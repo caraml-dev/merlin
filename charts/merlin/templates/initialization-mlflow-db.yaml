@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-postgresql-mlflow-init-scripts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "merlin.name" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    helm.sh/chart: {{ include "merlin.chart" . }}
+    app.kubernetes.io/name: {{ include "merlin.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    gojek.com/app: merlin
+    gojek.com/team: dsp
+    gojek.com/stream: dsp
+    gojek.com/orchestrator: gitlab
+    gojek.com/environment: {{ .Values.merlin.environment }}
+type: Opaque
+stringData:
+  init_mlflow_backend_store.sh: |-
+    #!/bin/sh
+    set -e
+    echo "Create DATABASE {{ .Values.mlflow.postgresql.postgresqlDatabase }} with OWNER {{ .Values.mlflow.postgresql.postgresqlUsername }}:"
+    psql -v ON_ERROR_STOP=1 --username "postgres" <<-EOSQL
+      CREATE USER {{ .Values.mlflow.postgresql.postgresqlUsername }} WITH PASSWORD '{{ .Values.mlflow.postgresql.postgresqlPassword }}';
+      CREATE DATABASE {{ .Values.mlflow.postgresql.postgresqlDatabase }};
+      GRANT ALL PRIVILEGES ON DATABASE {{ .Values.mlflow.postgresql.postgresqlDatabase }} TO {{ .Values.mlflow.postgresql.postgresqlUsername }};
+    EOSQL
+    echo "Done."

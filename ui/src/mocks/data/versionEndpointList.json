@@ -1,0 +1,64 @@
+[
+  {
+    "id": "04af0a90-187b-4f48-80a7-a59406fee34c",
+    "version_id": 1,
+    "model_id": 9,
+    "status": "failed",
+    "url": "http://sklearn-1-1.sample.models.vn.merlin.dev/v1/models/sklearn-1-1",
+    "service_name": "sklearn-1-1-predictor-default.sample.models.vn.merlin.dev",
+    "monitoring_url": "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=id-models&var-project=sample&var-model=sklearn-3&var-model_version=sklearn-1-1",
+    "environment": {
+      "id": 2,
+      "name": "id",
+      "cluster": "id-models",
+      "is_default": null,
+      "created_at": "2019-12-19T03:06:07.157881Z",
+      "updated_at": "2019-12-23T10:32:32.147875Z"
+    },
+    "environment_name": "id",
+    "message": "timeout creating inference service",
+    "created_at": "2019-12-19T03:18:58.902887Z",
+    "updated_at": "2019-12-19T11:00:07.182848Z"
+  },
+  {
+    "id": "69e1b85d-1914-4970-a311-6e9f8d4d20af",
+    "version_id": 2,
+    "model_id": 9,
+    "status": "serving",
+    "url": "http://sklearn-1-2.sample.models.id.merlin.dev/v1/models/sklearn-1-2",
+    "service_name": "sklearn-1-2-predictor-default.sample.models.id.merlin.dev",
+    "monitoring_url": "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=models&var-project=sample&var-model=sklearn-3&var-model_version=sklearn-1-2",
+    "environment": {
+      "id": 1,
+      "name": "id-dev",
+      "cluster": "models",
+      "is_default": true,
+      "created_at": "2019-12-17T10:31:57.069888Z",
+      "updated_at": "2019-12-26T06:30:45.615989Z"
+    },
+    "environment_name": "id-dev",
+    "created_at": "2019-12-19T10:59:32.170843Z",
+    "updated_at": "2019-12-19T11:00:02.356686Z"
+  },
+  {
+    "id": "04af0a90-187b-4f48-80a7-a59406fee34d",
+    "version_id": 1,
+    "model_id": 9,
+    "status": "failed",
+    "url": "http://sklearn-1-1.sample.models.vn.merlin.dev/v1/models/sklearn-1-1",
+    "service_name": "sklearn-1-1-predictor-default.sample.models.vn.merlin.dev",
+    "monitoring_url": "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=id-models&var-project=sample&var-model=sklearn-3&var-model_version=sklearn-1-1",
+    "environment": {
+      "id": 2,
+      "name": "id",
+      "cluster": "id-models",
+      "is_default": null,
+      "created_at": "2019-12-19T03:06:07.157881Z",
+      "updated_at": "2019-12-23T10:32:32.147875Z"
+    },
+    "environment_name": "id",
+    "message": "error building pyfunc image",
+    "created_at": "2019-12-19T03:18:58.902887Z",
+    "updated_at": "2019-12-19T11:00:07.182848Z"
+  }
+]

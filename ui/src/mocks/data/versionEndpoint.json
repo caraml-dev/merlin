@@ -1,0 +1,21 @@
+{
+  "id": "04af0a90-187b-4f48-80a7-a59406fee34c",
+  "version_id": 1,
+  "model_id": 9,
+  "status": "failed",
+  "url": "http://sklearn-1-1.sample.models.vn.merlin.dev/v1/models/sklearn-1-1",
+  "service_name": "sklearn-1-1-predictor-default.sample.models.id.merlin.dev",
+  "monitoring_url": "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=id-models&var-project=sample&var-model=sklearn-3&var-model_version=sklearn-1-1",
+  "environment": {
+    "id": 2,
+    "name": "id",
+    "cluster": "id-models",
+    "is_default": null,
+    "created_at": "2019-12-19T03:06:07.157881Z",
+    "updated_at": "2019-12-23T10:32:32.147875Z"
+  },
+  "environment_name": "id-staging",
+  "message": "timeout creating inference service",
+  "created_at": "2019-12-19T03:18:58.902887Z",
+  "updated_at": "2019-12-19T11:00:07.182848Z"
+}

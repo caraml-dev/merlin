@@ -1,0 +1,78 @@
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: SparkApplication
+metadata:
+  name: {{ template "merlin.fullname" . }}-spark-app
+  labels:
+    app: {{ template "merlin.name" . }}
+    chart: {{ template "merlin.chart" . }}
+    release: {{ .Release.Name | quote }}
+    heritage: {{ .Release.Service | quote }}
+spec:
+  type: Python
+  pythonVersion: "3"
+  mode: cluster
+  image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+  imagePullPolicy: IfNotPresent
+  mainApplicationFile: local:///merlin-spark-app/main.py
+  arguments:
+    - "--job-name"
+    - "bq-to-bq-prediction"
+    - "--spec-path"
+    - "/mnt/job-spec/jobspec.yaml"
+  sparkVersion: "2.4.5"
+  nodeSelector:
+    node-workload-type: "batch"
+  hadoopConf:
+    "fs.gs.project.id": "project"
+    "fs.gs.system.bucket": "bucket-name"
+    "google.cloud.auth.service.account.enable": "true"
+    "google.cloud.auth.service.account.json.keyfile": "/mnt/secrets/service-account.json"
+  restartPolicy:
+    type: OnFailure
+    onFailureRetries: 3
+    onFailureRetryInterval: 10
+    onSubmissionFailureRetries: 5
+    onSubmissionFailureRetryInterval: 20
+  driver:
+    cores: 1
+    coreLimit: "1"
+    memory: "512m"
+    labels:
+      version: 2.4.5
+    serviceAccount: integration-test-driver-sa
+    secrets:
+    - name: {{ template "merlin.fullname" . }}-secret
+      path: "/mnt/secrets"
+      secretType: GCPServiceAccount
+    configMaps:
+    - name: {{ template "merlin.fullname" . }}-jobspec
+      path: /mnt/job-spec
+    envVars:
+      GCS_PROJECT_ID: project
+      GOOGLE_APPLICATION_CREDENTIALS: /mnt/secrets/service-account.json
+    tolerations:
+    - key: batch-job
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+  executor:
+    cores: 1
+    instances: 4
+    memory: "512m"
+    labels:
+      version: 2.4.5
+    secrets:
+    - name: {{ template "merlin.fullname" . }}-secret
+      path: "/mnt/secrets"
+      secretType: GCPServiceAccount
+    configMaps:
+    - name: {{ template "merlin.fullname" . }}-jobspec
+      path: /mnt/job-spec
+    envVars:
+      GCS_PROJECT_ID: project
+      GOOGLE_APPLICATION_CREDENTIALS: /mnt/secrets/service-account.json
+    tolerations:
+    - key: batch-job
+      value: "true"
+      effect: NoSchedule
+      operator: Equal

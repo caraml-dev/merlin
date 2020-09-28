@@ -1,0 +1,259 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "merlin.fullname" .}}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "merlin.name" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    helm.sh/chart: {{ include "merlin.chart" . }}
+    app.kubernetes.io/name: {{ include "merlin.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    gojek.com/app: merlin
+    gojek.com/team: dsp
+    gojek.com/stream: dsp
+    gojek.com/orchestrator: gitlab
+    gojek.com/environment: {{ .Values.merlin.environment }}
+spec:
+  replicas: {{ .Values.merlin.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 4
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: {{ template "merlin.name" .}}
+        release: {{ .Release.Name }}
+        gojek.com/app: merlin
+        gojek.com/team: dsp
+        gojek.com/stream: dsp
+        gojek.com/orchestrator: gitlab
+        gojek.com/environment: {{ .Values.merlin.environment }}
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: "{{ .Values.merlin.service.internalPort }}"
+    spec:
+      containers:
+      - name: merlin
+        image: {{ .Values.merlin.image.registry }}/{{ .Values.merlin.image.repository }}:{{ .Values.merlin.image.tag }}
+        imagePullPolicy: {{ .Values.merlin.image.pullPolicy }}
+        ports:
+          - containerPort: {{ .Values.merlin.service.internalPort }}
+        livenessProbe:
+          httpGet:
+            path: /v1/internal/live
+            port: {{ .Values.merlin.service.internalPort }}
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /v1/internal/ready
+            port: {{ .Values.merlin.service.internalPort }}
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          requests:
+            cpu: {{ .Values.merlin.resources.requests.cpu }}
+            memory: {{ .Values.merlin.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.merlin.resources.limits.cpu }}
+            memory: {{ .Values.merlin.resources.limits.memory }}
+        env:
+          - name: ENVIRONMENT
+            value: "{{ .Values.merlin.environment }}"
+          - name: PORT
+            value: "{{ .Values.merlin.service.internalPort }}"
+          - name: DATABASE_HOST
+            value: {{ template "postgresql.host" . }}
+          - name: DATABASE_USER
+            value: "{{ .Values.postgresql.postgresqlUsername }}"
+          - name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-postgresql
+                key: postgresql-password
+          - name: DATABASE_NAME
+            value: "{{ .Values.postgresql.postgresqlDatabase }}"
+          - name: REACT_APP_OAUTH_CLIENT_ID
+            value: "{{ .Values.merlin.oauthClientID }}"
+          - name: REACT_APP_ENVIRONMENT
+            value: "{{ .Values.merlin.environment }}"
+          - name: REACT_APP_SENTRY_DSN
+            value: "{{ .Values.merlin.sentry.dsn }}"
+          - name: REACT_APP_MERLIN_DOCS_URL
+            value: "{{ .Values.merlin.docsURL }}"
+          - name: REACT_APP_ALERT_ENABLED
+            value: "{{ .Values.merlin.alert.enabled }}"
+          - name: REACT_APP_MONITORING_DASHBOARD_ENABLED
+            value: "{{ .Values.merlin.monitoring.enabled }}"
+          - name: REACT_APP_HOMEPAGE
+            value: "{{ .Values.merlin.homepage }}"
+          - name: REACT_APP_MERLIN_API
+            value: "{{ .Values.merlin.apiHost }}"
+          - name: REACT_APP_MLP_API
+            value: "{{ .Values.merlin.mlpApi.apiHost }}"
+          - name: IMG_BUILDER_CLUSTER_NAME
+            value: "{{ .Values.merlin.imageBuilder.clusterName }}"
+          - name: IMG_BUILDER_BUILD_CONTEXT_URI
+            value: "{{ .Values.merlin.imageBuilder.buildContextURI }}"
+          - name: IMG_BUILDER_DOCKERFILE_PATH
+            value: "{{ .Values.merlin.imageBuilder.dockerfilePath }}"
+          - name: IMG_BUILDER_BASE_IMAGE
+            value: "{{ .Values.merlin.imageBuilder.baseImage }}"
+          - name: IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI
+            value: "{{ .Values.merlin.imageBuilder.predictionJobBuildContextURI }}"
+          - name: IMG_BUILDER_PREDICTION_JOB_DOCKERFILE_PATH
+            value: "{{ .Values.merlin.imageBuilder.predictionJobDockerfilePath }}"
+          - name: IMG_BUILDER_PREDICTION_JOB_BASE_IMAGE
+            value: "{{ .Values.merlin.imageBuilder.predictionJobBaseImage }}"
+          - name: IMG_BUILDER_NAMESPACE
+            value: "{{ .Values.merlin.imageBuilder.namespace }}"
+          - name: IMG_BUILDER_DOCKER_REGISTRY
+            value: "{{ .Values.merlin.imageBuilder.dockerRegistry }}"
+          - name: IMG_BUILDER_TIMEOUT
+            value: "{{ .Values.merlin.imageBuilder.timeout }}"
+          - name: VAULT_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.merlin.vault.secretName }}"
+                key: address
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.merlin.vault.secretName }}"
+                key: token
+          - name: DEPLOYMENT_CONFIG_PATH
+            value: "/opt/config/environment.yaml"
+          {{ if .Values.merlin.sentry.enabled }}
+          - name: SENTRY_ENABLED
+            value: "{{ .Values.merlin.sentry.enabled }}"
+          - name: SENTRY_DSN
+            value: "{{ .Values.merlin.sentry.dsn }}"
+          {{- end }}
+          - name: NEWRELIC_ENABLED
+            value: "{{ .Values.merlin.newrelic.enabled }}"
+          {{- if .Values.merlin.newrelic.enabled }}
+          - name: NEWRELIC_APPNAME
+            value: "{{ .Values.merlin.newrelic.appname }}"
+          - name: NEWRELIC_LICENSE
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.merlin.newrelic.licenseSecretName }}"
+                key: key
+          - name: NEWRELIC_IGNORESTATUSCODES
+            value: "400,401,403,404,405,412"
+          {{- end }}
+          - name: AUTHORIZATION_ENABLED
+            value: "{{ .Values.merlin.authorization.enabled }}"
+          {{- if .Values.merlin.authorization.enabled }}
+          - name: AUTHORIZATION_SERVER_URL
+            value: "{{ .Values.merlin.authorization.serverUrl }}"
+          {{- end }}
+          - name: MONITORING_DASHBOARD_ENABLED
+            value: "{{ .Values.merlin.monitoring.enabled }}"
+          {{- if .Values.merlin.monitoring.enabled }}
+          - name: MONITORING_DASHBOARD_BASE_URL
+            value: "{{ .Values.merlin.monitoring.baseURL }}"
+          {{- end }}
+          - name: ALERT_ENABLED
+            value: "{{ .Values.merlin.alert.enabled }}"
+          {{- if .Values.merlin.alert.enabled }}
+          - name: GITLAB_BASE_URL
+            value: "{{ .Values.merlin.alert.gitlab.baseURL }}"
+          - name: GITLAB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Release.Name }}-gitlab-token"
+                key: gitlab-token
+          - name: GITLAB_DASHBOARD_REPOSITORY
+            value: "{{ .Values.merlin.alert.gitlab.dashboardRepository }}"
+          - name: GITLAB_DASHBOARD_BRANCH
+            value: "{{ .Values.merlin.alert.gitlab.dashboardBranch }}"
+          - name: GITLAB_ALERT_REPOSITORY
+            value: "{{ .Values.merlin.alert.gitlab.alertRepository }}"
+          - name: GITLAB_ALERT_BRANCH
+            value: "{{ .Values.merlin.alert.gitlab.alertBranch }}"
+          - name: WARDEN_API_HOST
+            value: "{{ .Values.merlin.alert.warden.apiHost }}"
+          {{- end }}
+          - name: MLP_API_HOST
+            value: "{{ .Values.merlin.mlpApi.apiHost }}"
+          - name: MLP_API_ENCRYPTION_KEY
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Release.Name }}-mlp-api-encryption-key"
+                key: encryption-key
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /etc/gcp_service_account/service-account.json
+        volumeMounts:
+        - mountPath: /opt/config
+          name: config
+        - name: service-account
+          mountPath: "/etc/gcp_service_account"
+          readOnly: true
+{{- if .Values.swagger.enabled }}
+      - name: swagger-ui
+        image: "swaggerapi/swagger-ui:{{ .Values.swagger.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: {{ .Values.swagger.service.internalPort }}
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        env:
+          - name: LAYOUT
+            value: "BaseLayout"
+          - name: SWAGGER_JSON
+            value: "/app/swagger.yaml"
+          - name: PORT
+            value: "{{ .Values.swagger.service.internalPort }}"
+          - name: API_HOST
+            value: "{{ .Values.swagger.apiHost }}"
+          - name: BASE_PATH
+            value: "{{ .Values.swagger.basePath }}"
+        command: ['sh', '-c']
+        args:
+          - |
+            mkdir /app
+            echo "Fetching swagger configuration from http://127.0.0.1:{{ .Values.merlin.service.internalPort }}/swagger.yaml..."
+            until $$(wget -O $${SWAGGER_JSON} --tries 1 --timeout 1 http://127.0.0.1:{{ .Values.merlin.service.internalPort }}/swagger.yaml); do
+              printf '.'
+              sleep 10
+            done
+            echo "Update Swagger config..."
+            sed -r -i 's/^(\s*)(host\s*:.*$$)/\host: "'$${API_HOST}'"/' $${SWAGGER_JSON}
+            sed -r -i 's#^(\s*)(basePath\s*:.*$$)#\basePath: "'$${BASE_PATH}'"#' $${SWAGGER_JSON}
+            echo "Running Swagger UI..."
+            /usr/share/nginx/run.sh
+{{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ template "merlin.fullname" .}}-environments
+      - name: service-account
+        secret:
+          secretName: {{ .Values.merlin.serviceAccount.secretName }}
+          items:
+            - key: {{ .Values.merlin.serviceAccount.secretKey }}
+              path: service-account.json
+
+{{- if (not .Values.merlin.nodeSelectorDisabled) }}
+{{- if .Values.merlin.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.merlin.nodeSelector | indent 8 }}
+{{ end -}}
+{{ end -}}

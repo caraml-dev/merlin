@@ -1,0 +1,2531 @@
+[{
+    "id": 3,
+    "name": "batch-iris-14-1586454038",
+    "version_id": 14,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "test",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/5182e8cc1b7c471e9b7a4fa3e9ffab3b/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed_submission",
+    "error": "record not found",
+    "created_at": "2020-04-09T17:40:38.780905Z",
+    "updated_at": "2020-04-09T17:43:44.951334Z"
+  },
+  {
+    "id": 4,
+    "name": "batch-iris-15-1586454710",
+    "version_id": 15,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "test",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/d012fb3e3a684af48c3e2f2faa917576/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed_submission",
+    "error": "record not found",
+    "created_at": "2020-04-09T17:51:50.357481Z",
+    "updated_at": "2020-04-09T17:55:01.511254Z"
+  },
+  {
+    "id": 2,
+    "name": "batch-iris-13-1586434443",
+    "version_id": 13,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "mlp-kaniko@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/ddba9ff0b8c149639928ab0b46a583e8/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:13",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-09T12:14:03.562225Z",
+    "updated_at": "2020-04-09T12:19:52.230736Z"
+  },
+  {
+    "id": 5,
+    "name": "batch-iris-16-1586503494",
+    "version_id": 16,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/f06c6e4e13534cf4a3fc3394602d2eee/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed_submission",
+    "error": "error building pyfunc image",
+    "created_at": "2020-04-10T07:24:54.384522Z",
+    "updated_at": "2020-04-10T07:27:30.042458Z"
+  },
+  {
+    "id": 6,
+    "name": "batch-iris-17-1586504217",
+    "version_id": 17,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/0963d309299745639bef587559ff3638/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:17",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed",
+    "error": "driver pod failed with ExitCode: 1, Reason: Error",
+    "created_at": "2020-04-10T07:36:57.245821Z",
+    "updated_at": "2020-04-10T07:44:46.970262Z"
+  },
+  {
+    "id": 7,
+    "name": "batch-iris-18-1586506539",
+    "version_id": 18,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/b696f4e631a441f98ab36813dc932e47/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:18",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed",
+    "error": "driver pod failed with ExitCode: 1, Reason: Error",
+    "created_at": "2020-04-10T08:15:39.299049Z",
+    "updated_at": "2020-04-10T08:23:19.341199Z"
+  },
+  {
+    "id": 8,
+    "name": "batch-iris-19-1586508590",
+    "version_id": 19,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/90ec5f3e94574de4a24971a799390583/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:19",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed",
+    "error": "driver pod failed with ExitCode: 1, Reason: Error",
+    "created_at": "2020-04-10T08:49:50.279419Z",
+    "updated_at": "2020-04-10T09:00:28.843079Z"
+  },
+  {
+    "id": 9,
+    "name": "batch-iris-20-1586509253",
+    "version_id": 20,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/a426932e08f543c6a036b2f5319d133b/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:20",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed",
+    "error": "driver pod failed with ExitCode: 1, Reason: Error",
+    "created_at": "2020-04-10T09:00:53.920563Z",
+    "updated_at": "2020-04-10T09:12:22.306487Z"
+  },
+  {
+    "id": 41,
+    "name": "batch-iris-25-1586862420",
+    "version_id": 25,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/49f245cf1506484ca37dd601d45b44de/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:25",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-14T11:07:00.980739Z",
+    "updated_at": "2020-04-14T11:11:29.859779Z"
+  },
+  {
+    "id": 10,
+    "name": "batch-iris-21-1586513341",
+    "version_id": 21,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/a26ddddebe42497d816c7f313ffe3fca/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:21",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed",
+    "error": "driver pod failed with ExitCode: 1, Reason: Error",
+    "created_at": "2020-04-10T10:09:01.831246Z",
+    "updated_at": "2020-04-10T10:17:19.445944Z"
+  },
+  {
+    "id": 44,
+    "name": "batch-iris-26-1586881525",
+    "version_id": 26,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/89d3caee2e64493ba8b7148b85938528/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:26",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-14T16:25:25.400997Z",
+    "updated_at": "2020-04-14T16:30:02.022493Z"
+  },
+  {
+    "id": 45,
+    "name": "batch-iris-27-1587013056",
+    "version_id": 27,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/ea35ec8e443a4e6f93f1294a424d632d/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:27",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T04:57:36.794431Z",
+    "updated_at": "2020-04-16T05:03:39.132177Z"
+  },
+  {
+    "id": 11,
+    "name": "batch-iris-22-1586514104",
+    "version_id": 22,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/ef23bdca25f247ba81c4db2167ecc2c1/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:22",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed",
+    "error": "driver pod failed with ExitCode: 1, Reason: Error",
+    "created_at": "2020-04-10T10:21:44.354194Z",
+    "updated_at": "2020-04-10T10:28:47.349718Z"
+  },
+  {
+    "id": 12,
+    "name": "batch-iris-23-1586514855",
+    "version_id": 23,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/ac05b772ab494ea4b198e5e763252792/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:23",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed",
+    "error": "driver pod failed with ExitCode: 1, Reason: Error",
+    "created_at": "2020-04-10T10:34:15.99068Z",
+    "updated_at": "2020-04-10T10:40:46.397394Z"
+  },
+  {
+    "id": 13,
+    "name": "batch-iris-20-1586515477",
+    "version_id": 20,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/a426932e08f543c6a036b2f5319d133b/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:20",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-10T10:44:37.496812Z",
+    "updated_at": "2020-04-10T10:46:21.307219Z"
+  },
+  {
+    "id": 14,
+    "name": "batch-iris-24-1586516409",
+    "version_id": 24,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/67f801a475c54695ba39c93d6f6ffb25/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:24",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-10T11:00:09.901393Z",
+    "updated_at": "2020-04-10T11:04:45.62323Z"
+  },
+  {
+    "id": 46,
+    "name": "batch-iris-28-1587014100",
+    "version_id": 28,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/03686a8072514e31b3123a565bceb7fd/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:28",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T05:15:00.475332Z",
+    "updated_at": "2020-04-16T05:19:41.490757Z"
+  },
+  {
+    "id": 48,
+    "name": "batch-iris-30-1587027803",
+    "version_id": 30,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/9314b137c6e64cadaabc2c40c8026513/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed_submission",
+    "error": "error building pyfunc image",
+    "created_at": "2020-04-16T09:03:23.352488Z",
+    "updated_at": "2020-04-16T09:03:28.943342Z"
+  },
+  {
+    "id": 49,
+    "name": "batch-iris-31-1587028024",
+    "version_id": 31,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/aa851012335642d7a4ed219c7ab8f5e5/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "failed_submission",
+    "error": "error building pyfunc image",
+    "created_at": "2020-04-16T09:07:04.614061Z",
+    "updated_at": "2020-04-16T09:07:10.395085Z"
+  },
+  {
+    "id": 47,
+    "name": "batch-iris-29-1587026154",
+    "version_id": 29,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/c1be56ab256746acbc348e6ea58686ca/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:29",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T08:35:54.60028Z",
+    "updated_at": "2020-04-16T08:40:42.728181Z"
+  },
+  {
+    "id": 50,
+    "name": "batch-iris-32-1587032351",
+    "version_id": 32,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/a208d058878840f394ef5eaf55a5958d/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:32",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T10:19:11.665639Z",
+    "updated_at": "2020-04-16T10:25:04.247682Z"
+  },
+  {
+    "id": 51,
+    "name": "batch-iris-33-1587033439",
+    "version_id": 33,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/17a714fbfc2d4b848fe7e37955eafeae/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:33",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T10:37:19.02358Z",
+    "updated_at": "2020-04-16T10:42:25.392139Z"
+  },
+  {
+    "id": 52,
+    "name": "batch-iris-34-1587036041",
+    "version_id": 34,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/0cf8a1b14a394ce6a804b7a6f6c010c4/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:34",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T11:20:41.495802Z",
+    "updated_at": "2020-04-16T11:25:45.506617Z"
+  },
+  {
+    "id": 54,
+    "name": "batch-iris-36-1587038891",
+    "version_id": 36,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/5fa7158af8f949b3bf681f3cf2be84aa/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:36",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T12:08:11.934623Z",
+    "updated_at": "2020-04-16T12:13:28.714386Z"
+  },
+  {
+    "id": 53,
+    "name": "batch-iris-35-1587036677",
+    "version_id": 35,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/5dd6232d99d74acf93cdd4f589766018/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:35",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T11:31:17.316871Z",
+    "updated_at": "2020-04-16T11:36:28.575222Z"
+  },
+  {
+    "id": 56,
+    "name": "batch-iris-38-1587040104",
+    "version_id": 38,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/b7e703fd791248edb271097ec18511d3/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:38",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T12:28:24.780861Z",
+    "updated_at": "2020-04-16T12:33:47.626688Z"
+  },
+  {
+    "id": 55,
+    "name": "batch-iris-37-1587039704",
+    "version_id": 37,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/52af0140eb544982bfadf79b427a6cfb/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:37",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T12:21:44.980634Z",
+    "updated_at": "2020-04-16T12:26:49.354172Z"
+  },
+  {
+    "id": 57,
+    "name": "batch-iris-39-1587042171",
+    "version_id": 39,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/9805c5d4bb51423ca83847284fbc389d/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:39",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-16T13:02:51.567575Z",
+    "updated_at": "2020-04-16T13:07:56.41472Z"
+  },
+  {
+    "id": 58,
+    "name": "batch-iris-40-1587355523",
+    "version_id": 40,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/e78cafd82d5a43fb9d89ca32afa16d87/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:40",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-20T04:05:23.181628Z",
+    "updated_at": "2020-04-20T04:11:17.048826Z"
+  },
+  {
+    "id": 59,
+    "name": "batch-iris-41-1587356128",
+    "version_id": 41,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/b6f928a82b5f4a88b6d85ef69810b2a9/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:41",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-20T04:15:28.018369Z",
+    "updated_at": "2020-04-20T04:19:55.001311Z"
+  },
+  {
+    "id": 60,
+    "name": "batch-iris-42-1587356425",
+    "version_id": 42,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/cddbc36082e1488f83f0ee4841573270/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:42",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-20T04:20:25.175884Z",
+    "updated_at": "2020-04-20T04:24:48.371413Z"
+  },
+  {
+    "id": 64,
+    "name": "batch-iris-52-1587538106",
+    "version_id": 52,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/6428ce4b2bea4b0a8aaf288ee7c96b7e/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:52",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T06:48:26.436997Z",
+    "updated_at": "2020-04-22T06:53:55.132882Z"
+  },
+  {
+    "id": 62,
+    "name": "batch-iris-49-1587524754",
+    "version_id": 49,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/464de81bfc674999bde91044325138bf/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:49",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T03:05:54.382819Z",
+    "updated_at": "2020-04-22T03:11:30.312773Z"
+  },
+  {
+    "id": 61,
+    "name": "batch-iris-48-1587451483",
+    "version_id": 48,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/dc90c22a52cd4421956a13dbd00857c8/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:48",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-21T06:44:43.779528Z",
+    "updated_at": "2020-04-21T06:50:38.471559Z"
+  },
+  {
+    "id": 68,
+    "name": "batch-iris-56-1587544875",
+    "version_id": 56,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/78cfac2f51274721aa9019c3ad597373/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:56",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T08:41:15.538856Z",
+    "updated_at": "2020-04-22T08:46:29.038198Z"
+  },
+  {
+    "id": 65,
+    "name": "batch-iris-53-1587539566",
+    "version_id": 53,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/70d372521d80453cbe407a98ace582f3/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:53",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T07:12:46.524958Z",
+    "updated_at": "2020-04-22T07:17:50.295678Z"
+  },
+  {
+    "id": 63,
+    "name": "batch-iris-51-1587537700",
+    "version_id": 51,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/a3c0299cdd334f108b68851fb26b5ccc/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:51",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T06:41:40.339817Z",
+    "updated_at": "2020-04-22T06:47:53.297188Z"
+  },
+  {
+    "id": 66,
+    "name": "batch-iris-54-1587541040",
+    "version_id": 54,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/def884e43dd1439b92801e2e3d520ee6/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:54",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T07:37:20.561263Z",
+    "updated_at": "2020-04-22T07:42:03.00202Z"
+  },
+  {
+    "id": 67,
+    "name": "batch-iris-55-1587541681",
+    "version_id": 55,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/979482be8dfe448eb018012a472903ca/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:55",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T07:48:01.004169Z",
+    "updated_at": "2020-04-22T07:52:40.815767Z"
+  },
+  {
+    "id": 69,
+    "name": "batch-iris-57-1587545255",
+    "version_id": 57,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/5f12afe61f1140179319379753a5f902/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:57",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T08:47:35.982024Z",
+    "updated_at": "2020-04-22T08:53:03.107729Z"
+  },
+  {
+    "id": 71,
+    "name": "batch-iris-59-1587549574",
+    "version_id": 59,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/82d07758cb5c4486bb5e0fb9cf91b6ce/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:59",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T09:59:34.613377Z",
+    "updated_at": "2020-04-22T10:04:37.243006Z"
+  },
+  {
+    "id": 70,
+    "name": "batch-iris-58-1587548719",
+    "version_id": 58,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/614ad977e4db47cfb4f4dd9c6f79a1ae/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:58",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-22T09:45:19.643255Z",
+    "updated_at": "2020-04-22T09:50:08.700178Z"
+  },
+  {
+    "id": 77,
+    "name": "batch-iris-65-1587629386",
+    "version_id": 65,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/47c5d6b2287944d3ad59754e331f3529/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:65",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-23T08:09:46.231364Z",
+    "updated_at": "2020-04-23T08:14:45.695574Z"
+  },
+  {
+    "id": 73,
+    "name": "batch-iris-61-1587625568",
+    "version_id": 61,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/066cc89dfcc74253833af0add8b846a2/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:61",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-23T07:06:08.866036Z",
+    "updated_at": "2020-04-23T07:12:09.796857Z"
+  },
+  {
+    "id": 74,
+    "name": "batch-iris-62-1587627689",
+    "version_id": 62,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/1736fca6b38449659107b853faa72ffc/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:62",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-23T07:41:29.61412Z",
+    "updated_at": "2020-04-23T07:46:35.453884Z"
+  },
+  {
+    "id": 72,
+    "name": "batch-iris-60-1587625095",
+    "version_id": 60,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/29a5c882bdf745d6a9dbb14023b22615/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:60",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-23T06:58:15.849498Z",
+    "updated_at": "2020-04-23T07:04:16.702819Z"
+  },
+  {
+    "id": 75,
+    "name": "batch-iris-63-1587628167",
+    "version_id": 63,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/99f0d6730d6d4bcbafca7c942fd17007/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:63",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-23T07:49:27.156725Z",
+    "updated_at": "2020-04-23T07:54:27.353269Z"
+  },
+  {
+    "id": 76,
+    "name": "batch-iris-64-1587629211",
+    "version_id": 64,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/3ddd314a1fdf423cbc4a2dab2aa06aea/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:64",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-23T08:06:51.537202Z",
+    "updated_at": "2020-04-23T08:11:43.333136Z"
+  },
+  {
+    "id": 82,
+    "name": "batch-iris-70-1588566011",
+    "version_id": 70,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/180889da481a4e28ab5764de4b29d29e/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:70",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-05-04T04:20:11.829044Z",
+    "updated_at": "2020-05-04T11:25:00.84685Z"
+  },
+  {
+    "id": 79,
+    "name": "batch-iris-67-1587640463",
+    "version_id": 67,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/c7cd0de47583425e943812ceceeed076/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:67",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-23T11:14:23.486862Z",
+    "updated_at": "2020-04-23T11:19:22.395866Z"
+  },
+  {
+    "id": 80,
+    "name": "batch-iris-68-1587640825",
+    "version_id": 68,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/003a91220c86471ba47a4c3d10dd2a0c/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:68",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-23T11:20:25.283438Z",
+    "updated_at": "2020-04-23T11:25:21.529418Z"
+  },
+  {
+    "id": 78,
+    "name": "batch-iris-66-1587637940",
+    "version_id": 66,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/64519b26d5ec43709a4e0bd51d6481f3/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:66",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-23T10:32:20.353823Z",
+    "updated_at": "2020-04-23T10:37:43.124272Z"
+  },
+  {
+    "id": 81,
+    "name": "batch-iris-69-1588144847",
+    "version_id": 69,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/7be4f104979b433cbb9cd58b07d38584/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:69",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-04-29T07:20:47.963032Z",
+    "updated_at": "2020-04-29T07:25:56.739509Z"
+  },
+  {
+    "id": 83,
+    "name": "batch-iris-71-1588572888",
+    "version_id": 71,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/127dd63389f04a49854218ed2393fc2d/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:71",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-05-04T06:14:48.763412Z",
+    "updated_at": "2020-05-04T13:19:38.85391Z"
+  },
+  {
+    "id": 84,
+    "name": "batch-iris-72-1588577394",
+    "version_id": 72,
+    "model_id": 34,
+    "project_id": 1,
+    "config": {
+      "service_account_name": "merlin-integration-test@project.iam.gserviceaccount.com",
+      "job_config": {
+        "version": "v1",
+        "kind": "PredictionJob",
+        "bigquerySource": {
+          "table": "project.dataset.table_iris",
+          "features": [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width"
+          ]
+        },
+        "model": {
+          "type": "PYFUNC_V2",
+          "uri": "gs://bucket-name/mlflow/70/b94caa76d52e4327be4659bfd6638f41/artifacts/model",
+          "result": {}
+        },
+        "bigquerySink": {
+          "table": "project.dataset.table_iris_result_e2e",
+          "stagingBucket": "bucket-name",
+          "resultColumn": "prediction",
+          "saveMode": "OVERWRITE"
+        }
+      },
+      "image_ref": "gojek/integration-test:72",
+      "resource_request": {
+        "driver_cpu_request": "2",
+        "driver_memory_request": "2Gi",
+        "executor_replica": 3,
+        "executor_cpu_request": "2",
+        "executor_memory_request": "2Gi"
+      }
+    },
+    "status": "completed",
+    "error": "",
+    "created_at": "2020-05-04T07:29:54.134309Z",
+    "updated_at": "2020-05-04T07:36:17.821109Z"
+  }
+]

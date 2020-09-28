@@ -1,0 +1,24 @@
+- name: "id-dev"
+  is_default: true
+  cluster: ""
+  region: "id"
+  gcp_project: ""
+  deployment_timeout: "10m"
+  namespace_timeout: "2m"
+  min_replica: 0
+  max_replica: 1
+  cpu_request: "500m"
+  memory_request: "500Mi"
+  cpu_limit: "1"
+  memory_limit: "1Gi"
+  max_cpu: "8"
+  max_memory: "8Gi"
+  queue_resource_percentage: "20"
+  is_prediction_job_enabled: true
+  is_default_prediction_job: true
+  prediction_job_config:
+    executor_replica: 3
+    driver_cpu_request: "2"
+    driver_memory_request: "2Gi"
+    executor_cpu_request: "2"
+    executor_memory_request: "2Gi"

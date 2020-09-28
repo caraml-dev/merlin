@@ -1,0 +1,31 @@
+{{- if .Values.merlin.ingress.enabled }}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "merlin.fullname" .}}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    ingress.class: {{ .Values.merlin.ingress.class }}
+  labels:
+    app: {{ include "merlin.name" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    helm.sh/chart: {{ include "merlin.chart" . }}
+    app.kubernetes.io/name: {{ include "merlin.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    gojek.com/app: merlin
+    gojek.com/team: dsp
+    gojek.com/stream: dsp
+    gojek.com/orchestrator: gitlab
+    gojek.com/environment: {{ .Values.merlin.environment }}
+spec:
+  rules:
+    - host: {{ .Values.merlin.ingress.host }}
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: {{ template "merlin.fullname" .}}
+              servicePort: {{ .Values.merlin.service.externalPort }}
+{{- end }}

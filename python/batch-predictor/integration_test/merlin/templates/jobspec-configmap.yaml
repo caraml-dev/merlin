@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "merlin.fullname" . }}-jobspec
+  labels:
+    app: {{ template "merlin.name" . }}
+    chart: {{ template "merlin.chart" . }}
+    release: {{ .Release.Name | quote }}
+    heritage: {{ .Release.Service | quote }}
+data:
+  jobspec.yaml: |-
+{{.Values.jobSpec | toYaml | indent 4}}

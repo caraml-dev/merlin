@@ -1,0 +1,8 @@
+{
+  "name": "kfserving-container",
+  "pod_name": "pod-deploymeqdslf",
+  "namespace": "default-fraud",
+  "cluster": "models",
+  "gcp_project": "",
+  "version_endpoint_id": "98507933-03eb-44ba-8f9e-1ef5dcb96c79"
+}

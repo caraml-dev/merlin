@@ -1,0 +1,8 @@
+{
+  "project_name": "Sample",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_').replace('-', '_') }}",
+  "model_name": "pyfunc-sample",
+  "model_slug": "{{ cookiecutter.model_name.lower().replace(' ', '_').replace('-', '_') }}",
+  "merlin_sdk_version": "0.3.0",
+  "environment_name": "id"
+}

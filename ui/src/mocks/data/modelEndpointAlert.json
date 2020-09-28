@@ -1,0 +1,18 @@
+{
+  "model_id": 1,
+  "model_endpoint_id": 1,
+  "environment_name": "id-dev",
+  "team_name": "datascience",
+  "alert_conditions": [
+    {
+      "enabled": true,
+      "metric_type": "throughput",
+      "severity": "WARNING",
+      "target": 1000,
+      "percentile": 0,
+      "unit": ""
+    }
+  ],
+  "created_at": "2020-04-24T04:45:41.833445Z",
+  "updated_at": "2020-04-24T04:45:41.833445Z"
+}

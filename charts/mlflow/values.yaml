@@ -1,0 +1,92 @@
+image:
+  registry: ghcr.io
+  repository: gojek/mlflow
+  tag: 1.3.0
+  pullPolicy: Always
+
+replicaCount: 1
+
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 0
+
+livenessProbe:
+  initialDelaySeconds: 120
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 30
+readinessProbe:
+  initialDelaySeconds: 120
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 30
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+  limits:
+    memory: "2048Mi"
+
+## The backend store is where MLflow server stores experiment
+## and run metadata as well as params, metrics, and tags for runs.
+## MLflow supports two types of backend stores: file store and database-backed store.
+#
+backendStoreUri: "/data/mlruns"
+
+## Local or GCS URI to store artifacts in, for
+## newly created experiments. Note that this flag
+## does not impact already-created experiments.
+#
+artifactRoot: "/data/artifacts"
+
+## The network address to listen on (default:
+## 127.0.0.1). Use 0.0.0.0 to bind to all
+## addresses if you want to access the tracking
+## server from other machines.
+#
+host: "0.0.0.0"
+
+## Update strategy, can be set to RollingUpdate or onDelete by default.
+## https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#updating-statefulsets
+#
+statefulset:
+  updateStrategy: RollingUpdate
+
+service:
+  type: ClusterIP
+  externalPort: 80
+  internalPort: 5000
+
+ingress:
+  enabled: false
+  class: "nginx"
+  # host:
+
+postgresql:
+  enabled: true
+
+  postgresqlUsername: username
+  postgresqlPassword: password
+  postgresqlDatabase: mlflow
+
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+  persistence:
+    enabled: true
+    size: 100Gi
+
+# These labels help us to account for the usage and cost of each deployment used in all environments and also the teams using them.
+# For the `app` label, there will be problems relabelling them since the replication controller uses the old values.
+# Feel free to put other podLabels as you deem fit.
+#
+# podLabels:
+  # environment: unknown
+  # team: unknown
+  # stream: unknown
+  # orchestrator: unknown

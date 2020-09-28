@@ -1,0 +1,6 @@
+{
+  "mid_pickup_eta": 0,
+  "order_driver_cut": 1000,
+  "order_gmv": 10000,
+  "order_surge_factor": 1
+}
