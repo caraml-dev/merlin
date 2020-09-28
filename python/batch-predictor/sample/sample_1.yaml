@@ -1,0 +1,22 @@
+kind: PredictionJob
+version: v1
+name: integration-test
+bigquerySource:
+  table: "project.dataset.table_iris"
+  features:
+    - sepal_length
+    - sepal_width
+    - petal_length
+    - petal_width
+model:
+  type: PYFUNC_V2
+  uri: gs://bucket-name/e2e/artifacts/model
+  result:
+    type: DOUBLE
+bigquerySink:
+  table: "project.dataset.table_iris_result"
+  result_column: "prediction"
+  save_mode: OVERWRITE
+  options:
+    project: "project"
+    temporaryGcsBucket: "bucket-name"

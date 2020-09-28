@@ -1,0 +1,3 @@
+scikit-learn==0.20.3
+merlin-sdk
+joblib>=0.13.0

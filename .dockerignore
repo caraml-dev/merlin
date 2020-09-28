@@ -1,0 +1,17 @@
+.git/
+.github/
+.gitignore
+.dockerignore
+
+bin/
+chart/
+docs/
+python/pyfunc-scaffolding
+python/pyfunc-server
+python/sdk
+ui/build/
+ui/node_modules/
+
+Dockerfile
+
+README.md

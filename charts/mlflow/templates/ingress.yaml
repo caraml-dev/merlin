@@ -1,0 +1,18 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "mlflow.fullname" .}}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    ingress.class: "{{ .Values.ingress.class }}"
+spec:
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: {{ template "mlflow.fullname" .}}
+              servicePort: {{ .Values.service.externalPort }}
+{{- end }}

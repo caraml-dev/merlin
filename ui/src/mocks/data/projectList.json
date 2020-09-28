@@ -1,0 +1,15 @@
+[{
+    "id": 1,
+    "name": "sample",
+    "mlflow_tracking_url": "http://sample.mlflow.global.merlin.dev/#/",
+    "created_at": "2019-08-17T05:49:43.214Z",
+    "updated_at": "2019-08-17T06:49:43.214Z"
+  },
+  {
+    "id": 2,
+    "name": "project-x",
+    "mlflow_tracking_url": "http://project-x.mlflow.global.merlin.dev/#/",
+    "created_at": "2019-08-23T05:49:43.214Z",
+    "updated_at": "2019-08-24T06:49:43.214Z"
+  }
+]

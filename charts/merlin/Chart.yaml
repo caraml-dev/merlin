@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Orchestrator service for Machine Learning Platform
+name: merlin
+version: 0.6.0

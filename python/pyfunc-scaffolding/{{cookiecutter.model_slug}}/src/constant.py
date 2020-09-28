@@ -1,0 +1,1 @@
+ARTIFACT_MODEL_PATH = "model_path"

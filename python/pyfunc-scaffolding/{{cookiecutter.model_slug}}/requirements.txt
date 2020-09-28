@@ -1,0 +1,1 @@
+merlin-sdk=={{ cookiecutter.merlin_sdk_version }}
