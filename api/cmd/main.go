@@ -112,12 +112,15 @@ func main() {
 	}
 
 	// Create an HTTP client for mlp-api client with Google default credential
+	mlpHttpClient := http.DefaultClient
 	googleClient, err := google.DefaultClient(ctx, "https://www.googleapis.com/auth/userinfo.email")
-	if err != nil {
-		panic(err)
+	if err == nil {
+		mlpHttpClient = googleClient
+	} else {
+		log.Infof("Google default credential not found. Fallback to default HTTP client.")
 	}
 
-	mlpApiClient := mlp.NewAPIClient(googleClient, cfg.MlpApiConfig.ApiHost, cfg.MlpApiConfig.EncryptionKey)
+	mlpApiClient := mlp.NewAPIClient(mlpHttpClient, cfg.MlpApiConfig.ApiHost, cfg.MlpApiConfig.EncryptionKey)
 
 	vaultClient := initVault(cfg)
 	webServiceBuilder, predJobBuilder := initImageBuilder(cfg, vaultClient)
