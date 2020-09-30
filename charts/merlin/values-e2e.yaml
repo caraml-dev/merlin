@@ -16,8 +16,9 @@ merlin:
     externalPort: 8080
     internalPort: 3000
   ingress:
-    enabled: true
-    class: nginx
+    enabled: false
+  mlpApi:
+    encryptionKey: password
   sentry:
     enabled: false
   newrelic:

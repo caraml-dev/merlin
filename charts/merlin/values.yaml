@@ -20,11 +20,11 @@ merlin:
 
   environment: dev
   homepage: /merlin
-  apiHost: http://mlp/v1
+  apiHost: http://merlin.mlp/v1
   docsURL: ""
 
   mlpApi:
-    apiHost: http://merlin.dev/api/v1
+    apiHost: http://mlp.mlp/v1
     # encryptionKey must be specified using --set flag.
     # encryptionKey:
 
@@ -61,12 +61,7 @@ merlin:
     enabled: false
 
   warden:
-    apiHost:
-
-  mlpApi:
-    apiHost: http://merlin.dev/api/v1
-    # encryptionKey must be specified using --set flag.
-    # encryptionKey:
+    apiHost: ""
 
   # Google service account used to access GCP's resources.
   #
