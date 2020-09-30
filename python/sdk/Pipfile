@@ -10,7 +10,6 @@ pytest = "*"
 pytest-xdist = "*"
 
 [packages]
-merlin = {extras = ["test"],path = "."}
 merlin-sdk = {extras = ["test"],path = "."}
 cookiecutter = '==1.7.2'
 
