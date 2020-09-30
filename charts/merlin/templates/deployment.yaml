@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "merlin.fullname" .}}
@@ -18,6 +18,10 @@ metadata:
     gojek.com/environment: {{ .Values.merlin.environment }}
 spec:
   replicas: {{ .Values.merlin.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "merlin.name" .}}
+      release: {{ .Release.Name }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -88,8 +92,10 @@ spec:
             value: "{{ .Values.merlin.oauthClientID }}"
           - name: REACT_APP_ENVIRONMENT
             value: "{{ .Values.merlin.environment }}"
+          {{- if .Values.merlin.sentry.enabled }}
           - name: REACT_APP_SENTRY_DSN
             value: "{{ .Values.merlin.sentry.dsn }}"
+          {{- end }}
           - name: REACT_APP_MERLIN_DOCS_URL
             value: "{{ .Values.merlin.docsURL }}"
           - name: REACT_APP_ALERT_ENABLED
@@ -193,15 +199,20 @@ spec:
               secretKeyRef:
                 name: "{{ .Release.Name }}-mlp-api-encryption-key"
                 key: encryption-key
+          {{- if .Values.merlin.gcpServiceAccount }}
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /etc/gcp_service_account/service-account.json
+          {{- end }}
         volumeMounts:
         - mountPath: /opt/config
           name: config
-        - name: service-account
+        {{- if .Values.merlin.gcpServiceAccount }}
+        - name: gcp-service-account
           mountPath: "/etc/gcp_service_account"
           readOnly: true
-{{- if .Values.swagger.enabled }}
+        {{- end }}
+
+      {{- if .Values.swagger.enabled }}
       - name: swagger-ui
         image: "swaggerapi/swagger-ui:{{ .Values.swagger.image.tag }}"
         imagePullPolicy: IfNotPresent
@@ -239,21 +250,27 @@ spec:
             sed -r -i 's#^(\s*)(basePath\s*:.*$$)#\basePath: "'$${BASE_PATH}'"#' $${SWAGGER_JSON}
             echo "Running Swagger UI..."
             /usr/share/nginx/run.sh
-{{- end }}
+      {{- end }}
+
       volumes:
       - name: config
         configMap:
           name: {{ template "merlin.fullname" .}}-environments
-      - name: service-account
+      {{- if .Values.merlin.gcpServiceAccount }}
+      - name: gcp-service-account
         secret:
-          secretName: {{ .Values.merlin.serviceAccount.secretName }}
+          secretName: {{ .Values.merlin.gcpServiceAccount.secretName }}
           items:
-            - key: {{ .Values.merlin.serviceAccount.secretKey }}
+            - key: {{ .Values.merlin.gcpServiceAccount.secretKey }}
               path: service-account.json
+      {{- end }}
 
-{{- if (not .Values.merlin.nodeSelectorDisabled) }}
+{{- if .Values.merlin.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.merlin.imagePullSecrets | indent 6 }}
+{{- end }}
+
 {{- if .Values.merlin.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.merlin.nodeSelector | indent 8 }}
-{{ end -}}
-{{ end -}}
+{{- end }}

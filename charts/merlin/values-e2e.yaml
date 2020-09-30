@@ -1,0 +1,56 @@
+merlin:
+  environment: dev
+  image:
+    tag: add-e2e-test
+  # TODO: After the Merlin docker image got published, we can remove imagePullSecrets config
+  imagePullSecrets:
+  - name: regcred
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 128Mi
+    limits:
+      memory: 128Mi
+  service:
+    externalPort: 8080
+    internalPort: 3000
+  ingress:
+    enabled: true
+    class: nginx
+  sentry:
+    enabled: false
+  newrelic:
+    enabled: false
+  authorization:
+    enabled: false
+
+postgresql:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 256Mi
+  persistence:
+    enabled: false
+  postgresqlUsername: merlin
+  postgresqlPassword: merlin
+  postgresqlDatabase: merlin
+  metrics:
+    enabled: false
+    serviceMonitor:
+      enabled: false
+  replication:
+    enabled: false
+  initdbScriptsSecret: merlin-postgresql-mlflow-init-scripts
+
+mlflow:
+  # TODO: After the MLflow docker image got published, we can remove imagePullSecrets config
+  imagePullSecrets:
+  - name: regcred
+  postgresql:
+    enabled: false
+    postgresqlDatabase: mlflow
+    postgresqlUsername: mlflow
+
+swagger:
+  enabled: false

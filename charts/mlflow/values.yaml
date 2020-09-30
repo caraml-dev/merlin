@@ -11,12 +11,12 @@ rollingUpdate:
   maxUnavailable: 0
 
 livenessProbe:
-  initialDelaySeconds: 120
+  initialDelaySeconds: 30
   periodSeconds: 10
   successThreshold: 1
   timeoutSeconds: 30
 readinessProbe:
-  initialDelaySeconds: 120
+  initialDelaySeconds: 30
   periodSeconds: 10
   successThreshold: 1
   timeoutSeconds: 30
@@ -64,7 +64,7 @@ ingress:
   # host:
 
 postgresql:
-  enabled: true
+  enabled: false
 
   postgresqlUsername: username
   postgresqlPassword: password

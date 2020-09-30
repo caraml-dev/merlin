@@ -23,7 +23,9 @@ import { sentryConfig } from "./config";
 
 require("./assets/scss/index.scss");
 
-Sentry.init(sentryConfig);
+if (sentryConfig.dsn !== "") {
+  Sentry.init(sentryConfig);
+}
 
 ReactDOM.render(<App />, document.getElementById("root"));
 
