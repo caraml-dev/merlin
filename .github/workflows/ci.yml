@@ -68,6 +68,8 @@ jobs:
         pip install mypy pipenv
         make setup
     - name: Unit test Python SDK
+      env:
+        E2E_USE_GOOGLE_AUTH: false
       working-directory: ./python/sdk
       run: make unit-test
 

@@ -77,3 +77,7 @@ def project_name():
 @pytest.fixture
 def service_account():
     return os.environ.get("E2E_SERVICE_ACCOUNT", default=None)
+
+@pytest.fixture
+def use_google_auth():
+    return os.environ.get("E2E_USE_GOOGLE_AUTH", default=True)

@@ -53,7 +53,7 @@ mdl_endpoint_1 = cl.ModelEndpoint(1, 1, None, "serving", "localhost", None,
 
 
 @responses.activate
-def test_get_project(mock_url, mock_oauth):
+def test_get_project(mock_url, mock_oauth, use_google_oauth):
     responses.add('GET', '/api/v1/projects',
                   body=f"""[{{
                         "id": 0,
@@ -66,7 +66,7 @@ def test_get_project(mock_url, mock_oauth):
                   content_type='application/json'
                   )
 
-    m = MerlinClient(mock_url, use_google_oauth=False)
+    m = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     p = m.get_project("my-project")
 
     assert responses.calls[-1].request.method == "GET"
@@ -81,7 +81,7 @@ def test_get_project(mock_url, mock_oauth):
     assert isinstance(p.updated_at, datetime.datetime)
 
 @responses.activate
-def test_create_model(mock_url, api_client, mock_oauth):
+def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth):
     project_id = '1010'
     mlflow_experiment_id = 1
     model_name = "my-model"
@@ -110,7 +110,7 @@ def test_create_model(mock_url, api_client, mock_oauth):
                   content_type='application/json'
                   )
 
-    client = MerlinClient(mock_url, use_google_oauth=False)
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     prj = cl.Project(project_id, project_name, mlflow_tracking_url,
                      created_at, updated_at)
     project = Project(prj, mock_url, api_client)
@@ -138,7 +138,7 @@ def test_create_model(mock_url, api_client, mock_oauth):
 
 
 @responses.activate
-def test_get_model(mock_url, api_client, mock_oauth):
+def test_get_model(mock_url, api_client, mock_oauth, use_google_oauth):
     project_id = '1010'
     mlflow_experiment_id = 1
     model_name = "my-model"
@@ -168,7 +168,7 @@ def test_get_model(mock_url, api_client, mock_oauth):
                   content_type='application/json'
                   )
 
-    client = MerlinClient(mock_url, use_google_oauth=False)
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     prj = cl.Project(project_id, project_name, mlflow_tracking_url,
                      created_at, updated_at)
     project = Project(prj, mock_url, api_client)
@@ -193,7 +193,7 @@ def test_get_model(mock_url, api_client, mock_oauth):
 
 
 @responses.activate
-def test_new_model_version(mock_url, api_client, mock_oauth):
+def test_new_model_version(mock_url, api_client, mock_oauth, use_google_oauth):
     project_id = 1
     model_id = 1
     version_id = 2
@@ -223,7 +223,7 @@ def test_new_model_version(mock_url, api_client, mock_oauth):
                   content_type='application/json'
                   )
 
-    client = MerlinClient(mock_url, use_google_oauth=False)
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     prj = cl.Project(project_id, project_name, mlflow_tracking_url,
                      created_at, updated_at)
     project = Project(prj, mock_url, api_client)
@@ -245,12 +245,12 @@ def test_new_model_version(mock_url, api_client, mock_oauth):
 
 
 @responses.activate
-def test_list_environments(mock_url, api_client, mock_oauth):
+def test_list_environments(mock_url, api_client, mock_oauth, use_google_oauth):
     responses.add("GET", "/api/v1/environments", body=json.dumps([env_1.to_dict(),
                                                               env_2.to_dict()]),
                   status=200,
                   content_type='application/json')
-    client = MerlinClient(mock_url, use_google_oauth=False)
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     envs = client.list_environment()
 
     assert len(envs) == 2
@@ -263,12 +263,12 @@ def test_list_environments(mock_url, api_client, mock_oauth):
 
 
 @responses.activate
-def test_get_environment(mock_url, api_client, mock_oauth):
+def test_get_environment(mock_url, api_client, mock_oauth, use_google_oauth):
     responses.add("GET", "/api/v1/environments", body=json.dumps([env_1.to_dict(),
                                                               env_2.to_dict()]),
                   status=200,
                   content_type='application/json')
-    client = MerlinClient(mock_url, use_google_oauth=False)
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     env = client.get_environment(env_1.name)
 
     assert env is not None
@@ -281,12 +281,12 @@ def test_get_environment(mock_url, api_client, mock_oauth):
 
 
 @responses.activate
-def test_get_default_environment(mock_url, api_client, mock_oauth):
+def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth):
     responses.add("GET", "/api/v1/environments", body=json.dumps([env_1.to_dict(),
                                                               env_2.to_dict()]),
                   status=200,
                   content_type='application/json')
-    client = MerlinClient(mock_url, use_google_oauth=False)
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     env = client.get_default_environment()
 
     assert env.name == env_1.name
@@ -304,8 +304,8 @@ def test_get_default_environment(mock_url, api_client, mock_oauth):
 
 
 @responses.activate
-def test_get_default_environment(mock_url, api_client, mock_oauth):
-    client = MerlinClient(mock_url, use_google_oauth=False)
+def test_get_default_environment(mock_url, api_client, mock_oauth, use_google_oauth):
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
     responses.add("GET", "/api/v1/environments", body=json.dumps([env_2.to_dict()]),
                   status=200,
                   content_type='application/json')
