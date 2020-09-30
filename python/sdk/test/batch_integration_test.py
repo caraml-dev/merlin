@@ -48,8 +48,8 @@ class IrisClassifier(PyFuncV2Model):
 
 
 @pytest.mark.integration
-def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account):
-    merlin.set_url(integration_test_url)
+def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("batch-iris", ModelType.PYFUNC_V2)
     service_account_name = "merlin-integration-test@project.iam.gserviceaccount.com"

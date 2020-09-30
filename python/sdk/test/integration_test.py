@@ -37,8 +37,8 @@ request_json = {
 
 
 @pytest.mark.integration
-def test_sklearn(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_sklearn(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("sklearn-sample", ModelType.SKLEARN)
 
@@ -72,8 +72,8 @@ def test_sklearn(integration_test_url, project_name):
 
 
 @pytest.mark.integration
-def test_xgboost(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_xgboost(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("xgboost-sample", ModelType.XGBOOST)
 
@@ -116,8 +116,8 @@ def test_xgboost(integration_test_url, project_name):
     assert resp.status_code == 404
 
 @pytest.mark.integration
-def test_mlflow_tracking(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("mlflow-tracking", ModelType.PYTORCH)
 
@@ -155,8 +155,8 @@ def test_mlflow_tracking(integration_test_url, project_name):
 
 
 @pytest.mark.integration
-def test_tensorflow(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_tensorflow(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("tensorflow-sample", ModelType.TENSORFLOW)
 
@@ -191,8 +191,8 @@ def test_tensorflow(integration_test_url, project_name):
 
 
 @pytest.mark.integration
-def test_pytorch(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_pytorch(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pytorch-sample", ModelType.PYTORCH)
 
@@ -218,8 +218,8 @@ def test_pytorch(integration_test_url, project_name):
 
 
 @pytest.mark.integration
-def test_set_traffic(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_set_traffic(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("set-traffic-sample", ModelType.SKLEARN)
 
@@ -270,8 +270,8 @@ def test_set_traffic(integration_test_url, project_name):
 
 
 @pytest.mark.integration
-def test_serve_traffic(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_serve_traffic(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("serve-traffic-sample", ModelType.SKLEARN)
 
@@ -315,8 +315,8 @@ def test_serve_traffic(integration_test_url, project_name):
 
 
 @pytest.mark.integration
-def test_stop_serving_traffic(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_stop_serving_traffic(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("stop-serving-traffic", ModelType.SKLEARN)
 
@@ -363,8 +363,8 @@ def test_stop_serving_traffic(integration_test_url, project_name):
 
 
 @pytest.mark.integration
-def test_multi_env(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_multi_env(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("multi-env", ModelType.XGBOOST)
 
@@ -414,8 +414,8 @@ def test_multi_env(integration_test_url, project_name):
     assert resp.status_code == 404
 
 @pytest.mark.integration
-def test_resource_request(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_resource_request(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("resource-request", ModelType.XGBOOST)
 

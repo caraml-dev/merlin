@@ -47,10 +47,10 @@ def runner():
     return CliRunner()
 
 @pytest.mark.integration
-def test_cli_deployment_undeployment(deployment_info, runner):
+def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth):
 
     model_name = 'cli-test'
-    merlin.set_url(deployment_info['url'])
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
     merlin.set_model(model_name)
 
@@ -75,7 +75,7 @@ def test_cli_deployment_undeployment(deployment_info, runner):
     test_deployed_model_version = result.output.split('\n')[0].split(' ')[-1]
 
     # Get latest deployed model's version
-    merlin.set_url(deployment_info['url'])
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
     merlin.set_model(model_name)
 
@@ -107,10 +107,10 @@ def test_cli_deployment_undeployment(deployment_info, runner):
     assert received_output == planned_output
 
 @pytest.mark.integration
-def test_cli_deployment_undeployment_with_resource_request(deployment_info, runner):
+def test_cli_deployment_undeployment_with_resource_request(deployment_info, runner, use_google_oauth):
 
     model_name = 'cli-resource-request-test'
-    merlin.set_url(deployment_info['url'])
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
     merlin.set_model(model_name)
 
@@ -139,7 +139,7 @@ def test_cli_deployment_undeployment_with_resource_request(deployment_info, runn
     test_deployed_model_version = result.output.split('\n')[0].split(' ')[-1]
 
     # Get latest deployed model's version
-    merlin.set_url(deployment_info['url'])
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
     merlin.set_model(model_name)
 
@@ -207,4 +207,3 @@ def test_cli_scaffold_with_invalid_model(runner):
             '''
     assert result.output.strip() == expected_output.strip()
     assert not os.path.exists('./pyfunc_prediction')
-
