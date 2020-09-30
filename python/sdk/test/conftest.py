@@ -80,4 +80,4 @@ def service_account():
 
 @pytest.fixture
 def use_google_oauth():
-    return os.environ.get("E2E_USE_GOOGLE_OAUTH", default=True)
+    return os.environ.get("E2E_USE_GOOGLE_OAUTH", default=True) == "true"
