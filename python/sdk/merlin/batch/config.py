@@ -40,6 +40,7 @@ class PredictionJobResourceRequest:
                  executor_replica: int):
         """
         Create resource request object
+
         :param driver_cpu_request: driver's cpu request in kubernetes request format (e.g. : 500m, 1, 2, etc)
         :param driver_memory_request: driver's memory request in kubernetes format (e.g.: 512Mi, 1Gi, 2Gi, etc)
         :param executor_cpu_request: executors's cpu request in kubernetes request format (e.g. : 500m, 1, 2, etc)
@@ -71,6 +72,7 @@ class PredictionJobConfig:
                  env_vars: Dict[str, str] = None):
         """
         Create configuration for starting a prediction job
+
         :param source: source configuration. See merlin.batch.source package.
         :param sink: sink configuration. See merlin.batch.sink package
         :param service_account_name: secret name containing the service account for executing the prediction job.

@@ -53,6 +53,7 @@ def get_url() -> Optional[str]:
 def list_environment() -> List[Environment]:
     """
     List all available environment for deployment
+
     :return: List[Environment]
     """
     _check_active_client()
@@ -62,6 +63,7 @@ def list_environment() -> List[Environment]:
 def get_environment(env_name: str) -> Environment:
     """
     Get environment for given env name
+
     :return: Environment or None
     """
     _check_active_client()
@@ -75,6 +77,7 @@ def get_environment(env_name: str) -> Environment:
 def get_default_environment() -> Optional[Environment]:
     """
     Get default environment
+
     :return: Environment or None
     """
     _check_active_client()
@@ -95,8 +98,7 @@ def set_project(project_name: str):
     """
     Set active project
 
-    If project_name is not found, it will create the project
-    :param project_name: project name
+    :param project_name: project name. If project_name is not found, it will create the project.
     """
     _check_active_client()
 
@@ -120,8 +122,7 @@ def set_model(model_name, model_type: ModelType = None):
     """
     Set active model
 
-    If model name is not found, it will create the model
-    :param model_name: model name to be set as active model
+    :param model_name: model name to be set as active model. If model name is not found, it will create the model.
     :param model_type: type of the model
     :return:
     """
@@ -217,6 +218,7 @@ def delete_tag(key: str):
 def get_param(key: str) -> Optional[str]:
     """
     Get param value from the active model version
+
     :param key: param name
     """
     _check_active_model_version()
@@ -226,6 +228,7 @@ def get_param(key: str) -> Optional[str]:
 def get_metric(key: str) -> Optional[float]:
     """
     Get metric value from the active model version
+
     :param key: metric name
     """
     _check_active_model_version()
@@ -235,6 +238,7 @@ def get_metric(key: str) -> Optional[float]:
 def get_tag(key: str) -> Optional[str]:
     """
     Get tag value from the active model version
+
     :param key: tag name
     """
     _check_active_model_version()
@@ -252,6 +256,7 @@ def list_tag() -> Dict[str, str]:
 def download_artifact(destination_path: str):
     """
     Download artifact from the active model version
+
     :param destination_path: destination of file when downloaded
     """
     _check_active_model_version()
@@ -282,13 +287,10 @@ def log_pyfunc_model(model_instance: Any, conda_env: str, code_dir: List[str] = 
 
 
     :param model_instance: instance of python function model
-    :param conda_env: path to conda env.yaml file :param code_dir:
-    additional code
-    directory that will be loaded with ModelType.PYFUNC model
+    :param conda_env: path to conda env.yaml file
+    :param code_dir: additional code directory that will be loaded with ModelType.PYFUNC model
     :param code_dir: additional code directory to be uploaded
-    :param artifacts: dictionary of artifact that will be stored together
-    with the model. This will be passed to PythonModel.initialize. Example:
-    {"config": "config/staging.yaml"}
+    :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config": "config/staging.yaml"}
     """
     _check_active_model_version()
     _active_model_version.log_pyfunc_model(model_instance,  # type: ignore
@@ -301,8 +303,7 @@ def log_pytorch_model(model_dir: str, model_class_name: str = None):
     Upload PyTorch model to artifact storage.
 
     :param model_dir: directory containing serialized PyTorch model
-    :param model_class_name: class name of PyTorch model. By default the model
-    class name is 'PyTorchModel'
+    :param model_class_name: class name of PyTorch model. By default the model class name is 'PyTorchModel'
     """
     _check_active_model_version()
     _active_model_version.log_pytorch_model(model_dir,  # type: ignore
@@ -312,9 +313,8 @@ def log_pytorch_model(model_dir: str, model_class_name: str = None):
 def log_model(model_dir):
     """
     Upload model to artifact storage.
+    This method is used to upload model for xgboost, tensorflow, and sklearn model.
 
-    This method is used to upload model for xgboost, tensorflow,
-    and sklearn model.
     :param model_dir: directory which contain serialized model
     """
     _check_active_model_version()
@@ -328,8 +328,7 @@ def deploy(model_version: ModelVersion = None,
     """
     Deploy a model version.
 
-    If model_version is not given it will deploy active model version
-    :param model_version:
+    :param model_version: If model_version is not given it will deploy active model version
     :return: VersionEndpoint
     """
     _check_active_client()
@@ -347,8 +346,7 @@ def undeploy(model_version=None,
     """
     Delete deployment of a model version.
 
-    If model_version is not given it will undeploy active model version
-    :param model_version: model version to be undeployed
+    :param model_version: model version to be undeployed. If model_version is not given it will undeploy active model version
     """
     _check_active_client()
     if model_version is None:
@@ -364,10 +362,8 @@ def serve_traffic(traffic_rule: Dict['VersionEndpoint', int],
     """
     Update traffic rule of the active model.
 
-    :param traffic_rule: dict of version endpoint and the percentage of
-    traffic.
-    :param environment_name: environment in which the traffic rule shall be
-    applied
+    :param traffic_rule: dict of version endpoint and the percentage of traffic.
+    :param environment_name: environment in which the traffic rule shall be applied
     :return: ModelEndpoint
     """
     _check_active_model()
@@ -387,7 +383,7 @@ def set_traffic(traffic_rule: Dict[ModelVersion, int]) -> ModelEndpoint:
     """
      Update traffic rule of the active model.
 
-    :param traffic_rule:  dict of model version and the percentage of traffic.
+    :param traffic_rule: dict of model version and the percentage of traffic.
     :return: ModelEndpoint
     """
     _check_active_model()

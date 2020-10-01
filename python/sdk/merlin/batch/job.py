@@ -43,6 +43,7 @@ class PredictionJob:
     def id(self) -> int:
         """
         ID of prediction job
+
         :return: int
         """
         return self._id
@@ -51,6 +52,7 @@ class PredictionJob:
     def name(self) -> str:
         """
         Prediction job name
+
         :return: str
         """
         return self._name
@@ -59,6 +61,7 @@ class PredictionJob:
     def status(self) -> JobStatus:
         """
         Prediction job status
+
         :return: JobStatus
         """
         return JobStatus(self._status)
@@ -67,6 +70,7 @@ class PredictionJob:
     def error(self) -> str:
         """
         Error message containing the reason of failed job
+
         :return: str
         """
         return self._error
@@ -74,6 +78,7 @@ class PredictionJob:
     def stop(self):
         """
         Stops a prediction job from running
+
         :return:
         """
         job_client = client.PredictionJobsApi(self._api_client)
@@ -86,6 +91,7 @@ class PredictionJob:
     def refresh(self):
         """
         Updates status of a prediction job
+
         :return:
         """
         job_client = client.PredictionJobsApi(self._api_client)
