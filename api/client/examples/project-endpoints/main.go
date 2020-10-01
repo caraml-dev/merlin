@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
+	"net/http"
 	"os"
 
 	"github.com/gojek/merlin/client"
@@ -18,14 +19,17 @@ func main() {
 	}
 
 	// Create an HTTP client with Google default credential
+	httpClient := http.DefaultClient
 	googleClient, err := google.DefaultClient(ctx, "https://www.googleapis.com/auth/userinfo.email")
-	if err != nil {
-		panic(err)
+	if err == nil {
+		httpClient = googleClient
+	} else {
+		log.Println("Google default credential not found. Fallback to HTTP default client")
 	}
 
 	cfg := client.NewConfiguration()
 	cfg.BasePath = basePath
-	cfg.HTTPClient = googleClient
+	cfg.HTTPClient = httpClient
 
 	apiClient := client.NewAPIClient(cfg)
 
@@ -34,28 +38,30 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	log.Println("Projects:", projects)
 
 	for _, project := range projects {
-		fmt.Println()
-		fmt.Println("---")
-		fmt.Println()
+		log.Println()
+		log.Println("---")
+		log.Println()
 
-		fmt.Println("Project:", project.Name)
+		log.Println("Project:", project.Name)
 
 		// Get all model endpoints in the given project
 		modelEndpoints, _, err := apiClient.ModelEndpointsApi.ProjectsProjectIdModelEndpointsGet(ctx, project.Id, nil)
 		if err != nil {
 			panic(err)
 		}
+		log.Println("Model Endpoints:", modelEndpoints)
 
 		if len(modelEndpoints) == 0 {
-			fmt.Println("  Model endpoints: not available")
+			log.Println("  Model endpoints: not available")
 			continue
 		}
 
-		fmt.Println("Model endpoints:")
+		log.Println("Model endpoints:")
 		for _, modelEndpoint := range modelEndpoints {
-			fmt.Printf("- %s in %s: %s\n", modelEndpoint.Model.Name, modelEndpoint.EnvironmentName, modelEndpoint.Url)
+			log.Printf("- %s in %s: %s\n", modelEndpoint.Model.Name, modelEndpoint.EnvironmentName, modelEndpoint.Url)
 		}
 	}
 }
