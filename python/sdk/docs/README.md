@@ -18,3 +18,8 @@ make html
 ```
 
 The output is located at `_build` directory
+
+Re-generating doc (delete all the files in the `_build` directory before generating the documentation again) 
+```bash
+make clean
+```
