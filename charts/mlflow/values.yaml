@@ -28,6 +28,12 @@ resources:
   limits:
     memory: "2048Mi"
 
+## Use this field to add environment variables relevant to MLflow server.
+## These fields will be passed on to MLflow container(s) when Chart is deployed.
+#
+# extraEnvs:
+#   FOO: bar
+
 ## The backend store is where MLflow server stores experiment
 ## and run metadata as well as params, metrics, and tags for runs.
 ## MLflow supports two types of backend stores: file store and database-backed store.

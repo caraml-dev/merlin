@@ -67,6 +67,10 @@ spec:
           value: "{{ .Values.host }}"
         - name: PORT
           value: "{{ .Values.service.internalPort }}"
+        {{- range $key, $val := .Values.extraEnvs }}
+        - name: {{ $key }}
+          value: {{ $val | quote }}
+        {{- end}}
 
 {{- if .Values.imagePullSecrets }}
       imagePullSecrets:

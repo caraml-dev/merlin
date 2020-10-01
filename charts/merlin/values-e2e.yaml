@@ -15,8 +15,6 @@ merlin:
   service:
     externalPort: 8080
     internalPort: 3000
-  ingress:
-    enabled: false
   mlpApi:
     encryptionKey: password
   sentry:
@@ -52,6 +50,11 @@ mlflow:
     enabled: false
     postgresqlDatabase: mlflow
     postgresqlUsername: mlflow
+  artifactRoot: s3://mlflow
+  extraEnvs:
+    # MinIO credentials
+    AWS_ACCESS_KEY_ID: YOURACCESSKEY
+    AWS_SECRET_ACCESS_KEY: YOURSECRETKEY
 
 swagger:
   enabled: false
