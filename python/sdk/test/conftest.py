@@ -68,7 +68,7 @@ def version(project, model, mlflow_url, api_client):
 
 @pytest.fixture
 def integration_test_url():
-    return os.environ.get("E2E_MERLIN_URL", default="http://127.0.0.0:8080")
+    return os.environ.get("E2E_MERLIN_URL", default="http://127.0.0.1:8080")
 
 @pytest.fixture
 def project_name():
