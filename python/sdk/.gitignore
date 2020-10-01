@@ -65,6 +65,7 @@ profile_default/
 ipython_config.py
 
 docs/_build
+docs/mlruns
 
 # Visual Studio Code
 .vscode/

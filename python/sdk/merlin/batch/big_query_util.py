@@ -22,25 +22,29 @@ COLUMN_NAME_PREFIX_EXCLUSIONS = ['_TABLE_', '_FILE_', '_PARTITION']
 
 def valid_dataset(dataset: str) -> bool:
     """
-        Validate BigQuery dataset name
-        :param dataset: BigQuery dataset name
-        :return: boolean
-        Rules based on this page https://cloud.google.com/bigquery/docs/datasets#dataset-naming
-        * May contain up to 1,024 characters
-        * Can contain letters (upper or lower case), numbers, and underscores
+    Validate BigQuery dataset name
+
+    :param dataset: BigQuery dataset name
+    :return: boolean
+
+    Rules based on this page https://cloud.google.com/bigquery/docs/datasets#dataset-naming
+    * May contain up to 1,024 characters
+    * Can contain letters (upper or lower case), numbers, and underscores
     """
     return validate_text(dataset, WORD_CHARACTER_EXPRESSION, DEFAULT_CHARACTER_LIMIT)
 
 
 def valid_column(column_name: str) -> bool:
     """
-        Validate BigQuery column name
-        :param column_name: BigQuery column name
-        :return: boolean
-        Rules based on this page https://cloud.google.com/bigquery/docs/schemas#column_names
-        * A column name must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_)
-        * It must start with a letter or underscore
-        * Maximum length 128
+    Validate BigQuery column name
+
+    :param column_name: BigQuery column name
+    :return: boolean
+
+    Rules based on this page https://cloud.google.com/bigquery/docs/schemas#column_names
+    * A column name must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_)
+    * It must start with a letter or underscore
+    * Maximum length 128
     """
     for prefix in COLUMN_NAME_PREFIX_EXCLUSIONS:
         if column_name.startswith(prefix):
@@ -53,23 +57,26 @@ def valid_column(column_name: str) -> bool:
 
 def valid_table_name(table_name: str) -> bool:
     """
-        Validate BigQuery table name
-        :param table_name: BigQuery table name
-        :return: boolean
-        Rules based on this page https://cloud.google.com/bigquery/docs/tables#table_naming
-        * A table name must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_)
-        * Maximum length 1024
+    Validate BigQuery table name
+
+    :param table_name: BigQuery table name
+    :return: boolean
+
+    Rules based on this page https://cloud.google.com/bigquery/docs/tables#table_naming
+    * A table name must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_)
+    * Maximum length 1024
     """
     return validate_text(table_name, WORD_CHARACTER_EXPRESSION, DEFAULT_CHARACTER_LIMIT)
 
 
 def validate_text(text: str, pattern: str, max_length: int) -> bool:
     """
-        Validate text based on regex pattern and maximum length allowed
-        :param text: Text to validate
-        :param pattern: Regular expression pattern to validate text
-        :param max_length: Maximum length allowed
-        :return: boolean
+    Validate text based on regex pattern and maximum length allowed
+
+    :param text: Text to validate
+    :param pattern: Regular expression pattern to validate text
+    :param max_length: Maximum length allowed
+    :return: boolean
     """
     if len(text) > max_length:
         return False
@@ -80,9 +87,10 @@ def validate_text(text: str, pattern: str, max_length: int) -> bool:
 
 def valid_table_id(table_id: str) -> bool:
     """
-        Validate BigQuery source_table which satisfied this format project_id.dataset.table
-        :param table_id: Source table
-        :return: boolean
+    Validate BigQuery source_table which satisfied this format project_id.dataset.table
+
+    :param table_id: Source table
+    :return: boolean
     """
     components = table_id.split(".")
     if len(components) != 3:
@@ -102,9 +110,10 @@ def valid_table_id(table_id: str) -> bool:
 
 def valid_columns(columns) -> bool:
     """
-        Validate multiple BiqQuery columns
-        :param columns: List of columns
-        :return: boolean
+    Validate multiple BiqQuery columns
+
+    :param columns: List of columns
+    :return: boolean
     """
     for column in columns:
         if not valid_column(column):

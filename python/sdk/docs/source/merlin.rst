@@ -13,6 +13,7 @@ Subpackages
    :maxdepth: 4
 
    merlin.batch
+   merlin.docker
 
 Submodules
 ----------
@@ -96,4 +97,3 @@ merlin.version module
    :members:
    :undoc-members:
    :show-inheritance:
-
