@@ -116,6 +116,7 @@ class Project:
                             model_type: 'ModelType' = None) -> 'Model':
         """
         Get or create a model with given name
+
         :param model_name: model name
         :param model_type: type of model, mandatory when creation is needed
         :return: Model instance
@@ -149,6 +150,7 @@ class Project:
     def create_secret(self, name: str, data: str):
         """
         Create a secret within the project
+
         :param name: secret name
         :param data: secret data
         :return:
@@ -163,6 +165,7 @@ class Project:
     def list_secret(self) -> List[str]:
         """
         List all secret name within the project
+
         :return:
         """
         secret_api = SecretApi(self._api_client)
@@ -175,6 +178,7 @@ class Project:
     def update_secret(self, name: str, data: str):
         """
         Update secret with given name
+
         :param name: secret name
         :param data: new secret data
         :return:
@@ -192,6 +196,7 @@ class Project:
     def delete_secret(self, name: str):
         """
         Delete secret with given name
+
         :param name: secret to be removed
         :return:
         """
@@ -280,6 +285,7 @@ class Model:
     def endpoint(self) -> Optional[ModelEndpoint]:
         """
         Get endpoint of this model that is deployed in default environment
+
         :return: Endpoint if exist, otherwise None
         """
         mdl_endpoints_api = ModelEndpointsApi(self._api_client)
@@ -294,6 +300,7 @@ class Model:
     def list_endpoint(self) -> List[ModelEndpoint]:
         """
         List all model endpoint assosiated with this model
+
         :return: List[ModelEndpoint]
         """
         mdl_endpoints_api = ModelEndpointsApi(self._api_client)
@@ -307,6 +314,7 @@ class Model:
     def get_version(self, id: int) -> Optional['ModelVersion']:
         """
         Get version with specific ID
+
         :param id: version id to retrieve
         :return:
         """
@@ -321,6 +329,7 @@ class Model:
         """
         List all version of the model
         List all version of the model
+
         :return: list of ModelVersion
         """
         version_api = VersionApi(self._api_client)
@@ -333,6 +342,7 @@ class Model:
     def new_model_version(self) -> 'ModelVersion':
         """
         Create a new version of this model
+
         :return:  new ModelVersion
         """
         version_api = VersionApi(self._api_client)
@@ -343,11 +353,9 @@ class Model:
                       environment_name: str = None) -> ModelEndpoint:
         """
         Set traffic rule for this model.
-        :param traffic_rule: dict of version endpoint and the percentage of
-        traffic.
-        :param environment_name: target environment in which the model
-        endpoint will be created. If left empty it will create in default
-        environment.
+
+        :param traffic_rule: dict of version endpoint and the percentage of traffic.
+        :param environment_name: target environment in which the model endpoint will be created. If left empty it will create in default environment.
         :return: ModelEndpoint
         """
         if not isinstance(traffic_rule, dict):
@@ -422,10 +430,7 @@ class Model:
         """
         Stop serving traffic for this model in given environment.
 
-        :param environment_name: environment name in which the endpoint
-        should be stopped from serving traffic.
-        If environment_name is empty it will attempt to undeploy the model
-        from default environment.
+        :param environment_name: environment name in which the endpoint should be stopped from serving traffic. If environment_name is empty it will attempt to undeploy the model from default environment.
         """
         target_env = environment_name
         if target_env is None:
@@ -462,6 +467,7 @@ class Model:
         Set traffic rule for this model.
 
         *This method is deprecated, use serve_traffic instead*
+
         :param traffic_rule: dict of model version and the percentage of traffic.
         :return: ModelEndpoint
         """
@@ -572,6 +578,7 @@ class ModelVersion:
         """
         Return endpoint of this model version that is deployed in default
         environment
+
         :return: Endpoint or None
         """
         endpoint_api = EndpointApi(self._api_client)
@@ -631,6 +638,7 @@ class ModelVersion:
     def log_param(self, key, value):
         """
         Log param to a model version
+
         :param key:
         :param value:
         :return:
@@ -640,6 +648,7 @@ class ModelVersion:
     def log_metric(self, key, value):
         """
         Log a metric to model version
+
         :param key:
         :param value:
         :return:
@@ -649,6 +658,7 @@ class ModelVersion:
     def set_tag(self, key, value):
         """
         Set tag in a model version
+
         :param key:
         :param value:
         :return:
@@ -658,6 +668,7 @@ class ModelVersion:
     def delete_tag(self, key):
         """
         Delete tag in a model version
+
         :param key:
         :return:
         """
@@ -683,6 +694,7 @@ class ModelVersion:
     def get_param(self, key) -> Optional[str]:
         """
         Get param value for specific param name(key)
+
         :param key:
         :return value:
         """
@@ -695,6 +707,7 @@ class ModelVersion:
     def get_metric(self, key) -> Optional[float]:
         """
         Get metric value from metric name(key)
+
         :param key:
         :return value:
         """
@@ -707,6 +720,7 @@ class ModelVersion:
     def get_tag(self, key) -> Optional[str]:
         """
         Get tag value from name(key)
+
         :param key:
         :return value:
         """
@@ -719,6 +733,7 @@ class ModelVersion:
     def list_tag(self) -> Dict[str, str]:
         """
         Get all tags
+
         :return list of tags:
         """
         run_data = self.get_run_data()
@@ -730,6 +745,7 @@ class ModelVersion:
     def download_artifact(self, destination_path):
         """
         Download artifact
+
         :param destination_path:
         :return:
         """
@@ -747,6 +763,7 @@ class ModelVersion:
     def log_artifacts(self, local_dir, artifact_path=None):
         """
         Log artifacts
+
         :param local_dir:
         :param artifact_path:
         :return:
@@ -756,6 +773,7 @@ class ModelVersion:
     def log_artifact(self, local_path, artifact_path=None):
         """
         Log artifact
+
         :param local_path:
         :param artifact_path:
         :return:
@@ -771,12 +789,10 @@ class ModelVersion:
         PyFuncModel. conda_env shall contain all dependency required by the
         model
 
-        :param model_instance: instance of python function model :param
-        conda_env: path to conda env.yaml file :param code_dir: additional
-        code directory that will be loaded with ModelType.PYFUNC model
-        :param artifacts: dictionary of artifact that will be stored
-        together with the model. This will be passed to
-        PythonModel.initialize. Example: {"config" : "config/staging.yaml"}
+        :param model_instance: instance of python function model
+        :param conda_env: path to conda env.yaml file
+        :param code_dir: additional code directory that will be loaded with ModelType.PYFUNC model
+        :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config" : "config/staging.yaml"}
         """
         if self._model.type != ModelType.PYFUNC and self._model.type != ModelType.PYFUNC_V2:
             raise ValueError("log_pyfunc_model is only for PyFunc and PyFuncV2 model")
@@ -791,9 +807,9 @@ class ModelVersion:
     def log_pytorch_model(self, model_dir, model_class_name=None):
         """
         Upload PyTorch model to artifact storage.
+
         :param model_dir: directory containing serialized PyTorch model
-        :param model_class_name: class name of PyTorch model. By default the
-        model class name is 'PyTorchModel'
+        :param model_class_name: class name of PyTorch model. By default the model class name is 'PyTorchModel'
         """
         if self._model.type != ModelType.PYTORCH:
             raise ValueError("log_pytorch_model is only for PyTorch model")
@@ -814,6 +830,7 @@ class ModelVersion:
         Upload model to artifact storage.
         This method is used to upload model for xgboost, tensorflow,
         and sklearn model.
+
         :param model_dir: directory which contain serialized model
         """
         if self._model.type == ModelType.PYFUNC or self._model.type == ModelType.PYFUNC_V2:
@@ -828,6 +845,7 @@ class ModelVersion:
     def list_endpoint(self) -> List[VersionEndpoint]:
         """
         Return all endpoint deployment for this particular model version
+
         :return: List of VersionEndpoint
         """
         endpoint_api = EndpointApi(self._api_client)
@@ -846,9 +864,9 @@ class ModelVersion:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
         and log_pyfunc_model has to be called beforehand
-        :param environment_name target environment to which the model
-        version will be deployed to. If left empty it will deploy to default environment.
-        :param resource_request The resource requirement and replicas requests for model version endpoint.
+
+        :param environment_name: target environment to which the model version will be deployed to. If left empty it will deploy to default environment.
+        :param resource_request: The resource requirement and replicas requests for model version endpoint.
         :return: Endpoint object
         """
 
@@ -931,9 +949,8 @@ class ModelVersion:
     def undeploy(self, environment_name: str = None):
         """
         Delete deployment of the model version
-        :param environment_name: environment name in which the endpoint
-        should be undeployed from. If environment_name is empty it will
-        attempt to undeploy the model from default environment
+
+        :param environment_name: environment name in which the endpoint should be undeployed from. If environment_name is empty it will attempt to undeploy the model from default environment
         """
         target_env = environment_name
         if target_env is None:
@@ -970,6 +987,7 @@ class ModelVersion:
     def create_prediction_job(self, job_config: PredictionJobConfig, sync: bool = True) -> PredictionJob:
         """
         Create and run prediction job with given config using this model version
+
         :param sync: boolean to set synchronicity of job. The default is set to True.
         :param job_config: prediction job config
         :return: prediction job
@@ -1051,6 +1069,7 @@ class ModelVersion:
     def list_prediction_job(self) -> List[PredictionJob]:
         """
         List all prediction job created from the model version
+
         :return: list of prediction jobs
         """
         job_client = client.PredictionJobsApi(self._api_client)
@@ -1070,6 +1089,7 @@ class ModelVersion:
                      build_image: bool = False):
         """
         Start a local server running the model version
+
         :param env_vars: dictionary of environment variables to be passed to the server
         :param port: host port that will be used to expose model server
         :param pyfunc_base_image: (optional, default=None) docker image to be used as base image for building pyfunc model
@@ -1261,6 +1281,7 @@ class PyFuncModel(PythonModel):
         """
         Implementation of PyFuncModel can specify initialization step which
         will be called one time during model initialization.
+
         :param artifacts: dictionary of artifacts passed to log_model method
         """
         pass
@@ -1297,6 +1318,7 @@ class PyFuncV2Model(PythonModel):
         """
         Implementation of PyFuncModel can specify initialization step which
         will be called one time during model initialization.
+
         :param artifacts: dictionary of artifacts passed to log_model method
         """
         pass
@@ -1316,8 +1338,7 @@ class PyFuncV2Model(PythonModel):
         it will only apply to the partition in contrary to the whole dataset.
 
         :param model_input: input to the model (pandas.DataFrame)
-        :return: inference result as numpy.ndarray or pandas.Series or
-        pandas.DataFrame
+        :return: inference result as numpy.ndarray or pandas.Series or pandas.DataFrame
 
         """
         raise NotImplementedError("infer is not implemented")
@@ -1356,6 +1377,7 @@ class PyFuncV2Model(PythonModel):
         This method will not be called during batch prediction.
 
         Implementation should return inference a json object of response.
+
         :param request: Dictionary containing incoming request body content
         :return: Dictionary containing response body
         """

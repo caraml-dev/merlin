@@ -27,6 +27,7 @@ except ImportError:
 def copy_pyfunc_dockerfile(dst):
     """
     Copy pyfunc dockerfile to the destination path
+
     :param dst: destination path
     :return: full path to pyfunc Dockerfile
     """
@@ -36,6 +37,7 @@ def copy_pyfunc_dockerfile(dst):
 def copy_standard_dockerfile(dst):
     """
     Copy dockerfile for standarnd model to the destination path
+
     :param dst: detination path
     :return: full path to standard model Dockerfile
     """

@@ -54,6 +54,7 @@ class MerlinClient:
     def list_environment(self) -> List[Environment]:
         """
         List all available environment for deployment
+
         :return: list of Environment
         """
         env_list = self._env_api.environments_get()
@@ -65,6 +66,7 @@ class MerlinClient:
     def get_environment(self, env_name: str) -> Optional[Environment]:
         """
         Get environment for given env name
+
         :return: Environment or None
         """
         env_list = self._env_api.environments_get()
@@ -76,6 +78,7 @@ class MerlinClient:
     def get_default_environment(self) -> Optional[Environment]:
         """
         Return default environment
+
         :return: Environment or None
         """
         env_list = self._env_api.environments_get()
@@ -87,6 +90,7 @@ class MerlinClient:
     def list_project(self) -> List[Project]:
         """
         List project in the connected MLP server
+
         :return: list of Project
         """
         p_list = self._project_api.projects_get()
@@ -106,6 +110,7 @@ class MerlinClient:
         """
         Get a project in Merlin and optionally assign list of readers and administrators.
         The identity used for creating the project will be automatically included as project's administrators.
+
         :param project_name: project name
         :return: project
         """
@@ -204,6 +209,7 @@ class MerlinClient:
             -> ModelVersion:
         """
         Create new model version for the given model and project
+
         :param model_name:
         :param project_name:
         :return:
