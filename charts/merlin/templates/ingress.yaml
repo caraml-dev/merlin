@@ -5,7 +5,7 @@ metadata:
   name: {{ template "merlin.fullname" .}}
   namespace: {{ .Release.Namespace }}
   annotations:
-    ingress.class: {{ .Values.merlin.ingress.class }}
+    kubernetes.io/ingress.class: {{ .Values.merlin.ingress.class }}
   labels:
     app: {{ include "merlin.name" . }}
     release: {{ .Release.Name }}
@@ -24,7 +24,7 @@ spec:
     - host: {{ .Values.merlin.ingress.host }}
       http:
         paths:
-          - path: /
+          - path: {{ .Values.merlin.ingress.path | default "/" }}
             backend:
               serviceName: {{ template "merlin.fullname" .}}
               servicePort: {{ .Values.merlin.service.externalPort }}
