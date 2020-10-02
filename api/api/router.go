@@ -26,9 +26,9 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/gojek/merlin/config"
-	"github.com/gojek/mlp/pkg/authz/enforcer"
-	"github.com/gojek/mlp/pkg/instrumentation/newrelic"
-	"github.com/gojek/mlp/pkg/instrumentation/sentry"
+	"github.com/gojek/mlp/api/pkg/authz/enforcer"
+	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
+	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 
 	"github.com/gojek/merlin/middleware"
 	"github.com/gojek/merlin/mlp"

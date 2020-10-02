@@ -20,8 +20,8 @@ import (
 
 	"github.com/antihax/optional"
 
-	"github.com/gojek/mlp/client"
-	"github.com/gojek/mlp/util"
+	"github.com/gojek/mlp/api/client"
+	"github.com/gojek/mlp/api/util"
 )
 
 // SecretAPI is interface to mlp-api's Secret API.

@@ -25,7 +25,7 @@ import (
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/service/mocks"
-	"github.com/gojek/mlp/client"
+	"github.com/gojek/mlp/api/client"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"

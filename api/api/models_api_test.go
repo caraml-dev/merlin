@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/gojek/mlp/client"
+	"github.com/gojek/mlp/api/client"
 
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"

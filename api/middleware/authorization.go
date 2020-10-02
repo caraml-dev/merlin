@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gojek/mlp/pkg/authz/enforcer"
+	"github.com/gojek/mlp/api/pkg/authz/enforcer"
 	"github.com/gorilla/mux"
 
 	"github.com/gojek/merlin/models"
