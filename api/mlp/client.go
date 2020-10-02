@@ -17,8 +17,8 @@ package mlp
 import (
 	"net/http"
 
-	"github.com/gojek/mlp/client"
-	"github.com/gojek/mlp/util"
+	"github.com/gojek/mlp/api/client"
+	"github.com/gojek/mlp/api/util"
 )
 
 // APIClient is interface to mlp-api client.
