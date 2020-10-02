@@ -69,6 +69,9 @@ html_static_path = ['_static']
 
 nbsphinx_execute = 'never'
 
+# The master toctree document.
+master_doc = 'index'
+
 apidoc_module_dir = '../merlin'
 apidoc_output_dir = 'source'
 apidoc_excluded_paths = ['**/*test*']
