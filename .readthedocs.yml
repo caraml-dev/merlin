@@ -2,6 +2,7 @@
 # Read the Docs configuration file
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
+#TODO: After github.com/gojek/merlin is published, move to Read the Docs Community edition
 # Required
 version: 1
 
