@@ -20,7 +20,7 @@ import (
 
 	"github.com/antihax/optional"
 
-	"github.com/gojek/mlp/client"
+	"github.com/gojek/mlp/api/client"
 )
 
 // ProjectAPI is interface to mlp-api's Project API.

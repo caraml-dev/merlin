@@ -24,8 +24,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/gojek/mlp/pkg/authz/enforcer"
-	enforcerMock "github.com/gojek/mlp/pkg/authz/enforcer/mocks"
+	"github.com/gojek/mlp/api/pkg/authz/enforcer"
+	enforcerMock "github.com/gojek/mlp/api/pkg/authz/enforcer/mocks"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/mlp"

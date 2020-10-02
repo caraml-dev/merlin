@@ -29,7 +29,7 @@ import (
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/service"
 	"github.com/gojek/merlin/service/mocks"
-	"github.com/gojek/mlp/client"
+	"github.com/gojek/mlp/api/client"
 )
 
 func TestList(t *testing.T) {

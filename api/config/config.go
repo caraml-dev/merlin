@@ -17,8 +17,8 @@ package config
 import (
 	"github.com/kelseyhightower/envconfig"
 
-	"github.com/gojek/mlp/pkg/instrumentation/newrelic"
-	"github.com/gojek/mlp/pkg/instrumentation/sentry"
+	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
+	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 )
 
 const (

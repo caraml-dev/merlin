@@ -41,9 +41,9 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 
-	"github.com/gojek/mlp/pkg/authz/enforcer"
-	"github.com/gojek/mlp/pkg/instrumentation/newrelic"
-	"github.com/gojek/mlp/pkg/instrumentation/sentry"
+	"github.com/gojek/mlp/api/pkg/authz/enforcer"
+	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
+	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 
 	"github.com/gojek/merlin/api"
 	"github.com/gojek/merlin/batch"

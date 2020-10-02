@@ -15,7 +15,8 @@ require (
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator v9.30.0+incompatible
 	github.com/gogo/protobuf v1.3.1
-	github.com/gojek/mlp v0.0.0-00010101000000-000000000000
+	github.com/gojek/merlin-pyspark-app v0.0.3
+	github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/google/go-containerregistry v0.0.0-20191009212737-d753c5604768
 	github.com/google/uuid v1.1.1
@@ -53,9 +54,5 @@ require (
 	sigs.k8s.io/controller-runtime v0.1.9 // indirect
 	sigs.k8s.io/testing_frameworks v0.1.2 // indirect
 )
-
-replace github.com/gojek/mlp => github.com/gojek/mlp/api v0.0.0-20200916102056-00ec9dccd758
-
-require github.com/gojek/merlin-pyspark-app v0.0.3
 
 replace github.com/gojek/merlin-pyspark-app => ../python/batch-predictor

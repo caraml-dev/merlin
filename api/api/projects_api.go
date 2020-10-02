@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gojek/mlp/client"
-	"github.com/gojek/mlp/pkg/authz/enforcer"
+	"github.com/gojek/mlp/api/client"
+	"github.com/gojek/mlp/api/pkg/authz/enforcer"
 
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
