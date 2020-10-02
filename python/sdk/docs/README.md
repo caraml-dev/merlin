@@ -23,3 +23,8 @@ Re-generating doc (delete all the files in the `_build` directory before generat
 ```bash
 make clean
 ```
+
+## Publishing
+The documentation for the latest **commit** is located [here](https://dsp-merlin-merlin.readthedocs-hosted.com/en/latest/).
+
+The documentation for the latest **release** is located [here](https://dsp-merlin-merlin.readthedocs-hosted.com/en/stable/).
