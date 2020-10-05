@@ -204,16 +204,16 @@ jobs:
       # TODO: To be removed after github.com/gojek/mlp published
       - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
-      - name: Setup cluster
-        run: kind create cluster --image=kindest/node:v1.15.12
-      - name: Create mlp namespace
-        run: kubectl create namespace mlp
-      # TODO: After the MLP docker image got published, we can remove this step
-      - name: Setup Docker credential
-        run: kubectl create secret docker-registry regcred --namespace=mlp --docker-server=ghcr.io --docker-email=ariefrahmansyah@hotmail.com --docker-username=ariefrahmansyah --docker-password=${{ secrets.GHCR_TOKEN }}
-      - name: Deploy MLP
-        run: ./mlp/scripts/e2e/deploy-mlp.sh "mlp/chart"
-      - name: Deploy Merlin
-        run: ./mlp/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
-      - name: Run E2E test
-        run: ./scripts/e2e/run-e2e.sh "merlin/api"
+    - name: Setup cluster
+      run: kind create cluster --image=kindest/node:v1.15.12
+    - name: Create mlp namespace
+      run: kubectl create namespace mlp
+    # TODO: After the MLP docker image got published, we can remove this step
+    - name: Setup Docker credential
+      run: kubectl create secret docker-registry regcred --namespace=mlp --docker-server=ghcr.io --docker-email=ariefrahmansyah@hotmail.com --docker-username=ariefrahmansyah --docker-password=${{ secrets.GHCR_TOKEN }}
+    - name: Deploy MLP
+      run: ./mlp/scripts/e2e/deploy-mlp.sh "mlp/chart"
+    - name: Deploy Merlin
+      run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
+    - name: Run E2E test
+      run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
