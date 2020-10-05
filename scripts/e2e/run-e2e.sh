@@ -1,8 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-set -o errexit
-set -o nounset
-set -o pipefail
+set -ex
 
 export API_PATH="$1"
 
@@ -20,3 +18,7 @@ for example in client/examples/*; do
     echo $example
     go run $example/main.go
 done
+
+# TODO: Run python/sdk e2e test
+
+set +ex

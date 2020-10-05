@@ -205,12 +205,13 @@ jobs:
       - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
     - name: Setup cluster
-      run: kind create cluster --image=kindest/node:v1.15.12
-    - name: Create mlp namespace
-      run: kubectl create namespace mlp
-    # TODO: After the MLP docker image got published, we can remove this step
-    - name: Setup Docker credential
-      run: kubectl create secret docker-registry regcred --namespace=mlp --docker-server=ghcr.io --docker-email=ariefrahmansyah@hotmail.com --docker-username=ariefrahmansyah --docker-password=${{ secrets.GHCR_TOKEN }}
+      run: ./merlin/scripts/e2e/setup-cluster.sh
+    - name: Setup mlp namespace
+      run: |
+        kubectl create namespace mlp
+        kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
+        # TODO: After the MLP docker image got published, we can remove creating docker credential secret
+        kubectl create secret docker-registry regcred --namespace=mlp --docker-server=ghcr.io --docker-email=ariefrahmansyah@hotmail.com --docker-username=ariefrahmansyah --docker-password=${{ secrets.GHCR_TOKEN }}
     - name: Deploy MLP
       run: ./mlp/scripts/e2e/deploy-mlp.sh "mlp/chart"
     - name: Deploy Merlin

@@ -1,8 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-set -o errexit
-set -o nounset
-set -o pipefail
+set -ex
 
 CHART_PATH="$1"
 
@@ -17,3 +15,5 @@ helm install merlin ${CHART_PATH} --namespace=mlp \
   --wait --timeout=5m
 
 kubectl get all --namespace=mlp
+
+set +ex
