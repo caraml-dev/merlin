@@ -50,6 +50,9 @@ merlin:
       executor_cpu_request: 25m
       executor_memory_request: 128Mi
 
+  imageBuilder:
+    clusterName: "e2e"
+
 
 postgresql:
   resources:
