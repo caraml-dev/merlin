@@ -40,7 +40,7 @@ helm install vault hashicorp/vault --version=${VAULT_VERSION} --namespace=vault 
   --set server.affinity=null \
   --set server.tolerations=null \
   --wait --timeout=600s
-sleep 10
+sleep 15
 kubectl wait pod/vault-0 --namespace=vault --for=condition=ready --timeout=600s
 
 # Downgrade to Vault KV secrets engine version 1

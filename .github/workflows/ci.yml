@@ -216,7 +216,11 @@ jobs:
         # TODO: After the MLP docker image got published, we can remove creating docker credential secret
         kubectl create secret docker-registry regcred --namespace=mlp --docker-server=ghcr.io --docker-email=ariefrahmansyah@hotmail.com --docker-username=ariefrahmansyah --docker-password=${{ secrets.GHCR_TOKEN }}
     - name: Deploy MLP
-      run: ./mlp/scripts/e2e/deploy-mlp.sh "mlp/chart"
+      run: |
+        helm install mlp mlp/chart --namespace=mlp \
+          --values=mlp/chart/values-e2e.yaml \
+          --set mlp.image.tag=main \
+          --wait --timeout=5m
     - name: Deploy Merlin
       run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
     - name: Run E2E test

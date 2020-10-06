@@ -1,15 +1,19 @@
 #!/bin/bash
 
-set -ex
-
 export API_PATH="$1"
 
+export MLP_API_BASEPATH="http://127.0.0.1:8081/v1"
 export MERLIN_API_BASEPATH="http://127.0.0.1:8080/v1"
 
+kubectl port-forward --namespace=mlp svc/mlp 8081:8080 &
+MLP_SVC_PID=$!
 kubectl port-forward --namespace=mlp svc/merlin 8080 &
-sleep 5
+MERLIN_SVC_PID=$!
 
-curl "${MERLIN_API_BASEPATH}/projects" -d '{"name": "e2e-test", "team": "gojek", "stream": "gojek"}'
+sleep 15
+
+echo "Creating merlin project: e2e-test"
+curl "${MLP_API_BASEPATH}/projects" -d '{"name": "e2e-test-2", "team": "gojek", "stream": "gojek"}'
 sleep 5
 
 cd ${API_PATH}
@@ -21,4 +25,5 @@ done
 
 # TODO: Run python/sdk e2e test
 
-set +ex
+kill ${MLP_SVC_PID}
+kill ${MERLIN_SVC_PID}
