@@ -21,6 +21,7 @@ import traceback
 
 import merlin
 from merlin.merlin import cli
+from merlin.model import ModelType
 from test.utils import undeploy_all_version
 
 
@@ -54,7 +55,7 @@ def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth):
     model_name = 'cli-test'
     merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
-    merlin.set_model(model_name)
+    merlin.set_model(model_name, ModelType.SKLEARN)
 
     undeploy_all_version()
 
@@ -79,7 +80,7 @@ def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth):
     # Get latest deployed model's version
     merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
-    merlin.set_model(model_name)
+    merlin.set_model(model_name, ModelType.SKLEARN)
 
     merlin_active_model = merlin.active_model()
     all_versions = merlin_active_model.list_version()
@@ -114,7 +115,7 @@ def test_cli_deployment_undeployment_with_resource_request(deployment_info, runn
     model_name = 'cli-resource-request-test'
     merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
-    merlin.set_model(model_name)
+    merlin.set_model(model_name, ModelType.SKLEARN)
 
     undeploy_all_version()
 
@@ -143,7 +144,7 @@ def test_cli_deployment_undeployment_with_resource_request(deployment_info, runn
     # Get latest deployed model's version
     merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
-    merlin.set_model(model_name)
+    merlin.set_model(model_name, ModelType.SKLEARN)
 
     merlin_active_model = merlin.active_model()
     all_versions = merlin_active_model.list_version()

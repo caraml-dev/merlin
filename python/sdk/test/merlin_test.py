@@ -153,7 +153,7 @@ def test_mlflow_methods(url, project, model, version, mock_oauth, use_google_oau
 
     merlin.set_url(url, use_google_oauth=use_google_oauth)
     merlin.set_project(project.name)
-    merlin.set_model(model.name)
+    merlin.set_model(model.name, model.type)
     with merlin.new_model_version() as v:
         merlin.log_metric("metric", 0.1)
         merlin.log_param("param", "value")
