@@ -47,8 +47,17 @@ class IrisClassifier(PyFuncV2Model):
         return self._model.predict(model_input)
 
 
+@pytest.fixture
+def batch_bigquery_source():
+    return os.environ.get("E2E_BATCH_BIGQUERY_SOURCE", default="project.dataset.table")
+
+@pytest.fixture
+def batch_bigquery_sink():
+    return os.environ.get("E2E_BATCH_BIGQUERY_SINK", default="project.dataset.table_result")
+
+
 @pytest.mark.integration
-def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth):
+def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth, batch_bigquery_source, batch_bigquery_sink):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("batch-iris", ModelType.PYFUNC_V2)
@@ -72,9 +81,9 @@ def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_accou
 
     v.finish()
 
-    bq_source = BigQuerySource("project.dataset.table_iris",
+    bq_source = BigQuerySource(batch_bigquery_source,
                                features=["sepal_length", "sepal_width", "petal_length", "petal_width"])
-    bq_sink = BigQuerySink("project.dataset.table_iris_result_e2e",
+    bq_sink = BigQuerySink(batch_bigquery_sink,
                            staging_bucket="bucket-name",
                            result_column="prediction",
                            save_mode=SaveMode.OVERWRITE)
