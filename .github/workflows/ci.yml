@@ -150,6 +150,7 @@ jobs:
           repository: gojek/merlin-pyfunc-base
           path: python/pyfunc-server
           dockerfile: python/pyfunc-server/base.Dockerfile
+          tags: dev
           tag_with_ref: true
 
   publish-pyspark-base-docker:
