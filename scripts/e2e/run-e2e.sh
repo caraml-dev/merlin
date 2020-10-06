@@ -13,7 +13,7 @@ MERLIN_SVC_PID=$!
 sleep 15
 
 echo "Creating merlin project: e2e-test"
-curl "${MLP_API_BASEPATH}/projects" -d '{"name": "e2e-test-2", "team": "gojek", "stream": "gojek"}'
+curl "${MLP_API_BASEPATH}/projects" -d '{"name": "e2e-test", "team": "gojek", "stream": "gojek"}'
 sleep 5
 
 cd ${API_PATH}
