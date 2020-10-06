@@ -55,6 +55,10 @@ def batch_bigquery_source():
 def batch_bigquery_sink():
     return os.environ.get("E2E_BATCH_BIGQUERY_SINK", default="project.dataset.table_result")
 
+@pytest.fixture
+def batch_gcs_staging_bucket():
+    return os.environ.get("E2E_BATCH_GCS_STAGING_BUCKET", default="bucket-name")
+
 
 @pytest.mark.integration
 def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth, batch_bigquery_source, batch_bigquery_sink):
@@ -84,7 +88,7 @@ def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_accou
     bq_source = BigQuerySource(batch_bigquery_source,
                                features=["sepal_length", "sepal_width", "petal_length", "petal_width"])
     bq_sink = BigQuerySink(batch_bigquery_sink,
-                           staging_bucket="bucket-name",
+                           staging_bucket=batch_gcs_staging_bucket,
                            result_column="prediction",
                            save_mode=SaveMode.OVERWRITE)
     job_config = PredictionJobConfig(source=bq_source, sink=bq_sink, service_account_name=service_account_name, env_vars={"ALPHA":"0.2"})
