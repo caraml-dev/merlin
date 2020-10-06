@@ -28,13 +28,15 @@ from test.utils import undeploy_all_version
 def deployment_info():
     dirname = os.path.dirname(os.path.dirname(__file__))
     filename = os.path.join(dirname, 'test/sklearn-model')
+    url = os.environ.get("E2E_MERLIN_URL", default="http://127.0.0.1:8080")
+    project = os.environ.get("E2E_PROJECT_NAME", default="integration-test")
 
     info = {
         'env': "id-dev",
         'model_dir': filename,
         'model_type': "sklearn",
-        'project': "integration-test",
-        'url': "http://merlin.dev/api/merlin",
+        'project': project,
+        'url': url,
         'min_replica': '1',
         'max_replica': '1',
         'cpu_request': '100m',

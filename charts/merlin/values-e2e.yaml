@@ -1,7 +1,7 @@
 merlin:
   environment: dev
   image:
-    tag: add-e2e-test
+    tag: 0.7.0
   # TODO: After the Merlin docker image got published, we can remove imagePullSecrets config
   imagePullSecrets:
   - name: regcred
@@ -11,7 +11,7 @@ merlin:
       cpu: 25m
       memory: 128Mi
     limits:
-      memory: 128Mi
+      memory: 256Mi
   service:
     externalPort: 8080
     internalPort: 3000
@@ -34,8 +34,8 @@ merlin:
     namespace_timeout: 2m
     min_replica: 1
     max_replica: 1
-    max_cpu: 1
-    max_memory: 1Gi
+    max_cpu: 250m
+    max_memory: 256Mi
     cpu_request: 25m
     memory_request: 128Mi
     cpu_limit: 250m

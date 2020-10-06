@@ -1,9 +1,9 @@
 merlin:
   image:
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     registry: ghcr.io
     repository: gojek/merlin
-    tag: 1.0.0-*
+    tag: 0.7.0
   replicaCount: "2"
   resources:
     requests:
@@ -74,7 +74,7 @@ merlin:
       is_default: true
       cluster: "dev"
       region: "id"
-      gcp_project: ""
+      gcp_project: "gcp-project"
       deployment_timeout: "10m"
       namespace_timeout: "2m"
       min_replica: 0
