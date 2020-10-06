@@ -61,7 +61,8 @@ def batch_gcs_staging_bucket():
 
 
 @pytest.mark.integration
-def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth, batch_bigquery_source, batch_bigquery_sink):
+def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth,
+        batch_bigquery_source, batch_bigquery_sink, batch_gcs_staging_bucket):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("batch-iris", ModelType.PYFUNC_V2)
