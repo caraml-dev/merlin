@@ -221,6 +221,7 @@ jobs:
         helm install mlp mlp/chart --namespace=mlp \
           --values=mlp/chart/values-e2e.yaml \
           --set mlp.image.tag=main \
+          --set "mlp.imagePullSecrets[0].name"=ghcr-secret \
           --wait --timeout=5m
     - name: Deploy Merlin
       run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
