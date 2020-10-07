@@ -11,12 +11,12 @@ rollingUpdate:
   maxUnavailable: 0
 
 livenessProbe:
-  initialDelaySeconds: 120
+  initialDelaySeconds: 30
   periodSeconds: 10
   successThreshold: 1
   timeoutSeconds: 30
 readinessProbe:
-  initialDelaySeconds: 120
+  initialDelaySeconds: 30
   periodSeconds: 10
   successThreshold: 1
   timeoutSeconds: 30
@@ -27,6 +27,12 @@ resources:
     memory: "512Mi"
   limits:
     memory: "2048Mi"
+
+## Use this field to add environment variables relevant to MLflow server.
+## These fields will be passed on to MLflow container(s) when Chart is deployed.
+#
+# extraEnvs:
+#   FOO: bar
 
 ## The backend store is where MLflow server stores experiment
 ## and run metadata as well as params, metrics, and tags for runs.
@@ -64,7 +70,7 @@ ingress:
   # host:
 
 postgresql:
-  enabled: true
+  enabled: false
 
   postgresqlUsername: username
   postgresqlPassword: password

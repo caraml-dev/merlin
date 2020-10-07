@@ -29,14 +29,14 @@ _active_model: Optional[Model]
 _active_model_version: Optional[ModelVersion]
 
 
-def set_url(url: str):
+def set_url(url: str, use_google_oauth: bool=True):
     """
     Set Merlin URL
 
     :param url: Merlin URL
     """
     global _merlin_client
-    _merlin_client = MerlinClient(url)
+    _merlin_client = MerlinClient(url, use_google_oauth)
 
 
 def get_url() -> Optional[str]:

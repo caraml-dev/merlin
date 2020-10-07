@@ -32,15 +32,17 @@ OAUTH_SCOPES = ['https://www.googleapis.com/auth/userinfo.email']
 
 
 class MerlinClient:
-    def __init__(self, merlin_url: str):
+    def __init__(self, merlin_url: str, use_google_oauth: bool=True):
         self._merlin_url = merlin_url
         config = Configuration()
         config.host = self._merlin_url + "/v1"
+
         self._api_client = ApiClient(config)
-        credentials, project = google.auth.default(
-            scopes=OAUTH_SCOPES)
-        autorized_http = AuthorizedHttp(credentials, urllib3.PoolManager())
-        self._api_client.rest_client.pool_manager = autorized_http
+        if use_google_oauth:
+            credentials, project = google.auth.default(scopes=OAUTH_SCOPES)
+            autorized_http = AuthorizedHttp(credentials, urllib3.PoolManager())
+            self._api_client.rest_client.pool_manager = autorized_http
+
         self._project_api = ProjectApi(self._api_client)
         self._model_api = ModelsApi(self._api_client)
         self._version_api = VersionApi(self._api_client)

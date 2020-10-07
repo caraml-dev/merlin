@@ -1,9 +1,9 @@
 dependencies:
 - name: postgresql
-  repository: https://kubernetes-charts.storage.googleapis.com
-  version: 6.3.2
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  version: 7.0.0
 - name: mlflow
   repository: file://../mlflow
   version: 0.4.1
-digest: sha256:ca1d87699efd70d17071d56261f6cee54d1fc09121c47ac59fe9feb176f3ae11
-generated: "2020-09-28T01:52:00.42544+07:00"
+digest: sha256:97298bf6868fedabca4b4dd4e494e2ca6c4631188d8cb23151df4d7df6e471a1
+generated: "2020-09-28T23:18:49.077269+07:00"

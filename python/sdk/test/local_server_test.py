@@ -41,8 +41,8 @@ else:
 @pytest.mark.integration
 @pytest.mark.local_server_test
 @pytest.mark.dependency(depends=["test/integration_test.py::test_sklearn"], scope='session')
-def test_sklearn(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_sklearn(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("sklearn-sample", ModelType.SKLEARN)
     v = _get_latest_version(merlin.active_model())
@@ -61,8 +61,8 @@ def test_sklearn(integration_test_url, project_name):
 @pytest.mark.integration
 @pytest.mark.local_server_test
 @pytest.mark.dependency(depends=["test/integration_test.py::test_xgboost"], scope='session')
-def test_xgboost(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_xgboost(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("xgboost-sample", ModelType.XGBOOST)
     v = _get_latest_version(merlin.active_model())
@@ -81,8 +81,8 @@ def test_xgboost(integration_test_url, project_name):
 @pytest.mark.integration
 @pytest.mark.local_server_test
 @pytest.mark.dependency(depends=["test/integration_test.py::test_tensorflow"], scope='session')
-def test_tensorflow(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_tensorflow(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("tensorflow-sample", ModelType.TENSORFLOW)
     v = _get_latest_version(merlin.active_model())
@@ -110,8 +110,8 @@ def test_tensorflow(integration_test_url, project_name):
 @pytest.mark.integration
 @pytest.mark.local_server_test
 @pytest.mark.dependency(depends=["test/integration_test.py::test_pytorch"], scope='session')
-def test_pytorch(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_pytorch(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pytorch-sample", ModelType.PYTORCH)
     model_dir = "test/pytorch-model"
@@ -134,8 +134,8 @@ def test_pytorch(integration_test_url, project_name):
 @pytest.mark.local_server_test
 @pytest.mark.integration
 @pytest.mark.dependency(depends=["test/pyfunc_integration_test.py::test_pyfunc"], scope='session')
-def test_pyfunc(integration_test_url, project_name):
-    merlin.set_url(integration_test_url)
+def test_pyfunc(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-sample", ModelType.PYFUNC)
     v = _get_latest_version(merlin.active_model())

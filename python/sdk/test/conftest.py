@@ -23,7 +23,7 @@ from merlin.model import Model, ModelType, ModelVersion, Project
 
 @pytest.fixture
 def url():
-    return "http://localhost:3000"
+    return "http://127.0.0.1:8080"
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def version(project, model, mlflow_url, api_client):
 
 @pytest.fixture
 def integration_test_url():
-    return os.environ.get("E2E_MERLIN_URL", default="http://merlin.dev/api/merlin")
+    return os.environ.get("E2E_MERLIN_URL", default="http://127.0.0.1:8080")
 
 @pytest.fixture
 def project_name():
@@ -77,3 +77,7 @@ def project_name():
 @pytest.fixture
 def service_account():
     return os.environ.get("E2E_SERVICE_ACCOUNT", default=None)
+
+@pytest.fixture
+def use_google_oauth():
+    return os.environ.get("E2E_USE_GOOGLE_OAUTH", default=True) == "true"

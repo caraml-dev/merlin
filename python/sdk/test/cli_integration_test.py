@@ -21,6 +21,7 @@ import traceback
 
 import merlin
 from merlin.merlin import cli
+from merlin.model import ModelType
 from test.utils import undeploy_all_version
 
 
@@ -28,13 +29,15 @@ from test.utils import undeploy_all_version
 def deployment_info():
     dirname = os.path.dirname(os.path.dirname(__file__))
     filename = os.path.join(dirname, 'test/sklearn-model')
+    url = os.environ.get("E2E_MERLIN_URL", default="http://127.0.0.1:8080")
+    project = os.environ.get("E2E_PROJECT_NAME", default="integration-test")
 
     info = {
         'env': "id-dev",
         'model_dir': filename,
         'model_type': "sklearn",
-        'project': "integration-test",
-        'url': "http://merlin.dev/api/merlin",
+        'project': project,
+        'url': url,
         'min_replica': '1',
         'max_replica': '1',
         'cpu_request': '100m',
@@ -47,12 +50,12 @@ def runner():
     return CliRunner()
 
 @pytest.mark.integration
-def test_cli_deployment_undeployment(deployment_info, runner):
+def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth):
 
     model_name = 'cli-test'
-    merlin.set_url(deployment_info['url'])
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
-    merlin.set_model(model_name)
+    merlin.set_model(model_name, ModelType.SKLEARN)
 
     undeploy_all_version()
 
@@ -75,9 +78,9 @@ def test_cli_deployment_undeployment(deployment_info, runner):
     test_deployed_model_version = result.output.split('\n')[0].split(' ')[-1]
 
     # Get latest deployed model's version
-    merlin.set_url(deployment_info['url'])
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
-    merlin.set_model(model_name)
+    merlin.set_model(model_name, ModelType.SKLEARN)
 
     merlin_active_model = merlin.active_model()
     all_versions = merlin_active_model.list_version()
@@ -107,12 +110,12 @@ def test_cli_deployment_undeployment(deployment_info, runner):
     assert received_output == planned_output
 
 @pytest.mark.integration
-def test_cli_deployment_undeployment_with_resource_request(deployment_info, runner):
+def test_cli_deployment_undeployment_with_resource_request(deployment_info, runner, use_google_oauth):
 
     model_name = 'cli-resource-request-test'
-    merlin.set_url(deployment_info['url'])
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
-    merlin.set_model(model_name)
+    merlin.set_model(model_name, ModelType.SKLEARN)
 
     undeploy_all_version()
 
@@ -139,9 +142,9 @@ def test_cli_deployment_undeployment_with_resource_request(deployment_info, runn
     test_deployed_model_version = result.output.split('\n')[0].split(' ')[-1]
 
     # Get latest deployed model's version
-    merlin.set_url(deployment_info['url'])
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
     merlin.set_project(deployment_info['project'])
-    merlin.set_model(model_name)
+    merlin.set_model(model_name, ModelType.SKLEARN)
 
     merlin_active_model = merlin.active_model()
     all_versions = merlin_active_model.list_version()
@@ -207,4 +210,3 @@ def test_cli_scaffold_with_invalid_model(runner):
             '''
     assert result.output.strip() == expected_output.strip()
     assert not os.path.exists('./pyfunc_prediction')
-
