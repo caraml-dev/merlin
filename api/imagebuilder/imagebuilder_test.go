@@ -100,6 +100,7 @@ func TestBuildImage(t *testing.T) {
 		wantCreateJob     *batchv1.Job
 		wantDeleteJobName string
 		wantImageRef      string
+		config            Config
 	}{
 		{
 			name: "success: no existing job",
@@ -136,7 +137,84 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextUrl),
+										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
+										"--cache=true",
+										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+									},
+									VolumeMounts: []v1.VolumeMount{
+										{
+											Name:      kanikoSecretName,
+											MountPath: "/secret",
+										},
+									},
+									Env: []v1.EnvVar{
+										{
+											Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+											Value: "/secret/kaniko-secret.json",
+										},
+									},
+									Resources: v1.ResourceRequirements{
+										Requests: defaultResourceRequests,
+									},
+								},
+							},
+							Volumes: []v1.Volume{
+								{
+									Name: kanikoSecretName,
+									VolumeSource: v1.VolumeSource{
+										Secret: &v1.SecretVolumeSource{
+											SecretName: kanikoSecretName,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				Status: batchv1.JobStatus{},
+			},
+			wantDeleteJobName: "",
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			config:            config,
+		},
+		{
+			name: "success: no existing job, not using context sub path",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+			},
+			existingJob: nil,
+			wantCreateJob: &batchv1.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
+					Namespace: config.BuildNamespace,
+					Labels: map[string]string{
+						"gojek.com/app":                model.Name,
+						"gojek.com/orchestrator":       "merlin",
+						"gojek.com/stream":             project.Stream,
+						"gojek.com/team":               project.Team,
+						"gojek.com/environment":        config.Environment,
+						"gojek.com/user-labels/sample": "true",
+					},
+				},
+				Spec: batchv1.JobSpec{
+					Completions:             &jobCompletions,
+					BackoffLimit:            &jobBackOffLimit,
+					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					Template: v1.PodTemplateSpec{
+						Spec: v1.PodSpec{
+							RestartPolicy: v1.RestartPolicyNever,
+							Containers: []v1.Container{
+								{
+									Name:  containerName,
+									Image: kanikoImage,
+									Args: []string{
+										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BuildContextUrl),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
@@ -177,6 +255,17 @@ func TestBuildImage(t *testing.T) {
 			},
 			wantDeleteJobName: "",
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			config: Config{
+				BuildContextUrl:      config.BuildContextUrl,
+				DockerfilePath:       config.DockerfilePath,
+				BuildNamespace:       config.BuildNamespace,
+				BaseImage:            config.BaseImage,
+				DockerRegistry:       config.DockerRegistry,
+				BuildTimeoutDuration: config.BuildTimeoutDuration,
+				ClusterName:          config.ClusterName,
+				GcpProject:           config.GcpProject,
+				Environment:          config.Environment,
+			},
 		},
 		{
 			name: "success: existing job is running",
@@ -212,12 +301,12 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
 										"--cache=true",
 										"--single-snapshot",
+										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -253,6 +342,7 @@ func TestBuildImage(t *testing.T) {
 			},
 			wantCreateJob: nil,
 			wantImageRef:  fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			config:        config,
 		},
 		{
 			name: "success: existing job already successful",
@@ -288,12 +378,12 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
 										"--cache=true",
 										"--single-snapshot",
+										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -332,6 +422,7 @@ func TestBuildImage(t *testing.T) {
 			wantCreateJob:     nil,
 			wantDeleteJobName: "",
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			config:            config,
 		},
 		{
 			name: "success: existing job failed",
@@ -367,12 +458,12 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
 										"--cache=true",
 										"--single-snapshot",
+										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -435,12 +526,12 @@ func TestBuildImage(t *testing.T) {
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
 										"--cache=true",
 										"--single-snapshot",
+										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -476,13 +567,14 @@ func TestBuildImage(t *testing.T) {
 			},
 			wantDeleteJobName: fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			config:            config,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			kubeClient := fake.NewSimpleClientset()
-			client := kubeClient.BatchV1().Jobs(config.BuildNamespace).(*fakebatchv1.FakeJobs)
+			client := kubeClient.BatchV1().Jobs(tt.config.BuildNamespace).(*fakebatchv1.FakeJobs)
 			client.Fake.PrependReactor("get", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				client.Fake.PrependReactor("get", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 					if tt.existingJob != nil {
@@ -518,7 +610,7 @@ func TestBuildImage(t *testing.T) {
 				return true, nil, nil
 			})
 
-			c := NewModelServiceImageBuilder(kubeClient, config)
+			c := NewModelServiceImageBuilder(kubeClient, tt.config)
 
 			imageRef, err := c.BuildImage(tt.args.project, tt.args.model, tt.args.version)
 			var actions []ktesting.Action

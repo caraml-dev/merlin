@@ -275,28 +275,18 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		labels[fmt.Sprintf(labelUsersHeading, label.Key)] = label.Value
 	}
 
-	var kanikoArgs []string
+	kanikoArgs := []string{
+		fmt.Sprintf("--dockerfile=%s", c.config.DockerfilePath),
+		fmt.Sprintf("--context=%s", c.config.BuildContextUrl),
+		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactUri),
+		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", c.config.BaseImage),
+		fmt.Sprintf("--destination=%s", imageRef),
+		"--cache=true",
+		"--single-snapshot",
+	}
+
 	if c.config.ContextSubPath != "" {
-		kanikoArgs = []string{
-			fmt.Sprintf("--dockerfile=%s", c.config.DockerfilePath),
-			fmt.Sprintf("--context=%s", c.config.BuildContextUrl),
-			fmt.Sprintf("--context-sub-path=%s", c.config.ContextSubPath),
-			fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactUri),
-			fmt.Sprintf("--build-arg=BASE_IMAGE=%s", c.config.BaseImage),
-			fmt.Sprintf("--destination=%s", imageRef),
-			"--cache=true",
-			"--single-snapshot",
-		}
-	} else {
-		kanikoArgs = []string{
-			fmt.Sprintf("--dockerfile=%s", c.config.DockerfilePath),
-			fmt.Sprintf("--context=%s", c.config.BuildContextUrl),
-			fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactUri),
-			fmt.Sprintf("--build-arg=BASE_IMAGE=%s", c.config.BaseImage),
-			fmt.Sprintf("--destination=%s", imageRef),
-			"--cache=true",
-			"--single-snapshot",
-		}
+		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.ContextSubPath))
 	}
 
 	return &batchv1.Job{
