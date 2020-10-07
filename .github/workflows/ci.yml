@@ -215,7 +215,7 @@ jobs:
         kubectl create namespace mlp
         kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
         # TODO: After the MLP docker image got published, we can remove creating docker credential secret
-        kubectl create secret docker-registry regcred --namespace=mlp --docker-server=ghcr.io --docker-email=ariefrahmansyah@hotmail.com --docker-username=ariefrahmansyah --docker-password=${{ secrets.GHCR_TOKEN }}
+        kubectl create secret docker-registry ghcr-secret --namespace=mlp --docker-server=ghcr.io --docker-email=ariefrahmansyah@hotmail.com --docker-username=ariefrahmansyah --docker-password=${{ secrets.GHCR_TOKEN }}
     - name: Deploy MLP
       run: |
         helm install mlp mlp/chart --namespace=mlp \
