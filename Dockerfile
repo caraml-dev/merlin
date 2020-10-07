@@ -24,7 +24,6 @@ WORKDIR /src/api
 COPY api .
 COPY python/batch-predictor ../python/batch-predictor
 COPY db-migrations ./db-migrations
-COPY environment.yaml ./environment.yaml
 
 # TODO: After we publish github.com/gojek/mlp, we can remove the next two lines:
 ARG GITHUB_TOKEN
@@ -47,7 +46,6 @@ RUN yarn run build
 FROM alpine:3.12
 
 COPY --from=go-builder /src/api/bin/merlin_api /usr/bin/merlin_api
-COPY --from=go-builder /src/api/environment.yaml ./
 COPY --from=go-builder /src/api/db-migrations ./db-migrations
 COPY --from=node-builder /src/ui/build ./ui/build
 

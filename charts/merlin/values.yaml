@@ -3,7 +3,7 @@ merlin:
     pullPolicy: IfNotPresent
     registry: ghcr.io
     repository: gojek/merlin
-    tag: 1.0.0-*
+    tag: 0.7.0
   replicaCount: "2"
   resources:
     requests:
@@ -15,18 +15,21 @@ merlin:
   service:
     externalPort: 8080
     internalPort: 3000
+  ingress:
+    enabled: false
+
   environment: dev
   homepage: /merlin
-  apiHost: http://merlin.dev/api/merlin/v1
+  apiHost: http://merlin.mlp/v1
   docsURL: ""
 
   mlpApi:
-    apiHost: http://merlin.dev/api/v1
+    apiHost: http://mlp.mlp:8080/v1
     # encryptionKey must be specified using --set flag.
     # encryptionKey:
 
   imageBuilder:
-    clusterName: "products"
+    clusterName: "dev"
     buildContextURI: "git://TOKEN@github.com/gojek/merlin.git#refs/tags/v0.1"
     baseImage: ""
     dockerfilePath: "./Dockerfile"
@@ -39,74 +42,74 @@ merlin:
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
 
-    vault:
-      secretName: "vault-secret" # Must be bootstraped first.
+  vault:
+    secretName: "vault-secret" # Must be bootstraped first.
 
-    gitlab:
-      baseURL: https://gitlab.com/
-      # GitLab token must be specified using --set flag.
-      # token:
-      dashboardRepository: data-science/slo-specs
-      dashboardBranch: master
-      alertRepository: lens/artillery/datascience
-      alertBranch: master
+  gitlab:
+    baseURL: https://gitlab.com/
+    # GitLab token must be specified using --set flag.
+    # token:
+    dashboardRepository: data-science/slo-specs
+    dashboardBranch: master
+    alertRepository: lens/artillery/datascience
+    alertBranch: master
 
-    warden:
-      apiHost:
+  alert:
+    enabled: false
 
-    mlpApi:
-      apiHost: http://merlin.dev/api/v1
-      # encryptionKey must be specified using --set flag.
-      # encryptionKey:
+  monitoring:
+    enabled: false
 
-    serviceAccount:
-      secretName: merlin-secret
-      secretKey: service-account.json
+  warden:
+    apiHost: ""
 
-    environmentConfigs:
-      - name: "id-dev"
-        is_default: true
-        cluster: "models"
-        region: "id"
-        gcp_project: ""
-        deployment_timeout: "10m"
-        namespace_timeout: "2m"
-        min_replica: 0
-        max_replica: 1
-        max_cpu: "8"
-        max_memory: "8Gi"
-        cpu_request: "100m"
-        memory_request: "200Mi"
-        cpu_limit: "400m"
-        memory_limit: "500Mi"
-        queue_resource_percentage: "20"
-        is_prediction_job_enabled: true
-        is_default_prediction_job: true
-        prediction_job_config:
-          executor_replica: 3
-          driver_cpu_request: "2"
-          driver_memory_request: "2Gi"
-          executor_cpu_request: "2"
-          executor_memory_request: "2Gi"
+  # Google service account used to access GCP's resources.
+  #
+  # gcpServiceAccount:
+  #   secretName: merlin-secret
+  #   secretKey: service-account.json
 
-    sentry:
-      enabled: true
-      dsn: "http://"
+  environmentConfigs:
+    - name: "id-dev"
+      is_default: true
+      cluster: "dev"
+      region: "id"
+      gcp_project: "gcp-project"
+      deployment_timeout: "10m"
+      namespace_timeout: "2m"
+      min_replica: 0
+      max_replica: 1
+      max_cpu: "8"
+      max_memory: "8Gi"
+      cpu_request: "100m"
+      memory_request: "200Mi"
+      cpu_limit: "400m"
+      memory_limit: "500Mi"
+      queue_resource_percentage: "20"
+      is_prediction_job_enabled: true
+      is_default_prediction_job: true
+      prediction_job_config:
+        executor_replica: 3
+        driver_cpu_request: "2"
+        driver_memory_request: "2Gi"
+        executor_cpu_request: "2"
+        executor_memory_request: "2Gi"
 
-    newrelic:
-      enabled: true
-      appname: "merlin-api-dev"
-      licenseSecretName: "newrelic-license-secret"
+  sentry:
+    enabled: false
+    dsn: ""
 
-    authorization:
-      enabled: true
-      serverUrl: http://mlp-authorization-keto
+  newrelic:
+    enabled: false
+    appname: "merlin-api-dev"
+    licenseSecretName: "newrelic-license-secret"
 
-    encryption:
-      key: "password"
+  authorization:
+    enabled: true
+    serverUrl: http://mlp-authorization-keto
 
-    ingress:
-      enabled: false
+  encryption:
+    key: "password"
 
 
 mlflow:
@@ -128,8 +131,8 @@ postgresql:
       cpu: 500m
   persistence:
     size: 100Gi
-  postgresqlUsername: mlp
-  postgresqlDatabase: mlp
+  postgresqlUsername: merlin
+  postgresqlDatabase: merlin
   metrics:
     enabled: true
     serviceMonitor:

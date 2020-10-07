@@ -1,5 +1,5 @@
 dependencies:
 - name: postgresql
-  version: 6.3.2
+  version: 7.0.0
   repository: "@stable"
   condition: postgresql.enabled

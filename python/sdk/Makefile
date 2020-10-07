@@ -1,6 +1,6 @@
 .PHONY: setup
 setup:
-	@pipenv install --dev
+	@pipenv install --dev --skip-lock
 
 .PHONY: type_check
 type_check:

@@ -5,13 +5,13 @@ metadata:
   name: {{ template "mlflow.fullname" .}}
   namespace: {{ .Release.Namespace }}
   annotations:
-    ingress.class: "{{ .Values.ingress.class }}"
+    kubernetes.io/ingress.class: "{{ .Values.ingress.class }}"
 spec:
   rules:
     - host: {{ .Values.ingress.host }}
       http:
         paths:
-          - path: /
+          - path: {{ .Values.ingress.path | default "/" }}
             backend:
               serviceName: {{ template "mlflow.fullname" .}}
               servicePort: {{ .Values.service.externalPort }}
