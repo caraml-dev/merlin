@@ -4,56 +4,56 @@ jobs:
   lint-ui:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 12
-    - name: Install dependencies
-      run: make init-dep-ui
-    - name: Lint UI files
-      run: make lint-ui
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Lint UI files
+        run: make lint-ui
 
   lint-api:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: 1.13
-    # TODO: To be removed after github.com/gojek/mlp published
-    - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - name: Install dependencies
-      run: |
-        make setup
-        make init-dep-api
-    - name: Lint API files
-      run: make lint-api
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+      # TODO: To be removed after github.com/gojek/mlp published
+      - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+      - name: Install dependencies
+        run: |
+          make setup
+          make init-dep-api
+      - name: Lint API files
+        run: make lint-api
 
   build-ui:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 12
-    - name: Install dependencies
-      run: make init-dep-ui
-    - name: Build UI static files
-      run: make build-ui
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Build UI static files
+        run: make build-ui
 
   build-api:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: 1.13
-    # TODO: To be removed after github.com/gojek/mlp published
-    - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - name: Install dependencies
-      run: make init-dep-api
-    - name: Build API server
-      run: make build-api
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+      # TODO: To be removed after github.com/gojek/mlp published
+      - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+      - name: Install dependencies
+        run: make init-dep-api
+      - name: Build API server
+        run: make build-api
 
   integration-test-api:
     runs-on: ubuntu-latest
@@ -65,104 +65,104 @@ jobs:
           POSTGRES_USER: merlin
           POSTGRES_PASSWORD: merlin
         ports:
-        - 5432:5432
+          - 5432:5432
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: 1.13
-    # TODO: To be removed after github.com/gojek/mlp published
-    - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - name: Test API files
-      env:
-        POSTGRES_HOST: localhost
-        POSTGRES_DB: merlin
-        POSTGRES_USER: merlin
-        POSTGRES_PASSWORD: merlin
-      run: make it-test-api-ci
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+      # TODO: To be removed after github.com/gojek/mlp published
+      - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+      - name: Test API files
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: merlin
+          POSTGRES_USER: merlin
+          POSTGRES_PASSWORD: merlin
+        run: make it-test-api-ci
 
   publish-python-sdk:
-    # if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.7
-    - name: Install dependencies
-      working-directory: ./python/sdk
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      working-directory: ./python/sdk
-      run: |
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        working-directory: ./python/sdk
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        working-directory: ./python/sdk
+        run: |
+          python setup.py sdist bdist_wheel
+          twine upload dist/*
 
   publish-merlin-docker:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     needs: integration-test-api
     steps:
-    - uses: actions/checkout@v2
-    - name: Build and push Merlin Docker image
-      uses: docker/build-push-action@v1
-      with:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GHCR_TOKEN }}
-        registry: ghcr.io
-        build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
-        tag_with_ref: true
+      - uses: actions/checkout@v2
+      - name: Build and push Merlin Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
+          tag_with_ref: true
 
   publish-pyfunc-base-docker:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Build and push PyFunc Base Docker image
-      uses: docker/build-push-action@v1
-      with:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GHCR_TOKEN }}
-        registry: ghcr.io
-        repository: gojek/merlin-pyfunc-base
-        path: python/pyfunc-server
-        dockerfile: python/pyfunc-server/base.Dockerfile
-        tag_with_ref: true
+      - uses: actions/checkout@v2
+      - name: Build and push PyFunc Base Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/merlin-pyfunc-base
+          path: python/pyfunc-server
+          dockerfile: python/pyfunc-server/base.Dockerfile
+          tag_with_ref: true
 
   publish-pyspark-base-docker:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Build and push PySpark Base Docker image
-      uses: docker/build-push-action@v1
-      with:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GHCR_TOKEN }}
-        registry: ghcr.io
-        repository: gojek/merlin-pyspark-base
-        path: python/batch-predictor
-        dockerfile: python/batch-predictor/docker/base.Dockerfile
-        tag_with_ref: true
+      - uses: actions/checkout@v2
+      - name: Build and push PySpark Base Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/merlin-pyspark-base
+          path: python/batch-predictor
+          dockerfile: python/batch-predictor/docker/base.Dockerfile
+          tag_with_ref: true
 
   publish-mlflow-docker:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Build and push MLflow Docker image
-      uses: docker/build-push-action@v1
-      with:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GHCR_TOKEN }}
-        registry: ghcr.io
-        repository: gojek/mlflow
-        path: mlflow
-        dockerfile: mlflow/Dockerfile
-        build_args: MLFLOW_VERSION=1.3.0
-        tags: 1.3.0
+      - uses: actions/checkout@v2
+      - name: Build and push MLflow Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/mlflow
+          path: mlflow
+          dockerfile: mlflow/Dockerfile
+          build_args: MLFLOW_VERSION=1.3.0
+          tags: 1.3.0
