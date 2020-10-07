@@ -128,6 +128,14 @@ spec:
             value: "{{ .Values.merlin.imageBuilder.dockerRegistry }}"
           - name: IMG_BUILDER_TIMEOUT
             value: "{{ .Values.merlin.imageBuilder.timeout }}"
+          {{- if .Values.merlin.imageBuilder.contextSubPath }}
+          - name: IMG_BUILDER_CONTEXT_SUB_PATH
+            value: "{{ .Values.merlin.imageBuilder.contextSubPath }}"
+          {{- end }}
+          {{- if .Values.merlin.imageBuilder.predictionJobContextSubPath }}
+          - name: IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH
+            value: "{{ .Values.merlin.imageBuilder.predictionJobContextSubPath }}"
+          {{- end }}
           - name: VAULT_ADDRESS
             valueFrom:
               secretKeyRef:
