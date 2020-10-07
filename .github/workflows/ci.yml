@@ -190,40 +190,40 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-merlin-docker
     steps:
-    - uses: actions/checkout@v2
-      with:
-        path: merlin
-    - uses: actions/checkout@master
-      with:
-        repository: gojek/mlp
-        ref: main
-        token: ${{ secrets.DSP_REPO_TOKEN }}
-        path: mlp
-    - uses: actions/setup-go@v2
-      with:
-        go-version: 1.13
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.7
-    # TODO: To be removed after github.com/gojek/mlp published
-    - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+      - uses: actions/checkout@v2
+        with:
+          path: merlin
+      - uses: actions/checkout@master
+        with:
+          repository: gojek/mlp
+          ref: main
+          token: ${{ secrets.DSP_REPO_TOKEN }}
+          path: mlp
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      # TODO: To be removed after github.com/gojek/mlp published
+      - run: git config --global url."https://${{ secrets.DSP_REPO_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
-    - name: Setup cluster
-      run: ./merlin/scripts/e2e/setup-cluster.sh
-    - name: Setup mlp namespace
-      run: |
-        kubectl create namespace mlp
-        kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
-        # TODO: After the MLP docker image got published, we can remove creating docker credential secret
-        kubectl create secret docker-registry ghcr-secret --namespace=mlp --docker-server=ghcr.io --docker-email=ariefrahmansyah@hotmail.com --docker-username=ariefrahmansyah --docker-password=${{ secrets.GHCR_TOKEN }}
-    - name: Deploy MLP
-      run: |
-        helm install mlp mlp/chart --namespace=mlp \
-          --values=mlp/chart/values-e2e.yaml \
-          --set mlp.image.tag=main \
-          --set "mlp.imagePullSecrets[0].name"=ghcr-secret \
-          --wait --timeout=5m
-    - name: Deploy Merlin
-      run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
-    - name: Run E2E test
-      run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
+      - name: Setup cluster
+        run: ./merlin/scripts/e2e/setup-cluster.sh
+      - name: Setup mlp namespace
+        run: |
+          kubectl create namespace mlp
+          kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
+          # TODO: After the MLP docker image got published, we can remove creating docker credential secret
+          kubectl create secret docker-registry ghcr-secret --namespace=mlp --docker-server=ghcr.io --docker-email=ariefrahmansyah@hotmail.com --docker-username=ariefrahmansyah --docker-password=${{ secrets.GHCR_TOKEN }}
+      - name: Deploy MLP
+        run: |
+          helm install mlp mlp/chart --namespace=mlp \
+            --values=mlp/chart/values-e2e.yaml \
+            --set mlp.image.tag=main \
+            --set "mlp.imagePullSecrets[0].name"=ghcr-secret \
+            --wait --timeout=5m
+      - name: Deploy Merlin
+        run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
+      - name: Run E2E test
+        run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
