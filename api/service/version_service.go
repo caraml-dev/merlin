@@ -24,10 +24,6 @@ import (
 	"github.com/gojek/merlin/models"
 )
 
-const (
-	monitoringBaseURL = "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard"
-)
-
 type VersionsService interface {
 	ListVersions(ctx context.Context, modelId models.Id, monitoringConfig config.MonitoringConfig) ([]*models.Version, error)
 	Save(ctx context.Context, version *models.Version, monitoringConfig config.MonitoringConfig) (*models.Version, error)
