@@ -1,6 +1,6 @@
-# Merlin
+<p align="center"><img src="./docs/images/merlin-with-text.png" width="550"/></p>
 
-<p align="center"><img src="./docs/images/merlin.png" width="300"/></p>
+## Overview
 
 Merlin is a platform for deploying and serving machine learning models. The project was born of the belief that model deployment should be:
 
@@ -45,3 +45,7 @@ We use [Swagger Codegen](https://github.com/swagger-api/swagger-codegen) to auto
 ```bash
 make generate-client
 ```
+
+## Notice
+
+Merlin is a community project and is still under active development. Your feedback and contributions are important to us. Please have a look at our [contributing guide](CONTRIBUTING.md) for details.
