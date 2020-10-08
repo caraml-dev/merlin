@@ -178,6 +178,8 @@ spec:
           {{- if .Values.merlin.monitoring.enabled }}
           - name: MONITORING_DASHBOARD_BASE_URL
             value: "{{ .Values.merlin.monitoring.baseURL }}"
+          - name: MONITORING_DASHBOARD_JOB_BASE_URL
+            value: "{{ .Values.merlin.monitoring.jobBaseURL }}"
           {{- end }}
           - name: ALERT_ENABLED
             value: "{{ .Values.merlin.alert.enabled }}"

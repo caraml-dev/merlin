@@ -108,12 +108,13 @@ type FeatureToggleConfig struct {
 }
 
 type MonitoringConfig struct {
-	MonitoringEnabled bool   `envconfig:"MONITORING_DASHBOARD_ENABLED" default:"true"`
-	MonitoringBaseURL string `envconfig:"MONITORING_DASHBOARD_BASE_URL"`
+	MonitoringEnabled    bool   `envconfig:"MONITORING_DASHBOARD_ENABLED" default:"false"`
+	MonitoringBaseURL    string `envconfig:"MONITORING_DASHBOARD_BASE_URL"`
+	MonitoringJobBaseURL string `envconfig:"MONITORING_DASHBOARD_JOB_BASE_URL"`
 }
 
 type AlertConfig struct {
-	AlertEnabled bool `envconfig:"ALERT_ENABLED" default:"true"`
+	AlertEnabled bool `envconfig:"ALERT_ENABLED" default:"false"`
 	GitlabConfig GitlabConfig
 	WardenConfig WardenConfig
 }

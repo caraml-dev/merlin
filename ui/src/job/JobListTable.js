@@ -36,6 +36,7 @@ import StopPredictionJobModal from "./modals/StopPredictionJobModal";
 import { featureToggleConfig } from "../config";
 
 const moment = require("moment");
+const querystring = require("querystring");
 
 const defaultTextSize = "s";
 const defaultIconSize = "xs";
@@ -68,11 +69,19 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
     []
   );
 
-  function createMonitoringUrl(project, job) {
+  function createMonitoringUrl(baseURL, project, job) {
     const start_time_nano =
       moment(job.created_at, "YYYY-MM-DDTHH:mm.SSZ").unix() * 1000;
     const end_time_nano = start_time_nano + 7200000;
-    return `https://monitoring.dev/graph/d/_iMaa8RMk/merlin-batch-prediction?orgId=1&from=${start_time_nano}&to=${end_time_nano}&var-cluster=${job.environment.cluster}&var-project=${project.name}&var-job=${job.name}`;
+    const query = {
+      from: start_time_nano,
+      to: end_time_nano,
+      "var-cluster": job.environment.cluster,
+      "var-project": project.name,
+      "var-job": job.name
+    };
+    const queryParams = querystring.stringify(query);
+    return `${baseURL}?${queryParams}`;
   }
 
   const [
@@ -176,7 +185,11 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
           {featureToggleConfig.monitoringEnabled && (
             <EuiFlexItem grow={false}>
               <a
-                href={createMonitoringUrl(project.data, item)}
+                href={createMonitoringUrl(
+                  featureToggleConfig.monitoringDashboardJobBaseURL,
+                  project.data,
+                  item
+                )}
                 target="_blank"
                 rel="noopener noreferrer">
                 <EuiButtonEmpty iconType="visLine" size={defaultIconSize}>

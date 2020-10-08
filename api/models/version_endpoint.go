@@ -73,10 +73,6 @@ func (e *VersionEndpoint) IsServing() bool {
 	return e.Status == EndpointServing
 }
 
-const (
-	monitoringURLBase = "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard"
-)
-
 type EndpointMonitoringURLParams struct {
 	Cluster      string
 	Project      string
