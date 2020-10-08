@@ -59,6 +59,8 @@ merlin:
 
   monitoring:
     enabled: false
+    # baseURL: ""
+    # jobBaseURL: ""
 
   warden:
     apiHost: ""

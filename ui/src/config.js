@@ -37,6 +37,9 @@ export const featureToggleConfig = {
     getEnv("REACT_APP_MONITORING_DASHBOARD_ENABLED")
       .toString()
       .toLowerCase() === "false"
+  ),
+  monitoringDashboardJobBaseURL: getEnv(
+    "REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"
   )
 };
 

@@ -195,15 +195,18 @@ func main() {
 
 	reactConfig := cfg.ReactAppConfig
 	uiEnv := uiEnvHandler{
-		OauthClientID:     reactConfig.OauthClientID,
-		Environment:       reactConfig.Environment,
-		SentryDSN:         reactConfig.SentryDSN,
-		DocURL:            reactConfig.DocURL,
-		AlertEnabled:      reactConfig.AlertEnabled,
-		MonitoringEnabled: reactConfig.MonitoringEnabled,
-		HomePage:          reactConfig.HomePage,
-		MerlinURL:         reactConfig.MerlinURL,
-		MlpURL:            reactConfig.MlpURL,
+		OauthClientID: reactConfig.OauthClientID,
+		Environment:   reactConfig.Environment,
+		SentryDSN:     reactConfig.SentryDSN,
+		DocURL:        reactConfig.DocURL,
+		HomePage:      reactConfig.HomePage,
+		MerlinURL:     reactConfig.MerlinURL,
+		MlpURL:        reactConfig.MlpURL,
+
+		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
+		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
+
+		AlertEnabled: cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
 	}
 
 	uiHomePage := reactConfig.HomePage
@@ -220,15 +223,18 @@ func main() {
 }
 
 type uiEnvHandler struct {
-	OauthClientID     string `json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
-	Environment       string `json:"REACT_APP_ENVIRONMENT,omitempty"`
-	SentryDSN         string `json:"REACT_APP_SENTRY_DSN,omitempty"`
-	DocURL            string `json:"REACT_APP_MERLIN_DOCS_URL,omitempty"`
-	AlertEnabled      bool   `json:"REACT_APP_ALERT_ENABLED"`
-	MonitoringEnabled bool   `json:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
-	HomePage          string `json:"REACT_APP_HOMEPAGE,omitempty"`
-	MerlinURL         string `json:"REACT_APP_MERLIN_API,omitempty"`
-	MlpURL            string `json:"REACT_APP_MLP_API,omitempty"`
+	OauthClientID string `json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
+	Environment   string `json:"REACT_APP_ENVIRONMENT,omitempty"`
+	SentryDSN     string `json:"REACT_APP_SENTRY_DSN,omitempty"`
+	DocURL        string `json:"REACT_APP_MERLIN_DOCS_URL,omitempty"`
+	HomePage      string `json:"REACT_APP_HOMEPAGE,omitempty"`
+	MerlinURL     string `json:"REACT_APP_MERLIN_API,omitempty"`
+	MlpURL        string `json:"REACT_APP_MLP_API,omitempty"`
+
+	MonitoringEnabled              bool   `json:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
+	MonitoringPredictionJobBaseURL string `json:"REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"`
+
+	AlertEnabled bool `json:"REACT_APP_ALERT_ENABLED"`
 }
 
 func (h uiEnvHandler) handler(w http.ResponseWriter, r *http.Request) {
