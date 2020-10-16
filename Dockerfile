@@ -25,10 +25,6 @@ COPY api .
 COPY python/batch-predictor ../python/batch-predictor
 COPY db-migrations ./db-migrations
 
-# TODO: After we publish github.com/gojek/mlp, we can remove the next two lines:
-ARG GITHUB_TOKEN
-RUN git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-
 RUN go build -o bin/merlin_api ./cmd/main.go
 
 # ============================================================
