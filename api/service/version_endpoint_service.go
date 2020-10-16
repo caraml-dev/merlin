@@ -175,7 +175,7 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 		}
 
 		modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment)
-		svc, err := ctl.Deploy(modelService)
+		svc, err := ctl.Deploy(modelService, endpoint.Transformer)
 		if err != nil {
 			log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.Id, err)
 			ep.Message = err.Error()

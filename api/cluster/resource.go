@@ -16,6 +16,7 @@ package cluster
 
 import (
 	"fmt"
+	"strings"
 
 	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
 	v1 "k8s.io/api/core/v1"
@@ -45,7 +46,7 @@ const (
 	prometheusPort = "8080"
 )
 
-func createInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
+func createInferenceServiceSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
 	labels := createLabels(modelService)
 
 	objectMeta := metav1.ObjectMeta{
@@ -62,7 +63,7 @@ func createInferenceServiceSpec(modelService *models.Service, config *config.Dep
 		objectMeta.Annotations[annotationPrometheusScrapePort] = prometheusPort
 	}
 
-	return &kfsv1alpha2.InferenceService{
+	inferenceService := &kfsv1alpha2.InferenceService{
 		ObjectMeta: objectMeta,
 		Spec: kfsv1alpha2.InferenceServiceSpec{
 			Default: kfsv1alpha2.EndpointSpec{
@@ -70,6 +71,25 @@ func createInferenceServiceSpec(modelService *models.Service, config *config.Dep
 			},
 		},
 	}
+
+	if transformer != nil && transformer.Enabled {
+		inferenceService.Spec.Default.Transformer = &kfsv1alpha2.TransformerSpec{
+			Custom: &kfsv1alpha2.CustomSpec{
+				Container: v1.Container{
+					Name:    "transformer",
+					Image:   transformer.Image,
+					Command: strings.Split(transformer.Command, " "),
+					Args:    strings.Split(transformer.Args, " "),
+				},
+			},
+			DeploymentSpec: kfsv1alpha2.DeploymentSpec{
+				MinReplicas: transformer.ResourceRequest.MinReplica,
+				MaxReplicas: transformer.ResourceRequest.MaxReplica,
+			},
+		}
+	}
+
+	return inferenceService
 }
 
 func patchInferenceServiceSpec(orig *kfsv1alpha2.InferenceService, modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {

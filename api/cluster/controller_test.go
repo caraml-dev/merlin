@@ -266,7 +266,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			ctl, _ := newController(kfClient, v1Client, deployConfig, containerFetcher)
-			iSvc, err := ctl.Deploy(modelSvc)
+			iSvc, err := ctl.Deploy(modelSvc, nil)
 
 			if tt.wantError {
 				assert.Error(t, err)
@@ -307,6 +307,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 	tests := []struct {
 		name          string
 		modelService  *models.Service
+		transformer   *models.Transformer
 		getResult     *inferenceServiceReactor
 		createResult  *inferenceServiceReactor
 		updateResult  *inferenceServiceReactor
@@ -317,6 +318,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"success: create inference service",
 			modelSvc,
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
@@ -336,6 +338,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"success: update inference service",
 			modelSvc,
+			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
 				nil},
@@ -364,6 +367,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 			},
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
@@ -383,6 +387,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: failed get",
 			modelSvc,
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				errors.New("error")},
@@ -401,6 +406,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: failed create",
 			modelSvc,
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
@@ -419,6 +425,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: failed update",
 			modelSvc,
+			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
 				nil},
@@ -437,6 +444,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: failed check",
 			modelSvc,
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
@@ -454,6 +462,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: predictor error",
 			modelSvc,
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
@@ -472,6 +481,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: routes error",
 			modelSvc,
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
@@ -490,6 +500,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: timeout",
 			modelSvc,
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
@@ -519,6 +530,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 			},
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
@@ -548,6 +560,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 					MemoryRequest: resource.MustParse("10Gi"),
 				},
 			},
+			nil,
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
@@ -597,7 +610,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			ctl, _ := newController(kfClient, v1Client, deployConfig, containerFetcher)
-			iSvc, err := ctl.Deploy(tt.modelService)
+			iSvc, err := ctl.Deploy(tt.modelService, tt.transformer)
 
 			if tt.wantError {
 				assert.Error(t, err)

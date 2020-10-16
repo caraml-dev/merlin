@@ -172,10 +172,10 @@ func TestDeployEndpoint(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			envController := &clusterMock.Controller{}
 			if tt.wantDeployError {
-				envController.On("Deploy", mock.Anything).
+				envController.On("Deploy", mock.Anything, mock.Anything).
 					Return(nil, errors.New("error deploying"))
 			} else {
-				envController.On("Deploy", mock.Anything).
+				envController.On("Deploy", mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
