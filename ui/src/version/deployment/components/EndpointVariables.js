@@ -21,6 +21,7 @@ import {
   EuiFieldText,
   EuiInMemoryTable,
   EuiPanel,
+  EuiSpacer,
   EuiTitle
 } from "@elastic/eui";
 
@@ -130,6 +131,8 @@ export const EndpointVariables = ({ variables, onChange }) => {
       <EuiTitle size="xs">
         <h4>Environment Variables</h4>
       </EuiTitle>
+
+      <EuiSpacer size="s" />
 
       <EuiInMemoryTable
         className="EnvVariables"

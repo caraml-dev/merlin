@@ -20,6 +20,7 @@ import {
   EuiFormRow,
   EuiIcon,
   EuiPanel,
+  EuiSpacer,
   EuiSuperSelect,
   EuiText,
   EuiTextColor,
@@ -105,6 +106,8 @@ export const EndpointEnvironment = ({
       <EuiTitle size="xs">
         <h4>Environment</h4>
       </EuiTitle>
+
+      <EuiSpacer size="s" />
 
       <EuiForm>
         <EuiFormRow
