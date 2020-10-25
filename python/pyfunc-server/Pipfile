@@ -5,7 +5,7 @@ verify_ssl = true
 
 [packages]
 pyfuncserver = {editable = true,extras = ["test"],path = "."}
-merlin-sdk = {version = "*",index = "artifactory"}
+merlin-sdk = "*"
 uvloop = "*"
 
 [requires]
