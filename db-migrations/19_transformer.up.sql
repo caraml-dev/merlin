@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS transformers
     command                 VARCHAR,
     args                    VARCHAR,
     resource_request        JSONB,
+    env_vars                JSONB,
     enabled                 BOOLEAN     NOT NULL DEFAULT false,
     created_at              TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP

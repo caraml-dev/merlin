@@ -36,6 +36,7 @@ class Transformer(object):
         'command': 'str',
         'args': 'str',
         'resource_request': 'ResourceRequest',
+        'env_vars': 'list[EnvVar]',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -46,11 +47,12 @@ class Transformer(object):
         'command': 'command',
         'args': 'args',
         'resource_request': 'resource_request',
+        'env_vars': 'env_vars',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, enabled=None, image=None, command=None, args=None, resource_request=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, enabled=None, image=None, command=None, args=None, resource_request=None, env_vars=None, created_at=None, updated_at=None):  # noqa: E501
         """Transformer - a model defined in Swagger"""  # noqa: E501
 
         self._enabled = None
@@ -58,6 +60,7 @@ class Transformer(object):
         self._command = None
         self._args = None
         self._resource_request = None
+        self._env_vars = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -72,6 +75,8 @@ class Transformer(object):
             self.args = args
         if resource_request is not None:
             self.resource_request = resource_request
+        if env_vars is not None:
+            self.env_vars = env_vars
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -181,6 +186,27 @@ class Transformer(object):
         """
 
         self._resource_request = resource_request
+
+    @property
+    def env_vars(self):
+        """Gets the env_vars of this Transformer.  # noqa: E501
+
+
+        :return: The env_vars of this Transformer.  # noqa: E501
+        :rtype: list[EnvVar]
+        """
+        return self._env_vars
+
+    @env_vars.setter
+    def env_vars(self, env_vars):
+        """Sets the env_vars of this Transformer.
+
+
+        :param env_vars: The env_vars of this Transformer.  # noqa: E501
+        :type: list[EnvVar]
+        """
+
+        self._env_vars = env_vars
 
     @property
     def created_at(self):

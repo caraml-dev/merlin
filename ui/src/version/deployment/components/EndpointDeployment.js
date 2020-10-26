@@ -216,6 +216,7 @@ export const EndpointDeployment = ({
               {model.type === "pyfunc" && (
                 <EuiFlexItem grow={false}>
                   <EuiSpacer size="s" />
+                  {/* TODO: Use new EnvironmentVariables.js */}
                   <EndpointVariables
                     variables={request.env_vars || []}
                     onChange={onVariablesChange}

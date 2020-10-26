@@ -31,6 +31,7 @@ import {
 } from "@elastic/eui";
 import { appConfig } from "../../../config";
 import { ResourceRequest } from "./ResourceRequest";
+import { EnvironmentVariables } from "./EnvironmentVariables";
 
 const extractRegistry = (image, registries) => {
   if (image) {
@@ -72,18 +73,22 @@ export const Transformer = ({
     }
   ]);
 
-  useEffect(() => {
-    if (appConfig.dockerRegistries) {
-      setDockerRegistries([
-        ...dockerRegistries,
-        ...appConfig.dockerRegistries.map(registry => ({
-          value: registry,
-          inputDisplay: dockerRegistryDisplay(registry),
-          dropdownDisplay: dockerRegistryDisplay(registry)
-        }))
-      ]);
-    }
-  }, [appConfig.dockerRegistries]);
+  useEffect(
+    () => {
+      if (appConfig.dockerRegistries) {
+        setDockerRegistries([
+          ...dockerRegistries,
+          ...appConfig.dockerRegistries.map(registry => ({
+            value: registry,
+            inputDisplay: dockerRegistryDisplay(registry),
+            dropdownDisplay: dockerRegistryDisplay(registry)
+          }))
+        ]);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [appConfig.dockerRegistries]
+  );
 
   const [registry, image] = extractRegistry(
     transformer.image,
@@ -99,6 +104,12 @@ export const Transformer = ({
       "image",
       registry !== "docker-hub" ? `${registry}/${value}` : value
     );
+  };
+
+  const onVariablesChange = value => {
+    if (JSON.stringify(value) !== JSON.stringify(transformer.env_vars)) {
+      setValue("env_vars", value);
+    }
   };
 
   return (
@@ -182,10 +193,15 @@ export const Transformer = ({
               resourceRequest={
                 transformer.resource_request || defaultResourceRequest
               }
-              onChange={value =>
-                onChange({ ...transformer, ["resource_request"]: value })
-              }
+              onChange={value => setValue("resource_request", value)}
             />
+
+            <EuiFormRow fullWidth label="Environment Variables">
+              <EnvironmentVariables
+                variables={transformer.env_vars || []}
+                onChange={onVariablesChange}
+              />
+            </EuiFormRow>
           </EuiForm>
         </>
       )}

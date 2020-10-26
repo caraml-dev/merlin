@@ -19,6 +19,7 @@ type Transformer struct {
 	Command         string           `json:"command,omitempty"`
 	Args            string           `json:"args,omitempty"`
 	ResourceRequest *ResourceRequest `json:"resource_request,omitempty"`
+	EnvVars         []EnvVar         `json:"env_vars,omitempty"`
 	CreatedAt       time.Time        `json:"created_at,omitempty"`
 	UpdatedAt       time.Time        `json:"updated_at,omitempty"`
 }

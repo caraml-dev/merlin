@@ -73,20 +73,7 @@ func createInferenceServiceSpec(modelService *models.Service, transformer *model
 	}
 
 	if transformer != nil && transformer.Enabled {
-		inferenceService.Spec.Default.Transformer = &kfsv1alpha2.TransformerSpec{
-			Custom: &kfsv1alpha2.CustomSpec{
-				Container: v1.Container{
-					Name:    "transformer",
-					Image:   transformer.Image,
-					Command: strings.Split(transformer.Command, " "),
-					Args:    strings.Split(transformer.Args, " "),
-				},
-			},
-			DeploymentSpec: kfsv1alpha2.DeploymentSpec{
-				MinReplicas: transformer.ResourceRequest.MinReplica,
-				MaxReplicas: transformer.ResourceRequest.MaxReplica,
-			},
-		}
+		inferenceService.Spec.Default.Transformer = createTransformerSpec(transformer, config)
 	}
 
 	return inferenceService
@@ -183,6 +170,51 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	}
 
 	return predictorSpec
+}
+
+func createTransformerSpec(transformer *models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.TransformerSpec {
+	if transformer.ResourceRequest == nil {
+		transformer.ResourceRequest = &models.ResourceRequest{
+			MinReplica:    config.MinReplica,
+			MaxReplica:    config.MaxReplica,
+			CpuRequest:    config.CpuRequest,
+			MemoryRequest: config.MemoryRequest,
+		}
+	}
+
+	// Set cpu limit and memory limit to be 2x of the requests
+	cpuLimit := transformer.ResourceRequest.CpuRequest.DeepCopy()
+	cpuLimit.Add(transformer.ResourceRequest.CpuRequest)
+	memoryLimit := transformer.ResourceRequest.MemoryRequest.DeepCopy()
+	memoryLimit.Add(transformer.ResourceRequest.MemoryRequest)
+
+	transformerSpec := &kfsv1alpha2.TransformerSpec{
+		Custom: &kfsv1alpha2.CustomSpec{
+			Container: v1.Container{
+				Name:    "transformer",
+				Image:   transformer.Image,
+				Command: strings.Split(transformer.Command, " "),
+				Args:    strings.Split(transformer.Args, " "),
+				Env:     transformer.EnvVars.ToKubernetesEnvVars(),
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceCPU:    transformer.ResourceRequest.CpuRequest,
+						v1.ResourceMemory: transformer.ResourceRequest.MemoryRequest,
+					},
+					Limits: v1.ResourceList{
+						v1.ResourceCPU:    cpuLimit,
+						v1.ResourceMemory: memoryLimit,
+					},
+				},
+			},
+		},
+		DeploymentSpec: kfsv1alpha2.DeploymentSpec{
+			MinReplicas: transformer.ResourceRequest.MinReplica,
+			MaxReplicas: transformer.ResourceRequest.MaxReplica,
+		},
+	}
+
+	return transformerSpec
 }
 
 func createLabels(modelService *models.Service) map[string]string {

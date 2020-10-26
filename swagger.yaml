@@ -1176,6 +1176,10 @@ definitions:
         type: "string"
       resource_request:
         $ref: "#/definitions/ResourceRequest"
+      env_vars:
+        type: "array"
+        items:
+          $ref: "#/definitions/EnvVar"
       created_at:
         type: "string"
         format: "date-time"

@@ -22,5 +22,6 @@ type Transformer struct {
 	Command         string           `json:"command,omitempty"`
 	Args            string           `json:"args,omitempty"`
 	ResourceRequest *ResourceRequest `json:"resource_request" gorm:"resource_request"`
+	EnvVars         EnvVars          `json:"env_vars" gorm:"column:env_vars"`
 	CreatedUpdated
 }
