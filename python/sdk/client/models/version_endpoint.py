@@ -42,6 +42,7 @@ class VersionEndpoint(object):
         'message': 'str',
         'resource_request': 'ResourceRequest',
         'env_vars': 'list[EnvVar]',
+        'transformer': 'Transformer',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -58,11 +59,12 @@ class VersionEndpoint(object):
         'message': 'message',
         'resource_request': 'resource_request',
         'env_vars': 'env_vars',
+        'transformer': 'transformer',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, env_vars=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, env_vars=None, transformer=None, created_at=None, updated_at=None):  # noqa: E501
         """VersionEndpoint - a model defined in Swagger"""  # noqa: E501
 
         self._id = None
@@ -76,6 +78,7 @@ class VersionEndpoint(object):
         self._message = None
         self._resource_request = None
         self._env_vars = None
+        self._transformer = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -102,6 +105,8 @@ class VersionEndpoint(object):
             self.resource_request = resource_request
         if env_vars is not None:
             self.env_vars = env_vars
+        if transformer is not None:
+            self.transformer = transformer
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -337,6 +342,27 @@ class VersionEndpoint(object):
         """
 
         self._env_vars = env_vars
+
+    @property
+    def transformer(self):
+        """Gets the transformer of this VersionEndpoint.  # noqa: E501
+
+
+        :return: The transformer of this VersionEndpoint.  # noqa: E501
+        :rtype: Transformer
+        """
+        return self._transformer
+
+    @transformer.setter
+    def transformer(self, transformer):
+        """Sets the transformer of this VersionEndpoint.
+
+
+        :param transformer: The transformer of this VersionEndpoint.  # noqa: E501
+        :type: Transformer
+        """
+
+        self._transformer = transformer
 
     @property
     def created_at(self):

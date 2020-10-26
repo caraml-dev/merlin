@@ -60,5 +60,6 @@ from client.models.resource_request import ResourceRequest
 from client.models.result_type import ResultType
 from client.models.save_mode import SaveMode
 from client.models.secret import Secret
+from client.models.transformer import Transformer
 from client.models.version import Version
 from client.models.version_endpoint import VersionEndpoint
