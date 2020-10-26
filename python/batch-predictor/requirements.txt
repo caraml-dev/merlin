@@ -2,5 +2,5 @@ pyspark==2.4.5
 mlflow==1.6.0
 cloudpickle==1.2.2
 pyarrow==0.14.1
-merlin-sdk==0.6.0.dev0
+merlin-sdk==0.7.0
 protobuf>=3.0

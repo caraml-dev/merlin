@@ -131,6 +131,7 @@ jobs:
 
   publish-pyfunc-base-docker:
     runs-on: ubuntu-latest
+    needs: publish-python-sdk
     steps:
       - uses: actions/checkout@v2
       - name: Build and push PyFunc Base Docker image
@@ -147,6 +148,7 @@ jobs:
 
   publish-pyspark-base-docker:
     runs-on: ubuntu-latest
+    needs: publish-python-sdk
     steps:
       - uses: actions/checkout@v2
       - name: Build and push PySpark Base Docker image

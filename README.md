@@ -28,7 +28,11 @@ Requirements:
 
 ## Documentation
 
-Go to the [docs](/docs) folder for the full documentation, examples and guides.
+Go to the [docs](/docs) folder for the full documentation and guides.
+
+### Python SDK Documentation
+
+Click [here](https://merlin-sdk.readthedocs.io) to getting started on using the Python SDK.
 
 ### API Documentation
 

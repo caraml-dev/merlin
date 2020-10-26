@@ -11,7 +11,7 @@ Installation
 ============
 
 
-Install `merlin-sdk` from artifactory by running this command:
+Install `merlin-sdk` from PyPI by running this command:
 ::
     pip install merlin-sdk
 
