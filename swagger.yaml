@@ -17,7 +17,7 @@ info:
   title: "Merlin"
   description: "API Guide for accessing Merlin's model management, deployment, and serving functionalities"
   version: "0.7.0"
-host: "localhost:3000"
+host: "localhost:8080"
 basePath: "/v1"
 tags:
   - name: "project"

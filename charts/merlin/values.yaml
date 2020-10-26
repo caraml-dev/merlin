@@ -14,7 +14,7 @@ merlin:
       memory: 1Gi
   service:
     externalPort: 8080
-    internalPort: 3000
+    internalPort: 8080
   ingress:
     enabled: false
 

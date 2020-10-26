@@ -24,12 +24,12 @@ import (
 )
 
 func TestJoinURL(t *testing.T) {
-	res := utils.JoinURL("http://localhost:3000", "some", "path")
-	assert.Equal(t, "http://localhost:3000/some/path", res)
+	res := utils.JoinURL("http://localhost:8080", "some", "path")
+	assert.Equal(t, "http://localhost:8080/some/path", res)
 
-	res = utils.JoinURL("http://localhost:3000")
-	assert.Equal(t, "http://localhost:3000/", res)
+	res = utils.JoinURL("http://localhost:8080")
+	assert.Equal(t, "http://localhost:8080/", res)
 
-	res = utils.JoinURL("http://localhost:3000/", "/api", "/v1/")
-	assert.Equal(t, "http://localhost:3000/api/v1", res)
+	res = utils.JoinURL("http://localhost:8080/", "/api", "/v1/")
+	assert.Equal(t, "http://localhost:8080/api/v1", res)
 }

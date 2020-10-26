@@ -27,7 +27,7 @@ const (
 
 type Config struct {
 	Environment string `envconfig:"ENVIRONMENT" default:"dev"`
-	Port        int    `envconfig:"PORT" default:"3000"`
+	Port        int    `envconfig:"PORT" default:"8080"`
 
 	DbConfig DatabaseConfig
 	Sentry   sentry.Config   `split_words:"false" envconfig:"SENTRY"`
