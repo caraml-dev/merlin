@@ -109,6 +109,11 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 		endpoint.ResourceRequest = newEndpoint.ResourceRequest
 	}
 
+	if newEndpoint.Transformer.Enabled {
+		endpoint.Transformer = newEndpoint.Transformer
+		endpoint.Transformer.VersionEndpointID = endpoint.Id
+	}
+
 	// Configure environment variables for Pyfunc model
 	if model.Type == models.ModelTypePyFunc {
 		pyfuncDefaultEnvVars := models.PyfuncDefaultEnvVars(*model, *version, defaultWorkers)

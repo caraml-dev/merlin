@@ -41,9 +41,7 @@ type VersionEndpoint struct {
 	Message              string           `json:"message"`
 	ResourceRequest      *ResourceRequest `json:"resource_request" gorm:"resource_request"`
 	EnvVars              EnvVars          `json:"env_vars" gorm:"column:env_vars"`
-
-	TransformerID Id           `json:"-" gorm:"-"`
-	Transformer   *Transformer `json:"transformer,omitempty"`
+	Transformer          Transformer      `json:"transformer,omitempty" gorm:"foreignKey:VersionEndpointID"`
 
 	CreatedUpdated
 }

@@ -15,7 +15,7 @@
 CREATE TABLE IF NOT EXISTS transformers
 (
     id                      SERIAL      PRIMARY KEY,
-    version_endpoint_id     UUID        REFERENCES version_endpoints(id)    NOT NULL,
+    version_endpoint_id     UUID        NOT NULL,
     image                   VARCHAR     NOT NULL,
     command                 VARCHAR,
     args                    VARCHAR,
@@ -23,5 +23,6 @@ CREATE TABLE IF NOT EXISTS transformers
     env_vars                JSONB,
     enabled                 BOOLEAN     NOT NULL DEFAULT false,
     created_at              TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at              TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at              TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(version_endpoint_id)
 );

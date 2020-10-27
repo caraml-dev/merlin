@@ -191,11 +191,9 @@ func createTransformerSpec(transformer *models.Transformer, config *config.Deplo
 	transformerSpec := &kfsv1alpha2.TransformerSpec{
 		Custom: &kfsv1alpha2.CustomSpec{
 			Container: v1.Container{
-				Name:    "transformer",
-				Image:   transformer.Image,
-				Command: strings.Split(transformer.Command, " "),
-				Args:    strings.Split(transformer.Args, " "),
-				Env:     transformer.EnvVars.ToKubernetesEnvVars(),
+				Name:  "transformer",
+				Image: transformer.Image,
+				Env:   transformer.EnvVars.ToKubernetesEnvVars(),
 				Resources: v1.ResourceRequirements{
 					Requests: v1.ResourceList{
 						v1.ResourceCPU:    transformer.ResourceRequest.CpuRequest,
@@ -212,6 +210,19 @@ func createTransformerSpec(transformer *models.Transformer, config *config.Deplo
 			MinReplicas: transformer.ResourceRequest.MinReplica,
 			MaxReplicas: transformer.ResourceRequest.MaxReplica,
 		},
+	}
+
+	if transformer.Command != "" {
+		command := strings.Split(transformer.Command, " ")
+		if len(command) > 0 {
+			transformerSpec.Custom.Container.Command = command
+		}
+	}
+	if transformer.Args != "" {
+		args := strings.Split(transformer.Args, " ")
+		if len(args) > 0 {
+			transformerSpec.Custom.Container.Args = args
+		}
 	}
 
 	return transformerSpec

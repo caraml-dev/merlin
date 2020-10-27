@@ -143,6 +143,9 @@ export const EndpointDeployment = ({
     );
 
     let targetResourceRequest = defaultResourceRequest;
+    let targetEnvVars = [];
+    let targetTransformer = undefined;
+
     if (selectedEnvironment) {
       if (selectedEnvironment.default_resource_request) {
         targetResourceRequest = selectedEnvironment.default_resource_request;
@@ -153,7 +156,6 @@ export const EndpointDeployment = ({
       e => e.environment_name === request.environment_name
     );
 
-    let targetEnvVars = [];
     if (endpoint) {
       if (endpoint.resource_request) {
         targetResourceRequest = endpoint.resource_request;
@@ -163,12 +165,16 @@ export const EndpointDeployment = ({
           envVar => envVar.name !== "MODEL_NAME" && envVar.name !== "MODEL_DIR"
         );
       }
+      if (endpoint.transformer) {
+        targetTransformer = endpoint.transformer;
+      }
     }
 
     setRequest(r => ({
       ...r,
       resource_request: targetResourceRequest,
-      env_vars: targetEnvVars
+      env_vars: targetEnvVars,
+      transformer: targetTransformer
     }));
   }, [environments, version.endpoints, request.environment_name, setRequest]);
 
