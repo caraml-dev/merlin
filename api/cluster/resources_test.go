@@ -78,7 +78,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 	tests := []struct {
 		name        string
 		modelSvc    *models.Service
-		transformer *models.Transformer
+		transformer models.Transformer
 		exp         *v1alpha2.InferenceService
 	}{
 		{
@@ -307,7 +307,6 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				EnvVars:  models.PyfuncDefaultEnvVars(models.Model{Name: model.Name}, models.Version{Id: models.Id(1), ArtifactUri: model.ArtifactUri}, cpuRequest.Value()),
 				Metadata: model.Metadata,
 			},
-
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionId),
