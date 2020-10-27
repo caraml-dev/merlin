@@ -22,6 +22,7 @@ from merlin.endpoint import ModelEndpoint, VersionEndpoint
 from merlin.environment import Environment
 from merlin.model import Model, ModelType, ModelVersion, Project
 from merlin.resource_request import ResourceRequest
+from merlin.transformer import Transformer
 
 _merlin_client: Optional[MerlinClient] = None
 _active_project: Optional[Project]
@@ -324,7 +325,8 @@ def log_model(model_dir):
 def deploy(model_version: ModelVersion = None,
            environment_name: str = None,
            resource_request: ResourceRequest = None,
-           env_vars: Dict[str, str] = None) -> VersionEndpoint:
+           env_vars: Dict[str, str] = None,
+           transformer: Transformer = None) -> VersionEndpoint:
     """
     Deploy a model version.
 
@@ -338,7 +340,8 @@ def deploy(model_version: ModelVersion = None,
 
     return _merlin_client.deploy(model_version,  # type: ignore
                                  environment_name,
-                                 resource_request, env_vars)
+                                 resource_request, env_vars,
+                                 transformer)
 
 
 def undeploy(model_version=None,

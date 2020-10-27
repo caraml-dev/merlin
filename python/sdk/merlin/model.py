@@ -42,6 +42,7 @@ from merlin.batch.source import BigQuerySource
 from merlin.docker.docker import copy_pyfunc_dockerfile, copy_standard_dockerfile
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
 from merlin.resource_request import ResourceRequest
+from merlin.transformer import Transformer
 from merlin.util import autostr, download_files_from_gcs, guess_mlp_ui_url, valid_name_check
 from merlin.validation import validate_model_dir
 from merlin.version import VERSION
@@ -860,13 +861,16 @@ class ModelVersion:
 
     def deploy(self, environment_name: str = None,
                resource_request: ResourceRequest = None,
-               env_vars: Dict[str, str] = None) -> VersionEndpoint:
+               env_vars: Dict[str, str] = None,
+               transformer: Transformer = None) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
         and log_pyfunc_model has to be called beforehand
 
         :param environment_name: target environment to which the model version will be deployed to. If left empty it will deploy to default environment.
         :param resource_request: The resource requirement and replicas requests for model version endpoint.
+        :param env_vars: List of environment variables to be passed to the model container.
+        :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
         :return: Endpoint object
         """
 
@@ -913,11 +917,19 @@ class ModelVersion:
                     for name, value in env_vars.items():
                         target_env_vars.append(client.EnvVar(name, value))
 
+        target_transformer = None
+        if transformer is not None:
+            target_transformer = client.Transformer(
+                transformer.enabled, transformer.image,
+                transformer.command, transformer.args,
+                transformer.resource_request, transformer.env_vars)
+
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
         endpoint = client.VersionEndpoint(environment_name=target_env_name,
                                           resource_request=target_resource_request,
-                                          env_vars=target_env_vars)
+                                          env_vars=target_env_vars,
+                                          transformer=target_transformer)
         endpoint = endpoint_api \
             .models_model_id_versions_version_id_endpoint_post(int(model.id),
                                                                int(self.id),
