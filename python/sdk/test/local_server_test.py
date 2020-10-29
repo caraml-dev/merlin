@@ -142,7 +142,7 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth):
     port = _get_free_port()
     p = Process(target=v.start_server, kwargs={"port": port})
     p.start()
-    _wait_server_ready(f"http://{host}:{port}", timeout_second=900)
+    _wait_server_ready(f"http://{host}:{port}", timeout_second=600)
     resp = requests.post(_get_local_endpoint(v, port), json=request_json)
 
     assert resp.status_code == 200
