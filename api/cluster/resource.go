@@ -46,7 +46,7 @@ const (
 	prometheusPort = "8080"
 )
 
-func createInferenceServiceSpec(modelService *models.Service, transformer models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
+func createInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
 	labels := createLabels(modelService)
 
 	objectMeta := metav1.ObjectMeta{
@@ -72,8 +72,8 @@ func createInferenceServiceSpec(modelService *models.Service, transformer models
 		},
 	}
 
-	if transformer.Enabled {
-		inferenceService.Spec.Default.Transformer = createTransformerSpec(transformer, config)
+	if modelService.Transformer != nil && modelService.Transformer.Enabled {
+		inferenceService.Spec.Default.Transformer = createTransformerSpec(modelService.Transformer, config)
 	}
 
 	return inferenceService
@@ -172,7 +172,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	return predictorSpec
 }
 
-func createTransformerSpec(transformer models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.TransformerSpec {
+func createTransformerSpec(transformer *models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.TransformerSpec {
 	if transformer.ResourceRequest == nil {
 		transformer.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.MinReplica,

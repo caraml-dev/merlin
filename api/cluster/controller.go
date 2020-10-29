@@ -32,7 +32,7 @@ import (
 )
 
 type Controller interface {
-	Deploy(modelService *models.Service, transformer models.Transformer) (*models.Service, error)
+	Deploy(modelService *models.Service) (*models.Service, error)
 	Delete(modelService *models.Service) (*models.Service, error)
 	ContainerFetcher
 }
@@ -105,7 +105,7 @@ func newController(kfservingClient kfservice.ServingV1alpha2Interface, nsClient 
 	}, nil
 }
 
-func (k *controller) Deploy(modelService *models.Service, transformer models.Transformer) (*models.Service, error) {
+func (k *controller) Deploy(modelService *models.Service) (*models.Service, error) {
 	if modelService.ResourceRequest != nil {
 		cpuRequest, _ := modelService.ResourceRequest.CpuRequest.AsInt64()
 		maxCpu, _ := k.config.MaxCpu.AsInt64()
@@ -136,7 +136,7 @@ func (k *controller) Deploy(modelService *models.Service, transformer models.Tra
 		}
 
 		// create new resource
-		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(createInferenceServiceSpec(modelService, transformer, k.config))
+		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(createInferenceServiceSpec(modelService, k.config))
 		if err != nil {
 			log.Errorf("unable to create inference service %s %v", svcName, err)
 			return nil, ErrUnableToCreateInferenceService

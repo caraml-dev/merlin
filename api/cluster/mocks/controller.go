@@ -35,13 +35,13 @@ func (_m *Controller) Delete(modelService *models.Service) (*models.Service, err
 	return r0, r1
 }
 
-// Deploy provides a mock function with given fields: modelService, transformer
-func (_m *Controller) Deploy(modelService *models.Service, transformer models.Transformer) (*models.Service, error) {
-	ret := _m.Called(modelService, transformer)
+// Deploy provides a mock function with given fields: modelService
+func (_m *Controller) Deploy(modelService *models.Service) (*models.Service, error) {
+	ret := _m.Called(modelService)
 
 	var r0 *models.Service
-	if rf, ok := ret.Get(0).(func(*models.Service, models.Transformer) *models.Service); ok {
-		r0 = rf(modelService, transformer)
+	if rf, ok := ret.Get(0).(func(*models.Service) *models.Service); ok {
+		r0 = rf(modelService)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.Service)
@@ -49,8 +49,8 @@ func (_m *Controller) Deploy(modelService *models.Service, transformer models.Tr
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*models.Service, models.Transformer) error); ok {
-		r1 = rf(modelService, transformer)
+	if rf, ok := ret.Get(1).(func(*models.Service) error); ok {
+		r1 = rf(modelService)
 	} else {
 		r1 = ret.Error(1)
 	}

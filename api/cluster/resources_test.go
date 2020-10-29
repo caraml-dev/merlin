@@ -76,10 +76,9 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		modelSvc    *models.Service
-		transformer models.Transformer
-		exp         *v1alpha2.InferenceService
+		name     string
+		modelSvc *models.Service
+		exp      *v1alpha2.InferenceService
 	}{
 		{
 			name: "tensorflow spec",
@@ -358,7 +357,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				QueueResourcePercentage: queueResourcePercentage,
 			}
 
-			infSvcSpec := createInferenceServiceSpec(tt.modelSvc, tt.transformer, deployConfig)
+			infSvcSpec := createInferenceServiceSpec(tt.modelSvc, deployConfig)
 			assert.Equal(t, tt.exp, infSvcSpec)
 		})
 	}

@@ -109,7 +109,7 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 		endpoint.ResourceRequest = newEndpoint.ResourceRequest
 	}
 
-	if newEndpoint.Transformer.Enabled {
+	if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
 		endpoint.Transformer = newEndpoint.Transformer
 		endpoint.Transformer.VersionEndpointID = endpoint.Id
 	}
@@ -179,8 +179,8 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 			modelOpt = models.NewPyTorchModelOption(version)
 		}
 
-		modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment)
-		svc, err := ctl.Deploy(modelService, endpoint.Transformer)
+		modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment, endpoint.Transformer)
+		svc, err := ctl.Deploy(modelService)
 		if err != nil {
 			log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.Id, err)
 			ep.Message = err.Error()
