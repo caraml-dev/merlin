@@ -20,7 +20,11 @@ import { EuiButtonIcon, EuiFieldText, EuiInMemoryTable } from "@elastic/eui";
 require("../../../assets/scss/EnvironmentVariables.scss");
 
 const filterProtectedEnvVar = envVar => {
-  return envVar.name !== "MODEL_NAME" && envVar.name !== "MODEL_DIR";
+  return (
+    envVar.name !== "MODEL_NAME" &&
+    envVar.name !== "MODEL_DIR" &&
+    !envVar.name.startsWith("MERLIN_TRANSFORMER")
+  );
 };
 
 export const EnvironmentVariables = ({ variables, onChange }) => {
