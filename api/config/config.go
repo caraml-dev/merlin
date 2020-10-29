@@ -65,6 +65,7 @@ type ReactAppConfig struct {
 	HomePage          string `envconfig:"REACT_APP_HOMEPAGE"`
 	MerlinURL         string `envconfig:"REACT_APP_MERLIN_API"`
 	MlpURL            string `envconfig:"REACT_APP_MLP_API"`
+	DockerRegistries  string `envconfig:"REACT_APP_DOCKER_REGISTRIES"`
 }
 
 type DatabaseConfig struct {

@@ -23,6 +23,9 @@ merlin:
   apiHost: http://merlin.mlp/v1
   docsURL: ""
 
+  # Comma-separated value of Docker registries that can be chosen in deployment page
+  dockerRegistries: ghcr.io/gojek,ghcr.io/your-company
+
   mlpApi:
     apiHost: http://mlp.mlp:8080/v1
     # encryptionKey must be specified using --set flag.
