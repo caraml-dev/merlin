@@ -972,11 +972,12 @@ class ModelVersion:
                 raise ValueError("resource request must be specified")
 
         resource_request.validate()
-        resource_request = client.ResourceRequest(
+
+        target_resource_request = client.ResourceRequest(
             resource_request.min_replica, resource_request.max_replica,
             resource_request.cpu_request, resource_request.memory_request)
 
-        env_vars = []
+        target_env_vars = []
         if transformer.env_vars is not None:
             if not isinstance(transformer.env_vars, dict):
                 raise ValueError(
@@ -984,12 +985,12 @@ class ModelVersion:
 
             if len(transformer.env_vars) > 0:
                 for name, value in transformer.env_vars.items():
-                    env_vars.append(client.EnvVar(name, value))
+                    target_env_vars.append(client.EnvVar(name, value))
 
         return client.Transformer(
             transformer.enabled, transformer.image,
             transformer.command, transformer.args,
-            resource_request, env_vars)
+            target_resource_request, target_env_vars)
 
     def undeploy(self, environment_name: str = None):
         """

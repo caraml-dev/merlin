@@ -1,6 +1,6 @@
 - name: "id-dev"
   is_default: true
-  cluster: "dev"
+  cluster: "d-gods-id-models"
   region: "id"
   gcp_project: ""
   deployment_timeout: "10m"

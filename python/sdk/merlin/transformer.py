@@ -40,11 +40,11 @@ class Transformer:
         return self._image
 
     @property
-    def command(self) -> str:
+    def command(self) -> Optional[str]:
         return self._command
 
     @property
-    def args(self) -> str:
+    def args(self) -> Optional[str]:
         return self._args
 
     @property
