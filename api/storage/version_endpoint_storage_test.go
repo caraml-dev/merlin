@@ -71,6 +71,20 @@ func TestVersionsService_CountEndpoints(t *testing.T) {
 	})
 }
 
+func TestVersionEndpointsStorage_GetTransformer(t *testing.T) {
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		endpoints := populateVersionEndpointTable(db)
+		endpointSvc := NewVersionEndpointStorage(db)
+
+		actualEndpoint, err := endpointSvc.Get(endpoints[2].Id)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, actualEndpoint)
+		assert.NotNil(t, actualEndpoint.Transformer)
+		assert.Equal(t, actualEndpoint.Transformer.Image, endpoints[2].Transformer.Image)
+	})
+}
+
 func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 	isDefaultTrue := true
 	p := mlp.Project{
@@ -130,6 +144,10 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 		VersionModelId:  m.Id,
 		Status:          "pending",
 		EnvironmentName: env2.Name,
+		Transformer: &models.Transformer{
+			Enabled: true,
+			Image:   "ghcr.io/gojek/merlin-transformer-test",
+		},
 	}
 	db.Create(&ep3)
 	return []*models.VersionEndpoint{&ep1, &ep2, &ep3}

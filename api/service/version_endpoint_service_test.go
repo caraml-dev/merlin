@@ -130,7 +130,7 @@ func TestDeployEndpoint(t *testing.T) {
 			false,
 		},
 		{
-			"success: empty pytorch class name will fallback to PyTorchModel",
+			"success: empty pyfunc model",
 			args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyFunc},
@@ -164,6 +164,25 @@ func TestDeployEndpoint(t *testing.T) {
 				&models.VersionEndpoint{},
 			},
 			true,
+			false,
+		},
+		{
+			"success: pytorch model with transformer",
+			args{
+				env,
+				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
+				&models.Version{Id: 1, Properties: models.KV{
+					models.PropertyPyTorchClassName: "MyModel",
+				}},
+				&models.VersionEndpoint{
+					Transformer: &models.Transformer{
+						Enabled:         true,
+						Image:           "ghcr.io/gojek/merlin-transformer-test",
+						ResourceRequest: env.DefaultResourceRequest,
+					},
+				},
+			},
+			false,
 			false,
 		},
 	}

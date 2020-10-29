@@ -83,6 +83,19 @@ func TestVersionsService_FindById(t *testing.T) {
 		}
 		db.Create(&endpoint2)
 
+		endpoint3 := &models.VersionEndpoint{
+			Id:              uuid.New(),
+			VersionId:       v.Id,
+			VersionModelId:  m.Id,
+			Status:          models.EndpointTerminated,
+			EnvironmentName: env.Name,
+			Transformer: &models.Transformer{
+				Enabled: true,
+				Image:   "ghcr.io/gojek/merlin-transformer-test",
+			},
+		}
+		db.Create(&endpoint3)
+
 		mockMlpApiClient := &mlpMock.APIClient{}
 		mockMlpApiClient.On("GetProjectByID", mock.Anything, int32(m.ProjectId)).Return(p, nil)
 
@@ -93,6 +106,14 @@ func TestVersionsService_FindById(t *testing.T) {
 
 		assert.NotNil(t, found)
 		assert.Equal(t, "http://mlflow:5000/#/experiments/1/runs/1", found.MlflowUrl)
-		assert.Equal(t, 2, len(found.Endpoints))
+		assert.Equal(t, 3, len(found.Endpoints))
+
+		var transformer *models.Transformer
+		for _, endpoint := range found.Endpoints {
+			if endpoint.Transformer != nil {
+				transformer = endpoint.Transformer
+			}
+		}
+		assert.Equal(t, endpoint3.Transformer.Image, transformer.Image)
 	})
 }
