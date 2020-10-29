@@ -336,11 +336,15 @@ def deploy(model_version: ModelVersion = None,
     _check_active_client()
     if model_version is None:
         _check_active_model_version()
-        return _active_model_version.deploy(environment_name)  # type: ignore
+        return _active_model_version.deploy(environment_name,  # type: ignore
+                                            resource_request,
+                                            env_vars,
+                                            transformer)
 
     return _merlin_client.deploy(model_version,  # type: ignore
                                  environment_name,
-                                 resource_request, env_vars,
+                                 resource_request,
+                                 env_vars,
                                  transformer)
 
 

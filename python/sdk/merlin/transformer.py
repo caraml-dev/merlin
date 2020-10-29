@@ -20,7 +20,7 @@ from merlin.util import autostr
 @autostr
 class Transformer:
     def __init__(self, enabled: bool, image: str,
-                 command: str, args: str,
+                 command: str = None, args: str = None,
                  resource_request: ResourceRequest = None,
                  env_vars: Dict[str, str] = None):
         self._enabled = enabled
