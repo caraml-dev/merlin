@@ -915,7 +915,7 @@ class ModelVersion:
 
                 if len(env_vars) > 0:
                     for name, value in env_vars.items():
-                        target_env_vars.append(client.EnvVar(name, value))
+                        target_env_vars.append(client.EnvVar(str(name), str(value)))
 
         target_transformer = None
         if transformer is not None:
@@ -985,7 +985,7 @@ class ModelVersion:
 
             if len(transformer.env_vars) > 0:
                 for name, value in transformer.env_vars.items():
-                    target_env_vars.append(client.EnvVar(name, value))
+                    target_env_vars.append(client.EnvVar(str(name), str(value)))
 
         return client.Transformer(
             transformer.enabled, transformer.image,
