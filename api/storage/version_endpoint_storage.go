@@ -67,6 +67,5 @@ func (v *versionEndpointStorage) query() *gorm.DB {
 		Preload("Environment").
 		Preload("Transformer").
 		Joins("JOIN environments on environments.name = version_endpoints.environment_name").
-		Joins("JOIN transformers on transformers.version_endpoint_id = version_endpoints.id").
 		Select("version_endpoints.*")
 }
