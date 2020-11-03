@@ -1,5 +1,5 @@
 name: release-e2e-test
-on: workflow_dispatch
+on: [workflow_dispatch, pull_request]
 jobs:
   get-version:
     runs-on: ubuntu-latest
@@ -136,7 +136,8 @@ jobs:
             --wait --timeout=5m
       - name: Deploy Merlin
         env:
+          MERLIN_CHART_PATH: merlin/charts/merlin
           MERLIN_IMAGE_TAG: ${{ needs.get-version.outputs.version }}
-        run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
+        run: ./merlin/scripts/e2e/deploy-merlin.sh
       - name: Run E2E test
         run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
