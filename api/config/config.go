@@ -27,7 +27,7 @@ const (
 
 type Config struct {
 	Environment string `envconfig:"ENVIRONMENT" default:"dev"`
-	Port        int    `envconfig:"PORT" default:"3000"`
+	Port        int    `envconfig:"PORT" default:"8080"`
 
 	DbConfig DatabaseConfig
 	Sentry   sentry.Config   `split_words:"false" envconfig:"SENTRY"`
@@ -65,6 +65,7 @@ type ReactAppConfig struct {
 	HomePage          string `envconfig:"REACT_APP_HOMEPAGE"`
 	MerlinURL         string `envconfig:"REACT_APP_MERLIN_API"`
 	MlpURL            string `envconfig:"REACT_APP_MLP_API"`
+	DockerRegistries  string `envconfig:"REACT_APP_DOCKER_REGISTRIES"`
 }
 
 type DatabaseConfig struct {

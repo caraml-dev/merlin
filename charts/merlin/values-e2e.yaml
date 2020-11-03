@@ -11,7 +11,7 @@ merlin:
       memory: 256Mi
   service:
     externalPort: 8080
-    internalPort: 3000
+    internalPort: 8080
   mlpApi:
     encryptionKey: password
   sentry:

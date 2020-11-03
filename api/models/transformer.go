@@ -12,24 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build unit
+package models
 
-package utils_test
+import "github.com/google/uuid"
 
-import (
-	"testing"
-
-	"github.com/gojek/merlin/utils"
-	"github.com/stretchr/testify/assert"
-)
-
-func TestJoinURL(t *testing.T) {
-	res := utils.JoinURL("http://localhost:8080", "some", "path")
-	assert.Equal(t, "http://localhost:8080/some/path", res)
-
-	res = utils.JoinURL("http://localhost:8080")
-	assert.Equal(t, "http://localhost:8080/", res)
-
-	res = utils.JoinURL("http://localhost:8080/", "/api", "/v1/")
-	assert.Equal(t, "http://localhost:8080/api/v1", res)
+// Transformer is a service for pre/post-processing steps.
+type Transformer struct {
+	ID                string    `json:"id"`
+	Enabled           bool      `json:"enabled"`
+	VersionEndpointID uuid.UUID `json:"version_endpoint_id"`
+	// Docker image name.
+	Image           string           `json:"image"`
+	Command         string           `json:"command,omitempty"`
+	Args            string           `json:"args,omitempty"`
+	ResourceRequest *ResourceRequest `json:"resource_request"`
+	EnvVars         EnvVars          `json:"env_vars"`
+	CreatedUpdated
 }

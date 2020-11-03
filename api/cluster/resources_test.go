@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
+	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -306,7 +307,6 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				EnvVars:  models.PyfuncDefaultEnvVars(models.Model{Name: model.Name}, models.Version{Id: models.Id(1), ArtifactUri: model.ArtifactUri}, cpuRequest.Value()),
 				Metadata: model.Metadata,
 			},
-
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionId),
@@ -495,6 +495,83 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 
 			infSvcSpec := patchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig)
 			assert.Equal(t, tt.exp, infSvcSpec)
+		})
+	}
+}
+
+func Test_createTransformerSpec(t *testing.T) {
+	cpuRequest := resource.MustParse("1")
+	memoryRequest := resource.MustParse("1Gi")
+	cpuLimit := cpuRequest.DeepCopy()
+	cpuLimit.Add(cpuRequest)
+	memoryLimit := memoryRequest.DeepCopy()
+	memoryLimit.Add(memoryRequest)
+
+	type args struct {
+		modelService *models.Service
+		transformer  *models.Transformer
+		config       *config.DeploymentConfig
+	}
+	tests := []struct {
+		name string
+		args args
+		want *kfsv1alpha2.TransformerSpec
+	}{
+		{
+			"complete",
+			args{
+				&models.Service{
+					Name:      "test-1",
+					Namespace: "test",
+				},
+				&models.Transformer{
+					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Command: "python",
+					Args:    "main.py",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    1,
+						MaxReplica:    1,
+						CpuRequest:    cpuRequest,
+						MemoryRequest: memoryRequest,
+					},
+				},
+				&config.DeploymentConfig{},
+			},
+			&kfsv1alpha2.TransformerSpec{
+				Custom: &kfsv1alpha2.CustomSpec{
+					Container: v1.Container{
+						Name:    "transformer",
+						Image:   "ghcr.io/gojek/merlin-transformer-test",
+						Command: []string{"python"},
+						Args:    []string{"main.py"},
+						Env: []v1.EnvVar{
+							{Name: envTransformerPort, Value: defaultTransformerPort},
+							{Name: envTransformerModelName, Value: "test-1"},
+							{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
+						},
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceCPU:    cpuRequest,
+								v1.ResourceMemory: memoryRequest,
+							},
+							Limits: v1.ResourceList{
+								v1.ResourceCPU:    cpuLimit,
+								v1.ResourceMemory: memoryLimit,
+							},
+						},
+					},
+				},
+				DeploymentSpec: kfsv1alpha2.DeploymentSpec{
+					MinReplicas: 1,
+					MaxReplicas: 1,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := createTransformerSpec(tt.args.modelService, tt.args.transformer, tt.args.config)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

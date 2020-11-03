@@ -195,13 +195,14 @@ func main() {
 
 	reactConfig := cfg.ReactAppConfig
 	uiEnv := uiEnvHandler{
-		OauthClientID: reactConfig.OauthClientID,
-		Environment:   reactConfig.Environment,
-		SentryDSN:     reactConfig.SentryDSN,
-		DocURL:        reactConfig.DocURL,
-		HomePage:      reactConfig.HomePage,
-		MerlinURL:     reactConfig.MerlinURL,
-		MlpURL:        reactConfig.MlpURL,
+		OauthClientID:    reactConfig.OauthClientID,
+		Environment:      reactConfig.Environment,
+		SentryDSN:        reactConfig.SentryDSN,
+		DocURL:           reactConfig.DocURL,
+		HomePage:         reactConfig.HomePage,
+		MerlinURL:        reactConfig.MerlinURL,
+		MlpURL:           reactConfig.MlpURL,
+		DockerRegistries: reactConfig.DockerRegistries,
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
@@ -223,13 +224,14 @@ func main() {
 }
 
 type uiEnvHandler struct {
-	OauthClientID string `json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
-	Environment   string `json:"REACT_APP_ENVIRONMENT,omitempty"`
-	SentryDSN     string `json:"REACT_APP_SENTRY_DSN,omitempty"`
-	DocURL        string `json:"REACT_APP_MERLIN_DOCS_URL,omitempty"`
-	HomePage      string `json:"REACT_APP_HOMEPAGE,omitempty"`
-	MerlinURL     string `json:"REACT_APP_MERLIN_API,omitempty"`
-	MlpURL        string `json:"REACT_APP_MLP_API,omitempty"`
+	OauthClientID    string `json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
+	Environment      string `json:"REACT_APP_ENVIRONMENT,omitempty"`
+	SentryDSN        string `json:"REACT_APP_SENTRY_DSN,omitempty"`
+	DocURL           string `json:"REACT_APP_MERLIN_DOCS_URL,omitempty"`
+	HomePage         string `json:"REACT_APP_HOMEPAGE,omitempty"`
+	MerlinURL        string `json:"REACT_APP_MERLIN_API,omitempty"`
+	MlpURL           string `json:"REACT_APP_MLP_API,omitempty"`
+	DockerRegistries string `json:"REACT_APP_DOCKER_REGISTRIES,omitempty"`
 
 	MonitoringEnabled              bool   `json:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
 	MonitoringPredictionJobBaseURL string `json:"REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"`
