@@ -14,7 +14,7 @@ jobs:
         env:
           VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          echo "Version: "${VERSION}"
+          echo "Version: ${VERSION}"
 
 
   # lint-ui:
