@@ -6,6 +6,7 @@ jobs:
     outputs:
       version: ${{ steps.get_version.outputs.version }}
     steps:
+      - uses: actions/checkout@v2
       - name: Get release version
         id: get_version
         run: |
