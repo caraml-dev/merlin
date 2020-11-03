@@ -65,6 +65,7 @@ func (v *versionEndpointStorage) CountEndpoints(environment *models.Environment,
 func (v *versionEndpointStorage) query() *gorm.DB {
 	return v.db.
 		Preload("Environment").
+		Preload("Transformer").
 		Joins("JOIN environments on environments.name = version_endpoints.environment_name").
 		Select("version_endpoints.*")
 }

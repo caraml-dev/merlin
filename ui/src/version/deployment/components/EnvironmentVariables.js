@@ -15,45 +15,44 @@
  */
 
 import React, { useEffect, useState } from "react";
-
-import {
-  EuiButtonIcon,
-  EuiFieldText,
-  EuiInMemoryTable,
-  EuiPanel,
-  EuiSpacer,
-  EuiTitle
-} from "@elastic/eui";
+import { EuiButtonIcon, EuiFieldText, EuiInMemoryTable } from "@elastic/eui";
 
 require("../../../assets/scss/EnvironmentVariables.scss");
 
 const filterProtectedEnvVar = envVar => {
-  return envVar.name !== "MODEL_NAME" && envVar.name !== "MODEL_DIR";
+  return (
+    envVar.name !== "MODEL_NAME" &&
+    envVar.name !== "MODEL_DIR" &&
+    !envVar.name.startsWith("MERLIN_TRANSFORMER")
+  );
 };
 
-export const EndpointVariables = ({ variables, onChange }) => {
+export const EnvironmentVariables = ({ variables, onChange }) => {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    const filteredVars = variables.filter(filterProtectedEnvVar);
-    const updatedItems = [
-      ...filteredVars.map((v, idx) => ({ idx, ...v })),
-      { idx: filteredVars.length }
-    ];
+    if (items.length === 0) {
+      const filteredVars = variables.filter(filterProtectedEnvVar);
+      const updatedItems = [
+        ...filteredVars.map((v, idx) => ({ idx, ...v })),
+        { idx: filteredVars.length }
+      ];
 
-    setItems(items =>
-      JSON.stringify(items) !== JSON.stringify(updatedItems)
-        ? updatedItems
-        : items
-    );
-  }, [variables, setItems]);
+      setItems(items =>
+        JSON.stringify(items) !== JSON.stringify(updatedItems)
+          ? updatedItems
+          : items
+      );
+    }
+  }, [variables, items, setItems]);
 
   useEffect(() => {
-    onChange([
-      ...items
+    if (items.length > 1) {
+      const updatedItems = items
         .slice(0, items.length - 1)
-        .map(item => ({ name: item.name.trim(), value: item.value }))
-    ]);
+        .map(item => ({ name: item.name.trim(), value: item.value }));
+      onChange(updatedItems);
+    }
   }, [items, onChange]);
 
   const removeRow = idx => {
@@ -127,19 +126,11 @@ export const EndpointVariables = ({ variables, onChange }) => {
   ];
 
   return (
-    <EuiPanel grow={false}>
-      <EuiTitle size="xs">
-        <h4>Environment Variables</h4>
-      </EuiTitle>
-
-      <EuiSpacer size="s" />
-
-      <EuiInMemoryTable
-        className="EnvVariables"
-        columns={columns}
-        items={items}
-        hasActions={true}
-      />
-    </EuiPanel>
+    <EuiInMemoryTable
+      className="EnvVariables"
+      columns={columns}
+      items={items}
+      hasActions={true}
+    />
   );
 };

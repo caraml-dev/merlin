@@ -16,6 +16,7 @@ package cluster
 
 import (
 	"fmt"
+	"strings"
 
 	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
 	v1 "k8s.io/api/core/v1"
@@ -30,6 +31,12 @@ const (
 	envModelName = "MODEL_NAME"
 	envModelDir  = "MODEL_DIR"
 	envWorkers   = "WORKERS"
+
+	envTransformerPort       = "MERLIN_TRANSFORMER_PORT"
+	envTransformerModelName  = "MERLIN_TRANSFORMER_MODEL_NAME"
+	envTransformerPredictURL = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
+
+	defaultTransformerPort = "8080"
 
 	annotationQueueProxyResource   = "queue.sidecar.serving.knative.dev/resourcePercentage"
 	annotationPrometheusScrapeFlag = "prometheus.io/scrape"
@@ -62,7 +69,7 @@ func createInferenceServiceSpec(modelService *models.Service, config *config.Dep
 		objectMeta.Annotations[annotationPrometheusScrapePort] = prometheusPort
 	}
 
-	return &kfsv1alpha2.InferenceService{
+	inferenceService := &kfsv1alpha2.InferenceService{
 		ObjectMeta: objectMeta,
 		Spec: kfsv1alpha2.InferenceServiceSpec{
 			Default: kfsv1alpha2.EndpointSpec{
@@ -70,12 +77,21 @@ func createInferenceServiceSpec(modelService *models.Service, config *config.Dep
 			},
 		},
 	}
+
+	if modelService.Transformer != nil && modelService.Transformer.Enabled {
+		inferenceService.Spec.Default.Transformer = createTransformerSpec(modelService, modelService.Transformer, config)
+	}
+
+	return inferenceService
 }
 
 func patchInferenceServiceSpec(orig *kfsv1alpha2.InferenceService, modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
 	labels := createLabels(modelService)
 	orig.ObjectMeta.Labels = labels
 	orig.Spec.Default.Predictor = createPredictorSpec(modelService, config)
+	if modelService.Transformer != nil && modelService.Transformer.Enabled {
+		orig.Spec.Default.Transformer = createTransformerSpec(modelService, modelService.Transformer, config)
+	}
 	return orig
 }
 
@@ -165,6 +181,67 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	return predictorSpec
 }
 
+func createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.TransformerSpec {
+	if transformer.ResourceRequest == nil {
+		transformer.ResourceRequest = &models.ResourceRequest{
+			MinReplica:    config.MinReplica,
+			MaxReplica:    config.MaxReplica,
+			CpuRequest:    config.CpuRequest,
+			MemoryRequest: config.MemoryRequest,
+		}
+	}
+
+	// Set cpu limit and memory limit to be 2x of the requests
+	cpuLimit := transformer.ResourceRequest.CpuRequest.DeepCopy()
+	cpuLimit.Add(transformer.ResourceRequest.CpuRequest)
+	memoryLimit := transformer.ResourceRequest.MemoryRequest.DeepCopy()
+	memoryLimit.Add(transformer.ResourceRequest.MemoryRequest)
+
+	envVars := transformer.EnvVars
+	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
+	envVars = append(envVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
+	envVars = append(envVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
+
+	transformerSpec := &kfsv1alpha2.TransformerSpec{
+		Custom: &kfsv1alpha2.CustomSpec{
+			Container: v1.Container{
+				Name:  "transformer",
+				Image: transformer.Image,
+				Env:   envVars.ToKubernetesEnvVars(),
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceCPU:    transformer.ResourceRequest.CpuRequest,
+						v1.ResourceMemory: transformer.ResourceRequest.MemoryRequest,
+					},
+					Limits: v1.ResourceList{
+						v1.ResourceCPU:    cpuLimit,
+						v1.ResourceMemory: memoryLimit,
+					},
+				},
+			},
+		},
+		DeploymentSpec: kfsv1alpha2.DeploymentSpec{
+			MinReplicas: transformer.ResourceRequest.MinReplica,
+			MaxReplicas: transformer.ResourceRequest.MaxReplica,
+		},
+	}
+
+	if transformer.Command != "" {
+		command := strings.Split(transformer.Command, " ")
+		if len(command) > 0 {
+			transformerSpec.Custom.Container.Command = command
+		}
+	}
+	if transformer.Args != "" {
+		args := strings.Split(transformer.Args, " ")
+		if len(args) > 0 {
+			transformerSpec.Custom.Container.Args = args
+		}
+	}
+
+	return transformerSpec
+}
+
 func createLabels(modelService *models.Service) map[string]string {
 	labels := map[string]string{
 		labelTeamName:         modelService.Metadata.Team,
@@ -179,4 +256,8 @@ func createLabels(modelService *models.Service) map[string]string {
 	}
 
 	return labels
+}
+
+func createPredictURL(modelService *models.Service) string {
+	return modelService.Name + "-predictor-default." + modelService.Namespace
 }

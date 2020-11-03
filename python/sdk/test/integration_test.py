@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 from time import sleep
 
@@ -26,6 +27,7 @@ import merlin
 from merlin.endpoint import Status
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
+from merlin.transformer import Transformer
 from test.utils import undeploy_all_version
 
 request_json = {
@@ -462,5 +464,40 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth):
     merlin.undeploy(v)
     sleep(5)
     resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 404
+
+@pytest.mark.integration
+def test_transformer_pytorch(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("transformer-pytorch", ModelType.PYTORCH)
+
+    model_dir = "test/transformer"
+
+    undeploy_all_version()
+
+    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+    transformer = Transformer(enabled=True,
+                              image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
+                              resource_request=resource_request)
+    print("transformer test", transformer)
+
+    with merlin.new_model_version() as v:
+        merlin.log_pytorch_model(model_dir=model_dir)
+        endpoint = merlin.deploy(transformer=transformer)
+
+    with open(os.path.join("test/transformer", "input.json"), "r") as f:
+        req = json.load(f)
+
+    resp = requests.post(f"{endpoint.url}", json=req)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()['predictions']) == len(req['instances'])
+
+    merlin.undeploy(v)
+    sleep(5)
+    resp = requests.post(f"{endpoint.url}", json=req)
 
     assert resp.status_code == 404

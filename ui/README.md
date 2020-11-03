@@ -1,42 +1,60 @@
-## Getting Started
+# Working with the Merlin UI
 
-Install all dependencies:
+This file explains how to work with the React-based Merlin UI.
 
-### `npm install`
+## Introduction
 
-Initialize environment variables:
+The [React-based](https://reactjs.org/) Merlin UI was bootstrapped using [Create React App](https://github.com/facebook/create-react-app), a popular toolkit for generating React application setups. You can find general information about Create React App on [their documentation site](https://create-react-app.dev/).
 
-```
-export REACT_APP_API=http://localhost:3000/v1
-export REACT_APP_OAUTH_CLIENT_ID=<oauth_client_id>
-```
+## Development environment
 
-REACT_APP_API should points to merlin API and REACT_APP_OAUTH_CLIENT_ID is the client ID used for authentication.
+To work with the React UI code, you will need to have the following tools installed:
 
-And you can run:
+- The [Node.js](https://nodejs.org/) JavaScript runtime.
+- The [Yarn](https://yarnpkg.com/) package manager.
 
-### `npm start`
+## Installing npm dependencies
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3001](http://localhost:3001) to view it in the browser.
+The React UI depends on a large number of [npm](https://www.npmjs.com/) packages. These are not checked in, so you will need to download and install them locally via the Yarn package manager:
 
-The page will reload if you make edits.<br>
+    yarn
 
-You can also use mock data by setting `USE_MOCK_DATA: true` in [config.js](src/config.js)  
-All mock data is configured under [mocks](src/mocks) folder
+Yarn consults the `package.json` and `yarn.lock` files for dependencies to install. It creates a `node_modules` directory with all installed dependencies.
 
+## Running a local development server
 
-You will also see any lint errors in the console.
+You need to set the `REACT_APP_OAUTH_CLIENT_ID` in `.env.development` with the Google Oauth Client ID for authentication.
 
-### `npm test`
+Then, you can start a development server for the React UI outside of a running Merlin server by running:
 
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+    yarn start
 
-### `npm run build`
+This will open a browser window with the React app running on http://localhost:3000/. The page will reload if you make edits to the source code. You will also see any lint errors in the console.
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Due to a `"proxy": "http://localhost:8080/v1"` setting in the `package.json` file, any API requests from the React UI are proxied to `localhost` on port `8080` by the development server. This allows you to run a normal Merlin server to handle API requests, while iterating separately on the UI.
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+    [browser] ----> [localhost:3000 (dev server)] --(proxy API requests)--> [localhost:8080/v1 (Merlin)]
+
+## Linting
+
+We use [lint-staged](https://github.com/okonet/lint-staged) for the linter. To detect and automatically fix lint errors against staged git files, run:
+
+    yarn lint
+
+This is also available via the `lint-ui` target in the main Merlin `Makefile`.
+
+## Building the app for production
+
+To build a production-optimized version of the React app to a `build` subdirectory, run:
+
+    yarn build
+
+**NOTE:** You will likely not need to do this directly. Instead, this is taken care of by the `build` target in the main Merlin `Makefile` when building the full binary.
+
+## Integration into Merlin
+
+To build a Merlin binary that includes a compiled-in version of the production build of the React app, change to the root of the repository and run:
+
+    make build
+
+This installs npm dependencies via Yarn, builds a production build of the React app, and then finally compiles in all web assets into the Merlin binary.

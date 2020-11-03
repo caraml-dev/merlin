@@ -17,7 +17,7 @@ info:
   title: "Merlin"
   description: "API Guide for accessing Merlin's model management, deployment, and serving functionalities"
   version: "0.7.0"
-host: "localhost:3000"
+host: "localhost:8080"
 basePath: "/v1"
 tags:
   - name: "project"
@@ -1147,6 +1147,32 @@ definitions:
         type: "string"
         format: "hostname"
       message:
+        type: "string"
+      resource_request:
+        $ref: "#/definitions/ResourceRequest"
+      env_vars:
+        type: "array"
+        items:
+          $ref: "#/definitions/EnvVar"
+      transformer:
+        $ref: "#/definitions/Transformer"
+      created_at:
+        type: "string"
+        format: "date-time"
+      updated_at:
+        type: "string"
+        format: "date-time"
+
+  Transformer:
+    type: "object"
+    properties:
+      enabled:
+        type: "boolean"
+      image:
+        type: "string"
+      command:
+        type: "string"
+      args:
         type: "string"
       resource_request:
         $ref: "#/definitions/ResourceRequest"

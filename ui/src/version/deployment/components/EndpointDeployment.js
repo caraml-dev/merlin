@@ -24,15 +24,18 @@ import {
   EuiFlexItem,
   EuiForm,
   EuiOverlayMask,
+  EuiPanel,
   EuiProgress,
-  EuiSpacer
+  EuiSpacer,
+  EuiTitle
 } from "@elastic/eui";
 import { replaceBreadcrumbs, useToggle } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import mocks from "../../../mocks";
 import { EndpointEnvironment } from "./EndpointEnvironment";
-import { EndpointResources } from "./EndpointResources";
 import { EndpointVariables } from "./EndpointVariables";
+import { ResourceRequest } from "./ResourceRequest";
+import { Transformer } from "./Transformer";
 
 const DeployConfirmationModal = ({
   actionTitle,
@@ -63,6 +66,22 @@ const defaultResourceRequest = {
 
 const targetRequestStatus = currentStatus => {
   return currentStatus === "serving" ? "serving" : "running";
+};
+
+const isRequestConfigured = request => {
+  if (
+    request.transformer &&
+    request.transformer.enabled &&
+    !request.transformer.image
+  ) {
+    return false;
+  }
+
+  if (!request.environment_name) {
+    return false;
+  }
+
+  return true;
 };
 
 export const EndpointDeployment = ({
@@ -124,6 +143,9 @@ export const EndpointDeployment = ({
     );
 
     let targetResourceRequest = defaultResourceRequest;
+    let targetEnvVars = [];
+    let targetTransformer = undefined;
+
     if (selectedEnvironment) {
       if (selectedEnvironment.default_resource_request) {
         targetResourceRequest = selectedEnvironment.default_resource_request;
@@ -134,7 +156,6 @@ export const EndpointDeployment = ({
       e => e.environment_name === request.environment_name
     );
 
-    let targetEnvVars = [];
     if (endpoint) {
       if (endpoint.resource_request) {
         targetResourceRequest = endpoint.resource_request;
@@ -144,12 +165,16 @@ export const EndpointDeployment = ({
           envVar => envVar.name !== "MODEL_NAME" && envVar.name !== "MODEL_DIR"
         );
       }
+      if (endpoint.transformer) {
+        targetTransformer = endpoint.transformer;
+      }
     }
 
     setRequest(r => ({
       ...r,
       resource_request: targetResourceRequest,
-      env_vars: targetEnvVars
+      env_vars: targetEnvVars,
+      transformer: targetTransformer
     }));
   }, [environments, version.endpoints, request.environment_name, setRequest]);
 
@@ -181,23 +206,42 @@ export const EndpointDeployment = ({
 
               <EuiFlexItem grow={false}>
                 <EuiSpacer size="s" />
-                <EndpointResources
-                  resourceRequest={
-                    request.resource_request || defaultResourceRequest
-                  }
-                  onChange={onChange("resource_request")}
-                />
+                <EuiPanel grow={false}>
+                  <EuiTitle size="xs">
+                    <h4>Resources</h4>
+                  </EuiTitle>
+                  <ResourceRequest
+                    resourceRequest={
+                      request.resource_request || defaultResourceRequest
+                    }
+                    onChange={onChange("resource_request")}
+                  />
+                </EuiPanel>
               </EuiFlexItem>
 
               {model.type === "pyfunc" && (
                 <EuiFlexItem grow={false}>
                   <EuiSpacer size="s" />
+                  {/* TODO: Use new EnvironmentVariables.js */}
                   <EndpointVariables
                     variables={request.env_vars || []}
                     onChange={onVariablesChange}
                   />
                 </EuiFlexItem>
               )}
+
+              <EuiFlexItem grow={false}>
+                <EuiSpacer size="s" />
+                <Transformer
+                  transformer={
+                    request.transformer || {
+                      image: "",
+                      resource_request: defaultResourceRequest
+                    }
+                  }
+                  onChange={onChange("transformer")}
+                />
+              </EuiFlexItem>
 
               <EuiFlexItem grow={false}>
                 <EuiFlexGroup direction="row" justifyContent="flexEnd">
@@ -214,7 +258,7 @@ export const EndpointDeployment = ({
                       size="s"
                       color="primary"
                       fill
-                      disabled={!request.environment_name}
+                      disabled={!isRequestConfigured(request)}
                       onClick={openModal}>
                       {actionTitle}
                     </EuiButton>
