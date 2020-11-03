@@ -1,5 +1,5 @@
 name: build-lint-test
-on: [push]
+on: push
 jobs:
   build-ui:
     runs-on: ubuntu-latest
