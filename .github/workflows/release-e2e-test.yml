@@ -1,4 +1,4 @@
-name: release
+name: release-e2e-test
 on: [workflow_dispatch, pull_request]
 jobs:
   get-version:
@@ -102,3 +102,41 @@ jobs:
           dockerfile: mlflow/Dockerfile
           build_args: MLFLOW_VERSION=1.3.0
           tags: 1.3.0
+
+  e2e-test:
+    runs-on: ubuntu-latest
+    needs: publish-merlin-docker
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: merlin
+      - uses: actions/checkout@master
+        with:
+          repository: gojek/mlp
+          ref: main
+          path: mlp
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Setup cluster
+        run: ./merlin/scripts/e2e/setup-cluster.sh
+      - name: Setup mlp namespace
+        run: |
+          kubectl create namespace mlp
+          kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
+      - name: Deploy MLP
+        run: |
+          helm install mlp mlp/chart --namespace=mlp \
+            --values=mlp/chart/values-e2e.yaml \
+            --set mlp.image.tag=main \
+            --wait --timeout=5m
+      - name: Deploy Merlin
+        env:
+          MERLIN_IMAGE_TAG: ${{ needs.get-version.outputs.version }}
+        run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
+      - name: Run E2E test
+        run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
