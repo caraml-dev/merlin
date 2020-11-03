@@ -1,5 +1,5 @@
 name: release
-on: workflow-dispatch
+on: workflow_dispatch
 jobs:
   get-version:
     runs-on: ubuntu-latest
