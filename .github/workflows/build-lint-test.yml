@@ -1,0 +1,94 @@
+name: build-lint-test
+on: push
+jobs:
+  build-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Build UI static files
+        run: make build-ui
+
+  build-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+      - name: Install dependencies
+        run: make init-dep-api
+      - name: Build API server
+        run: make build-api
+
+  lint-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Lint UI files
+        run: make lint-ui
+
+  lint-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+      - name: Install dependencies
+        run: |
+          make setup
+          make init-dep-api
+      - name: Lint API files
+        run: make lint-api
+
+  unit-test-python-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        working-directory: ./python/sdk
+        run: |
+          pip install mypy pipenv
+          make setup
+      - name: Unit test Python SDK
+        env:
+          E2E_USE_GOOGLE_OAUTH: false
+        working-directory: ./python/sdk
+        run: make unit-test
+
+  integration-test-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12.4
+        env:
+          POSTGRES_DB: merlin
+          POSTGRES_USER: merlin
+          POSTGRES_PASSWORD: merlin
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+      - name: Test API files
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: merlin
+          POSTGRES_USER: merlin
+          POSTGRES_PASSWORD: merlin
+        run: make it-test-api-ci
