@@ -11,11 +11,13 @@ jobs:
           fetch-depth: 0
       - name: Get release version
         id: get_version
-        run: echo ::set-output name=version::$(./scripts/vertagen/vertagen.sh -p v -f docker)
+        run: |
+          echo ::set-output name=version::$(./scripts/vertagen/vertagen.sh -p v -f docker)
       - name: Check output
         env:
           VERSION: ${{ steps.get_version.outputs.version }}
-        run: echo Version: ${VERSION}
+        run: |
+          echo "Version: ${VERSION}"
 
   publish-python-sdk:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
