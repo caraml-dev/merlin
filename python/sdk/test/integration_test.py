@@ -478,8 +478,7 @@ def test_transformer_pytorch(integration_test_url, project_name, use_google_oaut
     undeploy_all_version()
 
     resource_request = ResourceRequest(1, 1, "100m", "200Mi")
-    transformer = Transformer(enabled=True,
-                              image="gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
+    transformer = Transformer("gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
                               resource_request=resource_request)
     print("transformer test", transformer)
 
