@@ -19,25 +19,24 @@ from merlin.util import autostr
 
 @autostr
 class Transformer:
-    def __init__(self, enabled: bool, image: str,
+    def __init__(self, image: str, enabled: bool = True,
                  command: str = None, args: str = None,
                  resource_request: ResourceRequest = None,
                  env_vars: Dict[str, str] = None):
-        self._enabled = enabled
         self._image = image
+        self._enabled = enabled
         self._command = command
         self._args = args
         self._resource_request = resource_request
         self._env_vars = env_vars
 
+    @property
+    def image(self) -> str:
+        return self._image
 
     @property
     def enabled(self) -> bool:
         return self._enabled
-
-    @property
-    def image(self) -> str:
-        return self._image
 
     @property
     def command(self) -> Optional[str]:
