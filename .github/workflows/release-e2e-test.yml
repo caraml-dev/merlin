@@ -137,7 +137,8 @@ jobs:
       - name: Deploy Merlin
         env:
           MERLIN_CHART_PATH: merlin/charts/merlin
-          MERLIN_IMAGE_TAG: ${{ needs.get-version.outputs.version }}
-        run: ./merlin/scripts/e2e/deploy-merlin.sh
+        run: |
+          export MERLIN_IMAGE_TAG=${{ needs.get-version.outputs.version }}
+          ./merlin/scripts/e2e/deploy-merlin.sh
       - name: Run E2E test
         run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
