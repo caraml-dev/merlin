@@ -17,10 +17,9 @@ package models
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/mlp"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestVersionEndpoint(t *testing.T) {
@@ -125,6 +124,49 @@ func TestVersionEndpoint_UpdateMonitoringUrl(t *testing.T) {
 			e.UpdateMonitoringUrl(tt.args.baseURL, tt.args.params)
 
 			assert.Equal(t, tt.want, e.MonitoringUrl)
+		})
+	}
+}
+
+func TestVersionEndpoint_HostURL(t *testing.T) {
+	type fields struct {
+		Url string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			"empty url",
+			fields{
+				Url: "",
+			},
+			"",
+		},
+		{
+			"https://gojek.com",
+			fields{
+				Url: "https://gojek.com",
+			},
+			"gojek.com",
+		},
+		{
+			"https://gojek.com/v1/models/gojek-1:predict",
+			fields{
+				Url: "https://gojek.com/v1/models/gojek-1:predict",
+			},
+			"gojek.com",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			e := &VersionEndpoint{
+				Url: tt.fields.Url,
+			}
+			if got := e.HostURL(); got != tt.want {
+				t.Errorf("VersionEndpoint.HostURL() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
