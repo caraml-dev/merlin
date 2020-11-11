@@ -261,7 +261,7 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 			},
 			Headers: &networking.Headers{
 				Request: &networking.Headers_HeaderOperations{
-					Set: map[string]string{"Host": versionEndpoint.ServiceName},
+					Set: map[string]string{"Host": versionEndpoint.HostURL()},
 				},
 			},
 			Weight: destination.Weight,

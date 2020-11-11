@@ -176,7 +176,7 @@ func Test_createVirtualService(t *testing.T) {
 									},
 									Headers: &networking.Headers{
 										Request: &networking.Headers_HeaderOperations{
-											Set: map[string]string{"Host": versionEndpoint1.ServiceName},
+											Set: map[string]string{"Host": versionEndpoint1.HostURL()},
 										},
 									},
 									Weight: 100,
