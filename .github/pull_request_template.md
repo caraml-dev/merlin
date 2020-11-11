@@ -29,3 +29,11 @@ For more information about release notes, see kubernetes' guide here: http://git
 ```release-note
 
 ```
+
+**Checklist**
+
+- [ ] Added unit test, integration, and/or e2e tests
+- [ ] Tested locally
+- [ ] Updated documentation
+- [ ] Update Swagger spec if the PR introduce API changes
+- [ ] Regenerated Golang and Python client if the PR introduce API changes
