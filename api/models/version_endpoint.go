@@ -74,6 +74,19 @@ func (e *VersionEndpoint) IsServing() bool {
 	return e.Status == EndpointServing
 }
 
+func (e *VersionEndpoint) HostURL() string {
+	if e.Url == "" {
+		return ""
+	}
+
+	url, err := url.Parse(e.Url)
+	if err != nil {
+		return ""
+	}
+
+	return url.Hostname()
+}
+
 type EndpointMonitoringURLParams struct {
 	Cluster      string
 	Project      string
