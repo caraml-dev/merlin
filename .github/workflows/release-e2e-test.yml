@@ -1,5 +1,9 @@
 name: release-e2e-test
-on: [workflow_dispatch, pull_request]
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
 jobs:
   get-version:
     runs-on: ubuntu-latest
