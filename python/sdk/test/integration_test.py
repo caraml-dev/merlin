@@ -489,14 +489,24 @@ def test_transformer_pytorch(integration_test_url, project_name, use_google_oaut
     with open(os.path.join("test/transformer", "input.json"), "r") as f:
         req = json.load(f)
 
+    sleep(5)
     resp = requests.post(f"{endpoint.url}", json=req)
 
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()['predictions']) == len(req['instances'])
 
-    merlin.undeploy(v)
+    model_endpoint = merlin.serve_traffic({endpoint: 100})
     sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=req)
+    resp = requests.post(f"{model_endpoint.url}", json=req)
 
-    assert resp.status_code == 404
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()['predictions']) == len(req['instances'])
+
+    # Try to undeploy serving model version. It must be fail
+    with pytest.raises(Exception):
+        assert merlin.undeploy(v)
+
+    # Undeploy other running model version endpoints
+    undeploy_all_version()
