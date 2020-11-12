@@ -61,7 +61,7 @@ setup(
     setup_requires=["setuptools_scm"],
     tests_require=TEST_REQUIRES,
     extras_require={'test': TEST_REQUIRES},
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     entry_points='''
         [console_scripts]
         merlin=merlin.merlin:cli
