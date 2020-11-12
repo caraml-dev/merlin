@@ -26,7 +26,7 @@ setup(
     author_email='merlin-dev@gojek.com',
     description='Base pyspark application for running merlin prediction job',
     long_description=open('README.md').read(),
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     packages=find_packages("merlinpyspark"),
     install_requires=REQUIRE,
     tests_require=TEST_REQUIRE,

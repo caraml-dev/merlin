@@ -26,7 +26,7 @@ setup(
     description='Model Server implementation for mlflow pyfunc model. \
                  Not intended for use outside KFServing Frameworks Images',
     long_description=open('README.md').read(),
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     packages=find_packages("pyfuncserver"),
     install_requires=[
         "kfserving==0.2.1.1",
