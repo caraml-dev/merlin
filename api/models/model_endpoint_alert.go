@@ -171,12 +171,29 @@ func (alert ModelEndpointAlert) sliExpr(alertCondition AlertCondition) string {
 	}
 }
 
+func (alert ModelEndpointAlert) sliTarget(alertCondition AlertCondition) string {
+	switch alertCondition.MetricType {
+	case AlertConditionTypeThroughput:
+		return fmt.Sprint(alertCondition.Target)
+	case AlertConditionTypeLatency:
+		return fmt.Sprint(alertCondition.Target)
+	case AlertConditionTypeErrorRate:
+		return fmt.Sprint(alertCondition.Target / 100)
+	case AlertConditionTypeCPU:
+		return fmt.Sprint(alertCondition.Target / 100)
+	case AlertConditionTypeMemory:
+		return fmt.Sprint(alertCondition.Target / 100)
+	default:
+		return "0"
+	}
+}
+
 func (alert ModelEndpointAlert) prometheusExpr(alertCondition AlertCondition) string {
 	operator := ">"
 	if alertCondition.MetricType == AlertConditionTypeThroughput {
 		operator = "<"
 	}
-	return fmt.Sprintf("%s %s %f", alert.sliExpr(alertCondition), operator, alertCondition.Target)
+	return fmt.Sprintf("%s %s %s", alert.sliExpr(alertCondition), operator, alert.sliTarget(alertCondition))
 }
 
 func (alert ModelEndpointAlert) summary(alertCondition AlertCondition) string {
