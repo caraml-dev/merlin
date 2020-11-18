@@ -22,18 +22,16 @@ import (
 	"testing"
 	"time"
 
-	clusterMock "github.com/gojek/merlin/cluster/mocks"
-	imageBuilderMock "github.com/gojek/merlin/imagebuilder/mocks"
-	"github.com/gojek/merlin/mlp"
-
-	"k8s.io/apimachinery/pkg/api/resource"
-
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/gojek/merlin/cluster"
+	clusterMock "github.com/gojek/merlin/cluster/mocks"
 	"github.com/gojek/merlin/config"
+	imageBuilderMock "github.com/gojek/merlin/imagebuilder/mocks"
+	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/storage/mocks"
 )
@@ -261,6 +259,10 @@ func TestDeployEndpoint(t *testing.T) {
 				assert.Equal(t, models.EndpointRunning, savedEndpoint.Status)
 				assert.Equal(t, url, savedEndpoint.Url)
 				assert.Equal(t, iSvcName, savedEndpoint.InferenceServiceName)
+			}
+
+			if tt.args.endpoint.Transformer != nil {
+				assert.Equal(t, tt.args.endpoint.Transformer.Enabled, e.Transformer.Enabled)
 			}
 		})
 	}

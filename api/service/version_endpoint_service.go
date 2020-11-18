@@ -109,7 +109,7 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 		endpoint.ResourceRequest = newEndpoint.ResourceRequest
 	}
 
-	if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
+	if newEndpoint.Transformer != nil {
 		endpoint.Transformer = newEndpoint.Transformer
 		endpoint.Transformer.VersionEndpointID = endpoint.Id
 	}
