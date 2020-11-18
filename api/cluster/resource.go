@@ -89,6 +89,8 @@ func patchInferenceServiceSpec(orig *kfsv1alpha2.InferenceService, modelService 
 	labels := createLabels(modelService)
 	orig.ObjectMeta.Labels = labels
 	orig.Spec.Default.Predictor = createPredictorSpec(modelService, config)
+
+	orig.Spec.Default.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
 		orig.Spec.Default.Transformer = createTransformerSpec(modelService, modelService.Transformer, config)
 	}
