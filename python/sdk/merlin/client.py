@@ -177,7 +177,7 @@ class MerlinClient:
         :param model_type: model type
         :return: Model
         """
-        if not valid_name_check(project_name):
+        if not valid_name_check(model_name):
             raise ValueError(
                 '''Your project/model name contains invalid characters.\
                     \nUse only the following characters\

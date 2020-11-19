@@ -80,6 +80,18 @@ def test_get_project(mock_url, mock_oauth, use_google_oauth):
     assert isinstance(p.created_at, datetime.datetime)
     assert isinstance(p.updated_at, datetime.datetime)
 
+
+@responses.activate
+def test_create_invalid_project_name(mock_url, api_client, mock_oauth, use_google_oauth):
+    project_name = "invalidProjectName"
+
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
+
+    # Try to create project with invalid name. It must be fail
+    with pytest.raises(Exception):
+        assert client.get_project(project_name)
+
+
 @responses.activate
 def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth):
     project_id = '1010'
@@ -135,6 +147,19 @@ def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth):
         assert isinstance(model.created_at, datetime.datetime)
         assert isinstance(model.updated_at, datetime.datetime)
         assert model.project == project
+
+
+@responses.activate
+def test_create_invalid_model_name(mock_url, api_client, mock_oauth, use_google_oauth):
+    model_name = "invalidModelName"
+    project_name = "my-project"
+    model_type = ModelType.XGBOOST
+
+    client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
+
+    # Try to create model with invalid name. It must be fail
+    with pytest.raises(Exception):
+        assert client.get_or_create_model(model_name, project_name, model_type)
 
 
 @responses.activate
