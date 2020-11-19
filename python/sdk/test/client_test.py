@@ -87,7 +87,7 @@ def test_create_invalid_project_name(mock_url, api_client, mock_oauth, use_googl
 
     client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
 
-    # Try to undeploy serving model version. It must be fail
+    # Try to create project with invalid name. It must be fail
     with pytest.raises(Exception):
         assert client.get_project(project_name)
 
@@ -157,7 +157,7 @@ def test_create_invalid_model_name(mock_url, api_client, mock_oauth, use_google_
 
     client = MerlinClient(mock_url, use_google_oauth=use_google_oauth)
 
-    # Try to undeploy serving model version. It must be fail
+    # Try to create model with invalid name. It must be fail
     with pytest.raises(Exception):
         assert client.get_or_create_model(model_name, project_name, model_type)
 
