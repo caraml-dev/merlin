@@ -176,7 +176,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	}
 
 	predictorSpec.DeploymentSpec = kfsv1alpha2.DeploymentSpec{
-		MinReplicas: modelService.ResourceRequest.MinReplica,
+		MinReplicas: &(modelService.ResourceRequest.MinReplica),
 		MaxReplicas: modelService.ResourceRequest.MaxReplica,
 	}
 
@@ -223,7 +223,7 @@ func createTransformerSpec(modelService *models.Service, transformer *models.Tra
 			},
 		},
 		DeploymentSpec: kfsv1alpha2.DeploymentSpec{
-			MinReplicas: transformer.ResourceRequest.MinReplica,
+			MinReplicas: &(transformer.ResourceRequest.MinReplica),
 			MaxReplicas: transformer.ResourceRequest.MaxReplica,
 		},
 	}

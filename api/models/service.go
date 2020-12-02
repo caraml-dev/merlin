@@ -14,7 +14,10 @@
 
 package models
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Service struct {
 	Name            string
@@ -52,4 +55,15 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, resource 
 
 func CreateInferenceServiceName(modelName string, versionId string) string {
 	return fmt.Sprintf("%s-%s", modelName, versionId)
+}
+
+func GetValidInferenceURL(url string, inferenceServiceName string) string {
+	modelPath := "v1/models"
+	inferenceURLSuffix := fmt.Sprintf("%s/%s", modelPath, inferenceServiceName)
+
+	if strings.HasSuffix(url, inferenceURLSuffix) {
+		return url
+	}
+
+	return fmt.Sprintf("%s/%s", url, inferenceURLSuffix)
 }

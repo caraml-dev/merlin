@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build unit
-
 package istio
 
 import (
@@ -22,13 +20,17 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gojek/merlin/istio/client-go/pkg/apis/networking/v1alpha3"
-	networkingv1alpha3 "github.com/gojek/merlin/istio/client-go/pkg/clientset/versioned/typed/networking/v1alpha3"
-	"github.com/gojek/merlin/istio/client-go/pkg/clientset/versioned/typed/networking/v1alpha3/mocks"
+	// "github.com/gojek/merlin/istio/client-go/pkg/clientset/versioned/typed/networking/v1alpha3/mocks"
+
 	"github.com/stretchr/testify/assert"
 	networking "istio.io/api/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istioFake "istio.io/client-go/pkg/clientset/versioned/fake"
+	networkingv1alpha3 "istio.io/client-go/pkg/clientset/versioned/typed/networking/v1alpha3"
+	"istio.io/client-go/pkg/clientset/versioned/typed/networking/v1alpha3/fake"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/runtime"
+	ktesting "k8s.io/client-go/testing"
 )
 
 func TestNewClient(t *testing.T) {
@@ -67,6 +69,7 @@ var (
 )
 
 func Test_client_CreateVirtualService(t *testing.T) {
+	clientSet := istioFake.Clientset{}
 	type fields struct {
 		networking networkingv1alpha3.NetworkingV1alpha3Interface
 	}
@@ -78,7 +81,7 @@ func Test_client_CreateVirtualService(t *testing.T) {
 	tests := []struct {
 		name     string
 		fields   fields
-		mockFunc func(m *mocks.NetworkingV1alpha3Interface)
+		mockFunc func(m networkingv1alpha3.NetworkingV1alpha3Interface)
 		args     args
 		want     *v1alpha3.VirtualService
 		wantErr  bool
@@ -86,13 +89,13 @@ func Test_client_CreateVirtualService(t *testing.T) {
 		{
 			"empty virtual service",
 			fields{
-				networking: &mocks.NetworkingV1alpha3Interface{},
+				networking: clientSet.NetworkingV1alpha3(),
 			},
-			func(mockNetworking *mocks.NetworkingV1alpha3Interface) {
-				mockVirtualService := &mocks.VirtualServiceInterface{}
-				mockVirtualService.On("Create", emptyVirtualService).Return(emptyVirtualService, nil)
-
-				mockNetworking.On("VirtualServices", "default").Return(mockVirtualService)
+			func(mockNetworking networkingv1alpha3.NetworkingV1alpha3Interface) {
+				mockVirtualService := mockNetworking.VirtualServices("default").(*fake.FakeVirtualServices)
+				mockVirtualService.Fake.PrependReactor("create", "virtualservices", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, emptyVirtualService, nil
+				})
 			},
 			args{
 				context.Background(),
@@ -106,13 +109,14 @@ func Test_client_CreateVirtualService(t *testing.T) {
 		{
 			"valid virtual service",
 			fields{
-				networking: &mocks.NetworkingV1alpha3Interface{},
+				networking: clientSet.NetworkingV1alpha3(),
 			},
-			func(mockNetworking *mocks.NetworkingV1alpha3Interface) {
-				mockVirtualService := &mocks.VirtualServiceInterface{}
-				mockVirtualService.On("Create", validVirtualService).Return(validVirtualService, nil)
+			func(mockNetworking networkingv1alpha3.NetworkingV1alpha3Interface) {
+				mockVirtualService := mockNetworking.VirtualServices("default").(*fake.FakeVirtualServices)
+				mockVirtualService.Fake.PrependReactor("create", "virtualservices", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, validVirtualService, nil
+				})
 
-				mockNetworking.On("VirtualServices", "default").Return(mockVirtualService)
 			},
 			args{
 				context.Background(),
@@ -127,7 +131,7 @@ func Test_client_CreateVirtualService(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := newClient(tt.fields.networking)
 
-			tt.mockFunc(c.networking.(*mocks.NetworkingV1alpha3Interface))
+			tt.mockFunc(c.networking)
 
 			got, err := c.CreateVirtualService(tt.args.ctx, tt.args.namespace, tt.args.vs)
 			if (err != nil) != tt.wantErr {
@@ -142,6 +146,7 @@ func Test_client_CreateVirtualService(t *testing.T) {
 }
 
 func Test_client_PatchVirtualService(t *testing.T) {
+	clientSet := istioFake.Clientset{}
 	type fields struct {
 		networking networkingv1alpha3.NetworkingV1alpha3Interface
 	}
@@ -153,7 +158,7 @@ func Test_client_PatchVirtualService(t *testing.T) {
 	tests := []struct {
 		name     string
 		fields   fields
-		mockFunc func(m *mocks.NetworkingV1alpha3Interface)
+		mockFunc func(m networkingv1alpha3.NetworkingV1alpha3Interface)
 		args     args
 		want     *v1alpha3.VirtualService
 		wantErr  bool
@@ -161,13 +166,13 @@ func Test_client_PatchVirtualService(t *testing.T) {
 		{
 			"empty virtual service",
 			fields{
-				networking: &mocks.NetworkingV1alpha3Interface{},
+				networking: clientSet.NetworkingV1alpha3(),
 			},
-			func(mockNetworking *mocks.NetworkingV1alpha3Interface) {
-				mockVirtualService := &mocks.VirtualServiceInterface{}
-				mockVirtualService.On("Patch", emptyVirtualService.ObjectMeta.Name, types.MergePatchType, emptyVirtualServiceJSON).Return(emptyVirtualService, nil)
-
-				mockNetworking.On("VirtualServices", "default").Return(mockVirtualService)
+			func(mockNetworking networkingv1alpha3.NetworkingV1alpha3Interface) {
+				mockVirtualService := mockNetworking.VirtualServices("default").(*fake.FakeVirtualServices)
+				mockVirtualService.Fake.PrependReactor("patch", "virtualservices", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, emptyVirtualService, nil
+				})
 			},
 			args{
 				context.Background(),
@@ -181,13 +186,14 @@ func Test_client_PatchVirtualService(t *testing.T) {
 		{
 			"valid virtual service",
 			fields{
-				networking: &mocks.NetworkingV1alpha3Interface{},
+				networking: clientSet.NetworkingV1alpha3(),
 			},
-			func(mockNetworking *mocks.NetworkingV1alpha3Interface) {
-				mockVirtualService := &mocks.VirtualServiceInterface{}
-				mockVirtualService.On("Patch", validVirtualService.ObjectMeta.Name, types.MergePatchType, validVirtualServiceJSON).Return(validVirtualService, nil)
+			func(mockNetworking networkingv1alpha3.NetworkingV1alpha3Interface) {
+				mockVirtualService := mockNetworking.VirtualServices("default").(*fake.FakeVirtualServices)
+				mockVirtualService.Fake.PrependReactor("patch", "virtualservices", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, validVirtualService, nil
+				})
 
-				mockNetworking.On("VirtualServices", "default").Return(mockVirtualService)
 			},
 			args{
 				context.Background(),
@@ -202,7 +208,7 @@ func Test_client_PatchVirtualService(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := newClient(tt.fields.networking)
 
-			tt.mockFunc(c.networking.(*mocks.NetworkingV1alpha3Interface))
+			tt.mockFunc(c.networking)
 
 			got, err := c.PatchVirtualService(tt.args.ctx, tt.args.namespace, tt.args.vs)
 			if (err != nil) != tt.wantErr {

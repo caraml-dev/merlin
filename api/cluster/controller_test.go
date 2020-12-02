@@ -618,8 +618,8 @@ func createServiceReadyStatus(svcUrl, expUrl string) v1alpha2.InferenceServiceSt
 	status := v1alpha2.InferenceServiceStatus{}
 	status.InitializeConditions()
 	status.URL = expUrl
-	status.Default = &v1alpha2.EndpointStatusMap{
-		constants.Predictor: &v1alpha2.StatusConfigurationSpec{
+	status.Default = &map[constants.InferenceServiceComponent]v1alpha2.StatusConfigurationSpec{
+		constants.Predictor: v1alpha2.StatusConfigurationSpec{
 			Name:     svcUrl,
 			Hostname: svcUrl,
 		},

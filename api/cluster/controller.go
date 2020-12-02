@@ -155,11 +155,12 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 		return nil, err
 	}
 
+	inferenceURL := models.GetValidInferenceURL(s.Status.URL, svcName)
 	return &models.Service{
 		Name:        s.Name,
 		Namespace:   s.Namespace,
 		ServiceName: (*s.Status.Default)[constants.Predictor].Hostname,
-		Url:         s.Status.URL,
+		Url:         inferenceURL,
 	}, nil
 }
 
