@@ -56,11 +56,11 @@ class EnsembleModel(PyFuncModel):
         dmatrix = xgb.DMatrix(model_input['instances'])
         result_1 = self._model_1.predict(dmatrix)
         result_2 = self._model_2.predict_proba(inputs)
-        return {"predictions":((result_1 + result_2) / 2).tolist()}
-
+        return {"predictions": ((result_1 + result_2) / 2).tolist()}
 
 
 @pytest.mark.integration
+@pytest.mark.dependency()
 def test_pyfunc(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -139,6 +139,8 @@ def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth):
 
 # This implementation of PyFuncModel uses the old infer method (no keyword arguments).
 # The keywords arguments for infer() method introduced in Merlin 0.5.2.
+
+
 class OldInferModel(PyFuncModel):
     def initialize(self, artifacts):
         pass

@@ -38,6 +38,7 @@ REQUIRES = [
 
 TEST_REQUIRES = [
     "pytest",
+    "pytest-dependency",
     "pytest-cov",
     "pytest-xdist",
     "urllib3-mock>=0.3.3",
@@ -55,7 +56,8 @@ setup(
     url="https://github.com/gojek/merlin",
     author="Merlin",
     packages=find_packages(),
-    package_data={"merlin" : ["docker/pyfunc.Dockerfile", "docker/standard.Dockerfile"]},
+    package_data={"merlin": [
+        "docker/pyfunc.Dockerfile", "docker/standard.Dockerfile"]},
     zip_safe=True,
     install_requires=REQUIRES,
     setup_requires=["setuptools_scm"],
