@@ -220,56 +220,56 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth):
     assert resp.status_code == 404
 
 
-@pytest.mark.integration
-def test_set_traffic(integration_test_url, project_name, use_google_oauth):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
-    merlin.set_project(project_name)
-    merlin.set_model("set-traffic-sample", ModelType.SKLEARN)
+# @pytest.mark.integration
+# def test_set_traffic(integration_test_url, project_name, use_google_oauth):
+#     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+#     merlin.set_project(project_name)
+#     merlin.set_model("set-traffic-sample", ModelType.SKLEARN)
 
-    model_dir = "test/sklearn-model"
-    MODEL_FILE = "model.joblib"
+#     model_dir = "test/sklearn-model"
+#     MODEL_FILE = "model.joblib"
 
-    undeploy_all_version()
+#     undeploy_all_version()
 
-    with merlin.new_model_version() as v:
-        clf = svm.SVC(gamma='scale')
-        iris = load_iris()
-        X, y = iris.data, iris.target
-        clf.fit(X, y)
-        dump(clf, os.path.join(model_dir, MODEL_FILE))
+#     with merlin.new_model_version() as v:
+#         clf = svm.SVC(gamma='scale')
+#         iris = load_iris()
+#         X, y = iris.data, iris.target
+#         clf.fit(X, y)
+#         dump(clf, os.path.join(model_dir, MODEL_FILE))
 
-        # Upload the serialized model to MLP
-        merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v)
+#         # Upload the serialized model to MLP
+#         merlin.log_model(model_dir=model_dir)
+#         endpoint = merlin.deploy(v)
 
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
+#     sleep(5)
+#     resp = requests.post(f"{endpoint.url}", json=request_json)
 
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
+#     assert resp.status_code == 200
+#     assert resp.json() is not None
+#     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
-    # Undeploy deployed model version
-    merlin.undeploy(v)
-    sleep(5)
+#     # Undeploy deployed model version
+#     merlin.undeploy(v)
+#     sleep(5)
 
-    # Redeploy and set traffic
-    merlin.deploy(v)
+#     # Redeploy and set traffic
+#     merlin.deploy(v)
 
-    endpoint = merlin.set_traffic({v: 100})
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
+#     endpoint = merlin.set_traffic({v: 100})
+#     sleep(5)
+#     resp = requests.post(f"{endpoint.url}", json=request_json)
 
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
+#     assert resp.status_code == 200
+#     assert resp.json() is not None
+#     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
-    # Try to undeploy serving model version. It must be fail
-    with pytest.raises(Exception):
-        assert merlin.undeploy(v)
+#     # Try to undeploy serving model version. It must be fail
+#     with pytest.raises(Exception):
+#         assert merlin.undeploy(v)
 
-    # Undeploy other running model version endpoints
-    undeploy_all_version()
+#     # Undeploy other running model version endpoints
+#     undeploy_all_version()
 
 
 @pytest.mark.integration
