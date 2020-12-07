@@ -54,7 +54,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 		},
 	}
 	versionId := 1
-
+	one := 1
 	minReplica := 1
 	maxReplica := 10
 	cpuRequest := resource.MustParse("1")
@@ -115,7 +115,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -169,7 +169,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -198,8 +198,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								},
 							},
 							DeploymentSpec: kfsv1alpha2.DeploymentSpec{
-								MinReplicas: 1,
-								MaxReplicas: 1,
+								MinReplicas: &one,
+								MaxReplicas: one,
 							},
 						},
 					},
@@ -240,7 +240,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -282,7 +282,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -327,7 +327,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Resources:      resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -369,7 +369,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -419,7 +419,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								},
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -470,6 +470,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 	}
 	versionId := 1
 
+	one := 1
 	minReplica := 1
 	maxReplica := 10
 	cpuRequest := resource.MustParse("1")
@@ -523,7 +524,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -554,7 +555,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -600,7 +601,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -631,7 +632,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -660,8 +661,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								},
 							},
 							DeploymentSpec: kfsv1alpha2.DeploymentSpec{
-								MinReplicas: 1,
-								MaxReplicas: 1,
+								MinReplicas: &one,
+								MaxReplicas: one,
 							},
 						},
 					},
@@ -697,7 +698,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -726,8 +727,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								},
 							},
 							DeploymentSpec: kfsv1alpha2.DeploymentSpec{
-								MinReplicas: 1,
-								MaxReplicas: 1,
+								MinReplicas: &one,
+								MaxReplicas: one,
 							},
 						},
 					},
@@ -757,7 +758,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Resources:  resourceRequests,
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: minReplica,
+								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
 							},
 						},
@@ -787,6 +788,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 }
 
 func Test_createTransformerSpec(t *testing.T) {
+	one := 1
 	cpuRequest := resource.MustParse("1")
 	memoryRequest := resource.MustParse("1Gi")
 	cpuLimit := cpuRequest.DeepCopy()
@@ -849,8 +851,8 @@ func Test_createTransformerSpec(t *testing.T) {
 					},
 				},
 				DeploymentSpec: kfsv1alpha2.DeploymentSpec{
-					MinReplicas: 1,
-					MaxReplicas: 1,
+					MinReplicas: &one,
+					MaxReplicas: one,
 				},
 			},
 		},

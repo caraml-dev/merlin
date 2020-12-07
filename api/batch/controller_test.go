@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/apis/sparkoperator.k8s.io/v1beta2"
+	sparkOpFake "github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned/fake"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -313,7 +314,7 @@ func TestSubmit(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			mockStorage := &mocks.PredictionJobStorage{}
 			mockMlpApiClient := &mlpMock.APIClient{}
-			mockSparkClient := &batchMock.Clientset{}
+			mockSparkClient := &sparkOpFake.Clientset{}
 			mockKubeClient := &fake2.Clientset{}
 			mockManifestManager := &batchMock.ManifestManager{}
 			clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
@@ -376,7 +377,7 @@ func TestCleanupAfterSubmitFailed(t *testing.T) {
 	mockMlpApiClient := &mlpMock.APIClient{}
 	mockMlpApiClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
-	mockSparkClient := &batchMock.Clientset{}
+	mockSparkClient := &sparkOpFake.Clientset{}
 	mockSparkClient.PrependReactor("create", "sparkapplications", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 		return true, nil, errors.New("failed creating spark application")
 	})
@@ -403,7 +404,7 @@ func TestOnUpdate(t *testing.T) {
 	mockMlpApiClient := &mlpMock.APIClient{}
 	mockMlpApiClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
-	mockSparkClient := &batchMock.Clientset{}
+	mockSparkClient := &sparkOpFake.Clientset{}
 	mockKubeClient := &fake2.Clientset{}
 	mockManifestManager := &batchMock.ManifestManager{}
 	clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
@@ -478,7 +479,7 @@ func TestUpdateStatus(t *testing.T) {
 			mockMlpApiClient := &mlpMock.APIClient{}
 			mockMlpApiClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
-			mockSparkClient := &batchMock.Clientset{}
+			mockSparkClient := &sparkOpFake.Clientset{}
 			mockKubeClient := &fake2.Clientset{}
 			mockManifestManager := &batchMock.ManifestManager{}
 			clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
@@ -566,7 +567,7 @@ func TestStop(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			mockStorage := &mocks.PredictionJobStorage{}
 			mockMlpApiClient := &mlpMock.APIClient{}
-			mockSparkClient := &batchMock.Clientset{}
+			mockSparkClient := &sparkOpFake.Clientset{}
 			mockKubeClient := &fake2.Clientset{}
 			mockManifestManager := &batchMock.ManifestManager{}
 			clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}

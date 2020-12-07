@@ -18,8 +18,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/gojek/merlin/istio/client-go/pkg/apis/networking/v1alpha3"
-	networkingv1alpha3 "github.com/gojek/merlin/istio/client-go/pkg/clientset/versioned/typed/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	networkingv1alpha3 "istio.io/client-go/pkg/clientset/versioned/typed/networking/v1alpha3"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
@@ -84,7 +84,6 @@ func (c *client) PatchVirtualService(ctx context.Context, namespace string, vs *
 	if err != nil {
 		return nil, err
 	}
-
 	return c.networking.VirtualServices(namespace).Patch(vs.ObjectMeta.Name, types.MergePatchType, vsJSON)
 }
 
