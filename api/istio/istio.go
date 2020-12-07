@@ -84,9 +84,7 @@ func (c *client) PatchVirtualService(ctx context.Context, namespace string, vs *
 	if err != nil {
 		return nil, err
 	}
-	xx, yy := c.networking.VirtualServices(namespace).Patch(vs.ObjectMeta.Name, types.MergePatchType, vsJSON)
-	return xx, yy
-	// return c.networking.VirtualServices(namespace).Patch(vs.ObjectMeta.Name, types.MergePatchType, vsJSON)
+	return c.networking.VirtualServices(namespace).Patch(vs.ObjectMeta.Name, types.MergePatchType, vsJSON)
 }
 
 func (c *client) DeleteVirtualService(ctx context.Context, namespace, name string) error {

@@ -20,8 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	// "github.com/gojek/merlin/istio/client-go/pkg/clientset/versioned/typed/networking/v1alpha3/mocks"
-
 	"github.com/stretchr/testify/assert"
 	networking "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
