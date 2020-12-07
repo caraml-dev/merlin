@@ -39,6 +39,7 @@ request_json = {
 
 
 @pytest.mark.integration
+@pytest.mark.dependency()
 def test_sklearn(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -74,6 +75,7 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth):
 
 
 @pytest.mark.integration
+@pytest.mark.dependency()
 def test_xgboost(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -117,6 +119,7 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth):
 
     assert resp.status_code == 404
 
+
 @pytest.mark.integration
 def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
@@ -139,17 +142,20 @@ def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth):
         merlin.log_metric("model_loaded", 10.23)
 
         assert merlin.get_param("model_type") == "pytorch"
-        assert merlin.get_param("iteration") == '5'  # Stringify value which is integer originally
+        # Stringify value which is integer originally
+        assert merlin.get_param("iteration") == '5'
         assert merlin.get_param("random_key") is None
 
         assert merlin.get_tag("version") == "v1.0"
         assert merlin.get_tag("xxx") is None
-        assert merlin.get_tag("team_id") == "1"  # Stringify value which is integer originally
+        # Stringify value which is integer originally
+        assert merlin.get_tag("team_id") == "1"
 
         assert merlin.get_metric("model_loaded") == 10.23
         assert merlin.get_metric("response_time") is None
 
-        assert merlin.list_tag() == {"version": "v1.0", "build": "latest", "team_id": "1"}
+        assert merlin.list_tag() == {
+            "version": "v1.0", "build": "latest", "team_id": "1"}
 
         # TODO: Support downloading artifacts from S3 or S3-compatible alternative (such as MinIO)
         # merlin.download_artifact("test/downloaded_artifact")
@@ -158,6 +164,7 @@ def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth):
 
 
 @pytest.mark.integration
+@pytest.mark.dependency()
 def test_tensorflow(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -194,6 +201,7 @@ def test_tensorflow(integration_test_url, project_name, use_google_oauth):
 
 
 @pytest.mark.integration
+@pytest.mark.dependency()
 def test_pytorch(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -401,7 +409,8 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth):
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
         resource_request = ResourceRequest(1, 1, "100m", "200Mi")
-        endpoint = merlin.deploy(v, environment_name=default_env.name, resource_request=resource_request)
+        endpoint = merlin.deploy(
+            v, environment_name=default_env.name, resource_request=resource_request)
 
     sleep(5)
     resp = requests.post(f"{endpoint.url}", json=request_json)
@@ -415,6 +424,7 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth):
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 404
+
 
 @pytest.mark.integration
 def test_resource_request(integration_test_url, project_name, use_google_oauth):
@@ -452,7 +462,8 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth):
         merlin.log_model(model_dir=model_dir)
 
         resource_request = ResourceRequest(1, 1, "100m", "200Mi")
-        endpoint = merlin.deploy(v, environment_name=default_env.name, resource_request=resource_request)
+        endpoint = merlin.deploy(
+            v, environment_name=default_env.name, resource_request=resource_request)
 
     sleep(5)
     resp = requests.post(f"{endpoint.url}", json=request_json)
@@ -466,6 +477,7 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth):
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 404
+
 
 @pytest.mark.integration
 def test_transformer_pytorch(integration_test_url, project_name, use_google_oauth):

@@ -27,9 +27,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gojek/merlin/istio"
-	"github.com/gojek/merlin/istio/client-go/pkg/apis/networking/v1alpha3"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
+	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 )
 
 const (
@@ -274,7 +274,7 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 		versionEndpointPath += predictPathSuffix
 	}
 
-	mirrorDestination := &networking.Destination{}
+	var mirrorDestination *networking.Destination
 	if endpoint.Rule.Mirror != nil {
 		mirrorDestination = &networking.Destination{
 			Host: endpoint.Rule.Mirror.ServiceName,

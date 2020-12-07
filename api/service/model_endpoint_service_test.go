@@ -26,10 +26,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gojek/merlin/istio"
-	"github.com/gojek/merlin/istio/client-go/pkg/apis/networking/v1alpha3"
 	"github.com/gojek/merlin/istio/mocks"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 )
 
 var (
@@ -184,7 +184,7 @@ func Test_createVirtualService(t *testing.T) {
 							Rewrite: &networking.HTTPRewrite{
 								Uri: "/v1/models/version-1:predict",
 							},
-							Mirror: &networking.Destination{},
+							Mirror: nil,
 						},
 					},
 				},
