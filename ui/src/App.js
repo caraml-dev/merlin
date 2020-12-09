@@ -36,6 +36,9 @@ import { CreateJobView } from "./job/CreateJobView";
 import { VersionDetails } from "./version/VersionDetails";
 import { PrivateLayout } from "./PrivateLayout";
 
+// The new UI architecture will have all UI pages inside of pages folder
+import { Version } from "./pages";
+
 export default () => (
   <ErrorBoundary>
     <MlpApiContextProvider
@@ -84,10 +87,17 @@ export default () => (
             path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/*`}
             render={PrivateLayout(VersionDetails)}
           />
+
           <Redirect
             from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId`}
-            to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/deploy`}
+            to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/-/details`}
             noThrow
+          />
+
+          {/* Version pages (and its sub-routers) */}
+          <PrivateRoute
+            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/*`}
+            render={PrivateLayout(Version)}
           />
 
           {/* Prediction Job */}

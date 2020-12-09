@@ -32,8 +32,6 @@ import { useMerlinApi } from "../hooks/useMerlinApi";
 import { Router } from "@reach/router";
 import { get } from "@gojek/mlp-ui";
 import VersionDeploy from "./deployment/VersionDeploy";
-import VersionRedeploy from "./deployment/VersionRedeploy";
-import Log from "../log/Log";
 
 export const VersionDetails = ({
   projectId,
@@ -127,40 +125,10 @@ export const VersionDetails = ({
             />
           )}
 
-          {model && version && (
-            <VersionRedeploy
-              path="endpoints/:endpointId/redeploy"
-              model={model}
-              version={version}
-              breadcrumbs={breadcrumbs}
-            />
-          )}
-
-          {model && version && (
-            <VersionLog
-              path="endpoints/:endpointId/logs"
-              modelId={model.id}
-              versionId={version.id}
-              breadcrumbs={breadcrumbs}
-            />
-          )}
-
           <LoadingContent default />
         </Router>
       </EuiPageBody>
     </EuiPage>
-  );
-};
-
-const VersionLog = ({ modelId, versionId, endpointId, breadcrumbs }) => {
-  const containerURL = `/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`;
-  return (
-    <Log
-      path="endpoints/:endpointId/logs"
-      modelId={modelId}
-      fetchContainerURL={containerURL}
-      breadcrumbs={breadcrumbs}
-    />
   );
 };
 

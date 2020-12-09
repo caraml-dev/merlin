@@ -96,7 +96,7 @@ export const EndpointDeployment = ({
   response
 }) => {
   useEffect(() => {
-    replaceBreadcrumbs([...breadcrumbs, { text: actionTitle }]);
+    breadcrumbs && replaceBreadcrumbs([...breadcrumbs, { text: actionTitle }]);
   }, [actionTitle, breadcrumbs]);
 
   const redirectUrl = `/merlin/projects/${model.project_id}/models/${model.id}/versions`;
@@ -208,7 +208,7 @@ export const EndpointDeployment = ({
                 <EuiSpacer size="s" />
                 <EuiPanel grow={false}>
                   <EuiTitle size="xs">
-                    <h4>Resources</h4>
+                    <h4>Model Resources</h4>
                   </EuiTitle>
                   <ResourceRequest
                     resourceRequest={

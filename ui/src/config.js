@@ -24,6 +24,7 @@ export const sentryConfig = {
 };
 
 export const appConfig = {
+  appIcon: "machineLearningApp",
   docsUrl: getEnv("REACT_APP_MERLIN_DOCS_URL"),
   dockerRegistries: getEnv("REACT_APP_DOCKER_REGISTRIES")
     ? getEnv("REACT_APP_DOCKER_REGISTRIES").split(",")
