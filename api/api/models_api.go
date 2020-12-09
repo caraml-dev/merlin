@@ -24,16 +24,18 @@ import (
 	"github.com/gojek/merlin/models"
 )
 
+// ModelsController controls models API.
 type ModelsController struct {
 	*AppContext
 }
 
+// ListModels list all models of a project.
 func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
 	ctx := r.Context()
 
-	projectId, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseId(vars["project_id"])
 
-	models, err := c.ModelsService.ListModels(ctx, projectId, vars["name"])
+	models, err := c.ModelsService.ListModels(ctx, projectID, vars["name"])
 	if err != nil {
 		return InternalServerError(err.Error())
 	}
@@ -41,13 +43,14 @@ func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _
 	return Ok(models)
 }
 
+// CreateModel creates a new model in an existing project.
 func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
 	ctx := r.Context()
 
 	model := body.(*models.Model)
 
-	projectId, _ := models.ParseId(vars["project_id"])
-	project, err := c.ProjectsService.GetByID(ctx, int32(projectId))
+	projectID, _ := models.ParseId(vars["project_id"])
+	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		return NotFound(err.Error())
 	}
@@ -55,7 +58,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 	mlflowClient := mlflow.NewClient(nil, project.MlflowTrackingUrl)
 	experimentName := fmt.Sprintf("%s/%s", project.Name, model.Name)
 
-	experimentId, err := mlflowClient.CreateExperiment(experimentName)
+	experimentID, err := mlflowClient.CreateExperiment(experimentName)
 	if err != nil {
 		switch err.Error() {
 		case mlflow.ResourceAlreadyExists:
@@ -65,8 +68,8 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 		}
 	}
 
-	model.ProjectId = projectId
-	model.ExperimentId, _ = models.ParseId(experimentId)
+	model.ProjectId = projectID
+	model.ExperimentId, _ = models.ParseId(experimentID)
 
 	model, err = c.ModelsService.Save(ctx, model)
 	if err != nil {
@@ -76,21 +79,22 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 	return Created(model)
 }
 
+// GetModel gets model given a project and model ID.
 func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
 	ctx := r.Context()
 
-	projectId, _ := models.ParseId(vars["project_id"])
-	modelId, _ := models.ParseId(vars["model_id"])
+	projectID, _ := models.ParseId(vars["project_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
 
-	_, err := c.ProjectsService.GetByID(ctx, int32(projectId))
+	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		return NotFound(err.Error())
 	}
 
-	model, err := c.ModelsService.FindById(ctx, modelId)
+	model, err := c.ModelsService.FindById(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model id %s not found", modelId))
+			return NotFound(fmt.Sprintf("Model id %s not found", modelID))
 		}
 
 		return InternalServerError(err.Error())

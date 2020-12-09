@@ -23,7 +23,7 @@ type EnvironmentController struct {
 	*AppContext
 }
 
-// ListEnvironments list all available environment for deployment target
+// ListEnvironments list all available environment for deployment target.
 func (c *EnvironmentController) ListEnvironments(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
 	environments, err := c.EnvironmentService.ListEnvironments(vars["name"])
 	if err != nil {
