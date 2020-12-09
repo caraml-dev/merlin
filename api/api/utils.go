@@ -24,23 +24,23 @@ import (
 	"github.com/gojek/merlin/models"
 )
 
-func (c *AppContext) getModelAndVersion(ctx context.Context, modelId models.Id, versionId models.Id) (*models.Model, *models.Version, error) {
-	model, err := c.ModelsService.FindById(ctx, modelId)
+func (c *AppContext) getModelAndVersion(ctx context.Context, modelID models.Id, versionID models.Id) (*models.Model, *models.Version, error) {
+	model, err := c.ModelsService.FindById(ctx, modelID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
-			log.Errorf("error retrieving model with id: %d: %v", modelId, err)
-			return nil, nil, fmt.Errorf("error retrieving model with id: %d", modelId)
+			log.Errorf("error retrieving model with id: %d: %v", modelID, err)
+			return nil, nil, fmt.Errorf("error retrieving model with id: %d", modelID)
 		}
-		return nil, nil, fmt.Errorf("model with given id: %d not found", modelId)
+		return nil, nil, fmt.Errorf("model with given id: %d not found", modelID)
 	}
 
-	version, err := c.VersionsService.FindById(ctx, modelId, versionId, c.MonitoringConfig)
+	version, err := c.VersionsService.FindById(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
-			log.Errorf("error retrieving model version with id: %d: %v", versionId, err)
-			return nil, nil, fmt.Errorf("error retrieving model version with id: %d", versionId)
+			log.Errorf("error retrieving model version with id: %d: %v", versionID, err)
+			return nil, nil, fmt.Errorf("error retrieving model version with id: %d", versionID)
 		}
-		return nil, nil, fmt.Errorf("model version with given id: %d not found", versionId)
+		return nil, nil, fmt.Errorf("model version with given id: %d not found", versionID)
 	}
 
 	return model, version, nil

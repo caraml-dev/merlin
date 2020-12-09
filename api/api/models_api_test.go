@@ -37,7 +37,7 @@ func TestListModel(t *testing.T) {
 		desc         string
 		vars         map[string]string
 		modelService func() *mocks.ModelsService
-		expected     *ApiResponse
+		expected     *APIResponse
 	}{
 		{
 			desc: "Should success list model",
@@ -75,7 +75,7 @@ func TestListModel(t *testing.T) {
 				}, nil)
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &APIResponse{
 				code: http.StatusOK,
 				data: []*models.Model{
 					{
@@ -116,7 +116,7 @@ func TestListModel(t *testing.T) {
 				mockSvc.On("ListModels", mock.Anything, models.Id(1), "tensorflow").Return(nil, fmt.Errorf("MLP API is down"))
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &APIResponse{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "MLP API is down"},
 			},
@@ -143,7 +143,7 @@ func TestGetModel(t *testing.T) {
 		vars           map[string]string
 		modelService   func() *mocks.ModelsService
 		projectService func() *mocks.ProjectsService
-		expected       *ApiResponse
+		expected       *APIResponse
 	}{
 		{
 			desc: "Should success get model",
@@ -196,7 +196,7 @@ func TestGetModel(t *testing.T) {
 					}, nil)
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &APIResponse{
 				code: http.StatusOK,
 				data: &models.Model{
 					Id:        models.Id(1),
@@ -239,7 +239,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc := &mocks.ModelsService{}
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &APIResponse{
 				code: http.StatusNotFound,
 				data: Error{Message: "Project API is down"},
 			},
@@ -271,7 +271,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &APIResponse{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model id 1 not found"},
 			},
@@ -303,7 +303,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is unreachable"))
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &APIResponse{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "DB is unreachable"},
 			},

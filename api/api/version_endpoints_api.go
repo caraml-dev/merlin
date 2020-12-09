@@ -30,20 +30,20 @@ type EndpointsController struct {
 	*AppContext
 }
 
-func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
+	versionID, _ := models.ParseId(vars["version_id"])
 
-	model, err := c.ModelsService.FindById(ctx, modelId)
+	model, err := c.ModelsService.FindById(ctx, modelID)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelId))
+		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
 
-	version, err := c.VersionsService.FindById(ctx, modelId, versionId, c.MonitoringConfig)
+	version, err := c.VersionsService.FindById(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionId))
+		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
 	}
 
 	endpoints, err := c.EndpointsService.ListEndpoints(model, version)
@@ -64,21 +64,21 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 	return Ok(endpoints)
 }
 
-func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
+	versionID, _ := models.ParseId(vars["version_id"])
 	endpointId, _ := uuid.Parse(vars["endpoint_id"])
 
-	model, err := c.ModelsService.FindById(ctx, modelId)
+	model, err := c.ModelsService.FindById(ctx, modelID)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelId))
+		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
 
-	version, err := c.VersionsService.FindById(ctx, modelId, versionId, c.MonitoringConfig)
+	version, err := c.VersionsService.FindById(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionId))
+		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
 	}
 
 	endpoint, err := c.EndpointsService.FindById(endpointId)
@@ -102,13 +102,13 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 	return Ok(endpoint)
 }
 
-func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
+	versionID, _ := models.ParseId(vars["version_id"])
 
-	model, version, err := c.getModelAndVersion(ctx, modelId, versionId)
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			return InternalServerError(err.Error())
@@ -167,14 +167,14 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	return Created(endpoint)
 }
 
-func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
+	versionID, _ := models.ParseId(vars["version_id"])
 	endpointId, _ := uuid.Parse(vars["endpoint_id"])
 
-	model, version, err := c.getModelAndVersion(ctx, modelId, versionId)
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			return InternalServerError(err.Error())
@@ -227,15 +227,15 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 }
 
 // DeleteEndpoint undeploys running model version endpoint.
-func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	versionId, _ := models.ParseId(vars["version_id"])
-	modelId, _ := models.ParseId(vars["model_id"])
+	versionID, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
 	rawEndpointId, ok := vars["endpoint_id"]
 	endpointId, _ := uuid.Parse(rawEndpointId)
 
-	model, version, err := c.getModelAndVersion(ctx, modelId, versionId)
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
 		return NotFound(err.Error())
 	}
@@ -252,7 +252,7 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 
 		endpoint, ok = version.GetEndpointByEnvironmentName(env.Name)
 		if !ok {
-			return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionId))
+			return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
 		}
 	} else {
 
@@ -288,20 +288,20 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 	return Ok(nil)
 }
 
-func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	versionId, _ := models.ParseId(vars["version_id"])
+	versionID, _ := models.ParseId(vars["version_id"])
 	endpointId, _ := uuid.Parse(vars["endpoint_id"])
-	modelId, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
 
-	model, err := c.ModelsService.FindById(ctx, modelId)
+	model, err := c.ModelsService.FindById(ctx, modelID)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelId))
+		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
-	version, err := c.VersionsService.FindById(ctx, modelId, versionId, c.MonitoringConfig)
+	version, err := c.VersionsService.FindById(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionId))
+		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
 	}
 
 	endpoint, err := c.EndpointsService.ListContainers(model, version, endpointId)

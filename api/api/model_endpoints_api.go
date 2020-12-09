@@ -33,7 +33,7 @@ type ModelEndpointsController struct {
 }
 
 // ListModelEndpointInProject list all model endpoints under a project
-func (c *ModelEndpointsController) ListModelEndpointInProject(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *ModelEndpointsController) ListModelEndpointInProject(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
 	projectID, _ := models.ParseId(vars["project_id"])
@@ -54,7 +54,7 @@ func (c *ModelEndpointsController) ListModelEndpointInProject(r *http.Request, v
 }
 
 // ListModelEndpoints lists all model endpoints under a model.
-func (c *ModelEndpointsController) ListModelEndpoints(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *ModelEndpointsController) ListModelEndpoints(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseId(vars["model_id"])
@@ -69,7 +69,7 @@ func (c *ModelEndpointsController) ListModelEndpoints(r *http.Request, vars map[
 }
 
 // GetModelEndpoint get model endpoint given an ID.
-func (c *ModelEndpointsController) GetModelEndpoint(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *ModelEndpointsController) GetModelEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
 	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
@@ -91,7 +91,7 @@ func (c *ModelEndpointsController) GetModelEndpoint(r *http.Request, vars map[st
 // 1. Deploy an Istio's VirtualService specifaction that maps from ModelEndpoint's rule
 // 2. Insert a record on `model_endpoints` table
 // 3. Update `endpoint_id` column on associated `model` record
-func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseId(vars["model_id"])
@@ -153,7 +153,7 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 }
 
 // UpdateModelEndpoint updates model endpoint.
-func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseId(vars["model_id"])
@@ -296,7 +296,7 @@ func (c *ModelEndpointsController) assignVersionEndpoint(ctx context.Context, en
 //    - Update the model endpoint status to terminated
 // 3. Update the version endpoint database
 //    - Update the version endpoint status from serving to running
-func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseId(vars["model_id"])

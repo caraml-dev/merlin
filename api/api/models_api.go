@@ -30,7 +30,7 @@ type ModelsController struct {
 }
 
 // ListModels list all models of a project.
-func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
 	projectID, _ := models.ParseId(vars["project_id"])
@@ -44,7 +44,7 @@ func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _
 }
 
 // CreateModel creates a new model in an existing project.
-func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
 	model := body.(*models.Model)
@@ -80,7 +80,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 }
 
 // GetModel gets model given a project and model ID.
-func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
 	projectID, _ := models.ParseId(vars["project_id"])

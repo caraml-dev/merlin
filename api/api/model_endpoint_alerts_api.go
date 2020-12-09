@@ -30,7 +30,7 @@ type AlertsController struct {
 }
 
 // ListTeams lists registered teams for alerts notification.
-func (c *AlertsController) ListTeams(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *AlertsController) ListTeams(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	teams, err := c.ModelEndpointAlertService.ListTeams()
 	if err != nil {
 		log.Errorf("ListTeams: %s", err)
@@ -41,7 +41,7 @@ func (c *AlertsController) ListTeams(r *http.Request, vars map[string]string, _ 
 }
 
 // ListModelEndpointAlerts lists alerts for model endpoints.
-func (c *AlertsController) ListModelEndpointAlerts(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *AlertsController) ListModelEndpointAlerts(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	modelID, _ := models.ParseId(vars["model_id"])
 
 	modelEndpointAlerts, err := c.ModelEndpointAlertService.ListModelAlerts(modelID)
@@ -56,7 +56,7 @@ func (c *AlertsController) ListModelEndpointAlerts(r *http.Request, vars map[str
 }
 
 // GetModelEndpointAlert gets alert for given model endpoint.
-func (c *AlertsController) GetModelEndpointAlert(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *AlertsController) GetModelEndpointAlert(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	modelID, _ := models.ParseId(vars["model_id"])
 	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
 
@@ -72,7 +72,7 @@ func (c *AlertsController) GetModelEndpointAlert(r *http.Request, vars map[strin
 }
 
 // CreateModelEndpointAlert creates alert for given model endpoint.
-func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
 	user := vars["user"]
@@ -113,7 +113,7 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 }
 
 // UpdateModelEndpointAlert updates model endpoint alert.
-func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
 	user := vars["user"]

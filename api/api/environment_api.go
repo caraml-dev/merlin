@@ -24,7 +24,7 @@ type EnvironmentController struct {
 }
 
 // ListEnvironments list all available environment for deployment target.
-func (c *EnvironmentController) ListEnvironments(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *EnvironmentController) ListEnvironments(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	environments, err := c.EnvironmentService.ListEnvironments(vars["name"])
 	if err != nil {
 		return InternalServerError(err.Error())
