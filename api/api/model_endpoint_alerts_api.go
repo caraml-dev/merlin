@@ -42,14 +42,14 @@ func (c *AlertsController) ListTeams(r *http.Request, vars map[string]string, _ 
 
 // ListModelEndpointAlerts lists alerts for model endpoints.
 func (c *AlertsController) ListModelEndpointAlerts(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
-	modelId, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
 
-	modelEndpointAlerts, err := c.ModelEndpointAlertService.ListModelAlerts(modelId)
+	modelEndpointAlerts, err := c.ModelEndpointAlertService.ListModelAlerts(modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("ListModelAlerts: Alerts for Model ID %s not found", modelId))
+			return NotFound(fmt.Sprintf("ListModelAlerts: Alerts for Model ID %s not found", modelID))
 		}
-		return InternalServerError(fmt.Sprintf("ListModelAlerts: Error while getting alerts for Model ID %s", modelId))
+		return InternalServerError(fmt.Sprintf("ListModelAlerts: Error while getting alerts for Model ID %s", modelID))
 	}
 
 	return Ok(modelEndpointAlerts)
@@ -57,15 +57,15 @@ func (c *AlertsController) ListModelEndpointAlerts(r *http.Request, vars map[str
 
 // GetModelEndpointAlert gets alert for given model endpoint.
 func (c *AlertsController) GetModelEndpointAlert(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
-	modelId, _ := models.ParseId(vars["model_id"])
-	modelEndpointId, _ := models.ParseId(vars["model_endpoint_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
+	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
 
-	modelEndpointAlert, err := c.ModelEndpointAlertService.GetModelEndpointAlert(modelId, modelEndpointId)
+	modelEndpointAlert, err := c.ModelEndpointAlertService.GetModelEndpointAlert(modelID, modelEndpointID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("GetModelEndpointAlert: Alert for model endpoint with id %s not found", modelEndpointId))
+			return NotFound(fmt.Sprintf("GetModelEndpointAlert: Alert for model endpoint with id %s not found", modelEndpointID))
 		}
-		return InternalServerError(fmt.Sprintf("GetModelEndpointAlert: Error while getting alert for model endpoint with id %s", modelEndpointId))
+		return InternalServerError(fmt.Sprintf("GetModelEndpointAlert: Error while getting alert for model endpoint with id %s", modelEndpointID))
 	}
 
 	return Ok(modelEndpointAlert)
@@ -76,7 +76,7 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 	ctx := r.Context()
 
 	user := vars["user"]
-	modelId, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseId(vars["model_id"])
 	modelEndpointId, _ := models.ParseId(vars["model_endpoint_id"])
 
 	alert, ok := body.(*models.ModelEndpointAlert)
@@ -84,12 +84,12 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 		return BadRequest("Unable to parse body as model endpoint alert")
 	}
 
-	model, err := c.ModelsService.FindById(ctx, modelId)
+	model, err := c.ModelsService.FindById(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model with id %s not found", modelId))
+			return NotFound(fmt.Sprintf("Model with id %s not found", modelID))
 		}
-		return InternalServerError(fmt.Sprintf("Error while getting model with id %s", modelId))
+		return InternalServerError(fmt.Sprintf("Error while getting model with id %s", modelID))
 	}
 
 	alert.Model = model
@@ -106,12 +106,13 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 	alert, err = c.ModelEndpointAlertService.CreateModelEndpointAlert(user, alert)
 	if err != nil {
 		log.Errorf("CreateModelEndpointAlert: %s", err)
-		return InternalServerError(fmt.Sprintf("Error while creating model endpoint alert for Model %s, Endpoint %s", modelId, modelEndpointId))
+		return InternalServerError(fmt.Sprintf("Error while creating model endpoint alert for Model %s, Endpoint %s", modelID, modelEndpointId))
 	}
 
 	return Created(alert)
 }
 
+// UpdateModelEndpointAlert updates model endpoint alert.
 func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
 	ctx := r.Context()
 

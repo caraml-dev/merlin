@@ -18,6 +18,7 @@ import (
 	"net/http"
 )
 
+// EnvironmentController controls environment API.
 type EnvironmentController struct {
 	*AppContext
 }
