@@ -33,8 +33,8 @@ type EndpointsController struct {
 func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
@@ -67,8 +67,8 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 	endpointID, _ := uuid.Parse(vars["endpoint_id"])
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
@@ -105,8 +105,8 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
@@ -170,8 +170,8 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 	endpointID, _ := uuid.Parse(vars["endpoint_id"])
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
@@ -230,8 +230,8 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	versionID, _ := models.ParseId(vars["version_id"])
-	modelID, _ := models.ParseId(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 	rawEndpointID, ok := vars["endpoint_id"]
 	endpointID, _ := uuid.Parse(rawEndpointID)
 
@@ -291,9 +291,9 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	versionID, _ := models.ParseId(vars["version_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 	endpointID, _ := uuid.Parse(vars["endpoint_id"])
-	modelID, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {

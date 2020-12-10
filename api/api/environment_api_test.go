@@ -45,7 +45,7 @@ func TestListEnvironments(t *testing.T) {
 						Cluster:    "dev",
 						Region:     "id",
 						GcpProject: "dev",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 				}, nil)
@@ -60,7 +60,7 @@ func TestListEnvironments(t *testing.T) {
 						Cluster:    "dev",
 						Region:     "id",
 						GcpProject: "dev",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 				},

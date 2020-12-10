@@ -33,7 +33,7 @@ type ModelsController struct {
 func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 
 	models, err := c.ModelsService.ListModels(ctx, projectID, vars["name"])
 	if err != nil {
@@ -49,13 +49,13 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 
 	model := body.(*models.Model)
 
-	projectID, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		return NotFound(err.Error())
 	}
 
-	mlflowClient := mlflow.NewClient(nil, project.MlflowTrackingUrl)
+	mlflowClient := mlflow.NewClient(nil, project.MlflowTrackingURL)
 	experimentName := fmt.Sprintf("%s/%s", project.Name, model.Name)
 
 	experimentID, err := mlflowClient.CreateExperiment(experimentName)
@@ -69,7 +69,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 	}
 
 	model.ProjectID = projectID
-	model.ExperimentId, _ = models.ParseId(experimentID)
+	model.ExperimentID, _ = models.ParseID(experimentID)
 
 	model, err = c.ModelsService.Save(ctx, model)
 	if err != nil {
@@ -83,8 +83,8 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
-	modelID, _ := models.ParseId(vars["model_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {

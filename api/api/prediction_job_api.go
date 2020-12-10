@@ -34,8 +34,8 @@ type PredictionJobController struct {
 func (c *PredictionJobController) Create(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
@@ -68,8 +68,8 @@ func (c *PredictionJobController) Create(r *http.Request, vars map[string]string
 func (c *PredictionJobController) List(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
@@ -97,9 +97,9 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
-	id, _ := models.ParseId(vars["job_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
+	id, _ := models.ParseID(vars["job_id"])
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
@@ -127,9 +127,9 @@ func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _
 func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
-	id, _ := models.ParseId(vars["job_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
+	id, _ := models.ParseID(vars["job_id"])
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
@@ -157,9 +157,9 @@ func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, 
 func (c *PredictionJobController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	versionID, _ := models.ParseId(vars["version_id"])
-	modelID, _ := models.ParseId(vars["model_id"])
-	id, _ := models.ParseId(vars["job_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	id, _ := models.ParseID(vars["job_id"])
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
@@ -194,7 +194,7 @@ func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[str
 
 	var query service.ListPredictionJobQuery
 	err := decoder.Decode(&query, r.URL.Query())
-	projectID, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 
 	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {

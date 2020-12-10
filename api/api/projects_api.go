@@ -51,7 +51,7 @@ func (c *ProjectsController) ListProjects(r *http.Request, vars map[string]strin
 // GetProject gets a project of a project ID.
 func (c *ProjectsController) GetProject(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
-	projectID, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		return NotFound(err.Error())

@@ -301,7 +301,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 0,
+					ExperimentID: 0,
 				}, nil)
 				return svc
 			},
@@ -480,7 +480,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 0,
+					ExperimentID: 0,
 				}, nil)
 				return svc
 			},
@@ -524,7 +524,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 0,
+					ExperimentID: 0,
 				}, nil)
 				return svc
 			},
@@ -568,7 +568,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 0,
+					ExperimentID: 0,
 				}, nil)
 				return svc
 			},
@@ -647,7 +647,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 0,
+					ExperimentID: 0,
 				}, nil)
 				return svc
 			},
@@ -817,7 +817,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 0,
+					ExperimentID: 0,
 				}, nil)
 				return svc
 			},
@@ -857,7 +857,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 0,
+					ExperimentID: 0,
 				}, nil)
 				return svc
 			},
@@ -897,7 +897,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 0,
+					ExperimentID: 0,
 				}, nil)
 				return svc
 			},

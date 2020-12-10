@@ -32,8 +32,8 @@ type VersionsController struct {
 func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
 	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
@@ -50,8 +50,8 @@ func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string,
 func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	versionID, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
 	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
@@ -79,7 +79,7 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 func (c *VersionsController) ListVersions(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 	versions, err := c.VersionsService.ListVersions(ctx, modelID, c.MonitoringConfig)
 	if err != nil {
 		return InternalServerError(err.Error())
@@ -91,22 +91,22 @@ func (c *VersionsController) ListVersions(r *http.Request, vars map[string]strin
 func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
 
-	mlflowClient := mlflow.NewClient(nil, model.Project.MlflowTrackingUrl)
-	run, err := mlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentId))
+	mlflowClient := mlflow.NewClient(nil, model.Project.MlflowTrackingURL)
+	run, err := mlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentID))
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to create mlflow run: %s", err.Error()))
 	}
 
 	version := &models.Version{
 		ModelID:     modelID,
-		RunId:       run.Info.RunId,
+		RunID:       run.Info.RunID,
 		ArtifactURI: run.Info.ArtifactURI,
 	}
 

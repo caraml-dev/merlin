@@ -55,7 +55,7 @@ func TestListModel(t *testing.T) {
 						Project: mlp.Project(client.Project{
 							ID:                1,
 							Name:              "tensorflow",
-							MlflowTrackingUrl: "http://mlflow.com",
+							MlflowTrackingURL: "http://mlflow.com",
 							Administrators:    nil,
 							Readers:           nil,
 							Team:              "dsp",
@@ -64,9 +64,9 @@ func TestListModel(t *testing.T) {
 							CreatedAt:         now,
 							UpdatedAt:         now,
 						}),
-						ExperimentId: models.ID(1),
+						ExperimentID: models.ID(1),
 						Type:         "tensorflow",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 						CreatedUpdated: models.CreatedUpdated{
 							CreatedAt: now,
 							UpdatedAt: now,
@@ -85,7 +85,7 @@ func TestListModel(t *testing.T) {
 						Project: mlp.Project(client.Project{
 							ID:                1,
 							Name:              "tensorflow",
-							MlflowTrackingUrl: "http://mlflow.com",
+							MlflowTrackingURL: "http://mlflow.com",
 							Administrators:    nil,
 							Readers:           nil,
 							Team:              "dsp",
@@ -94,9 +94,9 @@ func TestListModel(t *testing.T) {
 							CreatedAt:         now,
 							UpdatedAt:         now,
 						}),
-						ExperimentId: models.ID(1),
+						ExperimentID: models.ID(1),
 						Type:         "tensorflow",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 						CreatedUpdated: models.CreatedUpdated{
 							CreatedAt: now,
 							UpdatedAt: now,
@@ -156,7 +156,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
 					ID:                1,
 					Name:              "tensorflow",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MlflowTrackingURL: "http://mlflow.com",
 					Administrators:    nil,
 					Readers:           nil,
 					Team:              "dsp",
@@ -177,7 +177,7 @@ func TestGetModel(t *testing.T) {
 						Project: mlp.Project(client.Project{
 							ID:                1,
 							Name:              "tensorflow",
-							MlflowTrackingUrl: "http://mlflow.com",
+							MlflowTrackingURL: "http://mlflow.com",
 							Administrators:    nil,
 							Readers:           nil,
 							Team:              "dsp",
@@ -186,9 +186,9 @@ func TestGetModel(t *testing.T) {
 							CreatedAt:         now,
 							UpdatedAt:         now,
 						}),
-						ExperimentId: models.ID(1),
+						ExperimentID: models.ID(1),
 						Type:         "tensorflow",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 						CreatedUpdated: models.CreatedUpdated{
 							CreatedAt: now,
 							UpdatedAt: now,
@@ -205,7 +205,7 @@ func TestGetModel(t *testing.T) {
 					Project: mlp.Project(client.Project{
 						ID:                1,
 						Name:              "tensorflow",
-						MlflowTrackingUrl: "http://mlflow.com",
+						MlflowTrackingURL: "http://mlflow.com",
 						Administrators:    nil,
 						Readers:           nil,
 						Team:              "dsp",
@@ -214,9 +214,9 @@ func TestGetModel(t *testing.T) {
 						CreatedAt:         now,
 						UpdatedAt:         now,
 					}),
-					ExperimentId: models.ID(1),
+					ExperimentID: models.ID(1),
 					Type:         "tensorflow",
-					MlflowUrl:    "http://mlflow.com",
+					MlflowURL:    "http://mlflow.com",
 					CreatedUpdated: models.CreatedUpdated{
 						CreatedAt: now,
 						UpdatedAt: now,
@@ -255,7 +255,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
 					ID:                1,
 					Name:              "tensorflow",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MlflowTrackingURL: "http://mlflow.com",
 					Administrators:    nil,
 					Readers:           nil,
 					Team:              "dsp",
@@ -287,7 +287,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
 					ID:                1,
 					Name:              "tensorflow",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MlflowTrackingURL: "http://mlflow.com",
 					Administrators:    nil,
 					Readers:           nil,
 					Team:              "dsp",

@@ -67,8 +67,8 @@ func TestListEndpoint(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
-					RunId:       "runID",
-					MlflowUrl:   "http://mlflow.com",
+					RunID:       "runID",
+					MlflowURL:   "http://mlflow.com",
 					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
@@ -105,7 +105,7 @@ func TestListEndpoint(t *testing.T) {
 							Name:    "dev",
 							Cluster: "dev",
 						},
-						MonitoringUrl: "http://grafana?var-cluster=dev&var-model=Model+1&var-model_version=Model+1-1&var-project=sample",
+						MonitoringURL: "http://grafana?var-cluster=dev&var-model=Model+1&var-model_version=Model+1-1&var-project=sample",
 					},
 				},
 			},
@@ -193,8 +193,8 @@ func TestListEndpoint(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
-					RunId:       "runID",
-					MlflowUrl:   "http://mlflow.com",
+					RunID:       "runID",
+					MlflowURL:   "http://mlflow.com",
 					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
@@ -270,8 +270,8 @@ func TestGetEndpoint(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
-					RunId:       "runID",
-					MlflowUrl:   "http://mlflow.com",
+					RunID:       "runID",
+					MlflowURL:   "http://mlflow.com",
 					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
@@ -305,7 +305,7 @@ func TestGetEndpoint(t *testing.T) {
 						Name:    "dev",
 						Cluster: "dev",
 					},
-					MonitoringUrl: "http://grafana?var-cluster=dev&var-model=Model+1&var-model_version=Model+1-1&var-project=sample",
+					MonitoringURL: "http://grafana?var-cluster=dev&var-model=Model+1&var-model_version=Model+1-1&var-project=sample",
 				},
 			},
 		},
@@ -395,8 +395,8 @@ func TestGetEndpoint(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
-					RunId:       "runID",
-					MlflowUrl:   "http://mlflow.com",
+					RunID:       "runID",
+					MlflowURL:   "http://mlflow.com",
 					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
@@ -437,8 +437,8 @@ func TestGetEndpoint(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
-					RunId:       "runID",
-					MlflowUrl:   "http://mlflow.com",
+					RunID:       "runID",
+					MlflowURL:   "http://mlflow.com",
 					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
@@ -514,8 +514,8 @@ func TestListContainers(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
-					RunId:       "runID",
-					MlflowUrl:   "http://mlflow.com",
+					RunID:       "runID",
+					MlflowURL:   "http://mlflow.com",
 					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
@@ -634,8 +634,8 @@ func TestListContainers(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
-					RunId:       "runID",
-					MlflowUrl:   "http://mlflow.com",
+					RunID:       "runID",
+					MlflowURL:   "http://mlflow.com",
 					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
@@ -706,7 +706,7 @@ func TestCreateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -723,9 +723,9 @@ func TestCreateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -740,9 +740,9 @@ func TestCreateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -757,7 +757,7 @@ func TestCreateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
@@ -767,7 +767,7 @@ func TestCreateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -784,7 +784,7 @@ func TestCreateEndpoint(t *testing.T) {
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -792,7 +792,7 @@ func TestCreateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -823,7 +823,7 @@ func TestCreateEndpoint(t *testing.T) {
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -831,7 +831,7 @@ func TestCreateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -864,7 +864,7 @@ func TestCreateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -881,9 +881,9 @@ func TestCreateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -898,9 +898,9 @@ func TestCreateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -915,7 +915,7 @@ func TestCreateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
@@ -925,7 +925,7 @@ func TestCreateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -949,7 +949,7 @@ func TestCreateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -984,7 +984,7 @@ func TestCreateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -1017,7 +1017,7 @@ func TestCreateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1070,7 +1070,7 @@ func TestCreateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1123,7 +1123,7 @@ func TestCreateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1140,9 +1140,9 @@ func TestCreateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1157,9 +1157,9 @@ func TestCreateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1201,7 +1201,7 @@ func TestCreateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1218,9 +1218,9 @@ func TestCreateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1235,9 +1235,9 @@ func TestCreateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1252,7 +1252,7 @@ func TestCreateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				svc.On("GetEnvironment", "dev").Return(nil, gorm.ErrRecordNotFound)
@@ -1288,7 +1288,7 @@ func TestCreateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1305,9 +1305,9 @@ func TestCreateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1322,9 +1322,9 @@ func TestCreateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1339,7 +1339,7 @@ func TestCreateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
@@ -1349,7 +1349,7 @@ func TestCreateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -1385,7 +1385,7 @@ func TestCreateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1402,9 +1402,9 @@ func TestCreateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1419,9 +1419,9 @@ func TestCreateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1436,7 +1436,7 @@ func TestCreateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
@@ -1446,7 +1446,7 @@ func TestCreateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -1522,7 +1522,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1539,9 +1539,9 @@ func TestUpdateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1556,9 +1556,9 @@ func TestUpdateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1573,7 +1573,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -1589,7 +1589,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -1597,7 +1597,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",
@@ -1617,7 +1617,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -1625,7 +1625,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -1652,7 +1652,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -1660,7 +1660,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -1695,7 +1695,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1746,7 +1746,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1763,9 +1763,9 @@ func TestUpdateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1780,9 +1780,9 @@ func TestUpdateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1797,7 +1797,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -1813,7 +1813,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -1821,7 +1821,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",
@@ -1858,7 +1858,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1875,9 +1875,9 @@ func TestUpdateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1892,9 +1892,9 @@ func TestUpdateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1909,7 +1909,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -1925,7 +1925,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -1933,7 +1933,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",
@@ -1970,7 +1970,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -1987,9 +1987,9 @@ func TestUpdateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2004,9 +2004,9 @@ func TestUpdateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -2021,7 +2021,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -2037,7 +2037,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2045,7 +2045,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",
@@ -2082,7 +2082,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -2099,9 +2099,9 @@ func TestUpdateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2116,9 +2116,9 @@ func TestUpdateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -2140,7 +2140,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2148,7 +2148,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",
@@ -2185,7 +2185,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				EnvVars: models.EnvVars([]models.EnvVar{
@@ -2202,9 +2202,9 @@ func TestUpdateEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2219,9 +2219,9 @@ func TestUpdateEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -2236,7 +2236,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -2252,7 +2252,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2260,7 +2260,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",
@@ -2280,7 +2280,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2288,7 +2288,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -2315,7 +2315,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2323,7 +2323,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -2393,9 +2393,9 @@ func TestDeleteEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2410,9 +2410,9 @@ func TestDeleteEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -2427,7 +2427,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -2443,7 +2443,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2451,7 +2451,7 @@ func TestDeleteEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",
@@ -2471,7 +2471,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2479,7 +2479,7 @@ func TestDeleteEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -2543,9 +2543,9 @@ func TestDeleteEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2582,9 +2582,9 @@ func TestDeleteEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2599,9 +2599,9 @@ func TestDeleteEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -2635,9 +2635,9 @@ func TestDeleteEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2652,9 +2652,9 @@ func TestDeleteEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -2688,9 +2688,9 @@ func TestDeleteEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2705,9 +2705,9 @@ func TestDeleteEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -2729,7 +2729,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2737,7 +2737,7 @@ func TestDeleteEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",
@@ -2769,9 +2769,9 @@ func TestDeleteEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2786,9 +2786,9 @@ func TestDeleteEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -2803,7 +2803,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -2819,7 +2819,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2827,7 +2827,7 @@ func TestDeleteEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",
@@ -2847,7 +2847,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2855,7 +2855,7 @@ func TestDeleteEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					},
 					EnvironmentName: "dev",
@@ -2890,9 +2890,9 @@ func TestDeleteEndpoint(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -2907,9 +2907,9 @@ func TestDeleteEndpoint(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -2924,7 +2924,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					IsDefault:  &trueBoolean,
 					Region:     "id",
 					GcpProject: "dev-proj",
-					MaxCpu:     "1",
+					MaxCPU:     "1",
 					MaxMemory:  "1Gi",
 				}, nil)
 				return svc
@@ -2940,7 +2940,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					URL:                  "http://endpoint.svc",
-					MonitoringUrl:        "http://monitoring.com",
+					MonitoringURL:        "http://monitoring.com",
 					Environment: &models.Environment{
 						ID:         models.ID(1),
 						Name:       "dev",
@@ -2948,7 +2948,7 @@ func TestDeleteEndpoint(t *testing.T) {
 						IsDefault:  &trueBoolean,
 						Region:     "id",
 						GcpProject: "dev-proj",
-						MaxCpu:     "1",
+						MaxCPU:     "1",
 						MaxMemory:  "1Gi",
 					}, EnvironmentName: "dev",
 					Message:         "",

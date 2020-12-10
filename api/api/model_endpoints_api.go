@@ -36,7 +36,7 @@ type ModelEndpointsController struct {
 func (c *ModelEndpointsController) ListModelEndpointInProject(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 	region := vars["region"]
 
 	modelEndpoints, err := c.ModelEndpointsService.ListModelEndpointsInProject(ctx, projectID, region)
@@ -57,7 +57,7 @@ func (c *ModelEndpointsController) ListModelEndpointInProject(r *http.Request, v
 func (c *ModelEndpointsController) ListModelEndpoints(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 	modelEndpoints, err := c.ModelEndpointsService.ListModelEndpoints(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
@@ -72,7 +72,7 @@ func (c *ModelEndpointsController) ListModelEndpoints(r *http.Request, vars map[
 func (c *ModelEndpointsController) GetModelEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
+	modelEndpointID, _ := models.ParseID(vars["model_endpoint_id"])
 	modelEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
 		log.Errorf("Error finding model endpoint with id %s, reason: %v", modelEndpointID, err)
@@ -94,7 +94,7 @@ func (c *ModelEndpointsController) GetModelEndpoint(r *http.Request, vars map[st
 func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
@@ -156,8 +156,8 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	modelEndpointID, _ := models.ParseID(vars["model_endpoint_id"])
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
@@ -299,8 +299,8 @@ func (c *ModelEndpointsController) assignVersionEndpoint(ctx context.Context, en
 func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	modelID, _ := models.ParseId(vars["model_id"])
-	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	modelEndpointID, _ := models.ParseID(vars["model_endpoint_id"])
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {

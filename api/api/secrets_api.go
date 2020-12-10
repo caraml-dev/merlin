@@ -30,7 +30,7 @@ type SecretsController struct {
 func (c *SecretsController) CreateSecret(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		log.Warnf("Project with id: %d not found", projectID)
@@ -54,8 +54,8 @@ func (c *SecretsController) CreateSecret(r *http.Request, vars map[string]string
 func (c *SecretsController) UpdateSecret(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
-	secretID, _ := models.ParseId(vars["secret_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
+	secretID, _ := models.ParseID(vars["secret_id"])
 	if projectID <= 0 || secretID <= 0 {
 		return BadRequest("project_id and secret_id is not valid")
 	}
@@ -81,8 +81,8 @@ func (c *SecretsController) UpdateSecret(r *http.Request, vars map[string]string
 func (c *SecretsController) DeleteSecret(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
-	secretID, _ := models.ParseId(vars["secret_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
+	secretID, _ := models.ParseID(vars["secret_id"])
 	if projectID <= 0 || secretID <= 0 {
 		return BadRequest("project_id and secret_id is not valid")
 	}
@@ -103,7 +103,7 @@ func (c *SecretsController) DeleteSecret(r *http.Request, vars map[string]string
 func (c *SecretsController) ListSecret(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		log.Warnf("Project with id: %d not found", projectID)

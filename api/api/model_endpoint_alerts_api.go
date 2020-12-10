@@ -42,7 +42,7 @@ func (c *AlertsController) ListTeams(r *http.Request, vars map[string]string, _ 
 
 // ListModelEndpointAlerts lists alerts for model endpoints.
 func (c *AlertsController) ListModelEndpointAlerts(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
-	modelID, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 
 	modelEndpointAlerts, err := c.ModelEndpointAlertService.ListModelAlerts(modelID)
 	if err != nil {
@@ -57,8 +57,8 @@ func (c *AlertsController) ListModelEndpointAlerts(r *http.Request, vars map[str
 
 // GetModelEndpointAlert gets alert for given model endpoint.
 func (c *AlertsController) GetModelEndpointAlert(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
-	modelID, _ := models.ParseId(vars["model_id"])
-	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	modelEndpointID, _ := models.ParseID(vars["model_endpoint_id"])
 
 	modelEndpointAlert, err := c.ModelEndpointAlertService.GetModelEndpointAlert(modelID, modelEndpointID)
 	if err != nil {
@@ -76,8 +76,8 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 	ctx := r.Context()
 
 	user := vars["user"]
-	modelID, _ := models.ParseId(vars["model_id"])
-	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	modelEndpointID, _ := models.ParseID(vars["model_endpoint_id"])
 
 	alert, ok := body.(*models.ModelEndpointAlert)
 	if !ok {
@@ -117,8 +117,8 @@ func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[st
 	ctx := r.Context()
 
 	user := vars["user"]
-	modelID, _ := models.ParseId(vars["model_id"])
-	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	modelEndpointID, _ := models.ParseID(vars["model_endpoint_id"])
 
 	newAlert, ok := body.(*models.ModelEndpointAlert)
 	if !ok {

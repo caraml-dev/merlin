@@ -54,9 +54,9 @@ func TestList(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -71,9 +71,9 @@ func TestList(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -147,9 +147,9 @@ func TestList(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -164,9 +164,9 @@ func TestList(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -234,9 +234,9 @@ func TestGet(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -251,9 +251,9 @@ func TestGet(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -337,9 +337,9 @@ func TestGet(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -354,9 +354,9 @@ func TestGet(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -390,9 +390,9 @@ func TestGet(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -407,9 +407,9 @@ func TestGet(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -489,9 +489,9 @@ func TestStop(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -506,9 +506,9 @@ func TestStop(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -584,9 +584,9 @@ func TestStop(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -601,9 +601,9 @@ func TestStop(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -637,9 +637,9 @@ func TestStop(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -654,9 +654,9 @@ func TestStop(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -737,9 +737,9 @@ func TestListContainers_PredictionJob(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -754,9 +754,9 @@ func TestListContainers_PredictionJob(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -852,9 +852,9 @@ func TestListContainers_PredictionJob(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -869,9 +869,9 @@ func TestListContainers_PredictionJob(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -905,9 +905,9 @@ func TestListContainers_PredictionJob(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -922,9 +922,9 @@ func TestListContainers_PredictionJob(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -967,9 +967,9 @@ func TestListContainers_PredictionJob(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -984,9 +984,9 @@ func TestListContainers_PredictionJob(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1082,9 +1082,9 @@ func TestCreate(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1099,9 +1099,9 @@ func TestCreate(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1191,9 +1191,9 @@ func TestCreate(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1208,9 +1208,9 @@ func TestCreate(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1250,9 +1250,9 @@ func TestCreate(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1267,9 +1267,9 @@ func TestCreate(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1311,9 +1311,9 @@ func TestCreate(t *testing.T) {
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1332,9 +1332,9 @@ func TestCreate(t *testing.T) {
 						Name:         "model-1",
 						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1401,7 +1401,7 @@ func TestListAllInProject(t *testing.T) {
 				svc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
 					ID:                1,
 					Name:              "project-1",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MlflowTrackingURL: "http://mlflow.com",
 					Team:              "dsp",
 					Stream:            "dsp",
 				}), nil)
@@ -1473,7 +1473,7 @@ func TestListAllInProject(t *testing.T) {
 				svc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
 					ID:                1,
 					Name:              "project-1",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MlflowTrackingURL: "http://mlflow.com",
 					Team:              "dsp",
 					Stream:            "dsp",
 				}), nil)
