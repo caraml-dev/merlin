@@ -50,13 +50,13 @@ func TestListEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -64,12 +64,12 @@ func TestListEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:          models.Id(1),
-					ModelId:     models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:          models.ID(1),
+					ModelID:     models.ID(1),
 					RunId:       "runID",
 					MlflowUrl:   "http://mlflow.com",
-					ArtifactUri: "http://artifact.com",
+					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
 			},
@@ -77,13 +77,13 @@ func TestListEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				svc.On("ListEndpoints", mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{
 					{
-						Id:             uuid,
-						VersionId:      models.Id(1),
-						VersionModelId: models.Id(1),
+						ID:             uuid,
+						VersionID:      models.ID(1),
+						VersionModelID: models.ID(1),
 						Status:         models.EndpointServing,
-						Url:            "http://endpoint-1.com",
+						URL:            "http://endpoint-1.com",
 						Environment: &models.Environment{
-							Id:      models.Id(1),
+							ID:      models.ID(1),
 							Name:    "dev",
 							Cluster: "dev",
 						},
@@ -95,13 +95,13 @@ func TestListEndpoint(t *testing.T) {
 				code: http.StatusOK,
 				data: []*models.VersionEndpoint{
 					{
-						Id:             uuid,
-						VersionId:      models.Id(1),
-						VersionModelId: models.Id(1),
+						ID:             uuid,
+						VersionID:      models.ID(1),
+						VersionModelID: models.ID(1),
 						Status:         models.EndpointServing,
-						Url:            "http://endpoint-1.com",
+						URL:            "http://endpoint-1.com",
 						Environment: &models.Environment{
-							Id:      models.Id(1),
+							ID:      models.ID(1),
 							Name:    "dev",
 							Cluster: "dev",
 						},
@@ -118,7 +118,7 @@ func TestListEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -142,13 +142,13 @@ func TestListEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -156,7 +156,7 @@ func TestListEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
@@ -176,13 +176,13 @@ func TestListEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -190,12 +190,12 @@ func TestListEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:          models.Id(1),
-					ModelId:     models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:          models.ID(1),
+					ModelID:     models.ID(1),
 					RunId:       "runID",
 					MlflowUrl:   "http://mlflow.com",
-					ArtifactUri: "http://artifact.com",
+					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
 			},
@@ -253,13 +253,13 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -267,25 +267,25 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:          models.Id(1),
-					ModelId:     models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:          models.ID(1),
+					ModelID:     models.ID(1),
 					RunId:       "runID",
 					MlflowUrl:   "http://mlflow.com",
-					ArtifactUri: "http://artifact.com",
+					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:             uuid,
-					VersionId:      models.Id(1),
-					VersionModelId: models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:             uuid,
+					VersionID:      models.ID(1),
+					VersionModelID: models.ID(1),
 					Status:         models.EndpointServing,
-					Url:            "http://endpoint-1.com",
+					URL:            "http://endpoint-1.com",
 					Environment: &models.Environment{
-						Id:      models.Id(1),
+						ID:      models.ID(1),
 						Name:    "dev",
 						Cluster: "dev",
 					},
@@ -295,13 +295,13 @@ func TestGetEndpoint(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusOK,
 				data: &models.VersionEndpoint{
-					Id:             uuid,
-					VersionId:      models.Id(1),
-					VersionModelId: models.Id(1),
+					ID:             uuid,
+					VersionID:      models.ID(1),
+					VersionModelID: models.ID(1),
 					Status:         models.EndpointServing,
-					Url:            "http://endpoint-1.com",
+					URL:            "http://endpoint-1.com",
 					Environment: &models.Environment{
-						Id:      models.Id(1),
+						ID:      models.ID(1),
 						Name:    "dev",
 						Cluster: "dev",
 					},
@@ -318,7 +318,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -343,13 +343,13 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -357,7 +357,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
@@ -378,13 +378,13 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -392,18 +392,18 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:          models.Id(1),
-					ModelId:     models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:          models.ID(1),
+					ModelID:     models.ID(1),
 					RunId:       "runID",
 					MlflowUrl:   "http://mlflow.com",
-					ArtifactUri: "http://artifact.com",
+					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", uuid).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			expected: &APIResponse{
@@ -420,13 +420,13 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -434,18 +434,18 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:          models.Id(1),
-					ModelId:     models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:          models.ID(1),
+					ModelID:     models.ID(1),
 					RunId:       "runID",
 					MlflowUrl:   "http://mlflow.com",
-					ArtifactUri: "http://artifact.com",
+					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", uuid).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			expected: &APIResponse{
@@ -497,13 +497,13 @@ func TestListContainers(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -511,12 +511,12 @@ func TestListContainers(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:          models.Id(1),
-					ModelId:     models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:          models.ID(1),
+					ModelID:     models.ID(1),
 					RunId:       "runID",
 					MlflowUrl:   "http://mlflow.com",
-					ArtifactUri: "http://artifact.com",
+					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
 			},
@@ -557,7 +557,7 @@ func TestListContainers(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -582,13 +582,13 @@ func TestListContainers(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -596,7 +596,7 @@ func TestListContainers(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
@@ -617,13 +617,13 @@ func TestListContainers(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:        models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
 					Name:      "Model 1",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -631,12 +631,12 @@ func TestListContainers(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:          models.Id(1),
-					ModelId:     models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:          models.ID(1),
+					ModelID:     models.ID(1),
 					RunId:       "runID",
 					MlflowUrl:   "http://mlflow.com",
-					ArtifactUri: "http://artifact.com",
+					ArtifactURI: "http://artifact.com",
 				}, nil)
 				return svc
 			},
@@ -696,9 +696,9 @@ func TestCreateEndpoint(t *testing.T) {
 				"version_id": "1",
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				ServiceName:     "sample",
 				Namespace:       "sample",
 				EnvironmentName: "dev",
@@ -718,10 +718,10 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -732,13 +732,13 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -751,7 +751,7 @@ func TestCreateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultEnvironment").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -761,7 +761,7 @@ func TestCreateEndpoint(t *testing.T) {
 					MaxMemory:  "1Gi",
 				}, nil)
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -776,17 +776,17 @@ func TestCreateEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
 				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -815,17 +815,17 @@ func TestCreateEndpoint(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusCreated,
 				data: &models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -854,9 +854,9 @@ func TestCreateEndpoint(t *testing.T) {
 				"version_id": "1",
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				ServiceName:     "sample",
 				Namespace:       "sample",
 				EnvironmentName: "dev",
@@ -876,10 +876,10 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -890,13 +890,13 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -909,7 +909,7 @@ func TestCreateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultEnvironment").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -919,7 +919,7 @@ func TestCreateEndpoint(t *testing.T) {
 					MaxMemory:  "1Gi",
 				}, nil)
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -934,16 +934,16 @@ func TestCreateEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
 				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -969,16 +969,16 @@ func TestCreateEndpoint(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusCreated,
 				data: &models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -1007,9 +1007,9 @@ func TestCreateEndpoint(t *testing.T) {
 				"version_id": "1",
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				ServiceName:     "sample",
 				Namespace:       "sample",
 				EnvironmentName: "dev",
@@ -1029,7 +1029,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -1060,9 +1060,9 @@ func TestCreateEndpoint(t *testing.T) {
 				"version_id": "1",
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				ServiceName:     "sample",
 				Namespace:       "sample",
 				EnvironmentName: "dev",
@@ -1082,7 +1082,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -1113,9 +1113,9 @@ func TestCreateEndpoint(t *testing.T) {
 				"version_id": "1",
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				ServiceName:     "sample",
 				Namespace:       "sample",
 				EnvironmentName: "dev",
@@ -1135,10 +1135,10 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -1149,13 +1149,13 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -1191,9 +1191,9 @@ func TestCreateEndpoint(t *testing.T) {
 				"version_id": "1",
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				ServiceName:     "sample",
 				Namespace:       "sample",
 				EnvironmentName: "dev",
@@ -1213,10 +1213,10 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -1227,13 +1227,13 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -1246,7 +1246,7 @@ func TestCreateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultEnvironment").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -1278,9 +1278,9 @@ func TestCreateEndpoint(t *testing.T) {
 				"version_id": "1",
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				ServiceName:     "sample",
 				Namespace:       "sample",
 				EnvironmentName: "dev",
@@ -1300,10 +1300,10 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -1314,13 +1314,13 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -1333,7 +1333,7 @@ func TestCreateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultEnvironment").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -1343,7 +1343,7 @@ func TestCreateEndpoint(t *testing.T) {
 					MaxMemory:  "1Gi",
 				}, nil)
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -1375,9 +1375,9 @@ func TestCreateEndpoint(t *testing.T) {
 				"version_id": "1",
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				ServiceName:     "sample",
 				Namespace:       "sample",
 				EnvironmentName: "dev",
@@ -1397,10 +1397,10 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -1411,13 +1411,13 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -1430,7 +1430,7 @@ func TestCreateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultEnvironment").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -1440,7 +1440,7 @@ func TestCreateEndpoint(t *testing.T) {
 					MaxMemory:  "1Gi",
 				}, nil)
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -1511,9 +1511,9 @@ func TestUpdateEndpoint(t *testing.T) {
 				"endpoint_id": uuid.String(),
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				Status:          models.EndpointRunning,
 				ServiceName:     "sample",
 				Namespace:       "sample",
@@ -1534,10 +1534,10 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -1548,13 +1548,13 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -1567,7 +1567,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -1580,18 +1580,18 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointPending,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -1609,17 +1609,17 @@ func TestUpdateEndpoint(t *testing.T) {
 						},
 					})}, nil)
 				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -1644,17 +1644,17 @@ func TestUpdateEndpoint(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusOK,
 				data: &models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -1684,9 +1684,9 @@ func TestUpdateEndpoint(t *testing.T) {
 				"endpoint_id": uuid.String(),
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				Status:          models.EndpointRunning,
 				ServiceName:     "sample",
 				Namespace:       "sample",
@@ -1707,7 +1707,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -1735,9 +1735,9 @@ func TestUpdateEndpoint(t *testing.T) {
 				"endpoint_id": uuid.String(),
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				Status:          models.EndpointRunning,
 				ServiceName:     "sample",
 				Namespace:       "sample",
@@ -1758,10 +1758,10 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -1772,13 +1772,13 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -1791,7 +1791,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -1804,18 +1804,18 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointServing,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -1847,9 +1847,9 @@ func TestUpdateEndpoint(t *testing.T) {
 				"endpoint_id": uuid.String(),
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				Status:          models.EndpointRunning,
 				ServiceName:     "sample",
 				Namespace:       "sample",
@@ -1870,10 +1870,10 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -1884,13 +1884,13 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -1903,7 +1903,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -1916,18 +1916,18 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointServing,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -1959,9 +1959,9 @@ func TestUpdateEndpoint(t *testing.T) {
 				"endpoint_id": uuid.String(),
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				Status:          models.EndpointPending,
 				ServiceName:     "sample",
 				Namespace:       "sample",
@@ -1982,10 +1982,10 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -1996,13 +1996,13 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -2015,7 +2015,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -2028,18 +2028,18 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2071,9 +2071,9 @@ func TestUpdateEndpoint(t *testing.T) {
 				"endpoint_id": uuid.String(),
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				Status:          models.EndpointRunning,
 				ServiceName:     "sample",
 				Namespace:       "sample",
@@ -2094,10 +2094,10 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -2108,13 +2108,13 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -2131,18 +2131,18 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointPending,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2174,9 +2174,9 @@ func TestUpdateEndpoint(t *testing.T) {
 				"endpoint_id": uuid.String(),
 			},
 			requestBody: &models.VersionEndpoint{
-				Id:              uuid,
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				Status:          models.EndpointTerminated,
 				ServiceName:     "sample",
 				Namespace:       "sample",
@@ -2197,10 +2197,10 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -2211,13 +2211,13 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -2230,7 +2230,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -2243,18 +2243,18 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointPending,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2272,17 +2272,17 @@ func TestUpdateEndpoint(t *testing.T) {
 						},
 					})}, nil)
 				svc.On("UndeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointTerminated,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2307,17 +2307,17 @@ func TestUpdateEndpoint(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusOK,
 				data: &models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointTerminated,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2388,10 +2388,10 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -2402,13 +2402,13 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -2421,7 +2421,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -2434,18 +2434,18 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2463,17 +2463,17 @@ func TestDeleteEndpoint(t *testing.T) {
 						},
 					})}, nil)
 				svc.On("UndeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointTerminated,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2509,7 +2509,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -2538,10 +2538,10 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -2552,7 +2552,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			envService: func() *mocks.EnvironmentService {
@@ -2577,10 +2577,10 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -2591,13 +2591,13 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -2613,7 +2613,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", uuid).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			expected: &APIResponse{
@@ -2630,10 +2630,10 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -2644,13 +2644,13 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -2666,7 +2666,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", uuid).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			expected: &APIResponse{
@@ -2683,10 +2683,10 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -2697,13 +2697,13 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -2720,18 +2720,18 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2764,10 +2764,10 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -2778,13 +2778,13 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -2797,7 +2797,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -2810,18 +2810,18 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointServing,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2839,17 +2839,17 @@ func TestDeleteEndpoint(t *testing.T) {
 						},
 					})}, nil)
 				svc.On("UndeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointTerminated,
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,
@@ -2885,10 +2885,10 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 1,
 					Type:         "pyfunc",
@@ -2899,13 +2899,13 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 1,
 						Type:         "pyfunc",
@@ -2918,7 +2918,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetEnvironment", "dev").Return(&models.Environment{
-					Id:         models.Id(1),
+					ID:         models.ID(1),
 					Name:       "dev",
 					Cluster:    "dev",
 					IsDefault:  &trueBoolean,
@@ -2931,18 +2931,18 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindById", uuid).Return(&models.VersionEndpoint{
-					Id:                   uuid,
-					VersionId:            models.Id(1),
-					VersionModelId:       models.Id(1),
+				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
 					Status:               models.EndpointRunning,
 					ServiceName:          "sample",
 					InferenceServiceName: "sample",
 					Namespace:            "sample",
-					Url:                  "http://endpoint.svc",
+					URL:                  "http://endpoint.svc",
 					MonitoringUrl:        "http://monitoring.com",
 					Environment: &models.Environment{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						IsDefault:  &trueBoolean,

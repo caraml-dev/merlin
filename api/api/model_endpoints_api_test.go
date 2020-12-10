@@ -42,14 +42,14 @@ func TestListModelEndpointInProject(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.Id(1), "id").Return([]*models.ModelEndpoint{
+				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.ID(1), "id").Return([]*models.ModelEndpoint{
 					{
-						Id:      models.Id(1),
-						ModelId: models.Id(1),
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
 						Model: &models.Model{
-							Id:           models.Id(1),
+							ID:           models.ID(1),
 							Name:         "Model-1",
-							ProjectId:    models.Id(1),
+							ProjectID:    models.ID(1),
 							Project:      mlp.Project{},
 							ExperimentId: 0,
 							Type:         "pyfunc",
@@ -64,12 +64,12 @@ func TestListModelEndpointInProject(t *testing.T) {
 				code: http.StatusOK,
 				data: []*models.ModelEndpoint{
 					{
-						Id:      models.Id(1),
-						ModelId: models.Id(1),
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
 						Model: &models.Model{
-							Id:           models.Id(1),
+							ID:           models.ID(1),
 							Name:         "Model-1",
-							ProjectId:    models.Id(1),
+							ProjectID:    models.ID(1),
 							Project:      mlp.Project{},
 							ExperimentId: 0,
 							Type:         "pyfunc",
@@ -88,7 +88,7 @@ func TestListModelEndpointInProject(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.Id(1), "id").Return(nil, gorm.ErrRecordNotFound)
+				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.ID(1), "id").Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
 			expected: &APIResponse{
@@ -104,7 +104,7 @@ func TestListModelEndpointInProject(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.Id(1), "id").Return(nil, fmt.Errorf("DB is down"))
+				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.ID(1), "id").Return(nil, fmt.Errorf("DB is down"))
 				return mockSvc
 			},
 			expected: &APIResponse{
@@ -142,14 +142,14 @@ func TestListModelEndpoints(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("ListModelEndpoints", mock.Anything, models.Id(1)).Return([]*models.ModelEndpoint{
+				mockSvc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return([]*models.ModelEndpoint{
 					{
-						Id:      models.Id(1),
-						ModelId: models.Id(1),
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
 						Model: &models.Model{
-							Id:           models.Id(1),
+							ID:           models.ID(1),
 							Name:         "Model-1",
-							ProjectId:    models.Id(1),
+							ProjectID:    models.ID(1),
 							Project:      mlp.Project{},
 							ExperimentId: 0,
 							Type:         "pyfunc",
@@ -164,12 +164,12 @@ func TestListModelEndpoints(t *testing.T) {
 				code: http.StatusOK,
 				data: []*models.ModelEndpoint{
 					{
-						Id:      models.Id(1),
-						ModelId: models.Id(1),
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
 						Model: &models.Model{
-							Id:           models.Id(1),
+							ID:           models.ID(1),
 							Name:         "Model-1",
-							ProjectId:    models.Id(1),
+							ProjectID:    models.ID(1),
 							Project:      mlp.Project{},
 							ExperimentId: 0,
 							Type:         "pyfunc",
@@ -188,7 +188,7 @@ func TestListModelEndpoints(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("ListModelEndpoints", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				mockSvc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
 			expected: &APIResponse{
@@ -204,7 +204,7 @@ func TestListModelEndpoints(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("ListModelEndpoints", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				mockSvc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return mockSvc
 			},
 			expected: &APIResponse{
@@ -241,13 +241,13 @@ func TestGetModelEndpoint(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(&models.ModelEndpoint{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.ModelEndpoint{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "Model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 0,
 						Type:         "pyfunc",
@@ -260,12 +260,12 @@ func TestGetModelEndpoint(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusOK,
 				data: &models.ModelEndpoint{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "Model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
 						ExperimentId: 0,
 						Type:         "pyfunc",
@@ -282,7 +282,7 @@ func TestGetModelEndpoint(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
 			expected: &APIResponse{
@@ -297,7 +297,7 @@ func TestGetModelEndpoint(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return mockSvc
 			},
 			expected: &APIResponse{

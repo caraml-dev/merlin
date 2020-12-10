@@ -73,7 +73,7 @@ func (c *ModelEndpointsController) GetModelEndpoint(r *http.Request, vars map[st
 	ctx := r.Context()
 
 	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
-	modelEndpoint, err := c.ModelEndpointsService.FindById(ctx, modelEndpointID)
+	modelEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
 		log.Errorf("Error finding model endpoint with id %s, reason: %v", modelEndpointID, err)
 
@@ -95,7 +95,7 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 	ctx := r.Context()
 
 	modelID, _ := models.ParseId(vars["model_id"])
-	model, err := c.ModelsService.FindById(ctx, modelID)
+	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model ID %s not found", modelID))
@@ -158,7 +158,7 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 
 	modelID, _ := models.ParseId(vars["model_id"])
 	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
-	model, err := c.ModelsService.FindById(ctx, modelID)
+	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model ID %s not found", modelID))
@@ -186,12 +186,12 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 		return BadRequest(fmt.Sprintf("Invalid version endpoints destination: %s", err))
 	}
 
-	currentEndpoint, err := c.ModelEndpointsService.FindById(ctx, modelEndpointID)
+	currentEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
 		return NotFound(fmt.Sprintf("Model Endpoint with given `model_endpoint_id: %d` not found", modelEndpointID))
 	}
 
-	if newEndpoint.Id != currentEndpoint.Id {
+	if newEndpoint.ID != currentEndpoint.ID {
 		return BadRequest("Invalid request model endpoint id")
 	}
 
@@ -229,7 +229,7 @@ func (c *ModelEndpointsController) saveDB(ctx context.Context, newModelEndpoint,
 	// Update version and version endpoints from previous model endpoint
 	if prevModelEndpoint != nil {
 		for _, ruleDestination := range prevModelEndpoint.Rule.Destination {
-			versionEndpoint, err := c.EndpointsService.FindById(ruleDestination.VersionEndpointID)
+			versionEndpoint, err := c.EndpointsService.FindByID(ruleDestination.VersionEndpointID)
 			if err != nil {
 				return err
 			}
@@ -244,7 +244,7 @@ func (c *ModelEndpointsController) saveDB(ctx context.Context, newModelEndpoint,
 
 	// Update version and version endpoints from new model endpoint
 	for _, ruleDestination := range newModelEndpoint.Rule.Destination {
-		versionEndpoint, err := c.EndpointsService.FindById(ruleDestination.VersionEndpointID)
+		versionEndpoint, err := c.EndpointsService.FindByID(ruleDestination.VersionEndpointID)
 		if err != nil {
 			return err
 		}
@@ -274,13 +274,13 @@ func (c *ModelEndpointsController) assignVersionEndpoint(ctx context.Context, en
 	for k := range endpoint.Rule.Destination {
 		versionEndpointID := endpoint.Rule.Destination[k].VersionEndpointID
 
-		versionEndpoint, err := c.EndpointsService.FindById(versionEndpointID)
+		versionEndpoint, err := c.EndpointsService.FindByID(versionEndpointID)
 		if err != nil {
 			return nil, fmt.Errorf("Version Endpoint with given `version_endpoint_id: %s` not found", versionEndpointID)
 		}
 
 		if !versionEndpoint.IsRunning() {
-			return nil, fmt.Errorf("Version Endpoint %s is not running, but %s", versionEndpoint.Id, versionEndpoint.Status)
+			return nil, fmt.Errorf("Version Endpoint %s is not running, but %s", versionEndpoint.ID, versionEndpoint.Status)
 		}
 
 		endpoint.Rule.Destination[k].VersionEndpoint = versionEndpoint
@@ -302,7 +302,7 @@ func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map
 	modelID, _ := models.ParseId(vars["model_id"])
 	modelEndpointID, _ := models.ParseId(vars["model_endpoint_id"])
 
-	model, err := c.ModelsService.FindById(ctx, modelID)
+	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model ID %s not found", modelID))
@@ -311,7 +311,7 @@ func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map
 		return InternalServerError(fmt.Sprintf("Error while getting Model ID %s", modelID))
 	}
 
-	modelEndpoint, err := c.ModelEndpointsService.FindById(ctx, modelEndpointID)
+	modelEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
 		log.Errorf("Error finding model endpoint with id %s, reason: %v", modelEndpointID, err)
 

@@ -80,13 +80,13 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 	}
 
 	query := &service.ListPredictionJobQuery{
-		ModelId:   modelID,
-		VersionId: versionID,
+		ModelID:   modelID,
+		VersionID: versionID,
 	}
 
 	jobs, err := c.PredictionJobService.ListPredictionJobs(model.Project, query)
 	if err != nil {
-		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.Id, err)
+		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
 		return InternalServerError("Failed listing prediction job")
 	}
 
@@ -116,7 +116,7 @@ func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _
 
 	job, err := c.PredictionJobService.GetPredictionJob(env, model, version, id)
 	if err != nil {
-		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.Id, err)
+		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.ID, err)
 		return InternalServerError("Failed reading prediction job")
 	}
 
@@ -176,14 +176,14 @@ func (c *PredictionJobController) ListContainers(r *http.Request, vars map[strin
 
 	job, err := c.PredictionJobService.GetPredictionJob(env, model, version, id)
 	if err != nil {
-		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.Id, err)
+		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.ID, err)
 		return InternalServerError("Failed reading prediction job")
 	}
 
 	containers, err := c.PredictionJobService.ListContainers(env, model, version, job)
 	if err != nil {
 		log.Errorf("Error finding containers for model %v, version %v, reason: %v", model, version, err)
-		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint with model %v and version %v", model.Id, version.Id))
+		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint with model %v and version %v", model.ID, version.ID))
 	}
 	return Ok(containers)
 }

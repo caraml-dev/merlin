@@ -47,13 +47,13 @@ func TestListModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("ListModels", mock.Anything, models.Id(1), "tensorflow").Return([]*models.Model{
+				mockSvc.On("ListModels", mock.Anything, models.ID(1), "tensorflow").Return([]*models.Model{
 					{
-						Id:        models.Id(1),
+						ID:        models.ID(1),
 						Name:      "tensorflow",
-						ProjectId: models.Id(1),
+						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
-							Id:                1,
+							ID:                1,
 							Name:              "tensorflow",
 							MlflowTrackingUrl: "http://mlflow.com",
 							Administrators:    nil,
@@ -64,7 +64,7 @@ func TestListModel(t *testing.T) {
 							CreatedAt:         now,
 							UpdatedAt:         now,
 						}),
-						ExperimentId: models.Id(1),
+						ExperimentId: models.ID(1),
 						Type:         "tensorflow",
 						MlflowUrl:    "http://mlflow.com",
 						CreatedUpdated: models.CreatedUpdated{
@@ -79,11 +79,11 @@ func TestListModel(t *testing.T) {
 				code: http.StatusOK,
 				data: []*models.Model{
 					{
-						Id:        models.Id(1),
+						ID:        models.ID(1),
 						Name:      "tensorflow",
-						ProjectId: models.Id(1),
+						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
-							Id:                1,
+							ID:                1,
 							Name:              "tensorflow",
 							MlflowTrackingUrl: "http://mlflow.com",
 							Administrators:    nil,
@@ -94,7 +94,7 @@ func TestListModel(t *testing.T) {
 							CreatedAt:         now,
 							UpdatedAt:         now,
 						}),
-						ExperimentId: models.Id(1),
+						ExperimentId: models.ID(1),
 						Type:         "tensorflow",
 						MlflowUrl:    "http://mlflow.com",
 						CreatedUpdated: models.CreatedUpdated{
@@ -113,7 +113,7 @@ func TestListModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("ListModels", mock.Anything, models.Id(1), "tensorflow").Return(nil, fmt.Errorf("MLP API is down"))
+				mockSvc.On("ListModels", mock.Anything, models.ID(1), "tensorflow").Return(nil, fmt.Errorf("MLP API is down"))
 				return mockSvc
 			},
 			expected: &APIResponse{
@@ -154,7 +154,7 @@ func TestGetModel(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					Id:                1,
+					ID:                1,
 					Name:              "tensorflow",
 					MlflowTrackingUrl: "http://mlflow.com",
 					Administrators:    nil,
@@ -169,13 +169,13 @@ func TestGetModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(
 					&models.Model{
-						Id:        models.Id(1),
+						ID:        models.ID(1),
 						Name:      "tensorflow",
-						ProjectId: models.Id(1),
+						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
-							Id:                1,
+							ID:                1,
 							Name:              "tensorflow",
 							MlflowTrackingUrl: "http://mlflow.com",
 							Administrators:    nil,
@@ -186,7 +186,7 @@ func TestGetModel(t *testing.T) {
 							CreatedAt:         now,
 							UpdatedAt:         now,
 						}),
-						ExperimentId: models.Id(1),
+						ExperimentId: models.ID(1),
 						Type:         "tensorflow",
 						MlflowUrl:    "http://mlflow.com",
 						CreatedUpdated: models.CreatedUpdated{
@@ -199,11 +199,11 @@ func TestGetModel(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusOK,
 				data: &models.Model{
-					Id:        models.Id(1),
+					ID:        models.ID(1),
 					Name:      "tensorflow",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Project: mlp.Project(client.Project{
-						Id:                1,
+						ID:                1,
 						Name:              "tensorflow",
 						MlflowTrackingUrl: "http://mlflow.com",
 						Administrators:    nil,
@@ -214,7 +214,7 @@ func TestGetModel(t *testing.T) {
 						CreatedAt:         now,
 						UpdatedAt:         now,
 					}),
-					ExperimentId: models.Id(1),
+					ExperimentId: models.ID(1),
 					Type:         "tensorflow",
 					MlflowUrl:    "http://mlflow.com",
 					CreatedUpdated: models.CreatedUpdated{
@@ -253,7 +253,7 @@ func TestGetModel(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					Id:                1,
+					ID:                1,
 					Name:              "tensorflow",
 					MlflowTrackingUrl: "http://mlflow.com",
 					Administrators:    nil,
@@ -268,7 +268,7 @@ func TestGetModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
 			expected: &APIResponse{
@@ -285,7 +285,7 @@ func TestGetModel(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					Id:                1,
+					ID:                1,
 					Name:              "tensorflow",
 					MlflowTrackingUrl: "http://mlflow.com",
 					Administrators:    nil,
@@ -300,7 +300,7 @@ func TestGetModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is unreachable"))
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is unreachable"))
 				return mockSvc
 			},
 			expected: &APIResponse{

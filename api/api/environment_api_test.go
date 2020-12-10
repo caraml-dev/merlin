@@ -40,7 +40,7 @@ func TestListEnvironments(t *testing.T) {
 				mockSvc := &mocks.EnvironmentService{}
 				mockSvc.On("ListEnvironments", "dev").Return([]*models.Environment{
 					{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						Region:     "id",
@@ -55,7 +55,7 @@ func TestListEnvironments(t *testing.T) {
 				code: http.StatusOK,
 				data: []*models.Environment{
 					{
-						Id:         models.Id(1),
+						ID:         models.ID(1),
 						Name:       "dev",
 						Cluster:    "dev",
 						Region:     "id",

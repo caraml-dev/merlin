@@ -84,7 +84,7 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 		return BadRequest("Unable to parse body as model endpoint alert")
 	}
 
-	model, err := c.ModelsService.FindById(ctx, modelID)
+	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model with id %s not found", modelID))
@@ -94,7 +94,7 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 
 	alert.Model = model
 
-	modelEndpoint, err := c.ModelEndpointsService.FindById(ctx, modelEndpointID)
+	modelEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model endpoint with id %s not found", modelEndpointID))
@@ -125,7 +125,7 @@ func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[st
 		return BadRequest("Unable to parse body as model endpoint alert")
 	}
 
-	model, err := c.ModelsService.FindById(ctx, modelID)
+	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model with id %s not found", modelID))
@@ -141,7 +141,7 @@ func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[st
 		return InternalServerError(fmt.Sprintf("Error while getting alert for Model ID %s and Model Endpoint ID %s", modelID, modelEndpointID))
 	}
 
-	newAlert.Id = oldAlert.Id
+	newAlert.ID = oldAlert.ID
 	newAlert.Model = model
 	newAlert.ModelEndpoint = oldAlert.ModelEndpoint
 

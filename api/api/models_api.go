@@ -68,7 +68,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 		}
 	}
 
-	model.ProjectId = projectID
+	model.ProjectID = projectID
 	model.ExperimentId, _ = models.ParseId(experimentID)
 
 	model, err = c.ModelsService.Save(ctx, model)
@@ -91,7 +91,7 @@ func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, bod
 		return NotFound(err.Error())
 	}
 
-	model, err := c.ModelsService.FindById(ctx, modelID)
+	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model id %s not found", modelID))

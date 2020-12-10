@@ -35,7 +35,7 @@ func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string,
 	modelID, _ := models.ParseId(vars["model_id"])
 	versionID, _ := models.ParseId(vars["version_id"])
 
-	v, err := c.VersionsService.FindById(ctx, modelID, versionID, c.MonitoringConfig)
+	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
 		log.Errorf("error getting model version for given model %s version %s", modelID, versionID)
 		if gorm.IsRecordNotFoundError(err) {
@@ -53,7 +53,7 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 	modelID, _ := models.ParseId(vars["model_id"])
 	versionID, _ := models.ParseId(vars["version_id"])
 
-	v, err := c.VersionsService.FindById(ctx, modelID, versionID, c.MonitoringConfig)
+	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
 		log.Errorf("error getting model version for given model %s version %s", modelID, versionID)
 		if gorm.IsRecordNotFoundError(err) {
@@ -93,7 +93,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 
 	modelID, _ := models.ParseId(vars["model_id"])
 
-	model, err := c.ModelsService.FindById(ctx, modelID)
+	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
@@ -105,9 +105,9 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 	}
 
 	version := &models.Version{
-		ModelId:     modelID,
+		ModelID:     modelID,
 		RunId:       run.Info.RunId,
-		ArtifactUri: run.Info.ArtifactUri,
+		ArtifactURI: run.Info.ArtifactURI,
 	}
 
 	version, _ = c.VersionsService.Save(ctx, version, c.MonitoringConfig)

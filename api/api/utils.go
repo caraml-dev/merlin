@@ -24,8 +24,8 @@ import (
 	"github.com/gojek/merlin/models"
 )
 
-func (c *AppContext) getModelAndVersion(ctx context.Context, modelID models.Id, versionID models.Id) (*models.Model, *models.Version, error) {
-	model, err := c.ModelsService.FindById(ctx, modelID)
+func (c *AppContext) getModelAndVersion(ctx context.Context, modelID models.ID, versionID models.ID) (*models.Model, *models.Version, error) {
+	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			log.Errorf("error retrieving model with id: %d: %v", modelID, err)
@@ -34,7 +34,7 @@ func (c *AppContext) getModelAndVersion(ctx context.Context, modelID models.Id, 
 		return nil, nil, fmt.Errorf("model with given id: %d not found", modelID)
 	}
 
-	version, err := c.VersionsService.FindById(ctx, modelID, versionID, c.MonitoringConfig)
+	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			log.Errorf("error retrieving model version with id: %d: %v", versionID, err)

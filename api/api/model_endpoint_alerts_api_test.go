@@ -90,11 +90,11 @@ func TestListModelEndpointAlerts(t *testing.T) {
 			},
 			service: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("ListModelAlerts", models.Id(1)).Return([]*models.ModelEndpointAlert{
+				svc.On("ListModelAlerts", models.ID(1)).Return([]*models.ModelEndpointAlert{
 					{
-						Id:              models.Id(1),
-						ModelId:         models.Id(1),
-						ModelEndpointId: models.Id(1),
+						ID:              models.ID(1),
+						ModelID:         models.ID(1),
+						ModelEndpointID: models.ID(1),
 						EnvironmentName: "dev",
 						AlertConditions: models.AlertConditions{
 							{
@@ -111,9 +111,9 @@ func TestListModelEndpointAlerts(t *testing.T) {
 				code: http.StatusOK,
 				data: []*models.ModelEndpointAlert{
 					{
-						Id:              models.Id(1),
-						ModelId:         models.Id(1),
-						ModelEndpointId: models.Id(1),
+						ID:              models.ID(1),
+						ModelID:         models.ID(1),
+						ModelEndpointID: models.ID(1),
 						EnvironmentName: "dev",
 						AlertConditions: models.AlertConditions{
 							{
@@ -133,7 +133,7 @@ func TestListModelEndpointAlerts(t *testing.T) {
 			},
 			service: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("ListModelAlerts", models.Id(1)).Return(nil, fmt.Errorf("API is down"))
+				svc.On("ListModelAlerts", models.ID(1)).Return(nil, fmt.Errorf("API is down"))
 				return svc
 			},
 			expected: &APIResponse{
@@ -148,7 +148,7 @@ func TestListModelEndpointAlerts(t *testing.T) {
 			},
 			service: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("ListModelAlerts", models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("ListModelAlerts", models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			expected: &APIResponse{
@@ -186,10 +186,10 @@ func TestGetModelEndpointAlert(t *testing.T) {
 			},
 			service: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("GetModelEndpointAlert", models.Id(1), models.Id(1)).Return(&models.ModelEndpointAlert{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
-					ModelEndpointId: models.Id(1),
+				svc.On("GetModelEndpointAlert", models.ID(1), models.ID(1)).Return(&models.ModelEndpointAlert{
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
+					ModelEndpointID: models.ID(1),
 					EnvironmentName: "dev",
 					AlertConditions: models.AlertConditions{
 						{
@@ -204,9 +204,9 @@ func TestGetModelEndpointAlert(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusOK,
 				data: &models.ModelEndpointAlert{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
-					ModelEndpointId: models.Id(1),
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
+					ModelEndpointID: models.ID(1),
 					EnvironmentName: "dev",
 					AlertConditions: models.AlertConditions{
 						{
@@ -226,7 +226,7 @@ func TestGetModelEndpointAlert(t *testing.T) {
 			},
 			service: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("GetModelEndpointAlert", models.Id(1), models.Id(1)).Return(nil, fmt.Errorf("API is down"))
+				svc.On("GetModelEndpointAlert", models.ID(1), models.ID(1)).Return(nil, fmt.Errorf("API is down"))
 				return svc
 			},
 			expected: &APIResponse{
@@ -242,7 +242,7 @@ func TestGetModelEndpointAlert(t *testing.T) {
 			},
 			service: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("GetModelEndpointAlert", models.Id(1), models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("GetModelEndpointAlert", models.ID(1), models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			expected: &APIResponse{
@@ -283,8 +283,8 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -296,10 +296,10 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 0,
 				}, nil)
@@ -307,9 +307,9 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				svc := &mocks.ModelEndpointsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.ModelEndpoint{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.ModelEndpoint{
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
 					Status:          models.EndpointRunning,
 					URL:             "http://serving.com",
 					EnvironmentName: "dev",
@@ -319,9 +319,9 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
 				svc.On("CreateModelEndpointAlert", "admin", mock.Anything).Return(&models.ModelEndpointAlert{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
-					ModelEndpointId: models.Id(1),
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
+					ModelEndpointID: models.ID(1),
 					EnvironmentName: "dev",
 					TeamName:        "dsp",
 					AlertConditions: models.AlertConditions{
@@ -337,9 +337,9 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusCreated,
 				data: &models.ModelEndpointAlert{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
-					ModelEndpointId: models.Id(1),
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
+					ModelEndpointID: models.ID(1),
 					EnvironmentName: "dev",
 					TeamName:        "dsp",
 					AlertConditions: models.AlertConditions{
@@ -360,7 +360,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpoint{
-				ModelId:         models.Id(1),
+				ModelID:         models.ID(1),
 				EnvironmentName: "dev",
 			},
 			modelService: func() *mocks.ModelsService {
@@ -388,8 +388,8 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -401,7 +401,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
@@ -425,8 +425,8 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -438,7 +438,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
@@ -462,8 +462,8 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -475,10 +475,10 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 0,
 				}, nil)
@@ -486,7 +486,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				svc := &mocks.ModelEndpointsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
@@ -506,8 +506,8 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -519,10 +519,10 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 0,
 				}, nil)
@@ -530,7 +530,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				svc := &mocks.ModelEndpointsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
@@ -550,8 +550,8 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -563,10 +563,10 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 0,
 				}, nil)
@@ -574,9 +574,9 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				svc := &mocks.ModelEndpointsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.ModelEndpoint{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.ModelEndpoint{
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
 					Status:          models.EndpointRunning,
 					URL:             "http://serving.com",
 					EnvironmentName: "dev",
@@ -629,8 +629,8 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -642,10 +642,10 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 0,
 				}, nil)
@@ -653,10 +653,10 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("GetModelEndpointAlert", models.Id(1), models.Id(1)).Return(&models.ModelEndpointAlert{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
-					ModelEndpointId: models.Id(1),
+				svc.On("GetModelEndpointAlert", models.ID(1), models.ID(1)).Return(&models.ModelEndpointAlert{
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
+					ModelEndpointID: models.ID(1),
 					EnvironmentName: "dev",
 					TeamName:        "dsp",
 					AlertConditions: models.AlertConditions{
@@ -668,9 +668,9 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 					},
 				}, nil)
 				svc.On("UpdateModelEndpointAlert", "admin", mock.Anything).Return(&models.ModelEndpointAlert{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
-					ModelEndpointId: models.Id(1),
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
+					ModelEndpointID: models.ID(1),
 					EnvironmentName: "dev",
 					TeamName:        "dsp",
 					AlertConditions: models.AlertConditions{
@@ -686,9 +686,9 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			expected: &APIResponse{
 				code: http.StatusCreated,
 				data: &models.ModelEndpointAlert{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
-					ModelEndpointId: models.Id(1),
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
+					ModelEndpointID: models.ID(1),
 					EnvironmentName: "dev",
 					TeamName:        "dsp",
 					AlertConditions: models.AlertConditions{
@@ -709,7 +709,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpoint{
-				ModelId:         models.Id(1),
+				ModelID:         models.ID(1),
 				EnvironmentName: "dev",
 			},
 			modelService: func() *mocks.ModelsService {
@@ -733,8 +733,8 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -746,7 +746,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
@@ -766,8 +766,8 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -779,7 +779,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
@@ -799,8 +799,8 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -812,10 +812,10 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 0,
 				}, nil)
@@ -823,7 +823,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("GetModelEndpointAlert", models.Id(1), models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("GetModelEndpointAlert", models.ID(1), models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			expected: &APIResponse{
@@ -839,8 +839,8 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -852,10 +852,10 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 0,
 				}, nil)
@@ -863,7 +863,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("GetModelEndpointAlert", models.Id(1), models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("GetModelEndpointAlert", models.ID(1), models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			expected: &APIResponse{
@@ -879,8 +879,8 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 				"model_endpoint_id": "1",
 			},
 			request: &models.ModelEndpointAlert{
-				ModelId:         models.Id(1),
-				ModelEndpointId: models.Id(1),
+				ModelID:         models.ID(1),
+				ModelEndpointID: models.ID(1),
 				EnvironmentName: "dev",
 				AlertConditions: models.AlertConditions{
 					{
@@ -892,10 +892,10 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
 					ExperimentId: 0,
 				}, nil)
@@ -904,10 +904,10 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("GetModelEndpointAlert", models.Id(1), models.Id(1)).Return(&models.ModelEndpointAlert{
-					Id:              models.Id(1),
-					ModelId:         models.Id(1),
-					ModelEndpointId: models.Id(1),
+				svc.On("GetModelEndpointAlert", models.ID(1), models.ID(1)).Return(&models.ModelEndpointAlert{
+					ID:              models.ID(1),
+					ModelID:         models.ID(1),
+					ModelEndpointID: models.ID(1),
 					EnvironmentName: "dev",
 					TeamName:        "dsp",
 					AlertConditions: models.AlertConditions{

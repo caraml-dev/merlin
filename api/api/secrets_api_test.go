@@ -50,20 +50,20 @@ func TestCreateSecret(t *testing.T) {
 			expectedResponse: &APIResponse{
 				code: 201,
 				data: mlp.Secret{
-					Id:   int32(1),
+					ID:   int32(1),
 					Name: "name",
 					Data: "encryptedData",
 				},
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
 				},
 			},
 			savedSecret: mlp.Secret{
-				Id:   int32(1),
+				ID:   int32(1),
 				Name: "name",
 				Data: "encryptedData",
 			},
@@ -99,7 +99,7 @@ func TestCreateSecret(t *testing.T) {
 				data: Error{"db is down"},
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -148,7 +148,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -159,14 +159,14 @@ func TestUpdateSecret(t *testing.T) {
 				Data: `{"id": 3}`,
 			},
 			updatedSecret: mlp.Secret{
-				Id:   int32(1),
+				ID:   int32(1),
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
 			expectedResponse: &APIResponse{
 				code: 200,
 				data: mlp.Secret{
-					Id:   int32(1),
+					ID:   int32(1),
 					Name: "name",
 					Data: `{"id": 3}`,
 				},
@@ -180,7 +180,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -190,14 +190,14 @@ func TestUpdateSecret(t *testing.T) {
 				Name: "name",
 			},
 			updatedSecret: mlp.Secret{
-				Id:   int32(1),
+				ID:   int32(1),
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
 			expectedResponse: &APIResponse{
 				code: 200,
 				data: mlp.Secret{
-					Id:   int32(1),
+					ID:   int32(1),
 					Name: "name",
 					Data: `{"id": 3}`,
 				},
@@ -210,7 +210,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "def",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -220,7 +220,7 @@ func TestUpdateSecret(t *testing.T) {
 				Name: "name",
 			},
 			updatedSecret: mlp.Secret{
-				Id:   int32(1),
+				ID:   int32(1),
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
@@ -237,7 +237,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -245,7 +245,7 @@ func TestUpdateSecret(t *testing.T) {
 			},
 			body: "body",
 			updatedSecret: mlp.Secret{
-				Id:   int32(1),
+				ID:   int32(1),
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
@@ -262,7 +262,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -285,7 +285,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -339,7 +339,7 @@ func TestDeleteSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -357,7 +357,7 @@ func TestDeleteSecret(t *testing.T) {
 				"secret_id":  "ghi",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -376,7 +376,7 @@ func TestDeleteSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -426,7 +426,7 @@ func TestListSecret(t *testing.T) {
 				"user":       "reader@domain.com",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -439,12 +439,12 @@ func TestListSecret(t *testing.T) {
 				code: 200,
 				data: mlp.Secrets{
 					{
-						Id:   int32(1),
+						ID:   int32(1),
 						Name: "name-1",
 						Data: "encryptedData",
 					},
 					{
-						Id:   int32(2),
+						ID:   int32(2),
 						Name: "name-2",
 						Data: "encryptedData",
 					},
@@ -452,12 +452,12 @@ func TestListSecret(t *testing.T) {
 			},
 			secrets: mlp.Secrets{
 				{
-					Id:   int32(1),
+					ID:   int32(1),
 					Name: "name-1",
 					Data: "encryptedData",
 				},
 				{
-					Id:   int32(2),
+					ID:   int32(2),
 					Name: "name-2",
 					Data: "encryptedData",
 				},
@@ -470,7 +470,7 @@ func TestListSecret(t *testing.T) {
 				"user":       "reader@domain.com",
 			},
 			existingProject: mlp.Project{
-				Id:   1,
+				ID:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
