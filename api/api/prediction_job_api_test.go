@@ -792,7 +792,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 						Namespace:         "default",
 						Cluster:           "dev",
 						GcpProject:        "dev-proj",
-						VersionEndpointId: uuid,
+						VersionEndpointID: uuid,
 					},
 				}, nil)
 				return svc
@@ -806,7 +806,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 						Namespace:         "default",
 						Cluster:           "dev",
 						GcpProject:        "dev-proj",
-						VersionEndpointId: uuid,
+						VersionEndpointID: uuid,
 					},
 				},
 			},

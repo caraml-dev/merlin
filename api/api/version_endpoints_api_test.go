@@ -529,7 +529,7 @@ func TestListContainers(t *testing.T) {
 						Namespace:         "default",
 						Cluster:           "dev",
 						GcpProject:        "dev-proj",
-						VersionEndpointId: uuid,
+						VersionEndpointID: uuid,
 					},
 				}, nil)
 				return svc
@@ -543,7 +543,7 @@ func TestListContainers(t *testing.T) {
 						Namespace:         "default",
 						Cluster:           "dev",
 						GcpProject:        "dev-proj",
-						VersionEndpointId: uuid,
+						VersionEndpointID: uuid,
 					},
 				},
 			},
