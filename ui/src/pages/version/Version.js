@@ -15,162 +15,220 @@
  */
 
 import React, { Fragment, useEffect, useState } from "react";
-import { Redirect, Router } from "@reach/router";
+import { Link, Router } from "@reach/router";
 import {
+  EuiButton,
+  EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiLoadingContent,
   EuiPage,
   EuiPageBody,
   EuiPageHeader,
   EuiPageHeaderSection,
-  EuiSpacer
+  EuiSpacer,
+  EuiText
 } from "@elastic/eui";
 import { replaceBreadcrumbs } from "@gojek/mlp-ui";
-import { PageTitle } from "../../components/PageTitle";
+import config from "../../config";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import Log from "../../log/Log";
 import mocks from "../../mocks";
+import { PageTitle } from "../../components/PageTitle";
+import VersionDeploy from "../../version/deployment/VersionDeploy";
 import VersionRedeploy from "../../version/deployment/VersionRedeploy";
-import { ConfigSection, ConfigSectionPanel } from "../../components/section";
-import { ModelVersionConfigTable } from "../../components/ModelVersionConfigTable";
+import { DeploymentPanelHeader } from "./DeploymentPanelHeader";
+import { ModelVersionPanelHeader } from "./ModelVersionPanelHeader";
 import { VersionConfig } from "./VersionConfig";
-import { DeploymentInfoHeader } from "./DeploymentInfoHeader";
-import { VersionEndpointTabNavigation } from "./VersionEndpointTabNavigation";
+import { VersionTabNavigation } from "./VersionTabNavigation";
 
 const Version = ({ projectId, modelId, versionId, endpointId, ...props }) => {
+  const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
+    `/projects/${projectId}/models/${modelId}`,
+    { mock: mocks.model },
+    {}
+  );
+
   const [{ data: version, isLoaded: versionLoaded }] = useMerlinApi(
     `/models/${modelId}/versions/${versionId}`,
     { mock: mocks.versionList[0] },
     {}
   );
 
-  const [{ data: endpoint, isLoaded: endpointLoaded }] = useMerlinApi(
-    `/models/${modelId}/versions/${versionId}/endpoint/${endpointId}`,
-    { mock: mocks.versionEndpoint },
-    {},
-    endpointId !== "-"
-  );
-
+  const [endpoint, setEndpoint] = useState();
   const [environments, setEnvironments] = useState([]);
-  useEffect(() => {
-    version.endpoints &&
-      setEnvironments(version.endpoints.map(endpoint => endpoint.environment));
-  }, [version]);
+  const [isDeployed, setIsDeployed] = useState(false);
 
   useEffect(() => {
-    let breadCrumbs = [
-      {
-        text: "Models",
-        href: `/merlin/projects/${projectId}/models`
+    if (version) {
+      if (version.endpoints && version.endpoints.length > 0) {
+        setIsDeployed(true);
+        setEnvironments(
+          version.endpoints.map(endpoint => endpoint.environment)
+        );
+
+        if (endpointId) {
+          setEndpoint(
+            version.endpoints.find(endpoint => endpoint.id === endpointId)
+          );
+        }
       }
-    ];
+    }
+  }, [version, endpointId]);
 
-    if (version.model) {
-      breadCrumbs.push({
-        text: version.model.name,
-        href: `/merlin/projects/${projectId}/models/${modelId}`
-      });
-      breadCrumbs.push({
-        text: `Model Version ${versionId}`,
-        href: `/merlin/projects/${projectId}/models/${modelId}/versions/${versionId}`
-      });
+  useEffect(() => {
+    let breadCrumbs = [];
+
+    if (modelLoaded && versionLoaded) {
+      breadCrumbs.push(
+        {
+          text: "Models",
+          href: `/merlin/projects/${model.project_id}/models`
+        },
+        {
+          text: model.name || "",
+          href: `/merlin/projects/${model.project_id}/models/${model.id}`
+        },
+        {
+          text: `Model Version ${version.id}`,
+          href: `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}`
+        }
+      );
     }
 
-    if (endpoint.environment_name) {
+    if (endpoint) {
       breadCrumbs.push({
         text: endpoint.environment_name
       });
     }
 
     replaceBreadcrumbs(breadCrumbs);
-  }, [projectId, modelId, versionId, version, endpoint]);
+  }, [modelLoaded, model, versionLoaded, version, endpoint]);
 
   return (
     <EuiPage>
       <EuiPageBody>
-        <Fragment>
-          <EuiPageHeader>
-            <EuiPageHeaderSection>
-              <PageTitle
-                title={
-                  <Fragment>
-                    {version.model && version.model.name}
-                    {" version "}
-                    <strong>{version.id}</strong>
-                  </Fragment>
-                }
-              />
-            </EuiPageHeaderSection>
-          </EuiPageHeader>
+        {!modelLoaded && !versionLoaded ? (
+          <EuiFlexGroup direction="row">
+            <EuiFlexItem grow={true}>
+              <EuiLoadingContent lines={3} />
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        ) : (
+          <Fragment>
+            <EuiPageHeader>
+              <EuiPageHeaderSection>
+                <PageTitle
+                  title={
+                    <Fragment>
+                      {model.name}
+                      {" version "}
+                      <strong>{version.id}</strong>
+                    </Fragment>
+                  }
+                />
+              </EuiPageHeaderSection>
+            </EuiPageHeader>
 
-          {versionLoaded && !(props["*"] === "redeploy") && (
-            <Fragment>
-              <ConfigSection title="Model">
-                <ConfigSectionPanel>
-                  <EuiFlexGroup direction="column" gutterSize="m">
-                    <EuiFlexItem>
-                      <ModelVersionConfigTable
-                        model={version.model}
-                        version={version}
-                      />
-                    </EuiFlexItem>
-                  </EuiFlexGroup>
-                </ConfigSectionPanel>
-              </ConfigSection>
-              <EuiSpacer size="m" />
-            </Fragment>
-          )}
+            {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+              model &&
+              modelLoaded &&
+              version &&
+              versionLoaded && (
+                <Fragment>
+                  <ModelVersionPanelHeader model={model} version={version} />
+                  <EuiSpacer size="m" />
+                </Fragment>
+              )}
 
-          {versionLoaded &&
-            endpointLoaded &&
-            environments &&
-            !(props["*"] === "redeploy") && (
-              <Fragment>
-                <ConfigSection title="Deployment">
-                  <DeploymentInfoHeader
+            {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+              model &&
+              modelLoaded &&
+              version &&
+              versionLoaded &&
+              environments &&
+              isDeployed && (
+                <Fragment>
+                  <DeploymentPanelHeader
+                    model={model}
                     version={version}
                     endpoint={endpoint}
                     environments={environments}
                   />
-                </ConfigSection>
-                <EuiSpacer size="m" />
-              </Fragment>
-            )}
+                  <EuiSpacer size="m" />
+                </Fragment>
+              )}
 
-          {endpointLoaded && !(props["*"] === "redeploy") && (
-            <Fragment>
-              <VersionEndpointTabNavigation endpoint={endpoint} {...props} />
-              <EuiSpacer size="m" />
-            </Fragment>
-          )}
+            {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+              endpoint &&
+              isDeployed && (
+                <Fragment>
+                  <VersionTabNavigation endpoint={endpoint} {...props} />
+                  <EuiSpacer size="m" />
+                </Fragment>
+              )}
 
-          <Router primary={false}>
-            <Redirect from="/" to="details" noThrow />
-            {version && version.model && (
-              <VersionConfig
-                path="details"
-                model={version.model}
-                version={version}
-                endpoint={endpoint}
+            {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+              model &&
+              modelLoaded &&
+              version &&
+              versionLoaded &&
+              !isDeployed && (
+                <EuiEmptyPrompt
+                  title={<h2>Model version is not deployed</h2>}
+                  body={
+                    <Fragment>
+                      <p>
+                        Deploy it first and wait for deployment to complete
+                        before you can see the configuration details here.
+                      </p>
+                      <Link
+                        to={`${config.HOMEPAGE}/projects/${model.project_id}/models/${model.id}/versions/${version.id}/deploy`}
+                        state={{ model: model, version: version }}>
+                        <EuiButton iconType="importAction" size="s">
+                          <EuiText size="xs">
+                            {model.type !== "pyfunc_v2"
+                              ? "Deploy"
+                              : "Deploy Endpoint"}
+                          </EuiText>
+                        </EuiButton>
+                      </Link>
+                    </Fragment>
+                  }
+                />
+              )}
+
+            <Router primary={false}>
+              {model && modelLoaded && version && versionLoaded && endpoint && (
+                <VersionConfig
+                  path="details"
+                  model={model}
+                  version={version}
+                  endpoint={endpoint}
+                />
+              )}
+
+              <Log
+                path="logs"
+                modelId={modelId}
+                versionId={versionId}
+                fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
               />
-            )}
 
-            <Log
-              path="logs"
-              modelId={modelId}
-              versionId={versionId}
-              fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
-            />
+              {model && modelLoaded && version && versionLoaded && (
+                <VersionDeploy path="deploy" model={model} version={version} />
+              )}
 
-            {version && version.model && (
-              <VersionRedeploy
-                path="redeploy"
-                model={version.model}
-                version={version}
-              />
-            )}
-          </Router>
-        </Fragment>
+              {model && modelLoaded && version && versionLoaded && (
+                <VersionRedeploy
+                  path="redeploy"
+                  model={model}
+                  version={version}
+                />
+              )}
+            </Router>
+          </Fragment>
+        )}
       </EuiPageBody>
     </EuiPage>
   );

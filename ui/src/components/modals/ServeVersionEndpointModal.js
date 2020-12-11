@@ -16,14 +16,68 @@
 
 import React, { useEffect, useState } from "react";
 import { EuiConfirmModal, EuiOverlayMask, EuiProgress } from "@elastic/eui";
-import useUpdateModelEndpoint from "../api/useUpdateModelEndpoint";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 
-const VersionServeEndpointModal = ({
+const useUpdateModelEndpoint = (versionEndpoint, model, modelEndpointId) => {
+  const [fetchModelEndpointResponse, fetchModelEndpoint] = useMerlinApi(
+    `/models/${model.id}/endpoints/${modelEndpointId}`,
+    {},
+    {},
+    false
+  );
+
+  const [updateModelEndpointResponse, doUpdateModelEndpoint] = useMerlinApi(
+    `/models/${model.id}/endpoints/${modelEndpointId}`,
+    { method: "PUT", addToast: true },
+    {},
+    false
+  );
+
+  const [state, setState] = useState(fetchModelEndpointResponse);
+
+  // Fetch model endpoint first
+  useEffect(() => {
+    if (fetchModelEndpointResponse.isLoaded) {
+      if (fetchModelEndpointResponse.error) {
+        setState(fetchModelEndpointResponse);
+      } else {
+        const modelEndpointRequest = {
+          ...fetchModelEndpointResponse.data,
+          environment_name: versionEndpoint.environment_name,
+          rule: {
+            destinations: [
+              {
+                weight: 100,
+                version_endpoint_id: versionEndpoint.id
+              }
+            ]
+          }
+        };
+
+        doUpdateModelEndpoint({ body: JSON.stringify(modelEndpointRequest) });
+      }
+    }
+  }, [
+    versionEndpoint,
+    model,
+    fetchModelEndpointResponse,
+    doUpdateModelEndpoint
+  ]);
+
+  useEffect(() => {
+    if (updateModelEndpointResponse.isLoaded) {
+      setState(updateModelEndpointResponse);
+    }
+  }, [updateModelEndpointResponse]);
+
+  return [state, () => fetchModelEndpoint()];
+};
+
+const ServeVersionEndpointModal = ({
   versionEndpoint,
   version,
   model,
-  updateVersionsCallback,
+  callback,
   closeModal
 }) => {
   const [createEndpointResponse, createModelEndpoint] = useMerlinApi(
@@ -69,14 +123,9 @@ const VersionServeEndpointModal = ({
   useEffect(() => {
     if (createEndpointResponse.isLoaded || updateEndpointResponse.isLoaded) {
       closeModal();
-      updateVersionsCallback();
+      callback();
     }
-  }, [
-    createEndpointResponse,
-    updateEndpointResponse,
-    closeModal,
-    updateVersionsCallback
-  ]);
+  }, [createEndpointResponse, updateEndpointResponse, closeModal, callback]);
 
   const toggleServing = () => {
     model.endpoints.find(endpoint => {
@@ -112,4 +161,4 @@ const VersionServeEndpointModal = ({
   );
 };
 
-export default VersionServeEndpointModal;
+export default ServeVersionEndpointModal;

@@ -23,7 +23,7 @@ import {
   EuiText
 } from "@elastic/eui";
 import { useToggle } from "@gojek/mlp-ui";
-import StopServeModelEndpointModal from "../model/modals/StopServeModelEndpointModal";
+import { StopServeVersionEndpointModal } from "../components/modals";
 
 const VersionEndpointActions = ({
   versionEndpoint,
@@ -192,7 +192,7 @@ const VersionEndpointActions = ({
       </EuiFlexGroup>
 
       {isStopServeModelEndpointModalVisible && (
-        <StopServeModelEndpointModal
+        <StopServeVersionEndpointModal
           model={activeModel}
           endpoint={modelEndpoint}
           callback={fetchVersions}

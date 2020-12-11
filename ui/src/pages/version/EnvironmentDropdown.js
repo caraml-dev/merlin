@@ -16,13 +16,13 @@
 
 import React, { Fragment, useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import { navigate } from "@reach/router";
 import {
   EuiSuperSelect,
   EuiText,
   EuiTextColor,
   EuiToolTip
 } from "@elastic/eui";
-import { navigate } from "@reach/router";
 
 const EnvironmentDropdownOption = ({ environment, endpoint, disabled }) => {
   const option = (
@@ -83,7 +83,11 @@ export const EnvironmentDropdown = ({ version, selected, environments }) => {
       compressed={true}
       options={environmentOptions}
       valueOfSelected={selected || ""}
-      onChange={value => navigate(`../${value}/details`)}
+      onChange={value =>
+        navigate(
+          `/merlin/projects/${version.model.project_id}/models/${version.model.id}/versions/${version.id}/endpoints/${value}/details`
+        )
+      }
       itemLayoutAlign="top"
       hasDividers
     />
@@ -92,6 +96,6 @@ export const EnvironmentDropdown = ({ version, selected, environments }) => {
 
 EnvironmentDropdown.propTypes = {
   version: PropTypes.object.isRequired,
-  selected: PropTypes.object.isRequired,
+  selected: PropTypes.string.isRequired,
   environments: PropTypes.array.isRequired
 };

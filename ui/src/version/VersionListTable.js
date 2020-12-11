@@ -275,9 +275,7 @@ const VersionListTable = ({
         const servingEndpoint = version.endpoints.find(
           endpoint => endpoint.status === "serving"
         );
-        const firstEndpointId =
-          version.endpoints.length > 0 ? version.endpoints[0].id : "-";
-        const versionPageUrl = `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/endpoints/${firstEndpointId}`;
+        const versionPageUrl = `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/details`;
         return (
           <Fragment>
             <span className="cell-first-column" size={defaultIconSize}>

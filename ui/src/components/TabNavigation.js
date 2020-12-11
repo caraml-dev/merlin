@@ -86,7 +86,7 @@ export const TabNavigation = ({ tabs, actions, selectedTab, ...props }) => (
         {tabs.map((tab, index) => (
           <EuiTab
             {...(tab.href
-              ? { href: tab.href, target: "_blank" }
+              ? { href: tab.href, target: tab.target }
               : { onClick: () => props.navigate(`./${tab.id}`) })}
             isSelected={tab.id === selectedTab}
             disabled={tab.disabled}

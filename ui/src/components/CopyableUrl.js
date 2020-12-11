@@ -16,7 +16,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { EuiCopy, EuiIcon, EuiLink, EuiText, EuiTextColor } from "@elastic/eui";
+import { EuiCopy, EuiIcon, EuiLink, EuiText } from "@elastic/eui";
 
 export const CopyableUrl = ({ text, iconSize }) => {
   return text ? (
@@ -40,7 +40,7 @@ export const CopyableUrl = ({ text, iconSize }) => {
       )}
     </EuiCopy>
   ) : (
-    <EuiTextColor color="subdued">Not available</EuiTextColor>
+    <EuiText>Not available</EuiText>
   );
 };
 

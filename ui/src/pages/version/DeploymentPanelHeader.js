@@ -16,21 +16,28 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { EuiPanel } from "@elastic/eui";
+import { EuiText } from "@elastic/eui";
 import { DateFromNow } from "@gojek/mlp-ui";
+import { ConfigSection, ConfigSectionPanel } from "../../components/section";
 import { CopyableUrl } from "../../components/CopyableUrl";
 import { DeploymentStatus } from "../../components/DeploymentStatus";
-import { EnvironmentDropdown } from "./EnvironmentDropdown";
 import { HorizontalDescriptionList } from "../../components/HorizontalDescriptionList";
+import { DeploymentActions } from "./DeploymentActions";
+import { EnvironmentDropdown } from "./EnvironmentDropdown";
 
-export const DeploymentInfoHeader = ({ version, endpoint, environments }) => {
+export const DeploymentPanelHeader = ({
+  model,
+  version,
+  endpoint,
+  environments
+}) => {
   const headerItems = [
     {
       title: "Environment",
       description: (
         <EnvironmentDropdown
           version={version}
-          selected={endpoint.id}
+          selected={endpoint ? endpoint.id : ""}
           environments={environments}
         />
       ),
@@ -40,21 +47,33 @@ export const DeploymentInfoHeader = ({ version, endpoint, environments }) => {
     },
     {
       title: "Status",
-      description: <DeploymentStatus status={endpoint.status} />,
+      description: endpoint ? (
+        <DeploymentStatus status={endpoint.status} />
+      ) : (
+        <EuiText>-</EuiText>
+      ),
       flexProps: {
         grow: 1
       }
     },
     {
       title: "Endpoint",
-      description: <CopyableUrl text={endpoint.url} />,
+      description: endpoint ? (
+        <CopyableUrl text={endpoint.url} />
+      ) : (
+        <EuiText>-</EuiText>
+      ),
       flexProps: {
         grow: 4
       }
     },
     {
       title: "Created At",
-      description: <DateFromNow date={endpoint.created_at} size="s" />,
+      description: endpoint ? (
+        <DateFromNow date={endpoint.created_at} size="s" />
+      ) : (
+        <EuiText>-</EuiText>
+      ),
       flexProps: {
         grow: 1,
         style: {
@@ -64,7 +83,29 @@ export const DeploymentInfoHeader = ({ version, endpoint, environments }) => {
     },
     {
       title: "Updated At",
-      description: <DateFromNow date={endpoint.updated_at} size="s" />,
+      description: endpoint ? (
+        <DateFromNow date={endpoint.updated_at} size="s" />
+      ) : (
+        <EuiText>-</EuiText>
+      ),
+      flexProps: {
+        grow: 1,
+        style: {
+          minWidth: "100px"
+        }
+      }
+    },
+    {
+      title: "Actions",
+      description: endpoint ? (
+        <DeploymentActions
+          model={model}
+          version={version}
+          endpoint={endpoint}
+        />
+      ) : (
+        <EuiText>-</EuiText>
+      ),
       flexProps: {
         grow: 1,
         style: {
@@ -75,13 +116,16 @@ export const DeploymentInfoHeader = ({ version, endpoint, environments }) => {
   ];
 
   return (
-    <EuiPanel paddingSize="l">
-      <HorizontalDescriptionList listItems={headerItems} />
-    </EuiPanel>
+    <ConfigSection title="Deployment">
+      <ConfigSectionPanel>
+        <HorizontalDescriptionList listItems={headerItems} />
+      </ConfigSectionPanel>
+    </ConfigSection>
   );
 };
 
-DeploymentInfoHeader.propTypes = {
+DeploymentPanelHeader.propTypes = {
+  model: PropTypes.object.isRequired,
   version: PropTypes.object.isRequired,
   endpoint: PropTypes.object.isRequired,
   environments: PropTypes.array.isRequired

@@ -16,18 +16,17 @@
 
 import React, { useEffect } from "react";
 import { EuiConfirmModal, EuiOverlayMask, EuiProgress } from "@elastic/eui";
-import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
+import mocks from "../../mocks";
 
-const VersionUndeployEndpointModal = ({
-  versionEndpoint,
-  version,
+const StopServeVersionEndpointModal = ({
   model,
-  updateVersionsCallback,
+  modelEndpoint,
+  callback,
   closeModal
 }) => {
-  const [{ isLoading, isLoaded }, undeployVersion] = useMerlinApi(
-    `/models/${model.id}/versions/${version.id}/endpoint/${versionEndpoint.id}`,
+  const [{ isLoading, isLoaded }, stopServingEndpoint] = useMerlinApi(
+    `/models/${model.id}/endpoints/${modelEndpoint.id}`,
     { method: "DELETE", addToast: true, mock: mocks.noBody },
     {},
     false
@@ -36,23 +35,22 @@ const VersionUndeployEndpointModal = ({
   useEffect(() => {
     if (isLoaded) {
       closeModal();
-      updateVersionsCallback();
+      callback();
     }
-  }, [isLoaded, closeModal, updateVersionsCallback]);
+  }, [isLoaded, closeModal, callback]);
 
   return (
     <EuiOverlayMask>
       <EuiConfirmModal
-        title="Undeploy model version"
+        title="Stop model serving"
         onCancel={closeModal}
-        onConfirm={undeployVersion}
+        onConfirm={stopServingEndpoint}
         cancelButtonText="Cancel"
-        confirmButtonText="Undeploy"
+        confirmButtonText="Stop Serving"
         buttonColor="danger">
         <p>
-          You're about to undeploy the endpoint for model version{" "}
-          <b>{version.id}</b> from <b>{versionEndpoint.environment_name}</b>{" "}
-          environment.
+          You're about to stop serving traffic to model <b>{model.name}</b> in{" "}
+          <b>{modelEndpoint.environment_name}</b> environment.
         </p>
         <p>The following endpoint will not be accessible anymore.</p>
         {isLoading && (
@@ -63,11 +61,11 @@ const VersionUndeployEndpointModal = ({
           />
         )}
         <pre>
-          <code>{versionEndpoint.url}</code>
+          <code>{modelEndpoint.url}</code>
         </pre>
       </EuiConfirmModal>
     </EuiOverlayMask>
   );
 };
 
-export default VersionUndeployEndpointModal;
+export default StopServeVersionEndpointModal;

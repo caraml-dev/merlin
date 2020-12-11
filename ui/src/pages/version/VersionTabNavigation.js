@@ -18,11 +18,7 @@ import React from "react";
 import { EuiIcon } from "@elastic/eui";
 import { TabNavigation } from "../../components/TabNavigation";
 
-export const VersionEndpointTabNavigation = ({
-  endpoint,
-  actions,
-  ...props
-}) => {
+export const VersionTabNavigation = ({ endpoint, actions, ...props }) => {
   const tabs = [
     {
       id: "details",
@@ -40,7 +36,8 @@ export const VersionEndpointTabNavigation = ({
           <EuiIcon className="eui-alignBaseline" type="popout" size="s" />
         </span>
       ),
-      href: endpoint.monitoring_url
+      href: endpoint.monitoring_url,
+      target: "_blank"
     }
   ];
 
