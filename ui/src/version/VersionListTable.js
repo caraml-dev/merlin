@@ -421,47 +421,59 @@ const VersionListTable = ({
         activeModel && (
           <EuiFlexGroup
             alignItems="flexStart"
-            direction="column"
+            direction="row"
             gutterSize="s"
             style={{ margin: "2px 0" }}>
-            <EuiToolTip
-              position="top"
-              content={
-                <p>
-                  Deploy model version as an HTTP endpoint to available
-                  environment.
-                </p>
-              }>
-              <Link
-                to={`${version.id}/deploy`}
-                state={{ model: activeModel, version: version }}>
-                <EuiButtonEmpty iconType="importAction" size="xs">
-                  <EuiText size="xs">
-                    {activeModel.type !== "pyfunc_v2"
-                      ? "Deploy"
-                      : "Deploy Endpoint"}
-                  </EuiText>
-                </EuiButtonEmpty>
-              </Link>
-            </EuiToolTip>
-
-            {activeModel.type === "pyfunc_v2" && (
+            <EuiFlexItem grow={false}>
               <EuiToolTip
                 position="top"
                 content={
                   <p>
-                    Start new batch prediction job from a given model version
+                    Deploy model version as an HTTP endpoint to available
+                    environment.
                   </p>
                 }>
                 <Link
-                  to={`${version.id}/create-job`}
+                  to={`${version.id}/deploy`}
                   state={{ model: activeModel, version: version }}>
-                  <EuiButtonEmpty iconType="storage" size="xs">
-                    <EuiText size="xs">Start Batch Job</EuiText>
+                  <EuiButtonEmpty iconType="importAction" size="xs">
+                    <EuiText size="xs">
+                      {activeModel.type !== "pyfunc_v2"
+                        ? "Deploy"
+                        : "Deploy Endpoint"}
+                    </EuiText>
                   </EuiButtonEmpty>
                 </Link>
               </EuiToolTip>
+            </EuiFlexItem>
+
+            {activeModel.type === "pyfunc_v2" && (
+              <EuiFlexItem>
+                <EuiToolTip
+                  position="top"
+                  content={
+                    <p>
+                      Start new batch prediction job from a given model version
+                    </p>
+                  }>
+                  <Link
+                    to={`${version.id}/create-job`}
+                    state={{ model: activeModel, version: version }}>
+                    <EuiButtonEmpty iconType="storage" size="xs">
+                      <EuiText size="xs">Start Batch Job</EuiText>
+                    </EuiButtonEmpty>
+                  </Link>
+                </EuiToolTip>
+              </EuiFlexItem>
             )}
+
+            <EuiFlexItem grow={false}>
+              <Link to={`${version.id}/details`}>
+                <EuiButtonEmpty iconType="inspect" size="xs">
+                  <EuiText size="xs">Details</EuiText>
+                </EuiButtonEmpty>
+              </Link>
+            </EuiFlexItem>
           </EuiFlexGroup>
         )
     },
