@@ -194,7 +194,7 @@ const VersionEndpointActions = ({
       {isStopServeModelEndpointModalVisible && (
         <StopServeVersionEndpointModal
           model={activeModel}
-          endpoint={modelEndpoint}
+          modelEndpoint={modelEndpoint}
           callback={fetchVersions}
           closeModal={() => toggleStopServeModelEndpointModal()}
         />
