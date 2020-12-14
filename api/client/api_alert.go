@@ -25,17 +25,17 @@ var (
 	_ context.Context
 )
 
-type AlertApiService service
+type AlertAPIService service
 
 /*
-AlertApiService Lists teams for alert notification channel.
+AlertAPIService Lists teams for alert notification channel.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 
 @return []string
 */
-func (a *AlertApiService) AlertsTeamsGet(ctx context.Context) ([]string, *http.Response, error) {
+func (a *AlertAPIService) AlertsTeamsGet(ctx context.Context) ([]string, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
+		localVarHTTPMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -50,21 +50,21 @@ func (a *AlertApiService) AlertsTeamsGet(ctx context.Context) ([]string, *http.R
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -79,63 +79,63 @@ func (a *AlertApiService) AlertsTeamsGet(ctx context.Context) ([]string, *http.R
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 200 {
+		if localVarHTTPResponse.StatusCode == 200 {
 			var v []string
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 /*
-AlertApiService Lists alerts for given model.
+AlertAPIService Lists alerts for given model.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
+ * @param modelID
 
 @return []ModelEndpointAlert
 */
-func (a *AlertApiService) ModelsModelIdAlertsGet(ctx context.Context, modelId int32) ([]ModelEndpointAlert, *http.Response, error) {
+func (a *AlertAPIService) ModelsModelIDAlertsGet(ctx context.Context, modelID int32) ([]ModelEndpointAlert, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
+		localVarHTTPMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -144,28 +144,28 @@ func (a *AlertApiService) ModelsModelIdAlertsGet(ctx context.Context, modelId in
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/alerts"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -180,64 +180,64 @@ func (a *AlertApiService) ModelsModelIdAlertsGet(ctx context.Context, modelId in
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 200 {
+		if localVarHTTPResponse.StatusCode == 200 {
 			var v []ModelEndpointAlert
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 /*
-AlertApiService Gets alert for given model endpoint.
+AlertAPIService Gets alert for given model endpoint.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param modelEndpointId
+ * @param modelID
+ * @param modelEndpointID
 
 @return ModelEndpointAlert
 */
-func (a *AlertApiService) ModelsModelIdEndpointsModelEndpointIdAlertGet(ctx context.Context, modelId int32, modelEndpointId string) (ModelEndpointAlert, *http.Response, error) {
+func (a *AlertAPIService) ModelsModelIDEndpointsModelEndpointIDAlertGet(ctx context.Context, modelID int32, modelEndpointID string) (ModelEndpointAlert, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
+		localVarHTTPMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -246,29 +246,29 @@ func (a *AlertApiService) ModelsModelIdEndpointsModelEndpointIdAlertGet(ctx cont
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/endpoints/{model_endpoint_id}/alert"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"model_endpoint_id"+"}", fmt.Sprintf("%v", modelEndpointId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_endpoint_id"+"}", fmt.Sprintf("%v", modelEndpointID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -283,71 +283,71 @@ func (a *AlertApiService) ModelsModelIdEndpointsModelEndpointIdAlertGet(ctx cont
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 200 {
+		if localVarHTTPResponse.StatusCode == 200 {
 			var v ModelEndpointAlert
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 /*
-AlertApiService Creates alert for given model endpoint.
+AlertAPIService Creates alert for given model endpoint.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param modelEndpointId
- * @param optional nil or *AlertApiModelsModelIdEndpointsModelEndpointIdAlertPostOpts - Optional Parameters:
+ * @param modelID
+ * @param modelEndpointID
+ * @param optional nil or *AlertAPIModelsModelIDEndpointsModelEndpointIDAlertPostOpts - Optional Parameters:
      * @param "Body" (optional.Interface of ModelEndpointAlert) -
 
 
 */
 
-type AlertApiModelsModelIdEndpointsModelEndpointIdAlertPostOpts struct {
+type AlertAPIModelsModelIDEndpointsModelEndpointIDAlertPostOpts struct {
 	Body optional.Interface
 }
 
-func (a *AlertApiService) ModelsModelIdEndpointsModelEndpointIdAlertPost(ctx context.Context, modelId int32, modelEndpointId string, localVarOptionals *AlertApiModelsModelIdEndpointsModelEndpointIdAlertPostOpts) (*http.Response, error) {
+func (a *AlertAPIService) ModelsModelIDEndpointsModelEndpointIDAlertPost(ctx context.Context, modelID int32, modelEndpointID string, localVarOptionals *AlertAPIModelsModelIDEndpointsModelEndpointIDAlertPostOpts) (*http.Response, error) {
 	var (
-		localVarHttpMethod = strings.ToUpper("Post")
+		localVarHTTPMethod = strings.ToUpper("Post")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
@@ -355,29 +355,29 @@ func (a *AlertApiService) ModelsModelIdEndpointsModelEndpointIdAlertPost(ctx con
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/endpoints/{model_endpoint_id}/alert"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"model_endpoint_id"+"}", fmt.Sprintf("%v", modelEndpointId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_endpoint_id"+"}", fmt.Sprintf("%v", modelEndpointID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Body.IsSet() {
@@ -401,52 +401,52 @@ func (a *AlertApiService) ModelsModelIdEndpointsModelEndpointIdAlertPost(ctx con
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarHttpResponse, err
+		return localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		return localVarHttpResponse, newErr
+		return localVarHTTPResponse, newErr
 	}
 
-	return localVarHttpResponse, nil
+	return localVarHTTPResponse, nil
 }
 
 /*
-AlertApiService Creates alert for given model endpoint.
+AlertAPIService Creates alert for given model endpoint.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param modelEndpointId
- * @param optional nil or *AlertApiModelsModelIdEndpointsModelEndpointIdAlertPutOpts - Optional Parameters:
+ * @param modelID
+ * @param modelEndpointID
+ * @param optional nil or *AlertAPIModelsModelIDEndpointsModelEndpointIDAlertPutOpts - Optional Parameters:
      * @param "Body" (optional.Interface of ModelEndpointAlert) -
 
 
 */
 
-type AlertApiModelsModelIdEndpointsModelEndpointIdAlertPutOpts struct {
+type AlertAPIModelsModelIDEndpointsModelEndpointIDAlertPutOpts struct {
 	Body optional.Interface
 }
 
-func (a *AlertApiService) ModelsModelIdEndpointsModelEndpointIdAlertPut(ctx context.Context, modelId int32, modelEndpointId string, localVarOptionals *AlertApiModelsModelIdEndpointsModelEndpointIdAlertPutOpts) (*http.Response, error) {
+func (a *AlertAPIService) ModelsModelIDEndpointsModelEndpointIDAlertPut(ctx context.Context, modelID int32, modelEndpointID string, localVarOptionals *AlertAPIModelsModelIDEndpointsModelEndpointIDAlertPutOpts) (*http.Response, error) {
 	var (
-		localVarHttpMethod = strings.ToUpper("Put")
+		localVarHTTPMethod = strings.ToUpper("Put")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
@@ -454,29 +454,29 @@ func (a *AlertApiService) ModelsModelIdEndpointsModelEndpointIdAlertPut(ctx cont
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/endpoints/{model_endpoint_id}/alert"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"model_endpoint_id"+"}", fmt.Sprintf("%v", modelEndpointId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_endpoint_id"+"}", fmt.Sprintf("%v", modelEndpointID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Body.IsSet() {
@@ -500,30 +500,30 @@ func (a *AlertApiService) ModelsModelIdEndpointsModelEndpointIdAlertPut(ctx cont
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarHttpResponse, err
+		return localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		return localVarHttpResponse, newErr
+		return localVarHTTPResponse, newErr
 	}
 
-	return localVarHttpResponse, nil
+	return localVarHTTPResponse, nil
 }

@@ -29,8 +29,8 @@ import (
 type ModelEndpointAlertService interface {
 	ListTeams() ([]string, error)
 
-	ListModelAlerts(modelId models.Id) ([]*models.ModelEndpointAlert, error)
-	GetModelEndpointAlert(modelId models.Id, modelEndpointId models.Id) (*models.ModelEndpointAlert, error)
+	ListModelAlerts(modelID models.ID) ([]*models.ModelEndpointAlert, error)
+	GetModelEndpointAlert(modelID models.ID, modelEndpointID models.ID) (*models.ModelEndpointAlert, error)
 	CreateModelEndpointAlert(user string, alert *models.ModelEndpointAlert) (*models.ModelEndpointAlert, error)
 	UpdateModelEndpointAlert(user string, alert *models.ModelEndpointAlert) (*models.ModelEndpointAlert, error)
 }
@@ -68,12 +68,12 @@ func (s *modelEndpointAlertService) ListTeams() ([]string, error) {
 	return s.wardenClient.GetAllTeams()
 }
 
-func (s *modelEndpointAlertService) ListModelAlerts(modelId models.Id) ([]*models.ModelEndpointAlert, error) {
-	return s.alertStorage.ListModelEndpointAlerts(modelId)
+func (s *modelEndpointAlertService) ListModelAlerts(modelID models.ID) ([]*models.ModelEndpointAlert, error) {
+	return s.alertStorage.ListModelEndpointAlerts(modelID)
 }
 
-func (s *modelEndpointAlertService) GetModelEndpointAlert(modelId models.Id, modelEndpointId models.Id) (*models.ModelEndpointAlert, error) {
-	return s.alertStorage.GetModelEndpointAlert(modelId, modelEndpointId)
+func (s *modelEndpointAlertService) GetModelEndpointAlert(modelID models.ID, modelEndpointID models.ID) (*models.ModelEndpointAlert, error) {
+	return s.alertStorage.GetModelEndpointAlert(modelID, modelEndpointID)
 }
 
 func (s *modelEndpointAlertService) CreateModelEndpointAlert(user string, alert *models.ModelEndpointAlert) (*models.ModelEndpointAlert, error) {

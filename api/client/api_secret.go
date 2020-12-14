@@ -25,18 +25,18 @@ var (
 	_ context.Context
 )
 
-type SecretApiService service
+type SecretAPIService service
 
 /*
-SecretApiService List secret
+SecretAPIService List secret
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param projectId
+ * @param projectID
 
 @return []Secret
 */
-func (a *SecretApiService) ProjectsProjectIdSecretsGet(ctx context.Context, projectId int32) ([]Secret, *http.Response, error) {
+func (a *SecretAPIService) ProjectsProjectIDSecretsGet(ctx context.Context, projectID int32) ([]Secret, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
+		localVarHTTPMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -45,28 +45,28 @@ func (a *SecretApiService) ProjectsProjectIdSecretsGet(ctx context.Context, proj
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/projects/{project_id}/secrets"
-	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -81,70 +81,70 @@ func (a *SecretApiService) ProjectsProjectIdSecretsGet(ctx context.Context, proj
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 201 {
+		if localVarHTTPResponse.StatusCode == 201 {
 			var v []Secret
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 /*
-SecretApiService Create secret
+SecretAPIService Create secret
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param projectId
- * @param optional nil or *SecretApiProjectsProjectIdSecretsPostOpts - Optional Parameters:
+ * @param projectID
+ * @param optional nil or *SecretAPIProjectsProjectIDSecretsPostOpts - Optional Parameters:
      * @param "Body" (optional.Interface of Secret) -
 
 @return Secret
 */
 
-type SecretApiProjectsProjectIdSecretsPostOpts struct {
+type SecretAPIProjectsProjectIDSecretsPostOpts struct {
 	Body optional.Interface
 }
 
-func (a *SecretApiService) ProjectsProjectIdSecretsPost(ctx context.Context, projectId int32, localVarOptionals *SecretApiProjectsProjectIdSecretsPostOpts) (Secret, *http.Response, error) {
+func (a *SecretAPIService) ProjectsProjectIDSecretsPost(ctx context.Context, projectID int32, localVarOptionals *SecretAPIProjectsProjectIDSecretsPostOpts) (Secret, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Post")
+		localVarHTTPMethod  = strings.ToUpper("Post")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -153,28 +153,28 @@ func (a *SecretApiService) ProjectsProjectIdSecretsPost(ctx context.Context, pro
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/projects/{project_id}/secrets"
-	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Body.IsSet() {
@@ -198,64 +198,64 @@ func (a *SecretApiService) ProjectsProjectIdSecretsPost(ctx context.Context, pro
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 201 {
+		if localVarHTTPResponse.StatusCode == 201 {
 			var v Secret
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 /*
-SecretApiService Delete secret
+SecretAPIService Delete secret
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param projectId
- * @param secretId
+ * @param projectID
+ * @param secretID
 
 
 */
-func (a *SecretApiService) ProjectsProjectIdSecretsSecretIdDelete(ctx context.Context, projectId int32, secretId int32) (*http.Response, error) {
+func (a *SecretAPIService) ProjectsProjectIDSecretsSecretIDDelete(ctx context.Context, projectID int32, secretID int32) (*http.Response, error) {
 	var (
-		localVarHttpMethod = strings.ToUpper("Delete")
+		localVarHTTPMethod = strings.ToUpper("Delete")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
@@ -263,29 +263,29 @@ func (a *SecretApiService) ProjectsProjectIdSecretsSecretIdDelete(ctx context.Co
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/projects/{project_id}/secrets/{secret_id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"secret_id"+"}", fmt.Sprintf("%v", secretId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"secret_id"+"}", fmt.Sprintf("%v", secretID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -300,52 +300,52 @@ func (a *SecretApiService) ProjectsProjectIdSecretsSecretIdDelete(ctx context.Co
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarHttpResponse, err
+		return localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		return localVarHttpResponse, newErr
+		return localVarHTTPResponse, newErr
 	}
 
-	return localVarHttpResponse, nil
+	return localVarHTTPResponse, nil
 }
 
 /*
-SecretApiService Update secret
+SecretAPIService Update secret
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param projectId
- * @param secretId
- * @param optional nil or *SecretApiProjectsProjectIdSecretsSecretIdPatchOpts - Optional Parameters:
+ * @param projectID
+ * @param secretID
+ * @param optional nil or *SecretAPIProjectsProjectIDSecretsSecretIDPatchOpts - Optional Parameters:
      * @param "Body" (optional.Interface of Secret) -
 
 @return Secret
 */
 
-type SecretApiProjectsProjectIdSecretsSecretIdPatchOpts struct {
+type SecretAPIProjectsProjectIDSecretsSecretIDPatchOpts struct {
 	Body optional.Interface
 }
 
-func (a *SecretApiService) ProjectsProjectIdSecretsSecretIdPatch(ctx context.Context, projectId int32, secretId int32, localVarOptionals *SecretApiProjectsProjectIdSecretsSecretIdPatchOpts) (Secret, *http.Response, error) {
+func (a *SecretAPIService) ProjectsProjectIDSecretsSecretIDPatch(ctx context.Context, projectID int32, secretID int32, localVarOptionals *SecretAPIProjectsProjectIDSecretsSecretIDPatchOpts) (Secret, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Patch")
+		localVarHTTPMethod  = strings.ToUpper("Patch")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -354,29 +354,29 @@ func (a *SecretApiService) ProjectsProjectIdSecretsSecretIdPatch(ctx context.Con
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/projects/{project_id}/secrets/{secret_id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"secret_id"+"}", fmt.Sprintf("%v", secretId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"secret_id"+"}", fmt.Sprintf("%v", secretID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Body.IsSet() {
@@ -400,49 +400,49 @@ func (a *SecretApiService) ProjectsProjectIdSecretsSecretIdPatch(ctx context.Con
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 200 {
+		if localVarHTTPResponse.StatusCode == 200 {
 			var v Secret
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }

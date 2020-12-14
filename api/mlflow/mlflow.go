@@ -26,24 +26,24 @@ import (
 
 type Client interface {
 	CreateExperiment(name string) (string, error)
-	CreateRun(experimentId string) (*Run, error)
+	CreateRun(experimentID string) (*Run, error)
 }
 
-func NewClient(httpClient *http.Client, trackingUrl string) Client {
+func NewClient(httpClient *http.Client, trackingURL string) Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 
 	return &client{
 		httpClient:  httpClient,
-		trackingUrl: trackingUrl,
+		trackingURL: trackingURL,
 	}
 }
 
 type client struct {
 	httpClient *http.Client
 
-	trackingUrl string
+	trackingURL string
 }
 
 type request struct {
@@ -53,7 +53,7 @@ type request struct {
 }
 
 func (mlflow *client) doCall(req *request, resp interface{}) error {
-	url := utils.JoinURL(mlflow.trackingUrl, req.endpoint)
+	url := utils.JoinURL(mlflow.trackingURL, req.endpoint)
 
 	reqPayload, err := json.Marshal(req.data)
 	if err != nil {
@@ -95,16 +95,16 @@ func (mlflow *client) CreateExperiment(name string) (string, error) {
 		return "", err
 	}
 
-	return resp.ExperimentId, nil
+	return resp.ExperimentID, nil
 }
 
-func (mlflow *client) CreateRun(experimentId string) (*Run, error) {
+func (mlflow *client) CreateRun(experimentID string) (*Run, error) {
 	var resp createRunResponse
 	req := request{
 		endpoint: "/api/2.0/mlflow/runs/create",
 		method:   http.MethodPost,
 		data: &createRunRequest{
-			ExperimentId: experimentId,
+			ExperimentID: experimentID,
 			StartTime:    time.Now().Unix() * 1000,
 		},
 	}

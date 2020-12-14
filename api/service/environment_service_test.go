@@ -39,15 +39,15 @@ func TestSave(t *testing.T) {
 		{
 			desc: "Should success save new environment",
 			environment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -56,10 +56,10 @@ func TestSave(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
@@ -67,7 +67,7 @@ func TestSave(t *testing.T) {
 		{
 			desc: "Should failed saving when environment name is empty",
 			environment: &models.Environment{
-				Id:      models.Id(1),
+				ID:      models.ID(1),
 				Name:    "",
 				Cluster: "dev-cluster",
 			},
@@ -76,7 +76,7 @@ func TestSave(t *testing.T) {
 		{
 			desc: "Should failed saving when environment cluster is empty",
 			environment: &models.Environment{
-				Id:      models.Id(1),
+				ID:      models.ID(1),
 				Name:    "dev",
 				Cluster: "",
 			},
@@ -85,15 +85,15 @@ func TestSave(t *testing.T) {
 		{
 			desc: "Should failed when save new environment with same name",
 			existingEnvironment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-new-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -102,22 +102,22 @@ func TestSave(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
 			environment: &models.Environment{
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -126,10 +126,10 @@ func TestSave(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
@@ -151,7 +151,7 @@ func TestSave(t *testing.T) {
 				assert.Equal(t, tC.environment.IsDefault, newEnv.IsDefault)
 				assert.Equal(t, tC.environment.Region, newEnv.Region)
 				assert.Equal(t, tC.environment.GcpProject, newEnv.GcpProject)
-				assert.Equal(t, tC.environment.MaxCpu, newEnv.MaxCpu)
+				assert.Equal(t, tC.environment.MaxCPU, newEnv.MaxCPU)
 				assert.Equal(t, tC.environment.MaxMemory, newEnv.MaxMemory)
 				assert.Equal(t, tC.environment.DefaultResourceRequest, newEnv.DefaultResourceRequest)
 				assert.Equal(t, tC.environment.IsPredictionJobEnabled, newEnv.IsPredictionJobEnabled)
@@ -177,15 +177,15 @@ func TestGetEnvironment(t *testing.T) {
 			desc: "Should success get environment",
 			name: "dev",
 			existingEnvironment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -194,23 +194,23 @@ func TestGetEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
 			expectedEnvironment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -219,10 +219,10 @@ func TestGetEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
@@ -231,15 +231,15 @@ func TestGetEnvironment(t *testing.T) {
 			desc: "Should get not found",
 			name: "staging",
 			existingEnvironment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -248,10 +248,10 @@ func TestGetEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
@@ -273,7 +273,7 @@ func TestGetEnvironment(t *testing.T) {
 				assert.Equal(t, tC.expectedEnvironment.IsDefault, env.IsDefault)
 				assert.Equal(t, tC.expectedEnvironment.Region, env.Region)
 				assert.Equal(t, tC.expectedEnvironment.GcpProject, env.GcpProject)
-				assert.Equal(t, tC.expectedEnvironment.MaxCpu, env.MaxCpu)
+				assert.Equal(t, tC.expectedEnvironment.MaxCPU, env.MaxCPU)
 				assert.Equal(t, tC.expectedEnvironment.MaxMemory, env.MaxMemory)
 				assert.Equal(t, tC.expectedEnvironment.DefaultResourceRequest, env.DefaultResourceRequest)
 				assert.Equal(t, tC.expectedEnvironment.IsPredictionJobEnabled, env.IsPredictionJobEnabled)
@@ -297,16 +297,16 @@ func TestGetDefaultEnvironment(t *testing.T) {
 		{
 			desc: "Should success get default environment",
 			existingEnvironment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				IsDefault: &trueBoolean,
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -315,23 +315,23 @@ func TestGetDefaultEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
 			expectedEnvironment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -341,10 +341,10 @@ func TestGetDefaultEnvironment(t *testing.T) {
 				IsDefault:              &trueBoolean,
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
@@ -352,15 +352,15 @@ func TestGetDefaultEnvironment(t *testing.T) {
 		{
 			desc: "Should get not found",
 			existingEnvironment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -369,10 +369,10 @@ func TestGetDefaultEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
@@ -394,7 +394,7 @@ func TestGetDefaultEnvironment(t *testing.T) {
 				assert.Equal(t, tC.expectedEnvironment.IsDefault, env.IsDefault)
 				assert.Equal(t, tC.expectedEnvironment.Region, env.Region)
 				assert.Equal(t, tC.expectedEnvironment.GcpProject, env.GcpProject)
-				assert.Equal(t, tC.expectedEnvironment.MaxCpu, env.MaxCpu)
+				assert.Equal(t, tC.expectedEnvironment.MaxCPU, env.MaxCPU)
 				assert.Equal(t, tC.expectedEnvironment.MaxMemory, env.MaxMemory)
 				assert.Equal(t, tC.expectedEnvironment.DefaultResourceRequest, env.DefaultResourceRequest)
 				assert.Equal(t, tC.expectedEnvironment.IsPredictionJobEnabled, env.IsPredictionJobEnabled)
@@ -418,16 +418,16 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 		{
 			desc: "Should success get default environment",
 			existingEnvironment: &models.Environment{
-				Id:                     models.Id(1),
+				ID:                     models.ID(1),
 				Name:                   "dev",
 				Cluster:                "dev-cluster",
-				MaxCpu:                 "1",
+				MaxCPU:                 "1",
 				MaxMemory:              "1Gi",
 				IsDefaultPredictionJob: &trueBoolean,
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -436,23 +436,23 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
 			expectedEnvironment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -462,10 +462,10 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 				IsDefaultPredictionJob: &trueBoolean,
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
@@ -473,15 +473,15 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 		{
 			desc: "Should get not found",
 			existingEnvironment: &models.Environment{
-				Id:        models.Id(1),
+				ID:        models.ID(1),
 				Name:      "dev",
 				Cluster:   "dev-cluster",
-				MaxCpu:    "1",
+				MaxCPU:    "1",
 				MaxMemory: "1Gi",
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -490,10 +490,10 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
@@ -515,7 +515,7 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 				assert.Equal(t, tC.expectedEnvironment.IsDefault, env.IsDefault)
 				assert.Equal(t, tC.expectedEnvironment.Region, env.Region)
 				assert.Equal(t, tC.expectedEnvironment.GcpProject, env.GcpProject)
-				assert.Equal(t, tC.expectedEnvironment.MaxCpu, env.MaxCpu)
+				assert.Equal(t, tC.expectedEnvironment.MaxCPU, env.MaxCPU)
 				assert.Equal(t, tC.expectedEnvironment.MaxMemory, env.MaxMemory)
 				assert.Equal(t, tC.expectedEnvironment.DefaultResourceRequest, env.DefaultResourceRequest)
 				assert.Equal(t, tC.expectedEnvironment.IsPredictionJobEnabled, env.IsPredictionJobEnabled)
@@ -540,16 +540,16 @@ func TestListEnvironment(t *testing.T) {
 			desc: "Should success list environment without filtering",
 			name: "",
 			existingEnvironment: &models.Environment{
-				Id:                     models.Id(1),
+				ID:                     models.ID(1),
 				Name:                   "dev",
 				Cluster:                "dev-cluster",
-				MaxCpu:                 "1",
+				MaxCPU:                 "1",
 				MaxMemory:              "1Gi",
 				IsDefaultPredictionJob: &trueBoolean,
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -558,24 +558,24 @@ func TestListEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
 			expectedEnvironments: []*models.Environment{
 				{
-					Id:        models.Id(1),
+					ID:        models.ID(1),
 					Name:      "dev",
 					Cluster:   "dev-cluster",
-					MaxCpu:    "1",
+					MaxCPU:    "1",
 					MaxMemory: "1Gi",
 					DefaultResourceRequest: &models.ResourceRequest{
 						MinReplica:    1,
 						MaxReplica:    4,
-						CpuRequest:    resource.MustParse("1"),
+						CPURequest:    resource.MustParse("1"),
 						MemoryRequest: resource.MustParse("1Gi"),
 					},
 					CreatedUpdated: models.CreatedUpdated{
@@ -585,10 +585,10 @@ func TestListEnvironment(t *testing.T) {
 					IsDefaultPredictionJob: &trueBoolean,
 					IsPredictionJobEnabled: true,
 					DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      "1",
+						DriverCPURequest:      "1",
 						DriverMemoryRequest:   "1Gi",
 						ExecutorReplica:       0,
-						ExecutorCpuRequest:    "1",
+						ExecutorCPURequest:    "1",
 						ExecutorMemoryRequest: "1Gi",
 					},
 				},
@@ -598,16 +598,16 @@ func TestListEnvironment(t *testing.T) {
 			desc: "Should success list environment with filtering",
 			name: "dev",
 			existingEnvironment: &models.Environment{
-				Id:                     models.Id(1),
+				ID:                     models.ID(1),
 				Name:                   "dev",
 				Cluster:                "dev-cluster",
-				MaxCpu:                 "1",
+				MaxCPU:                 "1",
 				MaxMemory:              "1Gi",
 				IsDefaultPredictionJob: &trueBoolean,
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -616,24 +616,24 @@ func TestListEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
 			expectedEnvironments: []*models.Environment{
 				{
-					Id:        models.Id(1),
+					ID:        models.ID(1),
 					Name:      "dev",
 					Cluster:   "dev-cluster",
-					MaxCpu:    "1",
+					MaxCPU:    "1",
 					MaxMemory: "1Gi",
 					DefaultResourceRequest: &models.ResourceRequest{
 						MinReplica:    1,
 						MaxReplica:    4,
-						CpuRequest:    resource.MustParse("1"),
+						CPURequest:    resource.MustParse("1"),
 						MemoryRequest: resource.MustParse("1Gi"),
 					},
 					CreatedUpdated: models.CreatedUpdated{
@@ -643,10 +643,10 @@ func TestListEnvironment(t *testing.T) {
 					IsDefaultPredictionJob: &trueBoolean,
 					IsPredictionJobEnabled: true,
 					DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      "1",
+						DriverCPURequest:      "1",
 						DriverMemoryRequest:   "1Gi",
 						ExecutorReplica:       0,
-						ExecutorCpuRequest:    "1",
+						ExecutorCPURequest:    "1",
 						ExecutorMemoryRequest: "1Gi",
 					},
 				},
@@ -656,16 +656,16 @@ func TestListEnvironment(t *testing.T) {
 			desc: "Should return empty  environment if no environment found",
 			name: "staging",
 			existingEnvironment: &models.Environment{
-				Id:                     models.Id(1),
+				ID:                     models.ID(1),
 				Name:                   "dev",
 				Cluster:                "dev-cluster",
-				MaxCpu:                 "1",
+				MaxCPU:                 "1",
 				MaxMemory:              "1Gi",
 				IsDefaultPredictionJob: &trueBoolean,
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    1,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1"),
+					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
@@ -674,10 +674,10 @@ func TestListEnvironment(t *testing.T) {
 				},
 				IsPredictionJobEnabled: true,
 				DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      "1",
+					DriverCPURequest:      "1",
 					DriverMemoryRequest:   "1Gi",
 					ExecutorReplica:       0,
-					ExecutorCpuRequest:    "1",
+					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
 			},
@@ -700,7 +700,7 @@ func TestListEnvironment(t *testing.T) {
 				assert.Equal(t, tC.expectedEnvironments[i].IsDefault, env.IsDefault)
 				assert.Equal(t, tC.expectedEnvironments[i].Region, env.Region)
 				assert.Equal(t, tC.expectedEnvironments[i].GcpProject, env.GcpProject)
-				assert.Equal(t, tC.expectedEnvironments[i].MaxCpu, env.MaxCpu)
+				assert.Equal(t, tC.expectedEnvironments[i].MaxCPU, env.MaxCPU)
 				assert.Equal(t, tC.expectedEnvironments[i].MaxMemory, env.MaxMemory)
 				assert.Equal(t, tC.expectedEnvironments[i].DefaultResourceRequest, env.DefaultResourceRequest)
 				assert.Equal(t, tC.expectedEnvironments[i].IsPredictionJobEnabled, env.IsPredictionJobEnabled)

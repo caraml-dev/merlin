@@ -18,11 +18,11 @@ import "github.com/google/uuid"
 
 // Deployment is a struct representing an attempt to deploy a version_endpoint
 type Deployment struct {
-	Id                Id             `json:"id"`
-	ProjectId         Id             `json:"project_id"`
-	VersionId         Id             `json:"version_id"`
-	VersionModelId    Id             `json:"model_id"`
-	VersionEndpointId uuid.UUID      `json:"version_endpoint_id"`
+	ID                ID             `json:"id"`
+	ProjectID         ID             `json:"project_id"`
+	VersionID         ID             `json:"version_id"`
+	VersionModelID    ID             `json:"model_id"`
+	VersionEndpointID uuid.UUID      `json:"version_endpoint_id"`
 	Status            EndpointStatus `json:"status"`
 	Error             string         `json:"error"`
 	CreatedUpdated

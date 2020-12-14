@@ -33,12 +33,12 @@ func TestVersionEndpointsStorage_Get(t *testing.T) {
 		endpoints := populateVersionEndpointTable(db)
 		endpointSvc := NewVersionEndpointStorage(db)
 
-		actualEndpoint, err := endpointSvc.Get(endpoints[0].Id)
+		actualEndpoint, err := endpointSvc.Get(endpoints[0].ID)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, actualEndpoint)
 		assert.NotNil(t, actualEndpoint.Environment)
-		assert.Equal(t, actualEndpoint.Id, endpoints[0].Id)
+		assert.Equal(t, actualEndpoint.ID, endpoints[0].ID)
 	})
 }
 
@@ -48,7 +48,7 @@ func TestVersionEndpointsStorage_ListEndpoints(t *testing.T) {
 
 		endpointSvc := NewVersionEndpointStorage(db)
 
-		actualEndpoints, err := endpointSvc.ListEndpoints(&models.Model{Id: 1}, &models.Version{Id: 1})
+		actualEndpoints, err := endpointSvc.ListEndpoints(&models.Model{ID: 1}, &models.Version{ID: 1})
 		assert.NoError(t, err)
 		assert.Equal(t, len(endpoints), len(actualEndpoints))
 	})
@@ -63,7 +63,7 @@ func TestVersionsService_CountEndpoints(t *testing.T) {
 		count, err := endpointSvc.CountEndpoints(&models.Environment{
 			Name: "env1",
 		}, &models.Model{
-			Id:   1,
+			ID:   1,
 			Name: "model",
 		})
 		assert.NoError(t, err)
@@ -76,7 +76,7 @@ func TestVersionEndpointsStorage_GetTransformer(t *testing.T) {
 		endpoints := populateVersionEndpointTable(db)
 		endpointSvc := NewVersionEndpointStorage(db)
 
-		actualEndpoint, err := endpointSvc.Get(endpoints[2].Id)
+		actualEndpoint, err := endpointSvc.Get(endpoints[2].ID)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, actualEndpoint)
@@ -94,18 +94,18 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 	db.Create(&p)
 
 	m := models.Model{
-		Id:           1,
-		ProjectId:    models.Id(p.Id),
-		ExperimentId: 1,
+		ID:           1,
+		ProjectID:    models.ID(p.Id),
+		ExperimentID: 1,
 		Name:         "model",
 		Type:         models.ModelTypeSkLearn,
 	}
 	db.Create(&m)
 
 	v := models.Version{
-		ModelId:     m.Id,
-		RunId:       "1",
-		ArtifactUri: "gcs:/mlp/1/1",
+		ModelID:     m.ID,
+		RunID:       "1",
+		ArtifactURI: "gcs:/mlp/1/1",
 	}
 	db.Create(&v)
 
@@ -123,25 +123,25 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 	db.Create(&env2)
 
 	ep1 := models.VersionEndpoint{
-		Id:              uuid.New(),
-		VersionId:       v.Id,
-		VersionModelId:  m.Id,
+		ID:              uuid.New(),
+		VersionID:       v.ID,
+		VersionModelID:  m.ID,
 		Status:          "pending",
 		EnvironmentName: env1.Name,
 	}
 	db.Create(&ep1)
 	ep2 := models.VersionEndpoint{
-		Id:              uuid.New(),
-		VersionId:       v.Id,
-		VersionModelId:  m.Id,
+		ID:              uuid.New(),
+		VersionID:       v.ID,
+		VersionModelID:  m.ID,
 		Status:          "terminated",
 		EnvironmentName: env1.Name,
 	}
 	db.Create(&ep2)
 	ep3 := models.VersionEndpoint{
-		Id:              uuid.New(),
-		VersionId:       v.Id,
-		VersionModelId:  m.Id,
+		ID:              uuid.New(),
+		VersionID:       v.ID,
+		VersionModelID:  m.ID,
 		Status:          "pending",
 		EnvironmentName: env2.Name,
 		Transformer: &models.Transformer{

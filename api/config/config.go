@@ -40,7 +40,7 @@ type Config struct {
 	EnvironmentConfigs    []EnvironmentConfig
 	AuthorizationConfig   AuthorizationConfig
 
-	MlpApiConfig MlpApiConfig
+	MlpAPIConfig MlpAPIConfig
 
 	FeatureToggleConfig FeatureToggleConfig
 
@@ -80,11 +80,11 @@ type DatabaseConfig struct {
 type ImageBuilderConfig struct {
 	ClusterName                  string `envconfig:"IMG_BUILDER_CLUSTER_NAME"`
 	GcpProject                   string `envconfig:"IMG_BUILDER_GCP_PROJECT"`
-	BuildContextUri              string `envconfig:"IMG_BUILDER_BUILD_CONTEXT_URI"`
+	BuildContextURI              string `envconfig:"IMG_BUILDER_BUILD_CONTEXT_URI"`
 	ContextSubPath               string `envconfig:"IMG_BUILDER_CONTEXT_SUB_PATH"`
 	DockerfilePath               string `envconfig:"IMG_BUILDER_DOCKERFILE_PATH" default:"./Dockerfile"`
 	BaseImage                    string `envconfig:"IMG_BUILDER_BASE_IMAGE"`
-	PredictionJobBuildContextUri string `envconfig:"IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI"`
+	PredictionJobBuildContextURI string `envconfig:"IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI"`
 	PredictionJobContextSubPath  string `envconfig:"IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH"`
 	PredictionJobDockerfilePath  string `envconfig:"IMG_BUILDER_PREDICTION_JOB_DOCKERFILE_PATH" default:"./Dockerfile"`
 	PredictionJobBaseImage       string `envconfig:"IMG_BUILDER_PREDICTION_JOB_BASE_IMAGE"`
@@ -100,7 +100,7 @@ type VaultConfig struct {
 
 type AuthorizationConfig struct {
 	AuthorizationEnabled   bool   `envconfig:"AUTHORIZATION_ENABLED" default:"true"`
-	AuthorizationServerUrl string `envconfig:"AUTHORIZATION_SERVER_URL" default:"http://localhost:4466"`
+	AuthorizationServerURL string `envconfig:"AUTHORIZATION_SERVER_URL" default:"http://localhost:4466"`
 }
 
 type FeatureToggleConfig struct {
@@ -130,11 +130,11 @@ type GitlabConfig struct {
 }
 
 type WardenConfig struct {
-	ApiHost string `envconfig:"WARDEN_API_HOST"`
+	APIHost string `envconfig:"WARDEN_API_HOST"`
 }
 
-type MlpApiConfig struct {
-	ApiHost       string `envconfig:"MLP_API_HOST" required:"true"`
+type MlpAPIConfig struct {
+	APIHost       string `envconfig:"MLP_API_HOST" required:"true"`
 	EncryptionKey string `envconfig:"MLP_API_ENCRYPTION_KEY" required:"true"`
 }
 

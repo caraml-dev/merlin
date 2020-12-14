@@ -10,7 +10,7 @@
 package client
 
 type ModelEndpointRuleDestination struct {
-	VersionEndpointId string           `json:"version_endpoint_id,omitempty"`
+	VersionEndpointID string           `json:"version_endpoint_id,omitempty"`
 	VersionEndpoint   *VersionEndpoint `json:"version_endpoint,omitempty"`
 	Weight            int32            `json:"weight,omitempty"`
 }

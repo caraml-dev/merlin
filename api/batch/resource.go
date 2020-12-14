@@ -28,9 +28,9 @@ import (
 )
 
 const (
-	labelPredictionJobId = "prediction-job-id"
-	labelModelVersionId  = "model-version-id"
-	labelModelId         = "model-id"
+	labelPredictionJobID = "prediction-job-id"
+	labelModelVersionID  = "model-version-id"
+	labelModelID         = "model-id"
 
 	labelTeamName         = "gojek.com/team"
 	labelStreamName       = "gojek.com/stream"
@@ -58,8 +58,8 @@ const (
 	jobSpecMount        = "/mnt/job-spec/"
 	serviceAccountMount = "/mnt/secrets/"
 
-	corePerCpuRequest    = 1.5
-	cpuRequestToCpuLimit = 1.25
+	corePerCPURequest    = 1.5
+	cpuRequestToCPULimit = 1.25
 )
 
 var (
@@ -146,13 +146,13 @@ func createSpec(job *models.PredictionJob) (v1beta2.SparkApplicationSpec, error)
 }
 
 func createDriverSpec(job *models.PredictionJob) (v1beta2.DriverSpec, error) {
-	userCpuRequest, err := resource.ParseQuantity(job.Config.ResourceRequest.DriverCpuRequest)
+	userCPURequest, err := resource.ParseQuantity(job.Config.ResourceRequest.DriverCPURequest)
 	if err != nil {
-		return v1beta2.DriverSpec{}, fmt.Errorf("invalid driver cpu request: %s", job.Config.ResourceRequest.DriverCpuRequest)
+		return v1beta2.DriverSpec{}, fmt.Errorf("invalid driver cpu request: %s", job.Config.ResourceRequest.DriverCPURequest)
 	}
 
-	core := getCoreRequest(userCpuRequest)
-	cpuRequest, cpuLimit := getCpuRequestAndLimit(userCpuRequest)
+	core := getCoreRequest(userCPURequest)
+	cpuRequest, cpuLimit := getCPURequestAndLimit(userCPURequest)
 
 	memoryRequest, err := toMegabyte(job.Config.ResourceRequest.DriverMemoryRequest)
 	if err != nil {
@@ -193,13 +193,13 @@ func createDriverSpec(job *models.PredictionJob) (v1beta2.DriverSpec, error) {
 }
 
 func createExecutorSpec(job *models.PredictionJob) (v1beta2.ExecutorSpec, error) {
-	userCpuRequest, err := resource.ParseQuantity(job.Config.ResourceRequest.ExecutorCpuRequest)
+	userCPURequest, err := resource.ParseQuantity(job.Config.ResourceRequest.ExecutorCPURequest)
 	if err != nil {
-		return v1beta2.ExecutorSpec{}, fmt.Errorf("invalid executor cpu request: %s", job.Config.ResourceRequest.ExecutorCpuRequest)
+		return v1beta2.ExecutorSpec{}, fmt.Errorf("invalid executor cpu request: %s", job.Config.ResourceRequest.ExecutorCPURequest)
 	}
 
-	core := getCoreRequest(userCpuRequest)
-	cpuRequest, cpuLimit := getCpuRequestAndLimit(userCpuRequest)
+	core := getCoreRequest(userCPURequest)
+	cpuRequest, cpuLimit := getCPURequestAndLimit(userCPURequest)
 
 	memoryRequest, err := toMegabyte(job.Config.ResourceRequest.ExecutorMemoryRequest)
 	if err != nil {
@@ -257,9 +257,9 @@ func toMegabyte(request string) (*string, error) {
 
 func createLabel(job *models.PredictionJob) map[string]string {
 	var labels = map[string]string{
-		labelPredictionJobId: job.Id.String(),
-		labelModelId:         job.VersionModelId.String(),
-		labelModelVersionId:  job.VersionId.String(),
+		labelPredictionJobID: job.ID.String(),
+		labelModelID:         job.VersionModelID.String(),
+		labelModelVersionID:  job.VersionID.String(),
 
 		// ROC labels
 		labelOrchestratorName: "merlin",
@@ -276,10 +276,10 @@ func createLabel(job *models.PredictionJob) map[string]string {
 	return labels
 }
 
-func getCpuRequestAndLimit(cpuRequest resource.Quantity) (*string, *string) {
+func getCPURequestAndLimit(cpuRequest resource.Quantity) (*string, *string) {
 	cpuRequestStr := cpuRequest.String()
 
-	cpuLimitMilli := cpuRequestToCpuLimit * float64(cpuRequest.MilliValue())
+	cpuLimitMilli := cpuRequestToCPULimit * float64(cpuRequest.MilliValue())
 	cpuLimit := resource.NewMilliQuantity(int64(cpuLimitMilli), resource.BinarySI)
 	cpuLimitStr := cpuLimit.String()
 
@@ -288,7 +288,7 @@ func getCpuRequestAndLimit(cpuRequest resource.Quantity) (*string, *string) {
 
 func getCoreRequest(cpuRequest resource.Quantity) *int32 {
 	var core int32
-	core = int32(cpuRequest.MilliValue() / (corePerCpuRequest * 1000))
+	core = int32(cpuRequest.MilliValue() / (corePerCPURequest * 1000))
 	if core < 1 {
 		core = 1
 	}
@@ -305,9 +305,8 @@ func addEnvVars(job *models.PredictionJob) ([]corev1.EnvVar, error) {
 	for _, ev := range job.Config.EnvVars.ToKubernetesEnvVars() {
 		if ev.Name == envServiceAccountPathKey {
 			return []corev1.EnvVar{}, fmt.Errorf("environment variable '%s' cannot be changed", ev.Name)
-		} else {
-			envVars = append(envVars, ev)
 		}
+		envVars = append(envVars, ev)
 	}
 	return envVars, nil
 }

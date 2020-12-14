@@ -24,15 +24,15 @@ import (
 )
 
 type PredictionJob struct {
-	Id   Id     `json:"id"`
+	ID   ID     `json:"id"`
 	Name string `json:"name"`
 	// Keep metadata internal until it's needed to be exposed
 	Metadata Metadata `json:"-"`
 	// The field name has to be prefixed with the related struct name
 	// in order for gorm Preload to work with association_foreignkey
-	VersionId       Id           `json:"version_id"`
-	VersionModelId  Id           `json:"model_id"`
-	ProjectId       Id           `json:"project_id"`
+	VersionID       ID           `json:"version_id"`
+	VersionModelID  ID           `json:"model_id"`
+	ProjectID       ID           `json:"project_id"`
 	Environment     *Environment `json:"environment" gorm:"association_foreignkey:Name;association_autoupdate:false;association_autocreate:false;"`
 	EnvironmentName string       `json:"environment_name"`
 	Config          *Config      `json:"config,omitempty"`
@@ -50,11 +50,11 @@ type Config struct {
 }
 
 type PredictionJobResourceRequest struct {
-	DriverCpuRequest    string `json:"driver_cpu_request,omitempty"`
+	DriverCPURequest    string `json:"driver_cpu_request,omitempty"`
 	DriverMemoryRequest string `json:"driver_memory_request,omitempty"`
 
 	ExecutorReplica       int32  `json:"executor_replica,omitempty"`
-	ExecutorCpuRequest    string `json:"executor_cpu_request,omitempty"`
+	ExecutorCPURequest    string `json:"executor_cpu_request,omitempty"`
 	ExecutorMemoryRequest string `json:"executor_memory_request,omitempty"`
 }
 

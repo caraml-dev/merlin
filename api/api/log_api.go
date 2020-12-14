@@ -27,10 +27,12 @@ import (
 
 var decoder = schema.NewDecoder()
 
+// LogController controls logs API.
 type LogController struct {
 	*AppContext
 }
 
+// ReadLog parses log requests and fetches logs.
 func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 	var query service.LogQuery
 	err := decoder.Decode(&query, r.URL.Query())

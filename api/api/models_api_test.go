@@ -37,7 +37,7 @@ func TestListModel(t *testing.T) {
 		desc         string
 		vars         map[string]string
 		modelService func() *mocks.ModelsService
-		expected     *ApiResponse
+		expected     *Response
 	}{
 		{
 			desc: "Should success list model",
@@ -47,11 +47,11 @@ func TestListModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("ListModels", mock.Anything, models.Id(1), "tensorflow").Return([]*models.Model{
+				mockSvc.On("ListModels", mock.Anything, models.ID(1), "tensorflow").Return([]*models.Model{
 					{
-						Id:        models.Id(1),
+						ID:        models.ID(1),
 						Name:      "tensorflow",
-						ProjectId: models.Id(1),
+						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
 							Id:                1,
 							Name:              "tensorflow",
@@ -64,9 +64,9 @@ func TestListModel(t *testing.T) {
 							CreatedAt:         now,
 							UpdatedAt:         now,
 						}),
-						ExperimentId: models.Id(1),
+						ExperimentID: models.ID(1),
 						Type:         "tensorflow",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 						CreatedUpdated: models.CreatedUpdated{
 							CreatedAt: now,
 							UpdatedAt: now,
@@ -75,13 +75,13 @@ func TestListModel(t *testing.T) {
 				}, nil)
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.Model{
 					{
-						Id:        models.Id(1),
+						ID:        models.ID(1),
 						Name:      "tensorflow",
-						ProjectId: models.Id(1),
+						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
 							Id:                1,
 							Name:              "tensorflow",
@@ -94,9 +94,9 @@ func TestListModel(t *testing.T) {
 							CreatedAt:         now,
 							UpdatedAt:         now,
 						}),
-						ExperimentId: models.Id(1),
+						ExperimentID: models.ID(1),
 						Type:         "tensorflow",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 						CreatedUpdated: models.CreatedUpdated{
 							CreatedAt: now,
 							UpdatedAt: now,
@@ -113,10 +113,10 @@ func TestListModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("ListModels", mock.Anything, models.Id(1), "tensorflow").Return(nil, fmt.Errorf("MLP API is down"))
+				mockSvc.On("ListModels", mock.Anything, models.ID(1), "tensorflow").Return(nil, fmt.Errorf("MLP API is down"))
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "MLP API is down"},
 			},
@@ -143,7 +143,7 @@ func TestGetModel(t *testing.T) {
 		vars           map[string]string
 		modelService   func() *mocks.ModelsService
 		projectService func() *mocks.ProjectsService
-		expected       *ApiResponse
+		expected       *Response
 	}{
 		{
 			desc: "Should success get model",
@@ -169,11 +169,11 @@ func TestGetModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(
 					&models.Model{
-						Id:        models.Id(1),
+						ID:        models.ID(1),
 						Name:      "tensorflow",
-						ProjectId: models.Id(1),
+						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
 							Id:                1,
 							Name:              "tensorflow",
@@ -186,9 +186,9 @@ func TestGetModel(t *testing.T) {
 							CreatedAt:         now,
 							UpdatedAt:         now,
 						}),
-						ExperimentId: models.Id(1),
+						ExperimentID: models.ID(1),
 						Type:         "tensorflow",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 						CreatedUpdated: models.CreatedUpdated{
 							CreatedAt: now,
 							UpdatedAt: now,
@@ -196,12 +196,12 @@ func TestGetModel(t *testing.T) {
 					}, nil)
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.Model{
-					Id:        models.Id(1),
+					ID:        models.ID(1),
 					Name:      "tensorflow",
-					ProjectId: models.Id(1),
+					ProjectID: models.ID(1),
 					Project: mlp.Project(client.Project{
 						Id:                1,
 						Name:              "tensorflow",
@@ -214,9 +214,9 @@ func TestGetModel(t *testing.T) {
 						CreatedAt:         now,
 						UpdatedAt:         now,
 					}),
-					ExperimentId: models.Id(1),
+					ExperimentID: models.ID(1),
 					Type:         "tensorflow",
-					MlflowUrl:    "http://mlflow.com",
+					MlflowURL:    "http://mlflow.com",
 					CreatedUpdated: models.CreatedUpdated{
 						CreatedAt: now,
 						UpdatedAt: now,
@@ -239,7 +239,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc := &mocks.ModelsService{}
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Project API is down"},
 			},
@@ -268,10 +268,10 @@ func TestGetModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(nil, gorm.ErrRecordNotFound)
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model id 1 not found"},
 			},
@@ -300,10 +300,10 @@ func TestGetModel(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				mockSvc := &mocks.ModelsService{}
-				mockSvc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is unreachable"))
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is unreachable"))
 				return mockSvc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "DB is unreachable"},
 			},

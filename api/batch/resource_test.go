@@ -46,15 +46,15 @@ var (
 		"--spec-path",
 		jobSpecPath,
 	}
-	jobId     = models.Id(1)
-	modelId   = models.Id(2)
-	versionId = models.Id(3)
+	jobID     = models.ID(1)
+	modelID   = models.ID(2)
+	versionID = models.ID(3)
 
 	defaultLabels = map[string]string{
 		labelOrchestratorName: "merlin",
-		labelModelId:          modelId.String(),
-		labelModelVersionId:   versionId.String(),
-		labelPredictionJobId:  jobId.String(),
+		labelModelID:          modelID.String(),
+		labelModelVersionID:   versionID.String(),
+		labelPredictionJobID:  jobID.String(),
 
 		labelTeamName:                           teamName,
 		labelStreamName:                         streamName,
@@ -64,27 +64,27 @@ var (
 	}
 
 	driverCore       int32 = 1
-	driverCpuRequest       = "1"     // coreToCpuRequestRatio * driverCore
-	driverCoreLimit        = "1250m" // cpuRequestToCpuLimit * driverCpuRequest
+	driverCPURequest       = "1"     // coreToCpuRequestRatio * driverCore
+	driverCoreLimit        = "1250m" // cpuRequestToCPULimit * driverCPURequest
 	driverMemory           = "1Gi"
 	driverMemoryInMB       = "1024m"
 
 	executorReplica    int32 = 5
 	executorCore       int32 = 1
-	executorCpuRequest       = "2"     // coreToCpuRequestRatio * executorCore
-	executorCoreLimit        = "2500m" // cpuRequestToCpuLimit * executorCpuRequest
+	executorCPURequest       = "2"     // coreToCpuRequestRatio * executorCore
+	executorCoreLimit        = "2500m" // cpuRequestToCPULimit * executorCPURequest
 	executorMemory           = "2Gi"
 	executorMemoryInMB       = "2048m"
 
-	fractExecutorCpuRequest = "1500m"
-	fractExecutorCpuLimit   = "1875m"
+	fractExecutorCPURequest = "1500m"
+	fractExecutorCPULimit   = "1875m"
 
-	fractDriverCpuRequest = "500m"
-	fractDriverCpuLimit   = "625m"
+	fractDriverCPURequest = "500m"
+	fractDriverCPULimit   = "625m"
 
 	largeExecutorCore       int32 = 5
-	largeExecutorCpuRequest       = "8"
-	largeExecutorCpuLimit         = "10"
+	largeExecutorCPURequest       = "8"
+	largeExecutorCPULimit         = "10"
 
 	defaultConfigMap = []v1beta2.NamePath{
 		{
@@ -120,7 +120,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 			name: "nominal case",
 			arg: &models.PredictionJob{
 				Name: jobName,
-				Id:   jobId,
+				ID:   jobID,
 				Metadata: models.Metadata{
 					Team:        teamName,
 					Stream:      streamName,
@@ -128,16 +128,16 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Environment: environementName,
 					Labels:      userLabels,
 				},
-				VersionModelId: modelId,
-				VersionId:      versionId,
+				VersionModelID: modelID,
+				VersionID:      versionID,
 				Config: &models.Config{
 					JobConfig: nil,
 					ImageRef:  imageRef,
 					ResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      driverCpuRequest,
+						DriverCPURequest:      driverCPURequest,
 						DriverMemoryRequest:   driverMemory,
 						ExecutorReplica:       executorReplica,
-						ExecutorCpuRequest:    executorCpuRequest,
+						ExecutorCPURequest:    executorCPURequest,
 						ExecutorMemoryRequest: executorMemory,
 					},
 				},
@@ -157,7 +157,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
 						ServiceAccount: &jobName,
-						CoreRequest:    &driverCpuRequest,
+						CoreRequest:    &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
 							CoreLimit:  &driverCoreLimit,
@@ -172,7 +172,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{
-						CoreRequest: &executorCpuRequest,
+						CoreRequest: &executorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &executorCore,
 							CoreLimit:  &executorCoreLimit,
@@ -198,7 +198,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 			name: "fractional driver cpu request",
 			arg: &models.PredictionJob{
 				Name: jobName,
-				Id:   jobId,
+				ID:   jobID,
 				Metadata: models.Metadata{
 					Team:        teamName,
 					Stream:      streamName,
@@ -206,16 +206,16 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Environment: environementName,
 					Labels:      userLabels,
 				},
-				VersionModelId: modelId,
-				VersionId:      versionId,
+				VersionModelID: modelID,
+				VersionID:      versionID,
 				Config: &models.Config{
 					JobConfig: nil,
 					ImageRef:  imageRef,
 					ResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      "500m",
+						DriverCPURequest:      "500m",
 						DriverMemoryRequest:   driverMemory,
 						ExecutorReplica:       executorReplica,
-						ExecutorCpuRequest:    executorCpuRequest,
+						ExecutorCPURequest:    executorCPURequest,
 						ExecutorMemoryRequest: executorMemory,
 					},
 				},
@@ -235,10 +235,10 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
 						ServiceAccount: &jobName,
-						CoreRequest:    &fractDriverCpuRequest,
+						CoreRequest:    &fractDriverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
-							CoreLimit:  &fractDriverCpuLimit,
+							CoreLimit:  &fractDriverCPULimit,
 							Memory:     &driverMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -250,7 +250,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{
-						CoreRequest: &executorCpuRequest,
+						CoreRequest: &executorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &executorCore,
 							CoreLimit:  &executorCoreLimit,
@@ -276,7 +276,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 			name: "fractional executor executor cpu request",
 			arg: &models.PredictionJob{
 				Name: jobName,
-				Id:   jobId,
+				ID:   jobID,
 				Metadata: models.Metadata{
 					Team:        teamName,
 					Stream:      streamName,
@@ -284,16 +284,16 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Environment: environementName,
 					Labels:      userLabels,
 				},
-				VersionModelId: modelId,
-				VersionId:      versionId,
+				VersionModelID: modelID,
+				VersionID:      versionID,
 				Config: &models.Config{
 					JobConfig: nil,
 					ImageRef:  imageRef,
 					ResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      driverCpuRequest,
+						DriverCPURequest:      driverCPURequest,
 						DriverMemoryRequest:   driverMemory,
 						ExecutorReplica:       executorReplica,
-						ExecutorCpuRequest:    "1500m",
+						ExecutorCPURequest:    "1500m",
 						ExecutorMemoryRequest: executorMemory,
 					},
 				},
@@ -312,7 +312,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Arguments:           defaultArgument,
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
-						CoreRequest:    &driverCpuRequest,
+						CoreRequest:    &driverCPURequest,
 						ServiceAccount: &jobName,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
@@ -328,10 +328,10 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{
-						CoreRequest: &fractExecutorCpuRequest,
+						CoreRequest: &fractExecutorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &executorCore,
-							CoreLimit:  &fractExecutorCpuLimit,
+							CoreLimit:  &fractExecutorCPULimit,
 							Memory:     &executorMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -354,7 +354,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 			name: "fractional executor executor cpu request",
 			arg: &models.PredictionJob{
 				Name: jobName,
-				Id:   jobId,
+				ID:   jobID,
 				Metadata: models.Metadata{
 					Team:        teamName,
 					Stream:      streamName,
@@ -362,16 +362,16 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Environment: environementName,
 					Labels:      userLabels,
 				},
-				VersionModelId: modelId,
-				VersionId:      versionId,
+				VersionModelID: modelID,
+				VersionID:      versionID,
 				Config: &models.Config{
 					JobConfig: nil,
 					ImageRef:  imageRef,
 					ResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      driverCpuRequest,
+						DriverCPURequest:      driverCPURequest,
 						DriverMemoryRequest:   driverMemory,
 						ExecutorReplica:       executorReplica,
-						ExecutorCpuRequest:    largeExecutorCpuRequest,
+						ExecutorCPURequest:    largeExecutorCPURequest,
 						ExecutorMemoryRequest: executorMemory,
 					},
 				},
@@ -390,7 +390,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Arguments:           defaultArgument,
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
-						CoreRequest:    &driverCpuRequest,
+						CoreRequest:    &driverCPURequest,
 						ServiceAccount: &jobName,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
@@ -406,10 +406,10 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{
-						CoreRequest: &largeExecutorCpuRequest,
+						CoreRequest: &largeExecutorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &largeExecutorCore,
-							CoreLimit:  &largeExecutorCpuLimit,
+							CoreLimit:  &largeExecutorCPULimit,
 							Memory:     &executorMemoryInMB,
 							ConfigMaps: defaultConfigMap,
 							Secrets:    defaultSecret,
@@ -432,7 +432,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 			name: "user input environment variables",
 			arg: &models.PredictionJob{
 				Name: jobName,
-				Id:   jobId,
+				ID:   jobID,
 				Metadata: models.Metadata{
 					Team:        teamName,
 					Stream:      streamName,
@@ -440,16 +440,16 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Environment: environementName,
 					Labels:      userLabels,
 				},
-				VersionModelId: modelId,
-				VersionId:      versionId,
+				VersionModelID: modelID,
+				VersionID:      versionID,
 				Config: &models.Config{
 					JobConfig: nil,
 					ImageRef:  imageRef,
 					ResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      driverCpuRequest,
+						DriverCPURequest:      driverCPURequest,
 						DriverMemoryRequest:   driverMemory,
 						ExecutorReplica:       executorReplica,
-						ExecutorCpuRequest:    executorCpuRequest,
+						ExecutorCPURequest:    executorCPURequest,
 						ExecutorMemoryRequest: executorMemory,
 					},
 					EnvVars: models.EnvVars{
@@ -475,7 +475,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
 						ServiceAccount: &jobName,
-						CoreRequest:    &driverCpuRequest,
+						CoreRequest:    &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
 							CoreLimit:  &driverCoreLimit,
@@ -493,7 +493,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{
-						CoreRequest: &executorCpuRequest,
+						CoreRequest: &executorCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &executorCore,
 							CoreLimit:  &executorCoreLimit,
@@ -522,7 +522,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 			name: "invalid executor cpu request",
 			arg: &models.PredictionJob{
 				Name: jobName,
-				Id:   jobId,
+				ID:   jobID,
 				Metadata: models.Metadata{
 					Team:        teamName,
 					Stream:      streamName,
@@ -530,16 +530,16 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Environment: environementName,
 					Labels:      userLabels,
 				},
-				VersionModelId: modelId,
-				VersionId:      versionId,
+				VersionModelID: modelID,
+				VersionID:      versionID,
 				Config: &models.Config{
 					JobConfig: nil,
 					ImageRef:  imageRef,
 					ResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      "500m",
+						DriverCPURequest:      "500m",
 						DriverMemoryRequest:   driverMemory,
 						ExecutorReplica:       executorReplica,
-						ExecutorCpuRequest:    "1500x",
+						ExecutorCPURequest:    "1500x",
 						ExecutorMemoryRequest: executorMemory,
 					},
 				},
@@ -551,7 +551,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 			name: "invalid driver cpu request",
 			arg: &models.PredictionJob{
 				Name: jobName,
-				Id:   jobId,
+				ID:   jobID,
 				Metadata: models.Metadata{
 					Team:        teamName,
 					Stream:      streamName,
@@ -559,16 +559,16 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Environment: environementName,
 					Labels:      userLabels,
 				},
-				VersionModelId: modelId,
-				VersionId:      versionId,
+				VersionModelID: modelID,
+				VersionID:      versionID,
 				Config: &models.Config{
 					JobConfig: nil,
 					ImageRef:  imageRef,
 					ResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      "500x",
+						DriverCPURequest:      "500x",
 						DriverMemoryRequest:   driverMemory,
 						ExecutorReplica:       executorReplica,
-						ExecutorCpuRequest:    "1500m",
+						ExecutorCPURequest:    "1500m",
 						ExecutorMemoryRequest: executorMemory,
 					},
 				},
@@ -580,7 +580,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 			name: "user override default environment variables",
 			arg: &models.PredictionJob{
 				Name: jobName,
-				Id:   jobId,
+				ID:   jobID,
 				Metadata: models.Metadata{
 					Team:        teamName,
 					Stream:      streamName,
@@ -588,16 +588,16 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Environment: environementName,
 					Labels:      userLabels,
 				},
-				VersionModelId: modelId,
-				VersionId:      versionId,
+				VersionModelID: modelID,
+				VersionID:      versionID,
 				Config: &models.Config{
 					JobConfig: nil,
 					ImageRef:  imageRef,
 					ResourceRequest: &models.PredictionJobResourceRequest{
-						DriverCpuRequest:      driverCpuRequest,
+						DriverCPURequest:      driverCPURequest,
 						DriverMemoryRequest:   driverMemory,
 						ExecutorReplica:       executorReplica,
-						ExecutorCpuRequest:    executorCpuRequest,
+						ExecutorCPURequest:    executorCPURequest,
 						ExecutorMemoryRequest: executorMemory,
 					},
 					EnvVars: models.EnvVars{

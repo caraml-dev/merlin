@@ -24,10 +24,10 @@ import (
 
 func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 	type fields struct {
-		Id              Id
-		ModelId         Id
+		ID              ID
+		ModelID         ID
 		Model           *Model
-		ModelEndpointId Id
+		ModelEndpointID ID
 		ModelEndpoint   *ModelEndpoint
 		EnvironmentName string
 		TeamName        string
@@ -42,16 +42,16 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 		{
 			name: "throughput",
 			fields: fields{
-				ModelId: 1,
+				ModelID: 1,
 				Model: &Model{
 					Name: "model-1",
 					Project: mlp.Project{
 						Name: "project-1",
 					},
 				},
-				ModelEndpointId: Id(1),
+				ModelEndpointID: ID(1),
 				ModelEndpoint: &ModelEndpoint{
-					Id: Id(1),
+					ID: ID(1),
 					Environment: &Environment{
 						Cluster: "cluster-1",
 					},
@@ -95,16 +95,16 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 		{
 			name: "latency",
 			fields: fields{
-				ModelId: 1,
+				ModelID: 1,
 				Model: &Model{
 					Name: "model-1",
 					Project: mlp.Project{
 						Name: "project-1",
 					},
 				},
-				ModelEndpointId: Id(1),
+				ModelEndpointID: ID(1),
 				ModelEndpoint: &ModelEndpoint{
-					Id: Id(1),
+					ID: ID(1),
 					Environment: &Environment{
 						Cluster: "cluster-1",
 					},
@@ -150,16 +150,16 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 		{
 			name: "error rate",
 			fields: fields{
-				ModelId: 1,
+				ModelID: 1,
 				Model: &Model{
 					Name: "model-1",
 					Project: mlp.Project{
 						Name: "project-1",
 					},
 				},
-				ModelEndpointId: Id(1),
+				ModelEndpointID: ID(1),
 				ModelEndpoint: &ModelEndpoint{
-					Id: Id(1),
+					ID: ID(1),
 					Environment: &Environment{
 						Cluster: "cluster-1",
 					},
@@ -203,16 +203,16 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 		{
 			name: "cpu",
 			fields: fields{
-				ModelId: 1,
+				ModelID: 1,
 				Model: &Model{
 					Name: "model-1",
 					Project: mlp.Project{
 						Name: "project-1",
 					},
 				},
-				ModelEndpointId: Id(1),
+				ModelEndpointID: ID(1),
 				ModelEndpoint: &ModelEndpoint{
-					Id: Id(1),
+					ID: ID(1),
 					Environment: &Environment{
 						Cluster: "cluster-1",
 					},
@@ -256,16 +256,16 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 		{
 			name: "memory",
 			fields: fields{
-				ModelId: 1,
+				ModelID: 1,
 				Model: &Model{
 					Name: "model-1",
 					Project: mlp.Project{
 						Name: "project-1",
 					},
 				},
-				ModelEndpointId: Id(1),
+				ModelEndpointID: ID(1),
 				ModelEndpoint: &ModelEndpoint{
-					Id: Id(1),
+					ID: ID(1),
 					Environment: &Environment{
 						Cluster: "cluster-1",
 					},
@@ -310,10 +310,10 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			alert := ModelEndpointAlert{
-				Id:              tt.fields.Id,
-				ModelId:         tt.fields.ModelId,
+				ID:              tt.fields.ID,
+				ModelID:         tt.fields.ModelID,
 				Model:           tt.fields.Model,
-				ModelEndpointId: tt.fields.ModelEndpointId,
+				ModelEndpointID: tt.fields.ModelEndpointID,
 				ModelEndpoint:   tt.fields.ModelEndpoint,
 				EnvironmentName: tt.fields.EnvironmentName,
 				TeamName:        tt.fields.TeamName,

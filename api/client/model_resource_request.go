@@ -12,6 +12,6 @@ package client
 type ResourceRequest struct {
 	MinReplica    int32  `json:"min_replica,omitempty"`
 	MaxReplica    int32  `json:"max_replica,omitempty"`
-	CpuRequest    string `json:"cpu_request,omitempty"`
+	CPURequest    string `json:"cpu_request,omitempty"`
 	MemoryRequest string `json:"memory_request,omitempty"`
 }

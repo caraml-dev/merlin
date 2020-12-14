@@ -25,20 +25,20 @@ var (
 	_ context.Context
 )
 
-type EndpointApiService service
+type EndpointAPIService service
 
 /*
-EndpointApiService Get all container belong to a version endpoint
+EndpointAPIService Get all container belong to a version endpoint
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
+ * @param modelID
+ * @param versionID
+ * @param endpointID
 
 @return Container
 */
-func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdContainersGet(ctx context.Context, modelId int32, versionId int32, endpointId string) (Container, *http.Response, error) {
+func (a *EndpointAPIService) ModelsModelIDVersionsVersionIDEndpointEndpointIDContainersGet(ctx context.Context, modelID int32, versionID int32, endpointID string) (Container, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
+		localVarHTTPMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -47,30 +47,30 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdCon
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/endpoint/{endpoint_id}/containers"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"endpoint_id"+"}", fmt.Sprintf("%v", endpointId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"endpoint_id"+"}", fmt.Sprintf("%v", endpointID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -85,65 +85,65 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdCon
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 200 {
+		if localVarHTTPResponse.StatusCode == 200 {
 			var v Container
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 /*
-EndpointApiService Undeploy the specified model version deployment
+EndpointAPIService Undeploy the specified model version deployment
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
+ * @param modelID
+ * @param versionID
+ * @param endpointID
 
 
 */
-func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdDelete(ctx context.Context, modelId int32, versionId int32, endpointId string) (*http.Response, error) {
+func (a *EndpointAPIService) ModelsModelIDVersionsVersionIDEndpointEndpointIDDelete(ctx context.Context, modelID int32, versionID int32, endpointID string) (*http.Response, error) {
 	var (
-		localVarHttpMethod = strings.ToUpper("Delete")
+		localVarHTTPMethod = strings.ToUpper("Delete")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
@@ -151,30 +151,30 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdDel
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/endpoint/{endpoint_id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"endpoint_id"+"}", fmt.Sprintf("%v", endpointId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"endpoint_id"+"}", fmt.Sprintf("%v", endpointID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -189,46 +189,46 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdDel
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarHttpResponse, err
+		return localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		return localVarHttpResponse, newErr
+		return localVarHTTPResponse, newErr
 	}
 
-	return localVarHttpResponse, nil
+	return localVarHTTPResponse, nil
 }
 
 /*
-EndpointApiService Get version endpoint resource
+EndpointAPIService Get version endpoint resource
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
+ * @param modelID
+ * @param versionID
+ * @param endpointID
 
 @return VersionEndpoint
 */
-func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdGet(ctx context.Context, modelId int32, versionId int32, endpointId string) (VersionEndpoint, *http.Response, error) {
+func (a *EndpointAPIService) ModelsModelIDVersionsVersionIDEndpointEndpointIDGet(ctx context.Context, modelID int32, versionID int32, endpointID string) (VersionEndpoint, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
+		localVarHTTPMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -237,30 +237,30 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdGet
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/endpoint/{endpoint_id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"endpoint_id"+"}", fmt.Sprintf("%v", endpointId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"endpoint_id"+"}", fmt.Sprintf("%v", endpointID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -275,72 +275,72 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdGet
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 200 {
+		if localVarHTTPResponse.StatusCode == 200 {
 			var v VersionEndpoint
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 /*
-EndpointApiService Modify version endpoint, this API will redeploy the associated deployment
+EndpointAPIService Modify version endpoint, this API will redeploy the associated deployment
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
- * @param optional nil or *EndpointApiModelsModelIdVersionsVersionIdEndpointEndpointIdPutOpts - Optional Parameters:
+ * @param modelID
+ * @param versionID
+ * @param endpointID
+ * @param optional nil or *EndpointAPIModelsModelIDVersionsVersionIDEndpointEndpointIDPutOpts - Optional Parameters:
      * @param "Body" (optional.Interface of VersionEndpoint) -
 
 @return VersionEndpoint
 */
 
-type EndpointApiModelsModelIdVersionsVersionIdEndpointEndpointIdPutOpts struct {
+type EndpointAPIModelsModelIDVersionsVersionIDEndpointEndpointIDPutOpts struct {
 	Body optional.Interface
 }
 
-func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPut(ctx context.Context, modelId int32, versionId int32, endpointId string, localVarOptionals *EndpointApiModelsModelIdVersionsVersionIdEndpointEndpointIdPutOpts) (VersionEndpoint, *http.Response, error) {
+func (a *EndpointAPIService) ModelsModelIDVersionsVersionIDEndpointEndpointIDPut(ctx context.Context, modelID int32, versionID int32, endpointID string, localVarOptionals *EndpointAPIModelsModelIDVersionsVersionIDEndpointEndpointIDPutOpts) (VersionEndpoint, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Put")
+		localVarHTTPMethod  = strings.ToUpper("Put")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -349,30 +349,30 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPut
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/endpoint/{endpoint_id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"endpoint_id"+"}", fmt.Sprintf("%v", endpointId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"endpoint_id"+"}", fmt.Sprintf("%v", endpointID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Body.IsSet() {
@@ -396,64 +396,64 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPut
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 200 {
+		if localVarHTTPResponse.StatusCode == 200 {
 			var v VersionEndpoint
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 /*
-EndpointApiService List all endpoint of a model version
+EndpointAPIService List all endpoint of a model version
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
+ * @param modelID
+ * @param versionID
 
 @return []VersionEndpoint
 */
-func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointGet(ctx context.Context, modelId int32, versionId int32) ([]VersionEndpoint, *http.Response, error) {
+func (a *EndpointAPIService) ModelsModelIDVersionsVersionIDEndpointGet(ctx context.Context, modelID int32, versionID int32) ([]VersionEndpoint, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
+		localVarHTTPMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -462,29 +462,29 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointGet(ctx conte
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/endpoint"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -499,71 +499,71 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointGet(ctx conte
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 200 {
+		if localVarHTTPResponse.StatusCode == 200 {
 			var v []VersionEndpoint
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 /*
-EndpointApiService Deploy specific version of the models
+EndpointAPIService Deploy specific version of the models
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param optional nil or *EndpointApiModelsModelIdVersionsVersionIdEndpointPostOpts - Optional Parameters:
+ * @param modelID
+ * @param versionID
+ * @param optional nil or *EndpointAPIModelsModelIDVersionsVersionIDEndpointPostOpts - Optional Parameters:
      * @param "Body" (optional.Interface of VersionEndpoint) -
 
 @return VersionEndpoint
 */
 
-type EndpointApiModelsModelIdVersionsVersionIdEndpointPostOpts struct {
+type EndpointAPIModelsModelIDVersionsVersionIDEndpointPostOpts struct {
 	Body optional.Interface
 }
 
-func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointPost(ctx context.Context, modelId int32, versionId int32, localVarOptionals *EndpointApiModelsModelIdVersionsVersionIdEndpointPostOpts) (VersionEndpoint, *http.Response, error) {
+func (a *EndpointAPIService) ModelsModelIDVersionsVersionIDEndpointPost(ctx context.Context, modelID int32, versionID int32, localVarOptionals *EndpointAPIModelsModelIDVersionsVersionIDEndpointPostOpts) (VersionEndpoint, *http.Response, error) {
 	var (
-		localVarHttpMethod  = strings.ToUpper("Post")
+		localVarHTTPMethod  = strings.ToUpper("Post")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -572,29 +572,29 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointPost(ctx cont
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/endpoint"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
-	if localVarHttpHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Body.IsSet() {
@@ -618,49 +618,49 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointPost(ctx cont
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+	localVarHTTPResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
+	if localVarHTTPResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
+			return localVarReturnValue, localVarHTTPResponse, err
 		}
 	}
 
-	if localVarHttpResponse.StatusCode >= 300 {
+	if localVarHTTPResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHttpResponse.Status,
+			error: localVarHTTPResponse.Status,
 		}
 
-		if localVarHttpResponse.StatusCode == 201 {
+		if localVarHTTPResponse.StatusCode == 201 {
 			var v VersionEndpoint
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHttpResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHttpResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarReturnValue, localVarHTTPResponse, nil
 }

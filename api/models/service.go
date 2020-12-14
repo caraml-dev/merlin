@@ -23,8 +23,8 @@ type Service struct {
 	Name            string
 	Namespace       string
 	ServiceName     string
-	Url             string
-	ArtifactUri     string
+	URL             string
+	ArtifactURI     string
 	Type            string
 	Options         *ModelOption
 	ResourceRequest *ResourceRequest
@@ -35,9 +35,9 @@ type Service struct {
 
 func NewService(model *Model, version *Version, modelOpt *ModelOption, resource *ResourceRequest, envVars EnvVars, environment string, transformer *Transformer) *Service {
 	return &Service{
-		Name:            CreateInferenceServiceName(model.Name, version.Id.String()),
+		Name:            CreateInferenceServiceName(model.Name, version.ID.String()),
 		Namespace:       model.Project.Name,
-		ArtifactUri:     version.ArtifactUri,
+		ArtifactURI:     version.ArtifactURI,
 		Type:            model.Type,
 		Options:         modelOpt,
 		ResourceRequest: resource,
@@ -53,8 +53,8 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, resource 
 	}
 }
 
-func CreateInferenceServiceName(modelName string, versionId string) string {
-	return fmt.Sprintf("%s-%s", modelName, versionId)
+func CreateInferenceServiceName(modelName string, versionID string) string {
+	return fmt.Sprintf("%s-%s", modelName, versionID)
 }
 
 func GetValidInferenceURL(url string, inferenceServiceName string) string {

@@ -18,12 +18,13 @@ import (
 	"net/http"
 )
 
+// EnvironmentController controls environment API.
 type EnvironmentController struct {
 	*AppContext
 }
 
-// ListEnvironments list all available environment for deployment target
-func (c *EnvironmentController) ListEnvironments(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+// ListEnvironments list all available environment for deployment target.
+func (c *EnvironmentController) ListEnvironments(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	environments, err := c.EnvironmentService.ListEnvironments(vars["name"])
 	if err != nil {
 		return InternalServerError(err.Error())

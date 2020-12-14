@@ -33,11 +33,11 @@ type EnvironmentConfig struct {
 	NamespaceTimeout        time.Duration `yaml:"namespace_timeout"`
 	MinReplica              int           `yaml:"min_replica"`
 	MaxReplica              int           `yaml:"max_replica"`
-	CpuRequest              string        `yaml:"cpu_request"`
-	MaxCpu                  string        `yaml:"max_cpu"`
+	CPURequest              string        `yaml:"cpu_request"`
+	MaxCPU                  string        `yaml:"max_cpu"`
 	MaxMemory               string        `yaml:"max_memory"`
 	MemoryRequest           string        `yaml:"memory_request"`
-	CpuLimit                string        `yaml:"cpu_limit"`
+	CPULimit                string        `yaml:"cpu_limit"`
 	MemoryLimit             string        `yaml:"memory_limit"`
 	QueueResourcePercentage string        `yaml:"queue_resource_percentage"`
 
@@ -48,9 +48,9 @@ type EnvironmentConfig struct {
 
 type PredictionJobConfig struct {
 	ExecutorReplica       int32  `yaml:"executor_replica"`
-	DriverCpuRequest      string `yaml:"driver_cpu_request"`
+	DriverCPURequest      string `yaml:"driver_cpu_request"`
 	DriverMemoryRequest   string `yaml:"driver_memory_request"`
-	ExecutorCpuRequest    string `yaml:"executor_cpu_request"`
+	ExecutorCPURequest    string `yaml:"executor_cpu_request"`
 	ExecutorMemoryRequest string `yaml:"executor_memory_request"`
 }
 
@@ -73,10 +73,10 @@ func ParseDeploymentConfig(cfg EnvironmentConfig) DeploymentConfig {
 		NamespaceTimeout:        cfg.NamespaceTimeout,
 		MinReplica:              cfg.MinReplica,
 		MaxReplica:              cfg.MaxReplica,
-		CpuRequest:              resource.MustParse(cfg.CpuRequest),
+		CPURequest:              resource.MustParse(cfg.CPURequest),
 		MemoryRequest:           resource.MustParse(cfg.MemoryRequest),
-		CpuLimit:                resource.MustParse(cfg.CpuLimit), //Deprecated
-		MaxCpu:                  resource.MustParse(cfg.MaxCpu),
+		CPULimit:                resource.MustParse(cfg.CPULimit), //Deprecated
+		MaxCPU:                  resource.MustParse(cfg.MaxCPU),
 		MaxMemory:               resource.MustParse(cfg.MaxMemory),
 		MemoryLimit:             resource.MustParse(cfg.MemoryLimit),
 		QueueResourcePercentage: cfg.QueueResourcePercentage,

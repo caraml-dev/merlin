@@ -37,8 +37,8 @@ type Controller interface {
 	ContainerFetcher
 }
 
-// ClusterConfig Model cluster authentication settings
-type ClusterConfig struct {
+// Config Model cluster authentication settings
+type Config struct {
 	// Kubernetes API server endpoint
 	Host string
 	// CA Certificate to trust for TLS
@@ -67,7 +67,7 @@ type controller struct {
 	ContainerFetcher
 }
 
-func NewController(clusterConfig ClusterConfig, deployConfig config.DeploymentConfig) (Controller, error) {
+func NewController(clusterConfig Config, deployConfig config.DeploymentConfig) (Controller, error) {
 	cfg := &rest.Config{
 		Host: clusterConfig.Host,
 		TLSClientConfig: rest.TLSClientConfig{
@@ -107,11 +107,11 @@ func newController(kfservingClient kfservice.ServingV1alpha2Interface, nsClient 
 
 func (k *controller) Deploy(modelService *models.Service) (*models.Service, error) {
 	if modelService.ResourceRequest != nil {
-		cpuRequest, _ := modelService.ResourceRequest.CpuRequest.AsInt64()
-		maxCpu, _ := k.config.MaxCpu.AsInt64()
-		if cpuRequest > maxCpu {
+		cpuRequest, _ := modelService.ResourceRequest.CPURequest.AsInt64()
+		maxCPU, _ := k.config.MaxCPU.AsInt64()
+		if cpuRequest > maxCPU {
 			log.Errorf("insufficient available cpu resource to fulfil user request of %d", cpuRequest)
-			return nil, ErrInsufficientCpu
+			return nil, ErrInsufficientCPU
 		}
 		memRequest, _ := modelService.ResourceRequest.MemoryRequest.AsInt64()
 		maxMem, _ := k.config.MaxMemory.AsInt64()
@@ -160,7 +160,7 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 		Name:        s.Name,
 		Namespace:   s.Namespace,
 		ServiceName: (*s.Status.Default)[constants.Predictor].Hostname,
-		Url:         inferenceURL,
+		URL:         inferenceURL,
 	}, nil
 }
 

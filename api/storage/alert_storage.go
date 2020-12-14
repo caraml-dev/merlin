@@ -22,11 +22,11 @@ import (
 
 // AlertStorage interface.
 type AlertStorage interface {
-	ListModelEndpointAlerts(modelId models.Id) ([]*models.ModelEndpointAlert, error)
-	GetModelEndpointAlert(modelId models.Id, modelEndpointId models.Id) (*models.ModelEndpointAlert, error)
+	ListModelEndpointAlerts(modelID models.ID) ([]*models.ModelEndpointAlert, error)
+	GetModelEndpointAlert(modelID models.ID, modelEndpointID models.ID) (*models.ModelEndpointAlert, error)
 	CreateModelEndpointAlert(alert *models.ModelEndpointAlert) error
 	UpdateModelEndpointAlert(alert *models.ModelEndpointAlert) error
-	DeleteModelEndpointAlert(modelId models.Id, modelEndpointId models.Id) error
+	DeleteModelEndpointAlert(modelID models.ID, modelEndpointID models.ID) error
 }
 
 type alertStorage struct {
@@ -47,20 +47,20 @@ func (s *alertStorage) query() *gorm.DB {
 		Joins("JOIN model_endpoints on model_endpoints.id = model_endpoint_alerts.model_endpoint_id")
 }
 
-func (s *alertStorage) ListModelEndpointAlerts(modelId models.Id) (alerts []*models.ModelEndpointAlert, err error) {
+func (s *alertStorage) ListModelEndpointAlerts(modelID models.ID) (alerts []*models.ModelEndpointAlert, err error) {
 	err = s.query().
-		Where("model_endpoint_alerts.model_id = ?", modelId.String()).
+		Where("model_endpoint_alerts.model_id = ?", modelID.String()).
 		Find(&alerts).
 		Error
 	return
 }
 
 // GetModelEndpointAlert gets an model endpoint alert.
-func (s *alertStorage) GetModelEndpointAlert(modelId models.Id, modelEndpointId models.Id) (*models.ModelEndpointAlert, error) {
+func (s *alertStorage) GetModelEndpointAlert(modelID models.ID, modelEndpointID models.ID) (*models.ModelEndpointAlert, error) {
 	var alert models.ModelEndpointAlert
 	err := s.query().
 		Where("model_endpoint_alerts.model_id = ? AND model_endpoint_alerts.model_endpoint_id = ?",
-			modelId.String(), modelEndpointId.String()).
+			modelID.String(), modelEndpointID.String()).
 		First(&alert).
 		Error
 	if err != nil {
@@ -80,9 +80,9 @@ func (s *alertStorage) UpdateModelEndpointAlert(alert *models.ModelEndpointAlert
 }
 
 // DeleteModelEndpointAlert deletes a model endpoint alert.
-func (s *alertStorage) DeleteModelEndpointAlert(modelId models.Id, modelEndpointId models.Id) error {
+func (s *alertStorage) DeleteModelEndpointAlert(modelID models.ID, modelEndpointID models.ID) error {
 	return s.db.
 		Where("model_endpoint_alerts.model_id = ? AND model_endpoint_alerts.model_endpoint_id = ?",
-			modelId.String(), modelEndpointId.String()).
+			modelID.String(), modelEndpointID.String()).
 		Delete(models.ModelEndpointAlert{}).Error
 }

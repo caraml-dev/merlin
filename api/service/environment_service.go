@@ -38,30 +38,30 @@ type environmentService struct {
 	db *gorm.DB
 }
 
-func (e *environmentService) GetEnvironment(name string) (*models.Environment, error) {
+func (errRaised *environmentService) GetEnvironment(name string) (*models.Environment, error) {
 	var env models.Environment
-	err := e.db.Where("name = ?", name).First(&env).Error
+	err := errRaised.db.Where("name = ?", name).First(&env).Error
 	return &env, err
 }
 
-func (e *environmentService) GetDefaultEnvironment() (*models.Environment, error) {
+func (errRaised *environmentService) GetDefaultEnvironment() (*models.Environment, error) {
 	var env models.Environment
-	err := e.db.Where("is_default = true").First(&env).Error
+	err := errRaised.db.Where("is_default = true").First(&env).Error
 	return &env, err
 }
 
-func (e *environmentService) GetDefaultPredictionJobEnvironment() (*models.Environment, error) {
+func (errRaised *environmentService) GetDefaultPredictionJobEnvironment() (*models.Environment, error) {
 	var env models.Environment
-	err := e.db.Where("is_default_prediction_job = true").First(&env).Error
+	err := errRaised.db.Where("is_default_prediction_job = true").First(&env).Error
 	return &env, err
 }
 
-func (e *environmentService) Save(env *models.Environment) (*models.Environment, error) {
-	err := e.db.Save(env).Error
+func (errRaised *environmentService) Save(env *models.Environment) (*models.Environment, error) {
+	err := errRaised.db.Save(env).Error
 	return env, err
 }
 
-func (e *environmentService) ListEnvironments(name string) (envs []*models.Environment, err error) {
-	err = e.db.Where("name LIKE ?", name+"%").Find(&envs).Error
+func (errRaised *environmentService) ListEnvironments(name string) (envs []*models.Environment, err error) {
+	err = errRaised.db.Where("name LIKE ?", name+"%").Find(&envs).Error
 	return
 }

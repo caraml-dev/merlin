@@ -33,7 +33,7 @@ func TestGetVersion(t *testing.T) {
 		desc           string
 		vars           map[string]string
 		versionService func() *mocks.VersionsService
-		expected       *ApiResponse
+		expected       *Response
 	}{
 		{
 			desc: "Should success get version",
@@ -43,37 +43,37 @@ func TestGetVersion(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 					},
-					MlflowUrl: "http://mlflow.com",
+					MlflowURL: "http://mlflow.com",
 				}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 					},
-					MlflowUrl: "http://mlflow.com",
+					MlflowURL: "http://mlflow.com",
 				},
 			},
 		},
@@ -85,10 +85,10 @@ func TestGetVersion(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model version 1 for version 1"},
 			},
@@ -101,10 +101,10 @@ func TestGetVersion(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error getting model version for given model 1 version 1"},
 			},
@@ -135,7 +135,7 @@ func TestListVersion(t *testing.T) {
 		desc           string
 		vars           map[string]string
 		versionService func() *mocks.VersionsService
-		expected       *ApiResponse
+		expected       *Response
 	}{
 		{
 			desc: "Should success get version",
@@ -144,40 +144,40 @@ func TestListVersion(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("ListVersions", mock.Anything, models.Id(1), mock.Anything).Return([]*models.Version{
+				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything).Return([]*models.Version{
 					{
-						Id:      models.Id(1),
-						ModelId: models.Id(1),
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
 						Model: &models.Model{
-							Id:           models.Id(1),
+							ID:           models.ID(1),
 							Name:         "model-1",
-							ProjectId:    models.Id(1),
+							ProjectID:    models.ID(1),
 							Project:      mlp.Project{},
-							ExperimentId: 1,
+							ExperimentID: 1,
 							Type:         "pyfunc",
-							MlflowUrl:    "http://mlflow.com",
+							MlflowURL:    "http://mlflow.com",
 						},
-						MlflowUrl: "http://mlflow.com",
+						MlflowURL: "http://mlflow.com",
 					},
 				}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.Version{
 					{
-						Id:      models.Id(1),
-						ModelId: models.Id(1),
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
 						Model: &models.Model{
-							Id:           models.Id(1),
+							ID:           models.ID(1),
 							Name:         "model-1",
-							ProjectId:    models.Id(1),
+							ProjectID:    models.ID(1),
 							Project:      mlp.Project{},
-							ExperimentId: 1,
+							ExperimentID: 1,
 							Type:         "pyfunc",
-							MlflowUrl:    "http://mlflow.com",
+							MlflowURL:    "http://mlflow.com",
 						},
-						MlflowUrl: "http://mlflow.com",
+						MlflowURL: "http://mlflow.com",
 					},
 				},
 			},
@@ -189,10 +189,10 @@ func TestListVersion(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("ListVersions", mock.Anything, models.Id(1), mock.Anything).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "DB is down"},
 			},
@@ -224,7 +224,7 @@ func TestPatchVersion(t *testing.T) {
 		requestBody    interface{}
 		vars           map[string]string
 		versionService func() *mocks.VersionsService
-		expected       *ApiResponse
+		expected       *Response
 	}{
 		{
 			desc: "Should success patch version",
@@ -238,51 +238,51 @@ func TestPatchVersion(t *testing.T) {
 			}},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
 					&models.Version{
-						Id:      models.Id(1),
-						ModelId: models.Id(1),
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
 						Model: &models.Model{
-							Id:           models.Id(1),
+							ID:           models.ID(1),
 							Name:         "model-1",
-							ProjectId:    models.Id(1),
+							ProjectID:    models.ID(1),
 							Project:      mlp.Project{},
-							ExperimentId: 1,
+							ExperimentID: 1,
 							Type:         "pyfunc",
-							MlflowUrl:    "http://mlflow.com",
+							MlflowURL:    "http://mlflow.com",
 						},
-						MlflowUrl: "http://mlflow.com",
+						MlflowURL: "http://mlflow.com",
 					}, nil)
 				svc.On("Save", mock.Anything, &models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 					},
-					MlflowUrl: "http://mlflow.com",
+					MlflowURL: "http://mlflow.com",
 					Properties: models.KV{
 						"name":       "model-1",
 						"created_by": "anonymous",
 					},
 				}, mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 					},
-					MlflowUrl: "http://mlflow.com",
+					MlflowURL: "http://mlflow.com",
 					Properties: models.KV{
 						"name":       "model-1",
 						"created_by": "anonymous",
@@ -290,21 +290,21 @@ func TestPatchVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 					},
-					MlflowUrl: "http://mlflow.com",
+					MlflowURL: "http://mlflow.com",
 					Properties: models.KV{
 						"name":       "model-1",
 						"created_by": "anonymous",
@@ -324,11 +324,11 @@ func TestPatchVersion(t *testing.T) {
 			}},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
 					nil, gorm.ErrRecordNotFound)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model version 1 for version 1"},
 			},
@@ -345,11 +345,11 @@ func TestPatchVersion(t *testing.T) {
 			}},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
 					nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error getting model version for given model 1 version 1"},
 			},
@@ -361,28 +361,28 @@ func TestPatchVersion(t *testing.T) {
 				"version_id": "1",
 			},
 			requestBody: &models.Model{
-				Id: models.Id(1),
+				ID: models.ID(1),
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
 					&models.Version{
-						Id:      models.Id(1),
-						ModelId: models.Id(1),
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
 						Model: &models.Model{
-							Id:           models.Id(1),
+							ID:           models.ID(1),
 							Name:         "model-1",
-							ProjectId:    models.Id(1),
+							ProjectID:    models.ID(1),
 							Project:      mlp.Project{},
-							ExperimentId: 1,
+							ExperimentID: 1,
 							Type:         "pyfunc",
-							MlflowUrl:    "http://mlflow.com",
+							MlflowURL:    "http://mlflow.com",
 						},
-						MlflowUrl: "http://mlflow.com",
+						MlflowURL: "http://mlflow.com",
 					}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to parse request body"},
 			},
@@ -399,34 +399,34 @@ func TestPatchVersion(t *testing.T) {
 			}},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
 					&models.Version{
-						Id:      models.Id(1),
-						ModelId: models.Id(1),
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
 						Model: &models.Model{
-							Id:           models.Id(1),
+							ID:           models.ID(1),
 							Name:         "model-1",
-							ProjectId:    models.Id(1),
+							ProjectID:    models.ID(1),
 							Project:      mlp.Project{},
-							ExperimentId: 1,
+							ExperimentID: 1,
 							Type:         "pyfunc",
-							MlflowUrl:    "http://mlflow.com",
+							MlflowURL:    "http://mlflow.com",
 						},
-						MlflowUrl: "http://mlflow.com",
+						MlflowURL: "http://mlflow.com",
 					}, nil)
 				svc.On("Save", mock.Anything, &models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "http://mlflow.com",
+						MlflowURL:    "http://mlflow.com",
 					},
-					MlflowUrl: "http://mlflow.com",
+					MlflowURL: "http://mlflow.com",
 					Properties: models.KV{
 						"name":       "model-1",
 						"created_by": "anonymous",
@@ -434,7 +434,7 @@ func TestPatchVersion(t *testing.T) {
 				}, mock.Anything).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error patching model version for given model 1 version 1"},
 			},
