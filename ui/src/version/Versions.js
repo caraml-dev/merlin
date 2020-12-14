@@ -26,10 +26,12 @@ import {
 } from "@elastic/eui";
 import VersionListTable from "./VersionListTable";
 import { get, replaceBreadcrumbs, useToggle } from "@gojek/mlp-ui";
-import VersionUndeployEndpointModal from "./modals/VersionUndeployEndpointModal";
-import VersionServeEndpointModal from "./modals/VersionServeEndpointModal";
-import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
+import mocks from "../mocks";
+import {
+  ServeVersionEndpointModal,
+  UndeployVersionEndpointModal
+} from "../components/modals";
 
 const Versions = ({ projectId, modelId, ...props }) => {
   const [
@@ -119,21 +121,21 @@ const Versions = ({ projectId, modelId, ...props }) => {
       </EuiPageBody>
 
       {isUndeployEndpointModalVisible && (
-        <VersionUndeployEndpointModal
+        <UndeployVersionEndpointModal
           versionEndpoint={activeVersionEndpoint}
           version={activeVersion}
           model={activeModel}
-          updateVersionsCallback={fetchVersions}
+          callback={fetchVersions}
           closeModal={toggleUndeployEndpointModal}
         />
       )}
 
       {isServeEndpointModalVisible && (
-        <VersionServeEndpointModal
+        <ServeVersionEndpointModal
           versionEndpoint={activeVersionEndpoint}
           version={activeVersion}
           model={activeModel}
-          updateVersionsCallback={fetchVersions}
+          callback={fetchVersions}
           closeModal={toggleServeEndpointModal}
         />
       )}

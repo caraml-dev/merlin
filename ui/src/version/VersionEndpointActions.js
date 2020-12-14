@@ -23,7 +23,7 @@ import {
   EuiText
 } from "@elastic/eui";
 import { useToggle } from "@gojek/mlp-ui";
-import StopServeModelEndpointModal from "../model/modals/StopServeModelEndpointModal";
+import { StopServeVersionEndpointModal } from "../components/modals";
 
 const VersionEndpointActions = ({
   versionEndpoint,
@@ -129,6 +129,16 @@ const VersionEndpointActions = ({
           </EuiButtonEmpty>
         </Link>
       </EuiFlexItem>
+    ),
+
+    details: (
+      <EuiFlexItem grow={false} key={`details-${versionEndpoint.id}`}>
+        <Link to={`${activeVersion.id}/endpoints/${versionEndpoint.id}`}>
+          <EuiButtonEmpty iconType="inspect" size="xs">
+            <EuiText size="xs">Details</EuiText>
+          </EuiButtonEmpty>
+        </Link>
+      </EuiFlexItem>
     )
   };
 
@@ -150,6 +160,9 @@ const VersionEndpointActions = ({
 
     // Logging
     list.push(actions.logging);
+
+    // Details
+    list.push(actions.details);
 
     // Undeploy
     if (
@@ -179,9 +192,9 @@ const VersionEndpointActions = ({
       </EuiFlexGroup>
 
       {isStopServeModelEndpointModalVisible && (
-        <StopServeModelEndpointModal
+        <StopServeVersionEndpointModal
           model={activeModel}
-          endpoint={modelEndpoint}
+          modelEndpoint={modelEndpoint}
           callback={fetchVersions}
           closeModal={() => toggleStopServeModelEndpointModal()}
         />

@@ -36,6 +36,7 @@ const VersionRedeploy = ({ breadcrumbs, model, version, endpointId }) => {
       disableEnvironment={true}
       modalContent={`You're about to redeploy an existing endpoint of model version ${version.id}.`}
       onDeploy={redeployVersionEndpoint}
+      redirectUrl={`/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}/endpoints/${endpointId}`}
       response={redeploymentResponse}
     />
   );

@@ -1,0 +1,52 @@
+/**
+ * Copyright 2020 The Merlin Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import "~@elastic/eui/src/global_styling/mixins/typography";
+
+// When text is truncated in a child flex element, the auto-calculated min width is wider than
+// its parent container which can break the layout. To prevent this, the min-width attribute
+// is expected to be set to a fixed value.
+// Ref: https://css-tricks.com/flexbox-truncated-text/
+.euiFlexItem.euiFlexItem--childFlexPanel {
+  min-width: 0;
+}
+
+.euiPanel--configSection {
+  .euiDescriptionList.euiDescriptionList--responsiveColumn {
+    > * {
+      @include euiTextTruncate;
+
+      line-height: 2.1 !important;
+      margin-top: 2px !important;
+    }
+
+    *:nth-child(4n-1) {
+      background: #f5f7fa;
+    }
+
+    *:nth-child(4n) {
+      background: #f5f7fa;
+    }
+  }
+}
+
+.euiFlexItem.euiFlexItem--smallPanel {
+  min-width: 265px;
+}
+
+.euiFlexItem.euiFlexItem--mediumPanel {
+  min-width: 350px;
+}

@@ -29,6 +29,7 @@ import {
   EuiSuperSelect,
   EuiTitle,
   EuiText,
+  EuiTextColor,
   EuiPageContent
 } from "@elastic/eui";
 import { replaceBreadcrumbs } from "@gojek/mlp-ui";
@@ -104,7 +105,7 @@ const Log = ({ modelId, fetchContainerURL, breadcrumbs }) => {
   }, [containers]);
 
   useEffect(() => {
-    replaceBreadcrumbs([...breadcrumbs, { text: "Logs" }]);
+    breadcrumbs && replaceBreadcrumbs([...breadcrumbs, { text: "Logs" }]);
   }, [breadcrumbs]);
 
   const onSelectContainerChange = value => {
@@ -228,49 +229,55 @@ const Log = ({ modelId, fetchContainerURL, breadcrumbs }) => {
   );
 
   return (
-    <EuiPageContent>
-      <EuiFlexGroup direction="column">
-        <EuiFlexItem>
-          <EuiFormRow
-            fullWidth
-            label={
-              <EuiText size="xs">
-                Select container{" "}
-                <EuiLink
-                  color="secondary"
-                  onClick={() => setIsFlyoutVisible(true)}>
-                  <EuiIcon type="questionInCircle" color="subdued" />
-                </EuiLink>
-              </EuiText>
-            }>
-            <EuiSuperSelect
-              options={containerOptions}
-              valueOfSelected={selectedContainer}
-              onChange={onSelectContainerChange}
-              onFocus={() => {
-                fetchContainers();
-              }}
-              hasDividers
+    <Fragment>
+      <EuiTitle size="s">
+        <EuiTextColor color="secondary">Logs</EuiTextColor>
+      </EuiTitle>
+
+      <EuiPageContent>
+        <EuiFlexGroup direction="column">
+          <EuiFlexItem>
+            <EuiFormRow
               fullWidth
-            />
-          </EuiFormRow>
-        </EuiFlexItem>
-
-        {stackdriverUrl !== "" && (
-          <EuiFlexItem>
-            <StackdriverLink stackdriverUrl={stackdriverUrl} />
+              label={
+                <EuiText size="xs">
+                  Select container{" "}
+                  <EuiLink
+                    color="secondary"
+                    onClick={() => setIsFlyoutVisible(true)}>
+                    <EuiIcon type="questionInCircle" color="subdued" />
+                  </EuiLink>
+                </EuiText>
+              }>
+              <EuiSuperSelect
+                options={containerOptions}
+                valueOfSelected={selectedContainer}
+                onChange={onSelectContainerChange}
+                onFocus={() => {
+                  fetchContainers();
+                }}
+                hasDividers
+                fullWidth
+              />
+            </EuiFormRow>
           </EuiFlexItem>
-        )}
 
-        {logUrl !== "" && (
-          <EuiFlexItem>
-            <StreamLog logUrl={logUrl} />
-          </EuiFlexItem>
-        )}
+          {stackdriverUrl !== "" && (
+            <EuiFlexItem>
+              <StackdriverLink stackdriverUrl={stackdriverUrl} />
+            </EuiFlexItem>
+          )}
 
-        {isFlyoutVisible && flyout}
-      </EuiFlexGroup>
-    </EuiPageContent>
+          {logUrl !== "" && (
+            <EuiFlexItem>
+              <StreamLog logUrl={logUrl} />
+            </EuiFlexItem>
+          )}
+
+          {isFlyoutVisible && flyout}
+        </EuiFlexGroup>
+      </EuiPageContent>
+    </Fragment>
   );
 };
 
