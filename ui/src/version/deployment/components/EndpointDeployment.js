@@ -93,15 +93,12 @@ export const EndpointDeployment = ({
   disableEnvironment,
   modalContent,
   onDeploy,
+  redirectUrl,
   response
 }) => {
   useEffect(() => {
     breadcrumbs && replaceBreadcrumbs([...breadcrumbs, { text: actionTitle }]);
   }, [actionTitle, breadcrumbs]);
-
-  const [redirectUrl, setRedirectUrl] = useState(
-    `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}`
-  );
 
   const [request, setRequest] = useState({});
 
@@ -110,13 +107,6 @@ export const EndpointDeployment = ({
       endpointId &&
       setRequest(version.endpoints.find(e => e.id === endpointId));
   }, [version.endpoints, endpointId, setRequest]);
-
-  useEffect(() => {
-    endpointId &&
-      setRedirectUrl(
-        `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}/endpoints/${endpointId}`
-      );
-  }, [model.id, model.project_id, version.id, endpointId, setRedirectUrl]);
 
   const [{ data: environments }] = useMerlinApi(
     `/environments`,
