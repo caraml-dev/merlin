@@ -103,13 +103,13 @@ func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 	db = db.LogMode(true)
 	isDefaultTrue := true
 	p := mlp.Project{
-		ID:                1,
+		Id:                1,
 		Name:              "project",
-		MlflowTrackingURL: "http://mlflow:5000",
+		MlflowTrackingUrl: "http://mlflow:5000",
 	}
 
 	m := models.Model{
-		ProjectID:    models.ID(p.ID),
+		ProjectID:    models.ID(p.Id),
 		ExperimentID: 1,
 		Name:         "model",
 		Type:         "sklearn",

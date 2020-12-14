@@ -45,13 +45,13 @@ func TestVersionsService_FindById(t *testing.T) {
 		db.Create(&env)
 
 		p := mlp.Project{
-			ID:                1,
+			Id:                1,
 			Name:              "project_1",
-			MlflowTrackingURL: "http://mlflow:5000",
+			MlflowTrackingUrl: "http://mlflow:5000",
 		}
 
 		m := models.Model{
-			ProjectID:    models.ID(p.ID),
+			ProjectID:    models.ID(p.Id),
 			ExperimentID: 1,
 			Name:         "model_1",
 			Type:         "other",

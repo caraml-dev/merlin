@@ -89,13 +89,13 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 	isDefaultTrue := true
 	p := mlp.Project{
 		Name:              "project",
-		MlflowTrackingURL: "http://mlflow:5000",
+		MlflowTrackingUrl: "http://mlflow:5000",
 	}
 	db.Create(&p)
 
 	m := models.Model{
 		ID:           1,
-		ProjectID:    models.ID(p.ID),
+		ProjectID:    models.ID(p.Id),
 		ExperimentID: 1,
 		Name:         "model",
 		Type:         models.ModelTypeSkLearn,

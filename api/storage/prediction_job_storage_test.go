@@ -43,15 +43,15 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 		db.Create(&env1)
 
 		p := mlp.Project{
-			ID:                1,
+			Id:                1,
 			Name:              "project",
-			MlflowTrackingURL: "http://mlflow:5000",
+			MlflowTrackingUrl: "http://mlflow:5000",
 		}
 		db.Create(&p)
 
 		m := models.Model{
 			ID:           1,
-			ProjectID:    models.ID(p.ID),
+			ProjectID:    models.ID(p.Id),
 			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
@@ -82,7 +82,7 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 			},
 			VersionID:       v.ID,
 			VersionModelID:  m.ID,
-			ProjectID:       models.ID(p.ID),
+			ProjectID:       models.ID(p.Id),
 			EnvironmentName: env1.Name,
 			Environment:     &env1,
 			Config: &models.Config{
@@ -101,7 +101,7 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 					},
 					Model: &spec.Model{
 						Type: spec.ModelType_PYFUNC_V2,
-						URI:  "gs://test-bucket",
+						Uri:  "gs://test-bucket",
 						Result: &spec.Model_ModelResult{
 							Type: spec.ResultType_INTEGER,
 						},
@@ -161,13 +161,13 @@ func TestPredictionJobStorage_List(t *testing.T) {
 
 		p := mlp.Project{
 			Name:              "project",
-			MlflowTrackingURL: "http://mlflow:5000",
+			MlflowTrackingUrl: "http://mlflow:5000",
 		}
 		db.Create(&p)
 
 		m := models.Model{
 			ID:           1,
-			ProjectID:    models.ID(p.ID),
+			ProjectID:    models.ID(p.Id),
 			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
@@ -198,7 +198,7 @@ func TestPredictionJobStorage_List(t *testing.T) {
 			},
 			VersionID:       v.ID,
 			VersionModelID:  m.ID,
-			ProjectID:       models.ID(p.ID),
+			ProjectID:       models.ID(p.Id),
 			Environment:     &env1,
 			EnvironmentName: env1.Name,
 			Config: &models.Config{
@@ -217,7 +217,7 @@ func TestPredictionJobStorage_List(t *testing.T) {
 					},
 					Model: &spec.Model{
 						Type: spec.ModelType_PYFUNC_V2,
-						URI:  "gs://test-bucket",
+						Uri:  "gs://test-bucket",
 						Result: &spec.Model_ModelResult{
 							Type: spec.ResultType_INTEGER,
 						},
@@ -261,7 +261,7 @@ func TestPredictionJobStorage_List(t *testing.T) {
 			},
 			VersionID:       v.ID,
 			VersionModelID:  m.ID,
-			ProjectID:       models.ID(p.ID),
+			ProjectID:       models.ID(p.Id),
 			Environment:     &env1,
 			EnvironmentName: env1.Name,
 			Config: &models.Config{
@@ -280,7 +280,7 @@ func TestPredictionJobStorage_List(t *testing.T) {
 					},
 					Model: &spec.Model{
 						Type: spec.ModelType_PYFUNC_V2,
-						URI:  "gs://test-bucket",
+						Uri:  "gs://test-bucket",
 						Result: &spec.Model_ModelResult{
 							Type: spec.ResultType_INTEGER,
 						},
@@ -314,7 +314,7 @@ func TestPredictionJobStorage_List(t *testing.T) {
 		assert.NoError(t, err)
 
 		jobs, err := predJobStore.List(&models.PredictionJob{
-			ProjectID: models.ID(p.ID),
+			ProjectID: models.ID(p.Id),
 		})
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)
