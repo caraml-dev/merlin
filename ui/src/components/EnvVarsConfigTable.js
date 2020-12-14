@@ -16,22 +16,34 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { EuiDescriptionList, EuiText } from "@elastic/eui";
+import { EuiInMemoryTable, EuiText } from "@elastic/eui";
 
 export const EnvVarsConfigTable = ({ variables }) => {
-  const items = variables.map(v => ({
-    title: v.name,
-    description: v.value
-  }));
+  const columns = [
+    {
+      field: "name",
+      name: "Name",
+      width: "20%",
+      sortable: true
+    },
+    {
+      field: "value",
+      name: "Value",
+      width: "80%",
+      sortable: true
+    }
+  ];
+
+  const sorting = {
+    enableAllColumns: true
+  };
 
   return variables.length ? (
-    <EuiDescriptionList
-      compressed
-      textStyle="reverse"
-      type="responsiveColumn"
-      listItems={items}
-      titleProps={{ style: { width: "30%" } }}
-      descriptionProps={{ style: { width: "70%" } }}
+    <EuiInMemoryTable
+      items={variables}
+      columns={columns}
+      itemId="name"
+      sorting={sorting}
     />
   ) : (
     <EuiText size="s" color="subdued">
