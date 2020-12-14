@@ -35,7 +35,7 @@ type modelServiceNameGenerator struct {
 
 // generateBuilderJobName generate pod name of the pod that will build docker image of model service
 func (n *modelServiceNameGenerator) generateBuilderJobName(project mlp.Project, model *models.Model, version *models.Version) string {
-	return fmt.Sprintf("%s-%s-%s", project.Name, model.Name, version.Id)
+	return fmt.Sprintf("%s-%s-%s", project.Name, model.Name, version.ID)
 }
 
 // generateDockerImageName generate docker image name of model service

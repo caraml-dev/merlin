@@ -33,7 +33,7 @@ func TestGetVersion(t *testing.T) {
 		desc           string
 		vars           map[string]string
 		versionService func() *mocks.VersionsService
-		expected       *APIResponse
+		expected       *Response
 	}{
 		{
 			desc: "Should success get version",
@@ -59,7 +59,7 @@ func TestGetVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.Version{
 					ID:      models.ID(1),
@@ -88,7 +88,7 @@ func TestGetVersion(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model version 1 for version 1"},
 			},
@@ -104,7 +104,7 @@ func TestGetVersion(t *testing.T) {
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error getting model version for given model 1 version 1"},
 			},
@@ -135,7 +135,7 @@ func TestListVersion(t *testing.T) {
 		desc           string
 		vars           map[string]string
 		versionService func() *mocks.VersionsService
-		expected       *APIResponse
+		expected       *Response
 	}{
 		{
 			desc: "Should success get version",
@@ -162,7 +162,7 @@ func TestListVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.Version{
 					{
@@ -192,7 +192,7 @@ func TestListVersion(t *testing.T) {
 				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "DB is down"},
 			},
@@ -224,7 +224,7 @@ func TestPatchVersion(t *testing.T) {
 		requestBody    interface{}
 		vars           map[string]string
 		versionService func() *mocks.VersionsService
-		expected       *APIResponse
+		expected       *Response
 	}{
 		{
 			desc: "Should success patch version",
@@ -290,7 +290,7 @@ func TestPatchVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.Version{
 					ID:      models.ID(1),
@@ -328,7 +328,7 @@ func TestPatchVersion(t *testing.T) {
 					nil, gorm.ErrRecordNotFound)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model version 1 for version 1"},
 			},
@@ -349,7 +349,7 @@ func TestPatchVersion(t *testing.T) {
 					nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error getting model version for given model 1 version 1"},
 			},
@@ -382,7 +382,7 @@ func TestPatchVersion(t *testing.T) {
 					}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to parse request body"},
 			},
@@ -434,7 +434,7 @@ func TestPatchVersion(t *testing.T) {
 				}, mock.Anything).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error patching model version for given model 1 version 1"},
 			},

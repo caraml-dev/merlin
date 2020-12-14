@@ -78,10 +78,10 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 		Name: "my-project",
 	}
 	version := &models.Version{
-		Id: 1,
+		ID: 1,
 	}
 	modelOpt := &models.ModelOption{}
-	svcName := models.CreateInferenceServiceName(model.Name, version.Id.String())
+	svcName := models.CreateInferenceServiceName(model.Name, version.ID.String())
 	status := createServiceReadyStatus(svcName, svcName)
 	isvc := fakeInferenceService(svcName, project.Name, status)
 
@@ -288,10 +288,10 @@ func TestController_DeployInferenceService(t *testing.T) {
 		Name: "my-project",
 	}
 	version := &models.Version{
-		Id: 1,
+		ID: 1,
 	}
 	modelOpt := &models.ModelOption{}
-	svcName := models.CreateInferenceServiceName(model.Name, version.Id.String())
+	svcName := models.CreateInferenceServiceName(model.Name, version.ID.String())
 	statusReady := createServiceReadyStatus(svcName, svcName)
 	namespace := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{Name: project.Name},
@@ -360,7 +360,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    2,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("100m"),
+					CPURequest:    resource.MustParse("100m"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 			},
@@ -515,7 +515,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    2,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("10"),
+					CPURequest:    resource.MustParse("10"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 			},
@@ -544,7 +544,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica:    2,
 					MaxReplica:    4,
-					CpuRequest:    resource.MustParse("1000m"),
+					CPURequest:    resource.MustParse("1000m"),
 					MemoryRequest: resource.MustParse("10Gi"),
 				},
 			},
@@ -591,7 +591,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 			deployConfig := config.DeploymentConfig{
 				DeploymentTimeout: tt.deployTimeout,
 				NamespaceTimeout:  2 * tickDurationSecond * time.Second,
-				MaxCpu:            resource.MustParse("8"),
+				MaxCPU:            resource.MustParse("8"),
 				MaxMemory:         resource.MustParse("8Gi"),
 			}
 

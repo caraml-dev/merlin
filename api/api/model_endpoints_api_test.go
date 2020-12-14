@@ -32,7 +32,7 @@ func TestListModelEndpointInProject(t *testing.T) {
 		desc                 string
 		vars                 map[string]string
 		modelEndpointService func() *mocks.ModelEndpointsService
-		expected             *APIResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should success list model endpoint",
@@ -60,7 +60,7 @@ func TestListModelEndpointInProject(t *testing.T) {
 				}, nil)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.ModelEndpoint{
 					{
@@ -91,7 +91,7 @@ func TestListModelEndpointInProject(t *testing.T) {
 				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.ID(1), "id").Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model Endpoints for Project ID 1 not found"},
 			},
@@ -107,7 +107,7 @@ func TestListModelEndpointInProject(t *testing.T) {
 				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.ID(1), "id").Return(nil, fmt.Errorf("DB is down"))
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error while getting Model Endpoints for Project ID 1"},
 			},
@@ -132,7 +132,7 @@ func TestListModelEndpoints(t *testing.T) {
 		desc                 string
 		vars                 map[string]string
 		modelEndpointService func() *mocks.ModelEndpointsService
-		expected             *APIResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should success list model endpoint",
@@ -160,7 +160,7 @@ func TestListModelEndpoints(t *testing.T) {
 				}, nil)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.ModelEndpoint{
 					{
@@ -191,7 +191,7 @@ func TestListModelEndpoints(t *testing.T) {
 				mockSvc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model Endpoints for Model ID 1 not found"},
 			},
@@ -207,7 +207,7 @@ func TestListModelEndpoints(t *testing.T) {
 				mockSvc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error while getting Model Endpoints for Model ID 1"},
 			},
@@ -232,7 +232,7 @@ func TestGetModelEndpoint(t *testing.T) {
 		desc                 string
 		vars                 map[string]string
 		modelEndpointService func() *mocks.ModelEndpointsService
-		expected             *APIResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should success get model endpoint",
@@ -257,7 +257,7 @@ func TestGetModelEndpoint(t *testing.T) {
 				}, nil)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.ModelEndpoint{
 					ID:      models.ID(1),
@@ -285,7 +285,7 @@ func TestGetModelEndpoint(t *testing.T) {
 				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model endpoint with id 1 not found"},
 			},
@@ -300,7 +300,7 @@ func TestGetModelEndpoint(t *testing.T) {
 				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error while getting model endpoint with id 1"},
 			},

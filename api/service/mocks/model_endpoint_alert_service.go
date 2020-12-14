@@ -35,13 +35,13 @@ func (_m *ModelEndpointAlertService) CreateModelEndpointAlert(user string, alert
 	return r0, r1
 }
 
-// GetModelEndpointAlert provides a mock function with given fields: modelId, modelEndpointId
-func (_m *ModelEndpointAlertService) GetModelEndpointAlert(modelId models.Id, modelEndpointId models.Id) (*models.ModelEndpointAlert, error) {
-	ret := _m.Called(modelId, modelEndpointId)
+// GetModelEndpointAlert provides a mock function with given fields: modelID, modelEndpointID
+func (_m *ModelEndpointAlertService) GetModelEndpointAlert(modelID models.ID, modelEndpointID models.ID) (*models.ModelEndpointAlert, error) {
+	ret := _m.Called(modelID, modelEndpointID)
 
 	var r0 *models.ModelEndpointAlert
-	if rf, ok := ret.Get(0).(func(models.Id, models.Id) *models.ModelEndpointAlert); ok {
-		r0 = rf(modelId, modelEndpointId)
+	if rf, ok := ret.Get(0).(func(models.ID, models.ID) *models.ModelEndpointAlert); ok {
+		r0 = rf(modelID, modelEndpointID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ModelEndpointAlert)
@@ -49,8 +49,8 @@ func (_m *ModelEndpointAlertService) GetModelEndpointAlert(modelId models.Id, mo
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(models.Id, models.Id) error); ok {
-		r1 = rf(modelId, modelEndpointId)
+	if rf, ok := ret.Get(1).(func(models.ID, models.ID) error); ok {
+		r1 = rf(modelID, modelEndpointID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -58,13 +58,13 @@ func (_m *ModelEndpointAlertService) GetModelEndpointAlert(modelId models.Id, mo
 	return r0, r1
 }
 
-// ListModelAlerts provides a mock function with given fields: modelId
-func (_m *ModelEndpointAlertService) ListModelAlerts(modelId models.Id) ([]*models.ModelEndpointAlert, error) {
-	ret := _m.Called(modelId)
+// ListModelAlerts provides a mock function with given fields: modelID
+func (_m *ModelEndpointAlertService) ListModelAlerts(modelID models.ID) ([]*models.ModelEndpointAlert, error) {
+	ret := _m.Called(modelID)
 
 	var r0 []*models.ModelEndpointAlert
-	if rf, ok := ret.Get(0).(func(models.Id) []*models.ModelEndpointAlert); ok {
-		r0 = rf(modelId)
+	if rf, ok := ret.Get(0).(func(models.ID) []*models.ModelEndpointAlert); ok {
+		r0 = rf(modelID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*models.ModelEndpointAlert)
@@ -72,8 +72,8 @@ func (_m *ModelEndpointAlertService) ListModelAlerts(modelId models.Id) ([]*mode
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(models.Id) error); ok {
-		r1 = rf(modelId)
+	if rf, ok := ret.Get(1).(func(models.ID) error); ok {
+		r1 = rf(modelID)
 	} else {
 		r1 = ret.Error(1)
 	}

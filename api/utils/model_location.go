@@ -16,6 +16,6 @@ package utils
 
 import "fmt"
 
-func CreateModelLocation(artifactUri string) string {
-	return fmt.Sprintf("%s/model", artifactUri)
+func CreateModelLocation(artifactURI string) string {
+	return fmt.Sprintf("%s/model", artifactURI)
 }

@@ -15,13 +15,13 @@
 package models
 
 type Environment struct {
-	Id                     Id               `json:"id"`
+	ID                     ID               `json:"id"`
 	Name                   string           `json:"name" gorm:"unique;not null"`
 	Cluster                string           `json:"cluster"`
 	IsDefault              *bool            `json:"is_default"`
 	Region                 string           `json:"region"`
 	GcpProject             string           `json:"gcp_project"`
-	MaxCpu                 string           `json:"max_cpu"`
+	MaxCPU                 string           `json:"max_cpu"`
 	MaxMemory              string           `json:"max_memory"`
 	DefaultResourceRequest *ResourceRequest `json:"default_resource_request"`
 

@@ -29,7 +29,7 @@ func TestListEnvironments(t *testing.T) {
 		desc       string
 		vars       map[string]string
 		envService func() *mocks.EnvironmentService
-		expected   *APIResponse
+		expected   *Response
 	}{
 		{
 			desc: "Should success list environment",
@@ -51,7 +51,7 @@ func TestListEnvironments(t *testing.T) {
 				}, nil)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.Environment{
 					{
@@ -76,7 +76,7 @@ func TestListEnvironments(t *testing.T) {
 				mockSvc.On("ListEnvironments", "dev").Return(nil, fmt.Errorf("Database is down"))
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{
 					Message: "Database is down",

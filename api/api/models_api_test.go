@@ -37,7 +37,7 @@ func TestListModel(t *testing.T) {
 		desc         string
 		vars         map[string]string
 		modelService func() *mocks.ModelsService
-		expected     *APIResponse
+		expected     *Response
 	}{
 		{
 			desc: "Should success list model",
@@ -53,9 +53,9 @@ func TestListModel(t *testing.T) {
 						Name:      "tensorflow",
 						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
-							ID:                1,
+							Id:                1,
 							Name:              "tensorflow",
-							MlflowTrackingURL: "http://mlflow.com",
+							MlflowTrackingUrl: "http://mlflow.com",
 							Administrators:    nil,
 							Readers:           nil,
 							Team:              "dsp",
@@ -75,7 +75,7 @@ func TestListModel(t *testing.T) {
 				}, nil)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.Model{
 					{
@@ -83,9 +83,9 @@ func TestListModel(t *testing.T) {
 						Name:      "tensorflow",
 						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
-							ID:                1,
+							Id:                1,
 							Name:              "tensorflow",
-							MlflowTrackingURL: "http://mlflow.com",
+							MlflowTrackingUrl: "http://mlflow.com",
 							Administrators:    nil,
 							Readers:           nil,
 							Team:              "dsp",
@@ -116,7 +116,7 @@ func TestListModel(t *testing.T) {
 				mockSvc.On("ListModels", mock.Anything, models.ID(1), "tensorflow").Return(nil, fmt.Errorf("MLP API is down"))
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "MLP API is down"},
 			},
@@ -143,7 +143,7 @@ func TestGetModel(t *testing.T) {
 		vars           map[string]string
 		modelService   func() *mocks.ModelsService
 		projectService func() *mocks.ProjectsService
-		expected       *APIResponse
+		expected       *Response
 	}{
 		{
 			desc: "Should success get model",
@@ -154,9 +154,9 @@ func TestGetModel(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					ID:                1,
+					Id:                1,
 					Name:              "tensorflow",
-					MlflowTrackingURL: "http://mlflow.com",
+					MlflowTrackingUrl: "http://mlflow.com",
 					Administrators:    nil,
 					Readers:           nil,
 					Team:              "dsp",
@@ -175,9 +175,9 @@ func TestGetModel(t *testing.T) {
 						Name:      "tensorflow",
 						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
-							ID:                1,
+							Id:                1,
 							Name:              "tensorflow",
-							MlflowTrackingURL: "http://mlflow.com",
+							MlflowTrackingUrl: "http://mlflow.com",
 							Administrators:    nil,
 							Readers:           nil,
 							Team:              "dsp",
@@ -196,16 +196,16 @@ func TestGetModel(t *testing.T) {
 					}, nil)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.Model{
 					ID:        models.ID(1),
 					Name:      "tensorflow",
 					ProjectID: models.ID(1),
 					Project: mlp.Project(client.Project{
-						ID:                1,
+						Id:                1,
 						Name:              "tensorflow",
-						MlflowTrackingURL: "http://mlflow.com",
+						MlflowTrackingUrl: "http://mlflow.com",
 						Administrators:    nil,
 						Readers:           nil,
 						Team:              "dsp",
@@ -239,7 +239,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc := &mocks.ModelsService{}
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Project API is down"},
 			},
@@ -253,9 +253,9 @@ func TestGetModel(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					ID:                1,
+					Id:                1,
 					Name:              "tensorflow",
-					MlflowTrackingURL: "http://mlflow.com",
+					MlflowTrackingUrl: "http://mlflow.com",
 					Administrators:    nil,
 					Readers:           nil,
 					Team:              "dsp",
@@ -271,7 +271,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model id 1 not found"},
 			},
@@ -285,9 +285,9 @@ func TestGetModel(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					ID:                1,
+					Id:                1,
 					Name:              "tensorflow",
-					MlflowTrackingURL: "http://mlflow.com",
+					MlflowTrackingUrl: "http://mlflow.com",
 					Administrators:    nil,
 					Readers:           nil,
 					Team:              "dsp",
@@ -303,7 +303,7 @@ func TestGetModel(t *testing.T) {
 				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is unreachable"))
 				return mockSvc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "DB is unreachable"},
 			},

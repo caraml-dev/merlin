@@ -39,7 +39,7 @@ func TestList(t *testing.T) {
 		modelService         func() *mocks.ModelsService
 		versionService       func() *mocks.VersionsService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *APIResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess list prediction job",
@@ -96,7 +96,7 @@ func TestList(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.PredictionJob{
 					{
@@ -129,7 +129,7 @@ func TestList(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -180,7 +180,7 @@ func TestList(t *testing.T) {
 				}).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed listing prediction job"},
 			},
@@ -218,7 +218,7 @@ func TestGet(t *testing.T) {
 		versionService       func() *mocks.VersionsService
 		envService           func() *mocks.EnvironmentService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *APIResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess get prediction job",
@@ -284,7 +284,7 @@ func TestGet(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.PredictionJob{
 					ID:              models.ID(1),
@@ -319,7 +319,7 @@ func TestGet(t *testing.T) {
 				svc := &mocks.EnvironmentService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -371,7 +371,7 @@ func TestGet(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
 			},
@@ -433,7 +433,7 @@ func TestGet(t *testing.T) {
 				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed reading prediction job"},
 			},
@@ -473,7 +473,7 @@ func TestStop(t *testing.T) {
 		versionService       func() *mocks.VersionsService
 		envService           func() *mocks.EnvironmentService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *APIResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess stop prediction job",
@@ -539,7 +539,7 @@ func TestStop(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNoContent,
 			},
 		},
@@ -566,7 +566,7 @@ func TestStop(t *testing.T) {
 				svc := &mocks.EnvironmentService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -618,7 +618,7 @@ func TestStop(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
 			},
@@ -680,7 +680,7 @@ func TestStop(t *testing.T) {
 				svc.On("StopPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Failed stopping prediction job Connection refused"},
 			},
@@ -721,7 +721,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 		versionService       func() *mocks.VersionsService
 		envService           func() *mocks.EnvironmentService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *APIResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess get list of containers",
@@ -797,7 +797,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.Container{
 					{
@@ -834,7 +834,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 				svc := &mocks.EnvironmentService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -886,7 +886,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
 			},
@@ -948,7 +948,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed reading prediction job"},
 			},
@@ -1018,7 +1018,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 				svc.On("ListContainers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error while getting container for endpoint with model 1 and version 1"},
 			},
@@ -1059,7 +1059,7 @@ func TestCreate(t *testing.T) {
 		versionService       func() *mocks.VersionsService
 		envService           func() *mocks.EnvironmentService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *APIResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess create prediction job",
@@ -1132,7 +1132,7 @@ func TestCreate(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.PredictionJob{
 					ID:              models.ID(1),
@@ -1167,7 +1167,7 @@ func TestCreate(t *testing.T) {
 				svc := &mocks.EnvironmentService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -1225,7 +1225,7 @@ func TestCreate(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
 			},
@@ -1293,7 +1293,7 @@ func TestCreate(t *testing.T) {
 				svc.On("CreatePredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Failed creating prediction job Connection refused"},
 			},
@@ -1348,7 +1348,7 @@ func TestCreate(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Unable to parse body as prediction job"},
 			},
@@ -1386,7 +1386,7 @@ func TestListAllInProject(t *testing.T) {
 		vars                 map[string]string
 		projectService       func() *mocks.ProjectsService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *APIResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should success list of prediction job",
@@ -1399,9 +1399,9 @@ func TestListAllInProject(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				svc := &mocks.ProjectsService{}
 				svc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					ID:                1,
+					Id:                1,
 					Name:              "project-1",
-					MlflowTrackingURL: "http://mlflow.com",
+					MlflowTrackingUrl: "http://mlflow.com",
 					Team:              "dsp",
 					Stream:            "dsp",
 				}), nil)
@@ -1424,7 +1424,7 @@ func TestListAllInProject(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.PredictionJob{
 					{
@@ -1455,7 +1455,7 @@ func TestListAllInProject(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "API is down"},
 			},
@@ -1471,9 +1471,9 @@ func TestListAllInProject(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				svc := &mocks.ProjectsService{}
 				svc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					ID:                1,
+					Id:                1,
 					Name:              "project-1",
-					MlflowTrackingURL: "http://mlflow.com",
+					MlflowTrackingUrl: "http://mlflow.com",
 					Team:              "dsp",
 					Stream:            "dsp",
 				}), nil)
@@ -1487,7 +1487,7 @@ func TestListAllInProject(t *testing.T) {
 				}).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed listing prediction job"},
 			},

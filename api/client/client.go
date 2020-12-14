@@ -45,25 +45,25 @@ type APIClient struct {
 
 	// API Services
 
-	AlertApi *AlertApiService
+	AlertAPI *AlertAPIService
 
-	EndpointApi *EndpointApiService
+	EndpointAPI *EndpointAPIService
 
-	EnvironmentApi *EnvironmentApiService
+	EnvironmentAPI *EnvironmentAPIService
 
-	LogApi *LogApiService
+	LogAPI *LogAPIService
 
-	ModelEndpointsApi *ModelEndpointsApiService
+	ModelEndpointsAPI *ModelEndpointsAPIService
 
-	ModelsApi *ModelsApiService
+	ModelsAPI *ModelsAPIService
 
-	PredictionJobsApi *PredictionJobsApiService
+	PredictionJobsAPI *PredictionJobsAPIService
 
-	ProjectApi *ProjectApiService
+	ProjectAPI *ProjectAPIService
 
-	SecretApi *SecretApiService
+	SecretAPI *SecretAPIService
 
-	VersionApi *VersionApiService
+	VersionAPI *VersionAPIService
 }
 
 type service struct {
@@ -82,16 +82,16 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.common.client = c
 
 	// API Services
-	c.AlertApi = (*AlertApiService)(&c.common)
-	c.EndpointApi = (*EndpointApiService)(&c.common)
-	c.EnvironmentApi = (*EnvironmentApiService)(&c.common)
-	c.LogApi = (*LogApiService)(&c.common)
-	c.ModelEndpointsApi = (*ModelEndpointsApiService)(&c.common)
-	c.ModelsApi = (*ModelsApiService)(&c.common)
-	c.PredictionJobsApi = (*PredictionJobsApiService)(&c.common)
-	c.ProjectApi = (*ProjectApiService)(&c.common)
-	c.SecretApi = (*SecretApiService)(&c.common)
-	c.VersionApi = (*VersionApiService)(&c.common)
+	c.AlertAPI = (*AlertAPIService)(&c.common)
+	c.EndpointAPI = (*EndpointAPIService)(&c.common)
+	c.EnvironmentAPI = (*EnvironmentAPIService)(&c.common)
+	c.LogAPI = (*LogAPIService)(&c.common)
+	c.ModelEndpointsAPI = (*ModelEndpointsAPIService)(&c.common)
+	c.ModelsAPI = (*ModelsAPIService)(&c.common)
+	c.PredictionJobsAPI = (*PredictionJobsAPIService)(&c.common)
+	c.ProjectAPI = (*ProjectAPIService)(&c.common)
+	c.SecretAPI = (*SecretAPIService)(&c.common)
+	c.VersionAPI = (*VersionAPIService)(&c.common)
 
 	return c
 }
@@ -143,7 +143,7 @@ func typeCheckParameter(obj interface{}, expected string, name string) error {
 
 	// Check the type is as expected.
 	if reflect.TypeOf(obj).String() != expected {
-		return fmt.Errorf("Expected %s to be of type %s but received %s.", name, expected, reflect.TypeOf(obj).String())
+		return fmt.Errorf("expected %s to be of type %s but received %s", name, expected, reflect.TypeOf(obj).String())
 	}
 	return nil
 }
@@ -210,7 +210,7 @@ func (c *APIClient) prepareRequest(
 	// add form parameters and file if available.
 	if strings.HasPrefix(headerParams["Content-Type"], "multipart/form-data") && len(formParams) > 0 || (len(fileBytes) > 0 && fileName != "") {
 		if body != nil {
-			return nil, errors.New("Cannot specify postBody and multipart form at the same time.")
+			return nil, errors.New("cannot specify postBody and multipart form at the same time")
 		}
 		body = &bytes.Buffer{}
 		w := multipart.NewWriter(body)
@@ -249,7 +249,7 @@ func (c *APIClient) prepareRequest(
 
 	if strings.HasPrefix(headerParams["Content-Type"], "application/x-www-form-urlencoded") && len(formParams) > 0 {
 		if body != nil {
-			return nil, errors.New("Cannot specify postBody and x-www-form-urlencoded form at the same time.")
+			return nil, errors.New("cannot specify postBody and x-www-form-urlencoded form at the same time")
 		}
 		body = &bytes.Buffer{}
 		body.WriteString(formParams.Encode())
@@ -398,7 +398,7 @@ func setBody(body interface{}, contentType string) (bodyBuf *bytes.Buffer, err e
 	}
 
 	if bodyBuf.Len() == 0 {
-		err = fmt.Errorf("Invalid body type %s\n", contentType)
+		err = fmt.Errorf("invalid body type %s", contentType)
 		return nil, err
 	}
 	return bodyBuf, nil
@@ -486,16 +486,16 @@ type GenericSwaggerError struct {
 }
 
 // Error returns non-empty string if there was an error.
-func (e GenericSwaggerError) Error() string {
-	return e.error
+func (errRaised GenericSwaggerError) Error() string {
+	return errRaised.error
 }
 
 // Body returns the raw bytes of the response
-func (e GenericSwaggerError) Body() []byte {
-	return e.body
+func (errRaised GenericSwaggerError) Body() []byte {
+	return errRaised.body
 }
 
 // Model returns the unpacked model of the error
-func (e GenericSwaggerError) Model() interface{} {
-	return e.model
+func (errRaised GenericSwaggerError) Model() interface{} {
+	return errRaised.model
 }

@@ -40,7 +40,7 @@ func TestListEndpoint(t *testing.T) {
 		modelService    func() *mocks.ModelsService
 		versionService  func() *mocks.VersionsService
 		endpointService func() *mocks.EndpointsService
-		expected        *APIResponse
+		expected        *Response
 	}{
 		{
 			desc: "Should success list endpoints",
@@ -56,7 +56,7 @@ func TestListEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -91,7 +91,7 @@ func TestListEndpoint(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.VersionEndpoint{
 					{
@@ -129,7 +129,7 @@ func TestListEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model with given `model_id: 1` not found"},
 			},
@@ -148,7 +148,7 @@ func TestListEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -163,7 +163,7 @@ func TestListEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Version with given `version_id: 1` not found"},
 			},
@@ -182,7 +182,7 @@ func TestListEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -204,7 +204,7 @@ func TestListEndpoint(t *testing.T) {
 				svc.On("ListEndpoints", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "DB is down"},
 			},
@@ -242,7 +242,7 @@ func TestGetEndpoint(t *testing.T) {
 		modelService    func() *mocks.ModelsService
 		versionService  func() *mocks.VersionsService
 		endpointService func() *mocks.EndpointsService
-		expected        *APIResponse
+		expected        *Response
 	}{
 		{
 			desc: "Should success get endpoint",
@@ -259,7 +259,7 @@ func TestGetEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -292,7 +292,7 @@ func TestGetEndpoint(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.VersionEndpoint{
 					ID:             uuid,
@@ -329,7 +329,7 @@ func TestGetEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model with given `model_id: 1` not found"},
 			},
@@ -349,7 +349,7 @@ func TestGetEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -364,7 +364,7 @@ func TestGetEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Version with given `version_id: 1` not found"},
 			},
@@ -384,7 +384,7 @@ func TestGetEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -406,7 +406,7 @@ func TestGetEndpoint(t *testing.T) {
 				svc.On("FindByID", uuid).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: fmt.Sprintf("Error while getting version endpoint with id %v", uuid)},
 			},
@@ -426,7 +426,7 @@ func TestGetEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -448,7 +448,7 @@ func TestGetEndpoint(t *testing.T) {
 				svc.On("FindByID", uuid).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: fmt.Sprintf("Version endpoint with id %s not found", uuid)},
 			},
@@ -486,7 +486,7 @@ func TestListContainers(t *testing.T) {
 		modelService    func() *mocks.ModelsService
 		versionService  func() *mocks.VersionsService
 		endpointService func() *mocks.EndpointsService
-		expected        *APIResponse
+		expected        *Response
 	}{
 		{
 			desc: "Should success list containers",
@@ -503,7 +503,7 @@ func TestListContainers(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -534,7 +534,7 @@ func TestListContainers(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.Container{
 					{
@@ -568,7 +568,7 @@ func TestListContainers(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Model with given `model_id: 1` not found"},
 			},
@@ -588,7 +588,7 @@ func TestListContainers(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -603,7 +603,7 @@ func TestListContainers(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Version with given `version_id: 1` not found"},
 			},
@@ -623,7 +623,7 @@ func TestListContainers(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						ID:   1,
+						Id:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -645,7 +645,7 @@ func TestListContainers(t *testing.T) {
 				svc.On("ListContainers", mock.Anything, mock.Anything, uuid).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: fmt.Sprintf("Error while getting container for endpoint with id %v", uuid)},
 			},
@@ -687,7 +687,7 @@ func TestCreateEndpoint(t *testing.T) {
 		endpointService  func() *mocks.EndpointsService
 		envService       func() *mocks.EnvironmentService
 		monitoringConfig config.MonitoringConfig
-		expected         *APIResponse
+		expected         *Response
 	}{
 		{
 			desc: "Should success create endpoint",
@@ -812,7 +812,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringEnabled: true,
 				MonitoringBaseURL: "http://grafana",
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusCreated,
 				data: &models.VersionEndpoint{
 					ID:                   uuid,
@@ -966,7 +966,7 @@ func TestCreateEndpoint(t *testing.T) {
 				return svc
 			},
 			monitoringConfig: config.MonitoringConfig{},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusCreated,
 				data: &models.VersionEndpoint{
 					ID:                   uuid,
@@ -1048,7 +1048,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringEnabled: true,
 				MonitoringBaseURL: "http://grafana",
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "model with given id: 1 not found"},
 			},
@@ -1101,7 +1101,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringEnabled: true,
 				MonitoringBaseURL: "http://grafana",
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -1179,7 +1179,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringEnabled: true,
 				MonitoringBaseURL: "http://grafana",
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
 			},
@@ -1266,7 +1266,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringEnabled: true,
 				MonitoringBaseURL: "http://grafana",
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Environment not found: dev"},
 			},
@@ -1363,7 +1363,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringEnabled: true,
 				MonitoringBaseURL: "http://grafana",
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Max deployed endpoint reached. Max: 2 Current: 5 "},
 			},
@@ -1461,7 +1461,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringEnabled: true,
 				MonitoringBaseURL: "http://grafana",
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to deploy model version: Something went wrong"},
 			},
@@ -1501,7 +1501,7 @@ func TestUpdateEndpoint(t *testing.T) {
 		versionService  func() *mocks.VersionsService
 		endpointService func() *mocks.EndpointsService
 		envService      func() *mocks.EnvironmentService
-		expected        *APIResponse
+		expected        *Response
 	}{
 		{
 			desc: "Should success update endpoint",
@@ -1641,7 +1641,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.VersionEndpoint{
 					ID:                   uuid,
@@ -1722,7 +1722,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "model with given id: 1 not found"},
 			},
@@ -1834,7 +1834,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					})}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Updating endpoint status to running is not allowed when the endpoint is in serving state"},
 			},
@@ -1946,7 +1946,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					})}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Updating environment is not allowed, previous: dev, new: staging"},
 			},
@@ -2058,7 +2058,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					})}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Updating endpoint status to pending is not allowed"},
 			},
@@ -2161,7 +2161,7 @@ func TestUpdateEndpoint(t *testing.T) {
 					})}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "Environment not found: dev"},
 			},
@@ -2304,7 +2304,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.VersionEndpoint{
 					ID:                   uuid,
@@ -2377,7 +2377,7 @@ func TestDeleteEndpoint(t *testing.T) {
 		versionService  func() *mocks.VersionsService
 		endpointService func() *mocks.EndpointsService
 		envService      func() *mocks.EnvironmentService
-		expected        *APIResponse
+		expected        *Response
 	}{
 		{
 			desc: "Should success delete endpoint",
@@ -2495,7 +2495,7 @@ func TestDeleteEndpoint(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: nil,
 			},
@@ -2524,7 +2524,7 @@ func TestDeleteEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "model with given id: 1 not found"},
 			},
@@ -2563,7 +2563,7 @@ func TestDeleteEndpoint(t *testing.T) {
 				svc := &mocks.EndpointsService{}
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "model version with given id: 1 not found"},
 			},
@@ -2616,7 +2616,7 @@ func TestDeleteEndpoint(t *testing.T) {
 				svc.On("FindByID", uuid).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: fmt.Sprintf("Version endpoint %s is not available", uuid),
 			},
@@ -2669,7 +2669,7 @@ func TestDeleteEndpoint(t *testing.T) {
 				svc.On("FindByID", uuid).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error while finding endpoint"},
 			},
@@ -2750,7 +2750,7 @@ func TestDeleteEndpoint(t *testing.T) {
 					})}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find environment dev"},
 			},
@@ -2871,7 +2871,7 @@ func TestDeleteEndpoint(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: fmt.Sprintf("Version Endpoints %s is still serving traffic. Please route the traffic to another model version first", uuid)},
 			},
@@ -2962,7 +2962,7 @@ func TestDeleteEndpoint(t *testing.T) {
 				svc.On("UndeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &APIResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: fmt.Sprintf("Unable to undeploy version endpoint %s", uuid)},
 			},

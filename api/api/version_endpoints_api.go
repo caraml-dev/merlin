@@ -30,7 +30,7 @@ type EndpointsController struct {
 	*AppContext
 }
 
-func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -64,7 +64,7 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 	return Ok(endpoints)
 }
 
-func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -102,7 +102,7 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 	return Ok(endpoint)
 }
 
-func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -167,7 +167,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	return Created(endpoint)
 }
 
-func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -227,7 +227,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 }
 
 // DeleteEndpoint undeploys running model version endpoint.
-func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	versionID, _ := models.ParseID(vars["version_id"])
@@ -288,7 +288,7 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 	return Ok(nil)
 }
 
-func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	versionID, _ := models.ParseID(vars["version_id"])

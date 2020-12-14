@@ -35,7 +35,7 @@ type predictionJobNameGenerator struct {
 
 // generateBuilderJobName generate pod name that will be used to build docker image of the prediction job
 func (n *predictionJobNameGenerator) generateBuilderJobName(project mlp.Project, model *models.Model, version *models.Version) string {
-	return fmt.Sprintf("batch-%s-%s-%s", project.Name, model.Name, version.Id)
+	return fmt.Sprintf("batch-%s-%s-%s", project.Name, model.Name, version.ID)
 }
 
 // generateDockerImageName generate the name of docker image of prediction job that will be created from given model

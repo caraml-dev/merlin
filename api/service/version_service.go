@@ -25,18 +25,18 @@ import (
 )
 
 type VersionsService interface {
-	ListVersions(ctx context.Context, modelId models.Id, monitoringConfig config.MonitoringConfig) ([]*models.Version, error)
+	ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig) ([]*models.Version, error)
 	Save(ctx context.Context, version *models.Version, monitoringConfig config.MonitoringConfig) (*models.Version, error)
-	FindById(ctx context.Context, modelId, versionId models.Id, monitoringConfig config.MonitoringConfig) (*models.Version, error)
+	FindByID(ctx context.Context, modelID, versionID models.ID, monitoringConfig config.MonitoringConfig) (*models.Version, error)
 }
 
-func NewVersionsService(db *gorm.DB, mlpApiClient mlp.APIClient) VersionsService {
-	return &versionsService{db: db, mlpApiClient: mlpApiClient}
+func NewVersionsService(db *gorm.DB, mlpAPIClient mlp.APIClient) VersionsService {
+	return &versionsService{db: db, mlpAPIClient: mlpAPIClient}
 }
 
 type versionsService struct {
 	db           *gorm.DB
-	mlpApiClient mlp.APIClient
+	mlpAPIClient mlp.APIClient
 }
 
 func (service *versionsService) query() *gorm.DB {
@@ -54,9 +54,9 @@ func (service *versionsService) query() *gorm.DB {
 		Select("versions.*")
 }
 
-func (service *versionsService) ListVersions(ctx context.Context, modelId models.Id, monitoringConfig config.MonitoringConfig) (versions []*models.Version, err error) {
+func (service *versionsService) ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig) (versions []*models.Version, err error) {
 	err = service.query().
-		Where(models.Version{ModelId: modelId}).
+		Where(models.Version{ModelID: modelID}).
 		Order("created_at DESC").
 		Find(&versions).
 		Error
@@ -65,22 +65,22 @@ func (service *versionsService) ListVersions(ctx context.Context, modelId models
 		return
 	}
 
-	project, err := service.mlpApiClient.GetProjectByID(ctx, int32(versions[0].Model.ProjectId))
+	project, err := service.mlpAPIClient.GetProjectByID(ctx, int32(versions[0].Model.ProjectID))
 	if err != nil {
 		return nil, err
 	}
 
 	for k := range versions {
 		versions[k].Model.Project = project
-		versions[k].MlflowUrl = project.MlflowRunURL(versions[k].Model.ExperimentId.String(), versions[k].RunId)
+		versions[k].MlflowURL = project.MlflowRunURL(versions[k].Model.ExperimentID.String(), versions[k].RunID)
 
 		if monitoringConfig.MonitoringEnabled {
 			for j := range versions[k].Endpoints {
-				versions[k].Endpoints[j].UpdateMonitoringUrl(monitoringConfig.MonitoringBaseURL, models.EndpointMonitoringURLParams{
+				versions[k].Endpoints[j].UpdateMonitoringURL(monitoringConfig.MonitoringBaseURL, models.EndpointMonitoringURLParams{
 					Cluster:      versions[k].Endpoints[j].Environment.Cluster,
 					Project:      project.Name,
 					Model:        versions[k].Model.Name,
-					ModelVersion: versions[k].Model.Name + "-" + versions[k].Id.String(),
+					ModelVersion: versions[k].Model.Name + "-" + versions[k].ID.String(),
 				})
 			}
 		}
@@ -105,34 +105,34 @@ func (service *versionsService) Save(ctx context.Context, version *models.Versio
 	} else if err = tx.Commit().Error; err != nil {
 		return nil, err
 	} else {
-		return service.FindById(ctx, version.ModelId, version.Id, monitoringConfig)
+		return service.FindByID(ctx, version.ModelID, version.ID, monitoringConfig)
 	}
 }
 
-func (service *versionsService) FindById(ctx context.Context, modelId, versionId models.Id, monitoringConfig config.MonitoringConfig) (*models.Version, error) {
+func (service *versionsService) FindByID(ctx context.Context, modelID, versionID models.ID, monitoringConfig config.MonitoringConfig) (*models.Version, error) {
 	var version models.Version
 	if err := service.query().
-		Where("models.id = ? AND versions.id = ?", modelId, versionId).
+		Where("models.id = ? AND versions.id = ?", modelID, versionID).
 		First(&version).
 		Error; err != nil {
 		return nil, err
 	}
 
-	project, err := service.mlpApiClient.GetProjectByID(ctx, int32(version.Model.ProjectId))
+	project, err := service.mlpAPIClient.GetProjectByID(ctx, int32(version.Model.ProjectID))
 	if err != nil {
 		return nil, err
 	}
 
 	version.Model.Project = project
-	version.MlflowUrl = project.MlflowRunURL(version.Model.ExperimentId.String(), version.RunId)
+	version.MlflowURL = project.MlflowRunURL(version.Model.ExperimentID.String(), version.RunID)
 
 	if monitoringConfig.MonitoringEnabled {
 		for k := range version.Endpoints {
-			version.Endpoints[k].UpdateMonitoringUrl(monitoringConfig.MonitoringBaseURL, models.EndpointMonitoringURLParams{
+			version.Endpoints[k].UpdateMonitoringURL(monitoringConfig.MonitoringBaseURL, models.EndpointMonitoringURLParams{
 				Cluster:      version.Endpoints[k].Environment.Cluster,
 				Project:      project.Name,
 				Model:        version.Model.Name,
-				ModelVersion: version.Model.Name + "-" + version.Id.String(),
+				ModelVersion: version.Model.Name + "-" + version.ID.String(),
 			})
 		}
 	}

@@ -30,7 +30,7 @@ type ModelsController struct {
 }
 
 // ListModels list all models of a project.
-func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	projectID, _ := models.ParseID(vars["project_id"])
@@ -44,7 +44,7 @@ func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _
 }
 
 // CreateModel creates a new model in an existing project.
-func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	model := body.(*models.Model)
@@ -55,7 +55,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 		return NotFound(err.Error())
 	}
 
-	mlflowClient := mlflow.NewClient(nil, project.MlflowTrackingURL)
+	mlflowClient := mlflow.NewClient(nil, project.MlflowTrackingUrl)
 	experimentName := fmt.Sprintf("%s/%s", project.Name, model.Name)
 
 	experimentID, err := mlflowClient.CreateExperiment(experimentName)
@@ -80,7 +80,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 }
 
 // GetModel gets model given a project and model ID.
-func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	projectID, _ := models.ParseID(vars["project_id"])

@@ -19,8 +19,8 @@ import (
 	"net/http"
 )
 
-// APIResponse handles responses of APIs.
-type APIResponse struct {
+// Response handles responses of APIs.
+type Response struct {
 	code int
 	data interface{}
 }
@@ -31,7 +31,7 @@ type Error struct {
 }
 
 // WriteTo writes the response header and body.
-func (r *APIResponse) WriteTo(w http.ResponseWriter) {
+func (r *Response) WriteTo(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(r.code)
 
@@ -42,52 +42,52 @@ func (r *APIResponse) WriteTo(w http.ResponseWriter) {
 }
 
 // Ok represents the response of status code 200.
-func Ok(data interface{}) *APIResponse {
-	return &APIResponse{
+func Ok(data interface{}) *Response {
+	return &Response{
 		code: http.StatusOK,
 		data: data,
 	}
 }
 
 // Created represents the response of status code 201.
-func Created(data interface{}) *APIResponse {
-	return &APIResponse{
+func Created(data interface{}) *Response {
+	return &Response{
 		code: http.StatusCreated,
 		data: data,
 	}
 }
 
 // NoContent represents the response of status code 204.
-func NoContent() *APIResponse {
-	return &APIResponse{
+func NoContent() *Response {
+	return &Response{
 		code: http.StatusNoContent,
 	}
 }
 
 // NewError represents the response of a custom status code.
-func NewError(code int, msg string) *APIResponse {
-	return &APIResponse{
+func NewError(code int, msg string) *Response {
+	return &Response{
 		code: code,
 		data: Error{msg},
 	}
 }
 
 // NotFound represents the response of status code 404.
-func NotFound(msg string) *APIResponse {
+func NotFound(msg string) *Response {
 	return NewError(http.StatusNotFound, msg)
 }
 
 // BadRequest represents the response of status code 400.
-func BadRequest(msg string) *APIResponse {
+func BadRequest(msg string) *Response {
 	return NewError(http.StatusBadRequest, msg)
 }
 
 // InternalServerError represents the response of status code 500.
-func InternalServerError(msg string) *APIResponse {
+func InternalServerError(msg string) *Response {
 	return NewError(http.StatusInternalServerError, msg)
 }
 
 // Forbidden represents the response of status code 403.
-func Forbidden(msg string) *APIResponse {
+func Forbidden(msg string) *Response {
 	return NewError(http.StatusForbidden, msg)
 }

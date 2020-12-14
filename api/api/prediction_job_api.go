@@ -31,7 +31,7 @@ type PredictionJobController struct {
 }
 
 // Create method creates a prediction job.
-func (c *PredictionJobController) Create(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *PredictionJobController) Create(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -65,7 +65,7 @@ func (c *PredictionJobController) Create(r *http.Request, vars map[string]string
 }
 
 // List method lists all prediction jobs of a model and version ID.
-func (c *PredictionJobController) List(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *PredictionJobController) List(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -94,7 +94,7 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 }
 
 // Get method gets a prediction job.
-func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -124,7 +124,7 @@ func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _
 }
 
 // Stop method stops a prediction job.
-func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -154,7 +154,7 @@ func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, 
 }
 
 // ListContainers method lists all containers of a prediction job.
-func (c *PredictionJobController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *PredictionJobController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	versionID, _ := models.ParseID(vars["version_id"])
@@ -189,7 +189,7 @@ func (c *PredictionJobController) ListContainers(r *http.Request, vars map[strin
 }
 
 // ListAllInProject lists all prediction jobs of a project.
-func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	var query service.ListPredictionJobQuery

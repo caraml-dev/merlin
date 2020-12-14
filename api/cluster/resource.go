@@ -104,20 +104,20 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		modelService.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.MinReplica,
 			MaxReplica:    config.MaxReplica,
-			CpuRequest:    config.CpuRequest,
+			CPURequest:    config.CPURequest,
 			MemoryRequest: config.MemoryRequest,
 		}
 	}
 
 	// Set cpu limit and memory limit to be 2x of the requests
-	cpuLimit := modelService.ResourceRequest.CpuRequest.DeepCopy()
-	cpuLimit.Add(modelService.ResourceRequest.CpuRequest)
+	cpuLimit := modelService.ResourceRequest.CPURequest.DeepCopy()
+	cpuLimit.Add(modelService.ResourceRequest.CPURequest)
 	memoryLimit := modelService.ResourceRequest.MemoryRequest.DeepCopy()
 	memoryLimit.Add(modelService.ResourceRequest.MemoryRequest)
 
 	Resources := v1.ResourceRequirements{
 		Requests: v1.ResourceList{
-			v1.ResourceCPU:    modelService.ResourceRequest.CpuRequest,
+			v1.ResourceCPU:    modelService.ResourceRequest.CPURequest,
 			v1.ResourceMemory: modelService.ResourceRequest.MemoryRequest,
 		},
 		Limits: v1.ResourceList{
@@ -130,35 +130,35 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	case models.ModelTypeTensorflow:
 		predictorSpec = kfsv1alpha2.PredictorSpec{
 			Tensorflow: &kfsv1alpha2.TensorflowSpec{
-				StorageURI: utils.CreateModelLocation(modelService.ArtifactUri),
+				StorageURI: utils.CreateModelLocation(modelService.ArtifactURI),
 				Resources:  Resources,
 			},
 		}
 	case models.ModelTypeOnnx:
 		predictorSpec = kfsv1alpha2.PredictorSpec{
 			ONNX: &kfsv1alpha2.ONNXSpec{
-				StorageURI: utils.CreateModelLocation(modelService.ArtifactUri),
+				StorageURI: utils.CreateModelLocation(modelService.ArtifactURI),
 				Resources:  Resources,
 			},
 		}
 	case models.ModelTypeSkLearn:
 		predictorSpec = kfsv1alpha2.PredictorSpec{
 			SKLearn: &kfsv1alpha2.SKLearnSpec{
-				StorageURI: utils.CreateModelLocation(modelService.ArtifactUri),
+				StorageURI: utils.CreateModelLocation(modelService.ArtifactURI),
 				Resources:  Resources,
 			},
 		}
 	case models.ModelTypeXgboost:
 		predictorSpec = kfsv1alpha2.PredictorSpec{
 			XGBoost: &kfsv1alpha2.XGBoostSpec{
-				StorageURI: utils.CreateModelLocation(modelService.ArtifactUri),
+				StorageURI: utils.CreateModelLocation(modelService.ArtifactURI),
 				Resources:  Resources,
 			},
 		}
 	case models.ModelTypePyTorch:
 		predictorSpec = kfsv1alpha2.PredictorSpec{
 			PyTorch: &kfsv1alpha2.PyTorchSpec{
-				StorageURI:     utils.CreateModelLocation(modelService.ArtifactUri),
+				StorageURI:     utils.CreateModelLocation(modelService.ArtifactURI),
 				ModelClassName: modelService.Options.PyTorchModelClassName,
 				Resources:      Resources,
 			},
@@ -188,14 +188,14 @@ func createTransformerSpec(modelService *models.Service, transformer *models.Tra
 		transformer.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.MinReplica,
 			MaxReplica:    config.MaxReplica,
-			CpuRequest:    config.CpuRequest,
+			CPURequest:    config.CPURequest,
 			MemoryRequest: config.MemoryRequest,
 		}
 	}
 
 	// Set cpu limit and memory limit to be 2x of the requests
-	cpuLimit := transformer.ResourceRequest.CpuRequest.DeepCopy()
-	cpuLimit.Add(transformer.ResourceRequest.CpuRequest)
+	cpuLimit := transformer.ResourceRequest.CPURequest.DeepCopy()
+	cpuLimit.Add(transformer.ResourceRequest.CPURequest)
 	memoryLimit := transformer.ResourceRequest.MemoryRequest.DeepCopy()
 	memoryLimit.Add(transformer.ResourceRequest.MemoryRequest)
 
@@ -212,7 +212,7 @@ func createTransformerSpec(modelService *models.Service, transformer *models.Tra
 				Env:   envVars.ToKubernetesEnvVars(),
 				Resources: v1.ResourceRequirements{
 					Requests: v1.ResourceList{
-						v1.ResourceCPU:    transformer.ResourceRequest.CpuRequest,
+						v1.ResourceCPU:    transformer.ResourceRequest.CPURequest,
 						v1.ResourceMemory: transformer.ResourceRequest.MemoryRequest,
 					},
 					Limits: v1.ResourceList{

@@ -31,18 +31,18 @@ const (
 	ModelTypePyFuncV2   = "pyfunc_v2"
 )
 
-type Id int
+type ID int
 
-func (id Id) String() string {
+func (id ID) String() string {
 	return strconv.Itoa(int(id))
 }
 
-func ParseId(id string) (Id, error) {
-	if parsed, err := strconv.Atoi(id); err != nil {
+func ParseID(id string) (ID, error) {
+	parsed, err := strconv.Atoi(id)
+	if err != nil {
 		return -1, err
-	} else {
-		return Id(parsed), nil
 	}
+	return ID(parsed), nil
 }
 
 type CreatedUpdated struct {
@@ -51,15 +51,15 @@ type CreatedUpdated struct {
 }
 
 type Model struct {
-	Id           Id          `json:"id"`
+	ID           ID          `json:"id"`
 	Name         string      `json:"name" validate:"required,min=3,max=25,subdomain_rfc1123"`
-	ProjectId    Id          `json:"project_id"`
+	ProjectID    ID          `json:"project_id"`
 	Project      mlp.Project `json:"-" gorm:"-"`
-	ExperimentId Id          `json:"mlflow_experiment_id" gorm:"column:mlflow_experiment_id"`
+	ExperimentID ID          `json:"mlflow_experiment_id" gorm:"column:mlflow_experiment_id"`
 	Type         string      `json:"type" gorm:"type"`
-	MlflowUrl    string      `json:"mlflow_url" gorm:"-"`
+	MlflowURL    string      `json:"mlflow_url" gorm:"-"`
 
-	Endpoints []*ModelEndpoint `json:"endpoints" gorm:"foreignkey:ModelId;"`
+	Endpoints []*ModelEndpoint `json:"endpoints" gorm:"foreignkey:ModelID;"`
 
 	CreatedUpdated
 }

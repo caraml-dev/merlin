@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	projectId, _ = models.ParseId("1")
+	projectID, _ = models.ParseID("1")
 	secret       = mlp.Secret{
 		Id:   1,
 		Name: "my-secret",
@@ -59,10 +59,10 @@ var (
 
 	predictionJob = &models.PredictionJob{
 		Name:           jobName,
-		Id:             jobId,
-		VersionModelId: modelId,
-		VersionId:      versionId,
-		ProjectId:      projectId,
+		ID:             jobID,
+		VersionModelID: modelID,
+		VersionID:      versionID,
+		ProjectID:      projectID,
 		Config: &models.Config{
 			ServiceAccountName: secret.Name,
 			JobConfig: &jobspec.PredictionJob{
@@ -100,10 +100,10 @@ var (
 			},
 			ImageRef: imageRef,
 			ResourceRequest: &models.PredictionJobResourceRequest{
-				DriverCpuRequest:      strconv.Itoa(int(driverCore)),
+				DriverCPURequest:      strconv.Itoa(int(driverCore)),
 				DriverMemoryRequest:   driverMemory,
 				ExecutorReplica:       executorReplica,
-				ExecutorCpuRequest:    strconv.Itoa(int(executorCore)),
+				ExecutorCPURequest:    strconv.Itoa(int(executorCore)),
 				ExecutorMemoryRequest: executorMemory,
 			},
 		},
@@ -111,7 +111,7 @@ var (
 
 	sparkApp, _ = CreateSparkApplicationResource(predictionJob)
 	namespace   = &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: defaultNamespace}}
-	e           = errors.New("error")
+	errRaised           = errors.New("error")
 )
 
 func TestSubmit(t *testing.T) {
@@ -201,10 +201,10 @@ func TestSubmit(t *testing.T) {
 			existingServiceAccount: secret,
 			namespaceCreationResult: namespaceCreationResult{
 				namespace: nil,
-				error:     e,
+				error:     errRaised,
 			},
 			wantError:    true,
-			wantErrorMsg: fmt.Sprintf("failed creating namespace %s: %v", defaultNamespace, e),
+			wantErrorMsg: fmt.Sprintf("failed creating namespace %s: %v", defaultNamespace, errRaised),
 		},
 		{
 			name:                   "Failed spark driver authorization",
@@ -216,10 +216,10 @@ func TestSubmit(t *testing.T) {
 			},
 			driverAuthzCreationResult: driverAuthzCreationResult{
 				serviceAccountName: "",
-				error:              e,
+				error:              errRaised,
 			},
 			wantError:    true,
-			wantErrorMsg: fmt.Sprintf("failed creating spark driver authorization in namespace %s: %v", defaultNamespace, e),
+			wantErrorMsg: fmt.Sprintf("failed creating spark driver authorization in namespace %s: %v", defaultNamespace, errRaised),
 		},
 		{
 			name:      "Service account is not found",
@@ -250,10 +250,10 @@ func TestSubmit(t *testing.T) {
 			},
 			secretCreationResult: secretCreationResult{
 				secretName: "",
-				error:      e,
+				error:      errRaised,
 			},
 			wantError:    true,
-			wantErrorMsg: fmt.Sprintf("failed creating secret for job %s in namespace %s: %v", predictionJob.Name, defaultNamespace, e),
+			wantErrorMsg: fmt.Sprintf("failed creating secret for job %s in namespace %s: %v", predictionJob.Name, defaultNamespace, errRaised),
 		},
 		{
 			name:                   "Failed job spec creation",
@@ -273,10 +273,10 @@ func TestSubmit(t *testing.T) {
 			},
 			jobConfigCreationResult: jobConfigCreationResult{
 				configName: "",
-				error:      e,
+				error:      errRaised,
 			},
 			wantError:    true,
-			wantErrorMsg: fmt.Sprintf("failed creating job specification configmap for job %s in namespace %s: %v", predictionJob.Name, defaultNamespace, e),
+			wantErrorMsg: fmt.Sprintf("failed creating job specification configmap for job %s in namespace %s: %v", predictionJob.Name, defaultNamespace, errRaised),
 		},
 		{
 			name:                   "Failed submitting spark application",
@@ -304,21 +304,21 @@ func TestSubmit(t *testing.T) {
 			},
 			sparkResourceSubmissionResult: sparkResourceSubmissionResult{
 				resource: nil,
-				error:    e,
+				error:    errRaised,
 			},
 			wantError:    true,
-			wantErrorMsg: fmt.Sprintf("failed submitting spark application to spark controller for job %s in namespace %s: %v", predictionJob.Name, defaultNamespace, e),
+			wantErrorMsg: fmt.Sprintf("failed submitting spark application to spark controller for job %s in namespace %s: %v", predictionJob.Name, defaultNamespace, errRaised),
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			mockStorage := &mocks.PredictionJobStorage{}
-			mockMlpApiClient := &mlpMock.APIClient{}
+			mockMlpAPIClient := &mlpMock.APIClient{}
 			mockSparkClient := &sparkOpFake.Clientset{}
 			mockKubeClient := &fake2.Clientset{}
 			mockManifestManager := &batchMock.ManifestManager{}
 			clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-			ctl := NewController(mockStorage, mockMlpApiClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
+			ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
 
 			mockKubeClient.PrependReactor("get", "namespaces", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil, kerrors.NewNotFound(schema.GroupResource{}, action.(ktesting.GetAction).GetName())
@@ -336,9 +336,9 @@ func TestSubmit(t *testing.T) {
 			mockManifestManager.On("CreateSecret", jobName, test.namespace, secret.Data).Return(test.secretCreationResult.secretName, test.secretCreationResult.error)
 			mockManifestManager.On("CreateJobSpec", jobName, test.namespace, predictionJob.Config.JobConfig).Return(test.jobConfigCreationResult.configName, test.jobConfigCreationResult.error)
 			if test.existingServiceAccount.Id != int32(0) {
-				mockMlpApiClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(test.existingServiceAccount, nil)
+				mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(test.existingServiceAccount, nil)
 			} else {
-				mockMlpApiClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(mlp.Secret{}, errors.New("not found"))
+				mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(mlp.Secret{}, errors.New("not found"))
 			}
 			mockStorage.On("Save", predictionJob).Return(test.saveResult.error)
 
@@ -374,8 +374,8 @@ func TestCleanupAfterSubmitFailed(t *testing.T) {
 	mockStorage := &mocks.PredictionJobStorage{}
 	mockStorage.On("Save", predictionJob).Return(nil)
 
-	mockMlpApiClient := &mlpMock.APIClient{}
-	mockMlpApiClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
+	mockMlpAPIClient := &mlpMock.APIClient{}
+	mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
 	mockSparkClient := &sparkOpFake.Clientset{}
 	mockSparkClient.PrependReactor("create", "sparkapplications", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
@@ -384,7 +384,7 @@ func TestCleanupAfterSubmitFailed(t *testing.T) {
 	mockKubeClient := &fake2.Clientset{}
 	mockManifestManager := &batchMock.ManifestManager{}
 	clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-	ctl := NewController(mockStorage, mockMlpApiClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
+	ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
 
 	mockManifestManager.On("DeleteSecret", jobName, defaultNamespace).Return(nil)
 	mockManifestManager.On("DeleteJobSpec", jobName, defaultNamespace).Return(nil)
@@ -399,16 +399,16 @@ func TestOnUpdate(t *testing.T) {
 
 	mockStorage := &mocks.PredictionJobStorage{}
 	mockStorage.On("Save", predictionJob).Return(nil)
-	mockStorage.On("Get", predictionJob.Id).Return(predictionJob, nil)
+	mockStorage.On("Get", predictionJob.ID).Return(predictionJob, nil)
 
-	mockMlpApiClient := &mlpMock.APIClient{}
-	mockMlpApiClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
+	mockMlpAPIClient := &mlpMock.APIClient{}
+	mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
 	mockSparkClient := &sparkOpFake.Clientset{}
 	mockKubeClient := &fake2.Clientset{}
 	mockManifestManager := &batchMock.ManifestManager{}
 	clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-	ctl := NewController(mockStorage, mockMlpApiClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata).(*controller)
+	ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata).(*controller)
 	stopCh := make(chan struct{})
 	defer close(stopCh)
 	go ctl.Run(stopCh)
@@ -474,16 +474,16 @@ func TestUpdateStatus(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			mockStorage := &mocks.PredictionJobStorage{}
 			mockStorage.On("Save", predictionJob).Return(nil)
-			mockStorage.On("Get", predictionJob.Id).Return(predictionJob, nil)
+			mockStorage.On("Get", predictionJob.ID).Return(predictionJob, nil)
 
-			mockMlpApiClient := &mlpMock.APIClient{}
-			mockMlpApiClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+			mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
 			mockSparkClient := &sparkOpFake.Clientset{}
 			mockKubeClient := &fake2.Clientset{}
 			mockManifestManager := &batchMock.ManifestManager{}
 			clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-			ctl := NewController(mockStorage, mockMlpApiClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata).(*controller)
+			ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata).(*controller)
 			stopCh := make(chan struct{})
 			defer close(stopCh)
 			go ctl.Run(stopCh)
@@ -557,21 +557,21 @@ func TestStop(t *testing.T) {
 			namespace: defaultNamespace,
 			sparkResourceListResult: sparkResourceListResult{
 				resource: &v1beta2.SparkApplicationList{},
-				error:    e,
+				error:    errRaised,
 			},
 			wantError:    true,
-			wantErrorMsg: fmt.Sprintf("unable to retrieve spark application of prediction job id %s from spark client", models.Id(1).String()),
+			wantErrorMsg: fmt.Sprintf("unable to retrieve spark application of prediction job id %s from spark client", models.ID(1).String()),
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			mockStorage := &mocks.PredictionJobStorage{}
-			mockMlpApiClient := &mlpMock.APIClient{}
+			mockMlpAPIClient := &mlpMock.APIClient{}
 			mockSparkClient := &sparkOpFake.Clientset{}
 			mockKubeClient := &fake2.Clientset{}
 			mockManifestManager := &batchMock.ManifestManager{}
 			clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
-			ctl := NewController(mockStorage, mockMlpApiClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
+			ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
 
 			mockKubeClient.PrependReactor("get", "namespaces", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil, kerrors.NewNotFound(schema.GroupResource{}, action.(ktesting.GetAction).GetName())
@@ -594,10 +594,9 @@ func TestStop(t *testing.T) {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())
 				return
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, models.State("terminated"), predictionJob.Status)
 			}
+			assert.NoError(t, err)
+			assert.Equal(t, models.State("terminated"), predictionJob.Status)
 		})
 	}
 }

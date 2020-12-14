@@ -14,13 +14,13 @@ type ModelsService struct {
 	mock.Mock
 }
 
-// FindById provides a mock function with given fields: ctx, modelId
-func (_m *ModelsService) FindById(ctx context.Context, modelId models.Id) (*models.Model, error) {
-	ret := _m.Called(ctx, modelId)
+// FindByID provides a mock function with given fields: ctx, modelID
+func (_m *ModelsService) FindByID(ctx context.Context, modelID models.ID) (*models.Model, error) {
+	ret := _m.Called(ctx, modelID)
 
 	var r0 *models.Model
-	if rf, ok := ret.Get(0).(func(context.Context, models.Id) *models.Model); ok {
-		r0 = rf(ctx, modelId)
+	if rf, ok := ret.Get(0).(func(context.Context, models.ID) *models.Model); ok {
+		r0 = rf(ctx, modelID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.Model)
@@ -28,8 +28,8 @@ func (_m *ModelsService) FindById(ctx context.Context, modelId models.Id) (*mode
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.Id) error); ok {
-		r1 = rf(ctx, modelId)
+	if rf, ok := ret.Get(1).(func(context.Context, models.ID) error); ok {
+		r1 = rf(ctx, modelID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -37,13 +37,13 @@ func (_m *ModelsService) FindById(ctx context.Context, modelId models.Id) (*mode
 	return r0, r1
 }
 
-// ListModels provides a mock function with given fields: ctx, projectId, name
-func (_m *ModelsService) ListModels(ctx context.Context, projectId models.Id, name string) ([]*models.Model, error) {
-	ret := _m.Called(ctx, projectId, name)
+// ListModels provides a mock function with given fields: ctx, projectID, name
+func (_m *ModelsService) ListModels(ctx context.Context, projectID models.ID, name string) ([]*models.Model, error) {
+	ret := _m.Called(ctx, projectID, name)
 
 	var r0 []*models.Model
-	if rf, ok := ret.Get(0).(func(context.Context, models.Id, string) []*models.Model); ok {
-		r0 = rf(ctx, projectId, name)
+	if rf, ok := ret.Get(0).(func(context.Context, models.ID, string) []*models.Model); ok {
+		r0 = rf(ctx, projectID, name)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*models.Model)
@@ -51,8 +51,8 @@ func (_m *ModelsService) ListModels(ctx context.Context, projectId models.Id, na
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.Id, string) error); ok {
-		r1 = rf(ctx, projectId, name)
+	if rf, ok := ret.Get(1).(func(context.Context, models.ID, string) error); ok {
+		r1 = rf(ctx, projectID, name)
 	} else {
 		r1 = ret.Error(1)
 	}

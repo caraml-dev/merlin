@@ -20,9 +20,9 @@ import (
 )
 
 type ResourceConfig struct {
-	Id              Id               `gorm:"id"`
-	EndpointId      uuid.UUID        `gorm:"endpoint_id"`
-	Version         Id               `gorm:"version"`
+	ID              ID               `gorm:"id"`
+	EndpointID      uuid.UUID        `gorm:"endpoint_id"`
+	Version         ID               `gorm:"version"`
 	ResourceRequest *ResourceRequest `gorm:"resource_request"`
 	CreatedUpdated
 }
@@ -34,11 +34,11 @@ func (v *ResourceConfig) BeforeCreate(scope *gorm.Scope) {
 		scope.DB().
 			Table("resource_configs").
 			Select("COALESCE(MAX(version), 0)").
-			Where("endpoint_id = ?", v.EndpointId).
+			Where("endpoint_id = ?", v.EndpointID).
 			Row().
 			Scan(&maxVersion)
 
-		v.Version = Id(maxVersion + 1)
+		v.Version = ID(maxVersion + 1)
 	}
 	return
 }

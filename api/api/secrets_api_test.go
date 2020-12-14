@@ -35,7 +35,7 @@ func TestCreateSecret(t *testing.T) {
 		body               interface{}
 		savedSecret        mlp.Secret
 		errSaveSecret      error
-		expectedResponse   *APIResponse
+		expectedResponse   *Response
 	}{
 		{
 			desc: "Should success",
@@ -47,23 +47,23 @@ func TestCreateSecret(t *testing.T) {
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 201,
 				data: mlp.Secret{
-					ID:   int32(1),
+					Id:   int32(1),
 					Name: "name",
 					Data: "encryptedData",
 				},
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
 				},
 			},
 			savedSecret: mlp.Secret{
-				ID:   int32(1),
+				Id:   int32(1),
 				Name: "name",
 				Data: "encryptedData",
 			},
@@ -78,7 +78,7 @@ func TestCreateSecret(t *testing.T) {
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 404,
 				data: Error{"Project with given `project_id: 1` not found"},
 			},
@@ -94,12 +94,12 @@ func TestCreateSecret(t *testing.T) {
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 500,
 				data: Error{"db is down"},
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -138,7 +138,7 @@ func TestUpdateSecret(t *testing.T) {
 		body               interface{}
 		updatedSecret      mlp.Secret
 		errUpdatingSecret  error
-		expectedResponse   *APIResponse
+		expectedResponse   *Response
 	}{
 		{
 			desc: "Should responded 204",
@@ -148,7 +148,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -159,14 +159,14 @@ func TestUpdateSecret(t *testing.T) {
 				Data: `{"id": 3}`,
 			},
 			updatedSecret: mlp.Secret{
-				ID:   int32(1),
+				Id:   int32(1),
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 200,
 				data: mlp.Secret{
-					ID:   int32(1),
+					Id:   int32(1),
 					Name: "name",
 					Data: `{"id": 3}`,
 				},
@@ -180,7 +180,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -190,14 +190,14 @@ func TestUpdateSecret(t *testing.T) {
 				Name: "name",
 			},
 			updatedSecret: mlp.Secret{
-				ID:   int32(1),
+				Id:   int32(1),
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 200,
 				data: mlp.Secret{
-					ID:   int32(1),
+					Id:   int32(1),
 					Name: "name",
 					Data: `{"id": 3}`,
 				},
@@ -210,7 +210,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "def",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -220,11 +220,11 @@ func TestUpdateSecret(t *testing.T) {
 				Name: "name",
 			},
 			updatedSecret: mlp.Secret{
-				ID:   int32(1),
+				Id:   int32(1),
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 400,
 				data: Error{"project_id and secret_id is not valid"},
 			},
@@ -237,7 +237,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -245,11 +245,11 @@ func TestUpdateSecret(t *testing.T) {
 			},
 			body: "body",
 			updatedSecret: mlp.Secret{
-				ID:   int32(1),
+				Id:   int32(1),
 				Name: "name",
 				Data: `{"id": 3}`,
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 400,
 				data: Error{"Invalid request body"},
 			},
@@ -262,7 +262,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -272,7 +272,7 @@ func TestUpdateSecret(t *testing.T) {
 				Name: "name",
 			},
 			errUpdatingSecret: fmt.Errorf("Secret with given `secret_id: 1` and `project_id: 1` not found"),
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 500,
 				data: Error{"Secret with given `secret_id: 1` and `project_id: 1` not found"},
 			},
@@ -285,7 +285,7 @@ func TestUpdateSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -295,7 +295,7 @@ func TestUpdateSecret(t *testing.T) {
 				Name: "name",
 			},
 			errUpdatingSecret: fmt.Errorf("db is down"),
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 500,
 				data: Error{"db is down"},
 			},
@@ -329,7 +329,7 @@ func TestDeleteSecret(t *testing.T) {
 		existingProject    mlp.Project
 		errFetchingProject error
 		errDeletingSecret  error
-		expectedResponse   *APIResponse
+		expectedResponse   *Response
 	}{
 		{
 			desc: "Should responsed 204",
@@ -339,13 +339,13 @@ func TestDeleteSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
 				},
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 204,
 				data: nil,
 			},
@@ -357,13 +357,13 @@ func TestDeleteSecret(t *testing.T) {
 				"secret_id":  "ghi",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
 				},
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 400,
 				data: Error{"project_id and secret_id is not valid"},
 			},
@@ -376,14 +376,14 @@ func TestDeleteSecret(t *testing.T) {
 				"secret_id":  "1",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
 				},
 			},
 			errDeletingSecret: fmt.Errorf("db is down"),
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 500,
 				data: Error{"db is down"},
 			},
@@ -417,7 +417,7 @@ func TestListSecret(t *testing.T) {
 		errFetchingProject error
 		secrets            mlp.Secrets
 		errListSecrets     error
-		expectedResponse   *APIResponse
+		expectedResponse   *Response
 	}{
 		{
 			desc: "Should success",
@@ -426,7 +426,7 @@ func TestListSecret(t *testing.T) {
 				"user":       "reader@domain.com",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -435,16 +435,16 @@ func TestListSecret(t *testing.T) {
 					"reader@domain.com",
 				},
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 200,
 				data: mlp.Secrets{
 					{
-						ID:   int32(1),
+						Id:   int32(1),
 						Name: "name-1",
 						Data: "encryptedData",
 					},
 					{
-						ID:   int32(2),
+						Id:   int32(2),
 						Name: "name-2",
 						Data: "encryptedData",
 					},
@@ -452,12 +452,12 @@ func TestListSecret(t *testing.T) {
 			},
 			secrets: mlp.Secrets{
 				{
-					ID:   int32(1),
+					Id:   int32(1),
 					Name: "name-1",
 					Data: "encryptedData",
 				},
 				{
-					ID:   int32(2),
+					Id:   int32(2),
 					Name: "name-2",
 					Data: "encryptedData",
 				},
@@ -470,7 +470,7 @@ func TestListSecret(t *testing.T) {
 				"user":       "reader@domain.com",
 			},
 			existingProject: mlp.Project{
-				ID:   1,
+				Id:   1,
 				Name: "project",
 				Administrators: []string{
 					"admin@domain.com",
@@ -479,7 +479,7 @@ func TestListSecret(t *testing.T) {
 					"reader@domain.com",
 				},
 			},
-			expectedResponse: &APIResponse{
+			expectedResponse: &Response{
 				code: 500,
 				data: Error{"db is down"},
 			},

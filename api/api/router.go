@@ -55,14 +55,14 @@ type AppContext struct {
 	Enforcer                  enforcer.Enforcer
 }
 
-// APIHandler handles the API requests and responses.
-type APIHandler func(r *http.Request, vars map[string]string, body interface{}) *APIResponse
+// Handler handles the API requests and responses.
+type Handler func(r *http.Request, vars map[string]string, body interface{}) *Response
 
 type Route struct {
 	method  string
 	path    string
 	body    interface{}
-	handler APIHandler
+	handler Handler
 	name    string
 }
 
@@ -81,7 +81,7 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 			}
 		}
 
-		response := func() *APIResponse {
+		response := func() *Response {
 			vars["user"] = r.Header.Get("User-Email")
 			var body interface{} = nil
 			if bodyType != nil {

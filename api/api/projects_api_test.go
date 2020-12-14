@@ -28,7 +28,7 @@ import (
 var (
 	projects = mlp.Projects{
 		{
-			ID:             1,
+			Id:             1,
 			Name:           "project-1",
 			Administrators: []string{"admin@domain.com"},
 			Readers:        []string{"reader@domain.com"},
@@ -36,7 +36,7 @@ var (
 	}
 
 	project1 = mlp.Project{
-		ID:             1,
+		Id:             1,
 		Name:           "project-1",
 		Administrators: []string{"admin@domain.com"},
 		Readers:        []string{"reader@domain.com"},
@@ -54,7 +54,7 @@ func TestProjectsController_ListProjects(t *testing.T) {
 		args        args
 		authEnabled bool
 		mockFunc    func(*mocks.ProjectsService)
-		want        *APIResponse
+		want        *Response
 	}{
 		{
 			name: "success - user is admin",
@@ -69,7 +69,7 @@ func TestProjectsController_ListProjects(t *testing.T) {
 			mockFunc: func(m *mocks.ProjectsService) {
 				m.On("List", mock.Anything, "project-1").Return(projects, nil)
 			},
-			want: &APIResponse{
+			want: &Response{
 				code: http.StatusOK,
 				data: projects,
 			},
@@ -87,7 +87,7 @@ func TestProjectsController_ListProjects(t *testing.T) {
 			mockFunc: func(m *mocks.ProjectsService) {
 				m.On("List", mock.Anything, "project-1").Return(projects, nil)
 			},
-			want: &APIResponse{
+			want: &Response{
 				code: http.StatusOK,
 				data: projects,
 			},
@@ -121,7 +121,7 @@ func TestProjectsController_GetProject(t *testing.T) {
 		args        args
 		authEnabled bool
 		mockFunc    func(*mocks.ProjectsService)
-		want        *APIResponse
+		want        *Response
 	}{
 		{
 			name: "success - user is admin",
@@ -136,7 +136,7 @@ func TestProjectsController_GetProject(t *testing.T) {
 			mockFunc: func(m *mocks.ProjectsService) {
 				m.On("GetByID", mock.Anything, int32(1)).Return(project1, nil)
 			},
-			want: &APIResponse{
+			want: &Response{
 				code: http.StatusOK,
 				data: project1,
 			},
@@ -154,7 +154,7 @@ func TestProjectsController_GetProject(t *testing.T) {
 			mockFunc: func(m *mocks.ProjectsService) {
 				m.On("GetByID", mock.Anything, int32(1)).Return(project1, nil)
 			},
-			want: &APIResponse{
+			want: &Response{
 				code: http.StatusOK,
 				data: project1,
 			},

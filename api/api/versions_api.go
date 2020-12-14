@@ -29,7 +29,7 @@ type VersionsController struct {
 	*AppContext
 }
 
-func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -47,7 +47,7 @@ func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string,
 	return Ok(v)
 }
 
-func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -76,7 +76,7 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 	return Ok(patchedVersion)
 }
 
-func (c *VersionsController) ListVersions(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *VersionsController) ListVersions(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -88,7 +88,7 @@ func (c *VersionsController) ListVersions(r *http.Request, vars map[string]strin
 	return Ok(versions)
 }
 
-func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -98,7 +98,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
 
-	mlflowClient := mlflow.NewClient(nil, model.Project.MlflowTrackingURL)
+	mlflowClient := mlflow.NewClient(nil, model.Project.MlflowTrackingUrl)
 	run, err := mlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentID))
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to create mlflow run: %s", err.Error()))

@@ -82,10 +82,10 @@ func Test_secretService_List(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockMlpApiClient := &mlpMock.APIClient{}
-			tt.mockFunc(mockMlpApiClient)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+			tt.mockFunc(mockMlpAPIClient)
 
-			ss := NewSecretService(mockMlpApiClient)
+			ss := NewSecretService(mockMlpAPIClient)
 
 			got, err := ss.List(tt.args.ctx, tt.args.projectID)
 			if (err != nil) != tt.wantErr {
@@ -157,10 +157,10 @@ func Test_secretService_GetByIDandProjectID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockMlpApiClient := &mlpMock.APIClient{}
-			tt.mockFunc(mockMlpApiClient)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+			tt.mockFunc(mockMlpAPIClient)
 
-			ss := NewSecretService(mockMlpApiClient)
+			ss := NewSecretService(mockMlpAPIClient)
 
 			got, err := ss.GetByIDandProjectID(tt.args.ctx, tt.args.secretID, tt.args.projectID)
 			if (err != nil) != tt.wantErr {
@@ -208,10 +208,10 @@ func Test_secretService_Create_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockMlpApiClient := &mlpMock.APIClient{}
-			tt.mockFunc(mockMlpApiClient)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+			tt.mockFunc(mockMlpAPIClient)
 
-			ss := NewSecretService(mockMlpApiClient)
+			ss := NewSecretService(mockMlpAPIClient)
 
 			got, err := ss.Create(tt.args.ctx, tt.args.projectID, tt.args.secret)
 			if (err != nil) != tt.wantErr {
@@ -262,10 +262,10 @@ func Test_secretService_Delete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockMlpApiClient := &mlpMock.APIClient{}
-			tt.mockFunc(mockMlpApiClient)
+			mockMlpAPIClient := &mlpMock.APIClient{}
+			tt.mockFunc(mockMlpAPIClient)
 
-			ss := NewSecretService(mockMlpApiClient)
+			ss := NewSecretService(mockMlpAPIClient)
 
 			if err := ss.Delete(tt.args.ctx, tt.args.secretID, tt.args.projectID); (err != nil) != tt.wantErr {
 				t.Errorf("secretService.Delete() error = %v, wantErr %v", err, tt.wantErr)

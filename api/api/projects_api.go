@@ -31,7 +31,7 @@ type ProjectsController struct {
 }
 
 // ListProjects lists all projects.
-func (c *ProjectsController) ListProjects(r *http.Request, vars map[string]string, _ interface{}) *APIResponse {
+func (c *ProjectsController) ListProjects(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	projects, err := c.ProjectsService.List(ctx, vars["name"])
@@ -49,7 +49,7 @@ func (c *ProjectsController) ListProjects(r *http.Request, vars map[string]strin
 }
 
 // GetProject gets a project of a project ID.
-func (c *ProjectsController) GetProject(r *http.Request, vars map[string]string, body interface{}) *APIResponse {
+func (c *ProjectsController) GetProject(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 	projectID, _ := models.ParseID(vars["project_id"])
 	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
@@ -66,7 +66,7 @@ func (c *ProjectsController) filterAuthorizedProjects(user string, projects mlp.
 		allowedProjects := mlp.Projects{}
 		projectMap := make(map[string]mlp.Project)
 		for _, project := range projects {
-			projectID := fmt.Sprintf("projects:%d", project.ID)
+			projectID := fmt.Sprintf("projects:%d", project.Id)
 			projectIDs = append(projectIDs, projectID)
 			projectMap[projectID] = mlp.Project(project)
 		}

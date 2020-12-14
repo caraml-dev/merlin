@@ -45,12 +45,12 @@ func TestModelEndpointsService_FindById(t *testing.T) {
 		environment := "dev"
 		endpointSvc := newModelEndpointsService(controllers, db, environment)
 
-		actualEndpoint, err := endpointSvc.FindById(context.Background(), endpoints[0].Id)
+		actualEndpoint, err := endpointSvc.FindByID(context.Background(), endpoints[0].ID)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, actualEndpoint)
 		assert.NotNil(t, actualEndpoint.Environment)
-		assert.Equal(t, actualEndpoint.Id, endpoints[0].Id)
+		assert.Equal(t, actualEndpoint.ID, endpoints[0].ID)
 		assert.NotNil(t, actualEndpoint.Model)
 	})
 }
@@ -103,23 +103,23 @@ func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 	db = db.LogMode(true)
 	isDefaultTrue := true
 	p := mlp.Project{
-		Id:                1,
+		ID:                1,
 		Name:              "project",
-		MlflowTrackingUrl: "http://mlflow:5000",
+		MlflowTrackingURL: "http://mlflow:5000",
 	}
 
 	m := models.Model{
-		ProjectId:    models.Id(p.Id),
-		ExperimentId: 1,
+		ProjectID:    models.ID(p.ID),
+		ExperimentID: 1,
 		Name:         "model",
 		Type:         "sklearn",
 	}
 	db.Create(&m)
 
 	v := models.Version{
-		ModelId:     m.Id,
-		RunId:       "1",
-		ArtifactUri: "gcs:/mlp/1/1",
+		ModelID:     m.ID,
+		RunID:       "1",
+		ArtifactURI: "gcs:/mlp/1/1",
 	}
 	db.Create(&v)
 
@@ -141,31 +141,31 @@ func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 	db.Create(&env2)
 
 	ep1 := models.VersionEndpoint{
-		Id:              uuid.New(),
-		VersionId:       v.Id,
-		VersionModelId:  m.Id,
+		ID:              uuid.New(),
+		VersionID:       v.ID,
+		VersionModelID:  m.ID,
 		Status:          "serving",
 		EnvironmentName: env1.Name,
 	}
 	db.Create(&ep1)
 	ep2 := models.VersionEndpoint{
-		Id:              uuid.New(),
-		VersionId:       v.Id,
-		VersionModelId:  m.Id,
+		ID:              uuid.New(),
+		VersionID:       v.ID,
+		VersionModelID:  m.ID,
 		Status:          "serving",
 		EnvironmentName: env2.Name,
 	}
 	db.Create(&ep2)
 
 	mep1 := models.ModelEndpoint{
-		Id:      1,
-		ModelId: m.Id,
+		ID:      1,
+		ModelID: m.ID,
 		Status:  "serving",
 		URL:     "localhost",
 		Rule: &models.ModelEndpointRule{
 			Destination: []*models.ModelEndpointRuleDestination{
 				{
-					VersionEndpointID: ep1.Id,
+					VersionEndpointID: ep1.ID,
 					VersionEndpoint:   &ep1,
 					Weight:            100,
 				},
@@ -176,14 +176,14 @@ func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 	db.Create(&mep1)
 
 	mep2 := models.ModelEndpoint{
-		Id:      2,
-		ModelId: m.Id,
+		ID:      2,
+		ModelID: m.ID,
 		Status:  "serving",
 		URL:     "localhost",
 		Rule: &models.ModelEndpointRule{
 			Destination: []*models.ModelEndpointRuleDestination{
 				{
-					VersionEndpointID: ep2.Id,
+					VersionEndpointID: ep2.ID,
 					VersionEndpoint:   &ep2,
 					Weight:            100,
 				},

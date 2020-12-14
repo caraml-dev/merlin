@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	WardenApiPath = "/api/v1"
+	WardenAPIPath = "/api/v1"
 )
 
 type Client interface {
@@ -65,7 +65,7 @@ type Team struct {
 }
 
 func (c *client) GetAllTeams() ([]string, error) {
-	endpoint := path.Join(WardenApiPath, "teams")
+	endpoint := path.Join(WardenAPIPath, "teams")
 	url := fmt.Sprintf("%s/%s", strings.TrimRight(c.apiHost, "/"), strings.TrimLeft(endpoint, "/"))
 
 	resp, err := http.Get(url)
