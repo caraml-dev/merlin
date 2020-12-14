@@ -14,7 +14,7 @@ import (
 )
 
 type Environment struct {
-	Id                     int32            `json:"id,omitempty"`
+	ID                     int32            `json:"id,omitempty"`
 	Name                   string           `json:"name"`
 	Cluster                string           `json:"cluster,omitempty"`
 	IsDefault              bool             `json:"is_default,omitempty"`

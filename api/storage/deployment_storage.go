@@ -25,7 +25,7 @@ type DeploymentStorage interface {
 	// Save save the deployment to underlying storage
 	Save(deployment *models.Deployment) (*models.Deployment, error)
 	// GetFirstSuccessModelVersionPerModel Return mapping of model id and the first model version with a successful model version
-	GetFirstSuccessModelVersionPerModel() (map[models.Id]models.Id, error)
+	GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error)
 }
 
 type deploymentStorage struct {
@@ -38,7 +38,7 @@ func NewDeploymentStorage(db *gorm.DB) DeploymentStorage {
 
 func (d *deploymentStorage) ListInModel(model *models.Model) ([]*models.Deployment, error) {
 	var deployments []*models.Deployment
-	err := d.db.Where("version_model_id = ?", model.Id).Find(&deployments).Error
+	err := d.db.Where("version_model_id = ?", model.ID).Find(&deployments).Error
 	return deployments, err
 }
 
@@ -47,7 +47,7 @@ func (d *deploymentStorage) Save(deployment *models.Deployment) (*models.Deploym
 	return deployment, err
 }
 
-func (d *deploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.Id]models.Id, error) {
+func (d *deploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error) {
 	rows, err := d.db.Table("deployments").
 		Select("version_model_id , min(version_id)").
 		Where("status = 'running' or status = 'serving'").
@@ -59,14 +59,14 @@ func (d *deploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.Id
 	}
 	defer rows.Close()
 
-	resultMap := make(map[models.Id]models.Id)
+	resultMap := make(map[models.ID]models.ID)
 	for rows.Next() {
-		var modelId models.Id
-		var versionId models.Id
-		if err := rows.Scan(&modelId, &versionId); err != nil {
+		var modelID models.ID
+		var versionID models.ID
+		if err := rows.Scan(&modelID, &versionID); err != nil {
 			return nil, err
 		}
-		resultMap[modelId] = versionId
+		resultMap[modelID] = versionID
 	}
 	return resultMap, nil
 }

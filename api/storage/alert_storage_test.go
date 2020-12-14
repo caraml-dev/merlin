@@ -45,42 +45,42 @@ func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {
 	}
 
 	model1 := &models.Model{
-		Id:           1,
-		ProjectId:    models.Id(project1.Id),
-		ExperimentId: 1,
+		ID:           1,
+		ProjectID:    models.ID(project1.Id),
+		ExperimentID: 1,
 		Name:         "model-1",
 		Type:         models.ModelTypeSkLearn,
 	}
 	db.Create(model1)
 
 	model2 := &models.Model{
-		Id:           2,
-		ProjectId:    models.Id(project1.Id),
-		ExperimentId: 2,
+		ID:           2,
+		ProjectID:    models.ID(project1.Id),
+		ExperimentID: 2,
 		Name:         "model-2",
 		Type:         models.ModelTypeSkLearn,
 	}
 	db.Create(model2)
 
 	model1Endpoint1 := &models.ModelEndpoint{
-		Id:              1,
-		ModelId:         model1.Id,
+		ID:              1,
+		ModelID:         model1.ID,
 		Status:          models.EndpointServing,
 		EnvironmentName: env1.Name,
 	}
 	db.Create(model1Endpoint1)
 
 	model1Endpoint2 := &models.ModelEndpoint{
-		Id:              2,
-		ModelId:         model1.Id,
+		ID:              2,
+		ModelID:         model1.ID,
 		Status:          models.EndpointServing,
 		EnvironmentName: env1.Name,
 	}
 	db.Create(model1Endpoint2)
 
 	model2Endpoint3 := &models.ModelEndpoint{
-		Id:              3,
-		ModelId:         model1.Id,
+		ID:              3,
+		ModelID:         model1.ID,
 		Status:          models.EndpointServing,
 		EnvironmentName: env1.Name,
 	}
@@ -89,8 +89,8 @@ func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {
 	alerts := []*models.ModelEndpointAlert{}
 
 	alertModel1Endpoint1 := &models.ModelEndpointAlert{
-		ModelId:         model1.Id,
-		ModelEndpointId: model1Endpoint1.Id,
+		ModelID:         model1.ID,
+		ModelEndpointID: model1Endpoint1.ID,
 		EnvironmentName: env1.Name,
 		TeamName:        "datascience",
 		AlertConditions: models.AlertConditions{
@@ -169,8 +169,8 @@ func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {
 	alerts = append(alerts, alertModel1Endpoint1)
 
 	alertModel1Endpoint2 := &models.ModelEndpointAlert{
-		ModelId:         model1.Id,
-		ModelEndpointId: model1Endpoint2.Id,
+		ModelID:         model1.ID,
+		ModelEndpointID: model1Endpoint2.ID,
 		EnvironmentName: env1.Name,
 		TeamName:        "datascience",
 		AlertConditions: models.AlertConditions{
@@ -249,8 +249,8 @@ func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {
 	alerts = append(alerts, alertModel1Endpoint2)
 
 	alertModel2Endpoint3 := &models.ModelEndpointAlert{
-		ModelId:         model2.Id,
-		ModelEndpointId: model2Endpoint3.Id,
+		ModelID:         model2.ID,
+		ModelEndpointID: model2Endpoint3.ID,
 		EnvironmentName: env1.Name,
 		TeamName:        "datascience",
 		AlertConditions: models.AlertConditions{
@@ -341,12 +341,12 @@ func Test_alertStorage_ListModelEndpointAlerts(t *testing.T) {
 
 		alertStorage := NewAlertStorage(db)
 
-		actualAlerts, err := alertStorage.ListModelEndpointAlerts(models.Id(1))
+		actualAlerts, err := alertStorage.ListModelEndpointAlerts(models.ID(1))
 		assert.Nil(t, err)
 		assert.NotNil(t, actualAlerts)
 
 		for _, actualAlert := range actualAlerts {
-			assert.Equal(t, "1", actualAlert.ModelId.String())
+			assert.Equal(t, "1", actualAlert.ModelID.String())
 		}
 	})
 }
@@ -357,17 +357,17 @@ func Test_alertStorage_GetModelEndpointAlert(t *testing.T) {
 
 		alertStorage := NewAlertStorage(db)
 
-		actualAlert, err := alertStorage.GetModelEndpointAlert(models.Id(1), models.Id(1))
+		actualAlert, err := alertStorage.GetModelEndpointAlert(models.ID(1), models.ID(1))
 		assert.Nil(t, err)
 		assert.NotNil(t, actualAlert)
-		assert.Equal(t, "1", actualAlert.ModelId.String())
-		assert.Equal(t, "1", actualAlert.ModelEndpointId.String())
+		assert.Equal(t, "1", actualAlert.ModelID.String())
+		assert.Equal(t, "1", actualAlert.ModelEndpointID.String())
 
-		actualAlert, err = alertStorage.GetModelEndpointAlert(models.Id(2), models.Id(3))
+		actualAlert, err = alertStorage.GetModelEndpointAlert(models.ID(2), models.ID(3))
 		assert.Nil(t, err)
 		assert.NotNil(t, actualAlert)
-		assert.Equal(t, "2", actualAlert.ModelId.String())
-		assert.Equal(t, "3", actualAlert.ModelEndpointId.String())
+		assert.Equal(t, "2", actualAlert.ModelID.String())
+		assert.Equal(t, "3", actualAlert.ModelEndpointID.String())
 	})
 }
 
@@ -378,8 +378,8 @@ func Test_alertStorage_CreateUpdateModelEndpointAlert(t *testing.T) {
 		alertStorage := NewAlertStorage(db)
 
 		alertModel1Endpoint3 := &models.ModelEndpointAlert{
-			ModelId:         1,
-			ModelEndpointId: 3,
+			ModelID:         1,
+			ModelEndpointID: 3,
 			EnvironmentName: "env-1",
 			TeamName:        "datascience",
 			AlertConditions: models.AlertConditions{
@@ -459,17 +459,17 @@ func Test_alertStorage_CreateUpdateModelEndpointAlert(t *testing.T) {
 		err := alertStorage.CreateModelEndpointAlert(alertModel1Endpoint3)
 		assert.Nil(t, err)
 
-		actualAlert, err := alertStorage.GetModelEndpointAlert(models.Id(1), models.Id(3))
+		actualAlert, err := alertStorage.GetModelEndpointAlert(models.ID(1), models.ID(3))
 		assert.Nil(t, err)
 		assert.NotNil(t, actualAlert)
-		assert.Equal(t, "1", actualAlert.ModelId.String())
-		assert.Equal(t, "3", actualAlert.ModelEndpointId.String())
+		assert.Equal(t, "1", actualAlert.ModelID.String())
+		assert.Equal(t, "3", actualAlert.ModelEndpointID.String())
 
 		actualAlert.AlertConditions = models.AlertConditions{}
 
 		err = alertStorage.UpdateModelEndpointAlert(actualAlert)
 
-		updatedAlert, err := alertStorage.GetModelEndpointAlert(models.Id(1), models.Id(3))
+		updatedAlert, err := alertStorage.GetModelEndpointAlert(models.ID(1), models.ID(3))
 		assert.Nil(t, err)
 		assert.NotNil(t, actualAlert)
 		assert.Empty(t, updatedAlert.AlertConditions)
@@ -482,15 +482,15 @@ func Test_alertStorage_DeleteModelEndpointAlert(t *testing.T) {
 
 		alertStorage := NewAlertStorage(db)
 
-		err := alertStorage.DeleteModelEndpointAlert(models.Id(1), models.Id(1))
+		err := alertStorage.DeleteModelEndpointAlert(models.ID(1), models.ID(1))
 		assert.Nil(t, err)
 
-		actualAlerts, err := alertStorage.ListModelEndpointAlerts(models.Id(1))
+		actualAlerts, err := alertStorage.ListModelEndpointAlerts(models.ID(1))
 		assert.Nil(t, err)
 		assert.NotNil(t, actualAlerts)
 
 		for _, actualAlert := range actualAlerts {
-			if actualAlert.ModelId.String() == "1" && actualAlert.ModelEndpointId.String() == "1" {
+			if actualAlert.ModelID.String() == "1" && actualAlert.ModelEndpointID.String() == "1" {
 				t.Errorf("Failed to delete model endpoint alert")
 			}
 		}

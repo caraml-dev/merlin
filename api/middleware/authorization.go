@@ -85,8 +85,8 @@ func (a *Authorizer) getResource(r *http.Request) (string, error) {
 	// workaround since models/** APIS is not under projects/**
 	if strings.HasPrefix(resource, "models") {
 		vars := mux.Vars(r)
-		modelID, _ := models.ParseId(vars["model_id"])
-		model, err := a.modelService.FindById(ctx, modelID)
+		modelID, _ := models.ParseID(vars["model_id"])
+		model, err := a.modelService.FindByID(ctx, modelID)
 		if err != nil {
 			return "", err
 		}
@@ -95,12 +95,12 @@ func (a *Authorizer) getResource(r *http.Request) (string, error) {
 
 	// workaround since logs API is not under projects/**
 	if strings.HasPrefix(resource, "logs") {
-		modelID, err := models.ParseId(r.URL.Query().Get("model_id"))
+		modelID, err := models.ParseID(r.URL.Query().Get("model_id"))
 		if err != nil {
 			return "", err
 		}
 
-		model, err := a.modelService.FindById(ctx, modelID)
+		model, err := a.modelService.FindByID(ctx, modelID)
 		if err != nil {
 			return "", err
 		}
@@ -120,10 +120,10 @@ func jsonError(w http.ResponseWriter, msg string, status int) {
 	w.WriteHeader(status)
 
 	if len(msg) > 0 {
-		errJson, _ := json.Marshal(struct {
+		errJSON, _ := json.Marshal(struct {
 			Error string `json:"error"`
 		}{msg})
 
-		w.Write(errJson)
+		w.Write(errJSON)
 	}
 }

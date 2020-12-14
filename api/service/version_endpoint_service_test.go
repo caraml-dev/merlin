@@ -54,17 +54,17 @@ func TestDeployEndpoint(t *testing.T) {
 		DefaultResourceRequest: &models.ResourceRequest{
 			MinReplica:    0,
 			MaxReplica:    1,
-			CpuRequest:    resource.MustParse("1"),
+			CPURequest:    resource.MustParse("1"),
 			MemoryRequest: resource.MustParse("1Gi"),
 		},
 	}
 	project := mlp.Project{Name: "project"}
 	model := &models.Model{Name: "model", Project: project}
-	version := &models.Version{Id: 1}
+	version := &models.Version{ID: 1}
 
-	iSvcName := fmt.Sprintf("%s-%d", model.Name, version.Id)
-	svcName := fmt.Sprintf("%s-%d.project.svc.cluster.local", model.Name, version.Id)
-	url := fmt.Sprintf("%s-%d.example.com", model.Name, version.Id)
+	iSvcName := fmt.Sprintf("%s-%d", model.Name, version.ID)
+	svcName := fmt.Sprintf("%s-%d.project.svc.cluster.local", model.Name, version.ID)
+	url := fmt.Sprintf("%s-%d.example.com", model.Name, version.ID)
 
 	tests := []struct {
 		name                string
@@ -93,7 +93,7 @@ func TestDeployEndpoint(t *testing.T) {
 					ResourceRequest: &models.ResourceRequest{
 						MinReplica:    2,
 						MaxReplica:    4,
-						CpuRequest:    resource.MustParse("1"),
+						CPURequest:    resource.MustParse("1"),
 						MemoryRequest: resource.MustParse("1Gi"),
 					},
 				},
@@ -106,7 +106,7 @@ func TestDeployEndpoint(t *testing.T) {
 			args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
-				&models.Version{Id: 1, Properties: models.KV{
+				&models.Version{ID: 1, Properties: models.KV{
 					models.PropertyPyTorchClassName: "MyModel",
 				}},
 				&models.VersionEndpoint{},
@@ -119,7 +119,7 @@ func TestDeployEndpoint(t *testing.T) {
 			args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
-				&models.Version{Id: 1},
+				&models.Version{ID: 1},
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
 				},
@@ -132,7 +132,7 @@ func TestDeployEndpoint(t *testing.T) {
 			args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyFunc},
-				&models.Version{Id: 1},
+				&models.Version{ID: 1},
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
 				},
@@ -145,7 +145,7 @@ func TestDeployEndpoint(t *testing.T) {
 			args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyFunc},
-				&models.Version{Id: 1},
+				&models.Version{ID: 1},
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
 				},
@@ -169,7 +169,7 @@ func TestDeployEndpoint(t *testing.T) {
 			args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
-				&models.Version{Id: 1, Properties: models.KV{
+				&models.Version{ID: 1, Properties: models.KV{
 					models.PropertyPyTorchClassName: "MyModel",
 				}},
 				&models.VersionEndpoint{
@@ -197,7 +197,7 @@ func TestDeployEndpoint(t *testing.T) {
 						Name:        iSvcName,
 						Namespace:   project.Name,
 						ServiceName: svcName,
-						Url:         url,
+						URL:         url,
 					}, nil)
 			}
 
@@ -224,27 +224,27 @@ func TestDeployEndpoint(t *testing.T) {
 
 			controllers := map[string]cluster.Controller{env.Name: envController}
 			endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, mockCfg.Environment, mockCfg.FeatureToggleConfig.MonitoringConfig)
-			e, err := endpointSvc.DeployEndpoint(tt.args.environment, tt.args.model, tt.args.version, tt.args.endpoint)
+			errRaised, err := endpointSvc.DeployEndpoint(tt.args.environment, tt.args.model, tt.args.version, tt.args.endpoint)
 
 			// delay to make second save happen before checking
 			time.Sleep(20 * time.Millisecond)
 
 			assert.NoError(t, err)
-			assert.Equal(t, "", e.Url)
-			assert.Equal(t, models.EndpointPending, e.Status)
-			assert.Equal(t, project.Name, e.Namespace)
-			assert.Equal(t, iSvcName, e.InferenceServiceName)
+			assert.Equal(t, "", errRaised.URL)
+			assert.Equal(t, models.EndpointPending, errRaised.Status)
+			assert.Equal(t, project.Name, errRaised.Namespace)
+			assert.Equal(t, iSvcName, errRaised.InferenceServiceName)
 
 			if tt.args.endpoint.ResourceRequest != nil {
-				assert.Equal(t, e.ResourceRequest, tt.args.endpoint.ResourceRequest)
+				assert.Equal(t, errRaised.ResourceRequest, tt.args.endpoint.ResourceRequest)
 			} else {
-				assert.Equal(t, e.ResourceRequest, tt.args.environment.DefaultResourceRequest)
+				assert.Equal(t, errRaised.ResourceRequest, tt.args.environment.DefaultResourceRequest)
 			}
 
 			mockStorage.AssertNumberOfCalls(t, "Save", 2)
 			savedEndpoint := mockStorage.Calls[1].Arguments[0].(*models.VersionEndpoint)
-			assert.Equal(t, tt.args.model.Id, savedEndpoint.VersionModelId)
-			assert.Equal(t, tt.args.version.Id, savedEndpoint.VersionId)
+			assert.Equal(t, tt.args.model.ID, savedEndpoint.VersionModelID)
+			assert.Equal(t, tt.args.version.ID, savedEndpoint.VersionID)
 			assert.Equal(t, tt.args.model.Project.Name, savedEndpoint.Namespace)
 			assert.Equal(t, tt.args.environment.Name, savedEndpoint.EnvironmentName)
 
@@ -257,12 +257,12 @@ func TestDeployEndpoint(t *testing.T) {
 				assert.Equal(t, models.EndpointFailed, savedEndpoint.Status)
 			} else {
 				assert.Equal(t, models.EndpointRunning, savedEndpoint.Status)
-				assert.Equal(t, url, savedEndpoint.Url)
+				assert.Equal(t, url, savedEndpoint.URL)
 				assert.Equal(t, iSvcName, savedEndpoint.InferenceServiceName)
 			}
 
 			if tt.args.endpoint.Transformer != nil {
-				assert.Equal(t, tt.args.endpoint.Transformer.Enabled, e.Transformer.Enabled)
+				assert.Equal(t, tt.args.endpoint.Transformer.Enabled, errRaised.Transformer.Enabled)
 			}
 		})
 	}
@@ -270,8 +270,8 @@ func TestDeployEndpoint(t *testing.T) {
 
 func TestListContainers(t *testing.T) {
 	project := mlp.Project{Id: 1, Name: "my-project"}
-	model := &models.Model{Id: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectId: models.Id(project.Id)}
-	version := &models.Version{Id: 1}
+	model := &models.Model{ID: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectID: models.ID(project.Id)}
+	version := &models.Version{ID: 1}
 	id := uuid.New()
 	env := &models.Environment{Name: "my-env", Cluster: "my-cluster", IsDefault: &isDefaultTrue}
 	cfg := &config.Config{
@@ -308,9 +308,9 @@ func TestListContainers(t *testing.T) {
 			},
 			componentMock{
 				&models.VersionEndpoint{
-					Id:              id,
-					VersionId:       version.Id,
-					VersionModelId:  model.Id,
+					ID:              id,
+					VersionID:       version.ID,
+					VersionModelID:  model.ID,
 					EnvironmentName: env.Name,
 				},
 				nil,
@@ -333,9 +333,9 @@ func TestListContainers(t *testing.T) {
 			},
 			componentMock{
 				&models.VersionEndpoint{
-					Id:              id,
-					VersionId:       version.Id,
-					VersionModelId:  model.Id,
+					ID:              id,
+					VersionID:       version.ID,
+					VersionModelID:  model.ID,
 					EnvironmentName: env.Name,
 				},
 				&models.Container{

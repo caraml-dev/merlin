@@ -22,13 +22,13 @@ import (
 
 func TestOnlineInferencePodLabelSelector(t *testing.T) {
 	modelName := "my-model"
-	versionId := "1"
-	result := OnlineInferencePodLabelSelector(modelName, versionId)
+	versionID := "1"
+	result := OnlineInferencePodLabelSelector(modelName, versionID)
 	assert.Equal(t, "serving.kubeflow.org/inferenceservice=my-model-1", result)
 }
 
 func TestBatchInferencePodLabelSelector(t *testing.T) {
-	predictionJobId := "33"
-	result := BatchInferencePodLabelSelector(predictionJobId)
+	predictionJobID := "33"
+	result := BatchInferencePodLabelSelector(predictionJobID)
 	assert.Equal(t, "prediction-job-id=33", result)
 }

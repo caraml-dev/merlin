@@ -24,8 +24,8 @@ import (
 
 // ModelEndpoint stores model's endpoint data.
 type ModelEndpoint struct {
-	Id              Id                 `json:"id" gorm:"primary_key;"`
-	ModelId         Id                 `json:"model_id"`
+	ID              ID                 `json:"id" gorm:"primary_key;"`
+	ModelID         ID                 `json:"model_id"`
 	Model           *Model             `json:"model"`
 	Status          EndpointStatus     `json:"status"`
 	URL             string             `json:"url" gorm:"url"`

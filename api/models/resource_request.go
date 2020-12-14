@@ -29,7 +29,7 @@ type ResourceRequest struct {
 	MaxReplica int `json:"max_replica"`
 
 	// CPU request of inference service
-	CpuRequest resource.Quantity `json:"cpu_request"`
+	CPURequest resource.Quantity `json:"cpu_request"`
 	// Memory request of inference service
 	MemoryRequest resource.Quantity `json:"memory_request"`
 }

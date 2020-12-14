@@ -36,6 +36,7 @@ import (
 	"github.com/gojek/merlin/service"
 )
 
+// AppContext contains the services of the Merlin application.
 type AppContext struct {
 	EnvironmentService        service.EnvironmentService
 	ProjectsService           service.ProjectsService
@@ -54,13 +55,14 @@ type AppContext struct {
 	Enforcer                  enforcer.Enforcer
 }
 
-type ApiHandler func(r *http.Request, vars map[string]string, body interface{}) *ApiResponse
+// Handler handles the API requests and responses.
+type Handler func(r *http.Request, vars map[string]string, body interface{}) *Response
 
 type Route struct {
 	method  string
 	path    string
 	body    interface{}
-	handler ApiHandler
+	handler Handler
 	name    string
 }
 
@@ -79,7 +81,7 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 			}
 		}
 
-		response := func() *ApiResponse {
+		response := func() *Response {
 			vars["user"] = r.Header.Get("User-Email")
 			var body interface{} = nil
 			if bodyType != nil {

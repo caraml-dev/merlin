@@ -112,38 +112,38 @@ func main() {
 	}
 
 	// Create an HTTP client for mlp-api client with Google default credential
-	mlpHttpClient := http.DefaultClient
+	mlpHTTPClient := http.DefaultClient
 	googleClient, err := google.DefaultClient(ctx, "https://www.googleapis.com/auth/userinfo.email")
 	if err == nil {
-		mlpHttpClient = googleClient
+		mlpHTTPClient = googleClient
 	} else {
 		log.Infof("Google default credential not found. Fallback to default HTTP client.")
 	}
 
-	mlpApiClient := mlp.NewAPIClient(mlpHttpClient, cfg.MlpApiConfig.ApiHost, cfg.MlpApiConfig.EncryptionKey)
+	mlpAPIClient := mlp.NewAPIClient(mlpHTTPClient, cfg.MlpAPIConfig.APIHost, cfg.MlpAPIConfig.EncryptionKey)
 
 	vaultClient := initVault(cfg)
 	webServiceBuilder, predJobBuilder := initImageBuilder(cfg, vaultClient)
 
 	modelEndpointService := initModelEndpointService(cfg, vaultClient, db)
 	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, vaultClient, db)
-	predictionJobService := initPredictionJobService(cfg, mlpApiClient, predJobBuilder, vaultClient, db)
+	predictionJobService := initPredictionJobService(cfg, mlpAPIClient, predJobBuilder, vaultClient, db)
 	logService := initLogService(cfg, vaultClient)
 
 	// use "mlp" as product name for enforcer so that same policy can be reused by excalibur
 	authEnforcer, err := enforcer.NewEnforcerBuilder().
-		URL(cfg.AuthorizationConfig.AuthorizationServerUrl).
+		URL(cfg.AuthorizationConfig.AuthorizationServerURL).
 		Product("mlp").
 		Build()
 	if err != nil {
 		log.Panicf("unable to initialize authorization enforcer %v", err)
 	}
 
-	projectsService := service.NewProjectsService(mlpApiClient)
-	modelsService := service.NewModelsService(db, mlpApiClient)
-	versionsService := service.NewVersionsService(db, mlpApiClient)
+	projectsService := service.NewProjectsService(mlpAPIClient)
+	modelsService := service.NewModelsService(db, mlpAPIClient)
+	versionsService := service.NewVersionsService(db, mlpAPIClient)
 	environmentService := initEnvironmentService(cfg, db)
-	secretService := service.NewSecretService(mlpApiClient)
+	secretService := service.NewSecretService(mlpAPIClient)
 
 	gitlabConfig := cfg.FeatureToggleConfig.AlertConfig.GitlabConfig
 	gitlabClient, err := gitlab.NewClient(gitlabConfig.BaseURL, gitlabConfig.Token)
@@ -152,7 +152,7 @@ func main() {
 	}
 
 	wardenConfig := cfg.FeatureToggleConfig.AlertConfig.WardenConfig
-	wardenClient := warden.NewClient(nil, wardenConfig.ApiHost)
+	wardenClient := warden.NewClient(nil, wardenConfig.APIHost)
 
 	modelEndpointAlertService := service.NewModelEndpointAlertService(
 		storage.NewAlertStorage(db), gitlabClient, wardenClient,
@@ -290,7 +290,7 @@ func (h uiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 }
 
-func initPredictionJobService(cfg *config.Config, mlpApiClient mlp.APIClient, builder imagebuilder.ImageBuilder, vaultClient vault.VaultClient, db *gorm.DB) service.PredictionJobService {
+func initPredictionJobService(cfg *config.Config, mlpAPIClient mlp.APIClient, builder imagebuilder.ImageBuilder, vaultClient vault.Client, db *gorm.DB) service.PredictionJobService {
 	controllers := make(map[string]batch.Controller)
 	predictionJobStorage := storage.NewPredictionJobStorage(db)
 	for _, env := range cfg.EnvironmentConfigs {
@@ -326,7 +326,7 @@ func initPredictionJobService(cfg *config.Config, mlpApiClient mlp.APIClient, bu
 			GcpProject:  env.GcpProject,
 		}
 
-		ctl := batch.NewController(predictionJobStorage, mlpApiClient, sparkClient, kubeClient, manifestManager, envMetadata)
+		ctl := batch.NewController(predictionJobStorage, mlpAPIClient, sparkClient, kubeClient, manifestManager, envMetadata)
 		stopCh := make(chan struct{})
 		go ctl.Run(stopCh)
 
@@ -380,11 +380,11 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 				IsDefault:  isDefault,
 				Region:     envCfg.Region,
 				GcpProject: envCfg.GcpProject,
-				MaxCpu:     envCfg.MaxCpu,
+				MaxCPU:     envCfg.MaxCPU,
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    cfg.MinReplica,
 					MaxReplica:    cfg.MaxReplica,
-					CpuRequest:    cfg.CpuRequest,
+					CPURequest:    cfg.CPURequest,
 					MemoryRequest: cfg.MemoryRequest,
 				},
 				IsDefaultPredictionJob: isDefaultPredictionJob,
@@ -393,10 +393,10 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 
 			if envCfg.IsPredictionJobEnabled {
 				env.DefaultPredictionJobResourceRequest = &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      envCfg.PredictionJobConfig.DriverCpuRequest,
+					DriverCPURequest:      envCfg.PredictionJobConfig.DriverCPURequest,
 					DriverMemoryRequest:   envCfg.PredictionJobConfig.DriverMemoryRequest,
 					ExecutorReplica:       envCfg.PredictionJobConfig.ExecutorReplica,
-					ExecutorCpuRequest:    envCfg.PredictionJobConfig.ExecutorCpuRequest,
+					ExecutorCPURequest:    envCfg.PredictionJobConfig.ExecutorCPURequest,
 					ExecutorMemoryRequest: envCfg.PredictionJobConfig.ExecutorMemoryRequest,
 				}
 			}
@@ -409,12 +409,12 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 			env.IsDefault = isDefault
 			env.Region = envCfg.Region
 			env.GcpProject = envCfg.GcpProject
-			env.MaxCpu = envCfg.MaxCpu
+			env.MaxCPU = envCfg.MaxCPU
 			env.MaxMemory = envCfg.MaxMemory
 			env.DefaultResourceRequest = &models.ResourceRequest{
 				MinReplica:    cfg.MinReplica,
 				MaxReplica:    cfg.MaxReplica,
-				CpuRequest:    cfg.CpuRequest,
+				CPURequest:    cfg.CPURequest,
 				MemoryRequest: cfg.MemoryRequest,
 			}
 			env.IsDefaultPredictionJob = isDefaultPredictionJob
@@ -422,10 +422,10 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 
 			if envCfg.IsPredictionJobEnabled {
 				env.DefaultPredictionJobResourceRequest = &models.PredictionJobResourceRequest{
-					DriverCpuRequest:      envCfg.PredictionJobConfig.DriverCpuRequest,
+					DriverCPURequest:      envCfg.PredictionJobConfig.DriverCPURequest,
 					DriverMemoryRequest:   envCfg.PredictionJobConfig.DriverMemoryRequest,
 					ExecutorReplica:       envCfg.PredictionJobConfig.ExecutorReplica,
-					ExecutorCpuRequest:    envCfg.PredictionJobConfig.ExecutorCpuRequest,
+					ExecutorCPURequest:    envCfg.PredictionJobConfig.ExecutorCPURequest,
 					ExecutorMemoryRequest: envCfg.PredictionJobConfig.ExecutorMemoryRequest,
 				}
 			}
@@ -481,7 +481,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 	return svc
 }
 
-func initModelEndpointService(cfg *config.Config, vaultClient vault.VaultClient, db *gorm.DB) service.ModelEndpointsService {
+func initModelEndpointService(cfg *config.Config, vaultClient vault.Client, db *gorm.DB) service.ModelEndpointsService {
 	istioClients := make(map[string]istio.Client)
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
@@ -506,7 +506,7 @@ func initModelEndpointService(cfg *config.Config, vaultClient vault.VaultClient,
 	return service.NewModelEndpointsService(istioClients, db, cfg.Environment)
 }
 
-func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBuilder, vaultClient vault.VaultClient, db *gorm.DB) service.EndpointsService {
+func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBuilder, vaultClient vault.Client, db *gorm.DB) service.EndpointsService {
 	controllers := make(map[string]cluster.Controller)
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
@@ -515,7 +515,7 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 			log.Panicf("unable to get cluster secret of cluster: %s %v", clusterName, err)
 		}
 
-		ctl, err := cluster.NewController(cluster.ClusterConfig{
+		ctl, err := cluster.NewController(cluster.Config{
 			Host:       clusterSecret.Endpoint,
 			CACert:     clusterSecret.CaCert,
 			ClientCert: clusterSecret.ClientCert,
@@ -536,7 +536,7 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 		cfg.FeatureToggleConfig.MonitoringConfig)
 }
 
-func initVault(cfg *config.Config) vault.VaultClient {
+func initVault(cfg *config.Config) vault.Client {
 	vaultConfig := &vault.Config{
 		Address: cfg.VaultConfig.Address,
 		Token:   cfg.VaultConfig.Token,
@@ -548,7 +548,7 @@ func initVault(cfg *config.Config) vault.VaultClient {
 	return vaultClient
 }
 
-func initImageBuilder(cfg *config.Config, vaultClient vault.VaultClient) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder) {
+func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder) {
 	imgBuilderClusterSecret, err := vaultClient.GetClusterSecret(cfg.ImageBuilderConfig.ClusterName)
 	if err != nil {
 		log.Panicf("unable to retrieve secret for cluster %s from vault", cfg.ImageBuilderConfig.ClusterName)
@@ -575,7 +575,7 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.VaultClient) (webser
 	}
 
 	webServiceConfig := imagebuilder.Config{
-		BuildContextUrl:      cfg.ImageBuilderConfig.BuildContextUri,
+		BuildContextURL:      cfg.ImageBuilderConfig.BuildContextURI,
 		DockerfilePath:       cfg.ImageBuilderConfig.DockerfilePath,
 		BaseImage:            cfg.ImageBuilderConfig.BaseImage,
 		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
@@ -590,7 +590,7 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.VaultClient) (webser
 	}
 	webserviceBuilder = imagebuilder.NewModelServiceImageBuilder(kubeClient, webServiceConfig)
 	predJobConfig := imagebuilder.Config{
-		BuildContextUrl:      cfg.ImageBuilderConfig.PredictionJobBuildContextUri,
+		BuildContextURL:      cfg.ImageBuilderConfig.PredictionJobBuildContextURI,
 		DockerfilePath:       cfg.ImageBuilderConfig.PredictionJobDockerfilePath,
 		BaseImage:            cfg.ImageBuilderConfig.PredictionJobBaseImage,
 		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
@@ -607,7 +607,7 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.VaultClient) (webser
 	return
 }
 
-func initLogService(cfg *config.Config, vaultClient vault.VaultClient) service.LogService {
+func initLogService(cfg *config.Config, vaultClient vault.Client) service.LogService {
 	// image builder cluster
 	imgBuilderClusterSecret, err := vaultClient.GetClusterSecret(cfg.ImageBuilderConfig.ClusterName)
 	if err != nil {

@@ -20,11 +20,11 @@ type createExperimentRequest struct {
 }
 
 type createExperimentResponse struct {
-	ExperimentId string `json:"experiment_id" required:"true"`
+	ExperimentID string `json:"experiment_id" required:"true"`
 }
 
 type createRunRequest struct {
-	ExperimentId string `json:"experiment_id"`
+	ExperimentID string `json:"experiment_id"`
 	StartTime    int64  `json:"start_time"`
 }
 
@@ -34,11 +34,11 @@ type createRunResponse struct {
 
 type Run struct {
 	Info struct {
-		RunId          string `json:"run_id"`
-		ExperimentId   string `json:"experiment_id"`
+		RunID          string `json:"run_id"`
+		ExperimentID   string `json:"experiment_id"`
 		StartTime      string `json:"start_time"`
 		EndTime        string `json:"end_time"`
-		ArtifactUri    string `json:"artifact_uri"`
+		ArtifactURI    string `json:"artifact_uri"`
 		LifecycleStage string `json:"lifecycle_stage"`
 		Status         string `json:"status"`
 	} `json:"info"`
@@ -49,6 +49,6 @@ type errorResponse struct {
 	Message   string `json:"message"`
 }
 
-func (e *errorResponse) Error() string {
-	return e.ErrorCode
+func (errRaised *errorResponse) Error() string {
+	return errRaised.ErrorCode
 }

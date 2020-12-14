@@ -98,7 +98,7 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, version *models.Version) (string, error) {
 	// check for existing image
 	imageName := c.nameGenerator.generateDockerImageName(project, model)
-	imageExists, err := c.imageRefExists(imageName, version.Id.String())
+	imageExists, err := c.imageRefExists(imageName, version.ID.String())
 	if err != nil {
 		log.Errorf("Unable to check existing image ref: %v", err)
 		return "", ErrUnableToGetImageRef
@@ -178,7 +178,7 @@ func (c *imageBuilder) GetContainers(project mlp.Project, model *models.Model, v
 	return containers, nil
 }
 
-// imageRef represents a versioned (i.e., tagged) image. The tag is
+// imageRef represents a versioned (i.errRaised., tagged) image. The tag is
 // allowed to be empty, though it is in general undefined what that
 // means. As such, `Ref` also includes all `Name` values.
 //
@@ -189,7 +189,7 @@ func (c *imageBuilder) GetContainers(project mlp.Project, model *models.Model, v
 //  * gojek/merlin-api:1.0.0
 //  * localhost:5000/arbitrary/path/to/repo:revision-sha1
 func (c *imageBuilder) imageRef(project mlp.Project, model *models.Model, version *models.Version) string {
-	return fmt.Sprintf("%s:%s", c.nameGenerator.generateDockerImageName(project, model), version.Id)
+	return fmt.Sprintf("%s:%s", c.nameGenerator.generateDockerImageName(project, model), version.ID)
 }
 
 // ImageExists returns true if the versioned image (tag) already exist in the image repository.
@@ -277,8 +277,8 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 
 	kanikoArgs := []string{
 		fmt.Sprintf("--dockerfile=%s", c.config.DockerfilePath),
-		fmt.Sprintf("--context=%s", c.config.BuildContextUrl),
-		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactUri),
+		fmt.Sprintf("--context=%s", c.config.BuildContextURL),
+		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactURI),
 		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", c.config.BaseImage),
 		fmt.Sprintf("--destination=%s", imageRef),
 		"--cache=true",

@@ -54,7 +54,7 @@ func TestEnvVars_CheckForProtectedEnvVars(t *testing.T) {
 func TestEnvVars_ToKubernetesEnvVars(t *testing.T) {
 	tests := []struct {
 		name string
-		e    EnvVars
+		errRaised    EnvVars
 		want []v1.EnvVar
 	}{
 		{
@@ -85,7 +85,7 @@ func TestEnvVars_ToKubernetesEnvVars(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.e.ToKubernetesEnvVars(); !reflect.DeepEqual(got, tt.want) {
+			if got := tt.errRaised.ToKubernetesEnvVars(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("EnvVars.ToKubernetesEnvVars() = %v, want %v", got, tt.want)
 			}
 		})

@@ -33,7 +33,7 @@ import (
 
 type PredictionJobService interface {
 	// GetPredictionJob return prediction job with given ID
-	GetPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.Id) (*models.PredictionJob, error)
+	GetPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
 	// ListPredictionJobs return all prediction job created in a project
 	ListPredictionJobs(project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, error)
 	// CreatePredictionJob creates and start a new prediction job from the given model version
@@ -41,15 +41,15 @@ type PredictionJobService interface {
 	// ListContainers return all containers which used for the given model version
 	ListContainers(env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) ([]*models.Container, error)
 	// StopPredictionJob deletes the spark application resource and cleans up the resource
-	StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.Id) (*models.PredictionJob, error)
+	StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
 }
 
 // ListPredictionJobQuery represent query string for list prediction job api
 type ListPredictionJobQuery struct {
-	Id        models.Id    `schema:"id"`
+	ID        models.ID    `schema:"id"`
 	Name      string       `schema:"name"`
-	ModelId   models.Id    `schema:"model_id"`
-	VersionId models.Id    `schema:"version_id"`
+	ModelID   models.ID    `schema:"model_id"`
+	VersionID models.ID    `schema:"version_id"`
 	Status    models.State `schema:"status"`
 	Error     string       `schema:"error"`
 }
@@ -67,18 +67,18 @@ func NewPredictionJobService(batchControllers map[string]batch.Controller, image
 }
 
 // GetPredictionJob return prediction job with given ID
-func (p *predictionJobService) GetPredictionJob(_ *models.Environment, _ *models.Model, _ *models.Version, id models.Id) (*models.PredictionJob, error) {
+func (p *predictionJobService) GetPredictionJob(_ *models.Environment, _ *models.Model, _ *models.Version, id models.ID) (*models.PredictionJob, error) {
 	return p.store.Get(id)
 }
 
 // ListPredictionJobs return all prediction job created from the given project filtered by the given query
 func (p *predictionJobService) ListPredictionJobs(project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, error) {
 	predJobQuery := &models.PredictionJob{
-		Id:             query.Id,
+		ID:             query.ID,
 		Name:           query.Name,
-		VersionId:      query.VersionId,
-		VersionModelId: query.ModelId,
-		ProjectId:      models.Id(project.Id),
+		VersionID:      query.VersionID,
+		VersionModelID: query.ModelID,
+		ProjectID:      models.ID(project.Id),
 		Status:         query.Status,
 		Error:          query.Error,
 	}
@@ -90,7 +90,7 @@ func (p *predictionJobService) ListPredictionJobs(project mlp.Project, query *Li
 // The method directly return a prediction job in pending state and execution happens asynchronously
 // Use GetPredictionJOb / ListPredictionJobs to get the status of the prediction job
 func (p *predictionJobService) CreatePredictionJob(env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) (*models.PredictionJob, error) {
-	jobName := fmt.Sprintf("%s-%s-%s", model.Name, version.Id, strconv.FormatInt(p.clock.Now().UnixNano(), 10)[:13])
+	jobName := fmt.Sprintf("%s-%s-%s", model.Name, version.ID, strconv.FormatInt(p.clock.Now().UnixNano(), 10)[:13])
 
 	predictionJob.Name = jobName
 	predictionJob.Metadata = models.Metadata{
@@ -101,9 +101,9 @@ func (p *predictionJobService) CreatePredictionJob(env *models.Environment, mode
 		Labels:      model.Project.Labels,
 	}
 	predictionJob.Status = models.JobPending
-	predictionJob.VersionModelId = model.Id
-	predictionJob.ProjectId = model.ProjectId
-	predictionJob.VersionId = version.Id
+	predictionJob.VersionModelID = model.ID
+	predictionJob.ProjectID = model.ProjectID
+	predictionJob.VersionID = version.ID
 	predictionJob = p.applyDefaults(env, predictionJob)
 	predictionJob.EnvironmentName = env.Name
 	predictionJob.Environment = env
@@ -151,7 +151,7 @@ func (p *predictionJobService) ListContainers(env *models.Environment, model *mo
 		containers = append(containers, imgBuilderContainers...)
 	}
 
-	modelContainers, err := ctl.GetContainers(model.Project.Name, models.BatchInferencePodLabelSelector(predictionJob.Id.String()))
+	modelContainers, err := ctl.GetContainers(model.Project.Name, models.BatchInferencePodLabelSelector(predictionJob.ID.String()))
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (p *predictionJobService) doCreatePredictionJob(env *models.Environment, mo
 	return ctl.Submit(job, project.Name)
 }
 
-func (p *predictionJobService) StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.Id) (*models.PredictionJob, error) {
+func (p *predictionJobService) StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error) {
 	project := model.Project
 	job, err := p.GetPredictionJob(env, model, version, id)
 	if err != nil {
@@ -205,16 +205,16 @@ func (p *predictionJobService) applyDefaults(env *models.Environment, job *model
 		job.Config.ResourceRequest = env.DefaultPredictionJobResourceRequest
 	}
 
-	if job.Config.ResourceRequest.DriverCpuRequest == "" {
-		job.Config.ResourceRequest.DriverCpuRequest = env.DefaultPredictionJobResourceRequest.DriverCpuRequest
+	if job.Config.ResourceRequest.DriverCPURequest == "" {
+		job.Config.ResourceRequest.DriverCPURequest = env.DefaultPredictionJobResourceRequest.DriverCPURequest
 	}
 
 	if job.Config.ResourceRequest.DriverMemoryRequest == "" {
 		job.Config.ResourceRequest.DriverMemoryRequest = env.DefaultPredictionJobResourceRequest.DriverMemoryRequest
 	}
 
-	if job.Config.ResourceRequest.ExecutorCpuRequest == "" {
-		job.Config.ResourceRequest.ExecutorCpuRequest = env.DefaultPredictionJobResourceRequest.ExecutorCpuRequest
+	if job.Config.ResourceRequest.ExecutorCPURequest == "" {
+		job.Config.ResourceRequest.ExecutorCPURequest = env.DefaultPredictionJobResourceRequest.ExecutorCPURequest
 	}
 
 	if job.Config.ResourceRequest.ExecutorMemoryRequest == "" {
@@ -235,17 +235,17 @@ func (p *predictionJobService) validate(model *models.Model, _ *models.Version, 
 	if job.Config.ResourceRequest.ExecutorReplica < 0 {
 		return fmt.Errorf("invalid executor replica: %d", job.Config.ResourceRequest.ExecutorReplica)
 	}
-	_, err := resource.ParseQuantity(job.Config.ResourceRequest.DriverCpuRequest)
+	_, err := resource.ParseQuantity(job.Config.ResourceRequest.DriverCPURequest)
 	if err != nil {
-		return fmt.Errorf("invalid driver cpu request: %s", job.Config.ResourceRequest.DriverCpuRequest)
+		return fmt.Errorf("invalid driver cpu request: %s", job.Config.ResourceRequest.DriverCPURequest)
 	}
 	_, err = resource.ParseQuantity(job.Config.ResourceRequest.DriverMemoryRequest)
 	if err != nil {
 		return fmt.Errorf("invalid driver memory request: %s", job.Config.ResourceRequest.DriverMemoryRequest)
 	}
-	_, err = resource.ParseQuantity(job.Config.ResourceRequest.ExecutorCpuRequest)
+	_, err = resource.ParseQuantity(job.Config.ResourceRequest.ExecutorCPURequest)
 	if err != nil {
-		return fmt.Errorf("invalid executor cpu request: %s", job.Config.ResourceRequest.ExecutorCpuRequest)
+		return fmt.Errorf("invalid executor cpu request: %s", job.Config.ResourceRequest.ExecutorCPURequest)
 	}
 	_, err = resource.ParseQuantity(job.Config.ResourceRequest.ExecutorMemoryRequest)
 	if err != nil {

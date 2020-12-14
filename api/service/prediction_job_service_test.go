@@ -43,15 +43,15 @@ var (
 	environmentLabel       = "dev"
 	isDefaultPredictionJob = true
 	predJobEnv             = &models.Environment{
-		Id:                     1,
+		ID:                     1,
 		Name:                   envName,
 		IsPredictionJobEnabled: true,
 		IsDefaultPredictionJob: &isDefaultPredictionJob,
 		DefaultPredictionJobResourceRequest: &models.PredictionJobResourceRequest{
-			DriverCpuRequest:      "1",
+			DriverCPURequest:      "1",
 			DriverMemoryRequest:   "512Mi",
 			ExecutorReplica:       1,
-			ExecutorCpuRequest:    "2",
+			ExecutorCPURequest:    "2",
 			ExecutorMemoryRequest: "1024Mi",
 		},
 	}
@@ -67,21 +67,21 @@ var (
 		},
 	}
 	model = &models.Model{
-		Id:           1,
-		ProjectId:    1,
+		ID:           1,
+		ProjectID:    1,
 		Project:      project,
-		ExperimentId: 0,
+		ExperimentID: 0,
 		Name:         "my-model",
 		Type:         models.ModelTypePyFuncV2,
 	}
 	version = &models.Version{
-		Id:      3,
-		ModelId: 1,
+		ID:      3,
+		ModelID: 1,
 		Model:   model,
 	}
 	job = &models.PredictionJob{
-		Id:   0,
-		Name: fmt.Sprintf("%s-%s-%s", model.Name, version.Id, strconv.FormatInt(now.UnixNano(), 10)[:13]),
+		ID:   0,
+		Name: fmt.Sprintf("%s-%s-%s", model.Name, version.ID, strconv.FormatInt(now.UnixNano(), 10)[:13]),
 		Metadata: models.Metadata{
 			Team:        project.Team,
 			Stream:      project.Stream,
@@ -89,9 +89,9 @@ var (
 			Environment: environmentLabel,
 			Labels:      project.Labels,
 		},
-		VersionId:       3,
-		VersionModelId:  1,
-		ProjectId:       models.Id(project.Id),
+		VersionID:       3,
+		VersionModelID:  1,
+		ProjectID:       models.ID(project.Id),
 		EnvironmentName: predJobEnv.Name,
 		Environment:     predJobEnv,
 		Config: &models.Config{
@@ -107,8 +107,8 @@ var (
 		Status: models.JobPending,
 	}
 	reqJob = &models.PredictionJob{
-		VersionId:      3,
-		VersionModelId: 1,
+		VersionID:      3,
+		VersionModelID: 1,
 		Config: &models.Config{
 			EnvVars: models.EnvVars{
 				{
@@ -122,8 +122,8 @@ var (
 
 func TestGetPredictionJob(t *testing.T) {
 	svc, _, _, mockStorage := newMockPredictionJobService()
-	mockStorage.On("Get", job.Id).Return(job, nil)
-	j, err := svc.GetPredictionJob(predJobEnv, model, version, job.Id)
+	mockStorage.On("Get", job.ID).Return(job, nil)
+	j, err := svc.GetPredictionJob(predJobEnv, model, version, job.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, job, j)
 	mockStorage.AssertExpectations(t)
@@ -133,20 +133,20 @@ func TestListPredictionJob(t *testing.T) {
 	jobs := []*models.PredictionJob{job}
 	svc, _, _, mockStorage := newMockPredictionJobService()
 	query := &ListPredictionJobQuery{
-		Id:        1,
+		ID:        1,
 		Name:      "test",
-		ModelId:   2,
-		VersionId: 3,
+		ModelID:   2,
+		VersionID: 3,
 		Status:    models.JobFailed,
 		Error:     "runtime error",
 	}
 
 	expDbQuery := &models.PredictionJob{
-		Id:             query.Id,
+		ID:             query.ID,
 		Name:           query.Name,
-		VersionId:      query.VersionId,
-		VersionModelId: query.ModelId,
-		ProjectId:      models.Id(project.Id),
+		VersionID:      query.VersionID,
+		VersionModelID: query.ModelID,
+		ProjectID:      models.ID(project.Id),
 		Status:         query.Status,
 		Error:          query.Error,
 	}
@@ -188,11 +188,11 @@ func TestStopPredictionJob(t *testing.T) {
 	err := copier.Copy(savedJob, job)
 	savedJob.Config.ImageRef = imageRef
 
-	mockStorage.On("Get", job.Id).Return(job, nil)
+	mockStorage.On("Get", job.ID).Return(job, nil)
 	mockController := mockControllers[envName]
 	mockController.(*mocks.Controller).On("Stop", job, project.Name).Return(nil)
 
-	j, err := svc.StopPredictionJob(predJobEnv, model, version, job.Id)
+	j, err := svc.StopPredictionJob(predJobEnv, model, version, job.ID)
 	time.Sleep(10 * time.Millisecond)
 	assert.NoError(t, err)
 	assert.Equal(t, job, j)
@@ -211,7 +211,7 @@ func TestInvalidResourceRequest(t *testing.T) {
 		{
 			name: "invalid driver cpu request",
 			resourceRequest: &models.PredictionJobResourceRequest{
-				DriverCpuRequest: "1x",
+				DriverCPURequest: "1x",
 			},
 			wantErrMsg: fmt.Sprintf("invalid driver cpu request: 1x"),
 		},
@@ -225,7 +225,7 @@ func TestInvalidResourceRequest(t *testing.T) {
 		{
 			name: "invalid executor cpu request",
 			resourceRequest: &models.PredictionJobResourceRequest{
-				ExecutorCpuRequest: "1x",
+				ExecutorCPURequest: "1x",
 			},
 			wantErrMsg: fmt.Sprintf("invalid executor cpu request: 1x"),
 		},
@@ -259,9 +259,9 @@ func TestInvalidResourceRequest(t *testing.T) {
 
 func TestPredictionJobService_ListContainers(t *testing.T) {
 	project := mlp.Project{Id: 1, Name: "my-project"}
-	model := &models.Model{Id: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectId: models.Id(project.Id)}
-	version := &models.Version{Id: 1}
-	job := &models.PredictionJob{Id: 2, VersionId: 1, VersionModelId: 1}
+	model := &models.Model{ID: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectID: models.ID(project.Id)}
+	version := &models.Version{ID: 1}
+	job := &models.PredictionJob{ID: 2, VersionID: 1, VersionModelID: 1}
 
 	type args struct {
 		env     *models.Environment
@@ -346,7 +346,7 @@ func TestPredictionJobService_ListContainers(t *testing.T) {
 		assert.NotNil(t, containers)
 		expContainer := len(tt.mock.modelContainers)
 		if tt.args.model.Type == models.ModelTypePyFunc {
-			expContainer += 1
+			expContainer++
 		}
 		assert.Equal(t, expContainer, len(containers))
 	}

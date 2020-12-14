@@ -43,7 +43,7 @@ func init() {
 
 type EndpointsService interface {
 	ListEndpoints(model *models.Model, version *models.Version) ([]*models.VersionEndpoint, error)
-	FindById(uuid2 uuid.UUID) (*models.VersionEndpoint, error)
+	FindByID(uuid2 uuid.UUID) (*models.VersionEndpoint, error)
 	DeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
 	UndeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
 	CountEndpoints(environment *models.Environment, model *models.Model) (int, error)
@@ -86,7 +86,7 @@ func (k *endpointService) ListEndpoints(model *models.Model, version *models.Ver
 	return endpoints, nil
 }
 
-func (k *endpointService) FindById(uuid uuid.UUID) (*models.VersionEndpoint, error) {
+func (k *endpointService) FindByID(uuid uuid.UUID) (*models.VersionEndpoint, error) {
 	return k.storage.Get(uuid)
 }
 
@@ -111,7 +111,7 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 
 	if newEndpoint.Transformer != nil {
 		endpoint.Transformer = newEndpoint.Transformer
-		endpoint.Transformer.VersionEndpointID = endpoint.Id
+		endpoint.Transformer.VersionEndpointID = endpoint.ID
 	}
 
 	// Configure environment variables for Pyfunc model
@@ -142,7 +142,7 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 	}
 
 	go func() {
-		log.Infof("creating deployment for model %s version %s with endpoint id: %s", model.Name, version.Id, endpoint.Id)
+		log.Infof("creating deployment for model %s version %s with endpoint id: %s", model.Name, version.ID, endpoint.ID)
 
 		// copy endpoint to avoid race condition
 		ep := *endpoint
@@ -152,10 +152,10 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 
 			// record the deployment result
 			if _, err := k.deploymentStorage.Save(&models.Deployment{
-				ProjectId:         model.ProjectId,
-				VersionModelId:    model.Id,
-				VersionId:         version.Id,
-				VersionEndpointId: ep.Id,
+				ProjectID:         model.ProjectID,
+				VersionModelID:    model.ID,
+				VersionID:         version.ID,
+				VersionEndpointID: ep.ID,
 				Status:            ep.Status,
 				Error:             ep.Message,
 			}); err != nil {
@@ -163,7 +163,7 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 			}
 
 			if err := k.storage.Save(&ep); err != nil {
-				log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.Id, err)
+				log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
 			}
 		}()
 
@@ -182,12 +182,12 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 		modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment, endpoint.Transformer)
 		svc, err := ctl.Deploy(modelService)
 		if err != nil {
-			log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.Id, err)
+			log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
 			ep.Message = err.Error()
 			return
 		}
 
-		ep.Url = svc.Url
+		ep.URL = svc.URL
 		if previousStatus == models.EndpointServing {
 			ep.Status = models.EndpointServing
 		} else {
@@ -206,7 +206,7 @@ func (k *endpointService) UndeployEndpoint(environment *models.Environment, mode
 	}
 
 	modelService := &models.Service{
-		Name:      models.CreateInferenceServiceName(model.Name, version.Id.String()),
+		Name:      models.CreateInferenceServiceName(model.Name, version.ID.String()),
 		Namespace: model.Project.Name,
 	}
 
@@ -251,14 +251,14 @@ func (k *endpointService) ListContainers(model *models.Model, version *models.Ve
 		containers = append(containers, imgBuilderContainers...)
 	}
 
-	modelContainers, err := ctl.GetContainers(model.Project.Name, models.OnlineInferencePodLabelSelector(model.Name, version.Id.String()))
+	modelContainers, err := ctl.GetContainers(model.Project.Name, models.OnlineInferencePodLabelSelector(model.Name, version.ID.String()))
 	if err != nil {
 		return nil, err
 	}
 	containers = append(containers, modelContainers...)
 
 	for _, container := range containers {
-		container.VersionEndpointId = id
+		container.VersionEndpointID = id
 	}
 
 	return containers, nil

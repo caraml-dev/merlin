@@ -44,7 +44,7 @@ func TestVersionEndpoint(t *testing.T) {
 				isServing: true,
 			},
 			want: &VersionEndpoint{
-				MonitoringUrl: "http://grafana?var-model_version=0",
+				MonitoringURL: "http://grafana?var-model_version=0",
 			},
 		},
 		{
@@ -55,26 +55,26 @@ func TestVersionEndpoint(t *testing.T) {
 				isServing:        true,
 			},
 			want: &VersionEndpoint{
-				MonitoringUrl: "",
+				MonitoringURL: "",
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := NewVersionEndpoint(&Environment{}, mlp.Project{}, &Model{}, &Version{}, tt.args.monitoringConfig)
-			assert.NotNil(t, e)
+			errRaised := NewVersionEndpoint(&Environment{}, mlp.Project{}, &Model{}, &Version{}, tt.args.monitoringConfig)
+			assert.NotNil(t, errRaised)
 
 			if tt.args.isRunning {
-				e.Status = EndpointRunning
-				assert.True(t, e.IsRunning())
+				errRaised.Status = EndpointRunning
+				assert.True(t, errRaised.IsRunning())
 			}
 
 			if tt.args.isServing {
-				e.Status = EndpointServing
-				assert.True(t, e.IsServing())
+				errRaised.Status = EndpointServing
+				assert.True(t, errRaised.IsServing())
 			}
 
-			assert.Equal(t, tt.want.MonitoringUrl, e.MonitoringUrl)
+			assert.Equal(t, tt.want.MonitoringURL, errRaised.MonitoringURL)
 		})
 	}
 }
@@ -120,17 +120,17 @@ func TestVersionEndpoint_UpdateMonitoringUrl(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &VersionEndpoint{}
-			e.UpdateMonitoringUrl(tt.args.baseURL, tt.args.params)
+			errRaised := &VersionEndpoint{}
+			errRaised.UpdateMonitoringURL(tt.args.baseURL, tt.args.params)
 
-			assert.Equal(t, tt.want, e.MonitoringUrl)
+			assert.Equal(t, tt.want, errRaised.MonitoringURL)
 		})
 	}
 }
 
 func TestVersionEndpoint_HostURL(t *testing.T) {
 	type fields struct {
-		Url string
+		URL string
 	}
 	tests := []struct {
 		name   string
@@ -140,31 +140,31 @@ func TestVersionEndpoint_HostURL(t *testing.T) {
 		{
 			"empty url",
 			fields{
-				Url: "",
+				URL: "",
 			},
 			"",
 		},
 		{
 			"https://gojek.com",
 			fields{
-				Url: "https://gojek.com",
+				URL: "https://gojek.com",
 			},
 			"gojek.com",
 		},
 		{
 			"https://gojek.com/v1/models/gojek-1:predict",
 			fields{
-				Url: "https://gojek.com/v1/models/gojek-1:predict",
+				URL: "https://gojek.com/v1/models/gojek-1:predict",
 			},
 			"gojek.com",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &VersionEndpoint{
-				Url: tt.fields.Url,
+			errRaised := &VersionEndpoint{
+				URL: tt.fields.URL,
 			}
-			if got := e.HostURL(); got != tt.want {
+			if got := errRaised.HostURL(); got != tt.want {
 				t.Errorf("VersionEndpoint.HostURL() = %v, want %v", got, tt.want)
 			}
 		})

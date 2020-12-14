@@ -36,11 +36,11 @@ func (_m *PredictionJobService) CreatePredictionJob(env *models.Environment, mod
 }
 
 // GetPredictionJob provides a mock function with given fields: env, model, version, id
-func (_m *PredictionJobService) GetPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.Id) (*models.PredictionJob, error) {
+func (_m *PredictionJobService) GetPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error) {
 	ret := _m.Called(env, model, version, id)
 
 	var r0 *models.PredictionJob
-	if rf, ok := ret.Get(0).(func(*models.Environment, *models.Model, *models.Version, models.Id) *models.PredictionJob); ok {
+	if rf, ok := ret.Get(0).(func(*models.Environment, *models.Model, *models.Version, models.ID) *models.PredictionJob); ok {
 		r0 = rf(env, model, version, id)
 	} else {
 		if ret.Get(0) != nil {
@@ -49,7 +49,7 @@ func (_m *PredictionJobService) GetPredictionJob(env *models.Environment, model 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*models.Environment, *models.Model, *models.Version, models.Id) error); ok {
+	if rf, ok := ret.Get(1).(func(*models.Environment, *models.Model, *models.Version, models.ID) error); ok {
 		r1 = rf(env, model, version, id)
 	} else {
 		r1 = ret.Error(1)
@@ -105,11 +105,11 @@ func (_m *PredictionJobService) ListPredictionJobs(project mlp.Project, query *s
 }
 
 // StopPredictionJob provides a mock function with given fields: env, model, version, id
-func (_m *PredictionJobService) StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.Id) (*models.PredictionJob, error) {
+func (_m *PredictionJobService) StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error) {
 	ret := _m.Called(env, model, version, id)
 
 	var r0 *models.PredictionJob
-	if rf, ok := ret.Get(0).(func(*models.Environment, *models.Model, *models.Version, models.Id) *models.PredictionJob); ok {
+	if rf, ok := ret.Get(0).(func(*models.Environment, *models.Model, *models.Version, models.ID) *models.PredictionJob); ok {
 		r0 = rf(env, model, version, id)
 	} else {
 		if ret.Get(0) != nil {
@@ -118,7 +118,7 @@ func (_m *PredictionJobService) StopPredictionJob(env *models.Environment, model
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*models.Environment, *models.Model, *models.Version, models.Id) error); ok {
+	if rf, ok := ret.Get(1).(func(*models.Environment, *models.Model, *models.Version, models.ID) error); ok {
 		r1 = rf(env, model, version, id)
 	} else {
 		r1 = ret.Error(1)

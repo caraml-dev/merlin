@@ -30,8 +30,8 @@ import (
 func Test_projectService(t *testing.T) {
 	ctx := context.Background()
 
-	mockMlpApiClient := &mlpMock.APIClient{}
-	ps := NewProjectsService(mockMlpApiClient)
+	mockMlpAPIClient := &mlpMock.APIClient{}
+	ps := NewProjectsService(mockMlpAPIClient)
 	assert.NotNil(t, ps)
 
 	project1 := mlp.Project{
@@ -42,21 +42,21 @@ func Test_projectService(t *testing.T) {
 		client.Project(project1),
 	}
 
-	mockMlpApiClient.On("ListProjects", mock.Anything, "").
+	mockMlpAPIClient.On("ListProjects", mock.Anything, "").
 		Return(projects, nil)
 
 	got1, err := ps.List(ctx, "")
 	assert.Nil(t, err)
 	assert.Equal(t, projects, got1)
 
-	mockMlpApiClient.On("GetProjectByID", mock.Anything, int32(1)).
+	mockMlpAPIClient.On("GetProjectByID", mock.Anything, int32(1)).
 		Return(project1, nil)
 
 	got2, err := ps.GetByID(ctx, int32(1))
 	assert.Nil(t, err)
 	assert.Equal(t, project1, got2)
 
-	mockMlpApiClient.On("GetProjectByName", mock.Anything, "project-1").
+	mockMlpAPIClient.On("GetProjectByName", mock.Anything, "project-1").
 		Return(project1, nil)
 
 	got3, err := ps.GetByName(ctx, "project-1")

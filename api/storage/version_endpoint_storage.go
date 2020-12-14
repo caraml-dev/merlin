@@ -37,7 +37,7 @@ func NewVersionEndpointStorage(db *gorm.DB) VersionEndpointStorage {
 }
 
 func (v *versionEndpointStorage) ListEndpoints(model *models.Model, version *models.Version) (endpoints []*models.VersionEndpoint, err error) {
-	err = v.query().Where("version_endpoints.version_model_id = ? AND version_endpoints.version_id = ?", model.Id, version.Id).Find(&endpoints).Error
+	err = v.query().Where("version_endpoints.version_model_id = ? AND version_endpoints.version_id = ?", model.ID, version.ID).Find(&endpoints).Error
 	return
 }
 
@@ -57,7 +57,7 @@ func (v *versionEndpointStorage) CountEndpoints(environment *models.Environment,
 	var count int
 	err := v.query().
 		Model(&models.VersionEndpoint{}).
-		Where("version_endpoints.environment_name = ? AND version_endpoints.version_model_id = ? AND version_endpoints.status IN ('pending', 'running', 'serving')", environment.Name, model.Id).
+		Where("version_endpoints.environment_name = ? AND version_endpoints.version_model_id = ? AND version_endpoints.status IN ('pending', 'running', 'serving')", environment.Name, model.ID).
 		Count(&count).Error
 	return count, err
 }

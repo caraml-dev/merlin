@@ -25,17 +25,19 @@ import (
 	"github.com/gojek/merlin/service"
 )
 
+// PredictionJobController controls prediction job API.
 type PredictionJobController struct {
 	*AppContext
 }
 
-func (c *PredictionJobController) Create(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+// Create method creates a prediction job.
+func (c *PredictionJobController) Create(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
-	model, version, err := c.getModelAndVersion(ctx, modelId, versionId)
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			return InternalServerError(err.Error())
@@ -62,13 +64,14 @@ func (c *PredictionJobController) Create(r *http.Request, vars map[string]string
 	return Ok(predictionJob)
 }
 
-func (c *PredictionJobController) List(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+// List method lists all prediction jobs of a model and version ID.
+func (c *PredictionJobController) List(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
-	model, version, err := c.getModelAndVersion(ctx, modelId, versionId)
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			return InternalServerError(err.Error())
@@ -77,27 +80,28 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 	}
 
 	query := &service.ListPredictionJobQuery{
-		ModelId:   modelId,
-		VersionId: versionId,
+		ModelID:   modelID,
+		VersionID: versionID,
 	}
 
 	jobs, err := c.PredictionJobService.ListPredictionJobs(model.Project, query)
 	if err != nil {
-		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.Id, err)
+		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
 		return InternalServerError("Failed listing prediction job")
 	}
 
 	return Ok(jobs)
 }
 
-func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+// Get method gets a prediction job.
+func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
-	id, _ := models.ParseId(vars["job_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
+	id, _ := models.ParseID(vars["job_id"])
 
-	model, version, err := c.getModelAndVersion(ctx, modelId, versionId)
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			return InternalServerError(err.Error())
@@ -112,21 +116,22 @@ func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _
 
 	job, err := c.PredictionJobService.GetPredictionJob(env, model, version, id)
 	if err != nil {
-		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.Id, err)
+		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.ID, err)
 		return InternalServerError("Failed reading prediction job")
 	}
 
 	return Ok(job)
 }
 
-func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+// Stop method stops a prediction job.
+func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
-	id, _ := models.ParseId(vars["job_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
+	id, _ := models.ParseID(vars["job_id"])
 
-	model, version, err := c.getModelAndVersion(ctx, modelId, versionId)
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			return InternalServerError(err.Error())
@@ -148,14 +153,15 @@ func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, 
 	return NoContent()
 }
 
-func (c *PredictionJobController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+// ListContainers method lists all containers of a prediction job.
+func (c *PredictionJobController) ListContainers(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
-	versionId, _ := models.ParseId(vars["version_id"])
-	modelId, _ := models.ParseId(vars["model_id"])
-	id, _ := models.ParseId(vars["job_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	id, _ := models.ParseID(vars["job_id"])
 
-	model, version, err := c.getModelAndVersion(ctx, modelId, versionId)
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			return InternalServerError(err.Error())
@@ -170,26 +176,27 @@ func (c *PredictionJobController) ListContainers(r *http.Request, vars map[strin
 
 	job, err := c.PredictionJobService.GetPredictionJob(env, model, version, id)
 	if err != nil {
-		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.Id, err)
+		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.ID, err)
 		return InternalServerError("Failed reading prediction job")
 	}
 
 	containers, err := c.PredictionJobService.ListContainers(env, model, version, job)
 	if err != nil {
 		log.Errorf("Error finding containers for model %v, version %v, reason: %v", model, version, err)
-		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint with model %v and version %v", model.Id, version.Id))
+		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint with model %v and version %v", model.ID, version.ID))
 	}
 	return Ok(containers)
 }
 
-func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+// ListAllInProject lists all prediction jobs of a project.
+func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
 	var query service.ListPredictionJobQuery
 	err := decoder.Decode(&query, r.URL.Query())
-	projectId, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 
-	project, err := c.ProjectsService.GetByID(ctx, int32(projectId))
+	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		return NotFound(err.Error())
 	}

@@ -29,37 +29,37 @@ type VersionsController struct {
 	*AppContext
 }
 
-func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
-	v, err := c.VersionsService.FindById(ctx, modelId, versionId, c.MonitoringConfig)
+	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		log.Errorf("error getting model version for given model %s version %s", modelId, versionId)
+		log.Errorf("error getting model version for given model %s version %s", modelID, versionID)
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model version %s for version %s", modelId, versionId))
+			return NotFound(fmt.Sprintf("Model version %s for version %s", modelID, versionID))
 		}
-		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s", modelId, versionId))
+		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s", modelID, versionID))
 	}
 
 	return Ok(v)
 }
 
-func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versionId, _ := models.ParseId(vars["version_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
 
-	v, err := c.VersionsService.FindById(ctx, modelId, versionId, c.MonitoringConfig)
+	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		log.Errorf("error getting model version for given model %s version %s", modelId, versionId)
+		log.Errorf("error getting model version for given model %s version %s", modelID, versionID)
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model version %s for version %s", modelId, versionId))
+			return NotFound(fmt.Sprintf("Model version %s for version %s", modelID, versionID))
 		}
-		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s", modelId, versionId))
+		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s", modelID, versionID))
 	}
 
 	versionPatch, ok := body.(*models.VersionPatch)
@@ -70,17 +70,17 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 	v.Patch(versionPatch)
 	patchedVersion, err := c.VersionsService.Save(ctx, v, c.MonitoringConfig)
 	if err != nil {
-		return InternalServerError(fmt.Sprintf("Error patching model version for given model %s version %s", modelId, versionId))
+		return InternalServerError(fmt.Sprintf("Error patching model version for given model %s version %s", modelID, versionID))
 	}
 
 	return Ok(patchedVersion)
 }
 
-func (c *VersionsController) ListVersions(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *VersionsController) ListVersions(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
-	versions, err := c.VersionsService.ListVersions(ctx, modelId, c.MonitoringConfig)
+	modelID, _ := models.ParseID(vars["model_id"])
+	versions, err := c.VersionsService.ListVersions(ctx, modelID, c.MonitoringConfig)
 	if err != nil {
 		return InternalServerError(err.Error())
 	}
@@ -88,26 +88,26 @@ func (c *VersionsController) ListVersions(r *http.Request, vars map[string]strin
 	return Ok(versions)
 }
 
-func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	modelId, _ := models.ParseId(vars["model_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
 
-	model, err := c.ModelsService.FindById(ctx, modelId)
+	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelId))
+		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
 
 	mlflowClient := mlflow.NewClient(nil, model.Project.MlflowTrackingUrl)
-	run, err := mlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentId))
+	run, err := mlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentID))
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to create mlflow run: %s", err.Error()))
 	}
 
 	version := &models.Version{
-		ModelId:     modelId,
-		RunId:       run.Info.RunId,
-		ArtifactUri: run.Info.ArtifactUri,
+		ModelID:     modelID,
+		RunID:       run.Info.RunID,
+		ArtifactURI: run.Info.ArtifactURI,
 	}
 
 	version, _ = c.VersionsService.Save(ctx, version, c.MonitoringConfig)

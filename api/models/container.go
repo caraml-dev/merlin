@@ -31,14 +31,14 @@ type Container struct {
 	Namespace         string    `json:"namespace"`
 	Cluster           string    `json:"cluster"`
 	GcpProject        string    `json:"gcp_project"`
-	VersionEndpointId uuid.UUID `json:"version_endpoint_id"`
+	VersionEndpointID uuid.UUID `json:"version_endpoint_id"`
 }
 
-func OnlineInferencePodLabelSelector(modelName string, versionId string) string {
-	serviceName := CreateInferenceServiceName(modelName, versionId)
+func OnlineInferencePodLabelSelector(modelName string, versionID string) string {
+	serviceName := CreateInferenceServiceName(modelName, versionID)
 	return fmt.Sprintf(onlineInferenceLabelTemplate, serviceName)
 }
 
-func BatchInferencePodLabelSelector(predictionJobId string) string {
-	return fmt.Sprintf(batchInferenceLabelTemplate, predictionJobId)
+func BatchInferencePodLabelSelector(predictionJobID string) string {
+	return fmt.Sprintf(batchInferenceLabelTemplate, predictionJobID)
 }

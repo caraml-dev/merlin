@@ -25,17 +25,17 @@ import (
 )
 
 type VersionEndpoint struct {
-	Id uuid.UUID `json:"id" gorm:"type:uuid;primary_key;"`
+	ID uuid.UUID `json:"id" gorm:"type:uuid;primary_key;"`
 	// The field name has to be prefixed with the related struct name
 	// in order for gorm Preload to work with association_foreignkey
-	VersionId            Id               `json:"version_id"`
-	VersionModelId       Id               `json:"model_id"`
+	VersionID            ID               `json:"version_id"`
+	VersionModelID       ID               `json:"model_id"`
 	Status               EndpointStatus   `json:"status"`
-	Url                  string           `json:"url" gorm:"url"`
+	URL                  string           `json:"url" gorm:"url"`
 	ServiceName          string           `json:"service_name" gorm:"service_name"`
 	InferenceServiceName string           `json:"-" gorm:"inference_service_name"`
 	Namespace            string           `json:"-" gorm:"namespace"`
-	MonitoringUrl        string           `json:"monitoring_url,omitempty" gorm:"-"`
+	MonitoringURL        string           `json:"monitoring_url,omitempty" gorm:"-"`
 	Environment          *Environment     `json:"environment" gorm:"association_foreignkey:Name;"`
 	EnvironmentName      string           `json:"environment_name"`
 	Message              string           `json:"message"`
@@ -48,12 +48,12 @@ type VersionEndpoint struct {
 
 func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, version *Version, monitoringConfig config.MonitoringConfig) *VersionEndpoint {
 	id := uuid.New()
-	e := &VersionEndpoint{
-		Id:                   id,
-		VersionId:            version.Id,
-		VersionModelId:       version.ModelId,
+	errRaised := &VersionEndpoint{
+		ID:                   id,
+		VersionID:            version.ID,
+		VersionModelID:       version.ModelID,
 		Namespace:            project.Name,
-		InferenceServiceName: fmt.Sprintf("%s-%s", model.Name, version.Id.String()),
+		InferenceServiceName: fmt.Sprintf("%s-%s", model.Name, version.ID.String()),
 		Status:               EndpointPending,
 		EnvironmentName:      env.Name,
 		Environment:          env,
@@ -61,25 +61,25 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 	}
 
 	if monitoringConfig.MonitoringEnabled {
-		e.UpdateMonitoringUrl(monitoringConfig.MonitoringBaseURL, EndpointMonitoringURLParams{env.Cluster, project.Name, model.Name, version.Id.String()})
+		errRaised.UpdateMonitoringURL(monitoringConfig.MonitoringBaseURL, EndpointMonitoringURLParams{env.Cluster, project.Name, model.Name, version.ID.String()})
 	}
-	return e
+	return errRaised
 }
 
-func (e *VersionEndpoint) IsRunning() bool {
-	return e.Status == EndpointPending || e.Status == EndpointRunning
+func (errRaised *VersionEndpoint) IsRunning() bool {
+	return errRaised.Status == EndpointPending || errRaised.Status == EndpointRunning
 }
 
-func (e *VersionEndpoint) IsServing() bool {
-	return e.Status == EndpointServing
+func (errRaised *VersionEndpoint) IsServing() bool {
+	return errRaised.Status == EndpointServing
 }
 
-func (e *VersionEndpoint) HostURL() string {
-	if e.Url == "" {
+func (errRaised *VersionEndpoint) HostURL() string {
+	if errRaised.URL == "" {
 		return ""
 	}
 
-	url, err := url.Parse(e.Url)
+	url, err := url.Parse(errRaised.URL)
 	if err != nil {
 		return ""
 	}
@@ -94,7 +94,7 @@ type EndpointMonitoringURLParams struct {
 	ModelVersion string
 }
 
-func (e *VersionEndpoint) UpdateMonitoringUrl(baseURL string, params EndpointMonitoringURLParams) {
+func (errRaised *VersionEndpoint) UpdateMonitoringURL(baseURL string, params EndpointMonitoringURLParams) {
 	url, _ := url.Parse(baseURL)
 
 	q := url.Query()
@@ -113,5 +113,5 @@ func (e *VersionEndpoint) UpdateMonitoringUrl(baseURL string, params EndpointMon
 
 	url.RawQuery = q.Encode()
 
-	e.MonitoringUrl = url.String()
+	errRaised.MonitoringURL = url.String()
 }

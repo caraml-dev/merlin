@@ -37,12 +37,12 @@ func (_m *ModelEndpointsService) DeployEndpoint(ctx context.Context, model *mode
 	return r0, r1
 }
 
-// FindById provides a mock function with given fields: ctx, id
-func (_m *ModelEndpointsService) FindById(ctx context.Context, id models.Id) (*models.ModelEndpoint, error) {
+// FindByID provides a mock function with given fields: ctx, id
+func (_m *ModelEndpointsService) FindByID(ctx context.Context, id models.ID) (*models.ModelEndpoint, error) {
 	ret := _m.Called(ctx, id)
 
 	var r0 *models.ModelEndpoint
-	if rf, ok := ret.Get(0).(func(context.Context, models.Id) *models.ModelEndpoint); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, models.ID) *models.ModelEndpoint); ok {
 		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
@@ -51,7 +51,7 @@ func (_m *ModelEndpointsService) FindById(ctx context.Context, id models.Id) (*m
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.Id) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, models.ID) error); ok {
 		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
@@ -60,13 +60,13 @@ func (_m *ModelEndpointsService) FindById(ctx context.Context, id models.Id) (*m
 	return r0, r1
 }
 
-// ListModelEndpoints provides a mock function with given fields: ctx, modelId
-func (_m *ModelEndpointsService) ListModelEndpoints(ctx context.Context, modelId models.Id) ([]*models.ModelEndpoint, error) {
-	ret := _m.Called(ctx, modelId)
+// ListModelEndpoints provides a mock function with given fields: ctx, modelID
+func (_m *ModelEndpointsService) ListModelEndpoints(ctx context.Context, modelID models.ID) ([]*models.ModelEndpoint, error) {
+	ret := _m.Called(ctx, modelID)
 
 	var r0 []*models.ModelEndpoint
-	if rf, ok := ret.Get(0).(func(context.Context, models.Id) []*models.ModelEndpoint); ok {
-		r0 = rf(ctx, modelId)
+	if rf, ok := ret.Get(0).(func(context.Context, models.ID) []*models.ModelEndpoint); ok {
+		r0 = rf(ctx, modelID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*models.ModelEndpoint)
@@ -74,8 +74,8 @@ func (_m *ModelEndpointsService) ListModelEndpoints(ctx context.Context, modelId
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.Id) error); ok {
-		r1 = rf(ctx, modelId)
+	if rf, ok := ret.Get(1).(func(context.Context, models.ID) error); ok {
+		r1 = rf(ctx, modelID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -83,13 +83,13 @@ func (_m *ModelEndpointsService) ListModelEndpoints(ctx context.Context, modelId
 	return r0, r1
 }
 
-// ListModelEndpointsInProject provides a mock function with given fields: ctx, projectId, region
-func (_m *ModelEndpointsService) ListModelEndpointsInProject(ctx context.Context, projectId models.Id, region string) ([]*models.ModelEndpoint, error) {
-	ret := _m.Called(ctx, projectId, region)
+// ListModelEndpointsInProject provides a mock function with given fields: ctx, projectID, region
+func (_m *ModelEndpointsService) ListModelEndpointsInProject(ctx context.Context, projectID models.ID, region string) ([]*models.ModelEndpoint, error) {
+	ret := _m.Called(ctx, projectID, region)
 
 	var r0 []*models.ModelEndpoint
-	if rf, ok := ret.Get(0).(func(context.Context, models.Id, string) []*models.ModelEndpoint); ok {
-		r0 = rf(ctx, projectId, region)
+	if rf, ok := ret.Get(0).(func(context.Context, models.ID, string) []*models.ModelEndpoint); ok {
+		r0 = rf(ctx, projectID, region)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*models.ModelEndpoint)
@@ -97,8 +97,8 @@ func (_m *ModelEndpointsService) ListModelEndpointsInProject(ctx context.Context
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.Id, string) error); ok {
-		r1 = rf(ctx, projectId, region)
+	if rf, ok := ret.Get(1).(func(context.Context, models.ID, string) error); ok {
+		r1 = rf(ctx, projectID, region)
 	} else {
 		r1 = ret.Error(1)
 	}

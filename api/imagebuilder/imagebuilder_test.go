@@ -42,9 +42,9 @@ import (
 const (
 	projectName = "test-project"
 	modelName   = "mymodel"
-	artifactUri = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
+	artifactURI = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
 
-	buildContextUrl = "gs://bucket/build.tar.gz"
+	buildContextURL = "gs://bucket/build.tar.gz"
 	buildNamespace  = "mynamespace"
 	dockerRegistry  = "ghcr.io"
 )
@@ -67,13 +67,13 @@ var (
 	}
 
 	modelVersion = &models.Version{
-		Id:          models.Id(1),
-		ArtifactUri: artifactUri,
+		ID:          models.ID(1),
+		ArtifactURI: artifactURI,
 	}
 
 	timeout, _ = time.ParseDuration("10s")
 	config     = Config{
-		BuildContextUrl:      buildContextUrl,
+		BuildContextURL:      buildContextURL,
 		DockerfilePath:       "./Dockerfile",
 		BuildNamespace:       buildNamespace,
 		ContextSubPath:       "python/pyfunc-server",
@@ -112,7 +112,7 @@ func TestBuildImage(t *testing.T) {
 			existingJob: nil,
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
 					Namespace: config.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":                model.Name,
@@ -136,10 +136,10 @@ func TestBuildImage(t *testing.T) {
 									Image: kanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
+										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
@@ -177,7 +177,7 @@ func TestBuildImage(t *testing.T) {
 				Status: batchv1.JobStatus{},
 			},
 			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config:            config,
 		},
 		{
@@ -190,7 +190,7 @@ func TestBuildImage(t *testing.T) {
 			existingJob: nil,
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
 					Namespace: config.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":                model.Name,
@@ -214,10 +214,10 @@ func TestBuildImage(t *testing.T) {
 									Image: kanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
+										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 									},
@@ -254,9 +254,9 @@ func TestBuildImage(t *testing.T) {
 				Status: batchv1.JobStatus{},
 			},
 			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config: Config{
-				BuildContextUrl:      config.BuildContextUrl,
+				BuildContextURL:      config.BuildContextURL,
 				DockerfilePath:       config.DockerfilePath,
 				BuildNamespace:       config.BuildNamespace,
 				BaseImage:            config.BaseImage,
@@ -276,7 +276,7 @@ func TestBuildImage(t *testing.T) {
 			},
 			existingJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
 					Namespace: config.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":                model.Name,
@@ -300,10 +300,10 @@ func TestBuildImage(t *testing.T) {
 									Image: kanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
+										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
@@ -341,7 +341,7 @@ func TestBuildImage(t *testing.T) {
 				Status: batchv1.JobStatus{},
 			},
 			wantCreateJob: nil,
-			wantImageRef:  fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			wantImageRef:  fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config:        config,
 		},
 		{
@@ -353,7 +353,7 @@ func TestBuildImage(t *testing.T) {
 			},
 			existingJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
 					Namespace: config.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":                model.Name,
@@ -377,10 +377,10 @@ func TestBuildImage(t *testing.T) {
 									Image: kanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
+										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
@@ -421,7 +421,7 @@ func TestBuildImage(t *testing.T) {
 			},
 			wantCreateJob:     nil,
 			wantDeleteJobName: "",
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config:            config,
 		},
 		{
@@ -433,7 +433,7 @@ func TestBuildImage(t *testing.T) {
 			},
 			existingJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
 					Namespace: config.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":                model.Name,
@@ -457,10 +457,10 @@ func TestBuildImage(t *testing.T) {
 									Image: kanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
+										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
@@ -501,7 +501,7 @@ func TestBuildImage(t *testing.T) {
 			},
 			wantCreateJob: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
 					Namespace: config.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":                model.Name,
@@ -525,10 +525,10 @@ func TestBuildImage(t *testing.T) {
 									Image: kanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextUrl),
-										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactUri),
+										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
-										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id)),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
@@ -565,8 +565,8 @@ func TestBuildImage(t *testing.T) {
 				},
 				Status: batchv1.JobStatus{},
 			},
-			wantDeleteJobName: fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
-			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.Id),
+			wantDeleteJobName: fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config:            config,
 		},
 	}
@@ -647,8 +647,8 @@ func TestGetContainers(t *testing.T) {
 		Name: modelName,
 	}
 	modelVersion := &models.Version{
-		Id:          models.Id(1),
-		ArtifactUri: artifactUri,
+		ID:          models.ID(1),
+		ArtifactURI: artifactURI,
 	}
 
 	type args struct {
@@ -668,9 +668,9 @@ func TestGetContainers(t *testing.T) {
 				Items: []v1.Pod{
 					v1.Pod{
 						ObjectMeta: metav1.ObjectMeta{
-							Name: fmt.Sprintf("%s-%s-%s-1", project.Name, model.Name, modelVersion.Id),
+							Name: fmt.Sprintf("%s-%s-%s-1", project.Name, model.Name, modelVersion.ID),
 							Labels: map[string]string{
-								"job-name": fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
+								"job-name": fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
 							},
 						},
 						Spec: v1.PodSpec{
@@ -683,9 +683,9 @@ func TestGetContainers(t *testing.T) {
 					},
 					v1.Pod{
 						ObjectMeta: metav1.ObjectMeta{
-							Name: fmt.Sprintf("%s-%s-%s-2", project.Name, model.Name, modelVersion.Id),
+							Name: fmt.Sprintf("%s-%s-%s-2", project.Name, model.Name, modelVersion.ID),
 							Labels: map[string]string{
-								"job-name": fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.Id),
+								"job-name": fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
 							},
 						},
 						Spec: v1.PodSpec{

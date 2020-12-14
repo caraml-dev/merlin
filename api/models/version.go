@@ -25,13 +25,13 @@ import (
 const PropertyPyTorchClassName = "pytorch_class_name"
 
 type Version struct {
-	Id          Id                 `json:"id" gorm:"primary_key"`
-	ModelId     Id                 `json:"model_id" gorm:"primary_key"`
-	Model       *Model             `json:"model" gorm:"foreignkey:ModelId;"`
-	RunId       string             `json:"mlflow_run_id" gorm:"column:mlflow_run_id"`
-	MlflowUrl   string             `json:"mlflow_url" gorm:"-"`
-	ArtifactUri string             `json:"artifact_uri" gorm:"artifact_uri"`
-	Endpoints   []*VersionEndpoint `json:"endpoints" gorm:"foreignkey:VersionId,VersionModelId;association_foreignkey:Id,ModelId;"`
+	ID          ID                 `json:"id" gorm:"primary_key"`
+	ModelID     ID                 `json:"model_id" gorm:"primary_key"`
+	Model       *Model             `json:"model" gorm:"foreignkey:ModelID;"`
+	RunID       string             `json:"mlflow_run_id" gorm:"column:mlflow_run_id"`
+	MlflowURL   string             `json:"mlflow_url" gorm:"-"`
+	ArtifactURI string             `json:"artifact_uri" gorm:"artifact_uri"`
+	Endpoints   []*VersionEndpoint `json:"endpoints" gorm:"foreignkey:VersionID,VersionModelID;association_foreignkey:ID,ModelID;"`
 	Properties  KV                 `json:"properties" gorm:"properties"`
 	CreatedUpdated
 }
@@ -62,17 +62,17 @@ func (v *Version) Patch(patch *VersionPatch) {
 }
 
 func (v *Version) BeforeCreate(scope *gorm.Scope) {
-	if v.Id == 0 {
-		var maxModelVersionId int
+	if v.ID == 0 {
+		var maxModelVersionID int
 
 		scope.DB().
 			Table("versions").
 			Select("COALESCE(MAX(id), 0)").
-			Where("model_id = ?", v.ModelId).
+			Where("model_id = ?", v.ModelID).
 			Row().
-			Scan(&maxModelVersionId)
+			Scan(&maxModelVersionID)
 
-		v.Id = Id(maxModelVersionId + 1)
+		v.ID = ID(maxModelVersionID + 1)
 	}
 	return
 }

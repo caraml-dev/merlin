@@ -10,13 +10,13 @@ type PredictionJobStorage struct {
 	mock.Mock
 }
 
-// Get provides a mock function with given fields: Id
-func (_m *PredictionJobStorage) Get(Id models.Id) (*models.PredictionJob, error) {
-	ret := _m.Called(Id)
+// Get provides a mock function with given fields: ID
+func (_m *PredictionJobStorage) Get(ID models.ID) (*models.PredictionJob, error) {
+	ret := _m.Called(ID)
 
 	var r0 *models.PredictionJob
-	if rf, ok := ret.Get(0).(func(models.Id) *models.PredictionJob); ok {
-		r0 = rf(Id)
+	if rf, ok := ret.Get(0).(func(models.ID) *models.PredictionJob); ok {
+		r0 = rf(ID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.PredictionJob)
@@ -24,8 +24,8 @@ func (_m *PredictionJobStorage) Get(Id models.Id) (*models.PredictionJob, error)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(models.Id) error); ok {
-		r1 = rf(Id)
+	if rf, ok := ret.Get(1).(func(models.ID) error); ok {
+		r1 = rf(ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -34,15 +34,15 @@ func (_m *PredictionJobStorage) Get(Id models.Id) (*models.PredictionJob, error)
 }
 
 // GetFirstSuccessModelVersionPerModel provides a mock function with given fields:
-func (_m *PredictionJobStorage) GetFirstSuccessModelVersionPerModel() (map[models.Id]models.Id, error) {
+func (_m *PredictionJobStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error) {
 	ret := _m.Called()
 
-	var r0 map[models.Id]models.Id
-	if rf, ok := ret.Get(0).(func() map[models.Id]models.Id); ok {
+	var r0 map[models.ID]models.ID
+	if rf, ok := ret.Get(0).(func() map[models.ID]models.ID); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[models.Id]models.Id)
+			r0 = ret.Get(0).(map[models.ID]models.ID)
 		}
 	}
 

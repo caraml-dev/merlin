@@ -49,10 +49,10 @@ const (
 
 // ModelEndpointsService interface.
 type ModelEndpointsService interface {
-	ListModelEndpoints(ctx context.Context, modelId models.Id) ([]*models.ModelEndpoint, error)
-	ListModelEndpointsInProject(ctx context.Context, projectId models.Id, region string) ([]*models.ModelEndpoint, error)
+	ListModelEndpoints(ctx context.Context, modelID models.ID) ([]*models.ModelEndpoint, error)
+	ListModelEndpointsInProject(ctx context.Context, projectID models.ID, region string) ([]*models.ModelEndpoint, error)
 
-	FindById(ctx context.Context, id models.Id) (*models.ModelEndpoint, error)
+	FindByID(ctx context.Context, id models.ID) (*models.ModelEndpoint, error)
 	Save(ctx context.Context, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
 
 	DeployEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
@@ -86,18 +86,18 @@ func (s *modelEndpointsService) query() *gorm.DB {
 		Joins("JOIN environments on environments.name = model_endpoints.environment_name")
 }
 
-func (s *modelEndpointsService) ListModelEndpoints(ctx context.Context, modelId models.Id) (endpoints []*models.ModelEndpoint, err error) {
-	err = s.query().Where("model_id = ?", modelId.String()).Find(&endpoints).Error
+func (s *modelEndpointsService) ListModelEndpoints(ctx context.Context, modelID models.ID) (endpoints []*models.ModelEndpoint, err error) {
+	err = s.query().Where("model_id = ?", modelID.String()).Find(&endpoints).Error
 	return
 }
 
-func (s *modelEndpointsService) ListModelEndpointsInProject(ctx context.Context, projectId models.Id, region string) ([]*models.ModelEndpoint, error) {
+func (s *modelEndpointsService) ListModelEndpointsInProject(ctx context.Context, projectID models.ID, region string) ([]*models.ModelEndpoint, error) {
 	// Run the query
 	endpoints := []*models.ModelEndpoint{}
 
 	db := s.query().
 		Joins("JOIN models on models.id = model_endpoints.model_id").
-		Where("models.project_id = ?", projectId)
+		Where("models.project_id = ?", projectID)
 
 	// Filter by optional column
 	// Environment's region
@@ -106,14 +106,14 @@ func (s *modelEndpointsService) ListModelEndpointsInProject(ctx context.Context,
 	}
 
 	if err := db.Find(&endpoints).Error; err != nil {
-		log.Errorf("failed to list Model Endpoints for Project ID (%s), %v", projectId, err)
-		return nil, errors.Wrapf(err, "failed to list Model Endpoints for Project ID (%s)", projectId)
+		log.Errorf("failed to list Model Endpoints for Project ID (%s), %v", projectID, err)
+		return nil, errors.Wrapf(err, "failed to list Model Endpoints for Project ID (%s)", projectID)
 	}
 
 	return endpoints, nil
 }
 
-func (s *modelEndpointsService) FindById(ctx context.Context, id models.Id) (*models.ModelEndpoint, error) {
+func (s *modelEndpointsService) FindByID(ctx context.Context, id models.ID) (*models.ModelEndpoint, error) {
 	endpoint := &models.ModelEndpoint{}
 
 	if err := s.query().Where("model_endpoints.id = ?", id.String()).Find(&endpoint).Error; err != nil {
@@ -128,7 +128,7 @@ func (s *modelEndpointsService) Save(ctx context.Context, endpoint *models.Model
 	if err := s.db.Save(endpoint).Error; err != nil {
 		return nil, err
 	}
-	return s.FindById(ctx, endpoint.Id)
+	return s.FindByID(ctx, endpoint.ID)
 }
 
 func (s *modelEndpointsService) DeployEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error) {
@@ -240,18 +240,18 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 		versionEndpoint := destination.VersionEndpoint
 
 		if versionEndpoint.Status != models.EndpointRunning {
-			return nil, fmt.Errorf("Version Endpoint (%s) is not running, but %s", versionEndpoint.Id, versionEndpoint.Status)
+			return nil, fmt.Errorf("Version Endpoint (%s) is not running, but %s", versionEndpoint.ID, versionEndpoint.Status)
 		}
 
 		meURL, err := s.parseModelEndpointHost(model, versionEndpoint)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse Version Endpoint URL (%s): %s, %s", versionEndpoint.Id, versionEndpoint.Url, err)
+			return nil, fmt.Errorf("Failed to parse Version Endpoint URL (%s): %s, %s", versionEndpoint.ID, versionEndpoint.URL, err)
 		}
 		modelEndpointHost = meURL
 
 		vePath, err := s.parseVersionEndpointPath(versionEndpoint)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse Version Endpoint Path (%s): %s, %s", versionEndpoint.Id, versionEndpoint.Url, err)
+			return nil, fmt.Errorf("Failed to parse Version Endpoint Path (%s): %s, %s", versionEndpoint.ID, versionEndpoint.URL, err)
 		}
 		versionEndpointPath = vePath
 
@@ -309,7 +309,7 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 }
 
 func (s *modelEndpointsService) parseModelEndpointHost(model *models.Model, versionEndpoint *models.VersionEndpoint) (string, error) {
-	veURL, err := url.Parse(versionEndpoint.Url)
+	veURL, err := url.Parse(versionEndpoint.URL)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse version endpoint url")
 	}
@@ -317,7 +317,7 @@ func (s *modelEndpointsService) parseModelEndpointHost(model *models.Model, vers
 	host := strings.Split(veURL.Hostname(), fmt.Sprintf(".%s.", model.Project.Name))
 
 	if len(host) != 2 {
-		return "", fmt.Errorf("invalid version endpoint url: %s. failed to split domain: %+v", versionEndpoint.Url, host)
+		return "", fmt.Errorf("invalid version endpoint url: %s. failed to split domain: %+v", versionEndpoint.URL, host)
 	}
 
 	domain := host[1]
@@ -328,7 +328,7 @@ func (s *modelEndpointsService) parseModelEndpointHost(model *models.Model, vers
 }
 
 func (s *modelEndpointsService) parseVersionEndpointPath(versionEndpoint *models.VersionEndpoint) (string, error) {
-	veURL, err := url.Parse(versionEndpoint.Url)
+	veURL, err := url.Parse(versionEndpoint.URL)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse version endpoint url")
 	}

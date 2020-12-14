@@ -39,7 +39,7 @@ func TestList(t *testing.T) {
 		modelService         func() *mocks.ModelsService
 		versionService       func() *mocks.VersionsService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *ApiResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess list prediction job",
@@ -49,31 +49,31 @@ func TestList(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -82,29 +82,29 @@ func TestList(t *testing.T) {
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
 				svc.On("ListPredictionJobs", mock.Anything, &service.ListPredictionJobQuery{
-					ModelId:   models.Id(1),
-					VersionId: models.Id(1),
+					ModelID:   models.ID(1),
+					VersionID: models.ID(1),
 				}).Return([]*models.PredictionJob{
 					{
-						Id:              models.Id(1),
+						ID:              models.ID(1),
 						Name:            "prediction-job-1",
-						ProjectId:       models.Id(1),
-						VersionId:       models.Id(1),
-						VersionModelId:  models.Id(1),
+						ProjectID:       models.ID(1),
+						VersionID:       models.ID(1),
+						VersionModelID:  models.ID(1),
 						EnvironmentName: "dev",
 					},
 				}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.PredictionJob{
 					{
-						Id:              models.Id(1),
+						ID:              models.ID(1),
 						Name:            "prediction-job-1",
-						ProjectId:       models.Id(1),
-						VersionId:       models.Id(1),
-						VersionModelId:  models.Id(1),
+						ProjectID:       models.ID(1),
+						VersionID:       models.ID(1),
+						VersionModelID:  models.ID(1),
 						EnvironmentName: "dev",
 					},
 				},
@@ -118,7 +118,7 @@ func TestList(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -129,7 +129,7 @@ func TestList(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -142,31 +142,31 @@ func TestList(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -175,12 +175,12 @@ func TestList(t *testing.T) {
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
 				svc.On("ListPredictionJobs", mock.Anything, &service.ListPredictionJobQuery{
-					ModelId:   models.Id(1),
-					VersionId: models.Id(1),
+					ModelID:   models.ID(1),
+					VersionID: models.ID(1),
 				}).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed listing prediction job"},
 			},
@@ -218,7 +218,7 @@ func TestGet(t *testing.T) {
 		versionService       func() *mocks.VersionsService
 		envService           func() *mocks.EnvironmentService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *ApiResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess get prediction job",
@@ -229,31 +229,31 @@ func TestGet(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -262,7 +262,7 @@ func TestGet(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultPredictionJobEnvironment").Return(&models.Environment{
-					Id:                     models.Id(1),
+					ID:                     models.ID(1),
 					Name:                   "dev",
 					Cluster:                "dev",
 					Region:                 "id",
@@ -275,23 +275,23 @@ func TestGet(t *testing.T) {
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
 				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
-					Id:              models.Id(1),
+					ID:              models.ID(1),
 					Name:            "prediction-job-1",
-					ProjectId:       models.Id(1),
-					VersionId:       models.Id(1),
-					VersionModelId:  models.Id(1),
+					ProjectID:       models.ID(1),
+					VersionID:       models.ID(1),
+					VersionModelID:  models.ID(1),
 					EnvironmentName: "dev",
 				}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.PredictionJob{
-					Id:              models.Id(1),
+					ID:              models.ID(1),
 					Name:            "prediction-job-1",
-					ProjectId:       models.Id(1),
-					VersionId:       models.Id(1),
-					VersionModelId:  models.Id(1),
+					ProjectID:       models.ID(1),
+					VersionID:       models.ID(1),
+					VersionModelID:  models.ID(1),
 					EnvironmentName: "dev",
 				},
 			},
@@ -304,7 +304,7 @@ func TestGet(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -319,7 +319,7 @@ func TestGet(t *testing.T) {
 				svc := &mocks.EnvironmentService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -332,31 +332,31 @@ func TestGet(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -371,7 +371,7 @@ func TestGet(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
 			},
@@ -385,31 +385,31 @@ func TestGet(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -418,7 +418,7 @@ func TestGet(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultPredictionJobEnvironment").Return(&models.Environment{
-					Id:                     models.Id(1),
+					ID:                     models.ID(1),
 					Name:                   "dev",
 					Cluster:                "dev",
 					Region:                 "id",
@@ -433,7 +433,7 @@ func TestGet(t *testing.T) {
 				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed reading prediction job"},
 			},
@@ -473,7 +473,7 @@ func TestStop(t *testing.T) {
 		versionService       func() *mocks.VersionsService
 		envService           func() *mocks.EnvironmentService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *ApiResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess stop prediction job",
@@ -484,31 +484,31 @@ func TestStop(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -517,7 +517,7 @@ func TestStop(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultPredictionJobEnvironment").Return(&models.Environment{
-					Id:                     models.Id(1),
+					ID:                     models.ID(1),
 					Name:                   "dev",
 					Cluster:                "dev",
 					Region:                 "id",
@@ -530,16 +530,16 @@ func TestStop(t *testing.T) {
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
 				svc.On("StopPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
-					Id:              models.Id(1),
+					ID:              models.ID(1),
 					Name:            "prediction-job-1",
-					ProjectId:       models.Id(1),
-					VersionId:       models.Id(1),
-					VersionModelId:  models.Id(1),
+					ProjectID:       models.ID(1),
+					VersionID:       models.ID(1),
+					VersionModelID:  models.ID(1),
 					EnvironmentName: "dev",
 				}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusNoContent,
 			},
 		},
@@ -551,7 +551,7 @@ func TestStop(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -566,7 +566,7 @@ func TestStop(t *testing.T) {
 				svc := &mocks.EnvironmentService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -579,31 +579,31 @@ func TestStop(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -618,7 +618,7 @@ func TestStop(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
 			},
@@ -632,31 +632,31 @@ func TestStop(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -665,7 +665,7 @@ func TestStop(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultPredictionJobEnvironment").Return(&models.Environment{
-					Id:                     models.Id(1),
+					ID:                     models.ID(1),
 					Name:                   "dev",
 					Cluster:                "dev",
 					Region:                 "id",
@@ -680,7 +680,7 @@ func TestStop(t *testing.T) {
 				svc.On("StopPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Failed stopping prediction job Connection refused"},
 			},
@@ -721,7 +721,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 		versionService       func() *mocks.VersionsService
 		envService           func() *mocks.EnvironmentService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *ApiResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess get list of containers",
@@ -732,31 +732,31 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -765,7 +765,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultPredictionJobEnvironment").Return(&models.Environment{
-					Id:                     models.Id(1),
+					ID:                     models.ID(1),
 					Name:                   "dev",
 					Cluster:                "dev",
 					Region:                 "id",
@@ -778,11 +778,11 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
 				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
-					Id:              models.Id(1),
+					ID:              models.ID(1),
 					Name:            "prediction-job-1",
-					ProjectId:       models.Id(1),
-					VersionId:       models.Id(1),
-					VersionModelId:  models.Id(1),
+					ProjectID:       models.ID(1),
+					VersionID:       models.ID(1),
+					VersionModelID:  models.ID(1),
 					EnvironmentName: "dev",
 				}, nil)
 				svc.On("ListContainers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]*models.Container{
@@ -792,12 +792,12 @@ func TestListContainers_PredictionJob(t *testing.T) {
 						Namespace:         "default",
 						Cluster:           "dev",
 						GcpProject:        "dev-proj",
-						VersionEndpointId: uuid,
+						VersionEndpointID: uuid,
 					},
 				}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.Container{
 					{
@@ -806,7 +806,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 						Namespace:         "default",
 						Cluster:           "dev",
 						GcpProject:        "dev-proj",
-						VersionEndpointId: uuid,
+						VersionEndpointID: uuid,
 					},
 				},
 			},
@@ -819,7 +819,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -834,7 +834,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 				svc := &mocks.EnvironmentService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -847,31 +847,31 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -886,7 +886,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
 			},
@@ -900,31 +900,31 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -933,7 +933,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultPredictionJobEnvironment").Return(&models.Environment{
-					Id:                     models.Id(1),
+					ID:                     models.ID(1),
 					Name:                   "dev",
 					Cluster:                "dev",
 					Region:                 "id",
@@ -948,7 +948,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed reading prediction job"},
 			},
@@ -962,31 +962,31 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -995,7 +995,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultPredictionJobEnvironment").Return(&models.Environment{
-					Id:                     models.Id(1),
+					ID:                     models.ID(1),
 					Name:                   "dev",
 					Cluster:                "dev",
 					Region:                 "id",
@@ -1008,17 +1008,17 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
 				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
-					Id:              models.Id(1),
+					ID:              models.ID(1),
 					Name:            "prediction-job-1",
-					ProjectId:       models.Id(1),
-					VersionId:       models.Id(1),
-					VersionModelId:  models.Id(1),
+					ProjectID:       models.ID(1),
+					VersionID:       models.ID(1),
+					VersionModelID:  models.ID(1),
 					EnvironmentName: "dev",
 				}, nil)
 				svc.On("ListContainers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Error while getting container for endpoint with model 1 and version 1"},
 			},
@@ -1059,7 +1059,7 @@ func TestCreate(t *testing.T) {
 		versionService       func() *mocks.VersionsService
 		envService           func() *mocks.EnvironmentService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *ApiResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should succcess create prediction job",
@@ -1070,38 +1070,38 @@ func TestCreate(t *testing.T) {
 			},
 			requestBody: &models.PredictionJob{
 				Name:            "prediction-job-1",
-				ProjectId:       models.Id(1),
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ProjectID:       models.ID(1),
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				EnvironmentName: "dev",
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1110,7 +1110,7 @@ func TestCreate(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultPredictionJobEnvironment").Return(&models.Environment{
-					Id:                     models.Id(1),
+					ID:                     models.ID(1),
 					Name:                   "dev",
 					Cluster:                "dev",
 					Region:                 "id",
@@ -1123,23 +1123,23 @@ func TestCreate(t *testing.T) {
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
 				svc.On("CreatePredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
-					Id:              models.Id(1),
+					ID:              models.ID(1),
 					Name:            "prediction-job-1",
-					ProjectId:       models.Id(1),
-					VersionId:       models.Id(1),
-					VersionModelId:  models.Id(1),
+					ProjectID:       models.ID(1),
+					VersionID:       models.ID(1),
+					VersionModelID:  models.ID(1),
 					EnvironmentName: "dev",
 				}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: &models.PredictionJob{
-					Id:              models.Id(1),
+					ID:              models.ID(1),
 					Name:            "prediction-job-1",
-					ProjectId:       models.Id(1),
-					VersionId:       models.Id(1),
-					VersionModelId:  models.Id(1),
+					ProjectID:       models.ID(1),
+					VersionID:       models.ID(1),
+					VersionModelID:  models.ID(1),
 					EnvironmentName: "dev",
 				},
 			},
@@ -1152,7 +1152,7 @@ func TestCreate(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -1167,7 +1167,7 @@ func TestCreate(t *testing.T) {
 				svc := &mocks.EnvironmentService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "error retrieving model with id: 1"},
 			},
@@ -1180,37 +1180,37 @@ func TestCreate(t *testing.T) {
 			},
 			requestBody: &models.PredictionJob{
 				Name:            "prediction-job-1",
-				ProjectId:       models.Id(1),
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ProjectID:       models.ID(1),
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				EnvironmentName: "dev",
 			}, modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1225,7 +1225,7 @@ func TestCreate(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
 			},
@@ -1238,38 +1238,38 @@ func TestCreate(t *testing.T) {
 			},
 			requestBody: &models.PredictionJob{
 				Name:            "prediction-job-1",
-				ProjectId:       models.Id(1),
-				VersionId:       models.Id(1),
-				VersionModelId:  models.Id(1),
+				ProjectID:       models.ID(1),
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
 				EnvironmentName: "dev",
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1278,7 +1278,7 @@ func TestCreate(t *testing.T) {
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
 				svc.On("GetDefaultPredictionJobEnvironment").Return(&models.Environment{
-					Id:                     models.Id(1),
+					ID:                     models.ID(1),
 					Name:                   "dev",
 					Cluster:                "dev",
 					Region:                 "id",
@@ -1293,7 +1293,7 @@ func TestCreate(t *testing.T) {
 				svc.On("CreatePredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Failed creating prediction job Connection refused"},
 			},
@@ -1306,14 +1306,14 @@ func TestCreate(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindById", mock.Anything, models.Id(1)).Return(&models.Model{
-					Id:           models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
 					Name:         "model-1",
-					ProjectId:    models.Id(1),
+					ProjectID:    models.ID(1),
 					Project:      mlp.Project{},
-					ExperimentId: 1,
+					ExperimentID: 1,
 					Type:         "pyfunc",
-					MlflowUrl:    "",
+					MlflowURL:    "",
 					Endpoints:    nil,
 				}, nil)
 				return svc
@@ -1324,17 +1324,17 @@ func TestCreate(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindById", mock.Anything, models.Id(1), models.Id(1), mock.Anything).Return(&models.Version{
-					Id:      models.Id(1),
-					ModelId: models.Id(1),
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
 					Model: &models.Model{
-						Id:           models.Id(1),
+						ID:           models.ID(1),
 						Name:         "model-1",
-						ProjectId:    models.Id(1),
+						ProjectID:    models.ID(1),
 						Project:      mlp.Project{},
-						ExperimentId: 1,
+						ExperimentID: 1,
 						Type:         "pyfunc",
-						MlflowUrl:    "",
+						MlflowURL:    "",
 						Endpoints:    nil,
 					},
 				}, nil)
@@ -1348,7 +1348,7 @@ func TestCreate(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "Unable to parse body as prediction job"},
 			},
@@ -1386,7 +1386,7 @@ func TestListAllInProject(t *testing.T) {
 		vars                 map[string]string
 		projectService       func() *mocks.ProjectsService
 		predictionJobService func() *mocks.PredictionJobService
-		expected             *ApiResponse
+		expected             *Response
 	}{
 		{
 			desc: "Should success list of prediction job",
@@ -1411,28 +1411,28 @@ func TestListAllInProject(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				svc.On("ListPredictionJobs", mock.Anything, &service.ListPredictionJobQuery{
 					Name:    "prediction-job",
-					ModelId: models.Id(1),
+					ModelID: models.ID(1),
 				}).Return([]*models.PredictionJob{
 					{
-						Id:              models.Id(1),
+						ID:              models.ID(1),
 						Name:            "prediction-job-1",
-						ProjectId:       models.Id(1),
-						VersionId:       models.Id(1),
-						VersionModelId:  models.Id(1),
+						ProjectID:       models.ID(1),
+						VersionID:       models.ID(1),
+						VersionModelID:  models.ID(1),
 						EnvironmentName: "dev",
 					},
 				}, nil)
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusOK,
 				data: []*models.PredictionJob{
 					{
-						Id:              models.Id(1),
+						ID:              models.ID(1),
 						Name:            "prediction-job-1",
-						ProjectId:       models.Id(1),
-						VersionId:       models.Id(1),
-						VersionModelId:  models.Id(1),
+						ProjectID:       models.ID(1),
+						VersionID:       models.ID(1),
+						VersionModelID:  models.ID(1),
 						EnvironmentName: "dev",
 					},
 				},
@@ -1455,7 +1455,7 @@ func TestListAllInProject(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusNotFound,
 				data: Error{Message: "API is down"},
 			},
@@ -1483,11 +1483,11 @@ func TestListAllInProject(t *testing.T) {
 				svc := &mocks.PredictionJobService{}
 				svc.On("ListPredictionJobs", mock.Anything, &service.ListPredictionJobQuery{
 					Name:    "prediction-job",
-					ModelId: models.Id(1),
+					ModelID: models.ID(1),
 				}).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
-			expected: &ApiResponse{
+			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{Message: "Failed listing prediction job"},
 			},

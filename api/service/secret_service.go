@@ -28,32 +28,32 @@ type SecretService interface {
 	Delete(ctx context.Context, secretID, projectID int32) error
 }
 
-func NewSecretService(mlpApiClient mlp.APIClient) SecretService {
+func NewSecretService(mlpAPIClient mlp.APIClient) SecretService {
 	return &secretService{
-		mlpApiClient: mlpApiClient,
+		mlpAPIClient: mlpAPIClient,
 	}
 }
 
 type secretService struct {
-	mlpApiClient mlp.APIClient
+	mlpAPIClient mlp.APIClient
 }
 
 func (ss *secretService) List(ctx context.Context, projectID int32) (mlp.Secrets, error) {
-	return ss.mlpApiClient.ListSecrets(ctx, projectID)
+	return ss.mlpAPIClient.ListSecrets(ctx, projectID)
 }
 
 func (ss *secretService) GetByIDandProjectID(ctx context.Context, secretID, projectID int32) (mlp.Secret, error) {
-	return ss.mlpApiClient.GetSecretByIDandProjectID(ctx, secretID, projectID)
+	return ss.mlpAPIClient.GetSecretByIDandProjectID(ctx, secretID, projectID)
 }
 
 func (ss *secretService) Create(ctx context.Context, projectID int32, secret mlp.Secret) (mlp.Secret, error) {
-	return ss.mlpApiClient.CreateSecret(ctx, projectID, secret)
+	return ss.mlpAPIClient.CreateSecret(ctx, projectID, secret)
 }
 
 func (ss *secretService) Update(ctx context.Context, projectID int32, secret mlp.Secret) (mlp.Secret, error) {
-	return ss.mlpApiClient.UpdateSecret(ctx, projectID, secret)
+	return ss.mlpAPIClient.UpdateSecret(ctx, projectID, secret)
 }
 
 func (ss *secretService) Delete(ctx context.Context, secretID, projectID int32) error {
-	return ss.mlpApiClient.DeleteSecret(ctx, secretID, projectID)
+	return ss.mlpAPIClient.DeleteSecret(ctx, secretID, projectID)
 }
