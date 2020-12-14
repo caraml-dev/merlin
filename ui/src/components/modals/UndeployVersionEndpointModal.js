@@ -16,17 +16,18 @@
 
 import React, { useEffect } from "react";
 import { EuiConfirmModal, EuiOverlayMask, EuiProgress } from "@elastic/eui";
-import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
+import mocks from "../../mocks";
 
-const StopServeModelEndpointModal = ({
+const UndeployVersionEndpointModal = ({
+  versionEndpoint,
+  version,
   model,
-  endpoint,
   callback,
   closeModal
 }) => {
-  const [{ isLoading, isLoaded }, stopServingEndpoint] = useMerlinApi(
-    `/models/${model.id}/endpoints/${endpoint.id}`,
+  const [{ isLoading, isLoaded }, undeployVersion] = useMerlinApi(
+    `/models/${model.id}/versions/${version.id}/endpoint/${versionEndpoint.id}`,
     { method: "DELETE", addToast: true, mock: mocks.noBody },
     {},
     false
@@ -42,15 +43,16 @@ const StopServeModelEndpointModal = ({
   return (
     <EuiOverlayMask>
       <EuiConfirmModal
-        title="Stop model serving"
+        title="Undeploy model version"
         onCancel={closeModal}
-        onConfirm={stopServingEndpoint}
+        onConfirm={undeployVersion}
         cancelButtonText="Cancel"
-        confirmButtonText="Stop Serving"
+        confirmButtonText="Undeploy"
         buttonColor="danger">
         <p>
-          You're about to stop serving traffic to model <b>{model.name}</b> in{" "}
-          <b>{endpoint.environment_name}</b> environment.
+          You're about to undeploy the endpoint for model version{" "}
+          <b>{version.id}</b> from <b>{versionEndpoint.environment_name}</b>{" "}
+          environment.
         </p>
         <p>The following endpoint will not be accessible anymore.</p>
         {isLoading && (
@@ -61,11 +63,11 @@ const StopServeModelEndpointModal = ({
           />
         )}
         <pre>
-          <code>{endpoint.url}</code>
+          <code>{versionEndpoint.url}</code>
         </pre>
       </EuiConfirmModal>
     </EuiOverlayMask>
   );
 };
 
-export default StopServeModelEndpointModal;
+export default UndeployVersionEndpointModal;

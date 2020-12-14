@@ -35,6 +35,7 @@ const VersionDeploy = ({ breadcrumbs, model, version }) => {
       disableEnvironment={false}
       modalContent={`You're about to deploy a new endpoint for a model version ${version.id}.`}
       onDeploy={deployVersionEndpoint}
+      redirectUrl={`/merlin/projects/${model.project_id}/models/${model.id}/versions`}
       response={deploymentResponse}
     />
   );

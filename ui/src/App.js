@@ -33,8 +33,10 @@ import Versions from "./version/Versions";
 import Jobs from "./job/Jobs";
 import JobDetails from "./job/JobDetails";
 import { CreateJobView } from "./job/CreateJobView";
-import { VersionDetails } from "./version/VersionDetails";
 import { PrivateLayout } from "./PrivateLayout";
+
+// The new UI architecture will have all UI pages inside of `pages` folder
+import { Version } from "./pages";
 
 export default () => (
   <ErrorBoundary>
@@ -79,14 +81,26 @@ export default () => (
             render={PrivateLayout(Versions)}
           />
 
-          {/* VERSIONS DETAILS (Sub-router) */}
+          {/* Version pages (and its sub-routers) */}
           <PrivateRoute
             path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/*`}
-            render={PrivateLayout(VersionDetails)}
+            render={PrivateLayout(Version)}
           />
+
           <Redirect
             from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId`}
-            to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/deploy`}
+            to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/details`}
+            noThrow
+          />
+
+          <PrivateRoute
+            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/*`}
+            render={PrivateLayout(Version)}
+          />
+
+          <Redirect
+            from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId`}
+            to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/details`}
             noThrow
           />
 

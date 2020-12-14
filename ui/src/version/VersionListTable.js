@@ -37,7 +37,7 @@ import {
 import { DateFromNow } from "@gojek/mlp-ui";
 
 import VersionEndpointActions from "./VersionEndpointActions";
-import { Link } from "@reach/router";
+import { Link, navigate } from "@reach/router";
 
 const moment = require("moment");
 
@@ -125,7 +125,14 @@ const VersionListTable = ({
                           Environment
                         </EuiText>
                         <EuiText size={defaultTextSize}>
-                          {versionEndpoint.environment_name}{" "}
+                          <EuiLink
+                            onClick={() =>
+                              navigate(
+                                `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/endpoints/${versionEndpoint.id}`
+                              )
+                            }>
+                            {versionEndpoint.environment_name}
+                          </EuiLink>{" "}
                           {versionEndpoint.status === "serving" && (
                             <EuiBadge
                               color={healthColor(versionEndpoint.status)}>
@@ -268,10 +275,11 @@ const VersionListTable = ({
         const servingEndpoint = version.endpoints.find(
           endpoint => endpoint.status === "serving"
         );
+        const versionPageUrl = `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/details`;
         return (
           <Fragment>
             <span className="cell-first-column" size={defaultIconSize}>
-              {name}
+              <EuiLink onClick={() => navigate(versionPageUrl)}>{name}</EuiLink>
             </span>{" "}
             {moment().diff(version.created_at, "hour") <= 1 && (
               <EuiBadge color="secondary">
@@ -338,9 +346,14 @@ const VersionListTable = ({
                     content={`Deployment to ${endpoint.environment_name} is ${endpoint.status}`}
                     position="left">
                     <EuiHealth color={healthColor(endpoint.status)}>
-                      <EuiText size={defaultTextSize}>
+                      <EuiLink
+                        onClick={() =>
+                          navigate(
+                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}`
+                          )
+                        }>
                         {endpoint.environment_name}
-                      </EuiText>
+                      </EuiLink>
                     </EuiHealth>
                   </EuiToolTip>
                 )}
@@ -348,7 +361,14 @@ const VersionListTable = ({
                   endpoint.status === "running") && (
                   <EuiHealth color="none">
                     <EuiText size={defaultTextSize}>
-                      {endpoint.environment_name}
+                      <EuiLink
+                        onClick={() =>
+                          navigate(
+                            `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}`
+                          )
+                        }>
+                        {endpoint.environment_name}
+                      </EuiLink>
                     </EuiText>
                   </EuiHealth>
                 )}
@@ -401,47 +421,59 @@ const VersionListTable = ({
         activeModel && (
           <EuiFlexGroup
             alignItems="flexStart"
-            direction="column"
+            direction="row"
             gutterSize="s"
             style={{ margin: "2px 0" }}>
-            <EuiToolTip
-              position="top"
-              content={
-                <p>
-                  Deploy model version as an HTTP endpoint to available
-                  environment.
-                </p>
-              }>
-              <Link
-                to={`${version.id}/deploy`}
-                state={{ model: activeModel, version: version }}>
-                <EuiButtonEmpty iconType="importAction" size="xs">
-                  <EuiText size="xs">
-                    {activeModel.type !== "pyfunc_v2"
-                      ? "Deploy"
-                      : "Deploy Endpoint"}
-                  </EuiText>
-                </EuiButtonEmpty>
-              </Link>
-            </EuiToolTip>
-
-            {activeModel.type === "pyfunc_v2" && (
+            <EuiFlexItem grow={false}>
               <EuiToolTip
                 position="top"
                 content={
                   <p>
-                    Start new batch prediction job from a given model version
+                    Deploy model version as an HTTP endpoint to available
+                    environment.
                   </p>
                 }>
                 <Link
-                  to={`${version.id}/create-job`}
+                  to={`${version.id}/deploy`}
                   state={{ model: activeModel, version: version }}>
-                  <EuiButtonEmpty iconType="storage" size="xs">
-                    <EuiText size="xs">Start Batch Job</EuiText>
+                  <EuiButtonEmpty iconType="importAction" size="xs">
+                    <EuiText size="xs">
+                      {activeModel.type !== "pyfunc_v2"
+                        ? "Deploy"
+                        : "Deploy Endpoint"}
+                    </EuiText>
                   </EuiButtonEmpty>
                 </Link>
               </EuiToolTip>
+            </EuiFlexItem>
+
+            {activeModel.type === "pyfunc_v2" && (
+              <EuiFlexItem>
+                <EuiToolTip
+                  position="top"
+                  content={
+                    <p>
+                      Start new batch prediction job from a given model version
+                    </p>
+                  }>
+                  <Link
+                    to={`${version.id}/create-job`}
+                    state={{ model: activeModel, version: version }}>
+                    <EuiButtonEmpty iconType="storage" size="xs">
+                      <EuiText size="xs">Start Batch Job</EuiText>
+                    </EuiButtonEmpty>
+                  </Link>
+                </EuiToolTip>
+              </EuiFlexItem>
             )}
+
+            <EuiFlexItem grow={false}>
+              <Link to={`${version.id}/details`}>
+                <EuiButtonEmpty iconType="inspect" size="xs">
+                  <EuiText size="xs">Details</EuiText>
+                </EuiButtonEmpty>
+              </Link>
+            </EuiFlexItem>
           </EuiFlexGroup>
         )
     },
