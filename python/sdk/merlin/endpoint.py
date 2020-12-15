@@ -31,7 +31,10 @@ class Status(Enum):
 @autostr
 class VersionEndpoint:
     def __init__(self, endpoint: client.VersionEndpoint, log_url: str = None):
-        self._url = f"{endpoint.url}:predict"
+        self._url = f"{endpoint.url}"
+        if ":predict" not in endpoint.url:
+            self._url = f"{endpoint.url}:predict"
+
         self._status = Status(endpoint.status)
         self._id = endpoint.id
         self._environment_name = endpoint.environment_name
