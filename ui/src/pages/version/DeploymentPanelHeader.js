@@ -24,6 +24,7 @@ import { DeploymentStatus } from "../../components/DeploymentStatus";
 import { HorizontalDescriptionList } from "../../components/HorizontalDescriptionList";
 import { DeploymentActions } from "./DeploymentActions";
 import { EnvironmentDropdown } from "./EnvironmentDropdown";
+import { versionEndpointUrl } from "../../utils/versionEndpointUrl";
 
 export const DeploymentPanelHeader = ({
   model,
@@ -59,7 +60,7 @@ export const DeploymentPanelHeader = ({
     {
       title: "Endpoint",
       description: endpoint ? (
-        <CopyableUrl text={endpoint.url} />
+        <CopyableUrl text={versionEndpointUrl(endpoint.url)} />
       ) : (
         <EuiText>-</EuiText>
       ),
