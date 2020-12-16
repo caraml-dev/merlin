@@ -26,7 +26,7 @@ REQUIRES = [
     "six>=1.10",
     "mlflow>=1.2.0",
     "google-cloud-storage>=1.19.0",
-    "boto3==1.9.84",
+    "boto3>=1.9.84",
     "urllib3>=1.23",
     "PyPrind>=2.11.2",
     "google-auth>=1.11.0,<2.0dev",
