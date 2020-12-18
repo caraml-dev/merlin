@@ -16,6 +16,7 @@
 
 import React, { useState } from "react";
 import { EuiFormRow, EuiSuperSelect } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 export const ResultDataTypeSelect = ({
   resultType,
@@ -108,4 +109,11 @@ export const ResultDataTypeSelect = ({
       />
     </EuiFormRow>
   );
+};
+
+ResultDataTypeSelect.propTypes = {
+  resultType: PropTypes.string,
+  resultItemType: PropTypes.string,
+  setResultType: PropTypes.func,
+  setResultItemType: PropTypes.func
 };

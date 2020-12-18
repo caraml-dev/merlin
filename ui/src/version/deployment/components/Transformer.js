@@ -32,6 +32,7 @@ import {
 import { appConfig } from "../../../config";
 import { ResourceRequest } from "./ResourceRequest";
 import { EnvironmentVariables } from "./EnvironmentVariables";
+import PropTypes from "prop-types";
 
 const extractRegistry = (image, registries) => {
   if (image) {
@@ -207,4 +208,10 @@ export const Transformer = ({
       )}
     </EuiPanel>
   );
+};
+
+Transformer.propTypes = {
+  transformer: PropTypes.object,
+  onChange: PropTypes.func,
+  defaultResourceRequest: PropTypes.object
 };

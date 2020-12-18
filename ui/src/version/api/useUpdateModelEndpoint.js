@@ -16,6 +16,7 @@
 
 import { useEffect, useState } from "react";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
+import PropTypes from "prop-types";
 
 const useUpdateModelEndpoint = (versionEndpoint, model, modelEndpointId) => {
   const [fetchModelEndpointResponse, fetchModelEndpoint] = useMerlinApi(
@@ -70,6 +71,12 @@ const useUpdateModelEndpoint = (versionEndpoint, model, modelEndpointId) => {
   }, [updateModelEndpointResponse]);
 
   return [state, () => fetchModelEndpoint()];
+};
+
+useUpdateModelEndpoint.propTypes = {
+  versionEndpoint: PropTypes.object,
+  model: PropTypes.object,
+  modelEndpointId: PropTypes.string
 };
 
 export default useUpdateModelEndpoint;

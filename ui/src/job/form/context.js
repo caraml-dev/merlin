@@ -15,6 +15,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from "react";
+import PropTypes from "prop-types";
 
 export const JobFormContext = React.createContext({});
 
@@ -232,4 +233,8 @@ export const JobFormContextProvider = ({ job: initJob, ...props }) => {
       {props.children}
     </JobFormContext.Provider>
   );
+};
+
+JobFormContextProvider.propTypes = {
+  initJob: PropTypes.object
 };

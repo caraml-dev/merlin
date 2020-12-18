@@ -23,6 +23,7 @@ import {
   EuiFormRow,
   EuiSelect
 } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 export const ModelAlertRulePercentileRow = ({
   ruleRow,
@@ -103,4 +104,12 @@ export const ModelAlertRulePercentileRow = ({
       </EuiFlexItem>
     </EuiFlexGroup>
   );
+};
+
+ModelAlertRulePercentileRow.propTypes = {
+  ruleRow: PropTypes.object,
+  editRuleRow: PropTypes.func,
+  deleteRuleRow: PropTypes.func,
+  unit: PropTypes.string,
+  isChecked: PropTypes.bool
 };

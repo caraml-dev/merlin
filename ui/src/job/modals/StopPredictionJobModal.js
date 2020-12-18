@@ -18,6 +18,7 @@ import React, { useEffect } from "react";
 import { EuiConfirmModal, EuiOverlayMask, EuiProgress } from "@elastic/eui";
 import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
+import PropTypes from "prop-types";
 
 const StopPredictionJobModal = ({ job, closeModal }) => {
   const [{ isLoading, isLoaded }, stopRunningJob] = useMerlinApi(
@@ -56,6 +57,11 @@ const StopPredictionJobModal = ({ job, closeModal }) => {
       </EuiConfirmModal>
     </EuiOverlayMask>
   );
+};
+
+StopPredictionJobModal.propTypes = {
+  job: PropTypes.object,
+  closeModal: PropTypes.func
 };
 
 export default StopPredictionJobModal;

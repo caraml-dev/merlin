@@ -34,6 +34,7 @@ import { get } from "@gojek/mlp-ui";
 import VersionDeploy from "./deployment/VersionDeploy";
 import VersionRedeploy from "./deployment/VersionRedeploy";
 import Log from "../log/Log";
+import PropTypes from "prop-types";
 
 export const VersionDetails = ({
   projectId,
@@ -150,6 +151,14 @@ export const VersionDetails = ({
       </EuiPageBody>
     </EuiPage>
   );
+};
+
+VersionDetails.propTypes = {
+  projectId: PropTypes.string,
+  modelId: PropTypes.string,
+  versionId: PropTypes.string,
+  location: PropTypes.object,
+  state: PropTypes.object
 };
 
 const VersionLog = ({ modelId, versionId, endpointId, breadcrumbs }) => {

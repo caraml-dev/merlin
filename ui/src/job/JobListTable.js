@@ -34,6 +34,7 @@ import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import StopPredictionJobModal from "./modals/StopPredictionJobModal";
 import { featureToggleConfig } from "../config";
+import PropTypes from "prop-types";
 
 const moment = require("moment");
 const querystring = require("querystring");
@@ -270,6 +271,14 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
       )}
     </Fragment>
   );
+};
+
+JobListTable.propTypes = {
+  projectId: PropTypes.string,
+  modelId: PropTypes.string,
+  jobs: PropTypes.array,
+  isLoaded: PropTypes.bool,
+  error: PropTypes.object
 };
 
 export default JobListTable;

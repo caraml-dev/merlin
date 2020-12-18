@@ -18,6 +18,7 @@ import React from "react";
 import { JobFormContextProvider } from "./form/context";
 import { JobForm } from "./form/JobForm";
 import { Job } from "./job";
+import PropTypes from "prop-types";
 
 export const CreateJobView = ({ projectId, modelId, versionId }) => {
   return (
@@ -25,4 +26,10 @@ export const CreateJobView = ({ projectId, modelId, versionId }) => {
       <JobForm projectId={projectId} modelId={modelId} versionId={versionId} />
     </JobFormContextProvider>
   );
+};
+
+CreateJobView.propTypes = {
+  projectId: PropTypes.string,
+  modelId: PropTypes.string,
+  versionId: PropTypes.string
 };

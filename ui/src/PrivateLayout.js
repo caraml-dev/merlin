@@ -24,6 +24,7 @@ import {
   ProjectsContextProvider
 } from "@gojek/mlp-ui";
 import config, { appConfig } from "./config";
+import PropTypes from "prop-types";
 
 export const PrivateLayout = Component => {
   return props => (
@@ -44,4 +45,8 @@ export const PrivateLayout = Component => {
       </ProjectsContextProvider>
     </ApplicationsContextProvider>
   );
+};
+
+PrivateLayout.propTypes = {
+  projectId: PropTypes.string
 };

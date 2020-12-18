@@ -35,6 +35,7 @@ import {
   EuiSearchBar
 } from "@elastic/eui";
 import { DateFromNow } from "@gojek/mlp-ui";
+import PropTypes from "prop-types";
 
 import VersionEndpointActions from "./VersionEndpointActions";
 import { Link } from "@reach/router";
@@ -537,6 +538,15 @@ const VersionListTable = ({
       cellProps={cellProps}
     />
   );
+};
+
+VersionListTable.propTypes = {
+  versions: PropTypes.array,
+  fetchVersions: PropTypes.func,
+  isLoaded: PropTypes.bool,
+  error: PropTypes.object,
+  activeVersion: PropTypes.object,
+  activeModel: PropTypes.object
 };
 
 export default VersionListTable;

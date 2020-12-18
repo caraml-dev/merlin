@@ -30,6 +30,7 @@ import VersionUndeployEndpointModal from "./modals/VersionUndeployEndpointModal"
 import VersionServeEndpointModal from "./modals/VersionServeEndpointModal";
 import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
+import PropTypes from "prop-types";
 
 const Versions = ({ projectId, modelId, ...props }) => {
   const [
@@ -139,6 +140,11 @@ const Versions = ({ projectId, modelId, ...props }) => {
       )}
     </EuiPage>
   );
+};
+
+Versions.propTypes = {
+  projectId: PropTypes.string.isRequired,
+  modelId: PropTypes.string.isRequired
 };
 
 export default Versions;

@@ -24,6 +24,7 @@ import {
 } from "@elastic/eui";
 import { useToggle } from "@gojek/mlp-ui";
 import StopServeModelEndpointModal from "../model/modals/StopServeModelEndpointModal";
+import PropTypes from "prop-types";
 
 const VersionEndpointActions = ({
   versionEndpoint,
@@ -188,6 +189,14 @@ const VersionEndpointActions = ({
       )}
     </Fragment>
   );
+};
+
+VersionEndpointActions.propTypes = {
+  versionEndpoint: PropTypes.object,
+  activeVersion: PropTypes.object,
+  activeModel: PropTypes.object,
+  fetchVersions: PropTypes.func,
+  versions: PropTypes.array
 };
 
 export default VersionEndpointActions;

@@ -26,6 +26,7 @@ import {
 } from "@elastic/eui";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import mocks from "../../../mocks";
+import PropTypes from "prop-types";
 
 export const ResourceRequestForm = ({ resourceRequest, onChange }) => {
   const [defaultResource, setDefaultResource] = useState({
@@ -185,4 +186,9 @@ export const ResourceRequestForm = ({ resourceRequest, onChange }) => {
       </EuiFlexGroup>
     </EuiForm>
   );
+};
+
+ResourceRequestForm.propTypes = {
+  resourceRequest: PropTypes.object,
+  onChange: PropTypes.func
 };

@@ -36,6 +36,7 @@ import { EndpointEnvironment } from "./EndpointEnvironment";
 import { EndpointVariables } from "./EndpointVariables";
 import { ResourceRequest } from "./ResourceRequest";
 import { Transformer } from "./Transformer";
+import PropTypes from "prop-types";
 
 const DeployConfirmationModal = ({
   actionTitle,
@@ -56,6 +57,14 @@ const DeployConfirmationModal = ({
     </EuiConfirmModal>
   </EuiOverlayMask>
 );
+
+DeployConfirmationModal.propTypes = {
+  actionTitle: PropTypes.string,
+  content: PropTypes.string,
+  isLoading: PropTypes.bool,
+  onConfirm: PropTypes.func,
+  onCancel: PropTypes.func
+};
 
 const defaultResourceRequest = {
   cpu_request: "500m",
@@ -288,4 +297,16 @@ export const EndpointDeployment = ({
       </EuiFlexGroup>
     </Fragment>
   );
+};
+
+EndpointDeployment.propTypes = {
+  actionTitle: PropTypes.string,
+  breadcrumbs: PropTypes.array,
+  model: PropTypes.object,
+  version: PropTypes.object,
+  endpointId: PropTypes.string,
+  disableEnvironment: PropTypes.bool,
+  modalContent: PropTypes.string,
+  onDeploy: PropTypes.func,
+  response: PropTypes.object
 };

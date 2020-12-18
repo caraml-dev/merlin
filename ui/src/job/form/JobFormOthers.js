@@ -21,6 +21,7 @@ import { ModelVersionSelect } from "./components/ModelVersionsSelect";
 import { ServiceAccountSelect } from "./components/ServiceAccountSelect";
 import { ResourceRequestForm } from "./components/ResourceRequestForm";
 import { EnvironmentVariablesForm } from "./components/EnvironmentVariablesForm";
+import PropTypes from "prop-types";
 
 export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
   const {
@@ -76,4 +77,9 @@ export const JobFormOthers = ({ versions, isSelectVersionDisabled }) => {
       </EuiFlexGroup>
     </Fragment>
   );
+};
+
+JobFormOthers.propTypes = {
+  versions: PropTypes.array,
+  isSelectVersionDisabled: PropTypes.bool
 };

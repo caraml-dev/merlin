@@ -24,6 +24,7 @@ import {
   EuiSwitch,
   EuiText
 } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 export const ModelAlertRule = ({
   title,
@@ -157,4 +158,14 @@ export const ModelAlertRule = ({
       </EuiFlexGroup>
     </Fragment>
   );
+};
+
+ModelAlertRule.propTypes = {
+  title: PropTypes.string,
+  name: PropTypes.string,
+  description: PropTypes.string,
+  unit: PropTypes.string,
+  max: PropTypes.number,
+  request: PropTypes.object,
+  setRequest: PropTypes.func
 };

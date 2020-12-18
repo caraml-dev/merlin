@@ -18,6 +18,7 @@ import React, { useEffect } from "react";
 import { EuiConfirmModal, EuiOverlayMask, EuiProgress } from "@elastic/eui";
 import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
+import PropTypes from "prop-types";
 
 const VersionUndeployEndpointModal = ({
   versionEndpoint,
@@ -68,6 +69,14 @@ const VersionUndeployEndpointModal = ({
       </EuiConfirmModal>
     </EuiOverlayMask>
   );
+};
+
+VersionUndeployEndpointModal.propTypes = {
+  versionEndpoint: PropTypes.object,
+  version: PropTypes.object,
+  model: PropTypes.object,
+  updateVersionsCallback: PropTypes.func,
+  closeModal: PropTypes.func
 };
 
 export default VersionUndeployEndpointModal;

@@ -18,6 +18,7 @@ import React, { useEffect } from "react";
 import { EuiConfirmModal, EuiOverlayMask, EuiProgress } from "@elastic/eui";
 import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
+import PropTypes from "prop-types";
 
 const StopServeModelEndpointModal = ({
   model,
@@ -66,6 +67,13 @@ const StopServeModelEndpointModal = ({
       </EuiConfirmModal>
     </EuiOverlayMask>
   );
+};
+
+StopServeModelEndpointModal.propTypes = {
+  model: PropTypes.object,
+  endpoint: PropTypes.object,
+  callback: PropTypes.func,
+  closeModal: PropTypes.func
 };
 
 export default StopServeModelEndpointModal;

@@ -18,6 +18,7 @@ import React, { useEffect, useState } from "react";
 import { EuiConfirmModal, EuiOverlayMask, EuiProgress } from "@elastic/eui";
 import useUpdateModelEndpoint from "../api/useUpdateModelEndpoint";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
+import PropTypes from "prop-types";
 
 const VersionServeEndpointModal = ({
   versionEndpoint,
@@ -110,6 +111,14 @@ const VersionServeEndpointModal = ({
       </EuiConfirmModal>
     </EuiOverlayMask>
   );
+};
+
+VersionServeEndpointModal.propTypes = {
+  versionEndpoint: PropTypes.object,
+  version: PropTypes.object,
+  model: PropTypes.object,
+  updateVersionsCallback: PropTypes.func,
+  closeModal: PropTypes.func
 };
 
 export default VersionServeEndpointModal;
