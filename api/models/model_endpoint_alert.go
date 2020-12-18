@@ -45,10 +45,10 @@ const (
 )
 
 type ModelEndpointAlert struct {
-	Id              Id              `json:"-"`
-	ModelId         Id              `json:"model_id"`
+	ID              ID              `json:"-"`
+	ModelID         ID              `json:"model_id"`
 	Model           *Model          `json:"-"`
-	ModelEndpointId Id              `json:"model_endpoint_id"`
+	ModelEndpointID ID              `json:"model_endpoint_id"`
 	ModelEndpoint   *ModelEndpoint  `json:"-"`
 	EnvironmentName string          `json:"environment_name"`
 	TeamName        string          `json:"team_name"`

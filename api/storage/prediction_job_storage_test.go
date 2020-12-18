@@ -50,24 +50,24 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 		db.Create(&p)
 
 		m := models.Model{
-			Id:           1,
-			ProjectId:    models.Id(p.Id),
-			ExperimentId: 1,
+			ID:           1,
+			ProjectID:    models.ID(p.Id),
+			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
 		}
 		db.Create(&m)
 
 		v := models.Version{
-			ModelId:     m.Id,
-			RunId:       "1",
-			ArtifactUri: "gcs:/mlp/1/1",
+			ModelID:     m.ID,
+			RunID:       "1",
+			ArtifactURI: "gcs:/mlp/1/1",
 		}
 		db.Create(&v)
 
 		job := &models.PredictionJob{
-			Id:   1,
-			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.Id, time.Now()),
+			ID:   1,
+			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time.Now()),
 			Metadata: models.Metadata{
 				Team:        "dsp",
 				Stream:      "dsp",
@@ -80,9 +80,9 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 					},
 				},
 			},
-			VersionId:       v.Id,
-			VersionModelId:  m.Id,
-			ProjectId:       models.Id(p.Id),
+			VersionID:       v.ID,
+			VersionModelID:  m.ID,
+			ProjectID:       models.ID(p.Id),
 			EnvironmentName: env1.Name,
 			Environment:     &env1,
 			Config: &models.Config{
@@ -131,12 +131,12 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 		err := predJobStore.Save(job)
 		assert.NoError(t, err)
 
-		loaded, err := predJobStore.Get(job.Id)
+		loaded, err := predJobStore.Get(job.ID)
 		assert.NoError(t, err)
 
-		assert.Equal(t, job.Id, loaded.Id)
-		assert.Equal(t, job.VersionId, loaded.VersionId)
-		assert.Equal(t, job.VersionModelId, loaded.VersionModelId)
+		assert.Equal(t, job.ID, loaded.ID)
+		assert.Equal(t, job.VersionID, loaded.VersionID)
+		assert.Equal(t, job.VersionModelID, loaded.VersionModelID)
 		assert.Equal(t, job.Config, loaded.Config)
 		assert.Equal(t, job.Status, loaded.Status)
 		assert.Equal(t, job.Error, loaded.Error)
@@ -166,24 +166,24 @@ func TestPredictionJobStorage_List(t *testing.T) {
 		db.Create(&p)
 
 		m := models.Model{
-			Id:           1,
-			ProjectId:    models.Id(p.Id),
-			ExperimentId: 1,
+			ID:           1,
+			ProjectID:    models.ID(p.Id),
+			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
 		}
 		db.Create(&m)
 
 		v := models.Version{
-			ModelId:     m.Id,
-			RunId:       "1",
-			ArtifactUri: "gcs:/mlp/1/1",
+			ModelID:     m.ID,
+			RunID:       "1",
+			ArtifactURI: "gcs:/mlp/1/1",
 		}
 		db.Create(&v)
 
 		job1 := &models.PredictionJob{
-			Id:   1,
-			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.Id, time.Now()),
+			ID:   1,
+			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time.Now()),
 			Metadata: models.Metadata{
 				Team:        "dsp",
 				Stream:      "dsp",
@@ -196,9 +196,9 @@ func TestPredictionJobStorage_List(t *testing.T) {
 					},
 				},
 			},
-			VersionId:       v.Id,
-			VersionModelId:  m.Id,
-			ProjectId:       models.Id(p.Id),
+			VersionID:       v.ID,
+			VersionModelID:  m.ID,
+			ProjectID:       models.ID(p.Id),
 			Environment:     &env1,
 			EnvironmentName: env1.Name,
 			Config: &models.Config{
@@ -245,8 +245,8 @@ func TestPredictionJobStorage_List(t *testing.T) {
 		}
 
 		job2 := &models.PredictionJob{
-			Id:   2,
-			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.Id, time.Now()),
+			ID:   2,
+			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time.Now()),
 			Metadata: models.Metadata{
 				Team:        "dsp",
 				Stream:      "dsp",
@@ -259,9 +259,9 @@ func TestPredictionJobStorage_List(t *testing.T) {
 					},
 				},
 			},
-			VersionId:       v.Id,
-			VersionModelId:  m.Id,
-			ProjectId:       models.Id(p.Id),
+			VersionID:       v.ID,
+			VersionModelID:  m.ID,
+			ProjectID:       models.ID(p.Id),
 			Environment:     &env1,
 			EnvironmentName: env1.Name,
 			Config: &models.Config{
@@ -314,19 +314,19 @@ func TestPredictionJobStorage_List(t *testing.T) {
 		assert.NoError(t, err)
 
 		jobs, err := predJobStore.List(&models.PredictionJob{
-			ProjectId: models.Id(p.Id),
+			ProjectID: models.ID(p.Id),
 		})
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)
 
 		jobs, err = predJobStore.List(&models.PredictionJob{
-			VersionModelId: m.Id,
+			VersionModelID: m.ID,
 		})
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)
 
 		jobs, err = predJobStore.List(&models.PredictionJob{
-			VersionId: v.Id,
+			VersionID: v.ID,
 		})
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)

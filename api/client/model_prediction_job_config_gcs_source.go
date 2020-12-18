@@ -11,7 +11,7 @@ package client
 
 type PredictionJobConfigGcsSource struct {
 	Format   *FileFormat       `json:"format,omitempty"`
-	Uri      string            `json:"uri,omitempty"`
+	URI      string            `json:"uri,omitempty"`
 	Features []string          `json:"features,omitempty"`
 	Options  map[string]string `json:"options,omitempty"`
 }

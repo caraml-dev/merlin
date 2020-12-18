@@ -58,8 +58,8 @@ type LogQuery struct {
 	Namespace         string    `schema:"namespace,required"`
 	Cluster           string    `schema:"cluster,required"`
 	GcpProject        string    `schema:"gcp_project"`
-	VersionEndpointId uuid.UUID `schema:"version_endpoint_id"`
-	ModelId           models.Id `schema:"model_id"`
+	VersionEndpointID uuid.UUID `schema:"version_endpoint_id"`
+	ModelID           models.ID `schema:"model_id"`
 
 	Pretty       bool       `schema:"pretty"`
 	Follow       bool       `schema:"follow"`

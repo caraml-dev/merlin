@@ -18,7 +18,7 @@ import "time"
 
 type Config struct {
 	// GCS URL Containing build context
-	BuildContextUrl string
+	BuildContextURL string
 	// Path to sub folder which is intended to build instead of using root folder
 	ContextSubPath string
 	// Dockerfile Path within the build context

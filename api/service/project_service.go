@@ -26,24 +26,24 @@ type ProjectsService interface {
 	GetByName(ctx context.Context, projectName string) (mlp.Project, error)
 }
 
-func NewProjectsService(mlpApiClient mlp.APIClient) ProjectsService {
+func NewProjectsService(mlpAPIClient mlp.APIClient) ProjectsService {
 	return &projectsService{
-		mlpApiClient: mlpApiClient,
+		mlpAPIClient: mlpAPIClient,
 	}
 }
 
 type projectsService struct {
-	mlpApiClient mlp.APIClient
+	mlpAPIClient mlp.APIClient
 }
 
 func (service *projectsService) List(ctx context.Context, projectName string) (mlp.Projects, error) {
-	return service.mlpApiClient.ListProjects(ctx, projectName)
+	return service.mlpAPIClient.ListProjects(ctx, projectName)
 }
 
 func (service *projectsService) GetByID(ctx context.Context, projectID int32) (mlp.Project, error) {
-	return service.mlpApiClient.GetProjectByID(ctx, projectID)
+	return service.mlpAPIClient.GetProjectByID(ctx, projectID)
 }
 
 func (service *projectsService) GetByName(ctx context.Context, projectName string) (mlp.Project, error) {
-	return service.mlpApiClient.GetProjectByName(ctx, projectName)
+	return service.mlpAPIClient.GetProjectByName(ctx, projectName)
 }

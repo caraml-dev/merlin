@@ -21,14 +21,14 @@ import (
 
 type PredictionJobStorage interface {
 	// Get get prediction job with given ID
-	Get(Id models.Id) (*models.PredictionJob, error)
+	Get(ID models.ID) (*models.PredictionJob, error)
 	// List list all prediction job matching the given query
 	List(query *models.PredictionJob) (endpoints []*models.PredictionJob, err error)
 	// Save save the prediction job to underlying storage
 	Save(predictionJob *models.PredictionJob) error
 	// GetFirstSuccessModelVersionPerModel get first model version resulting in a successful batch prediction job
 	// GetFirstSuccessModelVersionPerModel get first model version resulting in a successful batch prediction job
-	GetFirstSuccessModelVersionPerModel() (map[models.Id]models.Id, error)
+	GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error)
 }
 
 type predictionJobStorage struct {
@@ -40,7 +40,7 @@ func NewPredictionJobStorage(db *gorm.DB) PredictionJobStorage {
 }
 
 // Get get prediction job with given ID
-func (p *predictionJobStorage) Get(id models.Id) (*models.PredictionJob, error) {
+func (p *predictionJobStorage) Get(id models.ID) (*models.PredictionJob, error) {
 	var predictionJob models.PredictionJob
 	if err := p.query().Where("id = ?", id).First(&predictionJob).Error; err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (p *predictionJobStorage) Save(predictionJob *models.PredictionJob) error {
 	return p.db.Save(predictionJob).Error
 }
 
-func (p *predictionJobStorage) GetFirstSuccessModelVersionPerModel() (map[models.Id]models.Id, error) {
+func (p *predictionJobStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error) {
 	rows, err := p.db.Table("prediction_jobs").
 		Select("version_model_id , min(version_id)").
 		Where("status = 'completed' ").
@@ -72,14 +72,14 @@ func (p *predictionJobStorage) GetFirstSuccessModelVersionPerModel() (map[models
 	}
 	defer rows.Close()
 
-	resultMap := make(map[models.Id]models.Id)
+	resultMap := make(map[models.ID]models.ID)
 	for rows.Next() {
-		var modelId models.Id
-		var versionId models.Id
-		if err := rows.Scan(&modelId, &versionId); err != nil {
+		var modelID models.ID
+		var versionID models.ID
+		if err := rows.Scan(&modelID, &versionID); err != nil {
 			return nil, err
 		}
-		resultMap[modelId] = versionId
+		resultMap[modelID] = versionID
 	}
 	return resultMap, nil
 }

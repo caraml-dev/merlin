@@ -11,15 +11,15 @@ type DeploymentStorage struct {
 }
 
 // GetFirstSuccessModelVersionPerModel provides a mock function with given fields:
-func (_m *DeploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.Id]models.Id, error) {
+func (_m *DeploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error) {
 	ret := _m.Called()
 
-	var r0 map[models.Id]models.Id
-	if rf, ok := ret.Get(0).(func() map[models.Id]models.Id); ok {
+	var r0 map[models.ID]models.ID
+	if rf, ok := ret.Get(0).(func() map[models.ID]models.ID); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[models.Id]models.Id)
+			r0 = ret.Get(0).(map[models.ID]models.ID)
 		}
 	}
 

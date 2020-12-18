@@ -51,42 +51,42 @@ func TestVersionsService_FindById(t *testing.T) {
 		}
 
 		m := models.Model{
-			ProjectId:    models.Id(p.Id),
-			ExperimentId: 1,
+			ProjectID:    models.ID(p.Id),
+			ExperimentID: 1,
 			Name:         "model_1",
 			Type:         "other",
 		}
 		db.Create(&m)
 
 		v := models.Version{
-			ModelId:     m.Id,
-			RunId:       "1",
-			ArtifactUri: "gcs:/mlp/1/1",
+			ModelID:     m.ID,
+			RunID:       "1",
+			ArtifactURI: "gcs:/mlp/1/1",
 		}
 		db.Create(&v)
 
 		endpoint1 := &models.VersionEndpoint{
-			Id:              uuid.New(),
-			VersionId:       v.Id,
-			VersionModelId:  m.Id,
+			ID:              uuid.New(),
+			VersionID:       v.ID,
+			VersionModelID:  m.ID,
 			Status:          models.EndpointTerminated,
 			EnvironmentName: env.Name,
 		}
 		db.Create(&endpoint1)
 
 		endpoint2 := &models.VersionEndpoint{
-			Id:              uuid.New(),
-			VersionId:       v.Id,
-			VersionModelId:  m.Id,
+			ID:              uuid.New(),
+			VersionID:       v.ID,
+			VersionModelID:  m.ID,
 			Status:          models.EndpointTerminated,
 			EnvironmentName: env.Name,
 		}
 		db.Create(&endpoint2)
 
 		endpoint3 := &models.VersionEndpoint{
-			Id:              uuid.New(),
-			VersionId:       v.Id,
-			VersionModelId:  m.Id,
+			ID:              uuid.New(),
+			VersionID:       v.ID,
+			VersionModelID:  m.ID,
 			Status:          models.EndpointTerminated,
 			EnvironmentName: env.Name,
 			Transformer: &models.Transformer{
@@ -96,16 +96,16 @@ func TestVersionsService_FindById(t *testing.T) {
 		}
 		db.Create(&endpoint3)
 
-		mockMlpApiClient := &mlpMock.APIClient{}
-		mockMlpApiClient.On("GetProjectByID", mock.Anything, int32(m.ProjectId)).Return(p, nil)
+		mockMlpAPIClient := &mlpMock.APIClient{}
+		mockMlpAPIClient.On("GetProjectByID", mock.Anything, int32(m.ProjectID)).Return(p, nil)
 
-		versionsService := service.NewVersionsService(db, mockMlpApiClient)
+		versionsService := service.NewVersionsService(db, mockMlpAPIClient)
 
-		found, err := versionsService.FindById(context.Background(), m.Id, v.Id, config.MonitoringConfig{MonitoringEnabled: true})
+		found, err := versionsService.FindByID(context.Background(), m.ID, v.ID, config.MonitoringConfig{MonitoringEnabled: true})
 		assert.NoError(t, err)
 
 		assert.NotNil(t, found)
-		assert.Equal(t, "http://mlflow:5000/#/experiments/1/runs/1", found.MlflowUrl)
+		assert.Equal(t, "http://mlflow:5000/#/experiments/1/runs/1", found.MlflowURL)
 		assert.Equal(t, 3, len(found.Endpoints))
 
 		var transformer *models.Transformer

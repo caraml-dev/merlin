@@ -24,13 +24,13 @@ func (_m *AlertStorage) CreateModelEndpointAlert(alert *models.ModelEndpointAler
 	return r0
 }
 
-// DeleteModelEndpointAlert provides a mock function with given fields: modelId, modelEndpointId
-func (_m *AlertStorage) DeleteModelEndpointAlert(modelId models.Id, modelEndpointId models.Id) error {
-	ret := _m.Called(modelId, modelEndpointId)
+// DeleteModelEndpointAlert provides a mock function with given fields: modelID, modelEndpointID
+func (_m *AlertStorage) DeleteModelEndpointAlert(modelID models.ID, modelEndpointID models.ID) error {
+	ret := _m.Called(modelID, modelEndpointID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(models.Id, models.Id) error); ok {
-		r0 = rf(modelId, modelEndpointId)
+	if rf, ok := ret.Get(0).(func(models.ID, models.ID) error); ok {
+		r0 = rf(modelID, modelEndpointID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -38,13 +38,13 @@ func (_m *AlertStorage) DeleteModelEndpointAlert(modelId models.Id, modelEndpoin
 	return r0
 }
 
-// GetModelEndpointAlert provides a mock function with given fields: modelId, modelEndpointId
-func (_m *AlertStorage) GetModelEndpointAlert(modelId models.Id, modelEndpointId models.Id) (*models.ModelEndpointAlert, error) {
-	ret := _m.Called(modelId, modelEndpointId)
+// GetModelEndpointAlert provides a mock function with given fields: modelID, modelEndpointID
+func (_m *AlertStorage) GetModelEndpointAlert(modelID models.ID, modelEndpointID models.ID) (*models.ModelEndpointAlert, error) {
+	ret := _m.Called(modelID, modelEndpointID)
 
 	var r0 *models.ModelEndpointAlert
-	if rf, ok := ret.Get(0).(func(models.Id, models.Id) *models.ModelEndpointAlert); ok {
-		r0 = rf(modelId, modelEndpointId)
+	if rf, ok := ret.Get(0).(func(models.ID, models.ID) *models.ModelEndpointAlert); ok {
+		r0 = rf(modelID, modelEndpointID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ModelEndpointAlert)
@@ -52,8 +52,8 @@ func (_m *AlertStorage) GetModelEndpointAlert(modelId models.Id, modelEndpointId
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(models.Id, models.Id) error); ok {
-		r1 = rf(modelId, modelEndpointId)
+	if rf, ok := ret.Get(1).(func(models.ID, models.ID) error); ok {
+		r1 = rf(modelID, modelEndpointID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -61,13 +61,13 @@ func (_m *AlertStorage) GetModelEndpointAlert(modelId models.Id, modelEndpointId
 	return r0, r1
 }
 
-// ListModelEndpointAlerts provides a mock function with given fields: modelId
-func (_m *AlertStorage) ListModelEndpointAlerts(modelId models.Id) ([]*models.ModelEndpointAlert, error) {
-	ret := _m.Called(modelId)
+// ListModelEndpointAlerts provides a mock function with given fields: modelID
+func (_m *AlertStorage) ListModelEndpointAlerts(modelID models.ID) ([]*models.ModelEndpointAlert, error) {
+	ret := _m.Called(modelID)
 
 	var r0 []*models.ModelEndpointAlert
-	if rf, ok := ret.Get(0).(func(models.Id) []*models.ModelEndpointAlert); ok {
-		r0 = rf(modelId)
+	if rf, ok := ret.Get(0).(func(models.ID) []*models.ModelEndpointAlert); ok {
+		r0 = rf(modelID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*models.ModelEndpointAlert)
@@ -75,8 +75,8 @@ func (_m *AlertStorage) ListModelEndpointAlerts(modelId models.Id) ([]*models.Mo
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(models.Id) error); ok {
-		r1 = rf(modelId)
+	if rf, ok := ret.Get(1).(func(models.ID) error); ok {
+		r1 = rf(modelID)
 	} else {
 		r1 = ret.Error(1)
 	}

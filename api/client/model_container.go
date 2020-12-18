@@ -15,5 +15,5 @@ type Container struct {
 	Namespace         string `json:"namespace,omitempty"`
 	Cluster           string `json:"cluster,omitempty"`
 	GcpProject        string `json:"gcp_project,omitempty"`
-	VersionEndpointId int32  `json:"version_endpoint_id,omitempty"`
+	VersionEndpointID int32  `json:"version_endpoint_id,omitempty"`
 }

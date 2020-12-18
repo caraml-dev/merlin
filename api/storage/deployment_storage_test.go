@@ -40,18 +40,18 @@ func TestDeploymentStorage_List(t *testing.T) {
 		db.Create(&p)
 
 		m := models.Model{
-			Id:           1,
-			ProjectId:    models.Id(p.Id),
-			ExperimentId: 1,
+			ID:           1,
+			ProjectID:    models.ID(p.Id),
+			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
 		}
 		db.Create(&m)
 
 		v := models.Version{
-			ModelId:     m.Id,
-			RunId:       "1",
-			ArtifactUri: "gcs:/mlp/1/1",
+			ModelID:     m.ID,
+			RunID:       "1",
+			ArtifactURI: "gcs:/mlp/1/1",
 		}
 		db.Create(&v)
 
@@ -62,30 +62,30 @@ func TestDeploymentStorage_List(t *testing.T) {
 		}
 		db.Create(&env1)
 
-		e := models.VersionEndpoint{
-			Id:              uuid.New(),
-			VersionId:       v.Id,
-			VersionModelId:  m.Id,
+		errRaised := models.VersionEndpoint{
+			ID:              uuid.New(),
+			VersionID:       v.ID,
+			VersionModelID:  m.ID,
 			Status:          "pending",
 			EnvironmentName: env1.Name,
 		}
-		db.Create(&e)
+		db.Create(&errRaised)
 
 		deploy1 := &models.Deployment{
-			ProjectId:         models.Id(p.Id),
-			VersionId:         v.Id,
-			VersionModelId:    m.Id,
-			VersionEndpointId: e.Id,
+			ProjectID:         models.ID(p.Id),
+			VersionID:         v.ID,
+			VersionModelID:    m.ID,
+			VersionEndpointID: errRaised.ID,
 			Status:            models.EndpointServing,
 			Error:             "",
 			CreatedUpdated:    models.CreatedUpdated{},
 		}
 
 		deploy2 := &models.Deployment{
-			ProjectId:         models.Id(p.Id),
-			VersionId:         v.Id,
-			VersionModelId:    m.Id,
-			VersionEndpointId: e.Id,
+			ProjectID:         models.ID(p.Id),
+			VersionID:         v.ID,
+			VersionModelID:    m.ID,
+			VersionEndpointID: errRaised.ID,
 			Status:            models.EndpointServing,
 			Error:             "",
 			CreatedUpdated:    models.CreatedUpdated{},
@@ -114,25 +114,25 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 		db.Create(&p)
 
 		m := models.Model{
-			Id:           1,
-			ProjectId:    models.Id(p.Id),
-			ExperimentId: 1,
+			ID:           1,
+			ProjectID:    models.ID(p.Id),
+			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
 		}
 		db.Create(&m)
 
 		v1 := models.Version{
-			ModelId:     m.Id,
-			RunId:       "1",
-			ArtifactUri: "gcs:/mlp/1/1",
+			ModelID:     m.ID,
+			RunID:       "1",
+			ArtifactURI: "gcs:/mlp/1/1",
 		}
 		db.Create(&v1)
 
 		v2 := models.Version{
-			ModelId:     m.Id,
-			RunId:       "1",
-			ArtifactUri: "gcs:/mlp/1/1",
+			ModelID:     m.ID,
+			RunID:       "1",
+			ArtifactURI: "gcs:/mlp/1/1",
 		}
 		db.Create(&v2)
 
@@ -144,38 +144,38 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 		db.Create(&env1)
 
 		e1 := models.VersionEndpoint{
-			Id:              uuid.New(),
-			VersionId:       v1.Id,
-			VersionModelId:  m.Id,
+			ID:              uuid.New(),
+			VersionID:       v1.ID,
+			VersionModelID:  m.ID,
 			Status:          models.EndpointFailed,
 			EnvironmentName: env1.Name,
 		}
 		db.Create(&e1)
 
 		e2 := models.VersionEndpoint{
-			Id:              uuid.New(),
-			VersionId:       v2.Id,
-			VersionModelId:  m.Id,
+			ID:              uuid.New(),
+			VersionID:       v2.ID,
+			VersionModelID:  m.ID,
 			Status:          models.EndpointServing,
 			EnvironmentName: env1.Name,
 		}
 		db.Create(&e2)
 
 		deploy1 := &models.Deployment{
-			ProjectId:         models.Id(p.Id),
-			VersionId:         v1.Id,
-			VersionModelId:    m.Id,
-			VersionEndpointId: e1.Id,
+			ProjectID:         models.ID(p.Id),
+			VersionID:         v1.ID,
+			VersionModelID:    m.ID,
+			VersionEndpointID: e1.ID,
 			Status:            models.EndpointFailed,
 			Error:             "failed deployment",
 			CreatedUpdated:    models.CreatedUpdated{},
 		}
 
 		deploy2 := &models.Deployment{
-			ProjectId:         models.Id(p.Id),
-			VersionId:         v2.Id,
-			VersionModelId:    m.Id,
-			VersionEndpointId: e1.Id,
+			ProjectID:         models.ID(p.Id),
+			VersionID:         v2.ID,
+			VersionModelID:    m.ID,
+			VersionEndpointID: e1.ID,
 			Status:            models.EndpointServing,
 			Error:             "",
 			CreatedUpdated:    models.CreatedUpdated{},
@@ -189,6 +189,6 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 
 		resultMap, err := deploymentStorage.GetFirstSuccessModelVersionPerModel()
 		assert.NoError(t, err)
-		assert.Equal(t, v2.Id, resultMap[m.Id])
+		assert.Equal(t, v2.ID, resultMap[m.ID])
 	})
 }

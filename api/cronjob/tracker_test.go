@@ -22,12 +22,12 @@ import (
 )
 
 func TestGetStats(t *testing.T) {
-	min, max, mean := getStats(make(map[models.Id]models.Id))
+	min, max, mean := getStats(make(map[models.ID]models.ID))
 	assert.Equal(t, 0, min)
 	assert.Equal(t, 0, max)
 	assert.Equal(t, 0, mean)
 
-	min, max, mean = getStats(map[models.Id]models.Id{
+	min, max, mean = getStats(map[models.ID]models.ID{
 		1: 1,
 		2: 2,
 		3: 3,

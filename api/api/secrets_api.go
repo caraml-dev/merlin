@@ -27,10 +27,10 @@ type SecretsController struct {
 	*AppContext
 }
 
-func (c *SecretsController) CreateSecret(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *SecretsController) CreateSecret(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		log.Warnf("Project with id: %d not found", projectID)
@@ -51,11 +51,11 @@ func (c *SecretsController) CreateSecret(r *http.Request, vars map[string]string
 	return Created(newSecret)
 }
 
-func (c *SecretsController) UpdateSecret(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *SecretsController) UpdateSecret(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
-	secretID, _ := models.ParseId(vars["secret_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
+	secretID, _ := models.ParseID(vars["secret_id"])
 	if projectID <= 0 || secretID <= 0 {
 		return BadRequest("project_id and secret_id is not valid")
 	}
@@ -78,11 +78,11 @@ func (c *SecretsController) UpdateSecret(r *http.Request, vars map[string]string
 	return Ok(updatedSecret)
 }
 
-func (c *SecretsController) DeleteSecret(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+func (c *SecretsController) DeleteSecret(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
-	secretID, _ := models.ParseId(vars["secret_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
+	secretID, _ := models.ParseID(vars["secret_id"])
 	if projectID <= 0 || secretID <= 0 {
 		return BadRequest("project_id and secret_id is not valid")
 	}
@@ -100,10 +100,10 @@ func (c *SecretsController) DeleteSecret(r *http.Request, vars map[string]string
 	return NoContent()
 }
 
-func (c *SecretsController) ListSecret(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+func (c *SecretsController) ListSecret(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseId(vars["project_id"])
+	projectID, _ := models.ParseID(vars["project_id"])
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		log.Warnf("Project with id: %d not found", projectID)

@@ -89,7 +89,7 @@ type Controller interface {
 
 type controller struct {
 	store            storage.PredictionJobStorage
-	mlpApiClient     mlp.APIClient
+	mlpAPIClient     mlp.APIClient
 	sparkClient      versioned.Interface
 	kubeClient       kubernetes.Interface
 	namespaceCreator cluster.NamespaceCreator
@@ -100,14 +100,14 @@ type controller struct {
 	cluster.ContainerFetcher
 }
 
-func NewController(store storage.PredictionJobStorage, mlpApiClient mlp.APIClient, sparkClient versioned.Interface, kubeClient kubernetes.Interface, manifestManager ManifestManager, envMetaData cluster.Metadata) Controller {
+func NewController(store storage.PredictionJobStorage, mlpAPIClient mlp.APIClient, sparkClient versioned.Interface, kubeClient kubernetes.Interface, manifestManager ManifestManager, envMetaData cluster.Metadata) Controller {
 	informerFactory := externalversions.NewSharedInformerFactory(sparkClient, resyncPeriod)
 	informer := informerFactory.Sparkoperator().V1beta2().SparkApplications().Informer()
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
 	controller := &controller{
 		store:            store,
-		mlpApiClient:     mlpApiClient,
+		mlpAPIClient:     mlpAPIClient,
 		sparkClient:      sparkClient,
 		kubeClient:       kubeClient,
 		manifestManager:  manifestManager,
@@ -145,7 +145,7 @@ func (c *controller) Submit(predictionJob *models.PredictionJob, namespace strin
 		return fmt.Errorf("failed creating spark driver authorization in namespace %s: %v", namespace, err)
 	}
 
-	secret, err := c.mlpApiClient.GetPlainSecretByNameAndProjectID(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectId))
+	secret, err := c.mlpAPIClient.GetPlainSecretByNameAndProjectID(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectID))
 	if err != nil {
 		return fmt.Errorf("service account %s is not found within %s project: %s", predictionJob.Config.ServiceAccountName, namespace, err)
 	}
@@ -189,11 +189,11 @@ func (c *controller) Run(stopCh <-chan struct{}) {
 
 func (c *controller) Stop(predictionJob *models.PredictionJob, namespace string) error {
 	sparkResources, _ := c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).List(v1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s", labelPredictionJobId, predictionJob.Id.String()),
+		LabelSelector: fmt.Sprintf("%s=%s", labelPredictionJobID, predictionJob.ID.String()),
 	})
 
 	if len(sparkResources.Items) == 0 {
-		return fmt.Errorf("unable to retrieve spark application of prediction job id %s from spark client", predictionJob.Id.String())
+		return fmt.Errorf("unable to retrieve spark application of prediction job id %s from spark client", predictionJob.ID.String())
 	}
 
 	for _, resource := range sparkResources.Items {
@@ -264,13 +264,13 @@ func (c *controller) syncStatus(key string) error {
 	}
 
 	sparkApp, _ := obj.(*v1beta2.SparkApplication)
-	predictionJobId, err := models.ParseId(sparkApp.Labels[labelPredictionJobId])
+	predictionJobID, err := models.ParseID(sparkApp.Labels[labelPredictionJobID])
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse prediction job id")
 	}
-	predictionJob, err := c.store.Get(predictionJobId)
+	predictionJob, err := c.store.Get(predictionJobID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to find prediction job with id: %s", predictionJobId)
+		return errors.Wrapf(err, "unable to find prediction job with id: %s", predictionJobID)
 	}
 
 	if predictionJob.Status != models.JobTerminated {

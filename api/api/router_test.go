@@ -88,8 +88,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions",
 			enforcer.ActionRead,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -104,8 +104,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions",
 			enforcer.ActionCreate,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -120,8 +120,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions:3",
 			enforcer.ActionRead,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -136,8 +136,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions:3",
 			enforcer.ActionUpdate,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -160,8 +160,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:endpoints",
 			enforcer.ActionRead,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -176,8 +176,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:endpoints",
 			enforcer.ActionCreate,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -192,8 +192,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:endpoints:4",
 			enforcer.ActionRead,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -208,8 +208,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:endpoints:4",
 			enforcer.ActionUpdate,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -224,8 +224,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions:3:endpoint",
 			enforcer.ActionRead,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -240,8 +240,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions:3:endpoint",
 			enforcer.ActionCreate,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -256,8 +256,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions:3:endpoint",
 			enforcer.ActionDelete,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -272,8 +272,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions:3:endpoint:8e9624e0-efd3-44c9-941d-e645d5f680e8",
 			enforcer.ActionRead,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -288,8 +288,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions:3:endpoint:8e9624e0-efd3-44c9-941d-e645d5f680e8",
 			enforcer.ActionUpdate,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -304,8 +304,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions:3:endpoint:8e9624e0-efd3-44c9-941d-e645d5f680e8",
 			enforcer.ActionDelete,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -320,8 +320,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:models:2:versions:3:endpoint:8e9624e0-efd3-44c9-941d-e645d5f680e8:containers",
 			enforcer.ActionRead,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -336,8 +336,8 @@ func TestRejectAuthorization(t *testing.T) {
 			"projects:1:logs",
 			enforcer.ActionRead,
 			&models.Model{
-				Id:        2,
-				ProjectId: 1,
+				ID:        2,
+				ProjectID: 1,
 				Project: mlp.Project{
 					Id:   1,
 					Name: "my-project",
@@ -369,7 +369,7 @@ func TestRejectAuthorization(t *testing.T) {
 				AlertEnabled: true,
 			})
 			if tt.model != nil {
-				mockModelService.On("FindById", mock.Anything, tt.model.Id).Return(tt.model, nil)
+				mockModelService.On("FindByID", mock.Anything, tt.model.ID).Return(tt.model, nil)
 			}
 
 			mockEnforcer.On("Enforce", user, tt.resource, tt.action).Return(&reject, nil)

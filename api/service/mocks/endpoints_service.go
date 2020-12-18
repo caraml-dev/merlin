@@ -58,8 +58,8 @@ func (_m *EndpointsService) DeployEndpoint(environment *models.Environment, mode
 	return r0, r1
 }
 
-// FindById provides a mock function with given fields: uuid2
-func (_m *EndpointsService) FindById(uuid2 uuid.UUID) (*models.VersionEndpoint, error) {
+// FindByID provides a mock function with given fields: uuid2
+func (_m *EndpointsService) FindByID(uuid2 uuid.UUID) (*models.VersionEndpoint, error) {
 	ret := _m.Called(uuid2)
 
 	var r0 *models.VersionEndpoint

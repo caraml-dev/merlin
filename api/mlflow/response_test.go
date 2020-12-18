@@ -37,11 +37,11 @@ func Test_errorResponse_Error(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := &errorResponse{
+			errRaised := &errorResponse{
 				ErrorCode: tt.fields.ErrorCode,
 				Message:   tt.fields.Message,
 			}
-			if got := e.Error(); got != tt.want {
+			if got := errRaised.Error(); got != tt.want {
 				t.Errorf("errorResponse.Error() = %v, want %v", got, tt.want)
 			}
 		})

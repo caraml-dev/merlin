@@ -118,7 +118,7 @@ func (t *Tracker) recordProjectAndModelCount() {
 
 	nbOfModel := 0
 	for _, p := range projects {
-		models, err := t.modelService.ListModels(ctx, models.Id(p.Id), "")
+		models, err := t.modelService.ListModels(ctx, models.ID(p.Id), "")
 		if err != nil {
 			log.Errorf("unable to list models for project %s", p.Name)
 			return
@@ -154,7 +154,7 @@ func (t *Tracker) recordFirstSuccessfulBatchJobStats() {
 	firstSuccessfulPredictionJobGauge.WithLabelValues("mean").Set(float64(mean))
 }
 
-func getStats(successVersionMap map[models.Id]models.Id) (min int, max int, mean int) {
+func getStats(successVersionMap map[models.ID]models.ID) (min int, max int, mean int) {
 	if len(successVersionMap) == 0 {
 		return 0, 0, 0
 	}
@@ -162,8 +162,8 @@ func getStats(successVersionMap map[models.Id]models.Id) (min int, max int, mean
 	min = math.MaxInt32
 	max = 0
 	var total int = 0
-	for _, versionId := range successVersionMap {
-		entry := int(versionId)
+	for _, versionID := range successVersionMap {
+		entry := int(versionID)
 
 		if min > entry {
 			min = entry

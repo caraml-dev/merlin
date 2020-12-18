@@ -10,8 +10,8 @@
 package client
 
 type ModelEndpointAlert struct {
-	ModelId         int32                         `json:"model_id,omitempty"`
-	ModelEndpointId int32                         `json:"model_endpoint_id,omitempty"`
+	ModelID         int32                         `json:"model_id,omitempty"`
+	ModelEndpointID int32                         `json:"model_endpoint_id,omitempty"`
 	EnvironmentName string                        `json:"environment_name,omitempty"`
 	TeamName        string                        `json:"team_name,omitempty"`
 	AlertConditions []ModelEndpointAlertCondition `json:"alert_conditions,omitempty"`

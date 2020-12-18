@@ -108,11 +108,11 @@ func PyfuncDefaultEnvVars(model Model, version Version, workers int64) EnvVars {
 	envVars := EnvVars{
 		EnvVar{
 			Name:  envModelName,
-			Value: CreateInferenceServiceName(model.Name, version.Id.String()),
+			Value: CreateInferenceServiceName(model.Name, version.ID.String()),
 		},
 		EnvVar{
 			Name:  envModelDir,
-			Value: utils.CreateModelLocation(version.ArtifactUri),
+			Value: utils.CreateModelLocation(version.ArtifactURI),
 		},
 		EnvVar{
 			Name:  envWorkers,

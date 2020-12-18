@@ -47,8 +47,8 @@ var (
 		},
 	}
 	model1 = &models.Model{
-		Id:        1,
-		ProjectId: 1,
+		ID:        1,
+		ProjectID: 1,
 		Project: mlp.Project{
 			Id:     1,
 			Name:   "project-1",
@@ -56,23 +56,23 @@ var (
 			Stream: "dsp",
 			Labels: labels,
 		},
-		ExperimentId: 1,
+		ExperimentID: 1,
 
 		Name: "model-1",
 		Type: models.ModelTypeTensorflow,
 	}
 
 	versionEndpoint1 = &models.VersionEndpoint{
-		Id:                   uuid1,
+		ID:                   uuid1,
 		Status:               models.EndpointRunning,
-		Url:                  "http://version-1.project-1.mlp.io/v1/models/version-1:predict",
+		URL:                  "http://version-1.project-1.mlp.io/v1/models/version-1:predict",
 		ServiceName:          "version-1-abcde",
 		InferenceServiceName: "version-1",
 		Namespace:            "project-1",
 	}
 
 	modelEndpointRequest1 = &models.ModelEndpoint{
-		ModelId: 1,
+		ModelID: 1,
 		Rule: &models.ModelEndpointRule{
 			Destination: []*models.ModelEndpointRuleDestination{
 				&models.ModelEndpointRuleDestination{
@@ -86,7 +86,7 @@ var (
 	}
 
 	modelEndpointRequestWrongEnvironment = &models.ModelEndpoint{
-		ModelId: 1,
+		ModelID: 1,
 		Rule: &models.ModelEndpointRule{
 			Destination: []*models.ModelEndpointRuleDestination{
 				&models.ModelEndpointRuleDestination{
@@ -100,7 +100,7 @@ var (
 	}
 
 	modelEndpointResponse1 = &models.ModelEndpoint{
-		ModelId: 1,
+		ModelID: 1,
 		URL:     "model-1.project-1.mlp.io",
 		Status:  models.EndpointServing,
 		Rule: &models.ModelEndpointRule{
@@ -489,7 +489,7 @@ func Test_modelEndpointsService_parseModelEndpointHost(t *testing.T) {
 					},
 				},
 				&models.VersionEndpoint{
-					Url: "http://xgboost-sample-1.sample.models.id.merlin.dev/v1/models/xgboost-sample-1",
+					URL: "http://xgboost-sample-1.sample.models.id.merlin.dev/v1/models/xgboost-sample-1",
 				},
 			},
 			"xgboost-sample.sample.models.id.merlin.dev",
@@ -534,7 +534,7 @@ func Test_modelEndpointsService_parseVersionEndpointPath(t *testing.T) {
 			fields{},
 			args{
 				&models.VersionEndpoint{
-					Url: "http://xgboost-sample-1.sample.models.id.merlin.dev/v1/models/xgboost-sample-1",
+					URL: "http://xgboost-sample-1.sample.models.id.merlin.dev/v1/models/xgboost-sample-1",
 				},
 			},
 			"/v1/models/xgboost-sample-1",

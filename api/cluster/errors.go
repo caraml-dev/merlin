@@ -17,7 +17,7 @@ package cluster
 import "errors"
 
 var (
-	ErrInsufficientCpu                   = errors.New("CPU request is too large")
+	ErrInsufficientCPU                   = errors.New("CPU request is too large")
 	ErrInsufficientMem                   = errors.New("memory request too large")
 	ErrTimeoutNamespace                  = errors.New("timeout creating namespace")
 	ErrUnableToCreateNamespace           = errors.New("error creating namespace")

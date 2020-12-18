@@ -32,15 +32,15 @@ type DeploymentConfig struct {
 	MaxReplica int
 
 	// CPU limit of inference service
-	CpuLimit resource.Quantity //deprecated
+	CPULimit resource.Quantity //deprecated
 	// Max CPU of machine
-	MaxCpu resource.Quantity
+	MaxCPU resource.Quantity
 	// Max Memory of machine
 	MaxMemory resource.Quantity
 	// Memory limit of inference service
 	MemoryLimit resource.Quantity
 	// CPU request of inference service
-	CpuRequest resource.Quantity
+	CPURequest resource.Quantity
 	// Memory request of inference service
 	MemoryRequest resource.Quantity
 

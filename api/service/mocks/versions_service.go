@@ -17,13 +17,13 @@ type VersionsService struct {
 	mock.Mock
 }
 
-// FindById provides a mock function with given fields: ctx, modelId, versionId, monitoringConfig
-func (_m *VersionsService) FindById(ctx context.Context, modelId models.Id, versionId models.Id, monitoringConfig config.MonitoringConfig) (*models.Version, error) {
-	ret := _m.Called(ctx, modelId, versionId, monitoringConfig)
+// FindByID provides a mock function with given fields: ctx, modelID, versionID, monitoringConfig
+func (_m *VersionsService) FindByID(ctx context.Context, modelID models.ID, versionID models.ID, monitoringConfig config.MonitoringConfig) (*models.Version, error) {
+	ret := _m.Called(ctx, modelID, versionID, monitoringConfig)
 
 	var r0 *models.Version
-	if rf, ok := ret.Get(0).(func(context.Context, models.Id, models.Id, config.MonitoringConfig) *models.Version); ok {
-		r0 = rf(ctx, modelId, versionId, monitoringConfig)
+	if rf, ok := ret.Get(0).(func(context.Context, models.ID, models.ID, config.MonitoringConfig) *models.Version); ok {
+		r0 = rf(ctx, modelID, versionID, monitoringConfig)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.Version)
@@ -31,8 +31,8 @@ func (_m *VersionsService) FindById(ctx context.Context, modelId models.Id, vers
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.Id, models.Id, config.MonitoringConfig) error); ok {
-		r1 = rf(ctx, modelId, versionId, monitoringConfig)
+	if rf, ok := ret.Get(1).(func(context.Context, models.ID, models.ID, config.MonitoringConfig) error); ok {
+		r1 = rf(ctx, modelID, versionID, monitoringConfig)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -40,13 +40,13 @@ func (_m *VersionsService) FindById(ctx context.Context, modelId models.Id, vers
 	return r0, r1
 }
 
-// ListVersions provides a mock function with given fields: ctx, modelId, monitoringConfig
-func (_m *VersionsService) ListVersions(ctx context.Context, modelId models.Id, monitoringConfig config.MonitoringConfig) ([]*models.Version, error) {
-	ret := _m.Called(ctx, modelId, monitoringConfig)
+// ListVersions provides a mock function with given fields: ctx, modelID, monitoringConfig
+func (_m *VersionsService) ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig) ([]*models.Version, error) {
+	ret := _m.Called(ctx, modelID, monitoringConfig)
 
 	var r0 []*models.Version
-	if rf, ok := ret.Get(0).(func(context.Context, models.Id, config.MonitoringConfig) []*models.Version); ok {
-		r0 = rf(ctx, modelId, monitoringConfig)
+	if rf, ok := ret.Get(0).(func(context.Context, models.ID, config.MonitoringConfig) []*models.Version); ok {
+		r0 = rf(ctx, modelID, monitoringConfig)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*models.Version)
@@ -54,8 +54,8 @@ func (_m *VersionsService) ListVersions(ctx context.Context, modelId models.Id, 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.Id, config.MonitoringConfig) error); ok {
-		r1 = rf(ctx, modelId, monitoringConfig)
+	if rf, ok := ret.Get(1).(func(context.Context, models.ID, config.MonitoringConfig) error); ok {
+		r1 = rf(ctx, modelID, monitoringConfig)
 	} else {
 		r1 = ret.Error(1)
 	}

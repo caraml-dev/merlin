@@ -25,11 +25,13 @@ import (
 	"github.com/gojek/merlin/models"
 )
 
+// ProjectsController controls projects API.
 type ProjectsController struct {
 	*AppContext
 }
 
-func (c *ProjectsController) ListProjects(r *http.Request, vars map[string]string, _ interface{}) *ApiResponse {
+// ListProjects lists all projects.
+func (c *ProjectsController) ListProjects(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
 	projects, err := c.ProjectsService.List(ctx, vars["name"])
@@ -46,10 +48,11 @@ func (c *ProjectsController) ListProjects(r *http.Request, vars map[string]strin
 	return Ok(projects)
 }
 
-func (c *ProjectsController) GetProject(r *http.Request, vars map[string]string, body interface{}) *ApiResponse {
+// GetProject gets a project of a project ID.
+func (c *ProjectsController) GetProject(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
-	projectId, _ := models.ParseId(vars["project_id"])
-	project, err := c.ProjectsService.GetByID(ctx, int32(projectId))
+	projectID, _ := models.ParseID(vars["project_id"])
+	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		return NotFound(err.Error())
 	}
@@ -59,26 +62,26 @@ func (c *ProjectsController) GetProject(r *http.Request, vars map[string]string,
 
 func (c *ProjectsController) filterAuthorizedProjects(user string, projects mlp.Projects, action string) (mlp.Projects, error) {
 	if c.AuthorizationEnabled {
-		projectIds := make([]string, 0, 0)
+		projectIDs := make([]string, 0, 0)
 		allowedProjects := mlp.Projects{}
 		projectMap := make(map[string]mlp.Project)
 		for _, project := range projects {
-			projectId := fmt.Sprintf("projects:%d", project.Id)
-			projectIds = append(projectIds, projectId)
-			projectMap[projectId] = mlp.Project(project)
+			projectID := fmt.Sprintf("projects:%d", project.Id)
+			projectIDs = append(projectIDs, projectID)
+			projectMap[projectID] = mlp.Project(project)
 		}
 
-		allowedProjectIds, err := c.Enforcer.FilterAuthorizedResource(user, projectIds, action)
+		allowedProjectIds, err := c.Enforcer.FilterAuthorizedResource(user, projectIDs, action)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, projectId := range allowedProjectIds {
-			allowedProjects = append(allowedProjects, client.Project(projectMap[projectId]))
+		for _, projectID := range allowedProjectIds {
+			allowedProjects = append(allowedProjects, client.Project(projectMap[projectID]))
 		}
 
 		return allowedProjects, nil
-	} else {
-		return projects, nil
 	}
+
+	return projects, nil
 }

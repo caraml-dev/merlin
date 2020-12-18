@@ -23,19 +23,19 @@ import (
 )
 
 type ModelsService interface {
-	ListModels(ctx context.Context, projectId models.Id, name string) ([]*models.Model, error)
+	ListModels(ctx context.Context, projectID models.ID, name string) ([]*models.Model, error)
 	Save(ctx context.Context, model *models.Model) (*models.Model, error)
 	Update(ctx context.Context, model *models.Model) (*models.Model, error)
-	FindById(ctx context.Context, modelId models.Id) (*models.Model, error)
+	FindByID(ctx context.Context, modelID models.ID) (*models.Model, error)
 }
 
-func NewModelsService(db *gorm.DB, mlpApiClient mlp.APIClient) ModelsService {
-	return &modelsService{db: db, mlpApiClient: mlpApiClient}
+func NewModelsService(db *gorm.DB, mlpAPIClient mlp.APIClient) ModelsService {
+	return &modelsService{db: db, mlpAPIClient: mlpAPIClient}
 }
 
 type modelsService struct {
 	db           *gorm.DB
-	mlpApiClient mlp.APIClient
+	mlpAPIClient mlp.APIClient
 }
 
 func (service *modelsService) query() *gorm.DB {
@@ -46,10 +46,10 @@ func (service *modelsService) query() *gorm.DB {
 		Select("models.*")
 }
 
-func (service *modelsService) ListModels(ctx context.Context, projectId models.Id, name string) (models []*models.Model, err error) {
+func (service *modelsService) ListModels(ctx context.Context, projectID models.ID, name string) (models []*models.Model, err error) {
 	query := service.query().Where("models.name LIKE ?", name+"%")
-	if projectId > 0 {
-		query = query.Where("models.project_id = ?", projectId)
+	if projectID > 0 {
+		query = query.Where("models.project_id = ?", projectID)
 	}
 
 	err = query.Find(&models).Error
@@ -57,14 +57,14 @@ func (service *modelsService) ListModels(ctx context.Context, projectId models.I
 		return
 	}
 
-	project, err := service.mlpApiClient.GetProjectByID(ctx, int32(projectId))
+	project, err := service.mlpAPIClient.GetProjectByID(ctx, int32(projectID))
 	if err != nil {
 		return nil, err
 	}
 
 	for k := range models {
 		models[k].Project = project
-		models[k].MlflowUrl = project.MlflowExperimentURL(models[k].ExperimentId.String())
+		models[k].MlflowURL = project.MlflowExperimentURL(models[k].ExperimentID.String())
 	}
 
 	return
@@ -74,32 +74,32 @@ func (service *modelsService) Save(ctx context.Context, model *models.Model) (*m
 	if err := service.db.Create(model).Error; err != nil {
 		return nil, err
 	}
-	return service.FindById(ctx, model.Id)
+	return service.FindByID(ctx, model.ID)
 }
 
 func (service *modelsService) Update(ctx context.Context, model *models.Model) (*models.Model, error) {
 	if err := service.db.Save(model).Error; err != nil {
 		return nil, err
 	}
-	return service.FindById(ctx, model.Id)
+	return service.FindByID(ctx, model.ID)
 }
 
-func (service *modelsService) FindById(ctx context.Context, modelId models.Id) (*models.Model, error) {
+func (service *modelsService) FindByID(ctx context.Context, modelID models.ID) (*models.Model, error) {
 	var model models.Model
 	if err := service.query().
-		Where("models.id = ?", modelId).
+		Where("models.id = ?", modelID).
 		First(&model).
 		Error; err != nil {
 
 		return nil, err
 	}
 
-	project, err := service.mlpApiClient.GetProjectByID(ctx, int32(model.ProjectId))
+	project, err := service.mlpAPIClient.GetProjectByID(ctx, int32(model.ProjectID))
 	if err != nil {
 		return nil, err
 	}
 	model.Project = project
-	model.MlflowUrl = project.MlflowExperimentURL(model.ExperimentId.String())
+	model.MlflowURL = project.MlflowExperimentURL(model.ExperimentID.String())
 
 	return &model, nil
 }

@@ -10,6 +10,6 @@
 package client
 
 type PredictionJobConfigModelResult struct {
-	Type_    *ResultType `json:"type,omitempty"`
+	Type     *ResultType `json:"type,omitempty"`
 	ItemType *ResultType `json:"item_type,omitempty"`
 }
