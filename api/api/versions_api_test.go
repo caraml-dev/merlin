@@ -17,6 +17,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/gojek/merlin/config"
@@ -135,6 +136,7 @@ func TestListVersion(t *testing.T) {
 		desc           string
 		vars           map[string]string
 		versionService func() *mocks.VersionsService
+		queryParameter string
 		expected       *Response
 	}{
 		{
@@ -144,7 +146,7 @@ func TestListVersion(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything).Return([]*models.Version{
+				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything, mock.Anything).Return([]*models.Version{
 					{
 						ID:      models.ID(1),
 						ModelID: models.ID(1),
@@ -159,7 +161,7 @@ func TestListVersion(t *testing.T) {
 						},
 						MlflowURL: "http://mlflow.com",
 					},
-				}, nil)
+				}, "", nil)
 				return svc
 			},
 			expected: &Response{
@@ -180,6 +182,56 @@ func TestListVersion(t *testing.T) {
 						MlflowURL: "http://mlflow.com",
 					},
 				},
+				headers: map[string]string{},
+			},
+		},
+		{
+			desc: "Should success get version with pagination",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything, mock.Anything).Return([]*models.Version{
+					{
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
+						Model: &models.Model{
+							ID:           models.ID(1),
+							Name:         "model-1",
+							ProjectID:    models.ID(1),
+							Project:      mlp.Project{},
+							ExperimentID: 1,
+							Type:         "pyfunc",
+							MlflowURL:    "http://mlflow.com",
+						},
+						MlflowURL: "http://mlflow.com",
+					},
+				}, "NDdfMzQ=", nil)
+				return svc
+			},
+			queryParameter: "limit=30",
+			expected: &Response{
+				code: http.StatusOK,
+				data: []*models.Version{
+					{
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
+						Model: &models.Model{
+							ID:           models.ID(1),
+							Name:         "model-1",
+							ProjectID:    models.ID(1),
+							Project:      mlp.Project{},
+							ExperimentID: 1,
+							Type:         "pyfunc",
+							MlflowURL:    "http://mlflow.com",
+						},
+						MlflowURL: "http://mlflow.com",
+					},
+				},
+				headers: map[string]string{
+					"Next-Cursor": "NDdfMzQ=",
+				},
 			},
 		},
 		{
@@ -189,7 +241,7 @@ func TestListVersion(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything, mock.Anything).Return(nil, "", fmt.Errorf("DB is down"))
 				return svc
 			},
 			expected: &Response{
@@ -212,7 +264,7 @@ func TestListVersion(t *testing.T) {
 					AlertEnabled: true,
 				},
 			}
-			resp := ctl.ListVersions(&http.Request{}, tC.vars, nil)
+			resp := ctl.ListVersions(&http.Request{URL: &url.URL{RawQuery: tC.queryParameter}}, tC.vars, nil)
 			assert.Equal(t, tC.expected, resp)
 		})
 	}

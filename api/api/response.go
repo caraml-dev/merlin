@@ -21,8 +21,9 @@ import (
 
 // Response handles responses of APIs.
 type Response struct {
-	code int
-	data interface{}
+	code    int
+	data    interface{}
+	headers map[string]string
 }
 
 // Error represents the structure of an error response.
@@ -33,6 +34,10 @@ type Error struct {
 // WriteTo writes the response header and body.
 func (r *Response) WriteTo(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	for key, value := range r.headers {
+		w.Header().Set(key, value)
+	}
+
 	w.WriteHeader(r.code)
 
 	if r.data != nil {
@@ -46,6 +51,14 @@ func Ok(data interface{}) *Response {
 	return &Response{
 		code: http.StatusOK,
 		data: data,
+	}
+}
+
+func OkWithCustomHeaders(data interface{}, headers map[string]string) *Response {
+	return &Response{
+		code:    http.StatusOK,
+		data:    data,
+		headers: headers,
 	}
 }
 

@@ -23,6 +23,7 @@ import (
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlflow"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/service"
 )
 
 type VersionsController struct {
@@ -79,13 +80,24 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 func (c *VersionsController) ListVersions(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
+	var query service.VersionQuery
+	if err := decoder.Decode(&query, r.URL.Query()); err != nil {
+		log.Errorf("Error while parsing query string %v", err)
+		return BadRequest(fmt.Sprintf("Unable to parse query string: %s", err))
+	}
+
 	modelID, _ := models.ParseID(vars["model_id"])
-	versions, err := c.VersionsService.ListVersions(ctx, modelID, c.MonitoringConfig)
+	versions, nextCursor, err := c.VersionsService.ListVersions(ctx, modelID, c.MonitoringConfig, query)
 	if err != nil {
 		return InternalServerError(err.Error())
 	}
 
-	return Ok(versions)
+	responseHeaders := make(map[string]string)
+	if nextCursor != "" {
+		responseHeaders["Next-Cursor"] = nextCursor
+	}
+
+	return OkWithCustomHeaders(versions, responseHeaders)
 }
 
 func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {
