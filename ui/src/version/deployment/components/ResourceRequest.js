@@ -22,6 +22,7 @@ import {
   EuiIcon,
   EuiToolTip
 } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 export const ResourceRequest = ({ resourceRequest, onChange }) => {
   const setValue = (field, value) =>
@@ -100,4 +101,9 @@ export const ResourceRequest = ({ resourceRequest, onChange }) => {
       </EuiFormRow>
     </>
   );
+};
+
+ResourceRequest.propTypes = {
+  resourceRequest: PropTypes.object,
+  onChange: PropTypes.func
 };

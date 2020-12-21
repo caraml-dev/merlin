@@ -16,6 +16,7 @@
 
 import React, { useEffect, useState } from "react";
 import { EuiComboBox, EuiFormRow } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 export const ClusteredFieldsComboBox = ({ options, onChange }) => {
   const [fields, setFields] = useState([]);
@@ -83,4 +84,9 @@ export const ClusteredFieldsComboBox = ({ options, onChange }) => {
       />
     </EuiFormRow>
   );
+};
+
+ClusteredFieldsComboBox.propTypes = {
+  options: PropTypes.array,
+  onChange: PropTypes.func
 };

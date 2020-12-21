@@ -30,6 +30,7 @@ import {
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import { ModelAlertRule } from "./ModelAlertRule";
 import { ModelAlertRulePercentile } from "./ModelAlertRulePercentile";
+import PropTypes from "prop-types";
 
 export const ModelAlertForm = ({ request, setRequest }) => {
   const [{ data: teams }] = useMerlinApi(
@@ -158,4 +159,9 @@ export const ModelAlertForm = ({ request, setRequest }) => {
       />
     </EuiPanel>
   );
+};
+
+ModelAlertForm.propTypes = {
+  request: PropTypes.object,
+  setRequest: PropTypes.func
 };

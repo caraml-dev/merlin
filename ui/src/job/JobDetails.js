@@ -31,6 +31,7 @@ import JobConfig from "./JobConfig";
 import RecreateJobView from "./RecreateJobView";
 import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
+import PropTypes from "prop-types";
 
 const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
   const JobLog = ({ modelId, versionId, jobId, breadcrumbs }) => {
@@ -109,6 +110,13 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
       </EuiPageBody>
     </EuiPage>
   );
+};
+
+JobDetails.propTypes = {
+  projectId: PropTypes.string,
+  modelId: PropTypes.string,
+  versionId: PropTypes.string,
+  jobId: PropTypes.string
 };
 
 export default JobDetails;

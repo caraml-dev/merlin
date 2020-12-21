@@ -25,6 +25,7 @@ import {
   EuiSpacer,
   EuiTextAlign
 } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 const RecreateJobView = ({ projectId, modelId, versionId, jobId }) => {
   const [{ data, isLoaded, error }] = useMerlinApi(
@@ -55,6 +56,13 @@ const RecreateJobView = ({ projectId, modelId, versionId, jobId }) => {
       />
     </JobFormContextProvider>
   );
+};
+
+RecreateJobView.propTypes = {
+  projectId: PropTypes.string,
+  modelId: PropTypes.string,
+  versionId: PropTypes.string,
+  jobId: PropTypes.string
 };
 
 export default RecreateJobView;

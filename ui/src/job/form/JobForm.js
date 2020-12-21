@@ -37,6 +37,7 @@ import { JobFormOthers } from "./JobFormOthers";
 import { JobFormSink } from "./JobFormSink";
 import { JobFormSource } from "./JobFormSource";
 import { JobFormStep } from "./JobFormStep";
+import PropTypes from "prop-types";
 
 const isSourceConfigured = job => {
   return (
@@ -246,4 +247,11 @@ export const JobForm = ({ projectId, modelId, versionId, isNewJob = true }) => {
       </EuiPageBody>
     </EuiPage>
   );
+};
+
+JobForm.propTypes = {
+  projectId: PropTypes.string,
+  modelId: PropTypes.string,
+  versionId: PropTypes.string,
+  isNewJob: PropTypes.bool
 };

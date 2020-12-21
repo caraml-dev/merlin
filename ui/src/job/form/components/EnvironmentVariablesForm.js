@@ -22,6 +22,7 @@ import {
   EuiInMemoryTable,
   EuiTitle
 } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 require("../../../assets/scss/EnvironmentVariables.scss");
 
@@ -128,4 +129,9 @@ export const EnvironmentVariablesForm = ({ variables, onChange }) => {
       />
     </Fragment>
   );
+};
+
+EnvironmentVariablesForm.propTypes = {
+  variables: PropTypes.array,
+  onChange: PropTypes.func
 };

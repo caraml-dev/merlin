@@ -25,6 +25,7 @@ import {
 import { useToggle } from "@gojek/mlp-ui";
 import { StopServeVersionEndpointModal } from "../components/modals";
 import { featureToggleConfig } from "../config";
+import PropTypes from "prop-types";
 
 const ModelEndpointActions = ({ model, modelEndpoint, fetchModels }) => {
   const [
@@ -95,6 +96,12 @@ const ModelEndpointActions = ({ model, modelEndpoint, fetchModels }) => {
       )}
     </Fragment>
   );
+};
+
+ModelEndpointActions.propTypes = {
+  model: PropTypes.object,
+  modelEndpoint: PropTypes.object,
+  fetchModels: PropTypes.func
 };
 
 export default ModelEndpointActions;

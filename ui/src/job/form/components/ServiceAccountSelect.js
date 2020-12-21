@@ -17,6 +17,7 @@
 import React, { useEffect, useState } from "react";
 import { EuiFormRow, EuiSuperSelect } from "@elastic/eui";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
+import PropTypes from "prop-types";
 
 export const ServiceAccountSelect = ({ projectId, selected, onChange }) => {
   const [options, setOptions] = useState([]);
@@ -67,4 +68,10 @@ export const ServiceAccountSelect = ({ projectId, selected, onChange }) => {
       />
     </EuiFormRow>
   );
+};
+
+ServiceAccountSelect.propTypes = {
+  projectId: PropTypes.string,
+  selected: PropTypes.string,
+  onChange: PropTypes.func
 };

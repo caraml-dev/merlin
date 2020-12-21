@@ -16,6 +16,7 @@
 
 import React, { Fragment, useEffect, useState } from "react";
 import { EuiFormRow, EuiSuperSelect, EuiText } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 const moment = require("moment");
 
@@ -73,4 +74,11 @@ export const ModelVersionSelect = ({
       />
     </EuiFormRow>
   );
+};
+
+ModelVersionSelect.propTypes = {
+  isDisabled: PropTypes.bool,
+  selected: PropTypes.string,
+  versions: PropTypes.array,
+  onChange: PropTypes.func
 };
