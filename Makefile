@@ -5,7 +5,7 @@ BIN_NAME=merlin
 UI_PATH := ui
 UI_BUILD_PATH := ${UI_PATH}/build
 API_PATH=api
-API_ALL_PACKAGES := $(shell cd ${API_PATH} && go list ./... | grep -v github.com/gojek/mlp/api/client | grep -v mocks)
+API_ALL_PACKAGES := $(shell cd ${API_PATH} && go list ./... | grep -v github.com/gojek/mlp/api/client | grep -v -e mocks -e client)
 
 all: setup init-dep lint test clean build run
 
