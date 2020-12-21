@@ -265,6 +265,10 @@ paths:
       responses:
         200:
           description: "OK"
+          headers:
+            Next-Cursor:
+              type: string
+              description: "Pointer to used for next page request"
           schema:
             type: "array"
             items:

@@ -13,9 +13,9 @@ type AlertConditionMetricType string
 
 // List of AlertConditionMetricType
 const (
-	ThroughputAlertConditionMetricType AlertConditionMetricType = "throughput"
-	LatencyAlertConditionMetricType    AlertConditionMetricType = "latency"
-	ErrorRateAlertConditionMetricType AlertConditionMetricType = "error_rate"
-	CPUAlertConditionMetricType        AlertConditionMetricType = "cpu"
-	MemoryAlertConditionMetricType     AlertConditionMetricType = "memory"
+	THROUGHPUT_AlertConditionMetricType AlertConditionMetricType = "throughput"
+	LATENCY_AlertConditionMetricType    AlertConditionMetricType = "latency"
+	ERROR_RATE_AlertConditionMetricType AlertConditionMetricType = "error_rate"
+	CPU_AlertConditionMetricType        AlertConditionMetricType = "cpu"
+	MEMORY_AlertConditionMetricType     AlertConditionMetricType = "memory"
 )

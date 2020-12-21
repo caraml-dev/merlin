@@ -426,27 +426,26 @@ class TestModel:
     v2 = cl.Version(id=2, model_id=1)
 
     @responses.activate
-    def test_get_version(self, model):
-        responses.add("GET", "/v1/models/1/versions",
-                      body=json.dumps([self.v1.to_dict(), self.v2.to_dict()]),
+    def test_list_version(self, model):
+        responses.add("GET", "/v1/models/1/versions?limit=50&cursor=&search=",
+                      match_querystring=True,
+                      body=json.dumps([self.v1.to_dict()]),
+                      status=200,
+                      adding_headers={"Next-Cursor": "abcdef"},
+                      content_type='application/json')
+        responses.add("GET", "/v1/models/1/versions?limit=50&cursor=abcdef&search=",
+                      match_querystring=True,
+                      body=json.dumps([self.v2.to_dict()]),
                       status=200,
                       content_type='application/json')
-        v = model.get_version(1)
-        assert v.id == 1
-        assert model.get_version(3) is None
+        versions = model.list_version()
+        assert len(versions) == 2
+        assert versions[0].id == 1
+        assert versions[1].id == 2
 
 
         @responses.activate
-        def test_endpoint(self, model):
-            responses.add("GET", '/v1/models/1/endpoints',
-                          body=json.dumps([mdl_endpoint_2.to_dict()]),
-                          status=200,
-                          content_type='application/json')
-
-            ep = model.endpoint
-            assert ep is None
-            responses.reset()
-
+        def test_list_endpoint(self, model):
             responses.add("GET", '/v1/models/1/endpoints',
                           body=json.dumps(
                               [mdl_endpoint_1.to_dict(),
@@ -454,11 +453,14 @@ class TestModel:
                           status=200,
                           content_type='application/json')
 
-            ep = model.endpoint
-            assert ep.id == str(mdl_endpoint_1.id)
-            assert ep.status.value == mdl_endpoint_1.status
-            assert ep.environment_name == mdl_endpoint_1.environment_name
-            assert ep.url.startswith(f"http://{mdl_endpoint_1.url}")
+            endpoints = model.list_endpoint()
+            assert len(endpoints) == 2
+            assert endpoints[0].id == str(mdl_endpoint_1.id)
+            assert endpoints[1].id == str(mdl_endpoint_2.id)
+
+            v = model.get_version(1)
+            assert v.id == 1
+            assert model.get_version(3) is None
 
         @responses.activate
         def test_list_endpoint(self, model):

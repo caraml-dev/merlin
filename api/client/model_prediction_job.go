@@ -14,16 +14,16 @@ import (
 )
 
 type PredictionJob struct {
-	ID              int32        `json:"id,omitempty"`
+	Id              int32        `json:"id,omitempty"`
 	Name            string       `json:"name,omitempty"`
-	VersionID       int32        `json:"version_id,omitempty"`
-	ModelID         int32        `json:"model_id,omitempty"`
-	ProjectID       int32        `json:"project_id,omitempty"`
+	VersionId       int32        `json:"version_id,omitempty"`
+	ModelId         int32        `json:"model_id,omitempty"`
+	ProjectId       int32        `json:"project_id,omitempty"`
 	EnvironmentName string       `json:"environment_name,omitempty"`
 	Environment     *Environment `json:"environment,omitempty"`
 	Config          *Config      `json:"config,omitempty"`
 	Status          string       `json:"status,omitempty"`
-	Error          string       `json:"error,omitempty"`
+	Error_          string       `json:"error,omitempty"`
 	CreatedAt       time.Time    `json:"created_at,omitempty"`
 	UpdatedAt       time.Time    `json:"updated_at,omitempty"`
 }

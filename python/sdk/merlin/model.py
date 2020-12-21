@@ -48,6 +48,7 @@ from merlin.validation import validate_model_dir
 from merlin.version import VERSION
 
 DEFAULT_MODEL_PATH = "model"
+DEFAULT_MODEL_VERSION_LIMIT = 50
 V1 = "v1"
 PREDICTION_JOB = "PredictionJob"
 
@@ -333,12 +334,33 @@ class Model:
 
         :return: list of ModelVersion
         """
-        version_api = VersionApi(self._api_client)
-        v_list = version_api.models_model_id_versions_get(int(self.id))
         result = []
-        for v in v_list:
-            result.append(ModelVersion(v, self, self._api_client))
+        versions, cursor = self.list_version_pagination()
+        result = result + versions
+        while cursor != "":
+            versions, cursor = self.list_version_pagination(cursor=cursor)
+            result = result + versions
+            sleep(0.05)
         return result
+
+    def list_version_pagination(self, limit=DEFAULT_MODEL_VERSION_LIMIT, cursor="", search="") -> (List['ModelVersion'], str):
+        """
+        List version of the model with pagination
+        :param limit: integer, max number of rows will be returned
+        :param cursor: text, indicator where backend will start to look up the data
+        :param search: text
+
+        :return: list of ModelVersion
+        :return: next cursor to fetch next page of version
+        """
+        version_api = VersionApi(self._api_client)
+        (versions, _, headers) = version_api.models_model_id_versions_get_with_http_info(int(self.id), limit=limit, cursor=cursor, search=search)
+        next_cursor = headers.get("Next-Cursor") or ""
+        result = []
+        for v in versions:
+            result.append(ModelVersion(v, self, self._api_client))
+        return result, next_cursor
+
 
     def new_model_version(self) -> 'ModelVersion':
         """
@@ -547,6 +569,8 @@ class ModelVersion:
         ModelType.XGBOOST: "gcr.io/kfserving/xgbserver:0.2.2",
         ModelType.PYTORCH: "gcr.io/kfserving/pytorchserver:0.2.2",
     }
+
+
 
     def __init__(self, version: client.Version, model: Model,
                  api_client: client.ApiClient):

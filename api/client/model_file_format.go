@@ -13,9 +13,9 @@ type FileFormat string
 
 // List of FileFormat
 const (
-	InvalidFileFormat             FileFormat = "INVALID_FILE_FORMAT"
-	CSVFileFormat                 FileFormat = "CSV"
-	ParquetFileFormat             FileFormat = "PARQUET"
-	AvroFileFormat                FileFormat = "AVRO"
-	JsonFileFormat                FileFormat = "JSON"
+	INVALID_FILE_FORMAT_FileFormat FileFormat = "INVALID_FILE_FORMAT"
+	CSV_FileFormat                 FileFormat = "CSV"
+	PARQUET_FileFormat             FileFormat = "PARQUET"
+	AVRO_FileFormat                FileFormat = "AVRO"
+	JSON_FileFormat                FileFormat = "JSON"
 )

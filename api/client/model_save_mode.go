@@ -13,9 +13,9 @@ type SaveMode string
 
 // List of SaveMode
 const (
-	ErrorIfExistsSaveMode SaveMode = "ERRORIFEXISTS"
-	OverwriteSaveMode     SaveMode = "OVERWRITE"
-	AppendSaveMode        SaveMode = "APPEND"
-	IgnoreSaveMode        SaveMode = "IGNORE"
-	ErrorSaveMode         SaveMode = "ERROR"
+	ERRORIFEXISTS_SaveMode SaveMode = "ERRORIFEXISTS"
+	OVERWRITE_SaveMode     SaveMode = "OVERWRITE"
+	APPEND_SaveMode        SaveMode = "APPEND"
+	IGNORE_SaveMode        SaveMode = "IGNORE"
+	ERROR__SaveMode        SaveMode = "ERROR"
 )

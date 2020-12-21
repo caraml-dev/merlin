@@ -14,13 +14,13 @@ import (
 )
 
 type Model struct {
-	ID                 int32  `json:"id,omitempty"`
-	ProjectID          int32  `json:"project_id,omitempty"`
-	MlflowExperimentID int32  `json:"mlflow_experiment_id,omitempty"`
+	Id                 int32  `json:"id,omitempty"`
+	ProjectId          int32  `json:"project_id,omitempty"`
+	MlflowExperimentId int32  `json:"mlflow_experiment_id,omitempty"`
 	Name               string `json:"name,omitempty"`
 	// Model type
-	Type      string          `json:"type,omitempty"`
-	MlflowURL string          `json:"mlflow_url,omitempty"`
+	Type_     string          `json:"type,omitempty"`
+	MlflowUrl string          `json:"mlflow_url,omitempty"`
 	Endpoints []ModelEndpoint `json:"endpoints,omitempty"`
 	CreatedAt time.Time       `json:"created_at,omitempty"`
 	UpdatedAt time.Time       `json:"updated_at,omitempty"`
