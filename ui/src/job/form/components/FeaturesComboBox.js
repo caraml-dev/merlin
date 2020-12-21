@@ -16,6 +16,7 @@
 
 import React, { useEffect, useState } from "react";
 import { EuiCode, EuiComboBox, EuiFormRow } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 export const FeatureComboBox = ({ options, onChange }) => {
   const [features, setFeatures] = useState([]);
@@ -84,4 +85,9 @@ export const FeatureComboBox = ({ options, onChange }) => {
       />
     </EuiFormRow>
   );
+};
+
+FeatureComboBox.propTypes = {
+  options: PropTypes.array,
+  onChange: PropTypes.func
 };

@@ -28,6 +28,7 @@ import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import mocks from "../mocks";
 import ModelListTable from "../model/ModelListTable";
+import PropTypes from "prop-types";
 
 const Models = ({ projectId }) => {
   const [{ data, isLoaded, error }, fetchModels] = useMerlinApi(
@@ -70,6 +71,10 @@ const Models = ({ projectId }) => {
       </EuiPageBody>
     </EuiPage>
   );
+};
+
+Models.propTypes = {
+  modelId: PropTypes.string
 };
 
 export default Models;

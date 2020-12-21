@@ -24,6 +24,7 @@ import {
   EuiSpacer,
   EuiTitle
 } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 require("../../../assets/scss/EnvironmentVariables.scss");
 
@@ -142,4 +143,9 @@ export const EndpointVariables = ({ variables, onChange }) => {
       />
     </EuiPanel>
   );
+};
+
+EndpointVariables.propTypes = {
+  variables: PropTypes.array,
+  onChange: PropTypes.func
 };

@@ -24,6 +24,7 @@ import {
   EuiText
 } from "@elastic/eui";
 import { ModelAlertRulePercentileRow } from "./ModelAlertRulePercentileRow";
+import PropTypes from "prop-types";
 
 export const ModelAlertRulePercentile = ({
   title,
@@ -218,4 +219,13 @@ export const ModelAlertRulePercentile = ({
       </Fragment>
     </Fragment>
   );
+};
+
+ModelAlertRulePercentile.propTypes = {
+  title: PropTypes.string,
+  name: PropTypes.string,
+  description: PropTypes.string,
+  unit: PropTypes.string,
+  request: PropTypes.object,
+  setRequest: PropTypes.func
 };

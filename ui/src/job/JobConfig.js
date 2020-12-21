@@ -29,6 +29,7 @@ import {
 import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import { replaceBreadcrumbs } from "@gojek/mlp-ui";
+import PropTypes from "prop-types";
 
 const JobConfig = ({ projectId, modelId, versionId, jobId }) => {
   const [{ data, isLoaded, error }] = useMerlinApi(
@@ -311,6 +312,13 @@ const JobConfig = ({ projectId, modelId, versionId, jobId }) => {
       </EuiFlexItem>
     </EuiFlexGroup>
   );
+};
+
+JobConfig.propTypes = {
+  projectId: PropTypes.string,
+  modelId: PropTypes.string,
+  versionId: PropTypes.string,
+  jobId: PropTypes.string
 };
 
 export default JobConfig;

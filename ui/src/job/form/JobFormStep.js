@@ -22,6 +22,7 @@ import {
   EuiHorizontalRule,
   EuiSpacer
 } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 export const JobFormStep = ({
   step,
@@ -77,4 +78,14 @@ export const JobFormStep = ({
       </EuiFlexGroup>
     </Fragment>
   ) : null;
+};
+
+JobFormStep.propTypes = {
+  step: PropTypes.number,
+  currentStep: PropTypes.number,
+  isLastStep: PropTypes.bool,
+  onPrev: PropTypes.func,
+  onNext: PropTypes.func,
+  onSubmit: PropTypes.func,
+  isStepCompleted: PropTypes.bool
 };

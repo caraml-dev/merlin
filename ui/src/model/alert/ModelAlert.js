@@ -28,6 +28,7 @@ import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
 import { ModelAlertForm } from "./components/ModelAlertForm";
+import PropTypes from "prop-types";
 
 export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
   const redirectUrl = `/merlin/projects/${model.project_id}`;
@@ -155,4 +156,10 @@ export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
       </EuiFlexGroup>
     </Fragment>
   );
+};
+
+ModelAlert.propTypes = {
+  breadcrumbs: PropTypes.array,
+  model: PropTypes.object,
+  endpointId: PropTypes.string
 };

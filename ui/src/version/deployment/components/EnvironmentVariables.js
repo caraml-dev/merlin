@@ -16,6 +16,7 @@
 
 import React, { useEffect, useState } from "react";
 import { EuiButtonIcon, EuiFieldText, EuiInMemoryTable } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 require("../../../assets/scss/EnvironmentVariables.scss");
 
@@ -133,4 +134,9 @@ export const EnvironmentVariables = ({ variables, onChange }) => {
       hasActions={true}
     />
   );
+};
+
+EnvironmentVariables.propTypes = {
+  variables: PropTypes.array,
+  onChange: PropTypes.func
 };

@@ -32,6 +32,7 @@ import { get } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import { ModelAlert } from "./alert/ModelAlert";
 import { featureToggleConfig } from "../config";
+import PropTypes from "prop-types";
 
 const LoadingContent = () => (
   <EuiPageContent>
@@ -104,4 +105,10 @@ export const ModelDetails = ({ projectId, modelId, location: { state } }) => {
       </EuiPageBody>
     </EuiPage>
   );
+};
+
+ModelDetails.propTypes = {
+  projectId: PropTypes.string,
+  modelId: PropTypes.string,
+  state: PropTypes.object
 };

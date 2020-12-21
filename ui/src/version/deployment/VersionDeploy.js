@@ -17,6 +17,7 @@
 import React from "react";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import { EndpointDeployment } from "./components/EndpointDeployment";
+import PropTypes from "prop-types";
 
 const VersionDeploy = ({ breadcrumbs, model, version }) => {
   const [deploymentResponse, deployVersionEndpoint] = useMerlinApi(
@@ -39,6 +40,12 @@ const VersionDeploy = ({ breadcrumbs, model, version }) => {
       response={deploymentResponse}
     />
   );
+};
+
+VersionDeploy.propTypes = {
+  breadcrumbs: PropTypes.array,
+  model: PropTypes.object,
+  version: PropTypes.object
 };
 
 export default VersionDeploy;

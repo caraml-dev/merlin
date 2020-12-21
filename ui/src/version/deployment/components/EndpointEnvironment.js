@@ -27,6 +27,7 @@ import {
   EuiTitle,
   EuiToolTip
 } from "@elastic/eui";
+import PropTypes from "prop-types";
 
 const EnvironmentDropdownOption = ({ environment, endpoint, disabled }) => {
   const option = (
@@ -52,6 +53,12 @@ const EnvironmentDropdownOption = ({ environment, endpoint, disabled }) => {
   ) : (
     option
   );
+};
+
+EnvironmentDropdownOption.propTypes = {
+  environment: PropTypes.object,
+  endpoint: PropTypes.object,
+  disabled: PropTypes.bool
 };
 
 const isEnvironmentDisabled = endpoint => {
@@ -132,4 +139,12 @@ export const EndpointEnvironment = ({
       </EuiForm>
     </EuiPanel>
   );
+};
+
+EndpointEnvironment.propTypes = {
+  version: PropTypes.object,
+  selected: PropTypes.string,
+  environments: PropTypes.array,
+  onChange: PropTypes.func,
+  disabled: PropTypes.bool
 };

@@ -31,6 +31,7 @@ import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import mocks from "../mocks";
 import JobListTable from "../job/JobListTable";
+import PropTypes from "prop-types";
 
 const Jobs = ({ projectId, modelId }) => {
   const createJobURL = `/merlin/projects/${projectId}/models/${modelId}/create-job`;
@@ -97,6 +98,11 @@ const Jobs = ({ projectId, modelId }) => {
       </EuiPageBody>
     </EuiPage>
   );
+};
+
+Jobs.propTypes = {
+  projectId: PropTypes.string,
+  modelId: PropTypes.string
 };
 
 export default Jobs;

@@ -37,6 +37,7 @@ import {
 } from "@elastic/eui";
 import { DateFromNow } from "@gojek/mlp-ui";
 import ModelEndpointActions from "./ModelEndpointActions";
+import PropTypes from "prop-types";
 
 const moment = require("moment");
 
@@ -459,6 +460,13 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
       cellProps={cellProps}
     />
   );
+};
+
+ModelListTable.propTypes = {
+  items: PropTypes.array,
+  isLoaded: PropTypes.bool,
+  error: PropTypes.object,
+  fetchModels: PropTypes.func
 };
 
 export default ModelListTable;
