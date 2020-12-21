@@ -19,7 +19,7 @@ from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
 from time import sleep
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Tuple
 
 import docker
 import mlflow
@@ -334,7 +334,7 @@ class Model:
 
         :return: list of ModelVersion
         """
-        result = []
+        result: List['ModelVersion'] = []
         versions, cursor = self.list_version_pagination()
         result = result + versions
         while cursor != "":
@@ -343,7 +343,7 @@ class Model:
             sleep(0.05)
         return result
 
-    def list_version_pagination(self, limit=DEFAULT_MODEL_VERSION_LIMIT, cursor="", search="") -> (List['ModelVersion'], str):
+    def list_version_pagination(self, limit=DEFAULT_MODEL_VERSION_LIMIT, cursor="", search="") -> Tuple[List['ModelVersion'], str]:
         """
         List version of the model with pagination
         :param limit: integer, max number of rows will be returned
