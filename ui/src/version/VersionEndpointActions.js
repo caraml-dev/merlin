@@ -183,11 +183,7 @@ const VersionEndpointActions = ({
 
   return (
     <Fragment>
-      <EuiFlexGroup
-        alignItems="flexStart"
-        direction="column"
-        gutterSize="s"
-        style={{ marginTop: "4px" }}>
+      <EuiFlexGroup alignItems="flexStart" direction="column" gutterSize="xs">
         {tailorActions(actions)}
       </EuiFlexGroup>
 
