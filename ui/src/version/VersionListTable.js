@@ -422,9 +422,8 @@ const VersionListTable = ({
         activeModel && (
           <EuiFlexGroup
             alignItems="flexStart"
-            direction="row"
-            gutterSize="s"
-            style={{ margin: "2px 0" }}>
+            direction="column"
+            gutterSize="xs">
             <EuiFlexItem grow={false}>
               <EuiToolTip
                 position="top"
