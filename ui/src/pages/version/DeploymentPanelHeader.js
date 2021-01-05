@@ -59,11 +59,12 @@ export const DeploymentPanelHeader = ({
     },
     {
       title: "Endpoint",
-      description: endpoint ? (
-        <CopyableUrl text={versionEndpointUrl(endpoint.url)} />
-      ) : (
-        <EuiText>-</EuiText>
-      ),
+      description:
+        endpoint && endpoint.url ? (
+          <CopyableUrl text={versionEndpointUrl(endpoint.url)} />
+        ) : (
+          <EuiText>-</EuiText>
+        ),
       flexProps: {
         grow: 4
       }
