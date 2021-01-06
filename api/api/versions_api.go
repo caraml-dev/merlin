@@ -97,7 +97,7 @@ func (c *VersionsController) ListVersions(r *http.Request, vars map[string]strin
 		responseHeaders["Next-Cursor"] = nextCursor
 	}
 
-	return OkWithCustomHeaders(versions, responseHeaders)
+	return OkWithHeaders(versions, responseHeaders)
 }
 
 func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {

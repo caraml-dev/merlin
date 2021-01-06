@@ -16,18 +16,12 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/jinzhu/gorm"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
-
-	"encoding/base64"
-	b64 "encoding/base64"
 )
 
 type VersionsService interface {
@@ -41,9 +35,13 @@ func NewVersionsService(db *gorm.DB, mlpAPIClient mlp.APIClient) VersionsService
 }
 
 type VersionQuery struct {
+	PaginationQuery
+	Search string `schema:"search"`
+}
+
+type PaginationQuery struct {
 	Limit  int    `schema:"limit"`
 	Cursor string `schema:"cursor"`
-	Search string `schema:"search"`
 }
 
 type cursorPagination struct {
@@ -71,53 +69,13 @@ func (service *versionsService) query() *gorm.DB {
 		Select("versions.*")
 }
 
-func decodeCursor(cursor string) (cursorPagination, bool) {
-	decodedCursor, err := b64.StdEncoding.DecodeString(cursor)
-	if err != nil {
-		return cursorPagination{}, false
-	}
-	components := strings.Split(string(decodedCursor), "_")
-
-	// format of cursor is #{id}_#{model_id}, hence length of components should be 2
-	if len(components) < 2 {
-		return cursorPagination{}, false
-	}
-
-	versionID, err := strconv.Atoi(components[0])
-	if err != nil {
-		return cursorPagination{}, false
-	}
-	versionModelID, err := strconv.Atoi(components[1])
-	if err != nil {
-		return cursorPagination{}, false
-	}
-	return cursorPagination{
-		versionID:      models.ID(versionID),
-		versionModelID: models.ID(versionModelID),
-	}, true
-}
-
-func encodeCursor(versionID, versionModelID models.ID) string {
-	originalCursor := fmt.Sprintf("%d_%d", versionID, versionModelID)
-	return base64.StdEncoding.EncodeToString([]byte(originalCursor))
-}
-
 func (service *versionsService) buildListVersionsQuery(modelID models.ID, query VersionQuery) *gorm.DB {
 	dbQuery := service.query().
 		Where(models.Version{ModelID: modelID})
 
-	cursor, valid := decodeCursor(query.Cursor)
-	if valid && cursor.versionModelID == modelID {
-		dbQuery = dbQuery.Where("versions.id < ?", cursor.versionID)
-	}
-
 	// search only based on mlflow run_id
 	if query.Search != "" {
 		dbQuery = dbQuery.Where("versions.mlflow_run_id = ?", query.Search)
-	}
-
-	if query.Limit > 0 {
-		dbQuery = dbQuery.Limit(query.Limit)
 	}
 	dbQuery = dbQuery.Order("created_at DESC")
 	return dbQuery
@@ -125,7 +83,17 @@ func (service *versionsService) buildListVersionsQuery(modelID models.ID, query 
 
 func (service *versionsService) ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig, query VersionQuery) (versions []*models.Version, nextCursor string, err error) {
 	dbQuery := service.buildListVersionsQuery(modelID, query)
-	err = dbQuery.Find(&versions).Error
+
+	paginationEnabled := query.Limit > 0
+	if paginationEnabled {
+		paginateEngine := generatePagination(query.PaginationQuery, []string{"ID"}, descOrder)
+		err = paginateEngine.Paginate(dbQuery, &versions).Error
+		if paginateEngine.GetNextCursor().After != nil {
+			nextCursor = *paginateEngine.GetNextCursor().After
+		}
+	} else {
+		err = dbQuery.Find(&versions).Error
+	}
 
 	if err != nil {
 		return
@@ -153,11 +121,6 @@ func (service *versionsService) ListVersions(ctx context.Context, modelID models
 				})
 			}
 		}
-	}
-
-	lastVersion := versions[len(versions)-1]
-	if query.Limit > 0 && len(versions) == query.Limit {
-		nextCursor = encodeCursor(lastVersion.ID, lastVersion.ModelID)
 	}
 
 	return

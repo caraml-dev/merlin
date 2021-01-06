@@ -190,8 +190,10 @@ func TestVersionsService_ListVersions(t *testing.T) {
 		limit := 3
 		for numOfFetchedVersions < numOfVersions {
 			versions, nextCursor, err := versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
-				Limit:  limit,
-				Cursor: cursor,
+				PaginationQuery: PaginationQuery{
+					Limit:  limit,
+					Cursor: cursor,
+				},
 			})
 			assert.NoError(t, err)
 

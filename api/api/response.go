@@ -54,7 +54,7 @@ func Ok(data interface{}) *Response {
 	}
 }
 
-func OkWithCustomHeaders(data interface{}, headers map[string]string) *Response {
+func OkWithHeaders(data interface{}, headers map[string]string) *Response {
 	return &Response{
 		code:    http.StatusOK,
 		data:    data,

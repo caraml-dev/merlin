@@ -162,7 +162,7 @@ class Project:
                                                     body={
                                                         "name": name,
                                                         "data": data
-                                                    })
+        })
 
     def list_secret(self) -> List[str]:
         """
@@ -171,7 +171,8 @@ class Project:
         :return:
         """
         secret_api = SecretApi(self._api_client)
-        secrets = secret_api.projects_project_id_secrets_get(project_id=int(self.id))
+        secrets = secret_api.projects_project_id_secrets_get(
+            project_id=int(self.id))
         secret_names = []
         for s in secrets:
             secret_names.append(s.name)
@@ -189,11 +190,12 @@ class Project:
         match = self._find_secret(name)
 
         secret_api.projects_project_id_secrets_secret_id_patch(project_id=int(self.id),
-                                                               secret_id=int(match.id),
+                                                               secret_id=int(
+                                                                   match.id),
                                                                body={
                                                                    "name": name,
                                                                    "data": data
-                                                               })
+        })
 
     def delete_secret(self, name: str):
         """
@@ -210,13 +212,15 @@ class Project:
 
     def _find_secret(self, name: str):
         secret_api = SecretApi(self._api_client)
-        secrets = secret_api.projects_project_id_secrets_get(project_id=int(self.id))
+        secrets = secret_api.projects_project_id_secrets_get(
+            project_id=int(self.id))
         match = None
         for s in secrets:
             if s.name == name:
                 match = s
         if match is None:
-            raise ValueError(f"unable to find secret {name} in project {self.name}")
+            raise ValueError(
+                f"unable to find secret {name} in project {self.name}")
         return match
 
 
@@ -335,15 +339,14 @@ class Model:
         :return: list of ModelVersion
         """
         result: List['ModelVersion'] = []
-        versions, cursor = self.list_version_pagination()
+        versions, cursor = self._list_version_pagination()
         result = result + versions
         while cursor != "":
-            versions, cursor = self.list_version_pagination(cursor=cursor)
+            versions, cursor = self._list_version_pagination(cursor=cursor)
             result = result + versions
-            sleep(0.05)
         return result
 
-    def list_version_pagination(self, limit=DEFAULT_MODEL_VERSION_LIMIT, cursor="", search="") -> Tuple[List['ModelVersion'], str]:
+    def _list_version_pagination(self, limit=DEFAULT_MODEL_VERSION_LIMIT, cursor="", search="") -> Tuple[List['ModelVersion'], str]:
         """
         List version of the model with pagination
         :param limit: integer, max number of rows will be returned
@@ -354,13 +357,13 @@ class Model:
         :return: next cursor to fetch next page of version
         """
         version_api = VersionApi(self._api_client)
-        (versions, _, headers) = version_api.models_model_id_versions_get_with_http_info(int(self.id), limit=limit, cursor=cursor, search=search)
+        (versions, _, headers) = version_api.models_model_id_versions_get_with_http_info(
+            int(self.id), limit=limit, cursor=cursor, search=search)
         next_cursor = headers.get("Next-Cursor") or ""
         result = []
         for v in versions:
             result.append(ModelVersion(v, self, self._api_client))
         return result, next_cursor
-
 
     def new_model_version(self) -> 'ModelVersion':
         """
@@ -544,16 +547,16 @@ class Model:
             # GET and PUT
             ep = model_endpoint_api \
                 .models_model_id_endpoints_model_endpoint_id_get(
-                model_id=int(self.id),
-                model_endpoint_id=def_model_endpoint.id)
+                    model_id=int(self.id),
+                    model_endpoint_id=def_model_endpoint.id)
             ep.rule.destinations[0] \
                 .version_endpoint_id = def_version_endpoint.id
             ep.rule.destinations[0].weight = 100
             ep = model_endpoint_api \
                 .models_model_id_endpoints_model_endpoint_id_put(
-                model_id=int(self.id),
-                model_endpoint_id=def_model_endpoint.id,
-                body=ep.to_dict())
+                    model_id=int(self.id),
+                    model_endpoint_id=def_model_endpoint.id,
+                    body=ep.to_dict())
 
         return ModelEndpoint(ep)
 
@@ -569,8 +572,6 @@ class ModelVersion:
         ModelType.XGBOOST: "gcr.io/kfserving/xgbserver:0.2.2",
         ModelType.PYTORCH: "gcr.io/kfserving/pytorchserver:0.2.2",
     }
-
-
 
     def __init__(self, version: client.Version, model: Model,
                  api_client: client.ApiClient):
@@ -609,7 +610,7 @@ class ModelVersion:
         endpoint_api = EndpointApi(self._api_client)
         ep_list = endpoint_api. \
             models_model_id_versions_version_id_endpoint_get(
-            model_id=self.model.id, version_id=self.id)
+                model_id=self.model.id, version_id=self.id)
 
         for endpoint in ep_list:
             if endpoint.environment.is_default:
@@ -820,7 +821,8 @@ class ModelVersion:
         :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config" : "config/staging.yaml"}
         """
         if self._model.type != ModelType.PYFUNC and self._model.type != ModelType.PYFUNC_V2:
-            raise ValueError("log_pyfunc_model is only for PyFunc and PyFuncV2 model")
+            raise ValueError(
+                "log_pyfunc_model is only for PyFunc and PyFuncV2 model")
 
         validate_model_dir(self._model.type, ModelType.PYFUNC, None)
         mlflow.pyfunc.log_model(DEFAULT_MODEL_PATH,
@@ -844,8 +846,7 @@ class ModelVersion:
         if model_class_name is not None:
             version_api = VersionApi(self._api_client)
             version_api.models_model_id_versions_version_id_patch(
-                int(self.model.id), int(self.id), body=
-                {"properties": {
+                int(self.model.id), int(self.id), body={"properties": {
                     "pytorch_class_name": model_class_name
                 }
                 })
@@ -876,7 +877,7 @@ class ModelVersion:
         endpoint_api = EndpointApi(self._api_client)
         ep_list = endpoint_api. \
             models_model_id_versions_version_id_endpoint_get(
-            model_id=self.model.id, version_id=self.id)
+                model_id=self.model.id, version_id=self.id)
 
         endpoints = []
         for ep in ep_list:
@@ -939,11 +940,13 @@ class ModelVersion:
 
                 if len(env_vars) > 0:
                     for name, value in env_vars.items():
-                        target_env_vars.append(client.EnvVar(str(name), str(value)))
+                        target_env_vars.append(
+                            client.EnvVar(str(name), str(value)))
 
         target_transformer = None
         if transformer is not None:
-            target_transformer = self.create_transformer_spec(transformer, target_env_name)
+            target_transformer = self.create_transformer_spec(
+                transformer, target_env_name)
 
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
@@ -962,9 +965,9 @@ class ModelVersion:
         while endpoint.status == "pending":
             endpoint = endpoint_api \
                 .models_model_id_versions_version_id_endpoint_endpoint_id_get(
-                model_id=int(model.id),
-                version_id=int(self.id),
-                endpoint_id=endpoint.id)
+                    model_id=int(model.id),
+                    version_id=int(self.id),
+                    endpoint_id=endpoint.id)
             bar.update()
             sleep(5)
         bar.stop()
@@ -1009,7 +1012,8 @@ class ModelVersion:
 
             if len(transformer.env_vars) > 0:
                 for name, value in transformer.env_vars.items():
-                    target_env_vars.append(client.EnvVar(str(name), str(value)))
+                    target_env_vars.append(
+                        client.EnvVar(str(name), str(value)))
 
         return client.Transformer(
             transformer.enabled, transformer.image,
@@ -1063,7 +1067,8 @@ class ModelVersion:
         :return: prediction job
         """
         if self.model.type != ModelType.PYFUNC_V2:
-            raise ValueError(f"model type is not supported for prediction job: {self.model.type}")
+            raise ValueError(
+                f"model type is not supported for prediction job: {self.model.type}")
 
         job_cfg = client.PredictionJobConfig(version=V1, kind=PREDICTION_JOB, model={
             "type": self.model.type.value.upper(),
@@ -1173,30 +1178,35 @@ class ModelVersion:
         artifact_path = f"{tmp_dir}/merlin/{self.model.project.name}/{self.model.name}/{self.id}/{DEFAULT_MODEL_PATH}"
         pathlib.Path(artifact_path).mkdir(parents=True, exist_ok=True)
         if len(os.listdir(artifact_path)) < 1:
-            print(f"Downloading model artifact for model {self.model.name} version {self.id}")
+            print(
+                f"Downloading model artifact for model {self.model.name} version {self.id}")
             self.download_artifact(artifact_path)
 
         # stop all previous containers to avoid port conflict
         client = docker.from_env()
         if kill_existing_server:
-            started_containers = client.containers.list(filters={"name": self._container_name()})
+            started_containers = client.containers.list(
+                filters={"name": self._container_name()})
             for started_container in started_containers:
                 print(f"Stopping model server {started_container.name}")
                 started_container.remove(force=True)
 
         model_type = self.model.type
         if model_type == ModelType.PYFUNC:
-            self._run_pyfunc_local_server(artifact_path, env_vars, port, pyfunc_base_image)
+            self._run_pyfunc_local_server(
+                artifact_path, env_vars, port, pyfunc_base_image)
             return
 
         if model_type == ModelType.TENSORFLOW \
                 or model_type == ModelType.XGBOOST \
                 or model_type == ModelType.SKLEARN \
                 or model_type == ModelType.PYTORCH:
-            self._run_standard_model_local_server(artifact_path, env_vars, port, build_image)
+            self._run_standard_model_local_server(
+                artifact_path, env_vars, port, build_image)
             return
 
-        raise ValueError(f"running local model server is not supported for model type: {model_type}")
+        raise ValueError(
+            f"running local model server is not supported for model type: {model_type}")
 
     def _create_launch_command(self):
         model_type = self.model.type
@@ -1227,7 +1237,8 @@ class ModelVersion:
                                            "BASE_IMAGE": image_name,
                                            "MODEL_PATH": artifact_path
                                        },
-                                       dockerfile=os.path.basename(dockerfile_path),
+                                       dockerfile=os.path.basename(
+                                           dockerfile_path),
                                        decode=True
                                        )
                 self._wait_build_complete(logs)
@@ -1339,7 +1350,8 @@ class PyFuncModel(PythonModel):
                 return self.infer(model_input, **kwargs)
             except TypeError as e:
                 if "infer() got an unexpected keyword argument" in str(e):
-                    print('Fallback to the old infer() method, got TypeError exception: {}'.format(e))
+                    print(
+                        'Fallback to the old infer() method, got TypeError exception: {}'.format(e))
                     self._use_kwargs_infer = False
                 else:
                     raise e
