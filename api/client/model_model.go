@@ -19,7 +19,7 @@ type Model struct {
 	MlflowExperimentId int32  `json:"mlflow_experiment_id,omitempty"`
 	Name               string `json:"name,omitempty"`
 	// Model type
-	Type_     string          `json:"type,omitempty"`
+	Type      string          `json:"type,omitempty"`
 	MlflowUrl string          `json:"mlflow_url,omitempty"`
 	Endpoints []ModelEndpoint `json:"endpoints,omitempty"`
 	CreatedAt time.Time       `json:"created_at,omitempty"`
