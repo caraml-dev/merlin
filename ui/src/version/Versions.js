@@ -22,7 +22,8 @@ import {
   EuiPageContent,
   EuiPageHeader,
   EuiPageHeaderSection,
-  EuiTitle
+  EuiTitle,
+  EuiSpacer
 } from "@elastic/eui";
 import VersionListTable from "./VersionListTable";
 import { get, replaceBreadcrumbs, useToggle } from "@gojek/mlp-ui";
@@ -32,6 +33,7 @@ import {
   ServeVersionEndpointModal,
   UndeployVersionEndpointModal
 } from "../components/modals";
+import { CursorPagination } from "../components/CursorPagination";
 
 const Versions = ({ projectId, modelId, ...props }) => {
   const [
@@ -49,9 +51,11 @@ const Versions = ({ projectId, modelId, ...props }) => {
   /**
    * API Usage
    */
+  const limitPerPage = 50;
+
   const [versions, fetchVersions] = useMerlinApi(
     `/models/${modelId}/versions`,
-    { mock: mocks.versionList },
+    { mock: mocks.versionList, query: { limit: limitPerPage } },
     []
   );
 
@@ -60,6 +64,8 @@ const Versions = ({ projectId, modelId, ...props }) => {
     { mock: mocks.modelList },
     []
   );
+
+  const [searchQuery, setSearchQuery] = useState(null);
 
   useEffect(() => {
     if (activeModel) {
@@ -116,6 +122,15 @@ const Versions = ({ projectId, modelId, ...props }) => {
             setActiveVersionEndpoint={setActiveVersionEndpoint}
             toggleUndeployEndpointModal={toggleUndeployEndpointModal}
             toggleServeEndpointModal={toggleServeEndpointModal}
+            searchCallback={setSearchQuery}
+            searchQuery={searchQuery}
+          />
+          <EuiSpacer size="m" />
+          <CursorPagination
+            apiRequest={fetchVersions}
+            apiResponse={versions}
+            defaultLimit={limitPerPage}
+            search={searchQuery}
           />
         </EuiPageContent>
       </EuiPageBody>

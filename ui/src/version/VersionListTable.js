@@ -52,6 +52,8 @@ const VersionListTable = ({
   error,
   activeVersion,
   activeModel,
+  searchCallback,
+  searchQuery,
   ...props
 }) => {
   const healthColor = status => {
@@ -521,17 +523,16 @@ const VersionListTable = ({
     if (error) {
       return error;
     } else {
-      return EuiSearchBar.Query.execute(query, versions, {
-        defaultFields: ["mlflow_run_id"]
-      });
+      searchCallback(query.text);
     }
   };
 
   const search = {
     onChange: onChange,
     box: {
-      incremental: true
+      incremental: false
     },
+    query: searchQuery,
     filters: [
       {
         type: "field_value_selection",
