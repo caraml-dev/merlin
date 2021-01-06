@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   EuiFlexGroup,
   EuiFlexItem,
@@ -18,76 +18,79 @@ export const CursorPagination = ({
 }) => {
   const [limit, setLimit] = useState(defaultLimit);
   const [currentPageIdx, setCurrentPageIdx] = useState(0);
-  const nextPage = () => {
-    fetchAPI(limit, cursors[currentPageIdx + 1], search);
-    setCurrentPageIdx(currentPageIdx + 1);
-  };
 
-  const fetchAPI = (pageLimit, pageCursor, searchQuery) => {
-    apiRequest({
-      query: {
-        limit: pageLimit,
-        cursor: pageCursor,
-        search: searchQuery
-      }
-    });
-  };
+  const fetchAPI = useCallback(
+    (pageLimit, pageCursor, searchQuery) => {
+      apiRequest({
+        query: {
+          limit: pageLimit,
+          cursor: pageCursor,
+          search: searchQuery
+        }
+      });
+    },
+    [apiRequest]
+  );
 
-  const prevPage = () => {
-    const prevCursor = cursors[currentPageIdx - 1];
-    fetchAPI(limit, prevCursor, search);
-
-    setCurrentPageIdx(currentPageIdx - 1);
-
-    // remove cursors
-    removeCursor(currentPageIdx);
-  };
-
-  const removeCursor = idx => {
-    const tempCursors = [...cursors];
+  const removeCursor = (listOfCursor, idx) => {
+    const tempCursors = [...listOfCursor];
     tempCursors.splice(idx);
     setCursors(tempCursors);
   };
 
-  const initialCursors = [""];
-  const [cursors, setCursors] = useState(initialCursors);
-
-  useEffect(() => {
-    if (search == null) {
-      return;
-    }
-    setCurrentPageIdx(0);
-    setCursors(initialCursors);
-    fetchAPI(limit, "", search);
-  }, [search]);
-
-  const limitHookAlreadyMounted = useRef(false);
-  useEffect(() => {
-    if (!limitHookAlreadyMounted.current) {
-      limitHookAlreadyMounted.current = true;
-      return;
-    }
-    removeCursor(cursors.length - 1);
-    fetchAPI(limit, cursors[currentPageIdx], search);
-  }, [limit]);
-
-  const nextPageAvailable = () => {
-    return cursors[cursors.length - 1] != "";
-  };
-
-  const prevPageAvailable = () => {
-    return currentPageIdx - 1 >= 0;
-  };
+  const [cursors, setCursors] = useState([""]);
 
   useEffect(() => {
     if (apiResponse.headers == null) {
       return;
     }
     const nextCursor = apiResponse.headers["next-cursor"] || "";
-    if (cursors.length > 0 || nextCursor != "") {
-      setCursors([...cursors, nextCursor]);
-    }
-  }, [apiResponse]);
+    setCursors(prev => [...prev, nextCursor]);
+  }, [apiResponse, setCursors]);
+
+  const [, setQuery] = useState({ limit, search, cursors });
+
+  useEffect(() => {
+    setQuery(prev => {
+      const limitChanged = limit !== prev.limit;
+      const searchChanged = search !== prev.search;
+
+      var cursorsUsed = cursors;
+      if (limitChanged) {
+        fetchAPI(limit, cursors[currentPageIdx], search);
+        const tempCursors = [...cursors];
+        tempCursors.splice(cursors.length - 1);
+        setCursors(tempCursors);
+      } else if (searchChanged) {
+        setCurrentPageIdx(0);
+        setCursors([""]);
+        fetchAPI(limit, "", search);
+      }
+      return { limit, search, cursorsUsed };
+    });
+  }, [limit, search, cursors, currentPageIdx, fetchAPI]);
+
+  const nextPage = () => {
+    fetchAPI(limit, cursors[currentPageIdx + 1], search);
+    setCurrentPageIdx(currentPageIdx + 1);
+  };
+
+  const prevPage = () => {
+    const prevCursor = cursors[currentPageIdx - 1];
+    fetchAPI(limit, prevCursor, search);
+    setCurrentPageIdx(currentPageIdx - 1);
+
+    // remove cursors
+    removeCursor(cursors, currentPageIdx);
+  };
+
+  const nextPageAvailable = () => {
+    return cursors[cursors.length - 1] !== "";
+  };
+
+  const prevPageAvailable = () => {
+    return currentPageIdx - 1 >= 0;
+  };
 
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 

@@ -55,7 +55,7 @@ const Versions = ({ projectId, modelId, ...props }) => {
 
   const [versions, fetchVersions] = useMerlinApi(
     `/models/${modelId}/versions`,
-    { mock: mocks.versionList, query: { limit: limitPerPage } },
+    { mock: mocks.versionList, query: { limit: limitPerPage }, method: "GET" },
     []
   );
 
@@ -64,6 +64,8 @@ const Versions = ({ projectId, modelId, ...props }) => {
     { mock: mocks.modelList },
     []
   );
+
+  const [environments] = useMerlinApi(`environments`, {}, []);
 
   const [searchQuery, setSearchQuery] = useState(null);
 

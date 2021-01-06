@@ -1206,10 +1206,10 @@
     text-diff "^1.0.1"
     uuid "^3.1.0"
 
-"@gojek/mlp-ui@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@gojek/mlp-ui/-/mlp-ui-1.0.0.tgz#66a696d73a6ea915896d937751dd828f5f422d8e"
-  integrity sha512-ASvdjJsoZdl79YGsiLlBRKIKaAgvfONIYfcCaRP/STXld3jk4ZjaS8SyXJQMa4zOA6LzMd/EIVZmdRppAYqpCA==
+"@gojek/mlp-ui@1.1.1-alpha":
+  version "1.1.1-alpha"
+  resolved "https://npm.golabs.io/@gojek%2fmlp-ui/-/mlp-ui-1.1.1-alpha.tgz#1bb18fd37b6d9470c1f0a1057c3563b8fd62ba8a"
+  integrity sha512-eTQyY+JfRF3yPNGGOl7uZmGK87QrL+u/aIr6mZKjBi5IRLmyPKccghy8ApSMEO7bt4o7fbwWysOxFx7WDEdn0g==
   dependencies:
     prop-types "15.7.2"
     proper-url-join "2.1.1"

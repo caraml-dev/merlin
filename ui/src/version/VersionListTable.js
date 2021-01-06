@@ -31,8 +31,7 @@ import {
   EuiLoadingChart,
   EuiText,
   EuiTextAlign,
-  EuiToolTip,
-  EuiSearchBar
+  EuiToolTip
 } from "@elastic/eui";
 import { DateFromNow } from "@gojek/mlp-ui";
 import PropTypes from "prop-types";
@@ -546,11 +545,17 @@ const VersionListTable = ({
     ]
   };
 
-  return !isLoaded ? (
+  const loadingView = isLoaded ? (
+    "No items found"
+  ) : (
     <EuiTextAlign textAlign="center">
       <EuiLoadingChart size="xl" mono />
     </EuiTextAlign>
-  ) : error ? (
+  );
+
+  const versionData = isLoaded ? versions : [];
+
+  return error ? (
     <EuiCallOut
       title="Sorry, there was an error"
       color="danger"
@@ -559,12 +564,14 @@ const VersionListTable = ({
     </EuiCallOut>
   ) : (
     <EuiInMemoryTable
-      items={versions}
+      items={versionData}
       columns={columns}
+      loading={!isLoaded}
       itemId="id"
       itemIdToExpandedRowMap={expandedRowState.versionIdToExpandedRowMap}
       isExpandable={true}
       hasActions={true}
+      message={loadingView}
       search={search}
       sorting={{ sort: { field: "Version", direction: "desc" } }}
       cellProps={cellProps}

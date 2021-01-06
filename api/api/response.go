@@ -17,6 +17,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 // Response handles responses of APIs.
@@ -34,9 +35,15 @@ type Error struct {
 // WriteTo writes the response header and body.
 func (r *Response) WriteTo(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	exposeHeaders := make([]string, 0, len(r.headers))
 	for key, value := range r.headers {
+		exposeHeaders = append(exposeHeaders, key)
 		w.Header().Set(key, value)
 	}
+
+	allowHeaders := strings.Join(exposeHeaders, ",")
+	w.Header().Set("Access-Control-Expose-Headers", allowHeaders)
 
 	w.WriteHeader(r.code)
 
