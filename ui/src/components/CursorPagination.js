@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   EuiFlexGroup,
   EuiFlexItem,
@@ -27,26 +27,13 @@ import {
 } from "@elastic/eui";
 
 export const CursorPagination = ({
-  apiRequest,
   apiResponse,
   search,
-  defaultLimit
+  limit,
+  setLimit,
+  setSelectedCursor
 }) => {
-  const [limit, setLimit] = useState(defaultLimit);
   const [currentPageIdx, setCurrentPageIdx] = useState(0);
-
-  const fetchAPI = useCallback(
-    (pageLimit, pageCursor, searchQuery) => {
-      apiRequest({
-        query: {
-          limit: pageLimit,
-          cursor: pageCursor,
-          search: searchQuery
-        }
-      });
-    },
-    [apiRequest]
-  );
 
   const removeCursor = (listOfCursor, idx) => {
     const tempCursors = [...listOfCursor];
@@ -71,29 +58,23 @@ export const CursorPagination = ({
       const limitChanged = limit !== prev.limit;
       const searchChanged = search !== prev.search;
 
-      var cursorsUsed = cursors;
-      if (limitChanged) {
-        fetchAPI(limit, cursors[currentPageIdx], search);
-        const tempCursors = [...cursors];
-        tempCursors.splice(cursors.length - 1);
-        setCursors(tempCursors);
-      } else if (searchChanged) {
+      if (limitChanged || searchChanged) {
         setCurrentPageIdx(0);
         setCursors([""]);
-        fetchAPI(limit, "", search);
+        setSelectedCursor("");
       }
-      return { limit, search, cursorsUsed };
+      return { limit, search, cursors };
     });
-  }, [limit, search, cursors, currentPageIdx, fetchAPI]);
+  }, [limit, search, cursors, currentPageIdx, setSelectedCursor]);
 
   const nextPage = () => {
-    fetchAPI(limit, cursors[currentPageIdx + 1], search);
+    setSelectedCursor(cursors[currentPageIdx + 1]);
     setCurrentPageIdx(currentPageIdx + 1);
   };
 
   const prevPage = () => {
     const prevCursor = cursors[currentPageIdx - 1];
-    fetchAPI(limit, prevCursor, search);
+    setSelectedCursor(prevCursor);
     setCurrentPageIdx(currentPageIdx - 1);
 
     // remove cursors

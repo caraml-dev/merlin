@@ -97,7 +97,7 @@ const VersionListTable = ({
       let envDict = {},
         mlflowId = [];
 
-      if (isLoaded) {
+      if (isLoaded && activeModel) {
         if (versions.length > 0) {
           const rows = {};
           const expandedRows = expandedRowState.versionIdToExpandedRowMap;
@@ -523,7 +523,6 @@ const VersionListTable = ({
     box: {
       incremental: false
     },
-    query: searchQuery,
     filters: [
       {
         type: "field_value_selection",
@@ -554,7 +553,7 @@ const VersionListTable = ({
       iconType="alert">
       <p>{error.message}</p>
     </EuiCallOut>
-  ) : (
+  ) : activeModel ? (
     <EuiInMemoryTable
       items={versionData}
       columns={columns}
@@ -568,6 +567,10 @@ const VersionListTable = ({
       sorting={{ sort: { field: "Version", direction: "desc" } }}
       cellProps={cellProps}
     />
+  ) : (
+    <EuiTextAlign textAlign="center">
+      <EuiLoadingChart size="xl" mono />
+    </EuiTextAlign>
   );
 };
 

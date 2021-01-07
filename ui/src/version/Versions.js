@@ -52,10 +52,17 @@ const Versions = ({ projectId, modelId, ...props }) => {
    * API Usage
    */
   const limitPerPage = 50;
+  const [limit, setLimit] = useState(limitPerPage);
+  const [searchQuery, setSearchQuery] = useState(null);
 
+  const [selectedCursor, setSelectedCursor] = useState("");
   const [versions, fetchVersions] = useMerlinApi(
     `/models/${modelId}/versions`,
-    { mock: mocks.versionList, query: { limit: limitPerPage }, method: "GET" },
+    {
+      mock: mocks.versionList,
+      query: { limit: limit, search: searchQuery, cursor: selectedCursor },
+      method: "GET"
+    },
     []
   );
 
@@ -66,8 +73,6 @@ const Versions = ({ projectId, modelId, ...props }) => {
     { mock: mocks.modelList },
     []
   );
-
-  const [searchQuery, setSearchQuery] = useState(null);
 
   useEffect(() => {
     if (activeModel) {
@@ -129,12 +134,16 @@ const Versions = ({ projectId, modelId, ...props }) => {
             environments={environments.data}
           />
           <EuiSpacer size="m" />
-          <CursorPagination
-            apiRequest={fetchVersions}
-            apiResponse={versions}
-            defaultLimit={limitPerPage}
-            search={searchQuery}
-          />
+          {activeModel && (
+            <CursorPagination
+              apiResponse={versions}
+              defaultLimit={limitPerPage}
+              search={searchQuery}
+              limit={limit}
+              setLimit={setLimit}
+              setSelectedCursor={setSelectedCursor}
+            />
+          )}
         </EuiPageContent>
       </EuiPageBody>
 
