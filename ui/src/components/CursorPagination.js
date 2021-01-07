@@ -131,7 +131,7 @@ export const CursorPagination = ({
   const limitOptions = [20, 50, 100];
   const items = limitOptions.map(value => (
     <EuiContextMenuItem
-      key="{value} rows"
+      key={value}
       icon={getIconType(value)}
       onClick={() => {
         closePopover();

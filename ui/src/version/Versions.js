@@ -59,6 +59,8 @@ const Versions = ({ projectId, modelId, ...props }) => {
     []
   );
 
+  const [environments] = useMerlinApi(`/environments`, {}, []);
+
   const [models, fetchModels] = useMerlinApi(
     `/projects/${projectId}/models`,
     { mock: mocks.modelList },
@@ -124,6 +126,7 @@ const Versions = ({ projectId, modelId, ...props }) => {
             toggleServeEndpointModal={toggleServeEndpointModal}
             searchCallback={setSearchQuery}
             searchQuery={searchQuery}
+            environments={environments.data}
           />
           <EuiSpacer size="m" />
           <CursorPagination

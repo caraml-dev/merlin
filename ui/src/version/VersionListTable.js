@@ -53,6 +53,7 @@ const VersionListTable = ({
   activeModel,
   searchCallback,
   searchQuery,
+  environments,
   ...props
 }) => {
   const healthColor = status => {
@@ -85,11 +86,6 @@ const VersionListTable = ({
       )
     );
   };
-
-  const [config, setConfig] = useState({
-    environments: [],
-    mlflowId: []
-  });
 
   const [expandedRowState, setExpandedRowState] = useState({
     rows: {},
@@ -222,10 +218,6 @@ const VersionListTable = ({
                 expandedRows[version.id] = rows[version.id];
               }
             }
-          });
-          setConfig({
-            environments: Object.entries(envDict).map(([env]) => env),
-            mlflowId: mlflowId
           });
           setExpandedRowState(state => {
             return {
@@ -538,8 +530,8 @@ const VersionListTable = ({
         field: "environment_name",
         name: "Environment",
         multiSelect: false,
-        options: config.environments.map(item => ({
-          value: item
+        options: environments.map(item => ({
+          value: item.name
         }))
       }
     ]

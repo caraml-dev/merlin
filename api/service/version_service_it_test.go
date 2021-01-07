@@ -18,6 +18,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -141,10 +142,11 @@ func TestVersionsService_ListVersions(t *testing.T) {
 		db.Create(&m)
 
 		numOfVersions := 10
+		indexEndpointActive := 9
 		for i := 0; i < numOfVersions; i++ {
 			v := models.Version{
 				ModelID:     m.ID,
-				RunID:       "1",
+				RunID:       fmt.Sprintf("%d", i+1),
 				ArtifactURI: "gcs:/mlp/1/1",
 			}
 			db.Create(&v)
@@ -166,11 +168,15 @@ func TestVersionsService_ListVersions(t *testing.T) {
 			}
 			db.Create(&endpoint2)
 
+			endpoint3Status := models.EndpointTerminated
+			if i == indexEndpointActive {
+				endpoint3Status = models.EndpointRunning
+			}
 			endpoint3 := &models.VersionEndpoint{
 				ID:              uuid.New(),
 				VersionID:       v.ID,
 				VersionModelID:  m.ID,
-				Status:          models.EndpointTerminated,
+				Status:          endpoint3Status,
 				EnvironmentName: env.Name,
 				Transformer: &models.Transformer{
 					Enabled: true,
@@ -205,5 +211,38 @@ func TestVersionsService_ListVersions(t *testing.T) {
 			cursor = nextCursor
 			numOfFetchedVersions = numOfFetchedVersions + len(versions)
 		}
+
+		//search mlflow_run_id 1
+		versions, nextCursor, err := versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			PaginationQuery: PaginationQuery{
+				Limit: limit,
+			},
+			Search: "1",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(versions))
+		assert.Equal(t, "", nextCursor)
+
+		//search environment_name:env1
+		versionsBasedOnEnv, cursor, err := versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			PaginationQuery: PaginationQuery{
+				Limit: limit,
+			},
+			Search: "environment_name:env1",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(versionsBasedOnEnv))
+		assert.Equal(t, "", cursor)
+
+		//search environment_name:env2 not exist env
+		versionsBasedOnEnv1, cursor1, err := versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			PaginationQuery: PaginationQuery{
+				Limit: limit,
+			},
+			Search: "environment_name:env2",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(versionsBasedOnEnv1))
+		assert.Equal(t, "", cursor1)
 	})
 }

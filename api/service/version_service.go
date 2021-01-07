@@ -16,6 +16,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 
@@ -74,11 +75,32 @@ func (service *versionsService) buildListVersionsQuery(modelID models.ID, query 
 		Where(models.Version{ModelID: modelID})
 
 	// search only based on mlflow run_id
-	if query.Search != "" {
-		dbQuery = dbQuery.Where("versions.mlflow_run_id = ?", query.Search)
+	trimmedSearch := strings.TrimSpace(query.Search)
+	if trimmedSearch != "" {
+		dbQuery = service.buildSearchQuery(dbQuery, trimmedSearch)
 	}
 	dbQuery = dbQuery.Order("created_at DESC")
 	return dbQuery
+}
+
+func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search string) *gorm.DB {
+	// parse search query
+	//
+	searchComponents := strings.Split(search, ":")
+	// search query without specifying key
+	// currently will search only based on mlflow run_id, in the future can be searched on anything
+	if len(searchComponents) == 1 {
+		return listQuery.Where("versions.mlflow_run_id = ?", search)
+	}
+
+	searchQuery := listQuery
+	// if query has key e.g environment_name:id-dev
+	searchKey := searchComponents[0]
+	searchString := searchComponents[1]
+	if searchKey == "environment_name" {
+		searchQuery = listQuery.Joins("JOIN version_endpoints on version_endpoints.version_id = versions.id AND version_endpoints.version_model_id = versions.model_id AND version_endpoints.environment_name=? AND version_endpoints.status != ?", searchString, models.EndpointTerminated)
+	}
+	return searchQuery
 }
 
 func (service *versionsService) ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig, query VersionQuery) (versions []*models.Version, nextCursor string, err error) {
