@@ -61,6 +61,7 @@ func Ok(data interface{}) *Response {
 	}
 }
 
+// OkWithHeaders represents the response of status code 200 with custom headers
 func OkWithHeaders(data interface{}, headers map[string]string) *Response {
 	return &Response{
 		code:    http.StatusOK,
