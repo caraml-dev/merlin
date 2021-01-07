@@ -65,8 +65,6 @@ const Versions = ({ projectId, modelId, ...props }) => {
     []
   );
 
-  const [environments] = useMerlinApi(`environments`, {}, []);
-
   const [searchQuery, setSearchQuery] = useState(null);
 
   useEffect(() => {
