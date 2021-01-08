@@ -17,6 +17,6 @@ const (
 	FloatResultType   ResultType = "FLOAT"
 	IntegerResultType ResultType = "INTEGER"
 	LongResultType    ResultType = "LONG"
-	StringResultType ResultType = "STRING"
+	StringResultType  ResultType = "STRING"
 	ArrayResultType   ResultType = "ARRAY"
 )

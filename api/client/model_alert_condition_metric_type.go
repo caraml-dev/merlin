@@ -15,7 +15,7 @@ type AlertConditionMetricType string
 const (
 	ThroughputAlertConditionMetricType AlertConditionMetricType = "throughput"
 	LatencyAlertConditionMetricType    AlertConditionMetricType = "latency"
-	ErrorRateAlertConditionMetricType AlertConditionMetricType = "error_rate"
+	ErrorRateAlertConditionMetricType  AlertConditionMetricType = "error_rate"
 	CPUAlertConditionMetricType        AlertConditionMetricType = "cpu"
 	MemoryAlertConditionMetricType     AlertConditionMetricType = "memory"
 )

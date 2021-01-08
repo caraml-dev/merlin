@@ -14,11 +14,11 @@ import (
 )
 
 type Version struct {
-	ID          int32             `json:"id,omitempty"`
-	ModelID     int32             `json:"model_id,omitempty"`
-	MlflowRunID string            `json:"mlflow_run_id,omitempty"`
-	MlflowURL   string            `json:"mlflow_url,omitempty"`
-	ArtifactURI string            `json:"artifact_uri,omitempty"`
+	Id          int32             `json:"id,omitempty"`
+	ModelId     int32             `json:"model_id,omitempty"`
+	MlflowRunId string            `json:"mlflow_run_id,omitempty"`
+	MlflowUrl   string            `json:"mlflow_url,omitempty"`
+	ArtifactUri string            `json:"artifact_uri,omitempty"`
 	Endpoints   []VersionEndpoint `json:"endpoints,omitempty"`
 	Properties  *interface{}      `json:"properties,omitempty"`
 	CreatedAt   time.Time         `json:"created_at,omitempty"`

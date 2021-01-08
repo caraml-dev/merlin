@@ -14,11 +14,11 @@ import (
 )
 
 type ModelEndpoint struct {
-	ID              int32              `json:"id,omitempty"`
-	ModelID         int32              `json:"model_id,omitempty"`
+	Id              int32              `json:"id,omitempty"`
+	ModelId         int32              `json:"model_id,omitempty"`
 	Model           *Model             `json:"model,omitempty"`
 	Status          *EndpointStatus    `json:"status,omitempty"`
-	URL             string             `json:"url,omitempty"`
+	Url             string             `json:"url,omitempty"`
 	Rule            *ModelEndpointRule `json:"rule,omitempty"`
 	EnvironmentName string             `json:"environment_name,omitempty"`
 	Environment     *Environment       `json:"environment,omitempty"`

@@ -24,25 +24,25 @@ var (
 	_ context.Context
 )
 
-type EnvironmentAPIService service
+type EnvironmentApiService service
 
 /*
-EnvironmentAPIService List available environment
+EnvironmentApiService List available environment
 Environment can be filtered by optional &#x60;name&#x60; parameter
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param optional nil or *EnvironmentAPIEnvironmentsGetOpts - Optional Parameters:
+ * @param optional nil or *EnvironmentApiEnvironmentsGetOpts - Optional Parameters:
      * @param "Name" (optional.String) -
 
 @return []Environment
 */
 
-type EnvironmentAPIEnvironmentsGetOpts struct {
+type EnvironmentApiEnvironmentsGetOpts struct {
 	Name optional.String
 }
 
-func (a *EnvironmentAPIService) EnvironmentsGet(ctx context.Context, localVarOptionals *EnvironmentAPIEnvironmentsGetOpts) ([]Environment, *http.Response, error) {
+func (a *EnvironmentApiService) EnvironmentsGet(ctx context.Context, localVarOptionals *EnvironmentApiEnvironmentsGetOpts) ([]Environment, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = strings.ToUpper("Get")
+		localVarHttpMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -60,21 +60,21 @@ func (a *EnvironmentAPIService) EnvironmentsGet(ctx context.Context, localVarOpt
 		localVarQueryParams.Add("name", parameterToString(localVarOptionals.Name.Value(), ""))
 	}
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHttpContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHttpHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -89,49 +89,49 @@ func (a *EnvironmentAPIService) EnvironmentsGet(ctx context.Context, localVarOpt
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHTTPResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	if localVarHTTPResponse.StatusCode < 300 {
+	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHTTPResponse, err
+			return localVarReturnValue, localVarHttpResponse, err
 		}
 	}
 
-	if localVarHTTPResponse.StatusCode >= 300 {
+	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
+			error: localVarHttpResponse.Status,
 		}
 
-		if localVarHTTPResponse.StatusCode == 200 {
+		if localVarHttpResponse.StatusCode == 200 {
 			var v []Environment
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHttpResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarReturnValue, localVarHttpResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHttpResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHTTPResponse, nil
+	return localVarReturnValue, localVarHttpResponse, nil
 }

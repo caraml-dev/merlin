@@ -31,8 +31,7 @@ import {
   EuiLoadingChart,
   EuiText,
   EuiTextAlign,
-  EuiToolTip,
-  EuiSearchBar
+  EuiToolTip
 } from "@elastic/eui";
 import { DateFromNow } from "@gojek/mlp-ui";
 import PropTypes from "prop-types";
@@ -52,6 +51,9 @@ const VersionListTable = ({
   error,
   activeVersion,
   activeModel,
+  searchCallback,
+  searchQuery,
+  environments,
   ...props
 }) => {
   const healthColor = status => {
@@ -85,11 +87,6 @@ const VersionListTable = ({
     );
   };
 
-  const [config, setConfig] = useState({
-    environments: [],
-    mlflowId: []
-  });
-
   const [expandedRowState, setExpandedRowState] = useState({
     rows: {},
     versionIdToExpandedRowMap: {}
@@ -100,7 +97,7 @@ const VersionListTable = ({
       let envDict = {},
         mlflowId = [];
 
-      if (isLoaded) {
+      if (isLoaded && activeModel) {
         if (versions.length > 0) {
           const rows = {};
           const expandedRows = expandedRowState.versionIdToExpandedRowMap;
@@ -221,10 +218,6 @@ const VersionListTable = ({
                 expandedRows[version.id] = rows[version.id];
               }
             }
-          });
-          setConfig({
-            environments: Object.entries(envDict).map(([env]) => env),
-            mlflowId: mlflowId
           });
           setExpandedRowState(state => {
             return {
@@ -521,16 +514,14 @@ const VersionListTable = ({
     if (error) {
       return error;
     } else {
-      return EuiSearchBar.Query.execute(query, versions, {
-        defaultFields: ["mlflow_run_id"]
-      });
+      searchCallback(query.text);
     }
   };
 
   const search = {
     onChange: onChange,
     box: {
-      incremental: true
+      incremental: false
     },
     filters: [
       {
@@ -538,36 +529,48 @@ const VersionListTable = ({
         field: "environment_name",
         name: "Environment",
         multiSelect: false,
-        options: config.environments.map(item => ({
-          value: item
+        options: environments.map(item => ({
+          value: item.name
         }))
       }
     ]
   };
 
-  return !isLoaded ? (
+  const loadingView = isLoaded ? (
+    "No items found"
+  ) : (
     <EuiTextAlign textAlign="center">
       <EuiLoadingChart size="xl" mono />
     </EuiTextAlign>
-  ) : error ? (
+  );
+
+  const versionData = isLoaded ? versions : [];
+
+  return error ? (
     <EuiCallOut
       title="Sorry, there was an error"
       color="danger"
       iconType="alert">
       <p>{error.message}</p>
     </EuiCallOut>
-  ) : (
+  ) : activeModel ? (
     <EuiInMemoryTable
-      items={versions}
+      items={versionData}
       columns={columns}
+      loading={!isLoaded}
       itemId="id"
       itemIdToExpandedRowMap={expandedRowState.versionIdToExpandedRowMap}
       isExpandable={true}
       hasActions={true}
+      message={loadingView}
       search={search}
       sorting={{ sort: { field: "Version", direction: "desc" } }}
       cellProps={cellProps}
     />
+  ) : (
+    <EuiTextAlign textAlign="center">
+      <EuiLoadingChart size="xl" mono />
+    </EuiTextAlign>
   );
 };
 

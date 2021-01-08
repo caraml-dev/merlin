@@ -25,19 +25,19 @@ var (
 	_ context.Context
 )
 
-type PredictionJobsAPIService service
+type PredictionJobsApiService service
 
 /*
-PredictionJobsAPIService List all prediction jobs of a model version
+PredictionJobsApiService List all prediction jobs of a model version
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelID
- * @param versionID
+ * @param modelId
+ * @param versionId
 
 @return []PredictionJob
 */
-func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsGet(ctx context.Context, modelID int32, versionID int32) ([]PredictionJob, *http.Response, error) {
+func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsGet(ctx context.Context, modelId int32, versionId int32) ([]PredictionJob, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = strings.ToUpper("Get")
+		localVarHttpMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -46,29 +46,29 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsGet(ctx con
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/jobs"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHttpContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHttpHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -83,65 +83,65 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsGet(ctx con
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHTTPResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	if localVarHTTPResponse.StatusCode < 300 {
+	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHTTPResponse, err
+			return localVarReturnValue, localVarHttpResponse, err
 		}
 	}
 
-	if localVarHTTPResponse.StatusCode >= 300 {
+	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
+			error: localVarHttpResponse.Status,
 		}
 
-		if localVarHTTPResponse.StatusCode == 200 {
+		if localVarHttpResponse.StatusCode == 200 {
 			var v []PredictionJob
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHttpResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarReturnValue, localVarHttpResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHttpResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHTTPResponse, nil
+	return localVarReturnValue, localVarHttpResponse, nil
 }
 
 /*
-PredictionJobsAPIService Get all container belong to a prediction job
+PredictionJobsApiService Get all container belong to a prediction job
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelID
- * @param versionID
- * @param jobID
+ * @param modelId
+ * @param versionId
+ * @param jobId
 
 @return Container
 */
-func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsJobIDContainersGet(ctx context.Context, modelID int32, versionID int32, jobID string) (Container, *http.Response, error) {
+func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdContainersGet(ctx context.Context, modelId int32, versionId int32, jobId string) (Container, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = strings.ToUpper("Get")
+		localVarHttpMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -150,30 +150,30 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsJobIDContai
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/jobs/{job_id}/containers"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"job_id"+"}", fmt.Sprintf("%v", jobID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"job_id"+"}", fmt.Sprintf("%v", jobId), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHttpContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHttpHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -188,65 +188,65 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsJobIDContai
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHTTPResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	if localVarHTTPResponse.StatusCode < 300 {
+	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHTTPResponse, err
+			return localVarReturnValue, localVarHttpResponse, err
 		}
 	}
 
-	if localVarHTTPResponse.StatusCode >= 300 {
+	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
+			error: localVarHttpResponse.Status,
 		}
 
-		if localVarHTTPResponse.StatusCode == 200 {
+		if localVarHttpResponse.StatusCode == 200 {
 			var v Container
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHttpResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarReturnValue, localVarHttpResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHttpResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHTTPResponse, nil
+	return localVarReturnValue, localVarHttpResponse, nil
 }
 
 /*
-PredictionJobsAPIService Get prediction jobs with given id
+PredictionJobsApiService Get prediction jobs with given id
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelID
- * @param versionID
- * @param jobID
+ * @param modelId
+ * @param versionId
+ * @param jobId
 
 @return PredictionJob
 */
-func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsJobIDGet(ctx context.Context, modelID int32, versionID int32, jobID int32) (PredictionJob, *http.Response, error) {
+func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdGet(ctx context.Context, modelId int32, versionId int32, jobId int32) (PredictionJob, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = strings.ToUpper("Get")
+		localVarHttpMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -255,30 +255,30 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsJobIDGet(ct
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/jobs/{job_id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"job_id"+"}", fmt.Sprintf("%v", jobID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"job_id"+"}", fmt.Sprintf("%v", jobId), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHttpContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHttpHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -293,65 +293,65 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsJobIDGet(ct
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHTTPResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	if localVarHTTPResponse.StatusCode < 300 {
+	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHTTPResponse, err
+			return localVarReturnValue, localVarHttpResponse, err
 		}
 	}
 
-	if localVarHTTPResponse.StatusCode >= 300 {
+	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
+			error: localVarHttpResponse.Status,
 		}
 
-		if localVarHTTPResponse.StatusCode == 200 {
+		if localVarHttpResponse.StatusCode == 200 {
 			var v PredictionJob
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHttpResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarReturnValue, localVarHttpResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHttpResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHTTPResponse, nil
+	return localVarReturnValue, localVarHttpResponse, nil
 }
 
 /*
-PredictionJobsAPIService Stop prediction jobs with given id
+PredictionJobsApiService Stop prediction jobs with given id
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelID
- * @param versionID
- * @param jobID
+ * @param modelId
+ * @param versionId
+ * @param jobId
 
 
 */
-func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsJobIDStopPut(ctx context.Context, modelID int32, versionID int32, jobID int32) (*http.Response, error) {
+func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdStopPut(ctx context.Context, modelId int32, versionId int32, jobId int32) (*http.Response, error) {
 	var (
-		localVarHTTPMethod = strings.ToUpper("Put")
+		localVarHttpMethod = strings.ToUpper("Put")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
@@ -359,30 +359,30 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsJobIDStopPu
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/jobs/{job_id}/stop"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"job_id"+"}", fmt.Sprintf("%v", jobID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"job_id"+"}", fmt.Sprintf("%v", jobId), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHttpContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHttpHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -397,52 +397,52 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsJobIDStopPu
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	localVarHTTPResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarHttpResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarHttpResponse, err
 	}
 
-	if localVarHTTPResponse.StatusCode >= 300 {
+	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
+			error: localVarHttpResponse.Status,
 		}
 
-		return localVarHTTPResponse, newErr
+		return localVarHttpResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	return localVarHttpResponse, nil
 }
 
 /*
-PredictionJobsAPIService Create a prediction job from the given model version
+PredictionJobsApiService Create a prediction job from the given model version
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelID
- * @param versionID
- * @param optional nil or *PredictionJobsAPIModelsModelIDVersionsVersionIDJobsPostOpts - Optional Parameters:
+ * @param modelId
+ * @param versionId
+ * @param optional nil or *PredictionJobsApiModelsModelIdVersionsVersionIdJobsPostOpts - Optional Parameters:
      * @param "Body" (optional.Interface of PredictionJob) -
 
 @return PredictionJob
 */
 
-type PredictionJobsAPIModelsModelIDVersionsVersionIDJobsPostOpts struct {
+type PredictionJobsApiModelsModelIdVersionsVersionIdJobsPostOpts struct {
 	Body optional.Interface
 }
 
-func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsPost(ctx context.Context, modelID int32, versionID int32, localVarOptionals *PredictionJobsAPIModelsModelIDVersionsVersionIDJobsPostOpts) (PredictionJob, *http.Response, error) {
+func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsPost(ctx context.Context, modelId int32, versionId int32, localVarOptionals *PredictionJobsApiModelsModelIdVersionsVersionIdJobsPostOpts) (PredictionJob, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = strings.ToUpper("Post")
+		localVarHttpMethod  = strings.ToUpper("Post")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -451,29 +451,29 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsPost(ctx co
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/models/{model_id}/versions/{version_id}/jobs"
-	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelID), -1)
-	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"model_id"+"}", fmt.Sprintf("%v", modelId), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"version_id"+"}", fmt.Sprintf("%v", versionId), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHttpContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHttpHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Body.IsSet() {
@@ -497,80 +497,80 @@ func (a *PredictionJobsAPIService) ModelsModelIDVersionsVersionIDJobsPost(ctx co
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHTTPResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	if localVarHTTPResponse.StatusCode < 300 {
+	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHTTPResponse, err
+			return localVarReturnValue, localVarHttpResponse, err
 		}
 	}
 
-	if localVarHTTPResponse.StatusCode >= 300 {
+	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
+			error: localVarHttpResponse.Status,
 		}
 
-		if localVarHTTPResponse.StatusCode == 201 {
+		if localVarHttpResponse.StatusCode == 201 {
 			var v PredictionJob
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHttpResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarReturnValue, localVarHttpResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHttpResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHTTPResponse, nil
+	return localVarReturnValue, localVarHttpResponse, nil
 }
 
 /*
-PredictionJobsAPIService List all prediction jobs created using the model
+PredictionJobsApiService List all prediction jobs created using the model
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param projectID
- * @param optional nil or *PredictionJobsAPIProjectsProjectIDJobsGetOpts - Optional Parameters:
-     * @param "ID" (optional.Int32) -
+ * @param projectId
+ * @param optional nil or *PredictionJobsApiProjectsProjectIdJobsGetOpts - Optional Parameters:
+     * @param "Id" (optional.Int32) -
      * @param "Name" (optional.String) -
-     * @param "ModelID" (optional.Int32) -
-     * @param "VersionID" (optional.Int32) -
+     * @param "ModelId" (optional.Int32) -
+     * @param "VersionId" (optional.Int32) -
      * @param "Status" (optional.String) -
-     * @param "Error" (optional.String) -
+     * @param "Error_" (optional.String) -
 
 @return []PredictionJob
 */
 
-type PredictionJobsAPIProjectsProjectIDJobsGetOpts struct {
-	ID        optional.Int32
+type PredictionJobsApiProjectsProjectIdJobsGetOpts struct {
+	Id        optional.Int32
 	Name      optional.String
-	ModelID   optional.Int32
-	VersionID optional.Int32
+	ModelId   optional.Int32
+	VersionId optional.Int32
 	Status    optional.String
-	Error    optional.String
+	Error     optional.String
 }
 
-func (a *PredictionJobsAPIService) ProjectsProjectIDJobsGet(ctx context.Context, projectID int32, localVarOptionals *PredictionJobsAPIProjectsProjectIDJobsGetOpts) ([]PredictionJob, *http.Response, error) {
+func (a *PredictionJobsApiService) ProjectsProjectIdJobsGet(ctx context.Context, projectId int32, localVarOptionals *PredictionJobsApiProjectsProjectIdJobsGetOpts) ([]PredictionJob, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = strings.ToUpper("Get")
+		localVarHttpMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
@@ -579,23 +579,23 @@ func (a *PredictionJobsAPIService) ProjectsProjectIDJobsGet(ctx context.Context,
 
 	// create path and map variables
 	localVarPath := a.client.cfg.BasePath + "/projects/{project_id}/jobs"
-	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectID), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", fmt.Sprintf("%v", projectId), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	if localVarOptionals != nil && localVarOptionals.ID.IsSet() {
-		localVarQueryParams.Add("id", parameterToString(localVarOptionals.ID.Value(), ""))
+	if localVarOptionals != nil && localVarOptionals.Id.IsSet() {
+		localVarQueryParams.Add("id", parameterToString(localVarOptionals.Id.Value(), ""))
 	}
 	if localVarOptionals != nil && localVarOptionals.Name.IsSet() {
 		localVarQueryParams.Add("name", parameterToString(localVarOptionals.Name.Value(), ""))
 	}
-	if localVarOptionals != nil && localVarOptionals.ModelID.IsSet() {
-		localVarQueryParams.Add("model_id", parameterToString(localVarOptionals.ModelID.Value(), ""))
+	if localVarOptionals != nil && localVarOptionals.ModelId.IsSet() {
+		localVarQueryParams.Add("model_id", parameterToString(localVarOptionals.ModelId.Value(), ""))
 	}
-	if localVarOptionals != nil && localVarOptionals.VersionID.IsSet() {
-		localVarQueryParams.Add("version_id", parameterToString(localVarOptionals.VersionID.Value(), ""))
+	if localVarOptionals != nil && localVarOptionals.VersionId.IsSet() {
+		localVarQueryParams.Add("version_id", parameterToString(localVarOptionals.VersionId.Value(), ""))
 	}
 	if localVarOptionals != nil && localVarOptionals.Status.IsSet() {
 		localVarQueryParams.Add("status", parameterToString(localVarOptionals.Status.Value(), ""))
@@ -604,21 +604,21 @@ func (a *PredictionJobsAPIService) ProjectsProjectIDJobsGet(ctx context.Context,
 		localVarQueryParams.Add("error", parameterToString(localVarOptionals.Error.Value(), ""))
 	}
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHttpContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHttpHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -633,49 +633,49 @@ func (a *PredictionJobsAPIService) ProjectsProjectIDJobsGet(ctx context.Context,
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
 	}
 
-	localVarHTTPResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	if localVarHTTPResponse.StatusCode < 300 {
+	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 		if err == nil {
-			return localVarReturnValue, localVarHTTPResponse, err
+			return localVarReturnValue, localVarHttpResponse, err
 		}
 	}
 
-	if localVarHTTPResponse.StatusCode >= 300 {
+	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
+			error: localVarHttpResponse.Status,
 		}
 
-		if localVarHTTPResponse.StatusCode == 200 {
+		if localVarHttpResponse.StatusCode == 200 {
 			var v []PredictionJob
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHttpResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarReturnValue, localVarHttpResponse, newErr
 		}
 
-		return localVarReturnValue, localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHttpResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHTTPResponse, nil
+	return localVarReturnValue, localVarHttpResponse, nil
 }

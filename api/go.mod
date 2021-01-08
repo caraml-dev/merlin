@@ -26,6 +26,7 @@ require (
 	github.com/jinzhu/gorm v1.9.11
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kubeflow/kfserving v0.4.1
+	github.com/pilagod/gorm-cursor-paginator v1.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.5.1
 	github.com/prometheus/common v0.9.1

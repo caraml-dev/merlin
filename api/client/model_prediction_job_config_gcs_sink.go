@@ -11,7 +11,7 @@ package client
 
 type PredictionJobConfigGcsSink struct {
 	Format       *FileFormat       `json:"format,omitempty"`
-	URI          string            `json:"uri,omitempty"`
+	Uri          string            `json:"uri,omitempty"`
 	ResultColumn string            `json:"result_column,omitempty"`
 	SaveMode     *SaveMode         `json:"save_mode,omitempty"`
 	Options      map[string]string `json:"options,omitempty"`

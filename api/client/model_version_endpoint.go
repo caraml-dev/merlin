@@ -14,14 +14,14 @@ import (
 )
 
 type VersionEndpoint struct {
-	ID              string           `json:"id,omitempty"`
-	VersionID       int32            `json:"version_id,omitempty"`
+	Id              string           `json:"id,omitempty"`
+	VersionId       int32            `json:"version_id,omitempty"`
 	Status          *EndpointStatus  `json:"status,omitempty"`
-	URL             string           `json:"url,omitempty"`
+	Url             string           `json:"url,omitempty"`
 	ServiceName     string           `json:"service_name,omitempty"`
 	EnvironmentName string           `json:"environment_name,omitempty"`
 	Environment     *Environment     `json:"environment,omitempty"`
-	MonitoringURL   string           `json:"monitoring_url,omitempty"`
+	MonitoringUrl   string           `json:"monitoring_url,omitempty"`
 	Message         string           `json:"message,omitempty"`
 	ResourceRequest *ResourceRequest `json:"resource_request,omitempty"`
 	EnvVars         []EnvVar         `json:"env_vars,omitempty"`

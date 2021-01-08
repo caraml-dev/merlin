@@ -34,7 +34,7 @@ func main() {
 	apiClient := client.NewAPIClient(cfg)
 
 	// Get all projects
-	projects, _, err := apiClient.ProjectAPI.ProjectsGet(ctx, nil)
+	projects, _, err := apiClient.ProjectApi.ProjectsGet(ctx, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +48,8 @@ func main() {
 		log.Println("Project:", project.Name)
 
 		// Get all models in the given project
-		models, _, err := apiClient.ModelsAPI.ProjectsProjectIDModelsGet(ctx, project.ID, nil)
+
+		models, _, err := apiClient.ModelsApi.ProjectsProjectIdModelsGet(ctx, project.Id, nil)
 		if err != nil {
 			panic(err)
 		}
@@ -59,7 +60,7 @@ func main() {
 			log.Println("- Model:", model.Name)
 
 			// Get all model's endpoints
-			modelEndpoints, _, err := apiClient.ModelEndpointsAPI.ModelsModelIDEndpointsGet(ctx, model.ID)
+			modelEndpoints, _, err := apiClient.ModelEndpointsApi.ModelsModelIdEndpointsGet(ctx, model.Id)
 			if err != nil {
 				panic(err)
 			}
@@ -71,7 +72,7 @@ func main() {
 
 			log.Println("  Model endpoints:")
 			for _, modelEndpoint := range modelEndpoints {
-				log.Printf("  - %s: %s\n", modelEndpoint.EnvironmentName, modelEndpoint.URL)
+				log.Printf("  - %s: %s\n", modelEndpoint.EnvironmentName, modelEndpoint.Url)
 			}
 		}
 	}

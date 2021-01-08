@@ -24,16 +24,16 @@ var (
 	_ context.Context
 )
 
-type LogAPIService service
+type LogApiService service
 
 /*
-LogAPIService Retrieve log from a container
+LogApiService Retrieve log from a container
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param name
  * @param podName
  * @param namespace
  * @param cluster
- * @param optional nil or *LogAPILogsGetOpts - Optional Parameters:
+ * @param optional nil or *LogApiLogsGetOpts - Optional Parameters:
      * @param "Follow" (optional.String) -
      * @param "LimitBytes" (optional.String) -
      * @param "Pretty" (optional.String) -
@@ -46,7 +46,7 @@ LogAPIService Retrieve log from a container
 
 */
 
-type LogAPILogsGetOpts struct {
+type LogApiLogsGetOpts struct {
 	Follow       optional.String
 	LimitBytes   optional.String
 	Pretty       optional.String
@@ -57,9 +57,9 @@ type LogAPILogsGetOpts struct {
 	Timestamps   optional.String
 }
 
-func (a *LogAPIService) LogsGet(ctx context.Context, name string, podName string, namespace string, cluster string, localVarOptionals *LogAPILogsGetOpts) (*http.Response, error) {
+func (a *LogApiService) LogsGet(ctx context.Context, name string, podName string, namespace string, cluster string, localVarOptionals *LogApiLogsGetOpts) (*http.Response, error) {
 	var (
-		localVarHTTPMethod = strings.ToUpper("Get")
+		localVarHttpMethod = strings.ToUpper("Get")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
@@ -101,21 +101,21 @@ func (a *LogAPIService) LogsGet(ctx context.Context, name string, podName string
 		localVarQueryParams.Add("timestamps", parameterToString(localVarOptionals.Timestamps.Value(), ""))
 	}
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHttpContentTypes := []string{}
 
 	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHttpHeaderAccepts := []string{}
 
 	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
 	if ctx != nil {
 		// API Key Authentication
@@ -130,30 +130,30 @@ func (a *LogAPIService) LogsGet(ctx context.Context, name string, podName string
 
 		}
 	}
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	localVarHTTPResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarHttpResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarHttpResponse, err
 	}
 
-	if localVarHTTPResponse.StatusCode >= 300 {
+	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
+			error: localVarHttpResponse.Status,
 		}
 
-		return localVarHTTPResponse, newErr
+		return localVarHttpResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	return localVarHttpResponse, nil
 }
