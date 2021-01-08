@@ -33,7 +33,8 @@ REQUIRES = [
     'Click>=7.0',
     "cloudpickle==1.2.2",
     "cookiecutter>=1.7.2",
-    "docker>=4.2.1"
+    "docker>=4.2.1",
+    "google-api-core<1.17.0" # https://github.com/googleapis/python-pubsub/issues/115
 ]
 
 TEST_REQUIRES = [
