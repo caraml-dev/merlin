@@ -34,7 +34,8 @@ REQUIRES = [
     "cloudpickle==1.2.2",
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
-    "google-api-core<1.17.0" # https://github.com/googleapis/python-pubsub/issues/115
+    "google-api-core<=1.17.0", # https://github.com/googleapis/python-pubsub/issues/115
+    "grpcio==1.27.2",
 ]
 
 TEST_REQUIRES = [
