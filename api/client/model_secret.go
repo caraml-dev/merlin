@@ -10,7 +10,7 @@
 package client
 
 type Secret struct {
-	ID   int32  `json:"id,omitempty"`
+	Id   int32  `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 	Data string `json:"data,omitempty"`
 }

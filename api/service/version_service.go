@@ -16,6 +16,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 
@@ -25,13 +26,28 @@ import (
 )
 
 type VersionsService interface {
-	ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig) ([]*models.Version, error)
+	ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig, query VersionQuery) ([]*models.Version, string, error)
 	Save(ctx context.Context, version *models.Version, monitoringConfig config.MonitoringConfig) (*models.Version, error)
 	FindByID(ctx context.Context, modelID, versionID models.ID, monitoringConfig config.MonitoringConfig) (*models.Version, error)
 }
 
 func NewVersionsService(db *gorm.DB, mlpAPIClient mlp.APIClient) VersionsService {
 	return &versionsService{db: db, mlpAPIClient: mlpAPIClient}
+}
+
+type VersionQuery struct {
+	PaginationQuery
+	Search string `schema:"search"`
+}
+
+type PaginationQuery struct {
+	Limit  int    `schema:"limit"`
+	Cursor string `schema:"cursor"`
+}
+
+type cursorPagination struct {
+	versionID      models.ID
+	versionModelID models.ID
 }
 
 type versionsService struct {
@@ -54,20 +70,63 @@ func (service *versionsService) query() *gorm.DB {
 		Select("versions.*")
 }
 
-func (service *versionsService) ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig) (versions []*models.Version, err error) {
-	err = service.query().
-		Where(models.Version{ModelID: modelID}).
-		Order("created_at DESC").
-		Find(&versions).
-		Error
+func (service *versionsService) buildListVersionsQuery(modelID models.ID, query VersionQuery) *gorm.DB {
+	dbQuery := service.query().
+		Where(models.Version{ModelID: modelID})
 
+	// search only based on mlflow run_id
+	trimmedSearch := strings.TrimSpace(query.Search)
+	if trimmedSearch != "" {
+		dbQuery = service.buildSearchQuery(dbQuery, trimmedSearch)
+	}
+	dbQuery = dbQuery.Order("created_at DESC")
+	return dbQuery
+}
+
+func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search string) *gorm.DB {
+	// parse search query
+	//
+	searchComponents := strings.Split(search, ":")
+	// search query without specifying key
+	// currently will search only based on mlflow run_id, in the future can be searched on anything
+	if len(searchComponents) == 1 {
+		return listQuery.Where("versions.mlflow_run_id = ?", search)
+	}
+
+	searchQuery := listQuery
+	// if query has key e.g environment_name:id-dev
+	searchKey := searchComponents[0]
+	searchString := searchComponents[1]
+	if searchKey == "environment_name" {
+		searchQuery = listQuery.Joins("JOIN version_endpoints on version_endpoints.version_id = versions.id AND version_endpoints.version_model_id = versions.model_id AND version_endpoints.environment_name=? AND version_endpoints.status != ?", searchString, models.EndpointTerminated)
+	}
+	return searchQuery
+}
+
+func (service *versionsService) ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig, query VersionQuery) (versions []*models.Version, nextCursor string, err error) {
+	dbQuery := service.buildListVersionsQuery(modelID, query)
+
+	paginationEnabled := query.Limit > 0
+	if paginationEnabled {
+		paginateEngine := generatePagination(query.PaginationQuery, []string{"ID"}, descOrder)
+		err = paginateEngine.Paginate(dbQuery, &versions).Error
+		if paginateEngine.GetNextCursor().After != nil {
+			nextCursor = *paginateEngine.GetNextCursor().After
+		}
+	} else {
+		err = dbQuery.Find(&versions).Error
+	}
+
+	if err != nil {
+		return
+	}
 	if len(versions) == 0 {
 		return
 	}
 
 	project, err := service.mlpAPIClient.GetProjectByID(ctx, int32(versions[0].Model.ProjectID))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	for k := range versions {

@@ -66,6 +66,7 @@ class MerlinClient:
             envs.append(Environment(env))
         return envs
 
+
     def get_environment(self, env_name: str) -> Optional[Environment]:
         """
         Get environment for given env name

@@ -10,9 +10,9 @@
 package client
 
 type PredictionJobResourceRequest struct {
-	DriverCPURequest      string `json:"driver_cpu_request,omitempty"`
+	DriverCpuRequest      string `json:"driver_cpu_request,omitempty"`
 	DriverMemoryRequest   string `json:"driver_memory_request,omitempty"`
-	ExecutorCPURequest    string `json:"executor_cpu_request,omitempty"`
+	ExecutorCpuRequest    string `json:"executor_cpu_request,omitempty"`
 	ExecutorMemoryRequest string `json:"executor_memory_request,omitempty"`
 	ExecutorReplica       int32  `json:"executor_replica,omitempty"`
 }

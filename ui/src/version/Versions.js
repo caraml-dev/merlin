@@ -22,7 +22,8 @@ import {
   EuiPageContent,
   EuiPageHeader,
   EuiPageHeaderSection,
-  EuiTitle
+  EuiTitle,
+  EuiSpacer
 } from "@elastic/eui";
 import VersionListTable from "./VersionListTable";
 import { get, replaceBreadcrumbs, useToggle } from "@gojek/mlp-ui";
@@ -32,6 +33,7 @@ import {
   ServeVersionEndpointModal,
   UndeployVersionEndpointModal
 } from "../components/modals";
+import { CursorPagination } from "../components/CursorPagination";
 
 const Versions = ({ projectId, modelId, ...props }) => {
   const [
@@ -49,11 +51,22 @@ const Versions = ({ projectId, modelId, ...props }) => {
   /**
    * API Usage
    */
+  const limitPerPage = 50;
+  const [limit, setLimit] = useState(limitPerPage);
+  const [searchQuery, setSearchQuery] = useState(null);
+
+  const [selectedCursor, setSelectedCursor] = useState("");
   const [versions, fetchVersions] = useMerlinApi(
     `/models/${modelId}/versions`,
-    { mock: mocks.versionList },
+    {
+      mock: mocks.versionList,
+      query: { limit: limit, search: searchQuery, cursor: selectedCursor },
+      method: "GET"
+    },
     []
   );
+
+  const [environments] = useMerlinApi(`/environments`, {}, []);
 
   const [models, fetchModels] = useMerlinApi(
     `/projects/${projectId}/models`,
@@ -116,7 +129,21 @@ const Versions = ({ projectId, modelId, ...props }) => {
             setActiveVersionEndpoint={setActiveVersionEndpoint}
             toggleUndeployEndpointModal={toggleUndeployEndpointModal}
             toggleServeEndpointModal={toggleServeEndpointModal}
+            searchCallback={setSearchQuery}
+            searchQuery={searchQuery}
+            environments={environments.data}
           />
+          <EuiSpacer size="m" />
+          {activeModel && (
+            <CursorPagination
+              apiResponse={versions}
+              defaultLimit={limitPerPage}
+              search={searchQuery}
+              limit={limit}
+              setLimit={setLimit}
+              setSelectedCursor={setSelectedCursor}
+            />
+          )}
         </EuiPageContent>
       </EuiPageBody>
 

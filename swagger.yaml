@@ -250,9 +250,25 @@ paths:
           name: "model_id"
           type: "integer"
           required: true
+        - in: "query"
+          name: "limit"
+          type: "integer"
+          required: false
+        - in: "query"
+          name: "cursor"
+          type: "string"
+          required: false
+        - in: "query"
+          name: "search"
+          type: "string"
+          required: false
       responses:
         200:
           description: "OK"
+          headers:
+            Next-Cursor:
+              type: string
+              description: "Pointer to used for next page request"
           schema:
             type: "array"
             items:
@@ -273,6 +289,25 @@ paths:
           schema:
             $ref: "#/definitions/Version"
   "/models/{model_id}/versions/{version_id}":
+    get:
+      tags: ["version"]
+      summary: "Get version by ID from model"
+      parameters:
+        - in: "path"
+          name: "model_id"
+          type: "integer"
+          required: true
+        - in: "path"
+          name: "version_id"
+          type: "integer"
+          required: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Version"
+        404:
+          description: "Model with given `model_id` not found"
     patch:
       tags: ["version"]
       summary: "Patch the version "
