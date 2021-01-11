@@ -15,6 +15,10 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+
 	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
 )
 
@@ -49,4 +53,17 @@ func GetLoggerMode(mode LoggerMode) kfsv1alpha2.LoggerMode {
 		loggerMode = mappedValue
 	}
 	return loggerMode
+}
+
+func (logger Logger) Value() (driver.Value, error) {
+	return json.Marshal(logger)
+}
+
+func (logger *Logger) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+
+	return json.Unmarshal(b, &logger)
 }
