@@ -953,7 +953,7 @@ class ModelVersion:
 
         target_logger = None
         if logger is not None:
-            target_logger = self._create_logger_spec(logger)
+            target_logger = logger.to_logger_spec()
 
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
@@ -989,24 +989,6 @@ class ModelVersion:
               f"\nView model version logs: {log_url}")
 
         return VersionEndpoint(endpoint, log_url)
-
-    def _create_logger_spec(self, logger: Logger) -> Optional[client.Logger]:
-        target_logger = None
-
-        model_logger_config = None
-        if logger.model is not None:
-            model_logger_config = client.LoggerConfig(
-                enabled=logger.model.enabled, mode=logger.model.mode)
-
-        transformer_logger_config = None
-        if logger.transformer is not None:
-            transformer_logger_config = client.LoggerConfig(
-                enabled=logger.transformer.enabled, mode=logger.transformer.mode)
-
-        if model_logger_config is not None or transformer_logger_config is not None:
-            target_logger = client.Logger(model=model_logger_config, transformer=transformer_logger_config)
-
-        return target_logger
 
     def create_transformer_spec(self, transformer: Transformer, target_env_name: str) -> client.Transformer:
         resource_request = transformer.resource_request

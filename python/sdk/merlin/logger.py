@@ -15,7 +15,7 @@
 from enum import Enum
 import client
 from merlin.util import autostr
-
+from typing import Optional
 
 class LoggerMode(Enum):
     ALL = 'all'
@@ -39,6 +39,18 @@ class LoggerConfig:
 
 @autostr
 class Logger:
+    logger_mode_mapping = {
+        LoggerMode.ALL: client.LoggerMode.ALL,
+        LoggerMode.REQUEST: client.LoggerMode.REQUEST,
+        LoggerMode.RESPONSE: client.LoggerMode.RESPONSE
+    }
+
+    logger_mode_mapping_rev = {
+        client.LoggerMode.ALL: LoggerMode.ALL,
+        client.LoggerMode.REQUEST: LoggerMode.REQUEST,
+        client.LoggerMode.RESPONSE: LoggerMode.RESPONSE,
+    }
+
     def __init__(self, model: LoggerConfig = None, transformer: LoggerConfig = None):
         self._model = model
         self._transformer = transformer
@@ -49,13 +61,33 @@ class Logger:
             return Logger()
         model_config = None
         if response.model is not None:
-            model_config = LoggerConfig(enabled=response.model.enabled, mode=LoggerMode[response.model.mode])
+            model_config = LoggerConfig(enabled=response.model.enabled, mode=cls.logger_mode_mapping_rev[response.model.mode])
         transformer_config = None
         if response.transformer is not None:
             transformer_config = LoggerConfig(enabled=response.transformer.enabled,
-                                              mode=LoggerMode[response.transformer.mode])
+                                              mode=cls.logger_mode_mapping_rev[response.transformer.mode])
 
         return Logger(model=model_config, transformer=transformer_config)
+
+
+    def to_logger_spec(self) -> Optional[client.Logger]:
+        target_logger = None
+
+        model_logger_config = None
+        if self.model is not None:
+            model_logger_config = client.LoggerConfig(
+                enabled=self.model.enabled, mode=Logger.logger_mode_mapping[self.model.mode])
+
+        transformer_logger_config = None
+        if self.transformer is not None:
+            transformer_logger_config = client.LoggerConfig(
+                enabled=self.transformer.enabled, mode=Logger.logger_mode_mapping[self.transformer.mode])
+
+        if model_logger_config is not None or transformer_logger_config is not None:
+            target_logger = client.Logger(model=model_logger_config, transformer=transformer_logger_config)
+
+        return target_logger
+
 
     @property
     def model(self):
