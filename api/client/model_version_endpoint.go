@@ -26,6 +26,7 @@ type VersionEndpoint struct {
 	ResourceRequest *ResourceRequest `json:"resource_request,omitempty"`
 	EnvVars         []EnvVar         `json:"env_vars,omitempty"`
 	Transformer     *Transformer     `json:"transformer,omitempty"`
+	Logger          *Logger          `json:"logger,omitempty"`
 	CreatedAt       time.Time        `json:"created_at,omitempty"`
 	UpdatedAt       time.Time        `json:"updated_at,omitempty"`
 }

@@ -23,6 +23,7 @@ from merlin.environment import Environment
 from merlin.model import Model, ModelType, ModelVersion, Project
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
+from merlin.logger import Logger
 
 _merlin_client: Optional[MerlinClient] = None
 _active_project: Optional[Project]
@@ -30,7 +31,7 @@ _active_model: Optional[Model]
 _active_model_version: Optional[ModelVersion]
 
 
-def set_url(url: str, use_google_oauth: bool=True):
+def set_url(url: str, use_google_oauth: bool = True):
     """
     Set Merlin URL
 
@@ -326,7 +327,8 @@ def deploy(model_version: ModelVersion = None,
            environment_name: str = None,
            resource_request: ResourceRequest = None,
            env_vars: Dict[str, str] = None,
-           transformer: Transformer = None) -> VersionEndpoint:
+           transformer: Transformer = None,
+           logger: Logger = None) -> VersionEndpoint:
     """
     Deploy a model version.
 
@@ -339,13 +341,15 @@ def deploy(model_version: ModelVersion = None,
         return _active_model_version.deploy(environment_name,  # type: ignore
                                             resource_request,
                                             env_vars,
-                                            transformer)
+                                            transformer,
+                                            logger)
 
     return _merlin_client.deploy(model_version,  # type: ignore
                                  environment_name,
                                  resource_request,
                                  env_vars,
-                                 transformer)
+                                 transformer,
+                                 logger)
 
 
 def undeploy(model_version=None,
@@ -377,6 +381,7 @@ def serve_traffic(traffic_rule: Dict['VersionEndpoint', int],
     return _active_model.serve_traffic(traffic_rule,  # type: ignore
                                        environment_name)
 
+
 def stop_serving_traffic(environment_name: str = None):
     """
     Stop serving traffic for a given model endpoint in given environment.
@@ -384,7 +389,8 @@ def stop_serving_traffic(environment_name: str = None):
     :param environment_name: environment in which the model endpoint will be stopped.
     """
     _check_active_model()
-    return _active_model.stop_serving_traffic(environment_name) # type: ignore
+    return _active_model.stop_serving_traffic(environment_name)  # type: ignore
+
 
 def set_traffic(traffic_rule: Dict[ModelVersion, int]) -> ModelEndpoint:
     """
@@ -404,7 +410,7 @@ def list_model_endpoints() -> List[ModelEndpoint]:
     :return: List of model endpoints.
     """
     _check_active_model()
-    return _active_model.list_endpoint()  #type: ignore
+    return _active_model.list_endpoint()  # type: ignore
 
 
 def create_prediction_job(job_config: PredictionJobConfig, sync: bool = True) -> PredictionJob:
@@ -419,7 +425,8 @@ def create_prediction_job(job_config: PredictionJobConfig, sync: bool = True) ->
     _check_active_model()
     _check_active_model_version()
 
-    return _active_model_version.create_prediction_job(job_config=job_config, sync=sync)  # type: ignore
+    # type: ignore
+    return _active_model_version.create_prediction_job(job_config=job_config, sync=sync)
 
 
 def _check_active_project():

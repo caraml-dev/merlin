@@ -27,6 +27,7 @@ from merlin.environment import Environment
 from merlin.model import Model, ModelType, ModelVersion, Project
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
+from merlin.logger import Logger
 from merlin.util import valid_name_check
 
 OAUTH_SCOPES = ['https://www.googleapis.com/auth/userinfo.email']
@@ -227,8 +228,9 @@ class MerlinClient:
                environment_name: str = None,
                resource_request: ResourceRequest = None,
                env_vars: Dict[str, str] = None,
-               transformer: Transformer = None) -> VersionEndpoint:
-        return model_version.deploy(environment_name, resource_request, env_vars, transformer)
+               transformer: Transformer = None,
+               logger: Logger = None) -> VersionEndpoint:
+        return model_version.deploy(environment_name, resource_request, env_vars, transformer, logger)
 
     def undeploy(self, model_version: ModelVersion,
                  environment_name: str = None):

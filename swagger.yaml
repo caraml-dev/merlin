@@ -1192,7 +1192,7 @@ definitions:
       transformer:
         $ref: "#/definitions/Transformer"
       logger:
-        $ref: "#definitions/Logger"
+        $ref: "#/definitions/Logger"
       created_at:
         type: "string"
         format: "date-time"
@@ -1204,9 +1204,9 @@ definitions:
     type: "object"
     properties:
       model:
-        $ref: "#definitions/LoggerConfig"
+        $ref: "#/definitions/LoggerConfig"
       transformer:
-        $ref: "#definitions/LoggerConfig"
+        $ref: "#/definitions/LoggerConfig"
 
   LoggerConfig:
     type: "object"
@@ -1214,7 +1214,7 @@ definitions:
       enabled:
         type: "boolean"
       mode:
-        $ref: "#definitions/LoggerMode"
+        $ref: "#/definitions/LoggerMode"
 
   LoggerMode:
     type: "string"
