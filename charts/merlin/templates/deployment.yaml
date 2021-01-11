@@ -203,6 +203,8 @@ spec:
             value: "{{ .Values.merlin.alert.gitlab.alertBranch }}"
           - name: WARDEN_API_HOST
             value: "{{ .Values.merlin.alert.warden.apiHost }}"
+          - name: LOGGER_DESTINATION_URL
+            valuue: "{{ .Values.merlin.loggerDestinationURL }}"
           {{- end }}
           - name: MLP_API_HOST
             value: "{{ .Values.merlin.mlpApi.apiHost }}"

@@ -533,7 +533,7 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 
 	return service.NewEndpointService(controllers, builder, storage.NewVersionEndpointStorage(db),
 		storage.NewDeploymentStorage(db), cfg.Environment,
-		cfg.FeatureToggleConfig.MonitoringConfig)
+		cfg.FeatureToggleConfig.MonitoringConfig, cfg.LoggerDestinationURL)
 }
 
 func initVault(cfg *config.Config) vault.Client {

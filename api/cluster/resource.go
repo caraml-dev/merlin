@@ -175,12 +175,27 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		}
 	}
 
+	var loggerSpec *kfsv1alpha2.Logger
+	if modelService.Logger != nil && modelService.Logger.Model != nil && modelService.Logger.Model.Enabled {
+		logger := modelService.Logger
+		loggerSpec = createLoggerSpec(logger.DestinationURL, *logger.Model)
+	}
+
 	predictorSpec.DeploymentSpec = kfsv1alpha2.DeploymentSpec{
 		MinReplicas: &(modelService.ResourceRequest.MinReplica),
 		MaxReplicas: modelService.ResourceRequest.MaxReplica,
+		Logger:      loggerSpec,
 	}
 
 	return predictorSpec
+}
+
+func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kfsv1alpha2.Logger {
+	loggerMode := models.GetLoggerMode(loggerConfig.Mode)
+	return &kfsv1alpha2.Logger{
+		Url:  &loggerURL,
+		Mode: loggerMode,
+	}
 }
 
 func createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.TransformerSpec {
@@ -204,6 +219,12 @@ func createTransformerSpec(modelService *models.Service, transformer *models.Tra
 	envVars = append(envVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
 
+	var loggerSpec *kfsv1alpha2.Logger
+	if modelService.Logger != nil && modelService.Logger.Transformer != nil && modelService.Logger.Transformer.Enabled {
+		logger := modelService.Logger
+		loggerSpec = createLoggerSpec(logger.DestinationURL, *logger.Transformer)
+	}
+
 	transformerSpec := &kfsv1alpha2.TransformerSpec{
 		Custom: &kfsv1alpha2.CustomSpec{
 			Container: v1.Container{
@@ -225,6 +246,7 @@ func createTransformerSpec(modelService *models.Service, transformer *models.Tra
 		DeploymentSpec: kfsv1alpha2.DeploymentSpec{
 			MinReplicas: &(transformer.ResourceRequest.MinReplica),
 			MaxReplicas: transformer.ResourceRequest.MaxReplica,
+			Logger:      loggerSpec,
 		},
 	}
 
