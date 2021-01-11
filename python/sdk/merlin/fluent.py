@@ -425,8 +425,7 @@ def create_prediction_job(job_config: PredictionJobConfig, sync: bool = True) ->
     _check_active_model()
     _check_active_model_version()
 
-    # type: ignore
-    return _active_model_version.create_prediction_job(job_config=job_config, sync=sync)
+    return _active_model_version.create_prediction_job(job_config=job_config, sync=sync) # type: ignore
 
 
 def _check_active_project():

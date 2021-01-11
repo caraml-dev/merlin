@@ -990,7 +990,7 @@ class ModelVersion:
 
         return VersionEndpoint(endpoint, log_url)
 
-    def _create_logger_spec(self, logger: Logger) -> client.Logger:
+    def _create_logger_spec(self, logger: Logger) -> Optional[client.Logger]:
         target_logger = None
 
         model_logger_config = None

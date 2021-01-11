@@ -44,7 +44,7 @@ class Logger:
         self._transformer = transformer
 
     @classmethod
-    def from_logger_response(response: client.Logger):
+    def from_logger_response(cls, response: client.Logger):
         model_config = None
         if response.model is not None:
             model_config = LoggerConfig(enabled=response.model.enabled, mode=LoggerMode[response.model.mode])
