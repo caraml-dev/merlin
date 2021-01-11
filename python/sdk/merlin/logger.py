@@ -45,6 +45,8 @@ class Logger:
 
     @classmethod
     def from_logger_response(cls, response: client.Logger):
+        if response is None:
+            return Logger()
         model_config = None
         if response.model is not None:
             model_config = LoggerConfig(enabled=response.model.enabled, mode=LoggerMode[response.model.mode])
