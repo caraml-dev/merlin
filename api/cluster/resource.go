@@ -191,7 +191,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 }
 
 func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kfsv1alpha2.Logger {
-	loggerMode := models.GetLoggerMode(loggerConfig.Mode)
+	loggerMode := models.ToKFServingLoggerMode(loggerConfig.Mode)
 	return &kfsv1alpha2.Logger{
 		Url:  &loggerURL,
 		Mode: loggerMode,

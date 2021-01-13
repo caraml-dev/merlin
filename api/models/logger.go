@@ -24,6 +24,12 @@ import (
 
 type LoggerMode string
 
+var modeMapping = map[LoggerMode]kfsv1alpha2.LoggerMode{
+	LogAll:      kfsv1alpha2.LogAll,
+	LogRequest:  kfsv1alpha2.LogRequest,
+	LogResponse: kfsv1alpha2.LogResponse,
+}
+
 const (
 	LogAll      LoggerMode = "all"
 	LogRequest  LoggerMode = "request"
@@ -41,12 +47,7 @@ type LoggerConfig struct {
 	Mode    LoggerMode `json:"mode"`
 }
 
-func GetLoggerMode(mode LoggerMode) kfsv1alpha2.LoggerMode {
-	modeMapping := map[LoggerMode]kfsv1alpha2.LoggerMode{
-		LogAll:      kfsv1alpha2.LogAll,
-		LogRequest:  kfsv1alpha2.LogRequest,
-		LogResponse: kfsv1alpha2.LogResponse,
-	}
+func ToKFServingLoggerMode(mode LoggerMode) kfsv1alpha2.LoggerMode {
 
 	loggerMode := kfsv1alpha2.LogAll
 	if mappedValue, found := modeMapping[mode]; found {
