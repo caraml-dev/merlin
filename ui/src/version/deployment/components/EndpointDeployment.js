@@ -36,6 +36,7 @@ import { EndpointEnvironment } from "./EndpointEnvironment";
 import { EndpointVariables } from "./EndpointVariables";
 import { ResourceRequest } from "./ResourceRequest";
 import { Transformer } from "./Transformer";
+import { Logger } from "./Logger";
 import PropTypes from "prop-types";
 
 const DeployConfirmationModal = ({
@@ -75,6 +76,14 @@ const defaultResourceRequest = {
 
 const targetRequestStatus = currentStatus => {
   return currentStatus === "serving" ? "serving" : "running";
+};
+
+const isTransformerConfigured = request => {
+  return (
+    request.transformer &&
+    request.transformer.enabled &&
+    request.transformer.image !== null
+  );
 };
 
 const isRequestConfigured = request => {
@@ -153,6 +162,7 @@ export const EndpointDeployment = ({
     let targetResourceRequest = defaultResourceRequest;
     let targetEnvVars = [];
     let targetTransformer = undefined;
+    let targetLogger = undefined;
 
     if (selectedEnvironment) {
       if (selectedEnvironment.default_resource_request) {
@@ -176,13 +186,17 @@ export const EndpointDeployment = ({
       if (endpoint.transformer) {
         targetTransformer = endpoint.transformer;
       }
+      if (endpoint.logger) {
+        targetLogger = endpoint.logger;
+      }
     }
 
     setRequest(r => ({
       ...r,
       resource_request: targetResourceRequest,
       env_vars: targetEnvVars,
-      transformer: targetTransformer
+      transformer: targetTransformer,
+      logger: targetLogger
     }));
   }, [environments, version.endpoints, request.environment_name, setRequest]);
 
@@ -248,6 +262,15 @@ export const EndpointDeployment = ({
                     }
                   }
                   onChange={onChange("transformer")}
+                />
+              </EuiFlexItem>
+
+              <EuiFlexItem grow={false}>
+                <EuiSpacer size="s" />
+                <Logger
+                  logger={request.logger || {}}
+                  transformer={isTransformerConfigured(request)}
+                  onChange={onChange("logger")}
                 />
               </EuiFlexItem>
 
