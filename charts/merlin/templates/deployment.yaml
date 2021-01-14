@@ -75,6 +75,8 @@ spec:
         env:
           - name: ENVIRONMENT
             value: "{{ .Values.merlin.environment }}"
+          - name: LOGGER_DESTINATION_URL
+            value: "{{ .Values.merlin.loggerDestinationURL }}"
           - name: PORT
             value: "{{ .Values.merlin.service.internalPort }}"
           - name: DATABASE_HOST

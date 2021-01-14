@@ -40,6 +40,9 @@ from client.models.env_var import EnvVar
 from client.models.environment import Environment
 from client.models.file_format import FileFormat
 from client.models.label import Label
+from client.models.logger import Logger
+from client.models.logger_config import LoggerConfig
+from client.models.logger_mode import LoggerMode
 from client.models.model import Model
 from client.models.model_endpoint import ModelEndpoint
 from client.models.model_endpoint_alert import ModelEndpointAlert

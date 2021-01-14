@@ -37,6 +37,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 		Name: "project",
 	}
 
+	loggerDestinationURL := "http://destination.default"
 	model := &models.Service{
 		Name:        "model",
 		ArtifactURI: "gs://my-artifacet",
@@ -421,6 +422,374 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 							DeploymentSpec: v1alpha2.DeploymentSpec{
 								MinReplicas: &minReplica,
 								MaxReplicas: maxReplica,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "tensorflow (logger exist and enabled) + transformer spec",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeTensorflow,
+				Options:     &models.ModelOption{},
+				Metadata:    model.Metadata,
+				Transformer: &models.Transformer{
+					Enabled: true,
+					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Command: "python",
+					Args:    "main.py",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    1,
+						MaxReplica:    1,
+						CPURequest:    cpuRequest,
+						MemoryRequest: memoryRequest,
+					},
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogAll,
+					},
+				},
+			},
+			exp: &v1alpha2.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+					},
+					Labels: map[string]string{
+						"gojek.com/app":                model.Metadata.App,
+						"gojek.com/orchestrator":       "merlin",
+						"gojek.com/stream":             model.Metadata.Stream,
+						"gojek.com/team":               model.Metadata.Team,
+						"gojek.com/user-labels/sample": "true",
+						"gojek.com/environment":        model.Metadata.Environment,
+					},
+				},
+				Spec: v1alpha2.InferenceServiceSpec{
+					Default: v1alpha2.EndpointSpec{
+						Predictor: v1alpha2.PredictorSpec{
+							Tensorflow: &v1alpha2.TensorflowSpec{
+								StorageURI: fmt.Sprintf("%s/model", model.ArtifactURI),
+								Resources:  resourceRequests,
+							},
+							DeploymentSpec: v1alpha2.DeploymentSpec{
+								MinReplicas: &minReplica,
+								MaxReplicas: maxReplica,
+								Logger: &kfsv1alpha2.Logger{
+									Url:  &loggerDestinationURL,
+									Mode: kfsv1alpha2.LogAll,
+								},
+							},
+						},
+						Transformer: &kfsv1alpha2.TransformerSpec{
+							Custom: &kfsv1alpha2.CustomSpec{
+								Container: v1.Container{
+									Name:    "transformer",
+									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Command: []string{"python"},
+									Args:    []string{"main.py"},
+									Env: []v1.EnvVar{
+										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerModelName, Value: "model-1"},
+										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+									},
+									Resources: v1.ResourceRequirements{
+										Requests: v1.ResourceList{
+											v1.ResourceCPU:    cpuRequest,
+											v1.ResourceMemory: memoryRequest,
+										},
+										Limits: v1.ResourceList{
+											v1.ResourceCPU:    cpuLimit,
+											v1.ResourceMemory: memoryLimit,
+										},
+									},
+								},
+							},
+							DeploymentSpec: kfsv1alpha2.DeploymentSpec{
+								MinReplicas: &one,
+								MaxReplicas: one,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "tensorflow (logger exist and disabled) + transformer spec",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeTensorflow,
+				Options:     &models.ModelOption{},
+				Metadata:    model.Metadata,
+				Transformer: &models.Transformer{
+					Enabled: true,
+					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Command: "python",
+					Args:    "main.py",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    1,
+						MaxReplica:    1,
+						CPURequest:    cpuRequest,
+						MemoryRequest: memoryRequest,
+					},
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Model: &models.LoggerConfig{
+						Enabled: false,
+						Mode:    models.LogAll,
+					},
+				},
+			},
+			exp: &v1alpha2.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+					},
+					Labels: map[string]string{
+						"gojek.com/app":                model.Metadata.App,
+						"gojek.com/orchestrator":       "merlin",
+						"gojek.com/stream":             model.Metadata.Stream,
+						"gojek.com/team":               model.Metadata.Team,
+						"gojek.com/user-labels/sample": "true",
+						"gojek.com/environment":        model.Metadata.Environment,
+					},
+				},
+				Spec: v1alpha2.InferenceServiceSpec{
+					Default: v1alpha2.EndpointSpec{
+						Predictor: v1alpha2.PredictorSpec{
+							Tensorflow: &v1alpha2.TensorflowSpec{
+								StorageURI: fmt.Sprintf("%s/model", model.ArtifactURI),
+								Resources:  resourceRequests,
+							},
+							DeploymentSpec: v1alpha2.DeploymentSpec{
+								MinReplicas: &minReplica,
+								MaxReplicas: maxReplica,
+							},
+						},
+						Transformer: &kfsv1alpha2.TransformerSpec{
+							Custom: &kfsv1alpha2.CustomSpec{
+								Container: v1.Container{
+									Name:    "transformer",
+									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Command: []string{"python"},
+									Args:    []string{"main.py"},
+									Env: []v1.EnvVar{
+										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerModelName, Value: "model-1"},
+										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+									},
+									Resources: v1.ResourceRequirements{
+										Requests: v1.ResourceList{
+											v1.ResourceCPU:    cpuRequest,
+											v1.ResourceMemory: memoryRequest,
+										},
+										Limits: v1.ResourceList{
+											v1.ResourceCPU:    cpuLimit,
+											v1.ResourceMemory: memoryLimit,
+										},
+									},
+								},
+							},
+							DeploymentSpec: kfsv1alpha2.DeploymentSpec{
+								MinReplicas: &one,
+								MaxReplicas: one,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "tensorflow + transformer (logger enabled) spec",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeTensorflow,
+				Options:     &models.ModelOption{},
+				Metadata:    model.Metadata,
+				Transformer: &models.Transformer{
+					Enabled: true,
+					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Command: "python",
+					Args:    "main.py",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    1,
+						MaxReplica:    1,
+						CPURequest:    cpuRequest,
+						MemoryRequest: memoryRequest,
+					},
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogRequest,
+					},
+				},
+			},
+			exp: &v1alpha2.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+					},
+					Labels: map[string]string{
+						"gojek.com/app":                model.Metadata.App,
+						"gojek.com/orchestrator":       "merlin",
+						"gojek.com/stream":             model.Metadata.Stream,
+						"gojek.com/team":               model.Metadata.Team,
+						"gojek.com/user-labels/sample": "true",
+						"gojek.com/environment":        model.Metadata.Environment,
+					},
+				},
+				Spec: v1alpha2.InferenceServiceSpec{
+					Default: v1alpha2.EndpointSpec{
+						Predictor: v1alpha2.PredictorSpec{
+							Tensorflow: &v1alpha2.TensorflowSpec{
+								StorageURI: fmt.Sprintf("%s/model", model.ArtifactURI),
+								Resources:  resourceRequests,
+							},
+							DeploymentSpec: v1alpha2.DeploymentSpec{
+								MinReplicas: &minReplica,
+								MaxReplicas: maxReplica,
+							},
+						},
+						Transformer: &kfsv1alpha2.TransformerSpec{
+							Custom: &kfsv1alpha2.CustomSpec{
+								Container: v1.Container{
+									Name:    "transformer",
+									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Command: []string{"python"},
+									Args:    []string{"main.py"},
+									Env: []v1.EnvVar{
+										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerModelName, Value: "model-1"},
+										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+									},
+									Resources: v1.ResourceRequirements{
+										Requests: v1.ResourceList{
+											v1.ResourceCPU:    cpuRequest,
+											v1.ResourceMemory: memoryRequest,
+										},
+										Limits: v1.ResourceList{
+											v1.ResourceCPU:    cpuLimit,
+											v1.ResourceMemory: memoryLimit,
+										},
+									},
+								},
+							},
+							DeploymentSpec: kfsv1alpha2.DeploymentSpec{
+								MinReplicas: &one,
+								MaxReplicas: one,
+								Logger: &kfsv1alpha2.Logger{
+									Url:  &loggerDestinationURL,
+									Mode: kfsv1alpha2.LogRequest,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "tensorflow + transformer (logger, disabled) spec",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeTensorflow,
+				Options:     &models.ModelOption{},
+				Metadata:    model.Metadata,
+				Transformer: &models.Transformer{
+					Enabled: true,
+					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Command: "python",
+					Args:    "main.py",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    1,
+						MaxReplica:    1,
+						CPURequest:    cpuRequest,
+						MemoryRequest: memoryRequest,
+					},
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Transformer: &models.LoggerConfig{
+						Enabled: false,
+						Mode:    models.LogRequest,
+					},
+				},
+			},
+			exp: &v1alpha2.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+					},
+					Labels: map[string]string{
+						"gojek.com/app":                model.Metadata.App,
+						"gojek.com/orchestrator":       "merlin",
+						"gojek.com/stream":             model.Metadata.Stream,
+						"gojek.com/team":               model.Metadata.Team,
+						"gojek.com/user-labels/sample": "true",
+						"gojek.com/environment":        model.Metadata.Environment,
+					},
+				},
+				Spec: v1alpha2.InferenceServiceSpec{
+					Default: v1alpha2.EndpointSpec{
+						Predictor: v1alpha2.PredictorSpec{
+							Tensorflow: &v1alpha2.TensorflowSpec{
+								StorageURI: fmt.Sprintf("%s/model", model.ArtifactURI),
+								Resources:  resourceRequests,
+							},
+							DeploymentSpec: v1alpha2.DeploymentSpec{
+								MinReplicas: &minReplica,
+								MaxReplicas: maxReplica,
+							},
+						},
+						Transformer: &kfsv1alpha2.TransformerSpec{
+							Custom: &kfsv1alpha2.CustomSpec{
+								Container: v1.Container{
+									Name:    "transformer",
+									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Command: []string{"python"},
+									Args:    []string{"main.py"},
+									Env: []v1.EnvVar{
+										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerModelName, Value: "model-1"},
+										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+									},
+									Resources: v1.ResourceRequirements{
+										Requests: v1.ResourceList{
+											v1.ResourceCPU:    cpuRequest,
+											v1.ResourceMemory: memoryRequest,
+										},
+										Limits: v1.ResourceList{
+											v1.ResourceCPU:    cpuLimit,
+											v1.ResourceMemory: memoryLimit,
+										},
+									},
+								},
+							},
+							DeploymentSpec: kfsv1alpha2.DeploymentSpec{
+								MinReplicas: &one,
+								MaxReplicas: one,
 							},
 						},
 					},

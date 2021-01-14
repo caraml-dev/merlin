@@ -1191,12 +1191,37 @@ definitions:
           $ref: "#/definitions/EnvVar"
       transformer:
         $ref: "#/definitions/Transformer"
+      logger:
+        $ref: "#/definitions/Logger"
       created_at:
         type: "string"
         format: "date-time"
       updated_at:
         type: "string"
         format: "date-time"
+
+  Logger:
+    type: "object"
+    properties:
+      model:
+        $ref: "#/definitions/LoggerConfig"
+      transformer:
+        $ref: "#/definitions/LoggerConfig"
+
+  LoggerConfig:
+    type: "object"
+    properties:
+      enabled:
+        type: "boolean"
+      mode:
+        $ref: "#/definitions/LoggerMode"
+
+  LoggerMode:
+    type: "string"
+    enum:
+      - "all"
+      - "request"
+      - "response"
 
   Transformer:
     type: "object"
