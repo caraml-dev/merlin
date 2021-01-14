@@ -43,6 +43,7 @@ class VersionEndpoint(object):
         'resource_request': 'ResourceRequest',
         'env_vars': 'list[EnvVar]',
         'transformer': 'Transformer',
+        'logger': 'Logger',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -60,11 +61,12 @@ class VersionEndpoint(object):
         'resource_request': 'resource_request',
         'env_vars': 'env_vars',
         'transformer': 'transformer',
+        'logger': 'logger',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, env_vars=None, transformer=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, env_vars=None, transformer=None, logger=None, created_at=None, updated_at=None):  # noqa: E501
         """VersionEndpoint - a model defined in Swagger"""  # noqa: E501
 
         self._id = None
@@ -79,6 +81,7 @@ class VersionEndpoint(object):
         self._resource_request = None
         self._env_vars = None
         self._transformer = None
+        self._logger = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -107,6 +110,8 @@ class VersionEndpoint(object):
             self.env_vars = env_vars
         if transformer is not None:
             self.transformer = transformer
+        if logger is not None:
+            self.logger = logger
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -363,6 +368,27 @@ class VersionEndpoint(object):
         """
 
         self._transformer = transformer
+
+    @property
+    def logger(self):
+        """Gets the logger of this VersionEndpoint.  # noqa: E501
+
+
+        :return: The logger of this VersionEndpoint.  # noqa: E501
+        :rtype: Logger
+        """
+        return self._logger
+
+    @logger.setter
+    def logger(self, logger):
+        """Sets the logger of this VersionEndpoint.
+
+
+        :param logger: The logger of this VersionEndpoint.  # noqa: E501
+        :type: Logger
+        """
+
+        self._logger = logger
 
     @property
     def created_at(self):

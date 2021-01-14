@@ -37,6 +37,7 @@ import (
 )
 
 var isDefaultTrue = true
+var loggerDestinationURL = "http://logger.default"
 
 func TestDeployEndpoint(t *testing.T) {
 	type args struct {
@@ -223,7 +224,7 @@ func TestDeployEndpoint(t *testing.T) {
 			}
 
 			controllers := map[string]cluster.Controller{env.Name: envController}
-			endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, mockCfg.Environment, mockCfg.FeatureToggleConfig.MonitoringConfig)
+			endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, mockCfg.Environment, mockCfg.FeatureToggleConfig.MonitoringConfig, loggerDestinationURL)
 			errRaised, err := endpointSvc.DeployEndpoint(tt.args.environment, tt.args.model, tt.args.version, tt.args.endpoint)
 
 			// delay to make second save happen before checking
@@ -375,7 +376,7 @@ func TestListContainers(t *testing.T) {
 		mockStorage.On("Get", mock.Anything).Return(tt.mock.versionEndpoint, nil)
 		mockDeploymentStorage.On("Save", mock.Anything).Return(nil, nil)
 
-		endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, cfg.Environment, cfg.FeatureToggleConfig.MonitoringConfig)
+		endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, cfg.Environment, cfg.FeatureToggleConfig.MonitoringConfig, loggerDestinationURL)
 
 		containers, err := endpointSvc.ListContainers(tt.args.model, tt.args.version, tt.args.id)
 		if !tt.wantError {

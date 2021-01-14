@@ -42,6 +42,7 @@ type VersionEndpoint struct {
 	ResourceRequest      *ResourceRequest `json:"resource_request" gorm:"resource_request"`
 	EnvVars              EnvVars          `json:"env_vars" gorm:"column:env_vars"`
 	Transformer          *Transformer     `json:"transformer,omitempty" gorm:"foreignKey:VersionEndpointID"`
+	Logger               *Logger          `json:"logger,omitempty" gorm:"logger"`
 
 	CreatedUpdated
 }

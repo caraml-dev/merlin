@@ -17,6 +17,7 @@ from typing import Dict
 
 import client
 from merlin.environment import Environment
+from merlin.logger import Logger, LoggerConfig, LoggerMode
 from merlin.util import autostr
 
 
@@ -40,6 +41,7 @@ class VersionEndpoint:
         self._environment_name = endpoint.environment_name
         self._environment = Environment(endpoint.environment)
         self._env_vars = endpoint.env_vars
+        self._logger = Logger.from_logger_response(endpoint.logger)
         if log_url is not None:
             self._log_url = log_url
 
@@ -69,6 +71,10 @@ class VersionEndpoint:
         for ev in self._env_vars:
             env_vars[ev.name] = ev.value
         return env_vars
+
+    @property
+    def logger(self) -> Logger:
+        return self._logger
 
     @property
     def log_url(self) -> str:

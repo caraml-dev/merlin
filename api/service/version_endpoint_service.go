@@ -53,12 +53,13 @@ type EndpointsService interface {
 const defaultWorkers = 1
 
 type endpointService struct {
-	clusterControllers map[string]cluster.Controller
-	imageBuilder       imagebuilder.ImageBuilder
-	storage            storage.VersionEndpointStorage
-	deploymentStorage  storage.DeploymentStorage
-	environment        string
-	monitoringConfig   config.MonitoringConfig
+	clusterControllers   map[string]cluster.Controller
+	imageBuilder         imagebuilder.ImageBuilder
+	storage              storage.VersionEndpointStorage
+	deploymentStorage    storage.DeploymentStorage
+	environment          string
+	monitoringConfig     config.MonitoringConfig
+	loggerDestinationURL string
 }
 
 func NewEndpointService(clusterControllers map[string]cluster.Controller,
@@ -66,14 +67,16 @@ func NewEndpointService(clusterControllers map[string]cluster.Controller,
 	storage storage.VersionEndpointStorage,
 	deploymentStorage storage.DeploymentStorage,
 	environment string,
-	monitoringConfig config.MonitoringConfig) EndpointsService {
+	monitoringConfig config.MonitoringConfig,
+	loggerDestinationURL string) EndpointsService {
 	return &endpointService{
-		clusterControllers: clusterControllers,
-		imageBuilder:       imageBuilder,
-		storage:            storage,
-		deploymentStorage:  deploymentStorage,
-		environment:        environment,
-		monitoringConfig:   monitoringConfig,
+		clusterControllers:   clusterControllers,
+		imageBuilder:         imageBuilder,
+		storage:              storage,
+		deploymentStorage:    deploymentStorage,
+		environment:          environment,
+		monitoringConfig:     monitoringConfig,
+		loggerDestinationURL: loggerDestinationURL,
 	}
 }
 
@@ -112,6 +115,11 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 	if newEndpoint.Transformer != nil {
 		endpoint.Transformer = newEndpoint.Transformer
 		endpoint.Transformer.VersionEndpointID = endpoint.ID
+	}
+
+	if newEndpoint.Logger != nil {
+		endpoint.Logger = newEndpoint.Logger
+		endpoint.Logger.DestinationURL = k.loggerDestinationURL
 	}
 
 	// Configure environment variables for Pyfunc model
@@ -179,7 +187,7 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 			modelOpt = models.NewPyTorchModelOption(version)
 		}
 
-		modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment, endpoint.Transformer)
+		modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment, endpoint.Transformer, endpoint.Logger)
 		svc, err := ctl.Deploy(modelService)
 		if err != nil {
 			log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)

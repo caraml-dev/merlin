@@ -26,6 +26,8 @@ merlin:
   # Comma-separated value of Docker registries that can be chosen in deployment page
   dockerRegistries: ghcr.io/gojek,ghcr.io/your-company
 
+  loggerDestinationURL: "http://yourDestinationLogger"
+
   mlpApi:
     apiHost: http://mlp.mlp:8080/v1
     # encryptionKey must be specified using --set flag.
@@ -116,7 +118,6 @@ merlin:
   encryption:
     key: "password"
 
-
 mlflow:
   image:
     registry: ghcr.io
@@ -127,7 +128,6 @@ mlflow:
     enabled: false
     postgresqlDatabase: mlflow
     postgresqlUsername: mlflow
-
 
 postgresql:
   resources:
@@ -155,7 +155,6 @@ postgresql:
     numSynchronousReplicas: 2
     ## Replication Cluster application name. Useful for defining multiple replication policies
     applicationName: merlin
-
 
 swagger:
   enabled: true
