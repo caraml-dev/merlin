@@ -82,7 +82,8 @@ const isTransformerConfigured = request => {
   return (
     request.transformer &&
     request.transformer.enabled &&
-    request.transformer.image !== null
+    request.transformer.image !== null &&
+    request.transformer.image !== ""
   );
 };
 
@@ -201,6 +202,7 @@ export const EndpointDeployment = ({
   }, [environments, version.endpoints, request.environment_name, setRequest]);
 
   const onChange = field => {
+    console.log("request " + JSON.stringify(request));
     return value => setRequest(r => ({ ...r, [field]: value }));
   };
 

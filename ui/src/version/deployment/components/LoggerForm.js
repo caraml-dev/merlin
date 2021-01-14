@@ -48,12 +48,12 @@ export const LoggerForm = ({ name, configuration, onChange }) => {
     {
       name: "Request",
       value: "request",
-      desc: "Log request"
+      desc: "Only log request"
     },
     {
       name: "Response",
       value: "response",
-      desc: "Log response"
+      desc: "Only log response"
     }
   ];
 
