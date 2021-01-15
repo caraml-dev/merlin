@@ -16,8 +16,6 @@
 
 import React, { Fragment } from "react";
 import {
-  EuiFlexGroup,
-  EuiFlexItem,
   EuiForm,
   EuiFormRow,
   EuiIcon,
@@ -25,18 +23,26 @@ import {
   EuiText,
   EuiSuperSelect,
   EuiSwitch,
-  EuiTitle,
   EuiToolTip
 } from "@elastic/eui";
 import PropTypes from "prop-types";
 
-export const LoggerForm = ({ name, configuration, onChange }) => {
-  const setValue = (field, value) =>
-    onChange({
-      ...configuration,
-      [field]: value
-    });
+export const DEFAULT_LOGGER_CONFIG = { enabled: false, mode: "all" };
 
+export const LoggerForm = ({ logger, config_type, onChange }) => {
+  const setValue = (field, value) => {
+    const configuration = getConfiguration(config_type);
+    const updatedConfig = { ...configuration, [field]: value };
+    onChange({
+      ...logger,
+      [config_type]: updatedConfig
+    });
+  };
+
+  const getConfiguration = config_type =>
+    logger[config_type] || DEFAULT_LOGGER_CONFIG;
+
+  const configuration = getConfiguration(config_type);
   const enabled = configuration.enabled || false;
   const selectedMode = configuration.mode || "all";
   const loggerModes = [
@@ -73,32 +79,26 @@ export const LoggerForm = ({ name, configuration, onChange }) => {
   });
 
   return (
-    <Fragment>
-      <EuiFlexGroup alignItems="center" justifyContent="spaceBetween">
-        <EuiFlexItem grow={false}>
-          <EuiTitle size="xs">
-            <h4>{name}</h4>
-          </EuiTitle>
-        </EuiFlexItem>
-        <EuiFlexItem grow={false}>
-          <EuiSwitch
-            label=""
-            checked={enabled}
-            onChange={e => setValue("enabled", e.target.checked)}
-          />
-        </EuiFlexItem>
-      </EuiFlexGroup>
+    <>
+      <EuiForm>
+        <EuiFormRow fullWidth label="Logger enabled" display="columnCompressed">
+          <>
+            <EuiSpacer size="s" />
+            <EuiSwitch
+              label=""
+              checked={enabled}
+              onChange={e => setValue("enabled", e.target.checked)}></EuiSwitch>
+          </>
+        </EuiFormRow>
 
-      <EuiSpacer size="s" />
-
-      {enabled && (
-        <EuiForm>
+        {enabled && (
           <EuiFormRow
             fullWidth
             label={
               <EuiToolTip content="Specify logger mode">
                 <span>
-                  Mode <EuiIcon type="questionInCircle" color="subdued" />
+                  Logger mode{" "}
+                  <EuiIcon type="questionInCircle" color="subdued" />
                 </span>
               </EuiToolTip>
             }
@@ -111,14 +111,14 @@ export const LoggerForm = ({ name, configuration, onChange }) => {
               hasDividers
             />
           </EuiFormRow>
-        </EuiForm>
-      )}
-    </Fragment>
+        )}
+      </EuiForm>
+    </>
   );
 };
 
 LoggerForm.propTypes = {
-  name: PropTypes.string,
-  configuration: PropTypes.object,
+  logger: PropTypes.object,
+  config_type: PropTypes.string,
   onChange: PropTypes.func
 };
