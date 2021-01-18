@@ -46,7 +46,10 @@ TEST_REQUIRES = [
     "xgboost==0.82",
     "scikit-learn==0.20.3",
     "joblib>=0.13.0",
-    "mypy"
+    "mypy",
+    "google-api-core<=1.17.0",  # https://github.com/googleapis/python-pubsub/issues/115
+    "grpcio<=1.27.2",
+    "google-cloud-core==1.3.0"
 ]
 
 setup(
