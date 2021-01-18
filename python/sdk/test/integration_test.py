@@ -484,7 +484,7 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth):
 def test_pytorch_logger(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("pytorch-sample", ModelType.PYTORCH)
+    merlin.set_model("pytorch-logger", ModelType.PYTORCH)
 
     model_dir = "test/pytorch-model"
 
@@ -509,11 +509,12 @@ def test_pytorch_logger(integration_test_url, project_name, use_google_oauth):
     assert resp.json() is not None
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
+
 @pytest.mark.integration
 def test_trasformer_pytorch_logger(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("transformer-pytorch", ModelType.PYTORCH)
+    merlin.set_model("transformer-logger", ModelType.PYTORCH)
 
     model_dir = "test/transformer"
 
@@ -523,7 +524,8 @@ def test_trasformer_pytorch_logger(integration_test_url, project_name, use_googl
     transformer = Transformer("gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
                               resource_request=resource_request)
 
-    logger = Logger(model=LoggerConfig(enabled=True, mode=LoggerMode.ALL), transformer=LoggerConfig(enabled=True, mode=LoggerMode.ALL))
+    logger = Logger(model=LoggerConfig(enabled=True, mode=LoggerMode.ALL),
+                    transformer=LoggerConfig(enabled=True, mode=LoggerMode.ALL))
     with merlin.new_model_version() as v:
         merlin.log_pytorch_model(model_dir=model_dir)
         endpoint = merlin.deploy(transformer=transformer, logger=logger)
@@ -564,6 +566,7 @@ def test_trasformer_pytorch_logger(integration_test_url, project_name, use_googl
 
     # Undeploy other running model version endpoints
     undeploy_all_version()
+
 
 @pytest.mark.integration
 def test_transformer_pytorch(integration_test_url, project_name, use_google_oauth):
