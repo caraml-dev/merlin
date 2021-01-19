@@ -32,6 +32,8 @@ import {
 import { appConfig } from "../../../config";
 import { ResourceRequest } from "./ResourceRequest";
 import { EnvironmentVariables } from "./EnvironmentVariables";
+import { LoggerForm } from "./LoggerForm";
+
 import PropTypes from "prop-types";
 
 const extractRegistry = (image, registries) => {
@@ -58,7 +60,9 @@ const dockerRegistryDisplay = registry => (
 export const Transformer = ({
   transformer,
   onChange,
-  defaultResourceRequest
+  defaultResourceRequest,
+  logger,
+  onLoggerChange
 }) => {
   const setValue = (field, value) =>
     onChange({
@@ -118,7 +122,7 @@ export const Transformer = ({
       <EuiFlexGroup alignItems="center" justifyContent="spaceBetween">
         <EuiFlexItem grow={false}>
           <EuiTitle size="xs">
-            <h4>Transformer</h4>
+            <h4>Transformer Configuration</h4>
           </EuiTitle>
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
@@ -196,6 +200,14 @@ export const Transformer = ({
               }
               onChange={value => setValue("resource_request", value)}
             />
+
+            <EuiSpacer size="l" />
+            <LoggerForm
+              logger={logger}
+              config_type="transformer"
+              onChange={onLoggerChange}
+            />
+            <EuiSpacer size="l" />
 
             <EuiFormRow fullWidth label="Environment Variables">
               <EnvironmentVariables

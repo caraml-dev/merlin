@@ -36,6 +36,7 @@ import { EndpointEnvironment } from "./EndpointEnvironment";
 import { EndpointVariables } from "./EndpointVariables";
 import { ResourceRequest } from "./ResourceRequest";
 import { Transformer } from "./Transformer";
+import { LoggerForm, DEFAULT_LOGGER_CONFIG } from "./LoggerForm";
 import PropTypes from "prop-types";
 
 const DeployConfirmationModal = ({
@@ -153,6 +154,7 @@ export const EndpointDeployment = ({
     let targetResourceRequest = defaultResourceRequest;
     let targetEnvVars = [];
     let targetTransformer = undefined;
+    let targetLogger = undefined;
 
     if (selectedEnvironment) {
       if (selectedEnvironment.default_resource_request) {
@@ -176,13 +178,17 @@ export const EndpointDeployment = ({
       if (endpoint.transformer) {
         targetTransformer = endpoint.transformer;
       }
+      if (endpoint.logger) {
+        targetLogger = endpoint.logger;
+      }
     }
 
     setRequest(r => ({
       ...r,
       resource_request: targetResourceRequest,
       env_vars: targetEnvVars,
-      transformer: targetTransformer
+      transformer: targetTransformer,
+      logger: targetLogger
     }));
   }, [environments, version.endpoints, request.environment_name, setRequest]);
 
@@ -191,6 +197,11 @@ export const EndpointDeployment = ({
   };
 
   const onVariablesChange = useCallback(onChange("env_vars"), []);
+
+  const defaultLogger = {
+    model: DEFAULT_LOGGER_CONFIG,
+    transformer: DEFAULT_LOGGER_CONFIG
+  };
 
   return (
     <Fragment>
@@ -216,13 +227,19 @@ export const EndpointDeployment = ({
                 <EuiSpacer size="s" />
                 <EuiPanel grow={false}>
                   <EuiTitle size="xs">
-                    <h4>Model Resources</h4>
+                    <h4>Model Configuration</h4>
                   </EuiTitle>
                   <ResourceRequest
                     resourceRequest={
                       request.resource_request || defaultResourceRequest
                     }
                     onChange={onChange("resource_request")}
+                  />
+                  <EuiSpacer size="l" />
+                  <LoggerForm
+                    logger={request.logger || defaultLogger}
+                    config_type="model"
+                    onChange={onChange("logger")}
                   />
                 </EuiPanel>
               </EuiFlexItem>
@@ -248,6 +265,8 @@ export const EndpointDeployment = ({
                     }
                   }
                   onChange={onChange("transformer")}
+                  logger={request.logger || defaultLogger}
+                  onLoggerChange={onChange("logger")}
                 />
               </EuiFlexItem>
 
