@@ -38,6 +38,8 @@ ENV_PATH = os.path.join(MODEL_DIR, "env.yaml")
 
 
 class IrisClassifier(PyFuncV2Model):
+    # To test issue with grpcio 1.22.0
+    from google.cloud import bigquery, bigquery_storage_v1beta1
 
     def initialize(self, artifacts: dict):
         self._model = joblib.load(artifacts[MODEL_PATH_ARTIFACT_KEY])
