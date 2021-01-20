@@ -38,6 +38,9 @@ ENV_PATH = os.path.join(MODEL_DIR, "env.yaml")
 
 
 class IrisClassifier(PyFuncV2Model):
+    # To test issue with grpcio 1.22.0
+    from google.cloud import bigquery, bigquery_storage_v1beta1
+
     def initialize(self, artifacts: dict):
         self._model = joblib.load(artifacts[MODEL_PATH_ARTIFACT_KEY])
 
@@ -51,9 +54,11 @@ class IrisClassifier(PyFuncV2Model):
 def batch_bigquery_source():
     return os.environ.get("E2E_BATCH_BIGQUERY_SOURCE", default="project.dataset.table")
 
+
 @pytest.fixture
 def batch_bigquery_sink():
     return os.environ.get("E2E_BATCH_BIGQUERY_SINK", default="project.dataset.table_result")
+
 
 @pytest.fixture
 def batch_gcs_staging_bucket():
@@ -62,12 +67,13 @@ def batch_gcs_staging_bucket():
 
 @pytest.mark.integration
 def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth,
-        batch_bigquery_source, batch_bigquery_sink, batch_gcs_staging_bucket):
+                               batch_bigquery_source, batch_bigquery_sink, batch_gcs_staging_bucket):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("batch-iris", ModelType.PYFUNC_V2)
     service_account_name = "merlin-integration-test@project.iam.gserviceaccount.com"
-    _create_secret(merlin.active_project(), service_account_name, service_account)
+    _create_secret(merlin.active_project(),
+                   service_account_name, service_account)
 
     clf = svm.SVC(gamma='scale')
     iris = load_iris()
@@ -92,7 +98,8 @@ def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_accou
                            staging_bucket=batch_gcs_staging_bucket,
                            result_column="prediction",
                            save_mode=SaveMode.OVERWRITE)
-    job_config = PredictionJobConfig(source=bq_source, sink=bq_sink, service_account_name=service_account_name, env_vars={"ALPHA":"0.2"})
+    job_config = PredictionJobConfig(
+        source=bq_source, sink=bq_sink, service_account_name=service_account_name, env_vars={"ALPHA": "0.2"})
     job = v.create_prediction_job(job_config=job_config)
 
     assert job.status == JobStatus.COMPLETED
@@ -113,5 +120,6 @@ def _create_secret(project, secret_name, secret_value):
             return
 
     if secret_value is None:
-        raise ValueError(f"{secret_name} secret is not found in the project and E2E_SERVICE_ACCOUNT is empty")
+        raise ValueError(
+            f"{secret_name} secret is not found in the project and E2E_SERVICE_ACCOUNT is empty")
     project.create_secret(secret_name, secret_value)

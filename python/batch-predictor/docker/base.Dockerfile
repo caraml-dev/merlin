@@ -46,8 +46,9 @@ WORKDIR /
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-265.0.0-linux-x86_64.tar.gz | tar xzf -
 ENV PATH=$PATH:/google-cloud-sdk/bin
 
-COPY . /merlin-spark-app
-COPY merlin-entrypoint.sh /opt/merlin-entrypoint.sh
+COPY batch-predictor /merlin-spark-app
+COPY sdk /sdk
+COPY batch-predictor/merlin-entrypoint.sh /opt/merlin-entrypoint.sh
 RUN conda env create -f /merlin-spark-app/environment.yaml && \
     rm -rf /root/.cache
 
