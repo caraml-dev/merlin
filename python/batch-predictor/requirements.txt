@@ -2,5 +2,5 @@ pyspark==2.4.5
 mlflow==1.6.0
 cloudpickle==1.2.2
 pyarrow==0.14.1
-merlin-sdk @ git+https://github.com/gojek/merlin.git@pyspark-image-builder-issue#egg=merlin-sdk\&subdirectory=python/sdk
 protobuf>=3.0
+file:../sdk#egg=merlin-sdk
