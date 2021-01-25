@@ -157,3 +157,9 @@ generate-client-python:
 	@swagger-codegen generate -i swagger.yaml -l python -o ${TEMP_CLIENT_PYTHON_OUTPUT_DIR} -DpackageName=client
 	@mv ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}/client ${CLIENT_PYTHON_OUTPUT_DIR}
 	@rm -rf ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}
+
+
+.PHONY: gen-proto
+gen-proto:
+	@echo "> Generating specification configuration from Proto file..."
+	@cd protos && protoc -I=. --go_out=../api --go-json_out=../api --go_opt=module=github.com/gojek/merlin pkg/transformer/*.proto

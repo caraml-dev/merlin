@@ -12,7 +12,7 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/pkg/errors"
 
-	"github.com/gojek/merlin/pkg/transformers/feast/spec"
+	"github.com/gojek/merlin/pkg/transformer"
 )
 
 // Options for the Feast transformer.
@@ -21,25 +21,17 @@ type Options struct {
 	ServingPort    int    `envconfig:"FEAST_SERVING_PORT" required:"true"`
 }
 
-// Feast wraps Feast serving client to retrieve features.
-type Feast struct {
-	options *Options
-
-	client *feast.GrpcClient
-
-	requestParsing []spec.RequestParsing
+// FeastTransformer wraps feast serving client to retrieve features.
+type FeastTransformer struct {
+	feastClient *feast.GrpcClient
+	config      *transformer.StandardTransformerConfig
 }
 
-// New initializes a new Feast client.
-func New(o *Options, requestParsingConfig []spec.RequestParsing) *Feast {
-	cli, err := feast.NewGrpcClient(o.ServingAddress, o.ServingPort)
-	if err != nil {
-		panic(err)
-	}
-	return &Feast{
-		options:        o,
-		client:         cli,
-		requestParsing: requestParsingConfig,
+// NewTransformer initializes a new FeastTransformer.
+func NewTransformer(feastClient *feast.GrpcClient, config *transformer.StandardTransformerConfig) *FeastTransformer {
+	return &FeastTransformer{
+		feastClient: feastClient,
+		config:      config,
 	}
 }
 
@@ -48,7 +40,7 @@ type FeastFeature struct {
 	Data    []float64 `json:"data"`
 }
 
-func (f *Feast) TransformHandler(w http.ResponseWriter, r *http.Request) ([]byte, error) {
+func (f *FeastTransformer) TransformHandler(w http.ResponseWriter, r *http.Request) ([]byte, error) {
 	log.Println("TransformHandler")
 
 	ctx := r.Context()
@@ -59,9 +51,9 @@ func (f *Feast) TransformHandler(w http.ResponseWriter, r *http.Request) ([]byte
 	}
 	defer r.Body.Close()
 
-	feastFeatures := make(map[string]FeastFeature, len(f.requestParsing))
+	feastFeatures := make(map[string]FeastFeature, len(f.config.TransformerConfig.Feast))
 
-	for _, config := range f.requestParsing {
+	for _, config := range f.config.TransformerConfig.Feast {
 		// TODO: validate the config
 		log.Println(config)
 
@@ -91,7 +83,7 @@ func (f *Feast) TransformHandler(w http.ResponseWriter, r *http.Request) ([]byte
 			Features: features,
 		}
 
-		feastResponse, err := f.client.GetOnlineFeatures(ctx, &feastRequest)
+		feastResponse, err := f.feastClient.GetOnlineFeatures(ctx, &feastRequest)
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +123,7 @@ func (f *Feast) TransformHandler(w http.ResponseWriter, r *http.Request) ([]byte
 }
 
 // TODO: return feastTypes.Value instead of string
-func getValueFromJSONPayload(body []byte, entity spec.Entity) (string, error) {
+func getValueFromJSONPayload(body []byte, entity transformer.Entity) (string, error) {
 	// Retrieve value using JSON path
 	value, typez, _, _ := jsonparser.Get(body, strings.Split(entity.JsonPath, ".")...)
 

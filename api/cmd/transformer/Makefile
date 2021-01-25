@@ -37,8 +37,3 @@ run:
 clean:
 	@echo "> Cleaning up existing compiled binary ..."
 	@test ! -e bin || rm -r bin
-
-.PHONY: gen-spec-proto
-gen-spec-proto:
-	@echo "> Generating specification configuration from Proto file..."
-	@cd ../../pkg/transformers/feast && protoc -I=. --go_out=. --go-json_out=. --go_opt=paths=source_relative spec/*.proto
