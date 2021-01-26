@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+option go_package = "github.com/gojek/merlin/pkg/transformer";
+
+message StandardTransformerConfig {
+  TransformerConfig transformerConfig = 1;
+}
+
+message TransformerConfig {
+  repeated FeatureTable feast = 1;
+}
+
+message FeatureTable {
+  string project = 1;
+  repeated Entity entities = 2;
+  repeated Feature features = 3;
+}
+
+message Entity {
+  string name = 1;
+  string valueType = 2;
+  string jsonPath = 3;
+}
+
+message Feature {
+  string name = 1;
+  double defaultValue = 2;
+}

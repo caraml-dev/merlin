@@ -24,7 +24,7 @@ type Server struct {
 	LivenessHandler    func(w http.ResponseWriter, r *http.Request)
 }
 
-// New initializes a new Server.
+// NewStandardTransformer initializes a new Server.
 func New(o *Options) *Server {
 	return &Server{
 		options: o,
