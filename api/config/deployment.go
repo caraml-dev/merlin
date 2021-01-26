@@ -26,24 +26,25 @@ type DeploymentConfig struct {
 	DeploymentTimeout time.Duration
 	// Duration to wait for namespaceResource creation
 	NamespaceTimeout time.Duration
-	// Minimum number of replica of inference service
-	MinReplica int
-	// Maximum number of replica of inference service
-	MaxReplica int
-
-	// CPU limit of inference service
-	CPULimit resource.Quantity //deprecated
+	// Default resource request for model deployment
+	DefaultModelResourceRequests *ResourceRequests
+	// Default resource request for transformer deployment
+	DefaultTransformerResourceRequests *ResourceRequests
 	// Max CPU of machine
 	MaxCPU resource.Quantity
 	// Max Memory of machine
 	MaxMemory resource.Quantity
-	// Memory limit of inference service
-	MemoryLimit resource.Quantity
+	// Percentage of knative's queue proxy resource request from the inference service resource request
+	QueueResourcePercentage string
+}
+
+type ResourceRequests struct {
+	// Minimum number of replica of inference service
+	MinReplica int
+	// Maximum number of replica of inference service
+	MaxReplica int
 	// CPU request of inference service
 	CPURequest resource.Quantity
 	// Memory request of inference service
 	MemoryRequest resource.Quantity
-
-	// Percentage of knative's queue proxy resource request from the inference service resource request
-	QueueResourcePercentage string
 }

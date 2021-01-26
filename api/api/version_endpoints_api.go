@@ -15,15 +15,18 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/prometheus/common/log"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/transformer"
 )
 
 type EndpointsController struct {
@@ -159,6 +162,14 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 		return BadRequest(fmt.Sprintf("Max deployed endpoint reached. Max: %d Current: %d ", config.MaxDeployedVersion, deployedModelVersionCount))
 	}
 
+	// validate transformer
+	if newEndpoint.Transformer != nil {
+		err := validateTransformer(newEndpoint.Transformer)
+		if err != nil {
+			return BadRequest(err.Error())
+		}
+	}
+
 	endpoint, err = c.EndpointsService.DeployEndpoint(env, model, version, newEndpoint)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
@@ -210,6 +221,14 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 	}
 
 	if newEndpoint.Status == models.EndpointRunning || newEndpoint.Status == models.EndpointServing {
+		// validate transformer
+		if newEndpoint.Transformer != nil {
+			err := validateTransformer(newEndpoint.Transformer)
+			if err != nil {
+				return BadRequest(err.Error())
+			}
+		}
+
 		endpoint, err = c.EndpointsService.DeployEndpoint(env, model, version, newEndpoint)
 		if err != nil {
 			return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
@@ -326,6 +345,41 @@ func validateUpdateRequest(prev *models.VersionEndpoint, new *models.VersionEndp
 			return fmt.Errorf("Updating endpoint status to %s is not allowed", new.Status)
 		}
 	}
+
+	return nil
+}
+
+func validateTransformer(trans *models.Transformer) error {
+	switch trans.TransformerType {
+	case models.CustomTransformerType, models.DefaultTransformerType:
+		if trans.Image == "" {
+			return errors.New("Transformer image name is not specified")
+		}
+	case models.StandardTransformerType:
+		envVars := trans.EnvVars.ToMap()
+		cfg, ok := envVars[transformer.StandardTransformerConfigEnvName]
+		if !ok {
+			return errors.New("Standard transformer config is not specified")
+		}
+
+		return validateStandardTransformerConfig(cfg)
+	default:
+		return errors.New(fmt.Sprintf("Unknown transformer type: %s", trans.TransformerType))
+	}
+
+	return nil
+}
+
+func validateStandardTransformerConfig(cfg string) error {
+	stdTransformerConfig := &transformer.StandardTransformerConfig{}
+	err := jsonpb.UnmarshalString(cfg, stdTransformerConfig)
+	if err != nil {
+		return err
+	}
+
+	// TODO: validate standard transformer:
+	//        - check entity exist
+	//        - check feature table exist
 
 	return nil
 }

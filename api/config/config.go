@@ -26,28 +26,23 @@ const (
 )
 
 type Config struct {
-	Environment          string `envconfig:"ENVIRONMENT" default:"dev"`
-	Port                 int    `envconfig:"PORT" default:"8080"`
-	LoggerDestinationURL string `envconfig:"LOGGER_DESTINATION_URL"`
+	Environment           string          `envconfig:"ENVIRONMENT" default:"dev"`
+	Port                  int             `envconfig:"PORT" default:"8080"`
+	LoggerDestinationURL  string          `envconfig:"LOGGER_DESTINATION_URL"`
+	Sentry                sentry.Config   `envconfig:"SENTRY" split_words:"false"`
+	NewRelic              newrelic.Config `envconfig:"NEWRELIC" split_words:"false" `
+	EnvironmentConfigPath string          `envconfig:"DEPLOYMENT_CONFIG_PATH" required:"true"`
 
-	DbConfig DatabaseConfig
-	Sentry   sentry.Config   `split_words:"false" envconfig:"SENTRY"`
-	NewRelic newrelic.Config `split_words:"false" envconfig:"NEWRELIC"`
-
-	ImageBuilderConfig ImageBuilderConfig
-	VaultConfig        VaultConfig
-
-	EnvironmentConfigPath string `envconfig:"DEPLOYMENT_CONFIG_PATH" required:"true"`
-	EnvironmentConfigs    []EnvironmentConfig
-	AuthorizationConfig   AuthorizationConfig
-
-	MlpAPIConfig MlpAPIConfig
-
-	FeatureToggleConfig FeatureToggleConfig
-
-	ReactAppConfig ReactAppConfig
-
-	UI UIConfig
+	DbConfig                  DatabaseConfig
+	VaultConfig               VaultConfig
+	ImageBuilderConfig        ImageBuilderConfig
+	EnvironmentConfigs        []EnvironmentConfig
+	AuthorizationConfig       AuthorizationConfig
+	MlpAPIConfig              MlpAPIConfig
+	FeatureToggleConfig       FeatureToggleConfig
+	ReactAppConfig            ReactAppConfig
+	UI                        UIConfig
+	StandardTransformerConfig StandardTransformerConfig
 }
 
 // UIConfig stores the configuration for the UI.
@@ -137,6 +132,14 @@ type WardenConfig struct {
 type MlpAPIConfig struct {
 	APIHost       string `envconfig:"MLP_API_HOST" required:"true"`
 	EncryptionKey string `envconfig:"MLP_API_ENCRYPTION_KEY" required:"true"`
+}
+
+type StandardTransformerConfig struct {
+	ImageName           string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
+	FeastServingAddress string `envconfig:"FEAST_ONLINE_SERVING_ADDRESS" required:"true"`
+	FeastServingPort    int    `envconfig:"FEAST_ONLINE_SERVING_PORT" required:"true"`
+	FeastCoreAddress    string `envconfig:"FEAST_CORE_ADDRESS" required:"true"`
+	FeastCorePort       int    `envconfig:"FEAST_CORE_PORT" required:"true"`
 }
 
 func InitConfigEnv() (*Config, error) {
