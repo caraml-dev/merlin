@@ -260,12 +260,13 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 			})
 
 			deployConfig := config.DeploymentConfig{
-				NamespaceTimeout:  tt.nsTimeout,
-				DeploymentTimeout: 2 * tickDurationSecond * time.Second,
+				NamespaceTimeout:             tt.nsTimeout,
+				DeploymentTimeout:            2 * tickDurationSecond * time.Second,
+				DefaultModelResourceRequests: &config.ResourceRequests{},
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			ctl, _ := newController(kfClient, v1Client, deployConfig, containerFetcher)
+			ctl, _ := newController(kfClient, v1Client, deployConfig, containerFetcher, nil)
 			iSvc, err := ctl.Deploy(modelSvc)
 
 			if tt.wantError {
@@ -589,14 +590,15 @@ func TestController_DeployInferenceService(t *testing.T) {
 			})
 
 			deployConfig := config.DeploymentConfig{
-				DeploymentTimeout: tt.deployTimeout,
-				NamespaceTimeout:  2 * tickDurationSecond * time.Second,
-				MaxCPU:            resource.MustParse("8"),
-				MaxMemory:         resource.MustParse("8Gi"),
+				DeploymentTimeout:            tt.deployTimeout,
+				NamespaceTimeout:             2 * tickDurationSecond * time.Second,
+				MaxCPU:                       resource.MustParse("8"),
+				MaxMemory:                    resource.MustParse("8Gi"),
+				DefaultModelResourceRequests: &config.ResourceRequests{},
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			ctl, _ := newController(kfClient, v1Client, deployConfig, containerFetcher)
+			ctl, _ := newController(kfClient, v1Client, deployConfig, containerFetcher, nil)
 			iSvc, err := ctl.Deploy(tt.modelService)
 
 			if tt.wantError {
