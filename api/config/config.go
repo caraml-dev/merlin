@@ -135,11 +135,9 @@ type MlpAPIConfig struct {
 }
 
 type StandardTransformerConfig struct {
-	ImageName           string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
-	FeastServingAddress string `envconfig:"FEAST_ONLINE_SERVING_ADDRESS" required:"true"`
-	FeastServingPort    int    `envconfig:"FEAST_ONLINE_SERVING_PORT" required:"true"`
-	FeastCoreAddress    string `envconfig:"FEAST_CORE_ADDRESS" required:"true"`
-	FeastCorePort       int    `envconfig:"FEAST_CORE_PORT" required:"true"`
+	ImageName       string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
+	FeastServingURL string `envconfig:"FEAST_SERVING_URL" required:"true"`
+	FeastCoreURL    string `envconfig:"FEAST_CORE_URL" required:"true"`
 }
 
 func InitConfigEnv() (*Config, error) {

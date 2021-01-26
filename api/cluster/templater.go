@@ -222,8 +222,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	envVars := transformer.EnvVars
 	if transformer.TransformerType == models.StandardTransformerType {
 		transformer.Image = t.standardTransformerConfig.ImageName
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingAddressEnvName, Value: t.standardTransformerConfig.FeastServingAddress})
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingPortEnvName, Value: string(t.standardTransformerConfig.FeastServingPort)})
+		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLEnvName, Value: t.standardTransformerConfig.FeastServingURL})
 	}
 
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
