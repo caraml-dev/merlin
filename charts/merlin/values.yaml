@@ -92,8 +92,6 @@ merlin:
       namespace_timeout: "2m"
       max_cpu: "8"
       max_memory: "8Gi"
-      cpu_limit: "400m"
-      memory_limit: "500Mi"
       queue_resource_percentage: "20"
       is_prediction_job_enabled: true
       is_default_prediction_job: true
