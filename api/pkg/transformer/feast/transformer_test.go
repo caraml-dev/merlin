@@ -27,18 +27,19 @@ func TestTransformer_Transform(t *testing.T) {
 		feastRequest feast.OnlineFeaturesRequest
 	}
 	type mockFeast struct {
+		request  *feast.OnlineFeaturesRequest
 		response *feast.OnlineFeaturesResponse
 	}
 	tests := []struct {
 		name      string
 		fields    fields
 		args      args
-		mockFeast mockFeast
+		mockFeast []mockFeast
 		want      []byte
 		wantErr   bool
 	}{
 		{
-			name: "retrieve one entity, one feature",
+			name: "one config: retrieve one entity, one feature",
 			fields: fields{
 				config: &transformer.StandardTransformerConfig{
 					TransformerConfig: &transformer.TransformerConfig{
@@ -67,16 +68,21 @@ func TestTransformer_Transform(t *testing.T) {
 				ctx:     context.Background(),
 				request: []byte(`{"driver_id":"1001"}`),
 			},
-			mockFeast: mockFeast{
-				response: &feast.OnlineFeaturesResponse{
-					RawResponse: &serving.GetOnlineFeaturesResponse{
-						FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-							{
-								Fields: map[string]*types.Value{
-									"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
-								},
-								Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-									"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
 								},
 							},
 						},
@@ -87,13 +93,13 @@ func TestTransformer_Transform(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "retrieve one entity, two features",
+			name: "two configs: each retrieve one entity, one feature",
 			fields: fields{
 				config: &transformer.StandardTransformerConfig{
 					TransformerConfig: &transformer.TransformerConfig{
 						Feast: []*transformer.FeatureTable{
 							{
-								Project: "default",
+								Project: "driver_id",
 								Entities: []*transformer.Entity{
 									{
 										Name:      "driver_id",
@@ -106,8 +112,20 @@ func TestTransformer_Transform(t *testing.T) {
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: 0.0,
 									},
+								},
+							},
+							{
+								Project: "customer_id",
+								Entities: []*transformer.Entity{
 									{
-										Name:         "driver_trips:maximum_daily_rides",
+										Name:      "customer_id",
+										ValueType: "string",
+										JsonPath:  "customer_id",
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "customer_trips:average_daily_rides",
 										DefaultValue: 0.0,
 									},
 								},
@@ -118,35 +136,61 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 			args: args{
 				ctx:     context.Background(),
-				request: []byte(`{"driver_id":"1001"}`),
+				request: []byte(`{"driver_id":"1001","customer_id":"2002"}`),
 			},
-			mockFeast: mockFeast{
-				response: &feast.OnlineFeaturesResponse{
-					RawResponse: &serving.GetOnlineFeaturesResponse{
-						FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-							{
-								Fields: map[string]*types.Value{
-									"driver_trips:average_daily_rides": feast.DoubleVal(7.5),
-									"driver_trips:maximum_daily_rides": feast.DoubleVal(10.0),
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "driver_id", // used as identifier for mocking. must match config
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"driver_trips:averae_daily_rides": feast.DoubleVal(1.1),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
 								},
-								Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-									"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-									"driver_trips:maximum_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+							},
+						},
+					},
+				},
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "customer_id", // used as identifier for mocking. must match config
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"customer_trips:average_daily_rides": feast.DoubleVal(2.2),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"customer_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-			want:    []byte(`{"driver_id":"1001","feast_features":{"driver_id":{"columns":["driver_trips:average_daily_rides","driver_trips:maximum_daily_rides"],"data":[7.5,10]}}}`),
+			want:    []byte(`{"driver_id":"1001","customer_id":"2002","feast_features":{"customer_id":{"columns":["customer_trips:average_daily_rides"],"data":[2.2]},"driver_id":{"columns":["driver_trips:average_daily_rides"],"data":[1.1]}}}`),
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
-			mockFeast.On("GetOnlineFeatures", tt.args.ctx, mock.Anything).
-				Return(tt.mockFeast.response, nil)
+			for _, m := range tt.mockFeast {
+				project := m.request.Project
+				mockFeast.On("GetOnlineFeatures", tt.args.ctx, mock.MatchedBy(func(req *feast.OnlineFeaturesRequest) bool {
+					return req.Project == project
+				})).Return(m.response, nil)
+			}
 
 			f := &Transformer{
 				feastClient: mockFeast,
