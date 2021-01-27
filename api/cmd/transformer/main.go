@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
+	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast"
@@ -24,30 +25,38 @@ func main() {
 		Server server.Options
 		Feast  feast.Options
 
-		StandardTransformerConfigJson string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
+		StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
+
+		LogLevel string `envconfig:"LOG_LEVEL"`
 	}{}
 
 	if err := envconfig.Process("", &cfg); err != nil {
 		log.Fatalln(errors.Wrap(err, "Error processing environment variables"))
 	}
-	log.Printf("Configuration: %+v", cfg)
 
-	log.Println("Starting FeastTransformer Transformer...")
+	logger, _ := zap.NewProduction()
+	if cfg.LogLevel == "DEBUG" {
+		logger, _ = zap.NewDevelopment()
+	}
+	defer logger.Sync()
+
+	logger.Info("configuration loaded", zap.Any("cfg", cfg))
 
 	config := &transformer.StandardTransformerConfig{}
-	err := jsonpb.UnmarshalString(cfg.StandardTransformerConfigJson, config)
-	if err != nil {
-		log.Panicf("Unable to parse standard transformer config: %s", err.Error())
+	if err := jsonpb.UnmarshalString(cfg.StandardTransformerConfigJSON, config); err != nil {
+		log.Fatalln(errors.Wrap(err, "Unable to parse standard transformer config"))
 	}
 
 	feastClient, err := feastSdk.NewGrpcClient(cfg.Feast.ServingAddress, cfg.Feast.ServingPort)
 	if err != nil {
-		log.Panicf("Unable to initialie feastSdk client: %s", err.Error())
+		log.Fatalln(errors.Wrap(err, "Unable to initialie feastSdk client"))
 	}
 
-	f := feast.NewTransformer(feastClient, config)
+	f := feast.NewTransformer(feastClient, config, logger)
 
-	s := server.New(&cfg.Server)
-	s.PreprocessHandler = f.TransformHandler
+	s := server.New(&cfg.Server, logger)
+	s.PreprocessHandler = f.Transform
+
+	logger.Info("starting transformer")
 	s.Run()
 }

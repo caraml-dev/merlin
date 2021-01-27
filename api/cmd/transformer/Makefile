@@ -2,8 +2,11 @@ include .env.sample
 export
 
 BIN_NAME=feast-transformer
+BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
+REVISION=$(shell git rev-parse HEAD)
+VERSION=$(shell git describe --tags --always --dirty)
 
-all: gen-spec-proto init-dep clean build run
+all: init-dep clean build run
 
 # ============================================================
 # Initialize dependency recipes
@@ -20,7 +23,11 @@ init-dep:
 .PHONY: build
 build: clean
 	@echo "> Building API binary ..."
-	@go build -o bin/${BIN_NAME} ./main.go
+	@go build -o bin/${BIN_NAME} \
+		-ldflags="-X github.com/prometheus/common/version.Branch=${BRANCH} \
+					-X github.com/prometheus/common/version.Revision=${REVISION} \
+					-X github.com/prometheus/common/version.Version=${VERSION}" \
+		./main.go
 
 # ============================================================
 # Run recipe
