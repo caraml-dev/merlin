@@ -21,14 +21,16 @@ import (
 	"net/http"
 	"reflect"
 
+	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 
-	"github.com/gojek/merlin/config"
 	"github.com/gojek/mlp/api/pkg/authz/enforcer"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
+
+	"github.com/gojek/merlin/config"
 
 	"github.com/gojek/merlin/middleware"
 	"github.com/gojek/merlin/mlp"
@@ -53,6 +55,7 @@ type AppContext struct {
 	MonitoringConfig          config.MonitoringConfig
 	AlertEnabled              bool
 	Enforcer                  enforcer.Enforcer
+	FeastCoreClient           core.CoreServiceClient
 }
 
 // Handler handles the API requests and responses.

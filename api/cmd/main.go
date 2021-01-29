@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -36,6 +37,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -122,6 +124,12 @@ func main() {
 
 	mlpAPIClient := mlp.NewAPIClient(mlpHTTPClient, cfg.MlpAPIConfig.APIHost, cfg.MlpAPIConfig.EncryptionKey)
 
+	cc, err := grpc.Dial(cfg.StandardTransformerConfig.FeastCoreURL, grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	coreClient := core.NewCoreServiceClient(cc)
+
 	vaultClient := initVault(cfg)
 	webServiceBuilder, predJobBuilder := initImageBuilder(cfg, vaultClient)
 
@@ -185,6 +193,7 @@ func main() {
 		AlertEnabled:              cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
 		DB:                        db,
 		Enforcer:                  authEnforcer,
+		FeastCoreClient:           coreClient,
 	}
 
 	router := mux.NewRouter()
