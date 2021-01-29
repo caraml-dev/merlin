@@ -168,7 +168,13 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	if newEndpoint.Transformer != nil {
 		err := c.validateTransformer(r.Context(), newEndpoint.Transformer)
 		if err != nil {
-			return BadRequest(err.Error())
+			log.Errorf("error validating transformer config: %v", err)
+			target := &feast.ValidationError{}
+			if errors.As(err, &target) {
+				return BadRequest(err.Error())
+			}
+
+			return InternalServerError(err.Error())
 		}
 	}
 
@@ -227,7 +233,13 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 		if newEndpoint.Transformer != nil {
 			err := c.validateTransformer(r.Context(), newEndpoint.Transformer)
 			if err != nil {
-				return BadRequest(err.Error())
+				log.Errorf("error validating transformer config: %v", err)
+				target := &feast.ValidationError{}
+				if errors.As(err, &target) {
+					return BadRequest(err.Error())
+				}
+
+				return InternalServerError(err.Error())
 			}
 		}
 
@@ -379,13 +391,5 @@ func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Cont
 		return err
 	}
 
-	err = feast.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig)
-	target := &feast.ValidationError{}
-	if errors.As(err, &target) {
-		return err
-	}
-
-	// only log if it's not validation error
-	log.Warn(err)
-	return nil
+	return feast.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig)
 }
