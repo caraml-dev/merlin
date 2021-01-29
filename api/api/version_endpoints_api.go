@@ -379,5 +379,13 @@ func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Cont
 		return err
 	}
 
-	return feast.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig)
+	err = feast.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig)
+	target := &feast.ValidationError{}
+	if errors.As(err, &target) {
+		return err
+	}
+
+	// only log if it's not validation error
+	log.Warn(err)
+	return nil
 }
