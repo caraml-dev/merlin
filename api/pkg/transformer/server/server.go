@@ -5,20 +5,29 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
+	"github.com/heptiolabs/healthcheck"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"
 
+var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
+var onlyOneSignalHandler = make(chan struct{})
+
 // Options for the server.
 type Options struct {
 	Port            string `envconfig:"MERLIN_TRANSFORMER_PORT" default:"8080"`
-	ModelName       string `envconfig:"MERLIN_TRANSFORMER_MODEL_NAME" required:"true"`
-	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" required:"true"`
+	ModelName       string `envconfig:"MERLIN_TRANSFORMER_MODEL_NAME" default:"my-model"`
+	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"http://localhost:8081/v1/models/model:predict"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
@@ -105,14 +114,56 @@ func (s *Server) predict(r *http.Request, request []byte) ([]byte, error) {
 
 // Run serves the HTTP endpoints.
 func (s *Server) Run() {
-	// TODO: to be implemented
-	// http.HandleFunc("/", s.LivenessHandler)
-	// http.HandleFunc("/healthz", s.LivenessHandler)
-	// http.HandleFunc("/v2/health/live", s.LivenessHandler)
-
-	http.HandleFunc("/v1/models/"+s.options.ModelName+":predict", s.PredictHandler)
-
+	// use default mux
+	health := healthcheck.NewHandler()
+	http.Handle("/", health)
+	http.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelName), s.PredictHandler)
 	http.Handle("/metrics", promhttp.Handler())
 
-	log.Fatalln(http.ListenAndServe(":"+s.options.Port, nil))
+	addr := fmt.Sprintf(":%s", s.options.Port)
+	srv := &http.Server{Addr: addr, Handler: http.DefaultServeMux}
+
+	stopCh := setupSignalHandler()
+	errCh := make(chan error, 1)
+	go func() {
+		s.logger.Info("starting standard transformer at : " + addr)
+		// Don't forward ErrServerClosed as that indicates we're already shutting down.
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			errCh <- errors.Wrapf(err, "%s server failed")
+		}
+		s.logger.Info("server shut down successfully")
+	}()
+
+	// Exit as soon as we see a shutdown signal or the server failed.
+	select {
+	case <-stopCh:
+	case err := <-errCh:
+		s.logger.Error(fmt.Sprintf("failed to run HTTP server: %v", err))
+	}
+
+	s.logger.Info("server shutting down...")
+	time.Sleep(5 * time.Second)
+
+	if err := srv.Shutdown(context.Background()); err != nil {
+		s.logger.Error(fmt.Sprintf("failed to shutdown HTTP server: %v", err))
+	}
+}
+
+// setupSignalHandler registered for SIGTERM and SIGINT. A stop channel is returned
+// which is closed on one of these signals. If a second signal is caught, the program
+// is terminated with exit code 1.
+func setupSignalHandler() (stopCh <-chan struct{}) {
+	close(onlyOneSignalHandler) // panics when called twice
+
+	stop := make(chan struct{})
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, shutdownSignals...)
+	go func() {
+		<-c
+		close(stop)
+		<-c
+		os.Exit(1) // second signal. Exit directly.
+	}()
+
+	return stop
 }
