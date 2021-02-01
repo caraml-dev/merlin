@@ -3,7 +3,7 @@ package feast
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 
 	"github.com/buger/jsonparser"
 	feast "github.com/feast-dev/feast/sdk/go"
@@ -49,7 +49,7 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 		for _, entity := range config.Entities {
 			vals, err := getValuesFromJSONPayload(request, entity)
 			if err != nil {
-				log.Printf("JSON Path %s not found in request payload", entity.JsonPath)
+				return nil, fmt.Errorf("unable to extract entity %s: %v", entity.Name, err)
 			}
 
 			for _, val := range vals {

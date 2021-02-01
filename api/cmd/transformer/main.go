@@ -68,6 +68,5 @@ func main() {
 	s := server.New(&cfg.Server, logger)
 	s.PreprocessHandler = f.Transform
 
-	logger.Info("starting transformer")
 	s.Run()
 }

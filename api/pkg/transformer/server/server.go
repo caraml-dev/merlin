@@ -10,12 +10,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
+
+	"github.com/gojek/merlin/pkg/transformer/server/response"
 )
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"
@@ -25,9 +26,9 @@ var onlyOneSignalHandler = make(chan struct{})
 
 // Options for the server.
 type Options struct {
-	Port            string `envconfig:"MERLIN_TRANSFORMER_PORT" default:"8080"`
-	ModelName       string `envconfig:"MERLIN_TRANSFORMER_MODEL_NAME" default:"my-model"`
-	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"http://localhost:8081/v1/models/model:predict"`
+	Port            string `envconfig:"MERLIN_TRANSFORMER_PORT" default:"8081"`
+	ModelName       string `envconfig:"MERLIN_TRANSFORMER_MODEL_NAME" default:"model"`
+	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"http://localhost:8080/v1/models/model:predict"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
@@ -57,7 +58,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		s.logger.Error("read requestBody body", zap.Error(err))
-		fmt.Fprintf(w, err.Error())
+		response.NewError(http.StatusInternalServerError, err).Write(w)
 		return
 	}
 	defer r.Body.Close()
@@ -68,24 +69,29 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		preprocessedRequestBody, err = s.PreprocessHandler(ctx, requestBody)
 		if err != nil {
 			s.logger.Error("preprocess error", zap.Error(err))
-			fmt.Fprintf(w, err.Error())
+			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
 			return
 		}
 		s.logger.Debug("preprocess requestBody", zap.ByteString("preprocess_response", preprocessedRequestBody))
 	}
 
-	preprocessedRequestBody, err = s.predict(r, preprocessedRequestBody)
+	resp, err := s.predict(r, preprocessedRequestBody)
 	if err != nil {
-		s.logger.Error("predict error", zap.Error(err))
-		fmt.Fprintf(w, err.Error())
+		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
 		return
 	}
-	s.logger.Debug("predict requestBody", zap.ByteString("predict_response", preprocessedRequestBody))
-	fmt.Fprintf(w, string(preprocessedRequestBody))
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		response.NewError(http.StatusInternalServerError, err).Write(w)
+		return
+	}
+
+	w.WriteHeader(resp.StatusCode)
+	w.Write(respBody)
 }
 
-func (s *Server) predict(r *http.Request, request []byte) ([]byte, error) {
-
+func (s *Server) predict(r *http.Request, request []byte) (*http.Response, error) {
 	req, err := http.NewRequest("POST", s.options.ModelPredictURL, bytes.NewBuffer(request))
 	if err != nil {
 		return nil, err
@@ -98,18 +104,7 @@ func (s *Server) predict(r *http.Request, request []byte) ([]byte, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
+	return s.httpClient.Do(req)
 }
 
 // Run serves the HTTP endpoints.
@@ -142,7 +137,6 @@ func (s *Server) Run() {
 	}
 
 	s.logger.Info("server shutting down...")
-	time.Sleep(5 * time.Second)
 
 	if err := srv.Shutdown(context.Background()); err != nil {
 		s.logger.Error(fmt.Sprintf("failed to shutdown HTTP server: %v", err))
