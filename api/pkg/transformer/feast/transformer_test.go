@@ -2,8 +2,6 @@ package feast
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -12,7 +10,6 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
-	"k8s.io/client-go/util/jsonpath"
 
 	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
@@ -211,67 +208,3 @@ func TestTransformer_Transform(t *testing.T) {
 		})
 	}
 }
-
-func TestJsonPath(t *testing.T) {
-	input := []byte(`{"users":[
-	    {
-	      "name": 12314,
-	      "user": {}
-	    },
-	    {
-	      "name": 1213,
-	      "user": {"username": "admin", "password": "secret"}
-	  	}
-	  ]}`)
-
-	var nodesData interface{}
-	err := json.Unmarshal(input, &nodesData)
-	if err != nil {
-		t.Error(err)
-	}
-
-	j := jsonpath.New("get_name")
-	j.AllowMissingKeys(true)
-	err = j.Parse("{ $.users[*].name }")
-	if err != nil {
-		t.Error(err)
-	}
-
-	o, err := j.FindResults(nodesData)
-	for _, x := range o {
-		for _, y := range x {
-			fmt.Printf("%T\n", reflect.ValueOf(y).Interface())
-		}
-	}
-}
-
-//func BenchJsonPath(b *testing.B) {
-//	input := []byte(`{"users":[
-//	    {
-//	      "name": 1234,
-//	      "user": {}
-//	    },
-//	    {
-//	      "name": 1213,
-//	      "user": {"username": "admin", "password": "secret"}
-//	  	}
-//	  ]}`)
-//
-//	var nodesData interface{}
-//	err := json.Unmarshal(input, &nodesData)
-//	if err != nil {
-//		t.Error(err)
-//	}
-//
-//	o, err := jsonpath2.JsonPathLookup(nodesData, "$.users[*].name")
-//
-//	switch o.(type) {
-//	case []interface{}:
-//		for _, v := range(o.([]interface{})) {
-//			fmt.Printf("%f\n", v)
-//		}
-//
-//	case interface{}:
-//		fmt.Println(o)
-//	}
-//}
