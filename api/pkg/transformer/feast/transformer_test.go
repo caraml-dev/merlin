@@ -49,8 +49,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Entities: []*transformer.Entity{
 									{
 										Name:      "driver_id",
-										ValueType: "string",
-										JsonPath:  "driver_id",
+										ValueType: "STRING",
+										JsonPath:  "$.driver_id",
 									},
 								},
 								Features: []*transformer.Feature{
@@ -103,8 +103,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Entities: []*transformer.Entity{
 									{
 										Name:      "driver_id",
-										ValueType: "string",
-										JsonPath:  "driver_id",
+										ValueType: "STRING",
+										JsonPath:  "$.driver_id",
 									},
 								},
 								Features: []*transformer.Feature{
@@ -119,8 +119,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Entities: []*transformer.Entity{
 									{
 										Name:      "customer_id",
-										ValueType: "string",
-										JsonPath:  "customer_id",
+										ValueType: "STRING",
+										JsonPath:  "$.customer_id",
 									},
 								},
 								Features: []*transformer.Feature{
