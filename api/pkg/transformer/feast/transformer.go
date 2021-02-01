@@ -46,8 +46,7 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	feastFeatures := make(map[string]FeastFeature, len(t.config.TransformerConfig.Feast))
 
 	for _, config := range t.config.TransformerConfig.Feast {
-		entities := []feast.Row{}
-
+		var entities []feast.Row
 		for _, entity := range config.Entities {
 			vals, err := getValuesFromJSONPayload(request, entity)
 			if err != nil {
@@ -61,7 +60,7 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 			}
 		}
 
-		features := []string{}
+		var features []string
 		for _, feature := range config.Features {
 			features = append(features, feature.Name)
 		}
@@ -79,8 +78,8 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 		}
 		t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
 
-		data := []interface{}{}
-		columns := []string{}
+		var data []interface{}
+		var columns []string
 		for _, entity := range config.Entities {
 			columns = append(columns, entity.Name)
 		}
