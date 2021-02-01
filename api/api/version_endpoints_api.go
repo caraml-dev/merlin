@@ -15,6 +15,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -27,6 +28,7 @@ import (
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/feast"
 )
 
 type EndpointsController struct {
@@ -164,9 +166,15 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 
 	// validate transformer
 	if newEndpoint.Transformer != nil {
-		err := validateTransformer(newEndpoint.Transformer)
+		err := c.validateTransformer(ctx, newEndpoint.Transformer)
 		if err != nil {
-			return BadRequest(err.Error())
+			log.Errorf("error validating transformer config: %v", err)
+			target := &feast.ValidationError{}
+			if errors.As(err, &target) {
+				return BadRequest(err.Error())
+			}
+
+			return InternalServerError(err.Error())
 		}
 	}
 
@@ -223,9 +231,15 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 	if newEndpoint.Status == models.EndpointRunning || newEndpoint.Status == models.EndpointServing {
 		// validate transformer
 		if newEndpoint.Transformer != nil {
-			err := validateTransformer(newEndpoint.Transformer)
+			err := c.validateTransformer(ctx, newEndpoint.Transformer)
 			if err != nil {
-				return BadRequest(err.Error())
+				log.Errorf("error validating transformer config: %v", err)
+				target := &feast.ValidationError{}
+				if errors.As(err, &target) {
+					return BadRequest(err.Error())
+				}
+
+				return InternalServerError(err.Error())
 			}
 		}
 
@@ -349,7 +363,7 @@ func validateUpdateRequest(prev *models.VersionEndpoint, new *models.VersionEndp
 	return nil
 }
 
-func validateTransformer(trans *models.Transformer) error {
+func (c *EndpointsController) validateTransformer(ctx context.Context, trans *models.Transformer) error {
 	switch trans.TransformerType {
 	case models.CustomTransformerType, models.DefaultTransformerType:
 		if trans.Image == "" {
@@ -362,7 +376,7 @@ func validateTransformer(trans *models.Transformer) error {
 			return errors.New("Standard transformer config is not specified")
 		}
 
-		return validateStandardTransformerConfig(cfg)
+		return c.validateStandardTransformerConfig(ctx, cfg)
 	default:
 		return errors.New(fmt.Sprintf("Unknown transformer type: %s", trans.TransformerType))
 	}
@@ -370,16 +384,12 @@ func validateTransformer(trans *models.Transformer) error {
 	return nil
 }
 
-func validateStandardTransformerConfig(cfg string) error {
+func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Context, cfg string) error {
 	stdTransformerConfig := &transformer.StandardTransformerConfig{}
 	err := jsonpb.UnmarshalString(cfg, stdTransformerConfig)
 	if err != nil {
 		return err
 	}
 
-	// TODO: validate standard transformer:
-	//        - check entity exist
-	//        - check feature table exist
-
-	return nil
+	return feast.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig)
 }
