@@ -35,7 +35,7 @@ build: clean
 .PHONY: run
 run:
 	@echo "> Running application ..."
-	@./bin/${BIN_NAME}
+	@go run main.go
 
 # ============================================================
 # Utility recipes

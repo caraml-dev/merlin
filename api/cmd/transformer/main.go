@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"net/url"
+	"net"
 	"strconv"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
@@ -49,15 +49,16 @@ func main() {
 		log.Fatalln(errors.Wrap(err, "Unable to parse standard transformer config"))
 	}
 
-	feastServingURL, err := url.Parse(cfg.Feast.ServingURL)
+	feastHost, feastPort, err := net.SplitHostPort(cfg.Feast.ServingURL)
 	if err != nil {
 		log.Panicf("Unable to parse feast serving URL %s: %v", cfg.Feast.ServingURL, err)
 	}
-	feastServingPort, err := strconv.Atoi(feastServingURL.Port())
+
+	feastPortInt, err := strconv.Atoi(feastPort)
 	if err != nil {
-		log.Panicf("Unable to parse feast serving port %s: %v", feastServingURL.Port(), err)
+		log.Panicf("Unable to parse feast serving port %s: %v", feastPort, err)
 	}
-	feastClient, err := feastSdk.NewGrpcClient(feastServingURL.Host, feastServingPort)
+	feastClient, err := feastSdk.NewGrpcClient(feastHost, feastPortInt)
 	if err != nil {
 		log.Fatalln(errors.Wrap(err, "Unable to initialie feastSdk client"))
 	}
