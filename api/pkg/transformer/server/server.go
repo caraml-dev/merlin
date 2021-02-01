@@ -12,6 +12,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const MerlinLogIdHeader = "X-Merlin-Log-Id"
+
 // Options for the server.
 type Options struct {
 	Port            string `envconfig:"MERLIN_TRANSFORMER_PORT" default:"8080"`
@@ -43,44 +45,46 @@ func New(o *Options, logger *zap.Logger) *Server {
 func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	request, err := ioutil.ReadAll(r.Body)
+	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		s.logger.Error("read request body", zap.Error(err))
+		s.logger.Error("read requestBody body", zap.Error(err))
 		fmt.Fprintf(w, err.Error())
 		return
 	}
 	defer r.Body.Close()
-	s.logger.Debug("request", zap.ByteString("request", request))
+	s.logger.Debug("requestBody", zap.ByteString("requestBody", requestBody))
 
-	response := request
-
+	preprocessedRequestBody := requestBody
 	if s.PreprocessHandler != nil {
-		response, err = s.PreprocessHandler(ctx, request)
+		preprocessedRequestBody, err = s.PreprocessHandler(ctx, requestBody)
 		if err != nil {
 			s.logger.Error("preprocess error", zap.Error(err))
 			fmt.Fprintf(w, err.Error())
 			return
 		}
-		s.logger.Debug("preprocess response", zap.ByteString("preprocess_response", response))
+		s.logger.Debug("preprocess requestBody", zap.ByteString("preprocess_response", preprocessedRequestBody))
 	}
 
-	response, err = s.predict(ctx, response)
+	preprocessedRequestBody, err = s.predict(r, preprocessedRequestBody)
 	if err != nil {
 		s.logger.Error("predict error", zap.Error(err))
 		fmt.Fprintf(w, err.Error())
 		return
 	}
-	s.logger.Debug("predict response", zap.ByteString("predict_response", response))
-
-	// TODO: Postprocessing (next milestone)
-
-	fmt.Fprintf(w, string(response))
+	s.logger.Debug("predict requestBody", zap.ByteString("predict_response", preprocessedRequestBody))
+	fmt.Fprintf(w, string(preprocessedRequestBody))
 }
 
-func (s *Server) predict(ctx context.Context, request []byte) ([]byte, error) {
+func (s *Server) predict(r *http.Request, request []byte) ([]byte, error) {
+
 	req, err := http.NewRequest("POST", s.options.ModelPredictURL, bytes.NewBuffer(request))
 	if err != nil {
 		return nil, err
+	}
+
+	// propagate merlin request id header to model
+	if len(r.Header.Get(MerlinLogIdHeader)) != 0 {
+		req.Header.Set(MerlinLogIdHeader, r.Header.Get(MerlinLogIdHeader))
 	}
 
 	req.Header.Set("Content-Type", "application/json")
