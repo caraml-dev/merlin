@@ -37,6 +37,7 @@ REQUIRES = [
     "google-api-core<=1.17.0",  # https://github.com/googleapis/python-pubsub/issues/115
     "grpcio<=1.27.2",
     "google-cloud-core==1.3.0",
+    "PyYAML>=5.3.1"
 ]
 
 TEST_REQUIRES = [

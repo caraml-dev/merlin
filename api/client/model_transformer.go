@@ -15,6 +15,7 @@ import (
 
 type Transformer struct {
 	Enabled         bool             `json:"enabled,omitempty"`
+	TransformerType string           `json:"transformer_type,omitempty"`
 	Image           string           `json:"image,omitempty"`
 	Command         string           `json:"command,omitempty"`
 	Args            string           `json:"args,omitempty"`

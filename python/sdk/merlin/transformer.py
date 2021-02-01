@@ -16,19 +16,31 @@ from typing import Dict, Optional
 
 from merlin.resource_request import ResourceRequest
 from merlin.util import autostr
+from enum import Enum
+
+from client import EnvironmentApi
+import client
+import yaml
+import json
+
+class TransformerType(Enum):
+    CUSTOM_TRANSFORMER = 'custom'
+    STANDARD_TRANSFORMER = 'standard'
 
 @autostr
 class Transformer:
     def __init__(self, image: str, enabled: bool = True,
                  command: str = None, args: str = None,
                  resource_request: ResourceRequest = None,
-                 env_vars: Dict[str, str] = None):
+                 env_vars: Dict[str, str] = None,
+                 transformer_type: TransformerType = TransformerType.CUSTOM_TRANSFORMER):
         self._image = image
         self._enabled = enabled
         self._command = command
         self._args = args
         self._resource_request = resource_request
         self._env_vars = env_vars
+        self._transformer_type = transformer_type
 
     @property
     def image(self) -> str:
@@ -53,3 +65,27 @@ class Transformer:
     @property
     def env_vars(self) -> Optional[Dict[str, str]]:
         return self._env_vars
+
+    @property
+    def transformer_type(self) -> TransformerType:
+        return self._transformer_type
+
+
+class StandardTransformer(Transformer):
+    def __init__(self, config_file: str, enabled: bool = True,
+                 resource_request: ResourceRequest = None,
+                 env_vars: Dict[str, str] = None):
+
+        transformer_config = self._load_transformer_config(config_file)
+        merged_env_vars = env_vars or {}
+        merged_env_vars = {**merged_env_vars, **transformer_config}
+        super().__init__(image="", enabled=enabled, resource_request=resource_request,
+                         env_vars=merged_env_vars, transformer_type=TransformerType.STANDARD_TRANSFORMER)
+
+    def _load_transformer_config(self, config_file: str):
+        with open(config_file, "r") as stream:
+            transformer_config = yaml.safe_load(stream)
+
+        config_json_string = json.dumps(transformer_config)
+        return {"TRANSFORMER_CONFIG": config_json_string}
+

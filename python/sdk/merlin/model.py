@@ -1024,8 +1024,8 @@ class ModelVersion:
                         client.EnvVar(str(name), str(value)))
 
         return client.Transformer(
-            transformer.enabled, transformer.image,
-            transformer.command, transformer.args,
+            transformer.enabled, transformer.transformer_type.value,
+            transformer.image, transformer.command, transformer.args,
             target_resource_request, target_env_vars)
 
     def undeploy(self, environment_name: str = None):
