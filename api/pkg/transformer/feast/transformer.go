@@ -4,13 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"strings"
-	"unsafe"
 
 	"github.com/buger/jsonparser"
 	feast "github.com/feast-dev/feast/sdk/go"
-	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer"
@@ -52,14 +48,16 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 		entityIDs := make(map[string]int, len(config.Entities))
 
 		for _, entity := range config.Entities {
-			val, err := getValueFromJSONPayload(request, entity)
+			vals, err := getValuesFromJSONPayload(request, entity)
 			if err != nil {
 				log.Printf("JSON Path %s not found in request payload", entity.JsonPath)
 			}
 
-			entities = append(entities, feast.Row{
-				entity.Name: val,
-			})
+			for _, val := range vals {
+				entities = append(entities, feast.Row{
+					entity.Name: val,
+				})
+			}
 
 			entityIDs[entity.Name] = 1
 		}
@@ -110,38 +108,4 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	}
 
 	return out, err
-}
-
-func getValueFromJSONPayload(body []byte, entity *transformer.Entity) (*feastType.Value, error) {
-	// Retrieve value using JSON path
-	value, typez, _, _ := jsonparser.Get(body, strings.Split(entity.JsonPath, ".")...)
-
-	switch typez {
-	case jsonparser.String, jsonparser.Number, jsonparser.Boolean:
-		switch entity.ValueType {
-		case transformer.StringValueType:
-			// See: https://github.com/buger/jsonparser/blob/master/bytes_unsafe.go#L31
-			return feast.StrVal(*(*string)(unsafe.Pointer(&value))), nil
-		case transformer.DoubleValueType:
-			val, err := jsonparser.ParseFloat(value)
-			if err != nil {
-				return nil, err
-			}
-			return feast.DoubleVal(val), nil
-		case transformer.BooleanValueType:
-			val, err := jsonparser.ParseBoolean(value)
-			if err != nil {
-				return nil, err
-			}
-			return feast.BoolVal(val), nil
-		default:
-			return nil, errors.Errorf("ENtity value type %s is not supported", entity.ValueType)
-		}
-	case jsonparser.Null:
-		return nil, nil
-	case jsonparser.NotExist:
-		return nil, errors.Errorf("Field %s not found in the request payload: Key path not found", entity.JsonPath)
-	default:
-		return nil, errors.Errorf("Field %s can not be parsed, unsupported type: %s", entity.JsonPath, typez.String())
-	}
 }
