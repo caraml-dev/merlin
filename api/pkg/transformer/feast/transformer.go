@@ -37,8 +37,8 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 }
 
 type FeastFeature struct {
-	Columns []string      `json:"columns"`
-	Data    []interface{} `json:"data"`
+	Columns []string        `json:"columns"`
+	Data    [][]interface{} `json:"data"`
 }
 
 // Transform retrieves the Feast features values and add them into the request.
@@ -78,15 +78,16 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 		}
 		t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
 
-		var data []interface{}
 		var columns []string
 		for _, entity := range config.Entities {
 			columns = append(columns, entity.Name)
 		}
 		columns = append(columns, features...)
 
+		var data [][]interface{}
 		status := feastResponse.Statuses()
 		for i, feastRow := range feastResponse.Rows() {
+			var row []interface{}
 			for _, column := range columns {
 				switch status[i][column] {
 				case serving.GetOnlineFeaturesResponse_PRESENT:
@@ -95,17 +96,18 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 					if err != nil {
 						return nil, err
 					}
-					data = append(data, featVal)
+					row = append(row, featVal)
 				case serving.GetOnlineFeaturesResponse_NOT_FOUND:
-					data = append(data, nil)
+					row = append(row, nil)
 				case serving.GetOnlineFeaturesResponse_NULL_VALUE:
-					data = append(data, nil)
+					row = append(row, nil)
 				case serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
-					data = append(data, nil)
+					row = append(row, nil)
 				default:
 					return nil, fmt.Errorf("")
 				}
 			}
+			data = append(data, row)
 		}
 
 		tableName := createTableName(config.Entities)

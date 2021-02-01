@@ -91,7 +91,7 @@ func TestTransformer_Transform(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"driver_id":"1001","feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":["1001",1.1]}}}`),
+			want:    []byte(`{"driver_id":"1001","feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1]]}}}`),
 			wantErr: false,
 		},
 		{
@@ -184,7 +184,7 @@ func TestTransformer_Transform(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"driver_id":"1001","customer_id":"2002","feast_features":{"customer_id":{"columns":["customer_id","customer_trips:average_daily_rides"],"data":["2002",2.2]},"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":["1001",1.1]}}}`),
+			want:    []byte(`{"driver_id":"1001","customer_id":"2002","feast_features":{"customer_id":{"columns":["customer_id","customer_trips:average_daily_rides"],"data":[["2002",2.2]]},"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1]]}}}`),
 			wantErr: false,
 		},
 	}
