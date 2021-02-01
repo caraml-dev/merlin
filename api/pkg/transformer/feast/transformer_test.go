@@ -79,9 +79,11 @@ func TestTransformer_Transform(t *testing.T) {
 								{
 									Fields: map[string]*types.Value{
 										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+										"driver_id":                        feast.StrVal("1001"),
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 							},
@@ -89,7 +91,7 @@ func TestTransformer_Transform(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"driver_id":"1001","feast_features":{"driver_id":{"columns":["driver_trips:average_daily_rides"],"data":[1.1]}}}`),
+			want:    []byte(`{"driver_id":"1001","feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":["1001",1.1]}}}`),
 			wantErr: false,
 		},
 		{
@@ -148,10 +150,12 @@ func TestTransformer_Transform(t *testing.T) {
 							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
 								{
 									Fields: map[string]*types.Value{
-										"driver_trips:averae_daily_rides": feast.DoubleVal(1.1),
+										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+										"driver_id":                        feast.StrVal("1001"),
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 							},
@@ -168,9 +172,11 @@ func TestTransformer_Transform(t *testing.T) {
 								{
 									Fields: map[string]*types.Value{
 										"customer_trips:average_daily_rides": feast.DoubleVal(2.2),
+										"customer_id":                        feast.StrVal("2002"),
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"customer_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 							},
@@ -178,7 +184,7 @@ func TestTransformer_Transform(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"driver_id":"1001","customer_id":"2002","feast_features":{"customer_id":{"columns":["customer_trips:average_daily_rides"],"data":[2.2]},"driver_id":{"columns":["driver_trips:average_daily_rides"],"data":[1.1]}}}`),
+			want:    []byte(`{"driver_id":"1001","customer_id":"2002","feast_features":{"customer_id":{"columns":["customer_id","customer_trips:average_daily_rides"],"data":["2002",2.2]},"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":["1001",1.1]}}}`),
 			wantErr: false,
 		},
 	}

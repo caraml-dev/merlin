@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/buger/jsonparser"
 	feast "github.com/feast-dev/feast/sdk/go"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer"
@@ -34,8 +37,8 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 }
 
 type FeastFeature struct {
-	Columns []string  `json:"columns"`
-	Data    []float64 `json:"data"`
+	Columns []string      `json:"columns"`
+	Data    []interface{} `json:"data"`
 }
 
 // Transform retrieves the Feast features values and add them into the request.
@@ -44,7 +47,6 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 
 	for _, config := range t.config.TransformerConfig.Feast {
 		entities := []feast.Row{}
-		entityIDs := make(map[string]int, len(config.Entities))
 
 		for _, entity := range config.Entities {
 			vals, err := getValuesFromJSONPayload(request, entity)
@@ -57,8 +59,6 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 					entity.Name: val,
 				})
 			}
-
-			entityIDs[entity.Name] = 1
 		}
 
 		features := []string{}
@@ -79,19 +79,39 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 		}
 		t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
 
-		data := []float64{}
-		for _, feastRow := range feastResponse.Rows() {
-			for featureID, featureValue := range feastRow {
-				if _, ok := entityIDs[featureID]; ok {
-					continue
-				}
+		data := []interface{}{}
+		columns := []string{}
+		for _, entity := range config.Entities {
+			columns = append(columns, entity.Name)
+		}
+		columns = append(columns, features...)
 
-				data = append(data, featureValue.GetDoubleVal())
+		status := feastResponse.Statuses()
+		for i, feastRow := range feastResponse.Rows() {
+			for _, column := range columns {
+				switch status[i][column] {
+				case serving.GetOnlineFeaturesResponse_PRESENT:
+					rawValue := feastRow[column]
+					featVal, err := getFeatureValue(rawValue)
+					if err != nil {
+						return nil, err
+					}
+					data = append(data, featVal)
+				case serving.GetOnlineFeaturesResponse_NOT_FOUND:
+					data = append(data, nil)
+				case serving.GetOnlineFeaturesResponse_NULL_VALUE:
+					data = append(data, nil)
+				case serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
+					data = append(data, nil)
+				default:
+					return nil, fmt.Errorf("")
+				}
 			}
 		}
 
-		feastFeatures[config.Entities[0].Name] = FeastFeature{
-			Columns: features,
+		tableName := createTableName(config.Entities)
+		feastFeatures[tableName] = FeastFeature{
+			Columns: columns,
 			Data:    data,
 		}
 	}
@@ -107,4 +127,48 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	}
 
 	return out, err
+}
+
+func createTableName(entities []*transformer.Entity) string {
+	entityNames := make([]string, 0)
+	for _, n := range entities {
+		entityNames = append(entityNames, n.Name)
+	}
+
+	return strings.Join(entityNames, "_")
+}
+
+func getFeatureValue(val *types.Value) (interface{}, error) {
+	switch val.Val.(type) {
+	case *types.Value_StringVal:
+		return val.GetStringVal(), nil
+	case *types.Value_DoubleVal:
+		return val.GetDoubleVal(), nil
+	case *types.Value_FloatVal:
+		return val.GetFloatVal(), nil
+	case *types.Value_Int32Val:
+		return val.GetInt32Val(), nil
+	case *types.Value_Int64Val:
+		return val.GetInt64Val(), nil
+	case *types.Value_BoolVal:
+		return val.GetBoolVal(), nil
+	case *types.Value_StringListVal:
+		return val.GetStringListVal(), nil
+	case *types.Value_DoubleListVal:
+		return val.GetDoubleListVal(), nil
+	case *types.Value_FloatListVal:
+		return val.GetFloatListVal(), nil
+	case *types.Value_Int32ListVal:
+		return val.GetInt32ListVal(), nil
+	case *types.Value_Int64ListVal:
+		return val.GetInt64ListVal(), nil
+	case *types.Value_BoolListVal:
+		return val.GetBoolListVal(), nil
+	case *types.Value_BytesVal:
+		return val.GetBytesVal(), nil
+	case *types.Value_BytesListVal:
+		return val.GetBytesListVal(), nil
+	default:
+		return nil, fmt.Errorf("unknown feature value type: %T", val.Val)
+	}
 }
