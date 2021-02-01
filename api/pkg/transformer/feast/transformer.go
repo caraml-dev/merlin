@@ -101,7 +101,7 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 		return nil, err
 	}
 
-	out, err := jsonparser.Set(request, feastFeatureJSON, "feast_features")
+	out, err := jsonparser.Set(request, feastFeatureJSON, transformer.FeastFeatureJSONField)
 	if err != nil {
 		return nil, err
 	}
