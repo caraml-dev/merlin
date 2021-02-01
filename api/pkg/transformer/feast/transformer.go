@@ -41,80 +41,32 @@ type FeastFeature struct {
 	Data    [][]interface{} `json:"data"`
 }
 
+type result struct {
+	tableName    string
+	feastFeature *FeastFeature
+	err          error
+}
+
 // Transform retrieves the Feast features values and add them into the request.
 func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, error) {
-	feastFeatures := make(map[string]FeastFeature, len(t.config.TransformerConfig.Feast))
+	feastFeatures := make(map[string]*FeastFeature, len(t.config.TransformerConfig.Feast))
 
+	// parallelize feast call per feature table
+	resChan := make(chan result, len(t.config.TransformerConfig.Feast))
 	for _, config := range t.config.TransformerConfig.Feast {
-		var entities []feast.Row
-		for _, entity := range config.Entities {
-			vals, err := getValuesFromJSONPayload(request, entity)
-			if err != nil {
-				return nil, fmt.Errorf("unable to extract entity %s: %v", entity.Name, err)
-			}
+		go func(cfg *transformer.FeatureTable) {
+			val, err := t.getFeastFeature(ctx, request, cfg)
+			resChan <- result{createTableName(cfg.Entities), val, err}
+		}(config)
+	}
 
-			for _, val := range vals {
-				entities = append(entities, feast.Row{
-					entity.Name: val,
-				})
-			}
+	// collect result
+	for i := 0; i < cap(resChan); i++ {
+		res := <-resChan
+		if res.err != nil {
+			return nil, res.err
 		}
-
-		var features []string
-		for _, feature := range config.Features {
-			features = append(features, feature.Name)
-		}
-
-		feastRequest := feast.OnlineFeaturesRequest{
-			Project:  config.Project,
-			Entities: entities,
-			Features: features,
-		}
-		t.logger.Debug("feast_request", zap.Any("feast_request", feastRequest))
-
-		feastResponse, err := t.feastClient.GetOnlineFeatures(ctx, &feastRequest)
-		if err != nil {
-			return nil, err
-		}
-		t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
-
-		var columns []string
-		for _, entity := range config.Entities {
-			columns = append(columns, entity.Name)
-		}
-		columns = append(columns, features...)
-
-		var data [][]interface{}
-		status := feastResponse.Statuses()
-		for i, feastRow := range feastResponse.Rows() {
-			var row []interface{}
-			for _, column := range columns {
-				switch status[i][column] {
-				case serving.GetOnlineFeaturesResponse_PRESENT:
-					rawValue := feastRow[column]
-					featVal, err := getFeatureValue(rawValue)
-					if err != nil {
-						return nil, err
-					}
-					row = append(row, featVal)
-				case serving.GetOnlineFeaturesResponse_NOT_FOUND:
-					row = append(row, nil)
-				case serving.GetOnlineFeaturesResponse_NULL_VALUE:
-					row = append(row, nil)
-				case serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
-					row = append(row, nil)
-				default:
-					return nil, fmt.Errorf("")
-				}
-			}
-			data = append(data, row)
-		}
-
-		tableName := createTableName(config.Entities)
-		feastFeatures[tableName] = FeastFeature{
-			Columns: columns,
-			Data:    data,
-		}
+		feastFeatures[res.tableName] = res.feastFeature
 	}
 
 	feastFeatureJSON, err := json.Marshal(feastFeatures)
@@ -128,6 +80,77 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	}
 
 	return out, err
+}
+
+func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, config *transformer.FeatureTable) (*FeastFeature, error) {
+	var entities []feast.Row
+	for _, entity := range config.Entities {
+		vals, err := getValuesFromJSONPayload(request, entity)
+		if err != nil {
+			return nil, fmt.Errorf("unable to extract entity %s: %v", entity.Name, err)
+		}
+
+		for _, val := range vals {
+			entities = append(entities, feast.Row{
+				entity.Name: val,
+			})
+		}
+	}
+
+	var features []string
+	for _, feature := range config.Features {
+		features = append(features, feature.Name)
+	}
+
+	feastRequest := feast.OnlineFeaturesRequest{
+		Project:  config.Project,
+		Entities: entities,
+		Features: features,
+	}
+	t.logger.Debug("feast_request", zap.Any("feast_request", feastRequest))
+
+	feastResponse, err := t.feastClient.GetOnlineFeatures(ctx, &feastRequest)
+	if err != nil {
+		return nil, err
+	}
+	t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
+
+	var columns []string
+	for _, entity := range config.Entities {
+		columns = append(columns, entity.Name)
+	}
+	columns = append(columns, features...)
+
+	var data [][]interface{}
+	status := feastResponse.Statuses()
+	for i, feastRow := range feastResponse.Rows() {
+		var row []interface{}
+		for _, column := range columns {
+			switch status[i][column] {
+			case serving.GetOnlineFeaturesResponse_PRESENT:
+				rawValue := feastRow[column]
+				featVal, err := getFeatureValue(rawValue)
+				if err != nil {
+					return nil, err
+				}
+				row = append(row, featVal)
+			case serving.GetOnlineFeaturesResponse_NOT_FOUND:
+				row = append(row, nil)
+			case serving.GetOnlineFeaturesResponse_NULL_VALUE:
+				row = append(row, nil)
+			case serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
+				row = append(row, nil)
+			default:
+				return nil, fmt.Errorf("")
+			}
+		}
+		data = append(data, row)
+	}
+
+	return &FeastFeature{
+		Columns: columns,
+		Data:    data,
+	}, nil
 }
 
 func createTableName(entities []*transformer.Entity) string {
