@@ -124,7 +124,7 @@ func (s *Server) Run() {
 		s.logger.Info("starting standard transformer at : " + addr)
 		// Don't forward ErrServerClosed as that indicates we're already shutting down.
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			errCh <- errors.Wrapf(err, "%s server failed")
+			errCh <- errors.Wrapf(err, "server failed")
 		}
 		s.logger.Info("server shut down successfully")
 	}()
