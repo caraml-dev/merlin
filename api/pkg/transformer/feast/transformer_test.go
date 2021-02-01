@@ -343,6 +343,8 @@ func TestTransformer_Transform(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Transformer.Transform() = %s, want %s", got, tt.want)
 			}
+
+			mockFeast.AssertExpectations(t)
 		})
 	}
 }
