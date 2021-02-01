@@ -24,14 +24,11 @@ import (
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
+	transformerpkg "github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/utils"
 )
 
 const (
-	envModelName = "MODEL_NAME"
-	envModelDir  = "MODEL_DIR"
-	envWorkers   = "WORKERS"
-
 	envTransformerPort       = "MERLIN_TRANSFORMER_PORT"
 	envTransformerModelName  = "MERLIN_TRANSFORMER_MODEL_NAME"
 	envTransformerPredictURL = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
@@ -52,7 +49,15 @@ const (
 	prometheusPort = "8080"
 )
 
-func createInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
+type KFServingResourceTemplater struct {
+	standardTransformerConfig config.StandardTransformerConfig
+}
+
+func NewKFServingResourceTemplater(standardTransformerConfig config.StandardTransformerConfig) *KFServingResourceTemplater {
+	return &KFServingResourceTemplater{standardTransformerConfig: standardTransformerConfig}
+}
+
+func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
 	labels := createLabels(modelService)
 
 	objectMeta := metav1.ObjectMeta{
@@ -79,20 +84,20 @@ func createInferenceServiceSpec(modelService *models.Service, config *config.Dep
 	}
 
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		inferenceService.Spec.Default.Transformer = createTransformerSpec(modelService, modelService.Transformer, config)
+		inferenceService.Spec.Default.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 	}
 
 	return inferenceService
 }
 
-func patchInferenceServiceSpec(orig *kfsv1alpha2.InferenceService, modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
+func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kfsv1alpha2.InferenceService, modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
 	labels := createLabels(modelService)
 	orig.ObjectMeta.Labels = labels
 	orig.Spec.Default.Predictor = createPredictorSpec(modelService, config)
 
 	orig.Spec.Default.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		orig.Spec.Default.Transformer = createTransformerSpec(modelService, modelService.Transformer, config)
+		orig.Spec.Default.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 	}
 	return orig
 }
@@ -102,10 +107,10 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 
 	if modelService.ResourceRequest == nil {
 		modelService.ResourceRequest = &models.ResourceRequest{
-			MinReplica:    config.MinReplica,
-			MaxReplica:    config.MaxReplica,
-			CPURequest:    config.CPURequest,
-			MemoryRequest: config.MemoryRequest,
+			MinReplica:    config.DefaultModelResourceRequests.MinReplica,
+			MaxReplica:    config.DefaultModelResourceRequests.MaxReplica,
+			CPURequest:    config.DefaultModelResourceRequests.CPURequest,
+			MemoryRequest: config.DefaultModelResourceRequests.MemoryRequest,
 		}
 	}
 
@@ -198,13 +203,13 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kfsv1
 	}
 }
 
-func createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.TransformerSpec {
+func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.TransformerSpec {
 	if transformer.ResourceRequest == nil {
 		transformer.ResourceRequest = &models.ResourceRequest{
-			MinReplica:    config.MinReplica,
-			MaxReplica:    config.MaxReplica,
-			CPURequest:    config.CPURequest,
-			MemoryRequest: config.MemoryRequest,
+			MinReplica:    config.DefaultTransformerResourceRequests.MinReplica,
+			MaxReplica:    config.DefaultTransformerResourceRequests.MaxReplica,
+			CPURequest:    config.DefaultTransformerResourceRequests.CPURequest,
+			MemoryRequest: config.DefaultTransformerResourceRequests.MemoryRequest,
 		}
 	}
 
@@ -215,6 +220,11 @@ func createTransformerSpec(modelService *models.Service, transformer *models.Tra
 	memoryLimit.Add(transformer.ResourceRequest.MemoryRequest)
 
 	envVars := transformer.EnvVars
+	if transformer.TransformerType == models.StandardTransformerType {
+		transformer.Image = t.standardTransformerConfig.ImageName
+		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLEnvName, Value: t.standardTransformerConfig.FeastServingURL})
+	}
+
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
 	envVars = append(envVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})

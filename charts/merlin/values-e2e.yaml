@@ -29,27 +29,37 @@ merlin:
     gcp_project: gcp-project
     deployment_timeout: 10m
     namespace_timeout: 2m
-    min_replica: 1
-    max_replica: 1
     max_cpu: 250m
     max_memory: 256Mi
-    cpu_request: 25m
-    memory_request: 128Mi
-    cpu_limit: 250m
-    memory_limit: 256Mi
     queue_resource_percentage: 20
     is_prediction_job_enabled: true
     is_default_prediction_job: true
-    prediction_job_config:
+    default_prediction_job_config:
       executor_replica: 1
       driver_cpu_request: 25m
       driver_memory_request: 128Mi
       executor_cpu_request: 25m
       executor_memory_request: 128Mi
+    default_deployment_config:
+      min_replica: 0
+      max_replica: 1
+      cpu_request: "25m"
+      memory_request: "128Mi"
+    default_transformer_config:
+      min_replica: 0
+      max_replica: 1
+      cpu_request: "25m"
+      memory_request: "128Mi"
+
 
   imageBuilder:
     clusterName: "e2e"
 
+  transformer:
+    feast:
+      servingURL: serving.feast.dev
+      coreURL: core.feast.dev
+    image: merlin-transformer:1.0.0
 
 postgresql:
   resources:

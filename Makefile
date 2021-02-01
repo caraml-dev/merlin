@@ -56,7 +56,7 @@ test: test-api
 .PHONY: test-api
 test-api: init-dep-api
 	@echo "> API unit testing ..."
-	@cd ${API_PATH} && go test -v -race -cover -coverprofile cover.out -tags unit ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && go test -race -cover -coverprofile cover.out -tags unit ${API_ALL_PACKAGES}
 	@cd ${API_PATH} && go tool cover -func cover.out
 
 .PHONY: it-test-api-local

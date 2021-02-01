@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -36,6 +37,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -122,6 +124,12 @@ func main() {
 
 	mlpAPIClient := mlp.NewAPIClient(mlpHTTPClient, cfg.MlpAPIConfig.APIHost, cfg.MlpAPIConfig.EncryptionKey)
 
+	cc, err := grpc.Dial(cfg.StandardTransformerConfig.FeastCoreURL, grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	coreClient := core.NewCoreServiceClient(cc)
+
 	vaultClient := initVault(cfg)
 	webServiceBuilder, predJobBuilder := initImageBuilder(cfg, vaultClient)
 
@@ -185,6 +193,7 @@ func main() {
 		AlertEnabled:              cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
 		DB:                        db,
 		Enforcer:                  authEnforcer,
+		FeastCoreClient:           coreClient,
 	}
 
 	router := mux.NewRouter()
@@ -382,10 +391,16 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 				GcpProject: envCfg.GcpProject,
 				MaxCPU:     envCfg.MaxCPU,
 				DefaultResourceRequest: &models.ResourceRequest{
-					MinReplica:    cfg.MinReplica,
-					MaxReplica:    cfg.MaxReplica,
-					CPURequest:    cfg.CPURequest,
-					MemoryRequest: cfg.MemoryRequest,
+					MinReplica:    cfg.DefaultModelResourceRequests.MinReplica,
+					MaxReplica:    cfg.DefaultModelResourceRequests.MaxReplica,
+					CPURequest:    cfg.DefaultModelResourceRequests.CPURequest,
+					MemoryRequest: cfg.DefaultModelResourceRequests.MemoryRequest,
+				},
+				DefaultTransformerResourceRequest: &models.ResourceRequest{
+					MinReplica:    cfg.DefaultTransformerResourceRequests.MinReplica,
+					MaxReplica:    cfg.DefaultTransformerResourceRequests.MaxReplica,
+					CPURequest:    cfg.DefaultTransformerResourceRequests.CPURequest,
+					MemoryRequest: cfg.DefaultTransformerResourceRequests.MemoryRequest,
 				},
 				IsDefaultPredictionJob: isDefaultPredictionJob,
 				IsPredictionJobEnabled: envCfg.IsPredictionJobEnabled,
@@ -393,11 +408,11 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 
 			if envCfg.IsPredictionJobEnabled {
 				env.DefaultPredictionJobResourceRequest = &models.PredictionJobResourceRequest{
-					DriverCPURequest:      envCfg.PredictionJobConfig.DriverCPURequest,
-					DriverMemoryRequest:   envCfg.PredictionJobConfig.DriverMemoryRequest,
-					ExecutorReplica:       envCfg.PredictionJobConfig.ExecutorReplica,
-					ExecutorCPURequest:    envCfg.PredictionJobConfig.ExecutorCPURequest,
-					ExecutorMemoryRequest: envCfg.PredictionJobConfig.ExecutorMemoryRequest,
+					DriverCPURequest:      envCfg.DefaultPredictionJobConfig.DriverCPURequest,
+					DriverMemoryRequest:   envCfg.DefaultPredictionJobConfig.DriverMemoryRequest,
+					ExecutorReplica:       envCfg.DefaultPredictionJobConfig.ExecutorReplica,
+					ExecutorCPURequest:    envCfg.DefaultPredictionJobConfig.ExecutorCPURequest,
+					ExecutorMemoryRequest: envCfg.DefaultPredictionJobConfig.ExecutorMemoryRequest,
 				}
 			}
 
@@ -412,21 +427,27 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 			env.MaxCPU = envCfg.MaxCPU
 			env.MaxMemory = envCfg.MaxMemory
 			env.DefaultResourceRequest = &models.ResourceRequest{
-				MinReplica:    cfg.MinReplica,
-				MaxReplica:    cfg.MaxReplica,
-				CPURequest:    cfg.CPURequest,
-				MemoryRequest: cfg.MemoryRequest,
+				MinReplica:    cfg.DefaultModelResourceRequests.MinReplica,
+				MaxReplica:    cfg.DefaultModelResourceRequests.MaxReplica,
+				CPURequest:    cfg.DefaultModelResourceRequests.CPURequest,
+				MemoryRequest: cfg.DefaultModelResourceRequests.MemoryRequest,
+			}
+			env.DefaultTransformerResourceRequest = &models.ResourceRequest{
+				MinReplica:    cfg.DefaultTransformerResourceRequests.MinReplica,
+				MaxReplica:    cfg.DefaultTransformerResourceRequests.MaxReplica,
+				CPURequest:    cfg.DefaultTransformerResourceRequests.CPURequest,
+				MemoryRequest: cfg.DefaultTransformerResourceRequests.MemoryRequest,
 			}
 			env.IsDefaultPredictionJob = isDefaultPredictionJob
 			env.IsPredictionJobEnabled = envCfg.IsPredictionJobEnabled
 
 			if envCfg.IsPredictionJobEnabled {
 				env.DefaultPredictionJobResourceRequest = &models.PredictionJobResourceRequest{
-					DriverCPURequest:      envCfg.PredictionJobConfig.DriverCPURequest,
-					DriverMemoryRequest:   envCfg.PredictionJobConfig.DriverMemoryRequest,
-					ExecutorReplica:       envCfg.PredictionJobConfig.ExecutorReplica,
-					ExecutorCPURequest:    envCfg.PredictionJobConfig.ExecutorCPURequest,
-					ExecutorMemoryRequest: envCfg.PredictionJobConfig.ExecutorMemoryRequest,
+					DriverCPURequest:      envCfg.DefaultPredictionJobConfig.DriverCPURequest,
+					DriverMemoryRequest:   envCfg.DefaultPredictionJobConfig.DriverMemoryRequest,
+					ExecutorReplica:       envCfg.DefaultPredictionJobConfig.ExecutorReplica,
+					ExecutorCPURequest:    envCfg.DefaultPredictionJobConfig.ExecutorCPURequest,
+					ExecutorMemoryRequest: envCfg.DefaultPredictionJobConfig.ExecutorMemoryRequest,
 				}
 			}
 		}
@@ -523,7 +544,9 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 
 			ClusterName: clusterName,
 			GcpProject:  env.GcpProject,
-		}, config.ParseDeploymentConfig(env))
+		},
+			config.ParseDeploymentConfig(env),
+			cfg.StandardTransformerConfig)
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)
 		}

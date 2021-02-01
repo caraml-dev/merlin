@@ -15,15 +15,20 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/prometheus/common/log"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/feast"
 )
 
 type EndpointsController struct {
@@ -159,6 +164,20 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 		return BadRequest(fmt.Sprintf("Max deployed endpoint reached. Max: %d Current: %d ", config.MaxDeployedVersion, deployedModelVersionCount))
 	}
 
+	// validate transformer
+	if newEndpoint.Transformer != nil {
+		err := c.validateTransformer(ctx, newEndpoint.Transformer)
+		if err != nil {
+			log.Errorf("error validating transformer config: %v", err)
+			target := &feast.ValidationError{}
+			if errors.As(err, &target) {
+				return BadRequest(err.Error())
+			}
+
+			return InternalServerError(err.Error())
+		}
+	}
+
 	endpoint, err = c.EndpointsService.DeployEndpoint(env, model, version, newEndpoint)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
@@ -210,6 +229,20 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 	}
 
 	if newEndpoint.Status == models.EndpointRunning || newEndpoint.Status == models.EndpointServing {
+		// validate transformer
+		if newEndpoint.Transformer != nil {
+			err := c.validateTransformer(ctx, newEndpoint.Transformer)
+			if err != nil {
+				log.Errorf("error validating transformer config: %v", err)
+				target := &feast.ValidationError{}
+				if errors.As(err, &target) {
+					return BadRequest(err.Error())
+				}
+
+				return InternalServerError(err.Error())
+			}
+		}
+
 		endpoint, err = c.EndpointsService.DeployEndpoint(env, model, version, newEndpoint)
 		if err != nil {
 			return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
@@ -328,4 +361,35 @@ func validateUpdateRequest(prev *models.VersionEndpoint, new *models.VersionEndp
 	}
 
 	return nil
+}
+
+func (c *EndpointsController) validateTransformer(ctx context.Context, trans *models.Transformer) error {
+	switch trans.TransformerType {
+	case models.CustomTransformerType, models.DefaultTransformerType:
+		if trans.Image == "" {
+			return errors.New("Transformer image name is not specified")
+		}
+	case models.StandardTransformerType:
+		envVars := trans.EnvVars.ToMap()
+		cfg, ok := envVars[transformer.StandardTransformerConfigEnvName]
+		if !ok {
+			return errors.New("Standard transformer config is not specified")
+		}
+
+		return c.validateStandardTransformerConfig(ctx, cfg)
+	default:
+		return errors.New(fmt.Sprintf("Unknown transformer type: %s", trans.TransformerType))
+	}
+
+	return nil
+}
+
+func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Context, cfg string) error {
+	stdTransformerConfig := &transformer.StandardTransformerConfig{}
+	err := jsonpb.UnmarshalString(cfg, stdTransformerConfig)
+	if err != nil {
+		return err
+	}
+
+	return feast.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig)
 }

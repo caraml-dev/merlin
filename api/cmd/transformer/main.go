@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"net/url"
+	"strconv"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/golang/protobuf/jsonpb"
@@ -47,7 +49,15 @@ func main() {
 		log.Fatalln(errors.Wrap(err, "Unable to parse standard transformer config"))
 	}
 
-	feastClient, err := feastSdk.NewGrpcClient(cfg.Feast.ServingAddress, cfg.Feast.ServingPort)
+	feastServingURL, err := url.Parse(cfg.Feast.ServingURL)
+	if err != nil {
+		log.Panicf("Unable to parse feast serving URL %s: %v", cfg.Feast.ServingURL, err)
+	}
+	feastServingPort, err := strconv.Atoi(feastServingURL.Port())
+	if err != nil {
+		log.Panicf("Unable to parse feast serving port %s: %v", feastServingURL.Port(), err)
+	}
+	feastClient, err := feastSdk.NewGrpcClient(feastServingURL.Host, feastServingPort)
 	if err != nil {
 		log.Fatalln(errors.Wrap(err, "Unable to initialie feastSdk client"))
 	}

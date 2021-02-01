@@ -14,8 +14,7 @@ import (
 
 // Options for the Feast transformer.
 type Options struct {
-	ServingAddress string `envconfig:"FEAST_SERVING_ADDRESS" required:"true"`
-	ServingPort    int    `envconfig:"FEAST_SERVING_PORT" required:"true"`
+	ServingURL string `envconfig:"FEAST_SERVING_URL" required:"true"`
 }
 
 // Transformer wraps feast serving client to retrieve features.

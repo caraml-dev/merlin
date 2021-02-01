@@ -16,15 +16,26 @@ package models
 
 import "github.com/google/uuid"
 
+type TransformerType string
+
+const (
+	DefaultTransformerType  = ""
+	CustomTransformerType   = "custom"
+	StandardTransformerType = "standard"
+)
+
 // Transformer is a service for pre/post-processing steps.
 type Transformer struct {
-	ID                string    `json:"id"`
-	Enabled           bool      `json:"enabled"`
-	VersionEndpointID uuid.UUID `json:"version_endpoint_id"`
+	ID                string          `json:"id"`
+	Enabled           bool            `json:"enabled"`
+	VersionEndpointID uuid.UUID       `json:"version_endpoint_id"`
+	TransformerType   TransformerType `json:"transformer_type"`
+
 	// Docker image name.
-	Image           string           `json:"image"`
-	Command         string           `json:"command,omitempty"`
-	Args            string           `json:"args,omitempty"`
+	Image   string `json:"image"`
+	Command string `json:"command,omitempty"`
+	Args    string `json:"args,omitempty"`
+
 	ResourceRequest *ResourceRequest `json:"resource_request"`
 	EnvVars         EnvVars          `json:"env_vars"`
 	CreatedUpdated

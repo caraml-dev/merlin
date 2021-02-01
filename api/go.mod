@@ -30,6 +30,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kubeflow/kfserving v0.4.1
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pilagod/gorm-cursor-paginator v1.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.5.1
@@ -41,6 +42,7 @@ require (
 	go.uber.org/zap v1.13.0
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
+	google.golang.org/grpc v1.31.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.2.8
 	istio.io/api v0.0.0-20191115173247-e1a1952e5b81
