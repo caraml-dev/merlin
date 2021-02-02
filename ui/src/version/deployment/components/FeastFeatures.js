@@ -121,7 +121,7 @@ export const FeastFeatures = ({ features, feastFeatureTables, onChange }) => {
       items[idx] = {
         ...items[idx],
         name: e[0] ? e[0].value : "",
-        valueType: e[0] ? e[0].feature.valueType : "STRING"
+        valueType: e[0] ? e[0].feature.valueType : ""
       };
       updateItems(items);
     };
@@ -131,8 +131,7 @@ export const FeastFeatures = ({ features, feastFeatureTables, onChange }) => {
     const normalizedSearchValue = searchValue.trim();
     items[idx] = {
       ...items[idx],
-      [field]: normalizedSearchValue,
-      valueType: "STRING"
+      [field]: normalizedSearchValue
     };
     updateItems(items);
   };
