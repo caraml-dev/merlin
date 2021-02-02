@@ -64,15 +64,33 @@ type Transformer struct {
 	config            *transformer.StandardTransformerConfig
 	logger            *zap.Logger
 	monitoringOptions *FeatureMonitoringOptions
+	defaultValues     map[string]*types.Value
 }
 
 // NewTransformer initializes a new Transformer.
 func NewTransformer(feastClient feast.Client, config *transformer.StandardTransformerConfig, monitoringOptions *FeatureMonitoringOptions, logger *zap.Logger) *Transformer {
+	defaultValues := make(map[string]*types.Value)
+	// populate default values
+	for _, ft := range config.TransformerConfig.Feast {
+		for _, f := range ft.Features {
+			if len(f.DefaultValue) != 0 {
+				feastValType := types.ValueType_Enum(types.ValueType_Enum_value[f.ValueType])
+				defVal, err := getValue(f.DefaultValue, feastValType)
+				if err != nil {
+					logger.Warn(fmt.Sprintf("invalid default value for %s : %v, %v", f.Name, f.DefaultValue, err))
+					continue
+				}
+				defaultValues[f.Name] = defVal
+			}
+		}
+	}
+
 	return &Transformer{
 		feastClient:       feastClient,
 		config:            config,
 		monitoringOptions: monitoringOptions,
 		logger:            logger,
+		defaultValues:     defaultValues,
 	}
 }
 
@@ -190,12 +208,17 @@ func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, confi
 					}
 					feastFeatureSummary.WithLabelValues(column).Observe(v)
 				}
-			case serving.GetOnlineFeaturesResponse_NOT_FOUND:
-				row = append(row, nil)
-			case serving.GetOnlineFeaturesResponse_NULL_VALUE:
-				row = append(row, nil)
-			case serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
-				row = append(row, nil)
+			case serving.GetOnlineFeaturesResponse_NOT_FOUND, serving.GetOnlineFeaturesResponse_NULL_VALUE, serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
+				defVal, ok := t.defaultValues[column]
+				if !ok {
+					row = append(row, nil)
+					continue
+				}
+				featVal, err := getFeatureValue(defVal)
+				if err != nil {
+					return nil, err
+				}
+				row = append(row, featVal)
 			default:
 				return nil, fmt.Errorf("")
 			}

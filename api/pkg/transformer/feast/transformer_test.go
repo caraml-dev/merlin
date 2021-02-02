@@ -56,7 +56,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
 									},
 								},
 							},
@@ -112,7 +113,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
 									},
 								},
 							},
@@ -168,7 +170,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
 									},
 								},
 							},
@@ -217,7 +220,7 @@ func TestTransformer_Transform(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "one config: retrieve multiple entities, one feature with missing value",
+			name: "missing value without default",
 			fields: fields{
 				config: &transformer.StandardTransformerConfig{
 					TransformerConfig: &transformer.TransformerConfig{
@@ -233,8 +236,7 @@ func TestTransformer_Transform(t *testing.T) {
 								},
 								Features: []*transformer.Feature{
 									{
-										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										Name: "driver_trips:average_daily_rides",
 									},
 								},
 							},
@@ -283,6 +285,73 @@ func TestTransformer_Transform(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "missing value with default",
+			fields: fields{
+				config: &transformer.StandardTransformerConfig{
+					TransformerConfig: &transformer.TransformerConfig{
+						Feast: []*transformer.FeatureTable{
+							{
+								Project: "default",
+								Entities: []*transformer.Entity{
+									{
+										Name:      "driver_id",
+										ValueType: "STRING",
+										JsonPath:  "$.drivers[*].id",
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "driver_trips:average_daily_rides",
+										DefaultValue: "0.5",
+										ValueType:    "DOUBLE",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}]}`),
+			},
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+										"driver_id":                        feast.StrVal("1001"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*types.Value{
+										"driver_trips:average_daily_rides": nil,
+										"driver_id":                        feast.StrVal("2002"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_NULL_VALUE,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}],"feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1],["2002",0.5]]}}}`),
+			wantErr: false,
+		},
+		{
 			name: "two configs: each retrieve one entity, one feature",
 			fields: fields{
 				config: &transformer.StandardTransformerConfig{
@@ -300,7 +369,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
 									},
 								},
 							},
@@ -316,7 +386,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "customer_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
 									},
 								},
 							},
@@ -386,15 +457,11 @@ func TestTransformer_Transform(t *testing.T) {
 				})).Return(m.response, nil)
 			}
 
-			f := &Transformer{
-				feastClient: mockFeast,
-				config:      tt.fields.config,
-				logger:      logger,
-				monitoringOptions: &FeatureMonitoringOptions{
-					StatusMonitoringEnabled: true,
-					ValueMonitoringEnabled:  true,
-				},
-			}
+			f := NewTransformer(mockFeast, tt.fields.config, &FeatureMonitoringOptions{
+				StatusMonitoringEnabled: true,
+				ValueMonitoringEnabled:  true,
+			}, logger)
+
 			got, err := f.Transform(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Transformer.Transform() error = %v, wantErr %v", err, tt.wantErr)

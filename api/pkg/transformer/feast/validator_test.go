@@ -214,7 +214,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 			NewValidationError("feature not found for entities [customer_id hour_of_day]: total_booking"),
 		},
 		{
-			"success case with shorthand name",
+			"mismatch feature value type",
 			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
 				Feast: []*transformer.FeatureTable{
 					{
@@ -233,7 +233,8 @@ func TestValidateTransformerConfig(t *testing.T) {
 						},
 						Features: []*transformer.Feature{
 							{
-								Name: "total_booking",
+								Name:      "total_booking",
+								ValueType: "INT32",
 							},
 						},
 					},
@@ -260,7 +261,120 @@ func TestValidateTransformerConfig(t *testing.T) {
 				{
 					Features: map[string]*core.FeatureSpecV2{
 						"customer_feature_table:total_booking": &core.FeatureSpecV2{
-							Name: "total_booking",
+							Name:      "total_booking",
+							ValueType: types.ValueType_INT64,
+						},
+					},
+				},
+			},
+			NewValidationError("mismatched value type for total_booking, expect: INT64, got: INT32"),
+		},
+		{
+			"mismatch feature value type using fq name",
+			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
+				Feast: []*transformer.FeatureTable{
+					{
+						Project: "default",
+						Entities: []*transformer.Entity{
+							{
+								Name:      "customer_id",
+								JsonPath:  "$.customer_id",
+								ValueType: "STRING",
+							},
+							{
+								Name:      "hour_of_day",
+								JsonPath:  "$.hour_of_day",
+								ValueType: "INT32",
+							},
+						},
+						Features: []*transformer.Feature{
+							{
+								Name:      "customer_feature_table:total_booking",
+								ValueType: "INT32",
+							},
+						},
+					},
+				},
+			},
+			},
+			&core.ListEntitiesResponse{
+				Entities: []*core.Entity{
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "customer_id",
+							ValueType: types.ValueType_STRING,
+						},
+					},
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "hour_of_day",
+							ValueType: types.ValueType_INT32,
+						},
+					},
+				},
+			},
+			[]*core.ListFeaturesResponse{
+				{
+					Features: map[string]*core.FeatureSpecV2{
+						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+							Name:      "total_booking",
+							ValueType: types.ValueType_INT64,
+						},
+					},
+				},
+			},
+			NewValidationError("mismatched value type for customer_feature_table:total_booking, expect: INT64, got: INT32"),
+		},
+		{
+			"success case with shorthand name",
+			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
+				Feast: []*transformer.FeatureTable{
+					{
+						Project: "default",
+						Entities: []*transformer.Entity{
+							{
+								Name:      "customer_id",
+								JsonPath:  "$.customer_id",
+								ValueType: "STRING",
+							},
+							{
+								Name:      "hour_of_day",
+								JsonPath:  "$.hour_of_day",
+								ValueType: "INT32",
+							},
+						},
+						Features: []*transformer.Feature{
+							{
+								Name:      "total_booking",
+								ValueType: "INT32",
+							},
+						},
+					},
+				},
+			},
+			},
+			&core.ListEntitiesResponse{
+				Entities: []*core.Entity{
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "customer_id",
+							ValueType: types.ValueType_STRING,
+						},
+					},
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "hour_of_day",
+							ValueType: types.ValueType_INT32,
+						},
+					},
+				},
+			},
+			[]*core.ListFeaturesResponse{
+				{
+					Features: map[string]*core.FeatureSpecV2{
+						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+							Name:      "total_booking",
+							ValueType: types.ValueType_INT32,
 						},
 					},
 				},
@@ -287,7 +401,8 @@ func TestValidateTransformerConfig(t *testing.T) {
 						},
 						Features: []*transformer.Feature{
 							{
-								Name: "customer_feature_table:total_booking",
+								Name:      "customer_feature_table:total_booking",
+								ValueType: "INT32",
 							},
 						},
 					},
@@ -314,7 +429,8 @@ func TestValidateTransformerConfig(t *testing.T) {
 				{
 					Features: map[string]*core.FeatureSpecV2{
 						"customer_feature_table:total_booking": &core.FeatureSpecV2{
-							Name: "total_booking",
+							Name:      "total_booking",
+							ValueType: types.ValueType_INT32,
 						},
 					},
 				},
