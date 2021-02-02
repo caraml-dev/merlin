@@ -95,6 +95,62 @@ func TestTransformer_Transform(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "different type between json and entity type in feast",
+			fields: fields{
+				config: &transformer.StandardTransformerConfig{
+					TransformerConfig: &transformer.TransformerConfig{
+						Feast: []*transformer.FeatureTable{
+							{
+								Project: "default",
+								Entities: []*transformer.Entity{
+									{
+										Name:      "driver_id",
+										ValueType: "INT32",
+										JsonPath:  "$.driver_id",
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "driver_trips:average_daily_rides",
+										DefaultValue: 0.0,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"driver_id":"1001"}`),
+			},
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+										"driver_id":                        feast.Int32Val(1001),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    []byte(`{"driver_id":"1001","feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[[1001,1.1]]}}}`),
+			wantErr: false,
+		},
+		{
 			name: "one config: retrieve multiple entities, one feature",
 			fields: fields{
 				config: &transformer.StandardTransformerConfig{
