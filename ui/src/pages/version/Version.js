@@ -204,27 +204,7 @@ const Version = ({ projectId, modelId, versionId, endpointId, ...props }) => {
                   path="details"
                   model={model}
                   version={version}
-                  endpoint={{
-                    ...endpoint,
-                    transformer: {
-                      enabled: true,
-                      image: "ghcr.io/gojek/merlin-transformer:latest",
-                      resource_request: {
-                        cpu_request: "500m",
-                        memory_request: "500Mi",
-                        min_replica: 1,
-                        max_replica: 4
-                      },
-                      transformer_type: "standard",
-                      env_vars: [
-                        {
-                          name: "TRANSFORMER_CONFIG",
-                          value:
-                            '{"transformerConfig":{"feast":[{"project":"project_1","entities":[{"name":"user_id_1","valueType":"STRING","jsonPath":"user_id_1"}],"features":[{"name":"feast_test_metrics:string_feature","valueType":"STRING","defaultValue":"1"}]},{"project":"project_2","entities":[{"name":"user_id_2","valueType":"STRING","jsonPath":"user_id_2"}],"features":[{"name":"feast_test_metrics:string_feature","valueType":"STRING","defaultValue":"2"}]}]}}'
-                        }
-                      ]
-                    }
-                  }}
+                  endpoint={endpoint}
                 />
               )}
 

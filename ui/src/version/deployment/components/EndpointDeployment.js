@@ -268,12 +268,6 @@ export const EndpointDeployment = ({
                     request.transformer || {
                       image: "",
                       resource_request: defaultResourceRequest
-                      // enabled: true,
-                      // transformer_type: "standard",
-                      // env_vars: [{
-                      //   name: "TRANSFORMER_CONFIG",
-                      //   value: "{\"transformerConfig\":{\"feast\":[{\"project\":\"project_1\",\"entities\":[{\"name\":\"user_id_1\",\"valueType\":\"STRING\",\"jsonPath\":\"user_id_1\"}],\"features\":[{\"name\":\"feast_test_metrics:string_feature\",\"valueType\":\"STRING\",\"defaultValue\":\"1\"}]},{\"project\":\"project_2\",\"entities\":[{\"name\":\"user_id_2\",\"valueType\":\"STRING\",\"jsonPath\":\"user_id_2\"}],\"features\":[{\"name\":\"feast_test_metrics:string_feature\",\"valueType\":\"STRING\",\"defaultValue\":\"2\"}]}]}}",
-                      // }],
                     }
                   }
                   onChange={onChange("transformer")}
