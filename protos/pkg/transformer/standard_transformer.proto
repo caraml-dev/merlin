@@ -26,6 +26,6 @@ message Entity {
 
 message Feature {
   string name = 1;
-  string defaultValue = 2;
-  string valueType = 3;
+  string valueType = 2;
+  string defaultValue = 3;
 }

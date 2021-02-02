@@ -41,4 +41,4 @@ FROM alpine:3.12
 
 COPY --from=go-builder /src/api/bin/transformer /usr/bin/transformer
 
-CMD ["transformer"]
+ENTRYPOINT ["transformer"]
