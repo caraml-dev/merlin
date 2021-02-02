@@ -83,7 +83,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 			_, fqNameFound := res.Features[feature.Name]
 			_, shortNameFound := featureShortNames[feature.Name]
 			if !fqNameFound && !shortNameFound {
-				return NewValidationError(fmt.Sprintf("feature not found for entities %s: %s", entities, feature.Name))
+				return NewValidationError(fmt.Sprintf("feature not found for entities %s in project %s: %s", entities, config.Project, feature.Name))
 			}
 		}
 	}

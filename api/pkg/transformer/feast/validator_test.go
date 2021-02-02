@@ -211,7 +211,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 					Features: map[string]*core.FeatureSpecV2{},
 				},
 			},
-			NewValidationError("feature not found for entities [customer_id hour_of_day]: total_booking"),
+			NewValidationError("feature not found for entities [customer_id hour_of_day] in project default: total_booking"),
 		},
 		{
 			"success case with shorthand name",
