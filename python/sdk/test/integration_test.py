@@ -613,7 +613,7 @@ def test_transformer_pytorch(integration_test_url, project_name, use_google_oaut
     # Undeploy other running model version endpoints
     undeploy_all_version()
 
-@pytest.mark.local_integration
+@pytest.mark.integration
 def test_standard_transformer_feast_pyfunc(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
