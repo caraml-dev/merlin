@@ -390,7 +390,7 @@ func TestTransformer_Transform(t *testing.T) {
 				feastClient: mockFeast,
 				config:      tt.fields.config,
 				logger:      logger,
-				monitoringOptions: &FeatureMonitoringOptions{
+				options: &Options{
 					StatusMonitoringEnabled: true,
 					ValueMonitoringEnabled:  true,
 				},

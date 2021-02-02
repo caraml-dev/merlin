@@ -50,29 +50,26 @@ var (
 
 // Options for the Feast transformer.
 type Options struct {
-	ServingURL string `envconfig:"FEAST_SERVING_URL" required:"true"`
-}
-
-type FeatureMonitoringOptions struct {
-	StatusMonitoringEnabled bool `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
-	ValueMonitoringEnabled  bool `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
+	ServingURL              string `envconfig:"FEAST_SERVING_URL" required:"true"`
+	StatusMonitoringEnabled bool   `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
+	ValueMonitoringEnabled  bool   `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
 }
 
 // Transformer wraps feast serving client to retrieve features.
 type Transformer struct {
-	feastClient       feast.Client
-	config            *transformer.StandardTransformerConfig
-	logger            *zap.Logger
-	monitoringOptions *FeatureMonitoringOptions
+	feastClient feast.Client
+	config      *transformer.StandardTransformerConfig
+	logger      *zap.Logger
+	options     *Options
 }
 
 // NewTransformer initializes a new Transformer.
-func NewTransformer(feastClient feast.Client, config *transformer.StandardTransformerConfig, monitoringOptions *FeatureMonitoringOptions, logger *zap.Logger) *Transformer {
+func NewTransformer(feastClient feast.Client, config *transformer.StandardTransformerConfig, options *Options, logger *zap.Logger) *Transformer {
 	return &Transformer{
-		feastClient:       feastClient,
-		config:            config,
-		monitoringOptions: monitoringOptions,
-		logger:            logger,
+		feastClient: feastClient,
+		config:      config,
+		options:     options,
+		logger:      logger,
 	}
 }
 
@@ -183,7 +180,7 @@ func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, confi
 				row = append(row, featVal)
 
 				// put behind feature toggle since it will generate high cardinality metrics
-				if t.monitoringOptions.ValueMonitoringEnabled {
+				if t.options.ValueMonitoringEnabled {
 					v, err := getFloatValue(featVal)
 					if err != nil {
 						continue
@@ -200,7 +197,7 @@ func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, confi
 				return nil, fmt.Errorf("")
 			}
 			// put behind feature toggle since it will generate high cardinality metrics
-			if t.monitoringOptions.StatusMonitoringEnabled {
+			if t.options.StatusMonitoringEnabled {
 				feastFeatureStatus.WithLabelValues(column, featureStatus.String()).Inc()
 			}
 		}
