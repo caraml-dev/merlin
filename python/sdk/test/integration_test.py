@@ -18,6 +18,7 @@ from time import sleep
 
 import pytest
 import requests
+import pandas as pd
 import xgboost as xgb
 from joblib import dump
 from sklearn import svm
@@ -627,16 +628,20 @@ def test_standard_transformer_feast_pyfunc(integration_test_url, project_name, u
                            artifacts={})
 
     transformer_config_path = os.path.join("test/transformer", "standard_transformer_input.yaml")
-    transformer = StandardTransformer(config_file=transformer_config_path, enabled=False)
+    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
 
-    request_json = {"merchant_id": "1000"}
+    request_json = {"driver_id": "1000"}
     endpoint = merlin.deploy(v, transformer=transformer)
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
+    assert resp.json() is not None
+    feast_features = resp.json()["feast_features"]
+    assert feast_features is not None
+    assert pd.DataFrame(feast_features) is not None
 
     merlin.undeploy(v)
-    sleep(60)
+    sleep(5)
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 404

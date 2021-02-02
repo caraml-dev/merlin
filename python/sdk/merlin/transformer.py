@@ -27,8 +27,12 @@ class TransformerType(Enum):
     CUSTOM_TRANSFORMER = 'custom'
     STANDARD_TRANSFORMER = 'standard'
 
+
+
 @autostr
 class Transformer:
+    StandardTransformerConfigKey = "STANDARD_TRANSFORMER_CONFIG"
+
     def __init__(self, image: str, enabled: bool = True,
                  command: str = None, args: str = None,
                  resource_request: ResourceRequest = None,
@@ -87,5 +91,5 @@ class StandardTransformer(Transformer):
             transformer_config = yaml.safe_load(stream)
 
         config_json_string = json.dumps(transformer_config)
-        return {"STANDARD_TRANSFORMER_CONFIG": config_json_string}
+        return {self.StandardTransformerConfigKey: config_json_string}
 

@@ -1,9 +1,14 @@
 transformerConfig:
- feast:
-   - entities:
-     - name: merchant_id
-       valueType: STRING
-       jsonPath: "$$.merchant_id"
-     features:
-     - name: merchant_t1_discovery:t1_estimate
-       defaultValue: 0.0
+  feast:
+    - entities:
+      - name: driver_id
+        valueType: STRING
+        jsonPath: "$.driver_id"
+      project: default
+      features:
+      - name: driver_statistics:avg_daily_trips_3
+        valueType: STRING
+        defaultValue: '0'
+      - name: driver_statistics:conv_rate
+        valueType: STRING
+        defaultValue: '0'

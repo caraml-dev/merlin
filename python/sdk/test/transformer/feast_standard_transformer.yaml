@@ -6,15 +6,15 @@ transformerConfig:
        jsonPath: "$.customer_id"
      features:
      - name: total_booking_1w
-       defaultValue: 0.0
+       defaultValue: "0.0"
      - name: total_booking_4w
-       defaultValue: 0.0
+       defaultValue: "0.0"
    - entities:
      - name: merchant_id
        valueType: STRING
        jsonPath: "$.merchant_id"
      features:
      - name: total_completed_order_1w
-       defaultValue: 0.0
+       defaultValue: "0.0"
      - name: avg_completed_order_1w
-       defaultValue: 0.0
+       defaultValue: "0.0"
