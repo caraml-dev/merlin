@@ -1,0 +1,9 @@
+transformerConfig:
+ feast:
+   - entities:
+     - name: merchant_id
+       valueType: STRING
+       jsonPath: "$$.merchant_id"
+     features:
+     - name: merchant_t1_discovery:t1_estimate
+       defaultValue: 0.0

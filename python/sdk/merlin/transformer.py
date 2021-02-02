@@ -87,5 +87,5 @@ class StandardTransformer(Transformer):
             transformer_config = yaml.safe_load(stream)
 
         config_json_string = json.dumps(transformer_config)
-        return {"TRANSFORMER_CONFIG": config_json_string}
+        return {"STANDARD_TRANSFORMER_CONFIG": config_json_string}
 

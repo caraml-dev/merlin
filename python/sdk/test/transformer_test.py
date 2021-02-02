@@ -21,7 +21,7 @@ from merlin.resource_request import ResourceRequest
 def test_standard_transformer():
     transformer_config_path = os.path.join("test/transformer", "feast_standard_transformer.yaml")
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=False)
-    assert transformer.env_vars == {'TRANSFORMER_CONFIG': '{"transformerConfig": {"feast": [{"entities": [{"name": "customer_id", "valueType": "STRING", "jsonPath": "$.customer_id"}], "features": [{"name": "total_booking_1w", "defaultValue": 0.0}, {"name": "total_booking_4w", "defaultValue": 0.0}]}, {"entities": [{"name": "merchant_id", "valueType": "STRING", "jsonPath": "$.merchant_id"}], "features": [{"name": "total_completed_order_1w", "defaultValue": 0.0}, {"name": "avg_completed_order_1w", "defaultValue": 0.0}]}]}}'}
+    assert transformer.env_vars == {'STANDARD_TRANSFORMER_CONFIG': '{"transformerConfig": {"feast": [{"entities": [{"name": "customer_id", "valueType": "STRING", "jsonPath": "$.customer_id"}], "features": [{"name": "total_booking_1w", "defaultValue": 0.0}, {"name": "total_booking_4w", "defaultValue": 0.0}]}, {"entities": [{"name": "merchant_id", "valueType": "STRING", "jsonPath": "$.merchant_id"}], "features": [{"name": "total_completed_order_1w", "defaultValue": 0.0}, {"name": "avg_completed_order_1w", "defaultValue": 0.0}]}]}}'}
     assert not transformer.enabled
     assert transformer.command is None
     assert transformer.args is None
@@ -34,7 +34,7 @@ def test_standard_transformer_with_env_vars():
                                       enabled=True,
                                       resource_request=resource,
                                       env_vars={"MODEL_URL": "http://model.default"})
-    assert transformer.env_vars == {'MODEL_URL': "http://model.default", 'TRANSFORMER_CONFIG': '{"transformerConfig": {"feast": [{"entities": [{"name": "customer_id", "valueType": "STRING", "jsonPath": "$.customer_id"}], "features": [{"name": "total_booking_1w", "defaultValue": 0.0}, {"name": "total_booking_4w", "defaultValue": 0.0}]}, {"entities": [{"name": "merchant_id", "valueType": "STRING", "jsonPath": "$.merchant_id"}], "features": [{"name": "total_completed_order_1w", "defaultValue": 0.0}, {"name": "avg_completed_order_1w", "defaultValue": 0.0}]}]}}'}
+    assert transformer.env_vars == {'MODEL_URL': "http://model.default", 'STANDARD_TRANSFORMER_CONFIG': '{"transformerConfig": {"feast": [{"entities": [{"name": "customer_id", "valueType": "STRING", "jsonPath": "$.customer_id"}], "features": [{"name": "total_booking_1w", "defaultValue": 0.0}, {"name": "total_booking_4w", "defaultValue": 0.0}]}, {"entities": [{"name": "merchant_id", "valueType": "STRING", "jsonPath": "$.merchant_id"}], "features": [{"name": "total_completed_order_1w", "defaultValue": 0.0}, {"name": "avg_completed_order_1w", "defaultValue": 0.0}]}]}}'}
     assert transformer.enabled
     assert transformer.command is None
     assert transformer.args is None
