@@ -82,13 +82,11 @@ export const FeastFeatures = ({ features, feastFeatureTables, onChange }) => {
   useEffect(
     () => {
       if (items.length > 1) {
-        const updatedItems = items
-          .slice(0, items.length - 1)
-          .map(item => ({
-            name: item.name,
-            valueType: item.valueType,
-            defaultValue: item.defaultValue
-          }));
+        const updatedItems = items.slice(0, items.length - 1).map(item => ({
+          name: item.name,
+          valueType: item.valueType,
+          defaultValue: item.defaultValue
+        }));
         onChange(updatedItems);
       } else {
         onChange([]);
@@ -123,7 +121,7 @@ export const FeastFeatures = ({ features, feastFeatureTables, onChange }) => {
       items[idx] = {
         ...items[idx],
         name: e[0] ? e[0].value : "",
-        valueType: e[0] ? e[0].feature.valueType : ""
+        valueType: e[0] ? e[0].feature.valueType : "STRING"
       };
       updateItems(items);
     };
@@ -133,7 +131,8 @@ export const FeastFeatures = ({ features, feastFeatureTables, onChange }) => {
     const normalizedSearchValue = searchValue.trim();
     items[idx] = {
       ...items[idx],
-      [field]: normalizedSearchValue
+      [field]: normalizedSearchValue,
+      valueType: "STRING"
     };
     updateItems(items);
   };
