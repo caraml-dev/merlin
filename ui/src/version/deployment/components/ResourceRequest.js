@@ -55,6 +55,7 @@ export const ResourceRequest = ({ resourceRequest, onChange }) => {
         }
         display="columnCompressed">
         <EuiFieldText
+          fullWidth
           placeholder="1"
           value={resourceRequest.cpu_request}
           onChange={setTextValue("cpu_request")}
@@ -73,6 +74,7 @@ export const ResourceRequest = ({ resourceRequest, onChange }) => {
         }
         display="columnCompressed">
         <EuiFieldText
+          fullWidth
           placeholder="500Mi"
           value={resourceRequest.memory_request}
           onChange={setTextValue("memory_request")}
@@ -82,6 +84,7 @@ export const ResourceRequest = ({ resourceRequest, onChange }) => {
 
       <EuiFormRow fullWidth label="Min replicas*" display="columnCompressed">
         <EuiFieldNumber
+          fullWidth
           placeholder="0"
           min={0}
           value={resourceRequest.min_replica}
@@ -92,6 +95,7 @@ export const ResourceRequest = ({ resourceRequest, onChange }) => {
 
       <EuiFormRow fullWidth label="Max replicas*" display="columnCompressed">
         <EuiFieldNumber
+          fullWidth
           placeholder="2"
           min={0}
           value={resourceRequest.max_replica}

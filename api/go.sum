@@ -277,8 +277,8 @@ github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwo
 github.com/fatih/color v1.6.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga6PJ7M=
-github.com/feast-dev/feast/sdk/go v0.8.1-0.20210104034500-a3e6e5371bce h1:wu7yeUkblHRJN1w23ElNQh3BkKlbNK9WJR9+wFoQwMk=
-github.com/feast-dev/feast/sdk/go v0.8.1-0.20210104034500-a3e6e5371bce/go.mod h1:S4pG8DusW0Tj2HK12DqV2MNlgBFfQKLVELVr15NSIVE=
+github.com/feast-dev/feast/sdk/go v0.9.2 h1:V+BKYKgoH9RjIIN416+OqDPpbgRZOf1CqGOVR9S2M2s=
+github.com/feast-dev/feast/sdk/go v0.9.2/go.mod h1:S4pG8DusW0Tj2HK12DqV2MNlgBFfQKLVELVr15NSIVE=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/fortytw2/leaktest v1.3.0/go.mod h1:jDsjWgpAGjm2CA7WthBh/CdZYEPF31XHquHwclZch5g=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=

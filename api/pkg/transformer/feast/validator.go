@@ -73,17 +73,26 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 			return errors.Wrap(err, "error retrieving list of features")
 		}
 
-		featureShortNames := make(map[string]bool)
+		featureShortNames := make(map[string]*core.FeatureSpecV2)
 		for _, feature := range res.Features {
-			featureShortNames[feature.Name] = true
+			featureShortNames[feature.Name] = feature
 		}
 
 		for _, feature := range config.Features {
 			// check against feature short name or fully qualified name
-			_, fqNameFound := res.Features[feature.Name]
-			_, shortNameFound := featureShortNames[feature.Name]
+			fs, fqNameFound := res.Features[feature.Name]
+			fs2, shortNameFound := featureShortNames[feature.Name]
 			if !fqNameFound && !shortNameFound {
 				return NewValidationError(fmt.Sprintf("feature not found for entities %s in project %s: %s", entities, config.Project, feature.Name))
+			}
+
+			featureSpec := fs
+			if fs2 != nil {
+				featureSpec = fs2
+			}
+
+			if featureSpec.ValueType.String() != feature.ValueType {
+				return NewValidationError(fmt.Sprintf("mismatched value type for %s, expect: %s, got: %s", feature.Name, featureSpec.ValueType.String(), feature.ValueType))
 			}
 		}
 	}

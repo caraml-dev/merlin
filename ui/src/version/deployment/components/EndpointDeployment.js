@@ -79,9 +79,12 @@ const targetRequestStatus = currentStatus => {
 };
 
 const isRequestConfigured = request => {
+  if (!request.transformer || !request.transformer.enabled) {
+    return false;
+  }
+
   if (
-    request.transformer &&
-    request.transformer.enabled &&
+    request.transformer.transformer_type !== "standard" &&
     !request.transformer.image
   ) {
     return false;
@@ -208,12 +211,12 @@ export const EndpointDeployment = ({
       <EuiSpacer size="l" />
 
       <EuiFlexGroup justifyContent="spaceAround">
-        <EuiFlexItem style={{ maxWidth: 600 }}>
+        <EuiFlexItem style={{ maxWidth: 700 }}>
           <EuiForm
             isInvalid={!!response.error}
             error={response.error ? [response.error.message] : ""}>
             <EuiFlexGroup direction="column">
-              <EuiFlexItem grow={false}>
+              <EuiFlexItem>
                 <EndpointEnvironment
                   version={version}
                   selected={request.environment_name}

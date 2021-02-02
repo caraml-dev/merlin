@@ -211,6 +211,7 @@ func main() {
 		HomePage:         reactConfig.HomePage,
 		MerlinURL:        reactConfig.MerlinURL,
 		MlpURL:           reactConfig.MlpURL,
+		FeastCoreURL:     reactConfig.FeastCoreURL,
 		DockerRegistries: reactConfig.DockerRegistries,
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
@@ -240,6 +241,7 @@ type uiEnvHandler struct {
 	HomePage         string `json:"REACT_APP_HOMEPAGE,omitempty"`
 	MerlinURL        string `json:"REACT_APP_MERLIN_API,omitempty"`
 	MlpURL           string `json:"REACT_APP_MLP_API,omitempty"`
+	FeastCoreURL     string `json:"REACT_APP_FEAST_CORE_API,omitempty"`
 	DockerRegistries string `json:"REACT_APP_DOCKER_REGISTRIES,omitempty"`
 
 	MonitoringEnabled              bool   `json:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
