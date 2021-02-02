@@ -63,7 +63,7 @@ func main() {
 		log.Fatalln(errors.Wrap(err, "Unable to initialie feastSdk client"))
 	}
 
-	f := feast.NewTransformer(feastClient, config, logger)
+	f := feast.NewTransformer(feastClient, config, &cfg.Feast, logger)
 
 	s := server.New(&cfg.Server, logger)
 	s.PreprocessHandler = f.Transform

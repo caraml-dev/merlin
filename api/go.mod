@@ -7,7 +7,7 @@ require (
 	github.com/GoogleCloudPlatform/spark-on-k8s-operator v0.0.0-20200424034326-7cd886c7ec44
 	github.com/antihax/optional v1.0.0
 	github.com/buger/jsonparser v1.1.1
-	github.com/feast-dev/feast/sdk/go v0.8.1-0.20210104034500-a3e6e5371bce
+	github.com/feast-dev/feast/sdk/go v0.9.2
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-openapi/spec v0.19.9 // indirect
 	github.com/go-playground/locales v0.13.0
