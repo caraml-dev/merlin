@@ -17,6 +17,7 @@
 import React, { useEffect, useState } from "react";
 import { EuiButtonIcon, EuiFieldText, EuiInMemoryTable } from "@elastic/eui";
 import PropTypes from "prop-types";
+import { STANDARD_TRANSFORMER_CONFIG_ENV_NAME } from "../../../services/transformer/TransformerConfig";
 
 require("../../../assets/scss/EnvironmentVariables.scss");
 
@@ -24,7 +25,7 @@ const filterProtectedEnvVar = envVar => {
   return (
     envVar.name !== "MODEL_NAME" &&
     envVar.name !== "MODEL_DIR" &&
-    envVar.name !== "TRANSFORMER_CONFIG" &&
+    envVar.name !== STANDARD_TRANSFORMER_CONFIG_ENV_NAME &&
     !envVar.name.startsWith("MERLIN_TRANSFORMER")
   );
 };

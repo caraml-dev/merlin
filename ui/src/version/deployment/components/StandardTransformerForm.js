@@ -29,7 +29,8 @@ import { FeastTransformationPanel } from "./FeastTransformationPanel";
 import {
   Config,
   FeastConfig,
-  newConfig
+  newConfig,
+  STANDARD_TRANSFORMER_CONFIG_ENV_NAME
 } from "../../../services/transformer/TransformerConfig";
 import { feastEndpoints, useFeastApi } from "../../../hooks/useFeastApi";
 
@@ -47,7 +48,7 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
 
       if (transformer.env_vars && transformer.env_vars.length > 0) {
         const envVar = transformer.env_vars.find(
-          e => e.name === "TRANSFORMER_CONFIG"
+          e => e.name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME
         );
         if (envVar && envVar.value) {
           const envVarJSON = JSON.parse(envVar.value);
@@ -63,7 +64,12 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
       const tc = newConfig();
       setConfig(tc);
       setConfigInitialized(true);
-      onChange([{ name: "TRANSFORMER_CONFIG", value: JSON.stringify(tc) }]);
+      onChange([
+        {
+          name: STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
+          value: JSON.stringify(tc)
+        }
+      ]);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [configInitialized, transformer.env_vars]
@@ -81,11 +87,11 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
         // If it's not exist, create new env var
         // If it's exist, update it
         const idx = transformer.env_vars.findIndex(
-          e => e.name === "TRANSFORMER_CONFIG"
+          e => e.name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME
         );
         if (idx === -1) {
           const newEnvVars = [
-            { name: "TRANSFORMER_CONFIG", value: newConfigJSON }
+            { name: STANDARD_TRANSFORMER_CONFIG_ENV_NAME, value: newConfigJSON }
           ];
           onChange(newEnvVars);
         } else {

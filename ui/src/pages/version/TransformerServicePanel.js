@@ -25,7 +25,10 @@ import {
 import { ContainerConfigTable } from "../../components/ContainerConfigTable";
 import { EnvVarsConfigTable } from "../../components/EnvVarsConfigTable";
 import { ResourcesConfigTable } from "../../components/ResourcesConfigTable";
-import { Config } from "../../services/transformer/TransformerConfig";
+import {
+  Config,
+  STANDARD_TRANSFORMER_CONFIG_ENV_NAME
+} from "../../services/transformer/TransformerConfig";
 
 const yaml = require("js-yaml");
 
@@ -45,7 +48,7 @@ export const TransformerServicePanel = ({ endpoint }) => {
       endpoint.transformer.env_vars.length > 0
     ) {
       const envVar = endpoint.transformer.env_vars.find(
-        e => e.name === "TRANSFORMER_CONFIG"
+        e => e.name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME
       );
       if (envVar && envVar.value) {
         const envVarJSON = JSON.parse(envVar.value);
