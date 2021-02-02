@@ -3,7 +3,6 @@ module github.com/gojek/merlin
 go 1.13
 
 require (
-	cloud.google.com/go v0.75.0 // indirect
 	github.com/DATA-DOG/go-sqlmock v1.3.3
 	github.com/GoogleCloudPlatform/spark-on-k8s-operator v0.0.0-20200424034326-7cd886c7ec44
 	github.com/antihax/optional v1.0.0
@@ -18,9 +17,9 @@ require (
 	github.com/gojek/merlin-pyspark-app v0.0.3
 	github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8
 	github.com/golang-migrate/migrate/v4 v4.11.0
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.4.2
 	github.com/google/go-containerregistry v0.0.0-20191009212737-d753c5604768
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/schema v1.1.0
 	github.com/hashicorp/go-retryablehttp v0.6.6 // indirect
@@ -30,6 +29,7 @@ require (
 	github.com/jinzhu/gorm v1.9.11
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kubeflow/kfserving v0.4.1
+	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pilagod/gorm-cursor-paginator v1.3.0
 	github.com/pkg/errors v0.9.1
@@ -37,17 +37,12 @@ require (
 	github.com/prometheus/common v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/rs/cors v1.7.0
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.4.0
 	github.com/xanzy/go-gitlab v0.31.0
 	go.uber.org/zap v1.13.0
-	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
-	golang.org/x/oauth2 v0.0.0-20210126194326-f9ce19ea3013
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
-	golang.org/x/text v0.3.5 // indirect
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
-	google.golang.org/api v0.37.0 // indirect
-	google.golang.org/genproto v0.0.0-20210126160654-44e461bb6506 // indirect
-	google.golang.org/grpc v1.35.0
+	google.golang.org/grpc v1.31.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.2.8
 	istio.io/api v0.0.0-20191115173247-e1a1952e5b81

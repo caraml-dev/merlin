@@ -1,16 +1,16 @@
 package feast
 
 import (
+	"context"
 	"encoding/json"
-	"io/ioutil"
-	"log"
-	"net/http"
+	"fmt"
 	"strings"
-	"unsafe"
 
 	"github.com/buger/jsonparser"
 	feast "github.com/feast-dev/feast/sdk/go"
-	"github.com/pkg/errors"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer"
 )
@@ -20,92 +20,53 @@ type Options struct {
 	ServingURL string `envconfig:"FEAST_SERVING_URL" required:"true"`
 }
 
-// FeastTransformer wraps feast serving client to retrieve features.
-type FeastTransformer struct {
-	feastClient *feast.GrpcClient
+// Transformer wraps feast serving client to retrieve features.
+type Transformer struct {
+	feastClient feast.Client
 	config      *transformer.StandardTransformerConfig
+	logger      *zap.Logger
 }
 
-// NewTransformer initializes a new FeastTransformer.
-func NewTransformer(feastClient *feast.GrpcClient, config *transformer.StandardTransformerConfig) *FeastTransformer {
-	return &FeastTransformer{
+// NewTransformer initializes a new Transformer.
+func NewTransformer(feastClient feast.Client, config *transformer.StandardTransformerConfig, logger *zap.Logger) *Transformer {
+	return &Transformer{
 		feastClient: feastClient,
 		config:      config,
+		logger:      logger,
 	}
 }
 
 type FeastFeature struct {
-	Columns []string  `json:"columns"`
-	Data    []float64 `json:"data"`
+	Columns []string        `json:"columns"`
+	Data    [][]interface{} `json:"data"`
 }
 
-func (f *FeastTransformer) TransformHandler(w http.ResponseWriter, r *http.Request) ([]byte, error) {
-	log.Println("TransformHandler")
+type result struct {
+	tableName    string
+	feastFeature *FeastFeature
+	err          error
+}
 
-	ctx := r.Context()
+// Transform retrieves the Feast features values and add them into the request.
+func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, error) {
+	feastFeatures := make(map[string]*FeastFeature, len(t.config.TransformerConfig.Feast))
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, err
+	// parallelize feast call per feature table
+	resChan := make(chan result, len(t.config.TransformerConfig.Feast))
+	for _, config := range t.config.TransformerConfig.Feast {
+		go func(cfg *transformer.FeatureTable) {
+			val, err := t.getFeastFeature(ctx, request, cfg)
+			resChan <- result{createTableName(cfg.Entities), val, err}
+		}(config)
 	}
-	defer r.Body.Close()
 
-	feastFeatures := make(map[string]FeastFeature, len(f.config.TransformerConfig.Feast))
-
-	for _, config := range f.config.TransformerConfig.Feast {
-		// TODO: validate the config
-		log.Println(config)
-
-		entities := []feast.Row{}
-		entityIDs := make(map[string]int, len(config.Entities))
-
-		for _, entity := range config.Entities {
-			val, err := getValueFromJSONPayload(body, *entity)
-			if err != nil {
-				log.Printf("JSON Path %s not found in request payload", entity.JsonPath)
-			}
-			entities = append(entities, feast.Row{
-				entity.Name: feast.StrVal(val),
-			})
-
-			entityIDs[entity.Name] = 1
+	// collect result
+	for i := 0; i < cap(resChan); i++ {
+		res := <-resChan
+		if res.err != nil {
+			return nil, res.err
 		}
-
-		features := []string{}
-		for _, feature := range config.Features {
-			features = append(features, feature.Name)
-		}
-
-		feastRequest := feast.OnlineFeaturesRequest{
-			Project:  config.Project,
-			Entities: entities,
-			Features: features,
-		}
-
-		feastResponse, err := f.feastClient.GetOnlineFeatures(ctx, &feastRequest)
-		if err != nil {
-			return nil, err
-		}
-
-		log.Println(feastResponse.Rows())
-
-		data := []float64{}
-		for i, feastRow := range feastResponse.Rows() {
-			log.Println(i, feastRow)
-			for featureID, featureValue := range feastRow {
-				log.Println("ID:", featureID, "Value:", featureValue)
-				if _, ok := entityIDs[featureID]; ok {
-					continue
-				}
-
-				data = append(data, featureValue.GetDoubleVal())
-			}
-		}
-
-		feastFeatures[config.Entities[0].Name] = FeastFeature{
-			Columns: features,
-			Data:    data,
-		}
+		feastFeatures[res.tableName] = res.feastFeature
 	}
 
 	feastFeatureJSON, err := json.Marshal(feastFeatures)
@@ -113,7 +74,7 @@ func (f *FeastTransformer) TransformHandler(w http.ResponseWriter, r *http.Reque
 		return nil, err
 	}
 
-	out, err := jsonparser.Set(body, feastFeatureJSON, "feast_features")
+	out, err := jsonparser.Set(request, feastFeatureJSON, transformer.FeastFeatureJSONField)
 	if err != nil {
 		return nil, err
 	}
@@ -121,21 +82,117 @@ func (f *FeastTransformer) TransformHandler(w http.ResponseWriter, r *http.Reque
 	return out, err
 }
 
-// TODO: return feastTypes.Value instead of string
-func getValueFromJSONPayload(body []byte, entity transformer.Entity) (string, error) {
-	// Retrieve value using JSON path
-	value, typez, _, _ := jsonparser.Get(body, strings.Split(entity.JsonPath, ".")...)
+func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, config *transformer.FeatureTable) (*FeastFeature, error) {
+	var entities []feast.Row
+	for _, entity := range config.Entities {
+		vals, err := getValuesFromJSONPayload(request, entity)
+		if err != nil {
+			return nil, fmt.Errorf("unable to extract entity %s: %v", entity.Name, err)
+		}
 
-	switch typez {
-	case jsonparser.String, jsonparser.Number, jsonparser.Boolean:
-		// See: https://github.com/buger/jsonparser/blob/master/bytes_unsafe.go#L31
-		return *(*string)(unsafe.Pointer(&value)), nil
-	case jsonparser.Null:
-		return "", nil
-	case jsonparser.NotExist:
-		return "", errors.Errorf("Field %s not found in the request payload: Key path not found", entity.JsonPath)
+		for _, val := range vals {
+			entities = append(entities, feast.Row{
+				entity.Name: val,
+			})
+		}
+	}
+
+	var features []string
+	for _, feature := range config.Features {
+		features = append(features, feature.Name)
+	}
+
+	feastRequest := feast.OnlineFeaturesRequest{
+		Project:  config.Project,
+		Entities: entities,
+		Features: features,
+	}
+	t.logger.Debug("feast_request", zap.Any("feast_request", feastRequest))
+
+	feastResponse, err := t.feastClient.GetOnlineFeatures(ctx, &feastRequest)
+	if err != nil {
+		return nil, err
+	}
+	t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
+
+	var columns []string
+	for _, entity := range config.Entities {
+		columns = append(columns, entity.Name)
+	}
+	columns = append(columns, features...)
+
+	var data [][]interface{}
+	status := feastResponse.Statuses()
+	for i, feastRow := range feastResponse.Rows() {
+		var row []interface{}
+		for _, column := range columns {
+			switch status[i][column] {
+			case serving.GetOnlineFeaturesResponse_PRESENT:
+				rawValue := feastRow[column]
+				featVal, err := getFeatureValue(rawValue)
+				if err != nil {
+					return nil, err
+				}
+				row = append(row, featVal)
+			case serving.GetOnlineFeaturesResponse_NOT_FOUND:
+				row = append(row, nil)
+			case serving.GetOnlineFeaturesResponse_NULL_VALUE:
+				row = append(row, nil)
+			case serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
+				row = append(row, nil)
+			default:
+				return nil, fmt.Errorf("")
+			}
+		}
+		data = append(data, row)
+	}
+
+	return &FeastFeature{
+		Columns: columns,
+		Data:    data,
+	}, nil
+}
+
+func createTableName(entities []*transformer.Entity) string {
+	entityNames := make([]string, 0)
+	for _, n := range entities {
+		entityNames = append(entityNames, n.Name)
+	}
+
+	return strings.Join(entityNames, "_")
+}
+
+func getFeatureValue(val *types.Value) (interface{}, error) {
+	switch val.Val.(type) {
+	case *types.Value_StringVal:
+		return val.GetStringVal(), nil
+	case *types.Value_DoubleVal:
+		return val.GetDoubleVal(), nil
+	case *types.Value_FloatVal:
+		return val.GetFloatVal(), nil
+	case *types.Value_Int32Val:
+		return val.GetInt32Val(), nil
+	case *types.Value_Int64Val:
+		return val.GetInt64Val(), nil
+	case *types.Value_BoolVal:
+		return val.GetBoolVal(), nil
+	case *types.Value_StringListVal:
+		return val.GetStringListVal(), nil
+	case *types.Value_DoubleListVal:
+		return val.GetDoubleListVal(), nil
+	case *types.Value_FloatListVal:
+		return val.GetFloatListVal(), nil
+	case *types.Value_Int32ListVal:
+		return val.GetInt32ListVal(), nil
+	case *types.Value_Int64ListVal:
+		return val.GetInt64ListVal(), nil
+	case *types.Value_BoolListVal:
+		return val.GetBoolListVal(), nil
+	case *types.Value_BytesVal:
+		return val.GetBytesVal(), nil
+	case *types.Value_BytesListVal:
+		return val.GetBytesListVal(), nil
 	default:
-		return "", errors.Errorf(
-			"Field %s can not be parsed, unsupported type: %s", entity.JsonPath, typez.String())
+		return nil, fmt.Errorf("unknown feature value type: %T", val.Val)
 	}
 }
