@@ -14,48 +14,55 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from "react";
+import React from "react";
+import PropTypes from "prop-types";
 import {
-  EuiFieldText,
-  EuiFlexGroup,
-  EuiFlexItem,
+  EuiAccordion,
   EuiForm,
   EuiFormRow,
-  EuiIcon,
   EuiPanel,
   EuiSpacer,
   EuiSuperSelect,
-  EuiSwitch,
-  EuiTitle,
-  EuiToolTip
+  EuiText,
+  EuiTitle
 } from "@elastic/eui";
-import { appConfig } from "../../../config";
-import { ResourceRequest } from "./ResourceRequest";
+import { CustomTransformerForm } from "./CustomTransformerForm";
 import { EnvironmentVariables } from "./EnvironmentVariables";
 import { LoggerForm } from "./LoggerForm";
+import { StandardTransformerForm } from "./StandardTransformerForm";
+import { ResourceRequest } from "./ResourceRequest";
 
-import PropTypes from "prop-types";
-
-const extractRegistry = (image, registries) => {
-  if (image) {
-    const registry = registries.find(o => image.startsWith(o.value));
-    if (registry && registry.value) {
-      image = image.substr(registry.value.length);
-      image && image.startsWith("/") && (image = image.substr(1));
-      return [registry.value, image];
-    }
+const extractTransformerType = transformer => {
+  if (!transformer.enabled) {
+    return "disabled";
   }
-  return ["docker-hub", image];
+  if (
+    transformer.transformer_type === undefined ||
+    transformer.transformer_type === "" ||
+    transformer.transformer_type === "custom"
+  ) {
+    return "custom";
+  }
+  return "standard";
 };
 
-const dockerRegistryDisplay = registry => (
-  <EuiFlexGroup alignItems="center" gutterSize="s">
-    <EuiFlexItem grow={1}>
-      <EuiIcon type="logoDocker" size="m" />
-    </EuiFlexItem>
-    <EuiFlexItem grow={9}>{registry}</EuiFlexItem>
-  </EuiFlexGroup>
-);
+const transformerTypes = [
+  {
+    value: "disabled",
+    inputDisplay: "No Transformer",
+    dropdownDisplay: "No Transformer"
+  },
+  {
+    value: "standard",
+    inputDisplay: "Standard Transformer",
+    dropdownDisplay: "Standard Transformer"
+  },
+  {
+    value: "custom",
+    inputDisplay: "Custom Transformer",
+    dropdownDisplay: "Custom Transformer"
+  }
+];
 
 export const Transformer = ({
   transformer,
@@ -70,45 +77,19 @@ export const Transformer = ({
       [field]: value
     });
 
-  const [dockerRegistries, setDockerRegistries] = useState([
-    {
-      value: "docker-hub",
-      inputDisplay: dockerRegistryDisplay("Docker Hub"),
-      dropdownDisplay: dockerRegistryDisplay("Docker Hub")
+  const transformerType = extractTransformerType(transformer);
+
+  const onTransformerTypeChange = value => {
+    if (value === "disabled") {
+      setValue("enabled", false);
+      return;
     }
-  ]);
 
-  useEffect(
-    () => {
-      if (appConfig.dockerRegistries) {
-        setDockerRegistries([
-          ...dockerRegistries,
-          ...appConfig.dockerRegistries.map(registry => ({
-            value: registry,
-            inputDisplay: dockerRegistryDisplay(registry),
-            dropdownDisplay: dockerRegistryDisplay(registry)
-          }))
-        ]);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appConfig.dockerRegistries]
-  );
-
-  const [registry, image] = extractRegistry(
-    transformer.image,
-    dockerRegistries
-  );
-
-  const onRegistryChange = value => {
-    setValue("image", value !== "docker-hub" ? `${value}/${image}` : image);
-  };
-
-  const onImageChange = value => {
-    setValue(
-      "image",
-      registry !== "docker-hub" ? `${registry}/${value}` : value
-    );
+    onChange({
+      ...transformer,
+      enabled: true,
+      transformer_type: value
+    });
   };
 
   const onVariablesChange = value => {
@@ -119,105 +100,82 @@ export const Transformer = ({
 
   return (
     <EuiPanel grow={false}>
-      <EuiFlexGroup alignItems="center" justifyContent="spaceBetween">
-        <EuiFlexItem grow={false}>
-          <EuiTitle size="xs">
-            <h4>Transformer Configuration</h4>
-          </EuiTitle>
-        </EuiFlexItem>
-        <EuiFlexItem grow={false}>
-          <EuiSwitch
-            label=""
-            checked={transformer.enabled || false}
-            onChange={e => setValue("enabled", e.target.checked)}
+      <EuiTitle size="xs">
+        <h4>Transformer Configuration</h4>
+      </EuiTitle>
+
+      <EuiSpacer size="m" />
+
+      <EuiForm>
+        <EuiFormRow
+          fullWidth
+          label="Transformer Type"
+          display="columnCompressed">
+          <EuiSuperSelect
+            fullWidth
+            options={transformerTypes}
+            valueOfSelected={transformerType}
+            onChange={value => onTransformerTypeChange(value)}
+            itemLayoutAlign="top"
+            hasDividers
           />
-        </EuiFlexItem>
-      </EuiFlexGroup>
+        </EuiFormRow>
 
-      {transformer.enabled && (
-        <>
-          <EuiSpacer size="s" />
-
-          <EuiForm>
-            <EuiFormRow fullWidth label="Docker Image*">
-              <EuiFlexGroup gutterSize="s">
-                <EuiFlexItem grow={4}>
-                  <EuiSuperSelect
-                    options={dockerRegistries}
-                    valueOfSelected={registry}
-                    onChange={value => onRegistryChange(value)}
-                    itemLayoutAlign="top"
-                    hasDividers
-                  />
-                </EuiFlexItem>
-                <EuiFlexItem grow={6}>
-                  <EuiFieldText
-                    placeholder="Docker image name and tag"
-                    value={image}
-                    onChange={e => onImageChange(e.target.value)}
-                  />
-                </EuiFlexItem>
-              </EuiFlexGroup>
-            </EuiFormRow>
-
-            <EuiFormRow
-              fullWidth
-              label={
-                <EuiToolTip content="Specify the command to be executed. The Docker image's ENTRYPOINT is used if this is not provided.">
-                  <span>
-                    Command <EuiIcon type="questionInCircle" color="subdued" />
-                  </span>
-                </EuiToolTip>
-              }
-              display="columnCompressed">
-              <EuiFieldText
-                value={transformer.command || ""}
-                onChange={e => setValue("command", e.target.value)}
-                name="command"
+        {transformer.enabled && (
+          <>
+            {(transformer.transformer_type === undefined ||
+              transformer.transformer_type === "" ||
+              transformer.transformer_type === "custom") && (
+              <CustomTransformerForm
+                transformer={transformer}
+                onTransformerChange={onChange}
               />
-            </EuiFormRow>
+            )}
 
-            <EuiFormRow
-              fullWidth
-              label={
-                <EuiToolTip content="Specify the arguments to the command above. The Docker image's CMD is used if this is not provided.">
-                  <span>
-                    Args <EuiIcon type="questionInCircle" color="subdued" />
-                  </span>
-                </EuiToolTip>
-              }
-              display="columnCompressed">
-              <EuiFieldText
-                value={transformer.args || ""}
-                onChange={e => setValue("args", e.target.value)}
-                name="args"
-              />
-            </EuiFormRow>
-
-            <ResourceRequest
-              resourceRequest={
-                transformer.resource_request || defaultResourceRequest
-              }
-              onChange={value => setValue("resource_request", value)}
-            />
+            {transformer.transformer_type === "standard" && (
+              <>
+                <EuiSpacer size="l" />
+                <StandardTransformerForm
+                  transformer={transformer}
+                  onChange={onVariablesChange}
+                />
+              </>
+            )}
 
             <EuiSpacer size="l" />
-            <LoggerForm
-              logger={logger}
-              config_type="transformer"
-              onChange={onLoggerChange}
-            />
-            <EuiSpacer size="l" />
 
-            <EuiFormRow fullWidth label="Environment Variables">
-              <EnvironmentVariables
-                variables={transformer.env_vars || []}
-                onChange={onVariablesChange}
-              />
-            </EuiFormRow>
-          </EuiForm>
-        </>
-      )}
+            <EuiAccordion
+              id="transformer-advance_configuration"
+              buttonContent={
+                <EuiText size="xs">Advanced configurations</EuiText>
+              }
+              paddingSize="m">
+              <>
+                <LoggerForm
+                  logger={logger}
+                  config_type="transformer"
+                  onChange={onLoggerChange}
+                />
+                <EuiSpacer size="m" />
+
+                <ResourceRequest
+                  resourceRequest={
+                    transformer.resource_request || defaultResourceRequest
+                  }
+                  onChange={value => setValue("resource_request", value)}
+                />
+
+                <EuiFormRow fullWidth label="Environment Variables">
+                  <EnvironmentVariables
+                    variables={transformer.env_vars || []}
+                    onChange={onVariablesChange}
+                  />
+                </EuiFormRow>
+              </>
+            </EuiAccordion>
+          </>
+        )}
+      </EuiForm>
     </EuiPanel>
   );
 };

@@ -17,6 +17,7 @@
 import React, { useEffect, useState } from "react";
 import { EuiButtonIcon, EuiFieldText, EuiInMemoryTable } from "@elastic/eui";
 import PropTypes from "prop-types";
+import { STANDARD_TRANSFORMER_CONFIG_ENV_NAME } from "../../../services/transformer/TransformerConfig";
 
 require("../../../assets/scss/EnvironmentVariables.scss");
 
@@ -24,6 +25,7 @@ const filterProtectedEnvVar = envVar => {
   return (
     envVar.name !== "MODEL_NAME" &&
     envVar.name !== "MODEL_DIR" &&
+    envVar.name !== STANDARD_TRANSFORMER_CONFIG_ENV_NAME &&
     !envVar.name.startsWith("MERLIN_TRANSFORMER")
   );
 };
@@ -31,30 +33,40 @@ const filterProtectedEnvVar = envVar => {
 export const EnvironmentVariables = ({ variables, onChange }) => {
   const [items, setItems] = useState([]);
 
-  useEffect(() => {
-    if (items.length === 0) {
-      const filteredVars = variables.filter(filterProtectedEnvVar);
-      const updatedItems = [
-        ...filteredVars.map((v, idx) => ({ idx, ...v })),
-        { idx: filteredVars.length }
-      ];
+  useEffect(
+    () => {
+      if (items.length === 0) {
+        const filteredVars = variables.filter(filterProtectedEnvVar);
+        const updatedItems = [
+          ...filteredVars.map((v, idx) => ({ idx, ...v })),
+          { idx: filteredVars.length }
+        ];
 
-      setItems(items =>
-        JSON.stringify(items) !== JSON.stringify(updatedItems)
-          ? updatedItems
-          : items
-      );
-    }
-  }, [variables, items, setItems]);
+        setItems(items =>
+          JSON.stringify(items) !== JSON.stringify(updatedItems)
+            ? updatedItems
+            : items
+        );
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [variables]
+  );
 
-  useEffect(() => {
-    if (items.length > 1) {
-      const updatedItems = items
-        .slice(0, items.length - 1)
-        .map(item => ({ name: item.name.trim(), value: item.value }));
-      onChange(updatedItems);
-    }
-  }, [items, onChange]);
+  useEffect(
+    () => {
+      if (items.length > 1) {
+        const updatedItems = items
+          .slice(0, items.length - 1)
+          .map(item => ({ name: item.name.trim(), value: item.value }));
+        onChange(updatedItems);
+      } else {
+        onChange([]);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [items]
+  );
 
   const removeRow = idx => {
     items.splice(idx, 1);

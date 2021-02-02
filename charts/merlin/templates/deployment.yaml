@@ -110,6 +110,8 @@ spec:
             value: "{{ .Values.merlin.apiHost }}"
           - name: REACT_APP_MLP_API
             value: "{{ .Values.merlin.mlpApi.apiHost }}"
+          - name: REACT_APP_FEAST_CORE_API
+            value: "{{ .Values.merlin.feastCoreApi.apiHost }}"
           - name: REACT_APP_DOCKER_REGISTRIES
             value: "{{ .Values.merlin.dockerRegistries }}"
           - name: IMG_BUILDER_CLUSTER_NAME
