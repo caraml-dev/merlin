@@ -24,8 +24,9 @@ func init() {
 
 func main() {
 	cfg := struct {
-		Server server.Options
-		Feast  feast.Options
+		Server           server.Options
+		Feast            feast.Options
+		MonitoringOption feast.FeatureMonitoringOptions
 
 		StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
 
@@ -63,7 +64,7 @@ func main() {
 		log.Fatalln(errors.Wrap(err, "Unable to initialie feastSdk client"))
 	}
 
-	f := feast.NewTransformer(feastClient, config, logger)
+	f := feast.NewTransformer(feastClient, config, &cfg.MonitoringOption, logger)
 
 	s := server.New(&cfg.Server, logger)
 	s.PreprocessHandler = f.Transform

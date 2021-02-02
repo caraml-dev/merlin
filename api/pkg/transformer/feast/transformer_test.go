@@ -390,6 +390,10 @@ func TestTransformer_Transform(t *testing.T) {
 				feastClient: mockFeast,
 				config:      tt.fields.config,
 				logger:      logger,
+				monitoringOptions: &FeatureMonitoringOptions{
+					StatusMonitoringEnabled: true,
+					ValueMonitoringEnabled:  true,
+				},
 			}
 			got, err := f.Transform(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
