@@ -39,31 +39,35 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
   const [config, setConfig] = useState({});
 
   const [configInitialized, setConfigInitialized] = useState(false);
-  useEffect(() => {
-    if (configInitialized) {
-      return;
-    }
+  useEffect(
+    () => {
+      if (configInitialized) {
+        return;
+      }
 
-    if (transformer.env_vars && transformer.env_vars.length > 0) {
-      const envVar = transformer.env_vars.find(
-        e => e.name === "TRANSFORMER_CONFIG"
-      );
-      if (envVar && envVar.value) {
-        const envVarJSON = JSON.parse(envVar.value);
-        if (envVarJSON) {
-          const tc = Config.from(envVarJSON);
-          setConfig(tc);
-          setConfigInitialized(true);
-          return;
+      if (transformer.env_vars && transformer.env_vars.length > 0) {
+        const envVar = transformer.env_vars.find(
+          e => e.name === "TRANSFORMER_CONFIG"
+        );
+        if (envVar && envVar.value) {
+          const envVarJSON = JSON.parse(envVar.value);
+          if (envVarJSON) {
+            const tc = Config.from(envVarJSON);
+            setConfig(tc);
+            setConfigInitialized(true);
+            return;
+          }
         }
       }
-    }
 
-    const tc = newConfig();
-    setConfig(tc);
-    setConfigInitialized(true);
-    onChange([{ name: "TRANSFORMER_CONFIG", value: JSON.stringify(tc) }]);
-  }, [configInitialized, transformer.env_vars]);
+      const tc = newConfig();
+      setConfig(tc);
+      setConfigInitialized(true);
+      onChange([{ name: "TRANSFORMER_CONFIG", value: JSON.stringify(tc) }]);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [configInitialized, transformer.env_vars]
+  );
 
   useEffect(
     () => {
@@ -203,7 +207,8 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
 
       <EuiAccordion
         id="transformer-config-yaml"
-        buttonContent="See YAML configuration">
+        buttonContent={<EuiText size="xs">See YAML configuration</EuiText>}
+        paddingSize="m">
         <EuiCodeBlock language="yaml" fontSize="m" paddingSize="m" isCopyable>
           {yaml.dump(config)}
         </EuiCodeBlock>

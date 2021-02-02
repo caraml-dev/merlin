@@ -26,7 +26,6 @@ import {
   EuiToolTip
 } from "@elastic/eui";
 import { appConfig } from "../../../config";
-import { ResourceRequest } from "./ResourceRequest";
 
 const extractRegistry = (image, registries) => {
   if (image) {
@@ -49,11 +48,7 @@ const dockerRegistryDisplay = registry => (
   </EuiFlexGroup>
 );
 
-export const CustomTransformerForm = ({
-  transformer,
-  defaultResourceRequest,
-  onTransformerChange
-}) => {
+export const CustomTransformerForm = ({ transformer, onTransformerChange }) => {
   const [dockerRegistries, setDockerRegistries] = useState([
     {
       value: "docker-hub",
@@ -161,17 +156,11 @@ export const CustomTransformerForm = ({
           name="args"
         />
       </EuiFormRow>
-
-      <ResourceRequest
-        resourceRequest={transformer.resource_request || defaultResourceRequest}
-        onChange={value => setValue("resource_request", value)}
-      />
     </>
   );
 };
 
 CustomTransformerForm.propTypes = {
   transformer: PropTypes.object,
-  defaultResourceRequest: PropTypes.object,
   onTransformerChange: PropTypes.func
 };

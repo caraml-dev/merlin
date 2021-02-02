@@ -114,9 +114,6 @@ export const EndpointDeployment = ({
   }, [actionTitle, breadcrumbs]);
 
   const [request, setRequest] = useState({});
-  // useEffect(() => {
-  //   console.log(JSON.stringify(request, null, 2));
-  // }, [request]);
 
   useEffect(() => {
     version.endpoints &&

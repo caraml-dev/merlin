@@ -34,7 +34,7 @@ export const useFeastApi = (
   return useApi(
     endpoint,
     {
-      baseApiUrl: config.FEAST_API,
+      baseApiUrl: config.FEAST_CORE_API,
       timeout: config.TIMEOUT,
       useMockData: config.USE_MOCK_DATA,
       ...options

@@ -33,8 +33,8 @@ merlin:
     # encryptionKey must be specified using --set flag.
     # encryptionKey:
 
-  feastApi:
-    apiHost: http://feast.mlp:8080/v1
+  feastCoreApi:
+    apiHost: http://feast-core.mlp:8080/v1
 
   imageBuilder:
     clusterName: "dev"

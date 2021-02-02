@@ -17,17 +17,20 @@
 import React from "react";
 import PropTypes from "prop-types";
 import {
+  EuiAccordion,
   EuiForm,
   EuiFormRow,
   EuiPanel,
   EuiSpacer,
   EuiSuperSelect,
+  EuiText,
   EuiTitle
 } from "@elastic/eui";
 import { CustomTransformerForm } from "./CustomTransformerForm";
 import { EnvironmentVariables } from "./EnvironmentVariables";
 import { LoggerForm } from "./LoggerForm";
 import { StandardTransformerForm } from "./StandardTransformerForm";
+import { ResourceRequest } from "./ResourceRequest";
 
 const extractTransformerType = transformer => {
   if (!transformer.enabled) {
@@ -125,9 +128,6 @@ export const Transformer = ({
               transformer.transformer_type === "custom") && (
               <CustomTransformerForm
                 transformer={transformer}
-                defaultResourceRequest={
-                  transformer.resource_request || defaultResourceRequest
-                }
                 onTransformerChange={onChange}
               />
             )}
@@ -143,17 +143,28 @@ export const Transformer = ({
             )}
 
             <EuiSpacer size="l" />
-            <LoggerForm
-              logger={logger}
-              config_type="transformer"
-              onChange={onLoggerChange}
-            />
 
-            {(transformer.transformer_type === undefined ||
-              transformer.transformer_type === "" ||
-              transformer.transformer_type === "custom") && (
+            <EuiAccordion
+              id="transformer-advance_configuration"
+              buttonContent={
+                <EuiText size="xs">Advanced configurations</EuiText>
+              }
+              paddingSize="m">
               <>
-                <EuiSpacer size="l" />
+                <LoggerForm
+                  logger={logger}
+                  config_type="transformer"
+                  onChange={onLoggerChange}
+                />
+                <EuiSpacer size="m" />
+
+                <ResourceRequest
+                  resourceRequest={
+                    transformer.resource_request || defaultResourceRequest
+                  }
+                  onChange={value => setValue("resource_request", value)}
+                />
+
                 <EuiFormRow fullWidth label="Environment Variables">
                   <EnvironmentVariables
                     variables={transformer.env_vars || []}
@@ -161,7 +172,7 @@ export const Transformer = ({
                   />
                 </EuiFormRow>
               </>
-            )}
+            </EuiAccordion>
           </>
         )}
       </EuiForm>
