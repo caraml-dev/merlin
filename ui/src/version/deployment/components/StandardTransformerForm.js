@@ -62,6 +62,7 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
     const tc = newConfig();
     setConfig(tc);
     setConfigInitialized(true);
+    onChange([{ name: "TRANSFORMER_CONFIG", value: JSON.stringify(tc) }]);
   }, [configInitialized, transformer.env_vars]);
 
   useEffect(
