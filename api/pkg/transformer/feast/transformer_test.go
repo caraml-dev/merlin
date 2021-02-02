@@ -457,7 +457,7 @@ func TestTransformer_Transform(t *testing.T) {
 				})).Return(m.response, nil)
 			}
 
-			f := NewTransformer(mockFeast, tt.fields.config, &FeatureMonitoringOptions{
+			f := NewTransformer(mockFeast, tt.fields.config, &Options{
 				StatusMonitoringEnabled: true,
 				ValueMonitoringEnabled:  true,
 			}, logger)
