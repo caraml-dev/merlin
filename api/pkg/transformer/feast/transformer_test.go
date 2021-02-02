@@ -56,7 +56,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										ValueType:    "STRING",
+										DefaultValue: "0.0",
 									},
 								},
 							},
@@ -112,7 +113,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										ValueType:    "STRING",
+										DefaultValue: "0.0",
 									},
 								},
 							},
@@ -168,7 +170,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										ValueType:    "STRING",
+										DefaultValue: "0.0",
 									},
 								},
 							},
@@ -234,7 +237,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										ValueType:    "STRING",
+										DefaultValue: "0.0",
 									},
 								},
 							},
@@ -300,7 +304,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										ValueType:    "STRING",
+										DefaultValue: "0.0",
 									},
 								},
 							},
@@ -316,7 +321,8 @@ func TestTransformer_Transform(t *testing.T) {
 								Features: []*transformer.Feature{
 									{
 										Name:         "customer_trips:average_daily_rides",
-										DefaultValue: 0.0,
+										ValueType:    "STRING",
+										DefaultValue: "0.0",
 									},
 								},
 							},
