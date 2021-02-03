@@ -15,6 +15,7 @@ import (
 func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 	mockPredictResponse := []byte(`{"predictions": [2, 2]}`)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
 		w.Write(mockPredictResponse)
 	}))
 	defer ts.Close()
@@ -38,6 +39,7 @@ func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 	response, err := ioutil.ReadAll(rr.Body)
 	assert.Nil(t, err)
 	assert.Equal(t, mockPredictResponse, response)
+	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
 }
 
 func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
@@ -84,6 +86,8 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 
 				assert.Nil(t, err)
 				assert.Equal(t, test.expModelRequest, body)
+
+				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(test.modelStatusCode)
 				w.Write(test.modelResponse)
 			}))
@@ -114,6 +118,7 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, test.modelResponse, response)
 			assert.Equal(t, test.modelStatusCode, rr.Code)
+			assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
 		})
 	}
 }

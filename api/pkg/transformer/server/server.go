@@ -88,6 +88,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
 	w.Write(respBody)
 }
@@ -166,4 +167,12 @@ func setupSignalHandler() (stopCh <-chan struct{}) {
 	}()
 
 	return stop
+}
+
+func copyHeader(dst, src http.Header) {
+	for k, vv := range src {
+		for _, v := range vv {
+			dst.Set(k, v)
+		}
+	}
 }
