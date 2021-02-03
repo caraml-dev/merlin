@@ -104,13 +104,8 @@ func (s *Server) predict(r *http.Request, request []byte) (*http.Response, error
 		return nil, err
 	}
 
-	// propagate merlin request id header to model
-	if len(r.Header.Get(MerlinLogIdHeader)) != 0 {
-		req.Header.Set(MerlinLogIdHeader, r.Header.Get(MerlinLogIdHeader))
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
+	// propagate headers
+	copyHeader(req.Header, r.Header)
 	return s.httpClient.Do(req)
 }
 
