@@ -21,12 +21,12 @@ import { STANDARD_TRANSFORMER_CONFIG_ENV_NAME } from "../../../services/transfor
 
 require("../../../assets/scss/EnvironmentVariables.scss");
 
-const filterProtectedEnvVar = envVar => {
+const isProtectedEnvVar = name => {
   return (
-    envVar.name !== "MODEL_NAME" &&
-    envVar.name !== "MODEL_DIR" &&
-    envVar.name !== STANDARD_TRANSFORMER_CONFIG_ENV_NAME &&
-    !envVar.name.startsWith("MERLIN_TRANSFORMER")
+    name === "MODEL_NAME" ||
+    name === "MODEL_DIR" ||
+    name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME ||
+    (name && name.startsWith("MERLIN_TRANSFORMER"))
   );
 };
 
@@ -36,10 +36,9 @@ export const EnvironmentVariables = ({ variables, onChange }) => {
   useEffect(
     () => {
       if (items.length === 0) {
-        const filteredVars = variables.filter(filterProtectedEnvVar);
         const updatedItems = [
-          ...filteredVars.map((v, idx) => ({ idx, ...v })),
-          { idx: filteredVars.length }
+          ...variables.map((v, idx) => ({ idx, ...v })),
+          { idx: variables.length }
         ];
 
         setItems(items =>
@@ -95,6 +94,7 @@ export const EnvironmentVariables = ({ variables, onChange }) => {
       render: (name, item) => (
         <EuiFieldText
           controlOnly
+          disabled={isProtectedEnvVar(item.name)}
           className="inlineTableInput"
           placeholder="Name"
           value={name || ""}
@@ -109,6 +109,7 @@ export const EnvironmentVariables = ({ variables, onChange }) => {
       render: (value, item) => (
         <EuiFieldText
           controlOnly
+          disabled={isProtectedEnvVar(item.name)}
           className="inlineTableInput"
           placeholder="Value"
           value={value || ""}
@@ -123,6 +124,7 @@ export const EnvironmentVariables = ({ variables, onChange }) => {
           render: item => {
             return item.idx < items.length - 1 ? (
               <EuiButtonIcon
+                disabled={isProtectedEnvVar(item.name)}
                 size="s"
                 color="danger"
                 iconType="trash"

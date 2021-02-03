@@ -200,7 +200,7 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
         <EuiFlexItem>
           <EuiButton size="s">
             <EuiText size="s" onClick={onAddFeastConfig}>
-              + Add Request Enrichment
+              + Add Retrieval Table
             </EuiText>
           </EuiButton>
         </EuiFlexItem>
