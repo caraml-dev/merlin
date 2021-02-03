@@ -9,6 +9,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/heptiolabs/healthcheck"
@@ -28,7 +29,7 @@ var onlyOneSignalHandler = make(chan struct{})
 type Options struct {
 	Port            string `envconfig:"MERLIN_TRANSFORMER_PORT" default:"8081"`
 	ModelName       string `envconfig:"MERLIN_TRANSFORMER_MODEL_NAME" default:"model"`
-	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"http://localhost:8080/v1/models/model:predict"`
+	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"localhost:8080"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
@@ -92,7 +93,12 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) predict(r *http.Request, request []byte) (*http.Response, error) {
-	req, err := http.NewRequest("POST", s.options.ModelPredictURL, bytes.NewBuffer(request))
+	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", s.options.ModelPredictURL, s.options.ModelName)
+	if !strings.Contains(predictURL, "http://") {
+		predictURL = "http://" + predictURL
+	}
+
+	req, err := http.NewRequest("POST", predictURL, bytes.NewBuffer(request))
 	if err != nil {
 		return nil, err
 	}
