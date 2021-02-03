@@ -55,7 +55,7 @@ export const FeastTransformationPanel = ({
       <EuiFlexGroup>
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>Request Enrichment #{index + 1}</h4>
+            <h4>Retrieval Table #{index + 1}</h4>
           </EuiText>
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
@@ -64,7 +64,7 @@ export const FeastTransformationPanel = ({
             color="text"
             iconType="cross"
             onClick={onDelete}
-            aria-label={`Remove request enrichment ${index + 1}`}
+            aria-label={`Remove retieval table ${index + 1}`}
           />
         </EuiFlexItem>
       </EuiFlexGroup>

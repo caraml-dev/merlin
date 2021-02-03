@@ -293,5 +293,5 @@ func createLabels(modelService *models.Service) map[string]string {
 }
 
 func createPredictURL(modelService *models.Service) string {
-	return modelService.Name + "-predictor-default." + modelService.Namespace
+	return "http://" + modelService.Name + "-predictor-default." + modelService.Namespace
 }
