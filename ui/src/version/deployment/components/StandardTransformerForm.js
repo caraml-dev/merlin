@@ -179,20 +179,6 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
     true
   );
 
-  const [{ data: feastEntities }] = useFeastApi(
-    feastEndpoints.listEntities,
-    { method: "POST", muteError: true },
-    {},
-    true
-  );
-
-  const [{ data: feastFeatureTables }] = useFeastApi(
-    feastEndpoints.listFeatureTables,
-    { method: "POST", muteError: true },
-    {},
-    true
-  );
-
   return (
     <>
       <EuiFlexGroup direction="column" gutterSize="s">
@@ -204,8 +190,6 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
                   index={idx}
                   feastConfig={feastConfig}
                   feastProjects={feastProjects}
-                  feastEntities={feastEntities}
-                  feastFeatureTables={feastFeatureTables}
                   onChange={onFeastChange(idx)}
                   onDelete={onDeleteFeastConfig(idx)}
                 />
