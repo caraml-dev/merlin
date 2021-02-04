@@ -133,7 +133,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
       if (field === "name") {
         items[idx] = {
           ...items[idx],
-          valueType: e[0].spec.valueType
+          valueType: e[0] && e[0].spec ? e[0].spec.valueType : ""
         };
       }
       updateItems(items);
