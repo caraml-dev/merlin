@@ -27,37 +27,37 @@ const getSelectedOption = value => (value ? [{ label: value }] : []);
 
 export const FeastFeatures = ({ features, feastFeatureTables, onChange }) => {
   const [allOptions, setAllOptions] = useState([]);
-  useEffect(() => {
-    if (
-      allOptions.length === 0 &&
-      feastFeatureTables &&
-      feastFeatureTables.tables
-    ) {
-      let groups = [];
-      feastFeatureTables.tables
-        .sort((a, b) => (a.spec.name > b.spec.name ? 1 : -1))
-        .forEach(table => {
-          let options = [];
-          table.spec.features
-            .sort((a, b) => (a.name > b.name ? 1 : -1))
-            .forEach(feature => {
-              const featureFullname = table.spec.name + ":" + feature.name;
-              options.push({
-                key: featureFullname,
-                label: feature.name,
-                value: featureFullname,
-                feature: feature
+  useEffect(
+    () => {
+      if (feastFeatureTables && feastFeatureTables.tables) {
+        let groups = [];
+        feastFeatureTables.tables
+          .sort((a, b) => (a.spec.name > b.spec.name ? 1 : -1))
+          .forEach(table => {
+            let options = [];
+            table.spec.features
+              .sort((a, b) => (a.name > b.name ? 1 : -1))
+              .forEach(feature => {
+                const featureFullname = table.spec.name + ":" + feature.name;
+                options.push({
+                  key: featureFullname,
+                  label: feature.name,
+                  value: featureFullname,
+                  feature: feature
+                });
               });
-            });
-          let group = {
-            label: table.spec.name,
-            options: options
-          };
-          groups.push(group);
-        });
-      setAllOptions(groups);
-    }
-  }, [allOptions, feastFeatureTables]);
+            let group = {
+              label: table.spec.name,
+              options: options
+            };
+            groups.push(group);
+          });
+        setAllOptions(groups);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [feastFeatureTables]
+  );
 
   const [items, setItems] = useState([
     ...features.map((v, idx) => ({ idx, ...v })),
