@@ -86,15 +86,14 @@ export const TransformerServicePanel = ({ endpoint }) => {
                   </EuiFlexItem>
                 )}
 
-              {isCustomTransformer(endpoint.transformer) &&
-                endpoint.transformer.env_vars && (
-                  <EuiFlexItem>
-                    <ConfigSectionPanelTitle title="Environment Variables" />
-                    <EnvVarsConfigTable
-                      variables={endpoint.transformer.env_vars}
-                    />
-                  </EuiFlexItem>
-                )}
+              {endpoint.transformer.env_vars && (
+                <EuiFlexItem>
+                  <ConfigSectionPanelTitle title="Environment Variables" />
+                  <EnvVarsConfigTable
+                    variables={endpoint.transformer.env_vars}
+                  />
+                </EuiFlexItem>
+              )}
             </EuiFlexGroup>
           </ConfigSectionPanel>
         </EuiFlexItem>

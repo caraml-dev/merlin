@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import {
   EuiButtonIcon,
@@ -28,13 +28,12 @@ import {
 import { FeastEntities } from "./FeastEntities";
 import { FeastFeatures } from "./FeastFeatures";
 import { FeastProjectComboBox } from "./FeastProjectComboBox";
+import { feastEndpoints, useFeastApi } from "../../../hooks/useFeastApi";
 
 export const FeastTransformationPanel = ({
   index,
   feastConfig,
   feastProjects,
-  feastEntities,
-  feastFeatureTables,
   onChange,
   onDelete
 }) => {
@@ -43,6 +42,73 @@ export const FeastTransformationPanel = ({
       ...feastConfig,
       [field]: value
     });
+
+  const [selectedFeastProject, setSelectedFeastProject] = useState();
+  const [selectedFeastEntities, setSelectedFeastEntities] = useState([]);
+
+  const [{ data: feastEntities }, listFeastEntities] = useFeastApi(
+    feastEndpoints.listEntities,
+    { method: "POST", muteError: true },
+    {},
+    true
+  );
+
+  const [
+    { data: allFeastFeatureTables },
+    listAllFeastFeatureTables
+  ] = useFeastApi(
+    feastEndpoints.listFeatureTables,
+    { method: "POST", muteError: true },
+    {},
+    true
+  );
+
+  // Update the master list of entities and feature tables
+  useEffect(() => {
+    if (selectedFeastProject) {
+      listFeastEntities({
+        body: JSON.stringify({ filter: { project: selectedFeastProject } })
+      });
+      listAllFeastFeatureTables({
+        body: JSON.stringify({ filter: { project: selectedFeastProject } })
+      });
+    }
+  }, [selectedFeastProject, listFeastEntities, listAllFeastFeatureTables]);
+
+  const [feastFeatureTables, setFeastFeatureTables] = useState({});
+
+  // Update the list of feature tables whenever selected entities updated
+  useEffect(() => {
+    let feastTables = allFeastFeatureTables;
+    if (
+      feastTables.tables &&
+      selectedFeastEntities &&
+      selectedFeastEntities.length > 0
+    ) {
+      let tables = [];
+      selectedFeastEntities.forEach(entity => {
+        tables = tables.concat(
+          feastTables.tables.filter(table =>
+            table.spec.entities.includes(entity.name)
+          )
+        );
+      });
+      feastTables = { ...feastTables, tables: tables };
+    }
+    setFeastFeatureTables({ ...feastTables });
+  }, [selectedFeastEntities, allFeastFeatureTables]);
+
+  const onFeastProjectChange = value => {
+    setValue("project", value);
+    setSelectedFeastProject(value);
+  };
+
+  const onFeastEntitiesChange = value => {
+    if (JSON.stringify(value) !== JSON.stringify(feastConfig["entities"])) {
+      setValue("entities", value);
+      setSelectedFeastEntities(value);
+    }
+  };
 
   const onFeastConfigChange = (field, value) => {
     if (JSON.stringify(value) !== JSON.stringify(feastConfig[field])) {
@@ -76,7 +142,7 @@ export const FeastTransformationPanel = ({
           fullWidth
           project={feastConfig.project || ""}
           feastProjects={feastProjects}
-          onChange={value => onFeastConfigChange("project", value)}
+          onChange={onFeastProjectChange}
         />
       </EuiFormRow>
 
@@ -86,9 +152,8 @@ export const FeastTransformationPanel = ({
         <FeastEntities
           entities={feastConfig.entities || []}
           feastEntities={feastEntities}
-          onChange={value =>
-            onFeastConfigChange("entities", value)
-          }></FeastEntities>
+          onChange={onFeastEntitiesChange}
+        />
       </EuiFormRow>
 
       <EuiSpacer size="m" />

@@ -35,17 +35,15 @@ export const EnvironmentVariables = ({ variables, onChange }) => {
 
   useEffect(
     () => {
-      if (items.length === 0) {
+      if (variables.length > 0) {
         const updatedItems = [
           ...variables.map((v, idx) => ({ idx, ...v })),
           { idx: variables.length }
         ];
 
-        setItems(items =>
-          JSON.stringify(items) !== JSON.stringify(updatedItems)
-            ? updatedItems
-            : items
-        );
+        if (JSON.stringify(items) !== JSON.stringify(updatedItems)) {
+          setItems(updatedItems);
+        }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
