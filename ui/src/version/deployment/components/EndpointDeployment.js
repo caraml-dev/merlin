@@ -81,8 +81,7 @@ const targetRequestStatus = currentStatus => {
 const isRequestConfigured = request => {
   if (request.transformer && request.transformer.enabled) {
     if (
-      (request.transformer.transformer_type === "" ||
-        request.transformer.transformer_type === "custom") &&
+      request.transformer.transformer_type !== "standard" &&
       !request.transformer.image
     ) {
       return false;
@@ -113,6 +112,9 @@ export const EndpointDeployment = ({
   }, [actionTitle, breadcrumbs]);
 
   const [request, setRequest] = useState({});
+  useEffect(() => {
+    console.log(request.transformer);
+  }, [request]);
 
   useEffect(() => {
     version.endpoints &&
