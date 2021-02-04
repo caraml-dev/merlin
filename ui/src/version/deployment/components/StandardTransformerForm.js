@@ -46,30 +46,47 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
         return;
       }
 
+      // If transformer already has environment variables, check whether it already has standard transformer config or not
       if (transformer.env_vars && transformer.env_vars.length > 0) {
         const envVar = transformer.env_vars.find(
           e => e.name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME
         );
+
+        // If standard transformer config already exists, parse that value and set it to config
         if (envVar && envVar.value) {
           const envVarJSON = JSON.parse(envVar.value);
           if (envVarJSON) {
             const tc = Config.from(envVarJSON);
             setConfig(tc);
             setConfigInitialized(true);
-            return;
           }
+        } else {
+          // If there's no standard transformer config in environment variables, append the env_vars with empty transformer config.
+          // This case is likely because of the user switch from custom to standard transformer
+          // Note that we still keep the all previous environment variables if we switching transformer type
+          const tc = newConfig();
+          setConfig(tc);
+          setConfigInitialized(true);
+          onChange([
+            ...transformer.env_vars,
+            {
+              name: STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
+              value: JSON.stringify(tc)
+            }
+          ]);
         }
+      } else {
+        // If there's no environment variables at all, create a new one.
+        const tc = newConfig();
+        setConfig(tc);
+        setConfigInitialized(true);
+        onChange([
+          {
+            name: STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
+            value: JSON.stringify(tc)
+          }
+        ]);
       }
-
-      const tc = newConfig();
-      setConfig(tc);
-      setConfigInitialized(true);
-      onChange([
-        {
-          name: STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
-          value: JSON.stringify(tc)
-        }
-      ]);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [configInitialized, transformer.env_vars]
