@@ -2,7 +2,7 @@
 
 set -ex
 
-export CLUSTER_NAME=e2e
+export CLUSTER_NAME=dev
 export KIND_NODE_VERSION=v1.15.12
 export VAULT_VERSION=0.7.0
 
