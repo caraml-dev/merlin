@@ -16,15 +16,7 @@ Merlin attempts to do so by:
 
 ## Getting Started
 
-### Local Development
-
-Requirements:
-
-1. Golang 1.13
-1. NPM LTS
-1. Python 3
-1. Docker
-1. [Swagger Codegen 2.X](https://github.com/swagger-api/swagger-codegen)
+To install Merlin in your local machine, click [Local Development](./docs/getting-started/deploying-merlin/local_development.md).
 
 ## Documentation
 

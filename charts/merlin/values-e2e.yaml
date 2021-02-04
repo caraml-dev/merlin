@@ -22,9 +22,9 @@ merlin:
     enabled: false
 
   environmentConfigs:
-  - name: e2e
+  - name: dev
     is_default: true
-    cluster: e2e
+    cluster: dev
     region: id
     gcp_project: gcp-project
     deployment_timeout: 10m
@@ -53,7 +53,7 @@ merlin:
 
 
   imageBuilder:
-    clusterName: "e2e"
+    clusterName: "dev"
 
   transformer:
     feast:
