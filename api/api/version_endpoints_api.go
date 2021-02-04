@@ -165,7 +165,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	}
 
 	// validate transformer
-	if newEndpoint.Transformer != nil {
+	if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
 		err := c.validateTransformer(ctx, newEndpoint.Transformer)
 		if err != nil {
 			log.Errorf("error validating transformer config: %v", err)
@@ -230,7 +230,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 
 	if newEndpoint.Status == models.EndpointRunning || newEndpoint.Status == models.EndpointServing {
 		// validate transformer
-		if newEndpoint.Transformer != nil {
+		if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
 			err := c.validateTransformer(ctx, newEndpoint.Transformer)
 			if err != nil {
 				log.Errorf("error validating transformer config: %v", err)
