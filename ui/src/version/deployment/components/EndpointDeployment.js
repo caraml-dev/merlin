@@ -79,12 +79,14 @@ const targetRequestStatus = currentStatus => {
 };
 
 const isRequestConfigured = request => {
-  if (
-    request.transformer &&
-    request.transformer.enabled &&
-    !request.transformer.image
-  ) {
-    return false;
+  if (request.transformer && request.transformer.enabled) {
+    if (
+      (request.transformer.transformer_type === "" ||
+        request.transformer.transformer_type === "custom") &&
+      !request.transformer.image
+    ) {
+      return false;
+    }
   }
 
   if (!request.environment_name) {
