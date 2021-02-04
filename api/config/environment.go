@@ -24,34 +24,40 @@ import (
 )
 
 type EnvironmentConfig struct {
-	Name                    string        `yaml:"name"`
-	Cluster                 string        `yaml:"cluster"`
-	IsDefault               bool          `yaml:"is_default"`
-	Region                  string        `yaml:"region"`
-	GcpProject              string        `yaml:"gcp_project"`
-	DeploymentTimeout       time.Duration `yaml:"deployment_timeout"`
-	NamespaceTimeout        time.Duration `yaml:"namespace_timeout"`
-	MinReplica              int           `yaml:"min_replica"`
-	MaxReplica              int           `yaml:"max_replica"`
-	CPURequest              string        `yaml:"cpu_request"`
-	MaxCPU                  string        `yaml:"max_cpu"`
-	MaxMemory               string        `yaml:"max_memory"`
-	MemoryRequest           string        `yaml:"memory_request"`
-	CPULimit                string        `yaml:"cpu_limit"`
-	MemoryLimit             string        `yaml:"memory_limit"`
-	QueueResourcePercentage string        `yaml:"queue_resource_percentage"`
+	Name                   string `yaml:"name"`
+	Cluster                string `yaml:"cluster"`
+	IsDefault              bool   `yaml:"is_default"`
+	IsPredictionJobEnabled bool   `yaml:"is_prediction_job_enabled"`
+	IsDefaultPredictionJob bool   `yaml:"is_default_prediction_job"`
 
-	IsPredictionJobEnabled bool                 `yaml:"is_prediction_job_enabled"`
-	IsDefaultPredictionJob bool                 `yaml:"is_default_prediction_job"`
-	PredictionJobConfig    *PredictionJobConfig `yaml:"prediction_job_config"`
+	Region            string        `yaml:"region"`
+	GcpProject        string        `yaml:"gcp_project"`
+	DeploymentTimeout time.Duration `yaml:"deployment_timeout"`
+	NamespaceTimeout  time.Duration `yaml:"namespace_timeout"`
+
+	MaxCPU    string `yaml:"max_cpu"`
+	MaxMemory string `yaml:"max_memory"`
+
+	QueueResourcePercentage string `yaml:"queue_resource_percentage"`
+
+	DefaultPredictionJobConfig *PredictionJobResourceRequestConfig `yaml:"default_prediction_job_config"`
+	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
+	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
 }
 
-type PredictionJobConfig struct {
+type PredictionJobResourceRequestConfig struct {
 	ExecutorReplica       int32  `yaml:"executor_replica"`
 	DriverCPURequest      string `yaml:"driver_cpu_request"`
 	DriverMemoryRequest   string `yaml:"driver_memory_request"`
 	ExecutorCPURequest    string `yaml:"executor_cpu_request"`
 	ExecutorMemoryRequest string `yaml:"executor_memory_request"`
+}
+
+type ResourceRequestConfig struct {
+	MinReplica    int    `yaml:"min_replica"`
+	MaxReplica    int    `yaml:"max_replica"`
+	CPURequest    string `yaml:"cpu_request"`
+	MemoryRequest string `yaml:"memory_request"`
 }
 
 func initEnvironmentConfigs(path string) []EnvironmentConfig {
@@ -69,16 +75,22 @@ func initEnvironmentConfigs(path string) []EnvironmentConfig {
 
 func ParseDeploymentConfig(cfg EnvironmentConfig) DeploymentConfig {
 	return DeploymentConfig{
-		DeploymentTimeout:       cfg.DeploymentTimeout,
-		NamespaceTimeout:        cfg.NamespaceTimeout,
-		MinReplica:              cfg.MinReplica,
-		MaxReplica:              cfg.MaxReplica,
-		CPURequest:              resource.MustParse(cfg.CPURequest),
-		MemoryRequest:           resource.MustParse(cfg.MemoryRequest),
-		CPULimit:                resource.MustParse(cfg.CPULimit), //Deprecated
+		DeploymentTimeout: cfg.DeploymentTimeout,
+		NamespaceTimeout:  cfg.NamespaceTimeout,
+		DefaultModelResourceRequests: &ResourceRequests{
+			MinReplica:    cfg.DefaultDeploymentConfig.MinReplica,
+			MaxReplica:    cfg.DefaultDeploymentConfig.MaxReplica,
+			CPURequest:    resource.MustParse(cfg.DefaultDeploymentConfig.CPURequest),
+			MemoryRequest: resource.MustParse(cfg.DefaultDeploymentConfig.MemoryRequest),
+		},
+		DefaultTransformerResourceRequests: &ResourceRequests{
+			MinReplica:    cfg.DefaultTransformerConfig.MinReplica,
+			MaxReplica:    cfg.DefaultTransformerConfig.MaxReplica,
+			CPURequest:    resource.MustParse(cfg.DefaultTransformerConfig.CPURequest),
+			MemoryRequest: resource.MustParse(cfg.DefaultTransformerConfig.MemoryRequest),
+		},
 		MaxCPU:                  resource.MustParse(cfg.MaxCPU),
 		MaxMemory:               resource.MustParse(cfg.MaxMemory),
-		MemoryLimit:             resource.MustParse(cfg.MemoryLimit),
 		QueueResourcePercentage: cfg.QueueResourcePercentage,
 	}
 }

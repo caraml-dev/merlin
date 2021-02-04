@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import PropTypes from "prop-types";
 
 export const JobFormContext = React.createContext({});
 
 export const JobFormContextProvider = ({ job: initJob, ...props }) => {
   const [job, setJob] = useState(initJob);
-
-  useEffect(() => {
-    console.log("Debug Job:", job);
-  }, [job]);
 
   const setVersionId = useCallback(
     versionId => {

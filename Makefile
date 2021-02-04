@@ -56,19 +56,19 @@ test: test-api
 .PHONY: test-api
 test-api: init-dep-api
 	@echo "> API unit testing ..."
-	@cd ${API_PATH} && go test -v -race -cover -coverprofile cover.out -tags unit ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && go test -race -cover -coverprofile cover.out -tags unit ${API_ALL_PACKAGES}
 	@cd ${API_PATH} && go tool cover -func cover.out
 
 .PHONY: it-test-api-local
 it-test-api-local: local-db
 	@echo "> API integration testing locally ..."
-	@cd ${API_PATH} && go test -v -race -short -cover -coverprofile cover.out -tags unit,integration_local ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && go test -race -short -cover -coverprofile cover.out -tags unit,integration_local ${API_ALL_PACKAGES}
 	@cd ${API_PATH} && go tool cover -func cover.out
 
 .PHONY: it-test-api-ci
 it-test-api-ci:
 	@echo "> API integration testing ..."
-	@cd ${API_PATH} && go test -v -race -short -cover -coverprofile cover.out -tags unit,integration ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && go test -race -short -cover -coverprofile cover.out -tags unit,integration ${API_ALL_PACKAGES}
 	@cd ${API_PATH} && go tool cover -func cover.out
 
 # ============================================================
@@ -157,3 +157,9 @@ generate-client-python:
 	@swagger-codegen generate -i swagger.yaml -l python -o ${TEMP_CLIENT_PYTHON_OUTPUT_DIR} -DpackageName=client
 	@mv ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}/client ${CLIENT_PYTHON_OUTPUT_DIR}
 	@rm -rf ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}
+
+
+.PHONY: gen-proto
+gen-proto:
+	@echo "> Generating specification configuration from Proto file..."
+	@cd protos && protoc -I=. --go_out=../api --go-json_out=../api --go_opt=module=github.com/gojek/merlin pkg/transformer/*.proto

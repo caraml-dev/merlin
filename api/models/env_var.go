@@ -49,6 +49,15 @@ type EnvVar struct {
 // EnvVars is a list of environment variables to set in the container.
 type EnvVars []EnvVar
 
+// ToMap convert EnvVars into map of strings
+func (evs EnvVars) ToMap() map[string]string {
+	maps := make(map[string]string)
+	for _, envVar := range evs {
+		maps[envVar.Name] = envVar.Value
+	}
+	return maps
+}
+
 func (evs EnvVars) Value() (driver.Value, error) {
 	return json.Marshal(evs)
 }

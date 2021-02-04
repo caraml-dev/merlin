@@ -38,6 +38,8 @@ class Environment(object):
         'region': 'str',
         'gcp_project': 'str',
         'default_resource_request': 'ResourceRequest',
+        'default_transformer_resource_request': 'ResourceRequest',
+        'default_prediction_job_resource_request': 'PredictionJobResourceRequest',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -50,11 +52,13 @@ class Environment(object):
         'region': 'region',
         'gcp_project': 'gcp_project',
         'default_resource_request': 'default_resource_request',
+        'default_transformer_resource_request': 'default_transformer_resource_request',
+        'default_prediction_job_resource_request': 'default_prediction_job_resource_request',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, name=None, cluster=None, is_default=None, region=None, gcp_project=None, default_resource_request=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, id=None, name=None, cluster=None, is_default=None, region=None, gcp_project=None, default_resource_request=None, default_transformer_resource_request=None, default_prediction_job_resource_request=None, created_at=None, updated_at=None):  # noqa: E501
         """Environment - a model defined in Swagger"""  # noqa: E501
 
         self._id = None
@@ -64,6 +68,8 @@ class Environment(object):
         self._region = None
         self._gcp_project = None
         self._default_resource_request = None
+        self._default_transformer_resource_request = None
+        self._default_prediction_job_resource_request = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -81,6 +87,10 @@ class Environment(object):
             self.gcp_project = gcp_project
         if default_resource_request is not None:
             self.default_resource_request = default_resource_request
+        if default_transformer_resource_request is not None:
+            self.default_transformer_resource_request = default_transformer_resource_request
+        if default_prediction_job_resource_request is not None:
+            self.default_prediction_job_resource_request = default_prediction_job_resource_request
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -234,6 +244,48 @@ class Environment(object):
         """
 
         self._default_resource_request = default_resource_request
+
+    @property
+    def default_transformer_resource_request(self):
+        """Gets the default_transformer_resource_request of this Environment.  # noqa: E501
+
+
+        :return: The default_transformer_resource_request of this Environment.  # noqa: E501
+        :rtype: ResourceRequest
+        """
+        return self._default_transformer_resource_request
+
+    @default_transformer_resource_request.setter
+    def default_transformer_resource_request(self, default_transformer_resource_request):
+        """Sets the default_transformer_resource_request of this Environment.
+
+
+        :param default_transformer_resource_request: The default_transformer_resource_request of this Environment.  # noqa: E501
+        :type: ResourceRequest
+        """
+
+        self._default_transformer_resource_request = default_transformer_resource_request
+
+    @property
+    def default_prediction_job_resource_request(self):
+        """Gets the default_prediction_job_resource_request of this Environment.  # noqa: E501
+
+
+        :return: The default_prediction_job_resource_request of this Environment.  # noqa: E501
+        :rtype: PredictionJobResourceRequest
+        """
+        return self._default_prediction_job_resource_request
+
+    @default_prediction_job_resource_request.setter
+    def default_prediction_job_resource_request(self, default_prediction_job_resource_request):
+        """Sets the default_prediction_job_resource_request of this Environment.
+
+
+        :param default_prediction_job_resource_request: The default_prediction_job_resource_request of this Environment.  # noqa: E501
+        :type: PredictionJobResourceRequest
+        """
+
+        self._default_prediction_job_resource_request = default_prediction_job_resource_request
 
     @property
     def created_at(self):

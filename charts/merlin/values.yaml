@@ -33,6 +33,9 @@ merlin:
     # encryptionKey must be specified using --set flag.
     # encryptionKey:
 
+  feastCoreApi:
+    apiHost: http://feast-core.mlp:8080/v1
+
   imageBuilder:
     clusterName: "dev"
     buildContextURI: "git://TOKEN@github.com/gojek/merlin.git#refs/tags/v0.1"
@@ -70,6 +73,12 @@ merlin:
   warden:
     apiHost: ""
 
+  transformer:
+    feast:
+      servingURL: serving.feast.dev
+      coreURL: core.feast.dev
+    image: merlin-transformer:1.0.0
+
   # Google service account used to access GCP's resources.
   #
   # gcpServiceAccount:
@@ -84,23 +93,27 @@ merlin:
       gcp_project: "gcp-project"
       deployment_timeout: "10m"
       namespace_timeout: "2m"
-      min_replica: 0
-      max_replica: 1
       max_cpu: "8"
       max_memory: "8Gi"
-      cpu_request: "100m"
-      memory_request: "200Mi"
-      cpu_limit: "400m"
-      memory_limit: "500Mi"
       queue_resource_percentage: "20"
       is_prediction_job_enabled: true
       is_default_prediction_job: true
-      prediction_job_config:
+      default_prediction_job_config:
         executor_replica: 3
         driver_cpu_request: "2"
         driver_memory_request: "2Gi"
         executor_cpu_request: "2"
         executor_memory_request: "2Gi"
+      default_deployment_config:
+        min_replica: 0
+        max_replica: 1
+        cpu_request: "500m"
+        memory_request: "500Mi"
+      default_transformer_config:
+        min_replica: 0
+        max_replica: 1
+        cpu_request: "500m"
+        memory_request: "500Mi"
 
   sentry:
     enabled: false

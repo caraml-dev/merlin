@@ -102,9 +102,7 @@ func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsGet(ctx con
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -207,9 +205,7 @@ func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdContai
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -312,9 +308,7 @@ func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsJobIdGet(ct
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -516,9 +510,7 @@ func (a *PredictionJobsApiService) ModelsModelIdVersionsVersionIdJobsPost(ctx co
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -565,7 +557,7 @@ type PredictionJobsApiProjectsProjectIdJobsGetOpts struct {
 	ModelId   optional.Int32
 	VersionId optional.Int32
 	Status    optional.String
-	Error     optional.String
+	Error_    optional.String
 }
 
 func (a *PredictionJobsApiService) ProjectsProjectIdJobsGet(ctx context.Context, projectId int32, localVarOptionals *PredictionJobsApiProjectsProjectIdJobsGetOpts) ([]PredictionJob, *http.Response, error) {
@@ -600,8 +592,8 @@ func (a *PredictionJobsApiService) ProjectsProjectIdJobsGet(ctx context.Context,
 	if localVarOptionals != nil && localVarOptionals.Status.IsSet() {
 		localVarQueryParams.Add("status", parameterToString(localVarOptionals.Status.Value(), ""))
 	}
-	if localVarOptionals != nil && localVarOptionals.Error.IsSet() {
-		localVarQueryParams.Add("error", parameterToString(localVarOptionals.Error.Value(), ""))
+	if localVarOptionals != nil && localVarOptionals.Error_.IsSet() {
+		localVarQueryParams.Add("error", parameterToString(localVarOptionals.Error_.Value(), ""))
 	}
 	// to determine the Content-Type header
 	localVarHttpContentTypes := []string{}
@@ -652,9 +644,7 @@ func (a *PredictionJobsApiService) ProjectsProjectIdJobsGet(ctx context.Context,
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
