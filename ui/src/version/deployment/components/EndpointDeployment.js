@@ -79,12 +79,9 @@ const targetRequestStatus = currentStatus => {
 };
 
 const isRequestConfigured = request => {
-  if (!request.transformer || !request.transformer.enabled) {
-    return false;
-  }
-
   if (
-    request.transformer.transformer_type !== "standard" &&
+    request.transformer &&
+    request.transformer.enabled &&
     !request.transformer.image
   ) {
     return false;
