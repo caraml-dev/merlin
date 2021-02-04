@@ -15,15 +15,16 @@
 package models
 
 type Environment struct {
-	ID                     ID               `json:"id"`
-	Name                   string           `json:"name" gorm:"unique;not null"`
-	Cluster                string           `json:"cluster"`
-	IsDefault              *bool            `json:"is_default"`
-	Region                 string           `json:"region"`
-	GcpProject             string           `json:"gcp_project"`
-	MaxCPU                 string           `json:"max_cpu"`
-	MaxMemory              string           `json:"max_memory"`
-	DefaultResourceRequest *ResourceRequest `json:"default_resource_request"`
+	ID                                ID               `json:"id"`
+	Name                              string           `json:"name" gorm:"unique;not null"`
+	Cluster                           string           `json:"cluster"`
+	IsDefault                         *bool            `json:"is_default"`
+	Region                            string           `json:"region"`
+	GcpProject                        string           `json:"gcp_project"`
+	MaxCPU                            string           `json:"max_cpu"`
+	MaxMemory                         string           `json:"max_memory"`
+	DefaultResourceRequest            *ResourceRequest `json:"default_resource_request"`
+	DefaultTransformerResourceRequest *ResourceRequest `json:"default_transformer_resource_request"`
 
 	IsPredictionJobEnabled              bool                          `json:"is_prediction_job_enabled"`
 	IsDefaultPredictionJob              *bool                         `json:"is_default_prediction_job"`

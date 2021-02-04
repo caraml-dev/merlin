@@ -60,14 +60,15 @@ const (
 )
 
 type controller struct {
-	servingClient    kfservice.ServingV1alpha2Interface
-	clusterClient    corev1.CoreV1Interface
-	namespaceCreator NamespaceCreator
-	config           *config.DeploymentConfig
+	servingClient              kfservice.ServingV1alpha2Interface
+	clusterClient              corev1.CoreV1Interface
+	namespaceCreator           NamespaceCreator
+	deploymentConfig           *config.DeploymentConfig
+	kfServingResourceTemplater *KFServingResourceTemplater
 	ContainerFetcher
 }
 
-func NewController(clusterConfig Config, deployConfig config.DeploymentConfig) (Controller, error) {
+func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, standardTransformerConfig config.StandardTransformerConfig) (Controller, error) {
 	cfg := &rest.Config{
 		Host: clusterConfig.Host,
 		TLSClientConfig: rest.TLSClientConfig{
@@ -92,29 +93,31 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig) (
 		GcpProject:  clusterConfig.GcpProject,
 	})
 
-	return newController(servingClient, coreV1Client, deployConfig, containerFetcher)
+	kfServingResourceTemplater := NewKFServingResourceTemplater(standardTransformerConfig)
+	return newController(servingClient, coreV1Client, deployConfig, containerFetcher, kfServingResourceTemplater)
 }
 
-func newController(kfservingClient kfservice.ServingV1alpha2Interface, nsClient corev1.CoreV1Interface, deploymentConfig config.DeploymentConfig, containerFetcher ContainerFetcher) (Controller, error) {
+func newController(kfservingClient kfservice.ServingV1alpha2Interface, nsClient corev1.CoreV1Interface, deploymentConfig config.DeploymentConfig, containerFetcher ContainerFetcher, templater *KFServingResourceTemplater) (Controller, error) {
 	return &controller{
-		servingClient:    kfservingClient,
-		clusterClient:    nsClient,
-		namespaceCreator: NewNamespaceCreator(nsClient, deploymentConfig.NamespaceTimeout),
-		config:           &deploymentConfig,
-		ContainerFetcher: containerFetcher,
+		servingClient:              kfservingClient,
+		clusterClient:              nsClient,
+		namespaceCreator:           NewNamespaceCreator(nsClient, deploymentConfig.NamespaceTimeout),
+		deploymentConfig:           &deploymentConfig,
+		ContainerFetcher:           containerFetcher,
+		kfServingResourceTemplater: templater,
 	}, nil
 }
 
 func (k *controller) Deploy(modelService *models.Service) (*models.Service, error) {
 	if modelService.ResourceRequest != nil {
 		cpuRequest, _ := modelService.ResourceRequest.CPURequest.AsInt64()
-		maxCPU, _ := k.config.MaxCPU.AsInt64()
+		maxCPU, _ := k.deploymentConfig.MaxCPU.AsInt64()
 		if cpuRequest > maxCPU {
 			log.Errorf("insufficient available cpu resource to fulfil user request of %d", cpuRequest)
 			return nil, ErrInsufficientCPU
 		}
 		memRequest, _ := modelService.ResourceRequest.MemoryRequest.AsInt64()
-		maxMem, _ := k.config.MaxMemory.AsInt64()
+		maxMem, _ := k.deploymentConfig.MaxMemory.AsInt64()
 		if memRequest > maxMem {
 			log.Errorf("insufficient available memory resource to fulfil user request of %d", memRequest)
 			return nil, ErrInsufficientMem
@@ -136,14 +139,14 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 		}
 
 		// create new resource
-		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(createInferenceServiceSpec(modelService, k.config))
+		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(k.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, k.deploymentConfig))
 		if err != nil {
 			log.Errorf("unable to create inference service %s %v", svcName, err)
 			return nil, ErrUnableToCreateInferenceService
 		}
 	} else {
 		// existing resource found, do update
-		s, err = k.servingClient.InferenceServices(modelService.Namespace).Update(patchInferenceServiceSpec(s, modelService, k.config))
+		s, err = k.servingClient.InferenceServices(modelService.Namespace).Update(k.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, k.deploymentConfig))
 		if err != nil {
 			log.Errorf("unable to update inference service %s %v", svcName, err)
 			return nil, ErrUnableToUpdateInferenceService
@@ -182,7 +185,7 @@ func (k *controller) Delete(modelService *models.Service) (*models.Service, erro
 }
 
 func (k *controller) waitInferenceServiceReady(service *kfsv1alpha2.InferenceService) (*kfsv1alpha2.InferenceService, error) {
-	timeout := time.After(k.config.DeploymentTimeout)
+	timeout := time.After(k.deploymentConfig.DeploymentTimeout)
 	ticker := time.Tick(time.Second * tickDurationSecond)
 
 	for {

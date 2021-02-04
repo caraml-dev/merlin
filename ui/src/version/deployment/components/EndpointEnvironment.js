@@ -128,6 +128,7 @@ export const EndpointEnvironment = ({
           }
           display="columnCompressed">
           <EuiSuperSelect
+            fullWidth
             options={environmentOptions}
             valueOfSelected={selected || ""}
             onChange={onChange}

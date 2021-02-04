@@ -32,6 +32,7 @@ class Transformer(object):
     """
     swagger_types = {
         'enabled': 'bool',
+        'transformer_type': 'str',
         'image': 'str',
         'command': 'str',
         'args': 'str',
@@ -43,6 +44,7 @@ class Transformer(object):
 
     attribute_map = {
         'enabled': 'enabled',
+        'transformer_type': 'transformer_type',
         'image': 'image',
         'command': 'command',
         'args': 'args',
@@ -52,10 +54,11 @@ class Transformer(object):
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, enabled=None, image=None, command=None, args=None, resource_request=None, env_vars=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, enabled=None, transformer_type=None, image=None, command=None, args=None, resource_request=None, env_vars=None, created_at=None, updated_at=None):  # noqa: E501
         """Transformer - a model defined in Swagger"""  # noqa: E501
 
         self._enabled = None
+        self._transformer_type = None
         self._image = None
         self._command = None
         self._args = None
@@ -67,6 +70,8 @@ class Transformer(object):
 
         if enabled is not None:
             self.enabled = enabled
+        if transformer_type is not None:
+            self.transformer_type = transformer_type
         if image is not None:
             self.image = image
         if command is not None:
@@ -102,6 +107,27 @@ class Transformer(object):
         """
 
         self._enabled = enabled
+
+    @property
+    def transformer_type(self):
+        """Gets the transformer_type of this Transformer.  # noqa: E501
+
+
+        :return: The transformer_type of this Transformer.  # noqa: E501
+        :rtype: str
+        """
+        return self._transformer_type
+
+    @transformer_type.setter
+    def transformer_type(self, transformer_type):
+        """Sets the transformer_type of this Transformer.
+
+
+        :param transformer_type: The transformer_type of this Transformer.  # noqa: E501
+        :type: str
+        """
+
+        self._transformer_type = transformer_type
 
     @property
     def image(self):

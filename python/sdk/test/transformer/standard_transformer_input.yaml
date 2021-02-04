@@ -1,0 +1,14 @@
+transformerConfig:
+  feast:
+    - entities:
+      - name: driver_id
+        valueType: STRING
+        jsonPath: "$.driver_id"
+      project: default
+      features:
+      - name: driver_statistics:avg_daily_trips_3
+        valueType: INT32
+        defaultValue: '0'
+      - name: driver_statistics:conv_rate
+        valueType: FLOAT
+        defaultValue: '0'

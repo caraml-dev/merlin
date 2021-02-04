@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { EuiFlexGroup, EuiFlexItem, EuiText } from "@elastic/eui";
+import { EuiCodeBlock, EuiFlexGroup, EuiFlexItem, EuiText } from "@elastic/eui";
 import {
   ConfigSection,
   ConfigSectionPanel,
@@ -25,8 +25,42 @@ import {
 import { ContainerConfigTable } from "../../components/ContainerConfigTable";
 import { EnvVarsConfigTable } from "../../components/EnvVarsConfigTable";
 import { ResourcesConfigTable } from "../../components/ResourcesConfigTable";
+import {
+  Config,
+  STANDARD_TRANSFORMER_CONFIG_ENV_NAME
+} from "../../services/transformer/TransformerConfig";
+
+const yaml = require("js-yaml");
+
+const isCustomTransformer = transformer => {
+  return (
+    transformer.transformer_type === undefined ||
+    transformer.transformer_type === "" ||
+    transformer.transformer_type === "custom"
+  );
+};
 
 export const TransformerServicePanel = ({ endpoint }) => {
+  const [standardTransformerConfig, setStandardTransformerConfig] = useState();
+  useEffect(() => {
+    if (
+      endpoint.transformer.env_vars &&
+      endpoint.transformer.env_vars.length > 0
+    ) {
+      const envVar = endpoint.transformer.env_vars.find(
+        e => e.name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME
+      );
+      if (envVar && envVar.value) {
+        const envVarJSON = JSON.parse(envVar.value);
+        if (envVarJSON) {
+          const tc = Config.from(envVarJSON);
+          setStandardTransformerConfig(tc);
+          return;
+        }
+      }
+    }
+  }, [endpoint.transformer]);
+
   return (
     <ConfigSection title="Transformer Service">
       <EuiFlexGroup direction="row" wrap>
@@ -38,16 +72,29 @@ export const TransformerServicePanel = ({ endpoint }) => {
                 <ContainerConfigTable config={endpoint.transformer} />
               </EuiFlexItem>
 
-              {endpoint.transformer.env_vars ? (
-                <EuiFlexItem>
-                  <ConfigSectionPanelTitle title="Environment Variables" />
-                  <EnvVarsConfigTable
-                    variables={endpoint.transformer.env_vars}
-                  />
-                </EuiFlexItem>
-              ) : (
-                <EuiText>Not available</EuiText>
-              )}
+              {!isCustomTransformer(endpoint.transformer) &&
+                standardTransformerConfig && (
+                  <EuiFlexItem>
+                    <ConfigSectionPanelTitle title="Standard Transformer Configuration" />
+                    <EuiCodeBlock
+                      language="yaml"
+                      fontSize="m"
+                      paddingSize="m"
+                      isCopyable>
+                      {yaml.dump(standardTransformerConfig)}
+                    </EuiCodeBlock>
+                  </EuiFlexItem>
+                )}
+
+              {isCustomTransformer(endpoint.transformer) &&
+                endpoint.transformer.env_vars && (
+                  <EuiFlexItem>
+                    <ConfigSectionPanelTitle title="Environment Variables" />
+                    <EnvVarsConfigTable
+                      variables={endpoint.transformer.env_vars}
+                    />
+                  </EuiFlexItem>
+                )}
             </EuiFlexGroup>
           </ConfigSectionPanel>
         </EuiFlexItem>

@@ -110,6 +110,8 @@ spec:
             value: "{{ .Values.merlin.apiHost }}"
           - name: REACT_APP_MLP_API
             value: "{{ .Values.merlin.mlpApi.apiHost }}"
+          - name: REACT_APP_FEAST_CORE_API
+            value: "{{ .Values.merlin.feastCoreApi.apiHost }}"
           - name: REACT_APP_DOCKER_REGISTRIES
             value: "{{ .Values.merlin.dockerRegistries }}"
           - name: IMG_BUILDER_CLUSTER_NAME
@@ -140,6 +142,12 @@ spec:
           - name: IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH
             value: "{{ .Values.merlin.imageBuilder.predictionJobContextSubPath }}"
           {{- end }}
+          - name: FEAST_SERVING_URL
+            value: "{{ .Values.merlin.transformer.feast.servingURL }}"
+          - name: FEAST_CORE_URL
+            value: "{{ .Values.merlin.transformer.feast.coreURL }}"
+          - name: STANDARD_TRANSFORMER_IMAGE_NAME
+            value: "{{ .Values.merlin.transformer.image }}"
           - name: VAULT_ADDRESS
             valueFrom:
               secretKeyRef:

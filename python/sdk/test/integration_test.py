@@ -18,6 +18,7 @@ from time import sleep
 
 import pytest
 import requests
+import pandas as pd
 import xgboost as xgb
 from joblib import dump
 from sklearn import svm
@@ -27,9 +28,10 @@ import merlin
 from merlin.endpoint import Status
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
-from merlin.transformer import Transformer
+from merlin.transformer import Transformer, StandardTransformer
 from merlin.logger import Logger, LoggerConfig, LoggerMode
 from test.utils import undeploy_all_version
+from test.feast_model import FeastModel
 
 request_json = {
     "instances": [
@@ -611,3 +613,35 @@ def test_transformer_pytorch(integration_test_url, project_name, use_google_oaut
 
     # Undeploy other running model version endpoints
     undeploy_all_version()
+
+@pytest.mark.integration
+def test_standard_transformer_feast_pyfunc(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("standard-transformer", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        v.log_pyfunc_model(model_instance=FeastModel(),
+                           conda_env="test/pyfunc/env.yaml",
+                           code_dir=["test"],
+                           artifacts={})
+
+    transformer_config_path = os.path.join("test/transformer", "standard_transformer_input.yaml")
+    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
+
+    request_json = {"driver_id": "1000"}
+    endpoint = merlin.deploy(v, transformer=transformer)
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    feast_features = resp.json()["feast_features"]
+    assert feast_features is not None
+    assert pd.DataFrame(feast_features) is not None
+
+    merlin.undeploy(v)
+    sleep(5)
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 404
