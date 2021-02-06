@@ -28,6 +28,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type ManifestManager interface {
@@ -106,7 +107,7 @@ func (m *manifestManager) CreateJobSpec(predictionJobName string, namespace stri
 
 func (m *manifestManager) DeleteJobSpec(predictionJobName string, namespace string) error {
 	err := m.kubeClient.CoreV1().ConfigMaps(namespace).Delete(predictionJobName, &metav1.DeleteOptions{})
-	if err != nil {
+	if client.IgnoreNotFound(err) != nil {
 		log.Errorf("failed deleting configmap %s in namespace %s: %v", predictionJobName, namespace, err)
 		return errors.Errorf("failed deleting configmap %s in namespace %s", predictionJobName, namespace)
 	}
@@ -191,15 +192,15 @@ func (m *manifestManager) CreateDriverAuthorization(namespace string) (string, e
 func (m *manifestManager) DeleteDriverAuthorization(namespace string) error {
 	serviceAccountName, driverRoleName, driverRoleBindingName := createAuthorizationResourceNames(namespace)
 	err := m.kubeClient.RbacV1().RoleBindings(namespace).Delete(driverRoleBindingName, &metav1.DeleteOptions{})
-	if err != nil {
+	if client.IgnoreNotFound(err) != nil {
 		return errors.Errorf("failed deleting driver roles binding %s in namespace %s", driverRoleBindingName, namespace)
 	}
 	err = m.kubeClient.RbacV1().Roles(namespace).Delete(driverRoleName, &metav1.DeleteOptions{})
-	if err != nil {
+	if client.IgnoreNotFound(err) != nil {
 		return errors.Errorf("failed deleting driver roles %s in namespace %s", driverRoleName, namespace)
 	}
 	err = m.kubeClient.CoreV1().ServiceAccounts(namespace).Delete(serviceAccountName, &metav1.DeleteOptions{})
-	if err != nil {
+	if client.IgnoreNotFound(err) != nil {
 		return errors.Errorf("failed deleting service account %s in namespace %s", serviceAccountName, namespace)
 	}
 	return nil
@@ -227,7 +228,7 @@ func (m *manifestManager) CreateSecret(predictionJobName string, namespace strin
 
 func (m *manifestManager) DeleteSecret(predictionJobName string, namespace string) error {
 	err := m.kubeClient.CoreV1().Secrets(namespace).Delete(predictionJobName, &metav1.DeleteOptions{})
-	if err != nil {
+	if client.IgnoreNotFound(err) != nil {
 		log.Errorf("failed deleting secret %s in namespace %s: %v", predictionJobName, namespace, err)
 		return errors.Errorf("failed deleting secret %s in namespace %s", predictionJobName, namespace)
 	}
