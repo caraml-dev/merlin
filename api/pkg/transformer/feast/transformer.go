@@ -138,18 +138,9 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 }
 
 func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, config *transformer.FeatureTable) (*FeastFeature, error) {
-	var entities []feast.Row
-	for _, entity := range config.Entities {
-		vals, err := getValuesFromJSONPayload(request, entity)
-		if err != nil {
-			return nil, fmt.Errorf("unable to extract entity %s: %v", entity.Name, err)
-		}
-
-		for _, val := range vals {
-			entities = append(entities, feast.Row{
-				entity.Name: val,
-			})
-		}
+	entities, err := buildEntitiesRequest(request, config.Entities)
+	if err != nil {
+		return nil, err
 	}
 
 	var features []string
@@ -217,7 +208,7 @@ func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, confi
 				}
 				row = append(row, featVal)
 			default:
-				return nil, fmt.Errorf("")
+				return nil, fmt.Errorf("Unsupported feature retrieval status: %s", featureStatus)
 			}
 			// put behind feature toggle since it will generate high cardinality metrics
 			if t.options.StatusMonitoringEnabled {
@@ -233,6 +224,51 @@ func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, confi
 	}, nil
 }
 
+func buildEntitiesRequest(request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
+	allEntityRows := [][]feast.Row{}
+	for _, entity := range configEntities {
+		vals, err := getValuesFromJSONPayload(request, entity)
+		if err != nil {
+			return nil, fmt.Errorf("unable to extract entity %s: %v", entity.Name, err)
+		}
+
+		rows := []feast.Row{}
+		for _, val := range vals {
+			rows = append(rows, feast.Row{
+				entity.Name: val,
+			})
+		}
+		allEntityRows = append(allEntityRows, rows)
+	}
+
+	if len(allEntityRows) == 0 {
+		return nil, fmt.Errorf("no entity extracted")
+	}
+
+	entities := allEntityRows[0]
+
+	entityIndex := 1
+	for entityIndex < len(configEntities) {
+		rows := allEntityRows[entityIndex]
+
+		newEntities := []feast.Row{}
+		for _, entity := range entities {
+			for _, row := range rows {
+				newFeastRow := feast.Row{}
+				for key, value := range entity {
+					newFeastRow[key] = value
+				}
+				newFeastRow[configEntities[entityIndex].Name] = row[configEntities[entityIndex].Name]
+				newEntities = append(newEntities, newFeastRow)
+			}
+		}
+		entities = newEntities
+
+		entityIndex++
+	}
+
+	return entities, nil
+}
 func getFloatValue(val interface{}) (float64, error) {
 	switch i := val.(type) {
 	case float64:
