@@ -225,48 +225,35 @@ func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, confi
 }
 
 func buildEntitiesRequest(request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
-	allEntityRows := [][]feast.Row{}
-	for _, entity := range configEntities {
-		vals, err := getValuesFromJSONPayload(request, entity)
+	entities := []feast.Row{}
+
+	for _, configEntity := range configEntities {
+		vals, err := getValuesFromJSONPayload(request, configEntity)
 		if err != nil {
-			return nil, fmt.Errorf("unable to extract entity %s: %v", entity.Name, err)
+			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}
 
-		rows := []feast.Row{}
-		for _, val := range vals {
-			rows = append(rows, feast.Row{
-				entity.Name: val,
-			})
-		}
-		allEntityRows = append(allEntityRows, rows)
-	}
-
-	if len(allEntityRows) == 0 {
-		return nil, fmt.Errorf("no entity extracted")
-	}
-
-	entities := allEntityRows[0]
-
-	entityIndex := 1
-	for entityIndex < len(configEntities) {
-		entityName := configEntities[entityIndex].Name
-		rows := allEntityRows[entityIndex]
-
-		newEntities := []feast.Row{}
-		for _, entity := range entities {
-			for _, row := range rows {
-				newFeastRow := feast.Row{}
-				for key, value := range entity {
-					newFeastRow[key] = value
-				}
-
-				newFeastRow[entityName] = row[entityName]
-				newEntities = append(newEntities, newFeastRow)
+		if len(entities) == 0 {
+			for _, val := range vals {
+				entities = append(entities, feast.Row{
+					configEntity.Name: val,
+				})
 			}
-		}
-		entities = newEntities
+		} else {
+			newEntities := []feast.Row{}
+			for _, entity := range entities {
+				for _, val := range vals {
+					newFeastRow := feast.Row{}
+					for k, v := range entity {
+						newFeastRow[k] = v
+					}
 
-		entityIndex++
+					newFeastRow[configEntity.Name] = val
+					newEntities = append(newEntities, newFeastRow)
+				}
+			}
+			entities = newEntities
+		}
 	}
 
 	return entities, nil
