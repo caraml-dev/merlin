@@ -141,6 +141,7 @@ jobs:
           registry: ghcr.io
           repository: gojek/merlin-transformer
           build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
+          dockerfile: transformer.Dockerfile
           tag_with_ref: true
 
   publish-pyfunc-base-docker:
