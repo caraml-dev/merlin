@@ -249,6 +249,7 @@ func buildEntitiesRequest(request []byte, configEntities []*transformer.Entity) 
 
 	entityIndex := 1
 	for entityIndex < len(configEntities) {
+		entityName := configEntities[entityIndex].Name
 		rows := allEntityRows[entityIndex]
 
 		newEntities := []feast.Row{}
@@ -258,7 +259,8 @@ func buildEntitiesRequest(request []byte, configEntities []*transformer.Entity) 
 				for key, value := range entity {
 					newFeastRow[key] = value
 				}
-				newFeastRow[configEntities[entityIndex].Name] = row[configEntities[entityIndex].Name]
+
+				newFeastRow[entityName] = row[entityName]
 				newEntities = append(newEntities, newFeastRow)
 			}
 		}

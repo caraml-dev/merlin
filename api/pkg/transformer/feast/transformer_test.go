@@ -685,6 +685,52 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "3 entities with 1 value each except one",
+			args: args{
+				request: []byte(`{"customer_id":1111,"merchant_id":"M111","driver_id":["D111","D222","D333","D444"]}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id",
+					},
+					{
+						Name:      "driver_id",
+						ValueType: "STRING",
+						JsonPath:  "$.driver_id[*]",
+					},
+				},
+			},
+			want: []feast.Row{
+				{
+					"customer_id": feast.Int64Val(1111),
+					"merchant_id": feast.StrVal("M111"),
+					"driver_id":   feast.StrVal("D111"),
+				},
+				{
+					"customer_id": feast.Int64Val(1111),
+					"merchant_id": feast.StrVal("M111"),
+					"driver_id":   feast.StrVal("D222"),
+				},
+				{
+					"customer_id": feast.Int64Val(1111),
+					"merchant_id": feast.StrVal("M111"),
+					"driver_id":   feast.StrVal("D333"),
+				},
+				{
+					"customer_id": feast.Int64Val(1111),
+					"merchant_id": feast.StrVal("M111"),
+					"driver_id":   feast.StrVal("D444"),
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "3 entities with multiple value each except one",
 			args: args{
 				request: []byte(`{"customer_id":1111,"merchant_id":["M111","M222"],"driver_id":["D111","D222"]}`),
