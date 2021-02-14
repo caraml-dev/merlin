@@ -15,6 +15,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -61,6 +63,8 @@ func New(o *Options, logger *zap.Logger) *Server {
 // PredictHandler handles prediction request to the transformer and model.
 func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
+	defer span.Finish()
 
 	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -73,7 +77,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	preprocessedRequestBody := requestBody
 	if s.PreprocessHandler != nil {
-		preprocessedRequestBody, err = s.PreprocessHandler(ctx, requestBody)
+		preprocessedRequestBody, err = s.preprocess(ctx, requestBody)
 		if err != nil {
 			s.logger.Error("preprocess error", zap.Error(err))
 			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
@@ -82,7 +86,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		s.logger.Debug("preprocess requestBody", zap.ByteString("preprocess_response", preprocessedRequestBody))
 	}
 
-	resp, err := s.predict(r, preprocessedRequestBody)
+	resp, err := s.predict(ctx, r, preprocessedRequestBody)
 	if err != nil {
 		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
 		return
@@ -99,7 +103,17 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(respBody)
 }
 
-func (s *Server) predict(r *http.Request, request []byte) (*http.Response, error) {
+func (s *Server) preprocess(ctx context.Context, request []byte) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "preprocess")
+	defer span.Finish()
+
+	return s.PreprocessHandler(ctx, request)
+}
+
+func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (*http.Response, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
+	defer span.Finish()
+
 	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", s.options.ModelPredictURL, s.options.ModelName)
 	if !strings.Contains(predictURL, "http://") {
 		predictURL = "http://" + predictURL
@@ -124,10 +138,14 @@ func (s *Server) Run() {
 
 	s.router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelName), s.PredictHandler).Methods("POST")
 
+	operationName := nethttp.OperationNameFunc(func(r *http.Request) string {
+		return fmt.Sprintf("%s %s", r.Method, r.URL.Path)
+	})
+
 	addr := fmt.Sprintf(":%s", s.options.Port)
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      s.router,
+		Handler:      nethttp.Middleware(opentracing.GlobalTracer(), s.router, operationName),
 		WriteTimeout: s.options.HTTPServerTimeout,
 		ReadTimeout:  s.options.HTTPServerTimeout,
 		IdleTimeout:  2 * s.options.HTTPServerTimeout,
