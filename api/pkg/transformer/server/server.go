@@ -11,7 +11,9 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -30,12 +32,15 @@ type Options struct {
 	Port            string `envconfig:"MERLIN_TRANSFORMER_PORT" default:"8081"`
 	ModelName       string `envconfig:"MERLIN_TRANSFORMER_MODEL_NAME" default:"model"`
 	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"localhost:8080"`
+
+	HTTPServerTimeout time.Duration `envconfig:"HTTP_SERVER_TIMEOUT" default:"30s"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
 type Server struct {
 	options    *Options
 	httpClient *http.Client
+	router     *mux.Router
 	logger     *zap.Logger
 
 	PreprocessHandler  func(ctx context.Context, request []byte) ([]byte, error)
@@ -48,6 +53,7 @@ func New(o *Options, logger *zap.Logger) *Server {
 	return &Server{
 		options:    o,
 		httpClient: &http.Client{},
+		router:     mux.NewRouter(),
 		logger:     logger,
 	}
 }
@@ -113,12 +119,19 @@ func (s *Server) predict(r *http.Request, request []byte) (*http.Response, error
 func (s *Server) Run() {
 	// use default mux
 	health := healthcheck.NewHandler()
-	http.Handle("/", health)
-	http.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelName), s.PredictHandler)
-	http.Handle("/metrics", promhttp.Handler())
+	s.router.Handle("/", health)
+	s.router.Handle("/metrics", promhttp.Handler())
+
+	s.router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelName), s.PredictHandler).Methods("POST")
 
 	addr := fmt.Sprintf(":%s", s.options.Port)
-	srv := &http.Server{Addr: addr, Handler: http.DefaultServeMux}
+	srv := &http.Server{
+		Addr:         addr,
+		Handler:      s.router,
+		WriteTimeout: s.options.HTTPServerTimeout,
+		ReadTimeout:  s.options.HTTPServerTimeout,
+		IdleTimeout:  2 * s.options.HTTPServerTimeout,
+	}
 
 	stopCh := setupSignalHandler()
 	errCh := make(chan error, 1)
