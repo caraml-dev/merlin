@@ -209,7 +209,6 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7
-
       - name: Setup cluster
         run: ./merlin/scripts/e2e/setup-cluster.sh
       - name: Setup mlp namespace

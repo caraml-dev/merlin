@@ -32,7 +32,17 @@ fi
 ########################################
 # Provision KinD cluster
 #
-kind create cluster --name=${CLUSTER_NAME} --image=kindest/node:${KIND_NODE_VERSION}
+cat << EOF > ./kind-config-istio.yaml
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 32000
+    hostPort: 80
+EOF
+kind --version
+kind create cluster --name=${CLUSTER_NAME} --image=kindest/node:${KIND_NODE_VERSION} --config kind-config-istio.yaml
 kind get kubeconfig --name ${CLUSTER_NAME} --internal > kubeconfig.yaml
 
 ########################################
@@ -133,6 +143,19 @@ spec:
                 name: https
 EOF
 istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f istio-config.yaml
+
+cat <<EOF > ./patch-ingressgateway-nodeport.yaml
+spec:
+  type: NodePort
+  ports:
+  - name: http2
+    nodePort: 32000
+    port: 80
+    protocol: TCP
+    targetPor: 80
+EOF
+
+kubectl patch service/istio-ingressgateway -n istio-system --patch="$(cat patch-ingressgateway-nodeport.yaml)"
 
 ########################################
 # Install Knative
