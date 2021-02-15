@@ -192,7 +192,7 @@ jobs:
 
   e2e-test:
     runs-on: ubuntu-latest
-    needs: publish-merlin-docker
+    # needs: publish-merlin-docker
     steps:
       - uses: actions/checkout@v2
         with:
