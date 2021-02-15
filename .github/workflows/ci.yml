@@ -217,6 +217,7 @@ jobs:
           kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
       - name: Deploy MLP
         run: |
+          export INGRESS_HOST=127.0.0.1
           helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yaml \
           --set mlp.image.tag=main \
           --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \

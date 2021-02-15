@@ -15,7 +15,7 @@ export VAULT_VERSION=0.7.0
 export MINIO_VERSION=7.0.2
 
 export OAUTH_CLIENT_ID="<put your oauth client id here>"
-export MERLIN_VERSION=0.10
+export MERLIN_VERSION=v0.10
 
 ########################################
 # Install tools
@@ -163,13 +163,13 @@ kubectl patch service/istio-ingressgateway -n istio-system --patch="$(cat patch-
 kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-crds.yaml
 kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-core.yaml
 
-sleep 500
+sleep 60
 kubectl -n istio-system get service istio-ingressgateway
 kubectl -n istio-system get service istio-ingressgateway -o yaml
 
 kubectl get pods -A
 
-export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+export INGRESS_HOST="127.0.0.1"
 cat <<EOF > ./patch-config-domain.json
 {
   "data": {
