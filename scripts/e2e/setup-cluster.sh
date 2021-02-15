@@ -127,11 +127,11 @@ kubectl apply --filename=https://raw.githubusercontent.com/kubeflow/kfserving/ma
 cat <<EOF > ./patch-config-inferenceservice.json
 {
   "data": {
-    "storageInitializer": "{\n    \"image\" : \"ghcr.io/ariefrahmansyah/kfserving-storage-init:latest\",\n    \"memoryRequest\": \"100Mi\",\n    \"memoryLimit\": \"1Gi\",\n    \"cpuRequest\": \"100m\",\n    \"cpuLimit\": \"1\"\n}",
+    "storageInitializer": "{\n\"image\":\"ghcr.io/ariefrahmansyah/kfserving-storage-init:latest\",\n\"memoryRequest\":\"100Mi\",\n\"memoryLimit\":\"1Gi\",\n\"cpuRequest\":\"100m\",\n\"cpuLimit\":\"1\"\n}",
   }
 }
 EOF
-kubectl patch configmap/inferenceservice-config --namespace=kfserving-system --type=merge --patch "$(cat patch-config-inferenceservice.json)"
+kubectl patch configmap/inferenceservice-config --namespace=kfserving-system --type=merge --patch="$(cat patch-config-inferenceservice.json)"
 
 
 ########################################
@@ -151,6 +151,8 @@ helm install vault hashicorp/vault --version=${VAULT_VERSION} --namespace=vault 
   --set server.tolerations=null \
   --wait --timeout=600s
 sleep 15
+
+kubectl describe pod vault-0 --namespace=vault
 kubectl wait pod/vault-0 --namespace=vault --for=condition=ready --timeout=600s
 
 # Downgrade to Vault KV secrets engine version 1
