@@ -131,7 +131,7 @@ cat <<EOF > ./patch-config-inferenceservice.json
   }
 }
 EOF
-kubectl patch configmap/inferenceservice-config --namespace=kfserving-system --type=merge --patch="$(cat patch-config-inferenceservice.json)"
+kubectl patch configmap/inferenceservice-config --namespace=kfserving-system --type=merge --patch "$(cat patch-config-inferenceservice.json)"
 
 
 ########################################
