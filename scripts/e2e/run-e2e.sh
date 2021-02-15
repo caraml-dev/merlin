@@ -2,6 +2,7 @@
 
 export API_PATH="merlin/api"
 
+export INGRESS_HOST=127.0.0.1
 export MLP_API_BASEPATH="http://mlp.mlp.${INGRESS_HOST}.nip.io/v1"
 export MERLIN_API_BASEPATH="http://merlin.mlp.${INGRESS_HOST}.nip.io"
 

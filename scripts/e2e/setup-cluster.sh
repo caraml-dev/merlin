@@ -15,7 +15,7 @@ export VAULT_VERSION=0.7.0
 export MINIO_VERSION=7.0.2
 
 export OAUTH_CLIENT_ID="<put your oauth client id here>"
-export MERLIN_VERSION=v0.10
+export MERLIN_VERSION=v0.10.0
 
 ########################################
 # Install tools
@@ -163,6 +163,11 @@ kubectl patch service/istio-ingressgateway -n istio-system --patch="$(cat patch-
 kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-crds.yaml
 kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-core.yaml
 
+kubectl set resources deployment activator --namespace=knative-serving --containers=activator --requests=cpu=20m,memory=64Mi
+kubectl set resources deployment autoscaler --namespace=knative-serving --containers=autoscaler --requests=cpu=20m,memory=64Mi
+kubectl set resources deployment controller --namespace=knative-serving --containers=controller --requests=cpu=20m,memory=64Mi
+kubectl set resources deployment webhook --namespace=knative-serving --containers=webhook --requests=cpu=20m,memory=64Mi
+
 sleep 60
 kubectl -n istio-system get service istio-ingressgateway
 kubectl -n istio-system get service istio-ingressgateway -o yaml
@@ -233,7 +238,8 @@ EOF
 
 kubectl create namespace minio
 helm repo add minio https://helm.min.io/
-helm install minio minio/minio --version=${MINIO_VERSION} --namespace=minio --values=minio-values.yaml --wait --timeout=600s
+helm install minio minio/minio --version=${MINIO_VERSION} --namespace=minio --values=minio-values.yaml \
+--set accessKey=accessKey --set secretKey=secretKey --wait --timeout=600s
 
 
 set +ex
