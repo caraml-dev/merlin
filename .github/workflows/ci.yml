@@ -1,194 +1,194 @@
 name: ci
 on: push
 jobs:
-  lint-ui:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
-      - name: Install dependencies
-        run: make init-dep-ui
-      - name: Lint UI files
-        run: make lint-ui
+  # lint-ui:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-node@v1
+  #       with:
+  #         node-version: 12
+  #     - name: Install dependencies
+  #       run: make init-dep-ui
+  #     - name: Lint UI files
+  #       run: make lint-ui
 
-  lint-api:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.13
-      - name: Install dependencies
-        run: |
-          make setup
-          make init-dep-api
-      - name: Lint API files
-        run: make lint-api
+  # lint-api:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-go@v2
+  #       with:
+  #         go-version: 1.13
+  #     - name: Install dependencies
+  #       run: |
+  #         make setup
+  #         make init-dep-api
+  #     - name: Lint API files
+  #       run: make lint-api
 
-  build-ui:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
-      - name: Install dependencies
-        run: make init-dep-ui
-      - name: Build UI static files
-        run: make build-ui
+  # build-ui:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-node@v1
+  #       with:
+  #         node-version: 12
+  #     - name: Install dependencies
+  #       run: make init-dep-ui
+  #     - name: Build UI static files
+  #       run: make build-ui
 
-  build-api:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.13
-      - name: Install dependencies
-        run: make init-dep-api
-      - name: Build API server
-        run: make build-api
+  # build-api:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-go@v2
+  #       with:
+  #         go-version: 1.13
+  #     - name: Install dependencies
+  #       run: make init-dep-api
+  #     - name: Build API server
+  #       run: make build-api
 
-  unit-test-python-sdk:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
-      - name: Install dependencies
-        working-directory: ./python/sdk
-        run: |
-          pip install mypy pipenv
-          make setup
-      - name: Unit test Python SDK
-        env:
-          E2E_USE_GOOGLE_OAUTH: false
-        working-directory: ./python/sdk
-        run: make unit-test
+  # unit-test-python-sdk:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.7
+  #     - name: Install dependencies
+  #       working-directory: ./python/sdk
+  #       run: |
+  #         pip install mypy pipenv
+  #         make setup
+  #     - name: Unit test Python SDK
+  #       env:
+  #         E2E_USE_GOOGLE_OAUTH: false
+  #       working-directory: ./python/sdk
+  #       run: make unit-test
 
-  integration-test-api:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:12.4
-        env:
-          POSTGRES_DB: merlin
-          POSTGRES_USER: merlin
-          POSTGRES_PASSWORD: merlin
-        ports:
-          - 5432:5432
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.13
-      - name: Test API files
-        env:
-          POSTGRES_HOST: localhost
-          POSTGRES_DB: merlin
-          POSTGRES_USER: merlin
-          POSTGRES_PASSWORD: merlin
-        run: make it-test-api-ci
+  # integration-test-api:
+  #   runs-on: ubuntu-latest
+  #   services:
+  #     postgres:
+  #       image: postgres:12.4
+  #       env:
+  #         POSTGRES_DB: merlin
+  #         POSTGRES_USER: merlin
+  #         POSTGRES_PASSWORD: merlin
+  #       ports:
+  #         - 5432:5432
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-go@v2
+  #       with:
+  #         go-version: 1.13
+  #     - name: Test API files
+  #       env:
+  #         POSTGRES_HOST: localhost
+  #         POSTGRES_DB: merlin
+  #         POSTGRES_USER: merlin
+  #         POSTGRES_PASSWORD: merlin
+  #       run: make it-test-api-ci
 
-  publish-python-sdk:
-    if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
-      - name: Install dependencies
-        working-directory: ./python/sdk
-        run: |
-          python -m pip install --upgrade pip
-          pip install setuptools wheel twine
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        working-directory: ./python/sdk
-        run: |
-          python setup.py sdist bdist_wheel
-          twine upload dist/*
+  # publish-python-sdk:
+  #   if: ${{ startsWith(github.ref, 'refs/tags/') }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.7
+  #     - name: Install dependencies
+  #       working-directory: ./python/sdk
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install setuptools wheel twine
+  #     - name: Build and publish
+  #       env:
+  #         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+  #         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+  #       working-directory: ./python/sdk
+  #       run: |
+  #         python setup.py sdist bdist_wheel
+  #         twine upload dist/*
 
-  publish-merlin-docker:
-    runs-on: ubuntu-latest
-    needs: integration-test-api
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build and push Merlin Docker image
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
-          registry: ghcr.io
-          build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
-          tag_with_ref: true
+  # publish-merlin-docker:
+  #   runs-on: ubuntu-latest
+  #   needs: integration-test-api
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Build and push Merlin Docker image
+  #       uses: docker/build-push-action@v1
+  #       with:
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GHCR_TOKEN }}
+  #         registry: ghcr.io
+  #         build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
+  #         tag_with_ref: true
 
-  publish-merlin-transformer-docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build and push Merlin Standard Transformer Docker image
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
-          registry: ghcr.io
-          repository: gojek/merlin-transformer
-          build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
-          tag_with_ref: true
+  # publish-merlin-transformer-docker:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Build and push Merlin Standard Transformer Docker image
+  #       uses: docker/build-push-action@v1
+  #       with:
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GHCR_TOKEN }}
+  #         registry: ghcr.io
+  #         repository: gojek/merlin-transformer
+  #         build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
+  #         tag_with_ref: true
 
-  publish-pyfunc-base-docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build and push PyFunc Base Docker image
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
-          registry: ghcr.io
-          repository: gojek/merlin-pyfunc-base
-          path: python/pyfunc-server
-          dockerfile: python/pyfunc-server/base.Dockerfile
-          tags: dev
-          tag_with_ref: true
+  # publish-pyfunc-base-docker:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Build and push PyFunc Base Docker image
+  #       uses: docker/build-push-action@v1
+  #       with:
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GHCR_TOKEN }}
+  #         registry: ghcr.io
+  #         repository: gojek/merlin-pyfunc-base
+  #         path: python/pyfunc-server
+  #         dockerfile: python/pyfunc-server/base.Dockerfile
+  #         tags: dev
+  #         tag_with_ref: true
 
-  publish-pyspark-base-docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build and push PySpark Base Docker image
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
-          registry: ghcr.io
-          repository: gojek/merlin-pyspark-base
-          path: python
-          dockerfile: python/batch-predictor/docker/base.Dockerfile
-          tag_with_ref: true
+  # publish-pyspark-base-docker:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Build and push PySpark Base Docker image
+  #       uses: docker/build-push-action@v1
+  #       with:
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GHCR_TOKEN }}
+  #         registry: ghcr.io
+  #         repository: gojek/merlin-pyspark-base
+  #         path: python
+  #         dockerfile: python/batch-predictor/docker/base.Dockerfile
+  #         tag_with_ref: true
 
-  publish-mlflow-docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build and push MLflow Docker image
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
-          registry: ghcr.io
-          repository: gojek/mlflow
-          path: mlflow
-          dockerfile: mlflow/Dockerfile
-          build_args: MLFLOW_VERSION=1.3.0
-          tags: 1.3.0
+  # publish-mlflow-docker:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Build and push MLflow Docker image
+  #       uses: docker/build-push-action@v1
+  #       with:
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GHCR_TOKEN }}
+  #         registry: ghcr.io
+  #         repository: gojek/mlflow
+  #         path: mlflow
+  #         dockerfile: mlflow/Dockerfile
+  #         build_args: MLFLOW_VERSION=1.3.0
+  #         tags: 1.3.0
 
   e2e-test:
     runs-on: ubuntu-latest
@@ -218,11 +218,17 @@ jobs:
           kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
       - name: Deploy MLP
         run: |
-          helm install mlp mlp/chart --namespace=mlp \
-            --values=mlp/chart/values-e2e.yaml \
-            --set mlp.image.tag=main \
-            --wait --timeout=5m
+          helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yaml \
+          --set mlp.image.tag=main \
+          --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
+          --set mlp.oauthClientID=${OAUTH_CLIENT_ID} \
+          --set mlp.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST}.nip.io \
+          --set mlp.ingress.enabled=true \
+          --set mlp.ingress.class=istio \
+          --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
+          --set mlp.ingress.path="/*" \
+          --wait --timeout=5m
       - name: Deploy Merlin
         run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
       - name: Run E2E test
-        run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
+        run: ./merlin/scripts/e2e/run-e2e.sh
