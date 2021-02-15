@@ -48,7 +48,7 @@ func main() {
 
 	logger.Info("configuration loaded", zap.Any("cfg", cfg))
 
-	closer, err := initTracing(cfg.Server.ModelName)
+	closer, err := initTracing(cfg.Server.ModelName + "-transformer")
 	if err != nil {
 		logger.Error("Unable to initialize tracing", zap.Error(err))
 	}
