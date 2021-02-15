@@ -53,8 +53,6 @@ helm install vault hashicorp/vault --version=${VAULT_VERSION} --namespace=vault 
   --wait --timeout=600s
 sleep 15
 
-kubectl get pods -A
-kubectl describe pod vault-0 --namespace=vault
 kubectl wait pod/vault-0 --namespace=vault --for=condition=ready --timeout=600s
 
 # Downgrade to Vault KV secrets engine version 1
@@ -142,7 +140,11 @@ istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f istio-config.yaml
 kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-crds.yaml
 kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-core.yaml
 
+sleep 500
 kubectl -n istio-system get service istio-ingressgateway
+kubectl -n istio-system get service istio-ingressgateway -o yaml
+
+kubectl get pods -A
 
 export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 cat <<EOF > ./patch-config-domain.json
