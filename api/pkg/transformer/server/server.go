@@ -36,6 +36,7 @@ type Options struct {
 	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"localhost:8080"`
 
 	HTTPServerTimeout time.Duration `envconfig:"HTTP_SERVER_TIMEOUT" default:"30s"`
+	HTTPClientTimeout time.Duration `envconfig:"HTTP_CLIENT_TIMEOUT" default:"15s"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
@@ -52,9 +53,13 @@ type Server struct {
 
 // New initializes a new Server.
 func New(o *Options, logger *zap.Logger) *Server {
+	httpClient := &http.Client{
+		Timeout: o.HTTPClientTimeout,
+	}
+
 	return &Server{
 		options:    o,
-		httpClient: &http.Client{},
+		httpClient: httpClient,
 		router:     mux.NewRouter(),
 		logger:     logger,
 	}
