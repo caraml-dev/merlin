@@ -3,7 +3,7 @@
 set -ex
 
 export CLUSTER_NAME=dev
-export KIND_NODE_VERSION=v1.15.12
+export KIND_NODE_VERSION=v1.16.15
 export VAULT_VERSION=0.7.0
 export ISTIO_VERSION=1.5.4
 export KNATIVE_VERSION=v0.14.3
