@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"net"
 	"strconv"
@@ -8,9 +9,12 @@ import (
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/kelseyhightower/envconfig"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
+	jcfg "github.com/uber/jaeger-client-go/config"
+	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer"
@@ -33,7 +37,7 @@ func main() {
 	}{}
 
 	if err := envconfig.Process("", &cfg); err != nil {
-		log.Fatalln(errors.Wrap(err, "Error processing environment variables"))
+		log.Fatal(errors.Wrap(err, "Error processing environment variables"))
 	}
 
 	logger, _ := zap.NewProduction()
@@ -44,23 +48,30 @@ func main() {
 
 	logger.Info("configuration loaded", zap.Any("cfg", cfg))
 
+	closer, err := initTracing(cfg.Server.ModelName + "-transformer")
+	if err != nil {
+		logger.Error("Unable to initialize tracing", zap.Error(err))
+	}
+	if closer != nil {
+		defer closer.Close()
+	}
+
 	config := &transformer.StandardTransformerConfig{}
 	if err := jsonpb.UnmarshalString(cfg.StandardTransformerConfigJSON, config); err != nil {
-		log.Fatalln(errors.Wrap(err, "Unable to parse standard transformer config"))
+		logger.Fatal("Unable to parse standard transformer config", zap.Error(err))
 	}
 
 	feastHost, feastPort, err := net.SplitHostPort(cfg.Feast.ServingURL)
 	if err != nil {
-		log.Panicf("Unable to parse feast serving URL %s: %v", cfg.Feast.ServingURL, err)
+		logger.Fatal("Unable to parse Feast Serving URL", zap.String("feast-serving-url", cfg.Feast.ServingURL), zap.Error(err))
 	}
-
 	feastPortInt, err := strconv.Atoi(feastPort)
 	if err != nil {
-		log.Panicf("Unable to parse feast serving port %s: %v", feastPort, err)
+		logger.Fatal("Unable to parse Feast Serving Port", zap.String("feast-serving-port", feastPort), zap.Error(err))
 	}
 	feastClient, err := feastSdk.NewGrpcClient(feastHost, feastPortInt)
 	if err != nil {
-		log.Fatalln(errors.Wrap(err, "Unable to initialie feastSdk client"))
+		logger.Fatal("Unable to initialize Feast client", zap.Error(err))
 	}
 
 	f := feast.NewTransformer(feastClient, config, &cfg.Feast, logger)
@@ -69,4 +80,29 @@ func main() {
 	s.PreprocessHandler = f.Transform
 
 	s.Run()
+}
+
+func initTracing(serviceName string) (io.Closer, error) {
+	// Set tracing configuration defaults.
+	cfg := &jcfg.Configuration{
+		ServiceName: serviceName,
+		Disabled:    true,
+	}
+
+	// Available options can be seen here:
+	// https://github.com/jaegertracing/jaeger-client-go#environment-variables
+	cfg, err := cfg.FromEnv()
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to get tracing config from environment")
+	}
+
+	tracer, closer, err := cfg.NewTracer(
+		jcfg.Metrics(jprom.New()),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to initialize tracer")
+	}
+
+	opentracing.SetGlobalTracer(tracer)
+	return closer, nil
 }
