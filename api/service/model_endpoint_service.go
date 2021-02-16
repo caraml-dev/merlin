@@ -25,11 +25,13 @@ import (
 	"github.com/pkg/errors"
 	networking "istio.io/api/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 
 	"github.com/gojek/merlin/istio"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
-	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 )
 
 const (
@@ -201,7 +203,7 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 
 	// Delete Istio's VirtualService
 	err := istioClient.DeleteVirtualService(ctx, model.Project.Name, model.Name)
-	if err != nil {
+	if client.IgnoreNotFound(err) != nil {
 		log.Errorf("failed to delete VirtualService: %v", err)
 		return nil, errors.Wrapf(err, "failed to delete VirtualService resource on cluster")
 	}
