@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/log"
@@ -177,7 +178,7 @@ func (k *controller) Delete(modelService *models.Service) (*models.Service, erro
 	}
 	gracePeriod := int64(deletionGracePeriodSecond)
 	err = k.servingClient.InferenceServices(modelService.Namespace).Delete(modelService.Name, &metav1.DeleteOptions{GracePeriodSeconds: &gracePeriod})
-	if err != nil {
+	if client.IgnoreNotFound(err) != nil {
 		return nil, errors.Wrapf(err, "unable to delete inference service: %s", infSvc.Name)
 	}
 
