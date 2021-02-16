@@ -11,8 +11,12 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -30,12 +34,16 @@ type Options struct {
 	Port            string `envconfig:"MERLIN_TRANSFORMER_PORT" default:"8081"`
 	ModelName       string `envconfig:"MERLIN_TRANSFORMER_MODEL_NAME" default:"model"`
 	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"localhost:8080"`
+
+	HTTPServerTimeout time.Duration `envconfig:"HTTP_SERVER_TIMEOUT" default:"30s"`
+	HTTPClientTimeout time.Duration `envconfig:"HTTP_CLIENT_TIMEOUT" default:"15s"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
 type Server struct {
 	options    *Options
 	httpClient *http.Client
+	router     *mux.Router
 	logger     *zap.Logger
 
 	PreprocessHandler  func(ctx context.Context, request []byte) ([]byte, error)
@@ -45,9 +53,14 @@ type Server struct {
 
 // New initializes a new Server.
 func New(o *Options, logger *zap.Logger) *Server {
+	httpClient := &http.Client{
+		Timeout: o.HTTPClientTimeout,
+	}
+
 	return &Server{
 		options:    o,
-		httpClient: &http.Client{},
+		httpClient: httpClient,
+		router:     mux.NewRouter(),
 		logger:     logger,
 	}
 }
@@ -55,6 +68,8 @@ func New(o *Options, logger *zap.Logger) *Server {
 // PredictHandler handles prediction request to the transformer and model.
 func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
+	defer span.Finish()
 
 	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -67,7 +82,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	preprocessedRequestBody := requestBody
 	if s.PreprocessHandler != nil {
-		preprocessedRequestBody, err = s.PreprocessHandler(ctx, requestBody)
+		preprocessedRequestBody, err = s.preprocess(ctx, requestBody)
 		if err != nil {
 			s.logger.Error("preprocess error", zap.Error(err))
 			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
@@ -76,7 +91,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		s.logger.Debug("preprocess requestBody", zap.ByteString("preprocess_response", preprocessedRequestBody))
 	}
 
-	resp, err := s.predict(r, preprocessedRequestBody)
+	resp, err := s.predict(ctx, r, preprocessedRequestBody)
 	if err != nil {
 		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
 		return
@@ -93,7 +108,17 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(respBody)
 }
 
-func (s *Server) predict(r *http.Request, request []byte) (*http.Response, error) {
+func (s *Server) preprocess(ctx context.Context, request []byte) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "preprocess")
+	defer span.Finish()
+
+	return s.PreprocessHandler(ctx, request)
+}
+
+func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (*http.Response, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
+	defer span.Finish()
+
 	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", s.options.ModelPredictURL, s.options.ModelName)
 	if !strings.Contains(predictURL, "http://") {
 		predictURL = "http://" + predictURL
@@ -113,12 +138,23 @@ func (s *Server) predict(r *http.Request, request []byte) (*http.Response, error
 func (s *Server) Run() {
 	// use default mux
 	health := healthcheck.NewHandler()
-	http.Handle("/", health)
-	http.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelName), s.PredictHandler)
-	http.Handle("/metrics", promhttp.Handler())
+	s.router.Handle("/", health)
+	s.router.Handle("/metrics", promhttp.Handler())
+
+	s.router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelName), s.PredictHandler).Methods("POST")
+
+	operationName := nethttp.OperationNameFunc(func(r *http.Request) string {
+		return fmt.Sprintf("%s %s", r.Method, r.URL.Path)
+	})
 
 	addr := fmt.Sprintf(":%s", s.options.Port)
-	srv := &http.Server{Addr: addr, Handler: http.DefaultServeMux}
+	srv := &http.Server{
+		Addr:         addr,
+		Handler:      nethttp.Middleware(opentracing.GlobalTracer(), s.router, operationName),
+		WriteTimeout: s.options.HTTPServerTimeout,
+		ReadTimeout:  s.options.HTTPServerTimeout,
+		IdleTimeout:  2 * s.options.HTTPServerTimeout,
+	}
 
 	stopCh := setupSignalHandler()
 	errCh := make(chan error, 1)

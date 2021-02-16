@@ -13,6 +13,7 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/zap"
@@ -104,14 +105,18 @@ type result struct {
 
 // Transform retrieves the Feast features values and add them into the request.
 func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.Transform")
+	defer span.Finish()
+
 	feastFeatures := make(map[string]*FeastFeature, len(t.config.TransformerConfig.Feast))
 
 	// parallelize feast call per feature table
 	resChan := make(chan result, len(t.config.TransformerConfig.Feast))
 	for _, config := range t.config.TransformerConfig.Feast {
 		go func(cfg *transformer.FeatureTable) {
-			val, err := t.getFeastFeature(ctx, request, cfg)
-			resChan <- result{createTableName(cfg.Entities), val, err}
+			tableName := createTableName(cfg.Entities)
+			val, err := t.getFeastFeature(ctx, tableName, request, cfg)
+			resChan <- result{tableName, val, err}
 		}(config)
 	}
 
@@ -124,12 +129,7 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 		feastFeatures[res.tableName] = res.feastFeature
 	}
 
-	feastFeatureJSON, err := json.Marshal(feastFeatures)
-	if err != nil {
-		return nil, err
-	}
-
-	out, err := jsonparser.Set(request, feastFeatureJSON, transformer.FeastFeatureJSONField)
+	out, err := enrichRequest(ctx, request, feastFeatures)
 	if err != nil {
 		return nil, err
 	}
@@ -137,8 +137,12 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	return out, err
 }
 
-func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, config *transformer.FeatureTable) (*FeastFeature, error) {
-	entities, err := buildEntitiesRequest(request, config.Entities)
+func (t *Transformer) getFeastFeature(ctx context.Context, tableName string, request []byte, config *transformer.FeatureTable) (*FeastFeature, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.getFeastFeature")
+	span.SetTag("table.name", tableName)
+	defer span.Finish()
+
+	entities, err := buildEntitiesRequest(ctx, request, config.Entities)
 	if err != nil {
 		return nil, err
 	}
@@ -167,11 +171,63 @@ func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, confi
 
 	t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
 
+	feastFeature, err := t.buildFeastFeatures(ctx, feastResponse, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return feastFeature, nil
+}
+
+func buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildEntitiesRequest")
+	defer span.Finish()
+
+	entities := []feast.Row{}
+
+	for _, configEntity := range configEntities {
+		vals, err := getValuesFromJSONPayload(request, configEntity)
+		if err != nil {
+			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
+		}
+
+		if len(entities) == 0 {
+			for _, val := range vals {
+				entities = append(entities, feast.Row{
+					configEntity.Name: val,
+				})
+			}
+		} else {
+			newEntities := []feast.Row{}
+			for _, entity := range entities {
+				for _, val := range vals {
+					newFeastRow := feast.Row{}
+					for k, v := range entity {
+						newFeastRow[k] = v
+					}
+
+					newFeastRow[configEntity.Name] = val
+					newEntities = append(newEntities, newFeastRow)
+				}
+			}
+			entities = newEntities
+		}
+	}
+
+	return entities, nil
+}
+
+func (t *Transformer) buildFeastFeatures(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, config *transformer.FeatureTable) (*FeastFeature, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildFeastFeatures")
+	defer span.Finish()
+
 	var columns []string
 	for _, entity := range config.Entities {
 		columns = append(columns, entity.Name)
 	}
-	columns = append(columns, features...)
+	for _, feature := range config.Features {
+		columns = append(columns, feature.Name)
+	}
 
 	var data [][]interface{}
 	status := feastResponse.Statuses()
@@ -224,40 +280,6 @@ func (t *Transformer) getFeastFeature(ctx context.Context, request []byte, confi
 	}, nil
 }
 
-func buildEntitiesRequest(request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
-	entities := []feast.Row{}
-
-	for _, configEntity := range configEntities {
-		vals, err := getValuesFromJSONPayload(request, configEntity)
-		if err != nil {
-			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
-		}
-
-		if len(entities) == 0 {
-			for _, val := range vals {
-				entities = append(entities, feast.Row{
-					configEntity.Name: val,
-				})
-			}
-		} else {
-			newEntities := []feast.Row{}
-			for _, entity := range entities {
-				for _, val := range vals {
-					newFeastRow := feast.Row{}
-					for k, v := range entity {
-						newFeastRow[k] = v
-					}
-
-					newFeastRow[configEntity.Name] = val
-					newEntities = append(newEntities, newFeastRow)
-				}
-			}
-			entities = newEntities
-		}
-	}
-
-	return entities, nil
-}
 func getFloatValue(val interface{}) (float64, error) {
 	switch i := val.(type) {
 	case float64:
@@ -315,4 +337,21 @@ func getFeatureValue(val *types.Value) (interface{}, error) {
 	default:
 		return nil, fmt.Errorf("unknown feature value type: %T", val.Val)
 	}
+}
+
+func enrichRequest(ctx context.Context, request []byte, feastFeatures map[string]*FeastFeature) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.enrichRequest")
+	defer span.Finish()
+
+	feastFeatureJSON, err := json.Marshal(feastFeatures)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := jsonparser.Set(request, feastFeatureJSON, transformer.FeastFeatureJSONField)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, err
 }
