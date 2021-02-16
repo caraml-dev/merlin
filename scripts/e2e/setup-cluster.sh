@@ -168,11 +168,10 @@ kubectl set resources deployment autoscaler --namespace=knative-serving --contai
 kubectl set resources deployment controller --namespace=knative-serving --containers=controller --requests=cpu=20m,memory=64Mi
 kubectl set resources deployment webhook --namespace=knative-serving --containers=webhook --requests=cpu=20m,memory=64Mi
 
-sleep 60
-kubectl -n istio-system get service istio-ingressgateway
-kubectl -n istio-system get service istio-ingressgateway -o yaml
-
-kubectl get pods -A
+kubectl wait deployment.apps/activator --namespace=knative-serving --for=condition=available --timeout=600s
+kubectl wait deployment.apps/autoscaler --namespace=knative-serving --for=condition=available --timeout=600s
+kubectl wait deployment.apps/controller --namespace=knative-serving --for=condition=available --timeout=600s
+kubectl wait deployment.apps/webhook --namespace=knative-serving --for=condition=available --timeout=600s
 
 export INGRESS_HOST="127.0.0.1"
 cat <<EOF > ./patch-config-domain.json
@@ -194,7 +193,6 @@ kubectl apply --filename=https://github.com/knative/net-istio/releases/download/
 #
 kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
 kubectl wait deployment.apps/cert-manager-webhook --namespace=cert-manager --for=condition=available --timeout=600s
-sleep 15
 
 ########################################
 # Install KFServing
