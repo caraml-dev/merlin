@@ -33,17 +33,27 @@ fi
 # Provision KinD cluster
 #
 cat << EOF > ./kind-config-istio.yaml
-apiVersion: kind.x-k8s.io/v1alpha4
 kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
   extraPortMappings:
   - containerPort: 32000
     hostPort: 80
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 443
+    protocol: TCP
+- role: worker
 EOF
 kind --version
 kind create cluster --name=${CLUSTER_NAME} --image=kindest/node:${KIND_NODE_VERSION} --config kind-config-istio.yaml
 kind get kubeconfig --name ${CLUSTER_NAME} --internal > kubeconfig.yaml
+# kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/master/manifests/namespace.yaml
+# kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)" 
+# kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/master/manifests/metallb.yaml
+# sleep 60
+# kubectl apply -f https://kind.sigs.k8s.io/examples/loadbalancer/metallb-configmap.yaml
 
 ########################################
 # Install Vault
@@ -143,6 +153,7 @@ spec:
                 name: https
 EOF
 istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f istio-config.yaml
+sleep 120
 
 cat <<EOF > ./patch-ingressgateway-nodeport.yaml
 spec:
@@ -152,7 +163,7 @@ spec:
     nodePort: 32000
     port: 80
     protocol: TCP
-    targetPor: 80
+    targetPort: 80
 EOF
 
 kubectl patch service/istio-ingressgateway -n istio-system --patch="$(cat patch-ingressgateway-nodeport.yaml)"
@@ -173,7 +184,10 @@ kubectl wait deployment.apps/autoscaler --namespace=knative-serving --for=condit
 kubectl wait deployment.apps/controller --namespace=knative-serving --for=condition=available --timeout=600s
 kubectl wait deployment.apps/webhook --namespace=knative-serving --for=condition=available --timeout=600s
 
-export INGRESS_HOST="127.0.0.1"
+export INGRESS_HOST=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
+echo "IP $(hostname -I)"
+sleep 20
+kubectl get service istio-ingressgateway --namespace=istio-system -o yaml
 cat <<EOF > ./patch-config-domain.json
 {
   "data": {

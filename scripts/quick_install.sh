@@ -73,7 +73,7 @@ istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f istio-config.yaml
 kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-crds.yaml
 kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-core.yaml
 
-export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+export INGRESS_HOST=127.0.0.1
 cat <<EOF > ./patch-config-domain.json
 {
   "data": {
