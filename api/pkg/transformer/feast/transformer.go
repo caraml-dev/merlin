@@ -13,6 +13,7 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/oliveagle/jsonpath"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -184,9 +185,19 @@ func buildEntitiesRequest(ctx context.Context, request []byte, configEntities []
 	defer span.Finish()
 
 	entities := []feast.Row{}
+	var nodesBody interface{}
+	err := json.Unmarshal(request, &nodesBody)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, configEntity := range configEntities {
-		vals, err := getValuesFromJSONPayload(request, configEntity)
+		c, err := jsonpath.Compile(configEntity.JsonPath)
+		if err != nil {
+			return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.JsonPath)
+		}
+
+		vals, err := getValuesFromJSONPayload(request, configEntity, c)
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}

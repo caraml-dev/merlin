@@ -71,6 +71,11 @@ it-test-api-ci:
 	@cd ${API_PATH} && go test -race -short -cover -coverprofile cover.out -tags unit,integration ${API_ALL_PACKAGES}
 	@cd ${API_PATH} && go tool cover -func cover.out
 
+.PHONY:
+bench:
+	@echo "> Running Benchmark ..."
+	@cd ${API_PATH} && go test ${API_ALL_PACKAGES} -bench=. -run=^$$
+
 # ============================================================
 # Building recipes
 # ============================================================

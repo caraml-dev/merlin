@@ -1,7 +1,6 @@
 package feast
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -12,16 +11,10 @@ import (
 	"github.com/gojek/merlin/pkg/transformer"
 )
 
-func getValuesFromJSONPayload(body []byte, entity *transformer.Entity) ([]*feastType.Value, error) {
+func getValuesFromJSONPayload(nodesBody interface{}, entity *transformer.Entity, compiledJsonPath *jsonpath.Compiled) ([]*feastType.Value, error) {
 	feastValType := feastType.ValueType_Enum(feastType.ValueType_Enum_value[entity.ValueType])
 
-	var nodesBody interface{}
-	err := json.Unmarshal(body, &nodesBody)
-	if err != nil {
-		return nil, err
-	}
-
-	o, err := jsonpath.JsonPathLookup(nodesBody, entity.JsonPath)
+	o, err := compiledJsonPath.Lookup(nodesBody)
 	if err != nil {
 		return nil, err
 	}
