@@ -197,7 +197,7 @@ func buildEntitiesRequest(ctx context.Context, request []byte, configEntities []
 			return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.JsonPath)
 		}
 
-		vals, err := getValuesFromJSONPayload(request, configEntity, c)
+		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, c)
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}
