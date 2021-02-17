@@ -3,7 +3,7 @@
 set -ex
 
 CHART_PATH="$1"
-export INGRESS_HOST=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
+export INGRESS_HOST=127.0.0.1
 export MERLIN_VERSION=v0.10.0
 
 
@@ -18,7 +18,7 @@ helm install --debug merlin ${CHART_PATH} --namespace=mlp --values=${CHART_PATH}
   --set mlflow.ingress.enabled=true \
   --set mlflow.ingress.class=istio \
   --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
-  --set mlflow.extraEnvs.MLFLOW_S3_ENDPOINT_URL=minio.minio.${INGRESS_HOST}.nip.io \
+  --set mlflow.extraEnvs.MLFLOW_S3_ENDPOINT_URL=http://minio.minio.svc.cluster.local:9000 \
   --set mlflow.ingress.path="/*" \
   --set mlflow.postgresql.requests.cpu="25m" \
   --set mlflow.postgresql.requests.memory="256Mi" \
@@ -36,13 +36,26 @@ helm install --debug merlin ${CHART_PATH} --namespace=mlp --values=${CHART_PATH}
   --set mlflow.ingress.enabled=true \
   --set mlflow.ingress.class=istio \
   --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
-  --set mlflow.extraEnvs.MLFLOW_S3_ENDPOINT_URL=minio.minio.${INGRESS_HOST}.nip.io \
+  --set mlflow.extraEnvs.MLFLOW_S3_ENDPOINT_URL=http://minio.minio.svc.cluster.local:9000 \
   --set mlflow.ingress.path="/*" \
   --set mlflow.resources.requests.cpu="25m" \
   --set mlflow.resources.requests.memory="256Mi" \
   --timeout=5m \
   --wait
 
-kubectl get service istio-ingressgateway --namespace=istio-system -o yaml
+cat <<EOF > ./patch-merlin-mlflow-nodeport.yaml
+spec:
+  type: NodePort
+  ports:
+  - name: http2
+    nodePort: 31100
+    port: 80
+    protocol: TCP
+    targetPort: 5000
+EOF
+kubectl patch service/merlin-mlflow -n mlp --patch="$(cat patch-merlin-mlflow-nodeport.yaml)"
+sleep 12
+
+
 
 set +ex

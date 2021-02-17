@@ -60,8 +60,7 @@ spec:
 {{ toYaml .Values.resources | indent 10 }}
         env:
         - name: BACKEND_STORE_URI
-          # value: "{{ template "mlflow.backendStoreUri" . }}"
-          value: postgresql://mlflow:@merlin-postgresql.mlp.svc.cluster.local:5432/mlflow
+          value: "{{ template "mlflow.backendStoreUri" . }}"
         - name: ARTIFACT_ROOT
           value: "{{ .Values.artifactRoot }}"
         - name: HOST

@@ -1,5 +1,6 @@
 merlin:
   environment: dev
+  loggerDestinationURL: "http://logger.default"
   image:
     tag: 0.7.0
   replicaCount: 1
@@ -87,8 +88,9 @@ mlflow:
   artifactRoot: s3://mlflow
   extraEnvs:
     # MinIO credentials
-    AWS_ACCESS_KEY_ID: accessKey
-    AWS_SECRET_ACCESS_KEY: secretKey
+    AWS_ACCESS_KEY_ID: YOURACCESSKEY
+    AWS_SECRET_ACCESS_KEY: YOURSECRETKEY
+    AWS_DEFAULT_REGION: ap-southeast-2
     MLFLOW_S3_ENDPOINT_URL: http://minio.minio:9000
 
 swagger:

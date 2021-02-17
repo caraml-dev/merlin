@@ -184,9 +184,7 @@ kubectl wait deployment.apps/autoscaler --namespace=knative-serving --for=condit
 kubectl wait deployment.apps/controller --namespace=knative-serving --for=condition=available --timeout=600s
 kubectl wait deployment.apps/webhook --namespace=knative-serving --for=condition=available --timeout=600s
 
-export INGRESS_HOST=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
-echo "IP $(hostname -I)"
-sleep 20
+export INGRESS_HOST=127.0.0.1
 kubectl get service istio-ingressgateway --namespace=istio-system -o yaml
 cat <<EOF > ./patch-config-domain.json
 {
@@ -251,7 +249,6 @@ EOF
 kubectl create namespace minio
 helm repo add minio https://helm.min.io/
 helm install minio minio/minio --version=${MINIO_VERSION} --namespace=minio --values=minio-values.yaml \
---set accessKey=accessKey --set secretKey=secretKey --wait --timeout=600s
-
+--set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY
 
 set +ex
