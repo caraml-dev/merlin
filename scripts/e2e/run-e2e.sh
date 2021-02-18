@@ -21,8 +21,8 @@ curl "${E2E_MERLIN_URL}/v1/projects"
 cd ./merlin/python/sdk
 pip install pipenv
 pipenv install --dev --skip-lock
-# pipenv run pytest -n=8 -W=ignore --cov=merlin test/integration_test.py
-pipenv run pytest test/integration_test.py::test_stop_serving_traffic
+pipenv run pytest -n=5 -W=ignore --cov=merlin test/integration_test.py
+# pipenv run pytest test/integration_test.py::test_stop_serving_traffic
 
 # kubectl describe inferenceservice -l gojek.com/app=sklearn-sample -n ${E2E_PROJECT_NAME}
 
