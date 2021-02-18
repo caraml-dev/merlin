@@ -1128,20 +1128,27 @@ class ModelVersion:
         bar = pyprind.ProgBar(100, track_time=True,
                               title=f"Running prediction job {j.id} from model {self.model.name} version {self.id} "
                                     f"under project {self.model.project.name}")
+        retry = 5
         while j.status == "pending" or \
                 j.status == "running" or \
-                j.status == "terminating":
+                j.status == "terminating" or \
+                retry > 0:
             if not sync:
                 j = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self.model.id,
                                                                                    version_id=self.id,
                                                                                    job_id=j.id)
                 return PredictionJob(j, self._api_client)
             else:
-                j = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self.model.id,
-                                                                                   version_id=self.id,
-                                                                                   job_id=j.id)
+                try:
+                  j = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self.model.id,
+                                                                                       version_id=self.id,
+                                                                                       job_id=j.id)
+                except Exception:
+                    retry -= 1
+                    sleep(10)
             bar.update()
             sleep(5)
+
         bar.stop()
 
         if j.status == "failed" or j.status == "failed_submission":
