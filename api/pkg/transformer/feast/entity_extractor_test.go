@@ -1,11 +1,13 @@
 package feast
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/oliveagle/jsonpath"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/gojek/merlin/pkg/transformer"
@@ -287,8 +289,12 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			c, _ := jsonpath.Compile(test.entityConfig.JsonPath)
 
-			actual, err := getValuesFromJSONPayload(testData, test.entityConfig)
+			var nodesBody interface{}
+			json.Unmarshal(testData, &nodesBody)
+
+			actual, err := getValuesFromJSONPayload(nodesBody, test.entityConfig, c)
 			if err != nil {
 				if test.expError != nil {
 					assert.EqualError(t, err, test.expError.Error())
@@ -303,354 +309,377 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 }
 
 func BenchmarkGetValuesFromJSONPayload100Entity(b *testing.B) {
+	entityConfig := &transformer.Entity{
+		Name:      "",
+		ValueType: "INT32",
+		JsonPath:  "$.array[*].id",
+	}
+	c, _ := jsonpath.Compile(entityConfig.JsonPath)
+	var nodesBody interface{}
+	json.Unmarshal(benchData, &nodesBody)
+
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(benchData, &transformer.Entity{
-			Name:      "",
-			ValueType: "INT32",
-			JsonPath:  "$.array[*].id",
-		})
+		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c)
 	}
 }
 
 func BenchmarkGetValuesFromJSONPayload1StringEntity(b *testing.B) {
 	b.ReportAllocs()
+	entityConfig := &transformer.Entity{
+		Name:      "",
+		ValueType: "STRING",
+		JsonPath:  "$.string",
+	}
+	c, _ := jsonpath.Compile(entityConfig.JsonPath)
+	var nodesBody interface{}
+	json.Unmarshal(benchData, &nodesBody)
+
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(benchData, &transformer.Entity{
-			Name:      "",
-			ValueType: "STRING",
-			JsonPath:  "$.string",
-		})
+		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c)
 	}
 }
 
 func BenchmarkGetValuesFromJSONPayload1IntegerEntity(b *testing.B) {
 	b.ReportAllocs()
+	entityConfig := &transformer.Entity{
+		Name:      "",
+		ValueType: "INT32",
+		JsonPath:  "$.integer",
+	}
+	c, _ := jsonpath.Compile(entityConfig.JsonPath)
+	var nodesBody interface{}
+	json.Unmarshal(benchData, &nodesBody)
+
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(benchData, &transformer.Entity{
-			Name:      "",
-			ValueType: "INT32",
-			JsonPath:  "$.integer",
-		})
+		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c)
 	}
 }
 
 func BenchmarkGetValuesFromJSONPayload1FloatEntity(b *testing.B) {
 	b.ReportAllocs()
+	entityConfig := &transformer.Entity{
+		Name:      "",
+		ValueType: "DOUBLE",
+		JsonPath:  "$.float",
+	}
+	c, _ := jsonpath.Compile(entityConfig.JsonPath)
+	var nodesBody interface{}
+	json.Unmarshal(benchData, &nodesBody)
+
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(benchData, &transformer.Entity{
-			Name:      "",
-			ValueType: "DOUBLE",
-			JsonPath:  "$.float",
-		})
+		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c)
 	}
 }
 
 var Result []*feastType.Value
 var benchData = []byte(`{
-  "string": "string_value",
-  "integer" : 1234,
-  "float" : 1234.111,
-  "array": [
-    {
-      "id": 0
-    },
-    {
-      "id": 1
-    },
-    {
-      "id": 2
-    },
-    {
-      "id": 3
-    },
-    {
-      "id": 4
-    },
-    {
-      "id": 5
-    },
-    {
-      "id": 6
-    },
-    {
-      "id": 7
-    },
-    {
-      "id": 8
-    },
-    {
-      "id": 9
-    },
-    {
-      "id": 10
-    },
-    {
-      "id": 11
-    },
-    {
-      "id": 12
-    },
-    {
-      "id": 13
-    },
-    {
-      "id": 14
-    },
-    {
-      "id": 15
-    },
-    {
-      "id": 16
-    },
-    {
-      "id": 17
-    },
-    {
-      "id": 18
-    },
-    {
-      "id": 19
-    },
-    {
-      "id": 20
-    },
-    {
-      "id": 21
-    },
-    {
-      "id": 22
-    },
-    {
-      "id": 23
-    },
-    {
-      "id": 24
-    },
-    {
-      "id": 25
-    },
-    {
-      "id": 26
-    },
-    {
-      "id": 27
-    },
-    {
-      "id": 28
-    },
-    {
-      "id": 29
-    },
-    {
-      "id": 30
-    },
-    {
-      "id": 31
-    },
-    {
-      "id": 32
-    },
-    {
-      "id": 33
-    },
-    {
-      "id": 34
-    },
-    {
-      "id": 35
-    },
-    {
-      "id": 36
-    },
-    {
-      "id": 37
-    },
-    {
-      "id": 38
-    },
-    {
-      "id": 39
-    },
-    {
-      "id": 40
-    },
-    {
-      "id": 41
-    },
-    {
-      "id": 42
-    },
-    {
-      "id": 43
-    },
-    {
-      "id": 44
-    },
-    {
-      "id": 45
-    },
-    {
-      "id": 46
-    },
-    {
-      "id": 47
-    },
-    {
-      "id": 48
-    },
-    {
-      "id": 49
-    },
-    {
-      "id": 50
-    },
-    {
-      "id": 51
-    },
-    {
-      "id": 52
-    },
-    {
-      "id": 53
-    },
-    {
-      "id": 54
-    },
-    {
-      "id": 55
-    },
-    {
-      "id": 56
-    },
-    {
-      "id": 57
-    },
-    {
-      "id": 58
-    },
-    {
-      "id": 59
-    },
-    {
-      "id": 60
-    },
-    {
-      "id": 61
-    },
-    {
-      "id": 62
-    },
-    {
-      "id": 63
-    },
-    {
-      "id": 64
-    },
-    {
-      "id": 65
-    },
-    {
-      "id": 66
-    },
-    {
-      "id": 67
-    },
-    {
-      "id": 68
-    },
-    {
-      "id": 69
-    },
-    {
-      "id": 70
-    },
-    {
-      "id": 71
-    },
-    {
-      "id": 72
-    },
-    {
-      "id": 73
-    },
-    {
-      "id": 74
-    },
-    {
-      "id": 75
-    },
-    {
-      "id": 76
-    },
-    {
-      "id": 77
-    },
-    {
-      "id": 78
-    },
-    {
-      "id": 79
-    },
-    {
-      "id": 80
-    },
-    {
-      "id": 81
-    },
-    {
-      "id": 82
-    },
-    {
-      "id": 83
-    },
-    {
-      "id": 84
-    },
-    {
-      "id": 85
-    },
-    {
-      "id": 86
-    },
-    {
-      "id": 87
-    },
-    {
-      "id": 88
-    },
-    {
-      "id": 89
-    },
-    {
-      "id": 90
-    },
-    {
-      "id": 91
-    },
-    {
-      "id": 92
-    },
-    {
-      "id": 93
-    },
-    {
-      "id": 94
-    },
-    {
-      "id": 95
-    },
-    {
-      "id": 96
-    },
-    {
-      "id": 97
-    },
-    {
-      "id": 98
-    },
-    {
-      "id": 99
-    }
-  ]
+ "string": "string_value",
+ "integer" : 1234,
+ "float" : 1234.111,
+ "array": [
+   {
+     "id": 0
+   },
+   {
+     "id": 1
+   },
+   {
+     "id": 2
+   },
+   {
+     "id": 3
+   },
+   {
+     "id": 4
+   },
+   {
+     "id": 5
+   },
+   {
+     "id": 6
+   },
+   {
+     "id": 7
+   },
+   {
+     "id": 8
+   },
+   {
+     "id": 9
+   },
+   {
+     "id": 10
+   },
+   {
+     "id": 11
+   },
+   {
+     "id": 12
+   },
+   {
+     "id": 13
+   },
+   {
+     "id": 14
+   },
+   {
+     "id": 15
+   },
+   {
+     "id": 16
+   },
+   {
+     "id": 17
+   },
+   {
+     "id": 18
+   },
+   {
+     "id": 19
+   },
+   {
+     "id": 20
+   },
+   {
+     "id": 21
+   },
+   {
+     "id": 22
+   },
+   {
+     "id": 23
+   },
+   {
+     "id": 24
+   },
+   {
+     "id": 25
+   },
+   {
+     "id": 26
+   },
+   {
+     "id": 27
+   },
+   {
+     "id": 28
+   },
+   {
+     "id": 29
+   },
+   {
+     "id": 30
+   },
+   {
+     "id": 31
+   },
+   {
+     "id": 32
+   },
+   {
+     "id": 33
+   },
+   {
+     "id": 34
+   },
+   {
+     "id": 35
+   },
+   {
+     "id": 36
+   },
+   {
+     "id": 37
+   },
+   {
+     "id": 38
+   },
+   {
+     "id": 39
+   },
+   {
+     "id": 40
+   },
+   {
+     "id": 41
+   },
+   {
+     "id": 42
+   },
+   {
+     "id": 43
+   },
+   {
+     "id": 44
+   },
+   {
+     "id": 45
+   },
+   {
+     "id": 46
+   },
+   {
+     "id": 47
+   },
+   {
+     "id": 48
+   },
+   {
+     "id": 49
+   },
+   {
+     "id": 50
+   },
+   {
+     "id": 51
+   },
+   {
+     "id": 52
+   },
+   {
+     "id": 53
+   },
+   {
+     "id": 54
+   },
+   {
+     "id": 55
+   },
+   {
+     "id": 56
+   },
+   {
+     "id": 57
+   },
+   {
+     "id": 58
+   },
+   {
+     "id": 59
+   },
+   {
+     "id": 60
+   },
+   {
+     "id": 61
+   },
+   {
+     "id": 62
+   },
+   {
+     "id": 63
+   },
+   {
+     "id": 64
+   },
+   {
+     "id": 65
+   },
+   {
+     "id": 66
+   },
+   {
+     "id": 67
+   },
+   {
+     "id": 68
+   },
+   {
+     "id": 69
+   },
+   {
+     "id": 70
+   },
+   {
+     "id": 71
+   },
+   {
+     "id": 72
+   },
+   {
+     "id": 73
+   },
+   {
+     "id": 74
+   },
+   {
+     "id": 75
+   },
+   {
+     "id": 76
+   },
+   {
+     "id": 77
+   },
+   {
+     "id": 78
+   },
+   {
+     "id": 79
+   },
+   {
+     "id": 80
+   },
+   {
+     "id": 81
+   },
+   {
+     "id": 82
+   },
+   {
+     "id": 83
+   },
+   {
+     "id": 84
+   },
+   {
+     "id": 85
+   },
+   {
+     "id": 86
+   },
+   {
+     "id": 87
+   },
+   {
+     "id": 88
+   },
+   {
+     "id": 89
+   },
+   {
+     "id": 90
+   },
+   {
+     "id": 91
+   },
+   {
+     "id": 92
+   },
+   {
+     "id": 93
+   },
+   {
+     "id": 94
+   },
+   {
+     "id": 95
+   },
+   {
+     "id": 96
+   },
+   {
+     "id": 97
+   },
+   {
+     "id": 98
+   },
+   {
+     "id": 99
+   }
+ ]
 }`)
