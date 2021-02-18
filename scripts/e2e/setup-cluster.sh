@@ -49,12 +49,6 @@ EOF
 kind --version
 kind create cluster --name=${CLUSTER_NAME} --image=kindest/node:${KIND_NODE_VERSION} --config kind-config-istio.yaml
 kind get kubeconfig --name ${CLUSTER_NAME} --internal > kubeconfig.yaml
-# kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/master/manifests/namespace.yaml
-# kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)" 
-# kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/master/manifests/metallb.yaml
-# sleep 60
-# kubectl apply -f https://kind.sigs.k8s.io/examples/loadbalancer/metallb-configmap.yaml
-
 ########################################
 # Install Vault
 #

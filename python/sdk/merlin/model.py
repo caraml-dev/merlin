@@ -980,15 +980,15 @@ class ModelVersion:
             sleep(5)
         bar.stop()
 
-        if endpoint.status != "running":
-            raise ValueError(
-                f"Failed deploying model {model.name} version {self.id}")
+        # if endpoint.status != "running":
+        #     raise ValueError(
+        #         f"Failed deploying model {model.name} version {self.id}")
 
-        log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
-        print(f"Model {model.name} version {self.id} is deployed."
-              f"\nView model version logs: {log_url}")
+        # log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
+        # print(f"Model {model.name} version {self.id} is deployed."
+        #       f"\nView model version logs: {log_url}")
 
-        return VersionEndpoint(endpoint, log_url)
+        return VersionEndpoint(endpoint, "log_url")
 
     def create_transformer_spec(self, transformer: Transformer, target_env_name: str) -> client.Transformer:
         resource_request = transformer.resource_request
