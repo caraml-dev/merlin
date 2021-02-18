@@ -13,6 +13,7 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/oliveagle/jsonpath"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -58,15 +59,16 @@ type Options struct {
 
 // Transformer wraps feast serving client to retrieve features.
 type Transformer struct {
-	feastClient   feast.Client
-	config        *transformer.StandardTransformerConfig
-	logger        *zap.Logger
-	options       *Options
-	defaultValues map[string]*types.Value
+	feastClient      feast.Client
+	config           *transformer.StandardTransformerConfig
+	logger           *zap.Logger
+	options          *Options
+	defaultValues    map[string]*types.Value
+	compiledJsonPath map[string]*jsonpath.Compiled
 }
 
 // NewTransformer initializes a new Transformer.
-func NewTransformer(feastClient feast.Client, config *transformer.StandardTransformerConfig, options *Options, logger *zap.Logger) *Transformer {
+func NewTransformer(feastClient feast.Client, config *transformer.StandardTransformerConfig, options *Options, logger *zap.Logger) (*Transformer, error) {
 	defaultValues := make(map[string]*types.Value)
 	// populate default values
 	for _, ft := range config.TransformerConfig.Feast {
@@ -83,13 +85,25 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 		}
 	}
 
-	return &Transformer{
-		feastClient:   feastClient,
-		config:        config,
-		options:       options,
-		logger:        logger,
-		defaultValues: defaultValues,
+	compiledJsonPath := make(map[string]*jsonpath.Compiled)
+	for _, ft := range config.TransformerConfig.Feast {
+		for _, configEntity := range ft.Entities {
+			c, err := jsonpath.Compile(configEntity.JsonPath)
+			if err != nil {
+				return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.JsonPath)
+			}
+			compiledJsonPath[configEntity.JsonPath] = c
+		}
 	}
+
+	return &Transformer{
+		feastClient:      feastClient,
+		config:           config,
+		options:          options,
+		logger:           logger,
+		defaultValues:    defaultValues,
+		compiledJsonPath: compiledJsonPath,
+	}, nil
 }
 
 type FeastFeature struct {
@@ -142,7 +156,7 @@ func (t *Transformer) getFeastFeature(ctx context.Context, tableName string, req
 	span.SetTag("table.name", tableName)
 	defer span.Finish()
 
-	entities, err := buildEntitiesRequest(ctx, request, config.Entities)
+	entities, err := t.buildEntitiesRequest(ctx, request, config.Entities)
 	if err != nil {
 		return nil, err
 	}
@@ -179,14 +193,28 @@ func (t *Transformer) getFeastFeature(ctx context.Context, tableName string, req
 	return feastFeature, nil
 }
 
-func buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
+func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildEntitiesRequest")
 	defer span.Finish()
 
-	entities := []feast.Row{}
+	var entities []feast.Row
+	var nodesBody interface{}
+	err := json.Unmarshal(request, &nodesBody)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, configEntity := range configEntities {
-		vals, err := getValuesFromJSONPayload(request, configEntity)
+		c, ok := t.compiledJsonPath[configEntity.JsonPath]
+		if !ok {
+			c, err := jsonpath.Compile(configEntity.JsonPath)
+			if err != nil {
+				return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.JsonPath)
+			}
+			t.compiledJsonPath[configEntity.JsonPath] = c
+		}
+
+		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, c)
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}

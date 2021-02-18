@@ -9,10 +9,12 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/merlin/pkg/transformer"
-	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
+
+	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 )
 
 func TestTransformer_Transform(t *testing.T) {
@@ -458,10 +460,11 @@ func TestTransformer_Transform(t *testing.T) {
 				})).Return(m.response, nil)
 			}
 
-			f := NewTransformer(mockFeast, tt.fields.config, &Options{
+			f, err := NewTransformer(mockFeast, tt.fields.config, &Options{
 				StatusMonitoringEnabled: true,
 				ValueMonitoringEnabled:  true,
 			}, logger)
+			assert.NoError(t, err)
 
 			got, err := f.Transform(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
@@ -862,7 +865,20 @@ func Test_buildEntitiesRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := buildEntitiesRequest(tt.args.ctx, tt.args.request, tt.args.configEntities)
+			mockFeast := &mocks.Client{}
+			logger, _ := zap.NewDevelopment()
+
+			f, err := NewTransformer(mockFeast, &transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{Feast: []*transformer.FeatureTable{
+				{
+					Entities: tt.args.configEntities,
+				},
+			}}}, &Options{
+				StatusMonitoringEnabled: true,
+				ValueMonitoringEnabled:  true,
+			}, logger)
+			assert.NoError(t, err)
+
+			got, err := f.buildEntitiesRequest(tt.args.ctx, tt.args.request, tt.args.configEntities)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("buildEntitiesRequest() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -74,7 +74,10 @@ func main() {
 		logger.Fatal("Unable to initialize Feast client", zap.Error(err))
 	}
 
-	f := feast.NewTransformer(feastClient, config, &cfg.Feast, logger)
+	f, err := feast.NewTransformer(feastClient, config, &cfg.Feast, logger)
+	if err != nil {
+		logger.Fatal("Unable to initialize transformer", zap.Error(err))
+	}
 
 	s := server.New(&cfg.Server, logger)
 	s.PreprocessHandler = f.Transform
