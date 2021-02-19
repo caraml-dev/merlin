@@ -4,7 +4,7 @@ set -ex
 
 CHART_PATH="$1"
 export INGRESS_HOST=127.0.0.1
-export MERLIN_VERSION=v0.10.0
+export MERLIN_VERSION=${GITHUB_REF#refs/*/}
 
 
 helm install --debug merlin ${CHART_PATH} --namespace=mlp --values=${CHART_PATH}/values-e2e.yaml \
