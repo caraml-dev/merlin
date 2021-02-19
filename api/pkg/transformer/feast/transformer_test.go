@@ -2,12 +2,14 @@ package feast
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 	"testing"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 
@@ -47,6 +49,7 @@ func TestTransformer_Transform(t *testing.T) {
 							{
 								Project: "default",
 								Entities: []*transformer.Entity{
+
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
@@ -452,15 +455,16 @@ func TestTransformer_Transform(t *testing.T) {
 			mockFeast := &mocks.Client{}
 			for _, m := range tt.mockFeast {
 				project := m.request.Project
-				mockFeast.On("GetOnlineFeatures", tt.args.ctx, mock.MatchedBy(func(req *feast.OnlineFeaturesRequest) bool {
+				mockFeast.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feast.OnlineFeaturesRequest) bool {
 					return req.Project == project
 				})).Return(m.response, nil)
 			}
 
-			f := NewTransformer(mockFeast, tt.fields.config, &Options{
+			f, err := NewTransformer(mockFeast, tt.fields.config, &Options{
 				StatusMonitoringEnabled: true,
 				ValueMonitoringEnabled:  true,
 			}, logger)
+			assert.NoError(t, err)
 
 			got, err := f.Transform(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
@@ -472,6 +476,418 @@ func TestTransformer_Transform(t *testing.T) {
 			}
 
 			mockFeast.AssertExpectations(t)
+		})
+	}
+}
+
+func Test_buildEntitiesRequest(t *testing.T) {
+	type args struct {
+		ctx            context.Context
+		request        []byte
+		configEntities []*transformer.Entity
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []feast.Row
+		wantErr bool
+	}{
+		{
+			name: "1 entity",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":1111}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111)},
+			},
+			wantErr: false,
+		},
+		{
+			name: "1 entity with multiple values",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":[1111,2222]}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id[*]",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111)},
+				{"customer_id": feast.Int64Val(2222)},
+			},
+			wantErr: false,
+		},
+		{
+			name: "2 entities with 1 value each",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":1111,"merchant_id":"M111"}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "2 entities with the fisrt one has 2 values",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":[1111,2222],"merchant_id":"M111"}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id[*]",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "2 entities with the second one has 2 values",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":1111,"merchant_id":["M111","M222"]}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id[*]",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "2 entities with one of them has 3 values",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":1111,"merchant_id":["M111","M222","M333"]}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id[*]",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M333")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "2 entities with multiple values each",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":[1111,2222],"merchant_id":["M111","M222"]}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id[*]",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id[*]",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "3 entities with 1 value each",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":1111,"merchant_id":"M111","driver_id":"D111"}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id",
+					},
+					{
+						Name:      "driver_id",
+						ValueType: "STRING",
+						JsonPath:  "$.driver_id",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "3 entities with 1 value each except one",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":1111,"merchant_id":"M111","driver_id":["D111","D222","D333","D444"]}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id",
+					},
+					{
+						Name:      "driver_id",
+						ValueType: "STRING",
+						JsonPath:  "$.driver_id[*]",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D333")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D444")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "3 entities with multiple value each except the first one",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":1111,"merchant_id":["M111","M222"],"driver_id":["D111","D222"]}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id[*]",
+					},
+					{
+						Name:      "driver_id",
+						ValueType: "STRING",
+						JsonPath:  "$.driver_id[*]",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "3 entities with the first one has multiple values",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":[1111,2222,3333],"merchant_id":"M111","driver_id":"D111"}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id[*]",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id",
+					},
+					{
+						Name:      "driver_id",
+						ValueType: "STRING",
+						JsonPath:  "$.driver_id",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
+				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "3 entities with multiple values each",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":[1111,2222],"merchant_id":["M111","M222"],"driver_id":["D111","D222"]}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id[*]",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id[*]",
+					},
+					{
+						Name:      "driver_id",
+						ValueType: "STRING",
+						JsonPath:  "$.driver_id[*]",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "4 entities with multiple values each",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"customer_id":[1111,2222,3333],"merchant_id":["M111","M222"],"driver_id":["D111","D222"],"order_id":["O111","O222"]}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						JsonPath:  "$.customer_id[*]",
+					},
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						JsonPath:  "$.merchant_id[*]",
+					},
+					{
+						Name:      "driver_id",
+						ValueType: "STRING",
+						JsonPath:  "$.driver_id[*]",
+					},
+					{
+						Name:      "order_id",
+						ValueType: "STRING",
+						JsonPath:  "$.order_id[*]",
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
+				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
+				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockFeast := &mocks.Client{}
+			logger, _ := zap.NewDevelopment()
+
+			f, err := NewTransformer(mockFeast, &transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{Feast: []*transformer.FeatureTable{
+				{
+					Entities: tt.args.configEntities,
+				},
+			}}}, &Options{
+				StatusMonitoringEnabled: true,
+				ValueMonitoringEnabled:  true,
+			}, logger)
+			assert.NoError(t, err)
+
+			got, err := f.buildEntitiesRequest(tt.args.ctx, tt.args.request, tt.args.configEntities)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("buildEntitiesRequest() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			gotJSON, _ := json.Marshal(got)
+			wantJSON, _ := json.Marshal(tt.want)
+			if !reflect.DeepEqual(gotJSON, wantJSON) {
+				t.Errorf("buildEntitiesRequest() =\n%v\nwant\n%v", got, tt.want)
+			}
 		})
 	}
 }

@@ -12,6 +12,7 @@
 * [Model Version Endpoint](user-guide/model_version_endpoint.md)
 * [Model Deployment and Serving](user-guide/model_deployment_serving.md)
 * [Batch Prediction](user-guide/batch_prediction.md)
+* [Transformer](user-guide/transformer.md)
 
 ## Examples
 

@@ -129,19 +129,20 @@ jobs:
   #         build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
   #         tag_with_ref: true
 
-  # publish-merlin-transformer-docker:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Build and push Merlin Standard Transformer Docker image
-  #       uses: docker/build-push-action@v1
-  #       with:
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GHCR_TOKEN }}
-  #         registry: ghcr.io
-  #         repository: gojek/merlin-transformer
-  #         build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
-  #         tag_with_ref: true
+  publish-merlin-transformer-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and push Merlin Standard Transformer Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/merlin-transformer
+          build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
+          dockerfile: transformer.Dockerfile
+          tag_with_ref: true
 
   # publish-pyfunc-base-docker:
   #   runs-on: ubuntu-latest
