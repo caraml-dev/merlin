@@ -56,6 +56,4 @@ EOF
 kubectl patch service/merlin-mlflow -n mlp --patch="$(cat patch-merlin-mlflow-nodeport.yaml)"
 sleep 12
 
-
-
 set +ex

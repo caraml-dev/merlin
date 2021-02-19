@@ -21,29 +21,4 @@ curl "${E2E_MERLIN_URL}/v1/projects"
 cd ./merlin/python/sdk
 pip install pipenv
 pipenv install --dev --skip-lock
-# pipenv run pytest -n=3 -W=ignore --cov=merlin test/integration_test.py
-pipenv run pytest test/integration_test.py::test_trasformer_pytorch_logger
-kubectl get pod -l gojek.com/app=transformer-logger -n ${E2E_PROJECT_NAME}
-echo "---------------Get Predictor Initializer -------------------------"
-kubectl logs -l  gojek.com/app=transformer-logger,component=predictor -c storage-initializer -n ${E2E_PROJECT_NAME}
-echo "---------------Get Inferenceservice -------------------------"
-kubectl describe inferenceservice -l gojek.com/app=transformer-logger -n ${E2E_PROJECT_NAME}
-echo "---------------Get Revision -------------------------"
-kubectl get revision -l gojek.com/app=transformer-logger -n ${E2E_PROJECT_NAME} -o yaml
-echo "---------------Get Kfserving controller log -------------------------"
-kubectl logs kfserving-controller-manager-0 manager -n kfserving-system
-# echo "Creating merlin project: e2e-test"
-# curl "${MLP_API_BASEPATH}/projects" -d '{"name": "e2e-test", "team": "gojek", "stream": "gojek"}'
-# sleep 5
-
-# cd ${API_PATH}
-# for example in client/examples/*; do
-#     [[ -e $example ]] || continue
-#     echo $example
-#     go run $example/main.go
-# done
-
-# # TODO: Run python/sdk e2e test
-# cd ../python/sdk
-# export PATH=$PATH:/root/.pyenv/shims/
-# make setup
+pipenv run pytest -n=3 -W=ignore --cov=merlin test/integration_test.py -k 'not test_standard_transformer_feast_pyfunc'

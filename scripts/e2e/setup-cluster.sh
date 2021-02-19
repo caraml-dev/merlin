@@ -179,7 +179,6 @@ kubectl wait deployment.apps/controller --namespace=knative-serving --for=condit
 kubectl wait deployment.apps/webhook --namespace=knative-serving --for=condition=available --timeout=600s
 
 export INGRESS_HOST=127.0.0.1
-kubectl get service istio-ingressgateway --namespace=istio-system -o yaml
 cat <<EOF > ./patch-config-domain.json
 {
   "data": {
