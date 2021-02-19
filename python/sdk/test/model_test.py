@@ -382,6 +382,41 @@ class TestModelVersion:
         assert actual_req["config"]["service_account_name"] == "my-service-account"
 
     @responses.activate
+    def test_create_sync_prediction_job_failed(self, version):
+        job_1.status = "pending"
+        responses.add("POST", '/v1/models/1/versions/1/jobs',
+                      body=json.dumps(job_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+
+        job_1.status = "failed"
+        responses.add("GET", '/v1/models/1/versions/1/jobs/1',
+                      body=json.dumps(job_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+
+        bq_src = BigQuerySource(table="project.dataset.source_table",
+                                features=["feature_1", "feature2"],
+                                options={"key": "val"})
+
+        bq_sink = BigQuerySink(table="project.dataset.result_table",
+                               result_column="prediction",
+                               save_mode=SaveMode.OVERWRITE,
+                               staging_bucket="gs://test",
+                               options={"key": "val"})
+
+        job_config = PredictionJobConfig(source=bq_src,
+                                         sink=bq_sink,
+                                         service_account_name="my-service-account",
+                                         result_type=ResultType.INTEGER)
+
+        with pytest.raises(ValueError):
+            j = version.create_prediction_job(job_config=job_config)
+            assert j.id == job_1.id
+            assert j.error == job_1.error
+            assert j.name == job_1.name
+
+    @responses.activate
     def test_stop_prediction_job(self, version):
         job_1.status = "pending"
         responses.add("POST", '/v1/models/1/versions/1/jobs',

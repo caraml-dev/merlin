@@ -50,6 +50,7 @@ from merlin.version import VERSION
 
 DEFAULT_MODEL_PATH = "model"
 DEFAULT_MODEL_VERSION_LIMIT = 50
+DEFAULT_API_CALL_RETRY = 5
 V1 = "v1"
 PREDICTION_JOB = "PredictionJob"
 
@@ -1128,11 +1129,10 @@ class ModelVersion:
         bar = pyprind.ProgBar(100, track_time=True,
                               title=f"Running prediction job {j.id} from model {self.model.name} version {self.id} "
                                     f"under project {self.model.project.name}")
-        retry = 5
-        while j.status == "pending" or \
+        retry = DEFAULT_API_CALL_RETRY
+        while (j.status == "pending" or \
                 j.status == "running" or \
-                j.status == "terminating" or \
-                retry > 0:
+                j.status == "terminating") and retry > 0:
             if not sync:
                 j = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self.model.id,
                                                                                    version_id=self.id,
@@ -1140,12 +1140,12 @@ class ModelVersion:
                 return PredictionJob(j, self._api_client)
             else:
                 try:
-                  j = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self.model.id,
+                    j = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self.model.id,
                                                                                        version_id=self.id,
                                                                                        job_id=j.id)
+                    retry = DEFAULT_API_CALL_RETRY
                 except Exception:
-                    retry -= 1
-                    sleep(10)
+                        retry -= 1
             bar.update()
             sleep(5)
 
