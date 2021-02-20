@@ -51,6 +51,8 @@ from merlin.version import VERSION
 DEFAULT_MODEL_PATH = "model"
 DEFAULT_MODEL_VERSION_LIMIT = 50
 DEFAULT_API_CALL_RETRY = 5
+DEFAULT_PREDICTION_JOB_DELAY = 5
+DEFAULT_PREDICTION_JOB_RETRY_DELAY = 30
 V1 = "v1"
 PREDICTION_JOB = "PredictionJob"
 
@@ -1149,8 +1151,9 @@ class ModelVersion:
                         if retry == 0:
                             j.status = "failed"
                             break
+                        sleep(DEFAULT_PREDICTION_JOB_RETRY_DELAY)
             bar.update()
-            sleep(5)
+            sleep(DEFAULT_PREDICTION_JOB_DELAY)
         bar.stop()
 
         if j.status == "failed" or j.status == "failed_submission":

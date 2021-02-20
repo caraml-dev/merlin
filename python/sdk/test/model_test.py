@@ -17,6 +17,7 @@ import types
 import pytest
 from merlin.model import ModelType
 from urllib3_mock import Responses
+from unittest.mock import patch
 
 import client as cl
 from merlin.batch.config import PredictionJobConfig, ResultType
@@ -173,7 +174,6 @@ class TestProject:
 
         secret_names = project.list_secret()
         assert secret_names == [self.secret_1.name, self.secret_2.name]
-
 
 class TestModelVersion:
     @responses.activate
@@ -381,6 +381,8 @@ class TestModelVersion:
         assert actual_req["config"]["job_config"]["model"]["type"] == ModelType.PYFUNC_V2.value.upper()
         assert actual_req["config"]["service_account_name"] == "my-service-account"
 
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
     @responses.activate
     def test_create_prediction_job_with_retry_failed(self, version):
         job_1.status = "pending"
@@ -416,6 +418,8 @@ class TestModelVersion:
             assert j.error == job_1.error
             assert j.name == job_1.name
 
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
     @responses.activate
     def test_create_prediction_job_with_retry_success(self, version):
         job_1.status = "pending"
@@ -424,8 +428,7 @@ class TestModelVersion:
                       status=200,
                       content_type='application/json')
 
-        # Patch the method as currently it is not supported in the library itself
-        # I am going this way because this is a test, should be safe
+        # Patch the method as currently it is not supported in the library
         # https://github.com/getsentry/responses/issues/135
         def _find_match(self, request):
             for match in self._urls:
@@ -487,6 +490,8 @@ class TestModelVersion:
         # unpatch
         responses._find_match = types.MethodType(_find_match, responses)
 
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
+    @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
     @responses.activate
     def test_create_prediction_job_with_retry_pending_then_failed(self, version):
         job_1.status = "pending"
@@ -495,8 +500,7 @@ class TestModelVersion:
                       status=200,
                       content_type='application/json')
 
-        # Patch the method as currently it is not supported in the library itself
-        # I am going this way because this is a test, should be safe
+        # Patch the method as currently it is not supported in the library
         # https://github.com/getsentry/responses/issues/135
         def _find_match(self, request):
             for match in self._urls:
