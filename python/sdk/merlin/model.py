@@ -1130,9 +1130,9 @@ class ModelVersion:
                               title=f"Running prediction job {j.id} from model {self.model.name} version {self.id} "
                                     f"under project {self.model.project.name}")
         retry = DEFAULT_API_CALL_RETRY
-        while (j.status == "pending" or \
+        while j.status == "pending" or \
                 j.status == "running" or \
-                j.status == "terminating") and retry > 0:
+                j.status == "terminating":
             if not sync:
                 j = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self.model.id,
                                                                                    version_id=self.id,
@@ -1146,9 +1146,11 @@ class ModelVersion:
                     retry = DEFAULT_API_CALL_RETRY
                 except Exception:
                         retry -= 1
+                        if retry == 0:
+                            j.status = "failed"
+                            break
             bar.update()
             sleep(5)
-
         bar.stop()
 
         if j.status == "failed" or j.status == "failed_submission":
