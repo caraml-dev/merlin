@@ -391,11 +391,11 @@ class TestModelVersion:
                       status=200,
                       content_type='application/json')
 
-        job_1.status = "failed"
-        responses.add("GET", '/v1/models/1/versions/1/jobs/1',
-                      body=json.dumps(job_1.to_dict()),
-                      status=200,
-                      content_type='application/json')
+        for i in range(5):
+            responses.add("GET", '/v1/models/1/versions/1/jobs/1',
+                          body=json.dumps(job_1.to_dict()),
+                          status=500,
+                          content_type='application/json')
 
         bq_src = BigQuerySource(table="project.dataset.source_table",
                                 features=["feature_1", "feature2"],
@@ -417,6 +417,7 @@ class TestModelVersion:
             assert j.id == job_1.id
             assert j.error == job_1.error
             assert j.name == job_1.name
+            assert len(responses.calls) == 6
 
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_DELAY", 0)
     @patch("merlin.model.DEFAULT_PREDICTION_JOB_RETRY_DELAY", 0)
@@ -486,6 +487,7 @@ class TestModelVersion:
         assert actual_req["config"]["job_config"]["model"]["uri"] == f"{version.artifact_uri}/model"
         assert actual_req["config"]["job_config"]["model"]["type"] == ModelType.PYFUNC_V2.value.upper()
         assert actual_req["config"]["service_account_name"] == "my-service-account"
+        assert len(responses.calls) == 6
 
         # unpatch
         responses._find_match = types.MethodType(_find_match, responses)
@@ -559,6 +561,7 @@ class TestModelVersion:
 
         # unpatch
         responses._find_match = types.MethodType(_find_match, responses)
+        assert len(responses.calls) == 10
 
     @responses.activate
     def test_stop_prediction_job(self, version):
