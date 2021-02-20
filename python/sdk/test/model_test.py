@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import json
-
+import types
 import pytest
 from merlin.model import ModelType
 from urllib3_mock import Responses
@@ -417,18 +417,51 @@ class TestModelVersion:
             assert j.name == job_1.name
 
     @responses.activate
-    def test_create_prediction_job_with_retry(self, version):
+    def test_create_prediction_job_with_retry_success(self, version):
         job_1.status = "pending"
         responses.add("POST", '/v1/models/1/versions/1/jobs',
                       body=json.dumps(job_1.to_dict()),
                       status=200,
                       content_type='application/json')
 
-        # TODO: add override this responses with raise error 4 times
-        # responses.add("GET", '/v1/models/1/versions/1/jobs/1',
-        #               body=json.dumps(job_1.to_dict()),
-        #               status=500,
-        #               content_type='application/json')
+        # Patch the method as currently it is not supported in the library itself
+        # I am going this way because this is a test, should be safe
+        # https://github.com/getsentry/responses/issues/135
+        def _find_match(self, request):
+            for match in self._urls:
+                if request.method == match['method'] and \
+                        self._has_url_match(match, request.url):
+                    return match
+
+        def _find_match_patched(self, request):
+            for index, match in enumerate(self._urls):
+                if request.method == match['method'] and \
+                        self._has_url_match(match, request.url):
+                    if request.method == "GET" and request.url == "/v1/models/1/versions/1/jobs/1":
+                        return self._urls.pop(index)
+                    else:
+                        return match
+        responses._find_match = types.MethodType(_find_match_patched, responses)
+
+        responses.add("GET", '/v1/models/1/versions/1/jobs/1',
+                      body=json.dumps(job_1.to_dict()),
+                      status=500,
+                      content_type='application/json')
+
+        responses.add("GET", '/v1/models/1/versions/1/jobs/1',
+                      body=json.dumps(job_1.to_dict()),
+                      status=500,
+                      content_type='application/json')
+
+        responses.add("GET", '/v1/models/1/versions/1/jobs/1',
+                      body=json.dumps(job_1.to_dict()),
+                      status=500,
+                      content_type='application/json')
+
+        responses.add("GET", '/v1/models/1/versions/1/jobs/1',
+                      body=json.dumps(job_1.to_dict()),
+                      status=500,
+                      content_type='application/json')
 
         job_1.status = "completed"
         responses.add("GET", '/v1/models/1/versions/1/jobs/1',
@@ -464,6 +497,10 @@ class TestModelVersion:
         assert actual_req["config"]["job_config"]["model"]["uri"] == f"{version.artifact_uri}/model"
         assert actual_req["config"]["job_config"]["model"]["type"] == ModelType.PYFUNC_V2.value.upper()
         assert actual_req["config"]["service_account_name"] == "my-service-account"
+
+        # unpatch
+        responses._find_match = types.MethodType(_find_match, responses)
+
     @responses.activate
     def test_stop_prediction_job(self, version):
         job_1.status = "pending"
