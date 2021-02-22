@@ -19,8 +19,10 @@ func TestExtractGeohash(t *testing.T) {
 		},
 		"latitudeArrays": [1.0, 2.0],
 		"longitude" : 2.0,
+		"longitudeString" : "2.0",
 		"longitudeInteger": 1,
-		"longitudeArrays": [1.0, 2.0]
+		"longitudeArrays": [1.0, 2.0],
+		"longitudeLongArrays": [1.0, 2.0, 3.0]
 	}`)
 	var testJsonUnmarshallled interface{}
 	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
@@ -53,25 +55,28 @@ func TestExtractGeohash(t *testing.T) {
 		{
 			name:              "type conversion for latitude and longitude input",
 			latitudeJsonPath:  "$.latitudeString",
-			longitudeJsonPath: "$.longitudeInteger",
+			longitudeJsonPath: "$.longitudeString",
 			precision:         12,
-			expValue:          geohash.Encode(1.0, 1.0),
+			expValue:          geohash.Encode(1.0, 2.0),
+		},
+		{
+			name:              "Type difference error",
+			latitudeJsonPath:  "$.latitude",
+			longitudeJsonPath: "$.longitudeArrays",
+			expError:          errors.New("latitude and longitude must have the same types"),
 		},
 		{
 			name:              "type conversion error",
 			latitudeJsonPath:  "$.latitudeWrongType",
-			longitudeJsonPath: "$.longitude",
+			longitudeJsonPath: "$.longitudeString",
 			expError:          errors.New("strconv.ParseFloat: parsing \"abcde\": invalid syntax"),
 		},
 		{
-			name:              "latitude arrays and single longitude",
+			name:              "array length difference error",
 			latitudeJsonPath:  "$.latitudeArrays",
-			longitudeJsonPath: "$.longitude",
+			longitudeJsonPath: "$.longitudeLongArrays",
 			precision:         12,
-			expValue: []string{
-				geohash.Encode(1.0, 2.0),
-				geohash.Encode(2.0, 2.0),
-			},
+			expError:          errors.New("both latitude and longitude arrays must have the same length"),
 		},
 		{
 			name:              "latitude and longitude arrays",
@@ -80,8 +85,6 @@ func TestExtractGeohash(t *testing.T) {
 			precision:         12,
 			expValue: []string{
 				geohash.Encode(1.0, 1.0),
-				geohash.Encode(1.0, 2.0),
-				geohash.Encode(2.0, 1.0),
 				geohash.Encode(2.0, 2.0),
 			},
 		},

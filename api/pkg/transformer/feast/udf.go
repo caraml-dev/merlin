@@ -28,17 +28,6 @@ func (env UdfEnv) Geohash(latitudeJsonPath, longitudeJsonPath string, precision 
 	}
 }
 
-func toList(o interface{}) []interface{} {
-	var listInterface []interface{}
-	switch o.(type) {
-	case []interface{}:
-		listInterface = o.([]interface{})
-	case interface{}:
-		listInterface = []interface{}{o}
-	}
-	return listInterface
-}
-
 func toFloat64(o interface{}) (float64, error) {
 	var floatValue float64
 	switch o.(type) {
@@ -64,40 +53,56 @@ func extractGeohash(jsonRequestBody interface{}, latitudeJsonPath, longitudeJson
 	if err != nil {
 		return nil, err
 	}
-	latitudes := toList(latitude)
-	if len(latitudes) == 0 {
-		return nil, errors.New("empty arrays of latitudes provided")
-	}
 
 	longitude, err := jsonpath.JsonPathLookup(jsonRequestBody, longitudeJsonPath)
 	if err != nil {
 		return nil, err
 	}
-	longitudes := toList(longitude)
-	if len(longitudes) == 0 {
-		return nil, errors.New("empty arrays of longitudes provided")
+
+	if reflect.TypeOf(latitude) != reflect.TypeOf(longitude) {
+		return nil, errors.New("latitude and longitude must have the same types")
 	}
 
-	geohashes := make([]string, 0)
-	for _, lat := range latitudes {
-		for _, long := range longitudes {
-			latFloat, err := toFloat64(lat)
-			if err != nil {
-				return nil, err
-			}
-			longFloat, err := toFloat64(long)
-			if err != nil {
-				return nil, err
-			}
-			geohashes = append(geohashes, geohash.EncodeWithPrecision(latFloat, longFloat, precision))
+	var geohashValue interface{}
+
+	switch latitude.(type) {
+	case []interface{}:
+		if len(latitude.([]interface{})) != len(longitude.([]interface{})) {
+			return nil, errors.New("both latitude and longitude arrays must have the same length")
 		}
+
+		if len(latitude.([]interface{})) == 0 {
+			return nil, errors.New("empty arrays of latitudes and longitude provided")
+		}
+
+		geohashArray := make([]string, len(latitude.([]interface{})))
+		for index, lat := range latitude.([]interface{}) {
+			latitudeFloat, err := toFloat64(lat)
+			if err != nil {
+				return nil, err
+			}
+
+			longitudeFloat, err := toFloat64(longitude.([]interface{})[index])
+			if err != nil {
+				return nil, err
+			}
+			geohashArray[index] = geohash.EncodeWithPrecision(latitudeFloat, longitudeFloat, precision)
+		}
+		geohashValue = geohashArray
+
+	case interface{}:
+		latitudeFloat, err := toFloat64(latitude)
+		if err != nil {
+			return nil, err
+		}
+		longitudeFloat, err := toFloat64(longitude)
+		if err != nil {
+			return nil, err
+		}
+		geohashValue = geohash.EncodeWithPrecision(latitudeFloat, longitudeFloat, precision)
 	}
 
-	if len(geohashes) == 1 {
-		return geohashes[0], nil
-	} else {
-		return geohashes, nil
-	}
+	return geohashValue, nil
 
 }
 
