@@ -137,7 +137,9 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Entities: []*transformer.Entity{
 							{
 								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "INTEGER",
 							},
 						},
@@ -172,12 +174,16 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Entities: []*transformer.Entity{
 							{
 								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
 								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},
@@ -222,12 +228,16 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Entities: []*transformer.Entity{
 							{
 								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
 								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},
@@ -278,12 +288,16 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Entities: []*transformer.Entity{
 							{
 								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
 								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},
@@ -334,12 +348,16 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Entities: []*transformer.Entity{
 							{
 								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
 								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},
@@ -390,12 +408,16 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Entities: []*transformer.Entity{
 							{
 								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
 								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},

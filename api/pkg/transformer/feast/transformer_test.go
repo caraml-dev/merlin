@@ -53,7 +53,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.driver_id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.driver_id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -110,7 +112,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "INT32",
-										JsonPath:  "$.driver_id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.driver_id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -167,7 +171,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.drivers[*].id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.drivers[*].id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -234,7 +240,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.drivers[*].id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.drivers[*].id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -299,7 +307,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.drivers[*].id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.drivers[*].id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -366,7 +376,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.driver_id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.driver_id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -383,7 +395,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "customer_id",
 										ValueType: "STRING",
-										JsonPath:  "$.customer_id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.customer_id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -501,7 +515,9 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 				},
 			},
@@ -519,7 +535,9 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 				},
 			},
@@ -538,12 +556,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 				},
 			},
@@ -561,12 +583,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 				},
 			},
@@ -585,12 +611,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 				},
 			},
@@ -609,12 +639,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 				},
 			},
@@ -634,12 +668,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 				},
 			},
@@ -660,17 +698,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id",
+						},
 					},
 				},
 			},
@@ -688,17 +732,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id[*]",
+						},
 					},
 				},
 			},
@@ -719,17 +769,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id[*]",
+						},
 					},
 				},
 			},
@@ -750,17 +806,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id",
+						},
 					},
 				},
 			},
@@ -780,17 +842,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id[*]",
+						},
 					},
 				},
 			},
@@ -815,22 +883,30 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id[*]",
+						},
 					},
 					{
 						Name:      "order_id",
 						ValueType: "STRING",
-						JsonPath:  "$.order_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.order_id[*]",
+						},
 					},
 				},
 			},

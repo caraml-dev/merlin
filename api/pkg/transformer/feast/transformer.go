@@ -88,11 +88,14 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 	compiledJsonPath := make(map[string]*jsonpath.Compiled)
 	for _, ft := range config.TransformerConfig.Feast {
 		for _, configEntity := range ft.Entities {
-			c, err := jsonpath.Compile(configEntity.JsonPath)
-			if err != nil {
-				return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.JsonPath)
+			switch configEntity.Extractor.(type) {
+			case *transformer.Entity_JsonPath:
+				c, err := jsonpath.Compile(configEntity.GetJsonPath())
+				if err != nil {
+					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
+				}
+				compiledJsonPath[configEntity.GetJsonPath()] = c
 			}
-			compiledJsonPath[configEntity.JsonPath] = c
 		}
 	}
 
@@ -205,16 +208,20 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 	}
 
 	for _, configEntity := range configEntities {
-		c, ok := t.compiledJsonPath[configEntity.JsonPath]
-		if !ok {
-			c, err := jsonpath.Compile(configEntity.JsonPath)
-			if err != nil {
-				return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.JsonPath)
+		switch configEntity.Extractor.(type) {
+		case *transformer.Entity_JsonPath:
+			_, ok := t.compiledJsonPath[configEntity.GetJsonPath()]
+			if !ok {
+				c, err := jsonpath.Compile(configEntity.GetJsonPath())
+				if err != nil {
+					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
+				}
+				t.compiledJsonPath[configEntity.GetJsonPath()] = c
 			}
-			t.compiledJsonPath[configEntity.JsonPath] = c
 		}
 
-		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, c)
+
+		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()])
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}

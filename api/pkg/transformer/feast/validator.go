@@ -52,8 +52,11 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 				return NewValidationError("entity not found: " + entity.Name)
 			}
 
-			if len(entity.JsonPath) == 0 {
-				return NewValidationError(fmt.Sprintf("json path for %s is not specified", entity.Name))
+			switch entity.Extractor.(type) {
+			case *transformer.Entity_JsonPath:
+				if len(entity.GetJsonPath()) == 0 {
+					return NewValidationError(fmt.Sprintf("json path for %s is not specified", entity.Name))
+				}
 			}
 
 			if spec.ValueType.String() != entity.ValueType {
