@@ -25,9 +25,8 @@ func TestTransformer_Transform(t *testing.T) {
 		config *transformer.StandardTransformerConfig
 	}
 	type args struct {
-		ctx          context.Context
-		request      []byte
-		feastRequest feast.OnlineFeaturesRequest
+		ctx     context.Context
+		request []byte
 	}
 	type mockFeast struct {
 		request  *feast.OnlineFeaturesRequest
@@ -462,6 +461,65 @@ func TestTransformer_Transform(t *testing.T) {
 				},
 			},
 			want:    []byte(`{"driver_id":"1001","customer_id":"2002","feast_features":{"customer_id":{"columns":["customer_id","customer_trips:average_daily_rides"],"data":[["2002",2.2]]},"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1]]}}}`),
+			wantErr: false,
+		},
+		{
+			name: "geohash entity from latitude and longitude",
+			fields: fields{
+				config: &transformer.StandardTransformerConfig{
+					TransformerConfig: &transformer.TransformerConfig{
+						Feast: []*transformer.FeatureTable{
+							{
+								Project: "geohash",
+								Entities: []*transformer.Entity{
+									{
+										Name:      "geohash",
+										ValueType: "STRING",
+										Extractor: &transformer.Entity_Udf{
+											Udf: "Geohash(\"$.latitude\", \"$.longitude\", 12)",
+										},
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "geohash_statistics:average_daily_rides",
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"latitude":1.0,"longitude":2.0}`),
+			},
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "geohash",
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
+										"geohash":                                feast.StrVal(geohash.Encode(1.0, 2.0)),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"geohash":                                serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"geohash":{"columns":["geohash","geohash_statistics:average_daily_rides"],"data":[["s01mtw037ms0",3.2]]}}}`),
 			wantErr: false,
 		},
 	}
