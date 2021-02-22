@@ -460,8 +460,8 @@ func BenchmarkGetValuesFromJSONPayloadGeohashUdf(b *testing.B) {
 				Udf: udfString,
 			},
 		},
-		nil,
-		compiledUdf)
+			nil,
+			compiledUdf)
 	}
 }
 

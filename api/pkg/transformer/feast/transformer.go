@@ -67,7 +67,7 @@ type Transformer struct {
 	options          *Options
 	defaultValues    map[string]*types.Value
 	compiledJsonPath map[string]*jsonpath.Compiled
-	compiledUdf	 	 map[string]*vm.Program
+	compiledUdf      map[string]*vm.Program
 }
 
 // NewTransformer initializes a new Transformer.
@@ -89,7 +89,7 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 	}
 
 	compiledJsonPath := make(map[string]*jsonpath.Compiled)
-	compiledUdf 	 := make(map[string]*vm.Program)
+	compiledUdf := make(map[string]*vm.Program)
 	for _, ft := range config.TransformerConfig.Feast {
 		for _, configEntity := range ft.Entities {
 			switch configEntity.Extractor.(type) {
@@ -117,7 +117,7 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 		logger:           logger,
 		defaultValues:    defaultValues,
 		compiledJsonPath: compiledJsonPath,
-		compiledUdf: 	  compiledUdf,
+		compiledUdf:      compiledUdf,
 	}, nil
 }
 
@@ -231,7 +231,6 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 				t.compiledJsonPath[configEntity.GetJsonPath()] = c
 			}
 		}
-
 
 		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[configEntity.Name])
 		if err != nil {
