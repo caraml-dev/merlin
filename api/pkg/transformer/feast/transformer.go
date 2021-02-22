@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/vm"
 	"math"
 	"strings"
 	"time"
@@ -65,6 +67,7 @@ type Transformer struct {
 	options          *Options
 	defaultValues    map[string]*types.Value
 	compiledJsonPath map[string]*jsonpath.Compiled
+	compiledUdf	 	 map[string]*vm.Program
 }
 
 // NewTransformer initializes a new Transformer.
@@ -86,6 +89,7 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 	}
 
 	compiledJsonPath := make(map[string]*jsonpath.Compiled)
+	compiledUdf 	 := make(map[string]*vm.Program)
 	for _, ft := range config.TransformerConfig.Feast {
 		for _, configEntity := range ft.Entities {
 			switch configEntity.Extractor.(type) {
@@ -95,7 +99,14 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
 				}
 				compiledJsonPath[configEntity.GetJsonPath()] = c
+			case *transformer.Entity_Udf:
+				c, err := expr.Compile(configEntity.GetUdf(), expr.Env(UdfEnv{}))
+				if err != nil {
+					return nil, err
+				}
+				compiledUdf[configEntity.Name] = c
 			}
+
 		}
 	}
 
@@ -106,6 +117,7 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 		logger:           logger,
 		defaultValues:    defaultValues,
 		compiledJsonPath: compiledJsonPath,
+		compiledUdf: 	  compiledUdf,
 	}, nil
 }
 
@@ -221,7 +233,7 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 		}
 
 
-		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()])
+		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[configEntity.Name])
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}

@@ -3,6 +3,7 @@ package feast
 import (
 	"context"
 	"encoding/json"
+	"github.com/mmcloughlin/geohash"
 	"reflect"
 	"testing"
 
@@ -935,6 +936,26 @@ func Test_buildEntitiesRequest(t *testing.T) {
 				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
 				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
 				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "geohash entity from latitude and longitude",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"latitude": 1.0, "longitude": 2.0}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "my_geohash",
+						ValueType: "STRING",
+						Extractor: &transformer.Entity_Udf{
+							Udf: "Geohash(\"$.latitude\", \"$.longitude\")",
+						},
+					},
+				},
+			},
+			want: []feast.Row{
+				{"my_geohash": feast.StrVal(geohash.Encode(1.0, 2.0))},
 			},
 			wantErr: false,
 		},

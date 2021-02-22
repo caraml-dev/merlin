@@ -3,6 +3,8 @@ package feast
 import (
 	"encoding/json"
 	"errors"
+	"github.com/antonmedv/expr/vm"
+	"github.com/mmcloughlin/geohash"
 	"testing"
 
 	feast "github.com/feast-dev/feast/sdk/go"
@@ -20,6 +22,8 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		"string" : "1234",
 		"boolean" : true,
 		"booleanString" : "false",
+		"latitude": 1.0,
+		"longitude": 2.0,
 		"struct" : {
                 "integer" : 1234,
 				"float" : 1234.111,
@@ -315,6 +319,20 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 			nil,
 		},
 		{
+			"Geohash udf",
+			&transformer.Entity{
+				Name:      "my_geohash",
+				ValueType: "STRING",
+				Extractor: &transformer.Entity_Udf{
+					Udf: "Geohash(\"$.latitude\", \"$.longitude\")",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal(geohash.Encode(1.0, 2.0)),
+			},
+			nil,
+		},
+		{
 			"unsupported feast type",
 			&transformer.Entity{
 				Name:      "my_entity",
@@ -329,12 +347,19 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			c, _ := jsonpath.Compile(test.entityConfig.GetJsonPath())
+			var compiledJsonPath *jsonpath.Compiled = nil
+			var compiledUdf *vm.Program = nil
+			switch test.entityConfig.Extractor.(type) {
+			case *transformer.Entity_JsonPath:
+				compiledJsonPath, _ = jsonpath.Compile(test.entityConfig.GetJsonPath())
+			case *transformer.Entity_Udf:
+				compiledUdf = mustCompileUdf(test.entityConfig.GetUdf())
+			}
 
 			var nodesBody interface{}
 			json.Unmarshal(testData, &nodesBody)
 
-			actual, err := getValuesFromJSONPayload(nodesBody, test.entityConfig, c)
+			actual, err := getValuesFromJSONPayload(nodesBody, test.entityConfig, compiledJsonPath, compiledUdf)
 			if err != nil {
 				if test.expError != nil {
 					assert.EqualError(t, err, test.expError.Error())
@@ -362,7 +387,7 @@ func BenchmarkGetValuesFromJSONPayload100Entity(b *testing.B) {
 
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c)
+		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c, nil)
 	}
 }
 
@@ -381,7 +406,7 @@ func BenchmarkGetValuesFromJSONPayload1StringEntity(b *testing.B) {
 
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c)
+		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c, nil)
 	}
 }
 
@@ -400,7 +425,7 @@ func BenchmarkGetValuesFromJSONPayload1IntegerEntity(b *testing.B) {
 
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c)
+		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c, nil)
 	}
 }
 
@@ -419,7 +444,24 @@ func BenchmarkGetValuesFromJSONPayload1FloatEntity(b *testing.B) {
 
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c)
+		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c, nil)
+	}
+}
+
+func BenchmarkGetValuesFromJSONPayloadGeohashUdf(b *testing.B) {
+	b.ReportAllocs()
+	udfString := "Geohash(\"$.latitude\", \"$.longitude\")"
+	compiledUdf := mustCompileUdf(udfString)
+	for i := 0; i < b.N; i++ {
+		Result, _ = getValuesFromJSONPayload(benchData, &transformer.Entity{
+			Name:      "my_geohash",
+			ValueType: "STRING",
+			Extractor: &transformer.Entity_Udf{
+				Udf: udfString,
+			},
+		},
+		nil,
+		compiledUdf)
 	}
 }
 
@@ -428,6 +470,8 @@ var benchData = []byte(`{
  "string": "string_value",
  "integer" : 1234,
  "float" : 1234.111,
+ "latitude": 1.0,
+ "longitude": 2.0,
  "array": [
    {
      "id": 0
