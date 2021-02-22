@@ -32,6 +32,7 @@ func TestExtractGeohash(t *testing.T) {
 		name              string
 		latitudeJsonPath  string
 		longitudeJsonPath string
+		precision         uint
 		expValue          interface{}
 		expError          error
 	}{
@@ -39,18 +40,21 @@ func TestExtractGeohash(t *testing.T) {
 			name:              "geohash from json fields",
 			latitudeJsonPath:  "$.latitude",
 			longitudeJsonPath: "$.longitude",
-			expValue:          geohash.Encode(1.0, 2.0),
+			precision:         7,
+			expValue:          geohash.EncodeWithPrecision(1.0, 2.0, 7),
 		},
 		{
 			name:              "geohash from json struct",
 			latitudeJsonPath:  "$.location.latitude",
 			longitudeJsonPath: "$.location.longitude",
-			expValue:          geohash.Encode(0.1, 2.0),
+			precision:         7,
+			expValue:          geohash.EncodeWithPrecision(0.1, 2.0, 7),
 		},
 		{
 			name:              "type conversion for latitude and longitude input",
 			latitudeJsonPath:  "$.latitudeString",
 			longitudeJsonPath: "$.longitudeInteger",
+			precision:         12,
 			expValue:          geohash.Encode(1.0, 1.0),
 		},
 		{
@@ -63,6 +67,7 @@ func TestExtractGeohash(t *testing.T) {
 			name:              "latitude arrays and single longitude",
 			latitudeJsonPath:  "$.latitudeArrays",
 			longitudeJsonPath: "$.longitude",
+			precision:         12,
 			expValue: []string{
 				geohash.Encode(1.0, 2.0),
 				geohash.Encode(2.0, 2.0),
@@ -72,6 +77,7 @@ func TestExtractGeohash(t *testing.T) {
 			name:              "latitude and longitude arrays",
 			latitudeJsonPath:  "$.latitudeArrays",
 			longitudeJsonPath: "$.longitudeArrays",
+			precision:         12,
 			expValue: []string{
 				geohash.Encode(1.0, 1.0),
 				geohash.Encode(1.0, 2.0),
@@ -83,7 +89,7 @@ func TestExtractGeohash(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual, err := extractGeohash(testJsonUnmarshallled, test.latitudeJsonPath, test.longitudeJsonPath)
+			actual, err := extractGeohash(testJsonUnmarshallled, test.latitudeJsonPath, test.longitudeJsonPath, test.precision)
 			if err != nil {
 				if test.expError != nil {
 					assert.EqualError(t, err, test.expError.Error())

@@ -20,8 +20,8 @@ type UdfEnv struct {
 	UnmarshalledJsonRequest interface{}
 }
 
-func (env UdfEnv) Geohash(latitudeJsonPath, longitudeJsonPath string) UdfResult {
-	value, err := extractGeohash(env.UnmarshalledJsonRequest, latitudeJsonPath, longitudeJsonPath)
+func (env UdfEnv) Geohash(latitudeJsonPath, longitudeJsonPath string, precision uint) UdfResult {
+	value, err := extractGeohash(env.UnmarshalledJsonRequest, latitudeJsonPath, longitudeJsonPath, precision)
 	return UdfResult{
 		Value: value,
 		Error: err,
@@ -59,7 +59,7 @@ func toFloat64(o interface{}) (float64, error) {
 
 }
 
-func extractGeohash(jsonRequestBody interface{}, latitudeJsonPath, longitudeJsonPath string) (interface{}, error) {
+func extractGeohash(jsonRequestBody interface{}, latitudeJsonPath, longitudeJsonPath string, precision uint) (interface{}, error) {
 	latitude, err := jsonpath.JsonPathLookup(jsonRequestBody, latitudeJsonPath)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func extractGeohash(jsonRequestBody interface{}, latitudeJsonPath, longitudeJson
 			if err != nil {
 				return nil, err
 			}
-			geohashes = append(geohashes, geohash.Encode(latFloat, longFloat))
+			geohashes = append(geohashes, geohash.EncodeWithPrecision(latFloat, longFloat, precision))
 		}
 	}
 

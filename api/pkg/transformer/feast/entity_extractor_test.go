@@ -324,7 +324,7 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 				Name:      "my_geohash",
 				ValueType: "STRING",
 				Extractor: &transformer.Entity_Udf{
-					Udf: "Geohash(\"$.latitude\", \"$.longitude\")",
+					Udf: "Geohash(\"$.latitude\", \"$.longitude\", 12)",
 				},
 			},
 			[]*feastType.Value{
