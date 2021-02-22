@@ -104,7 +104,7 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 				if err != nil {
 					return nil, err
 				}
-				compiledUdf[configEntity.Name] = c
+				compiledUdf[configEntity.GetUdf()] = c
 			}
 
 		}
@@ -232,7 +232,7 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 			}
 		}
 
-		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[configEntity.Name])
+		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[configEntity.GetUdf()])
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}
