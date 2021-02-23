@@ -3,6 +3,7 @@ package feast
 import (
 	"context"
 	"encoding/json"
+	"github.com/mmcloughlin/geohash"
 	"reflect"
 	"testing"
 
@@ -24,9 +25,8 @@ func TestTransformer_Transform(t *testing.T) {
 		config *transformer.StandardTransformerConfig
 	}
 	type args struct {
-		ctx          context.Context
-		request      []byte
-		feastRequest feast.OnlineFeaturesRequest
+		ctx     context.Context
+		request []byte
 	}
 	type mockFeast struct {
 		request  *feast.OnlineFeaturesRequest
@@ -53,7 +53,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.driver_id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.driver_id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -110,7 +112,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "INT32",
-										JsonPath:  "$.driver_id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.driver_id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -167,7 +171,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.drivers[*].id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.drivers[*].id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -234,7 +240,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.drivers[*].id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.drivers[*].id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -299,7 +307,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.drivers[*].id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.drivers[*].id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -366,7 +376,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										JsonPath:  "$.driver_id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.driver_id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -383,7 +395,9 @@ func TestTransformer_Transform(t *testing.T) {
 									{
 										Name:      "customer_id",
 										ValueType: "STRING",
-										JsonPath:  "$.customer_id",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.customer_id",
+										},
 									},
 								},
 								Features: []*transformer.Feature{
@@ -449,6 +463,65 @@ func TestTransformer_Transform(t *testing.T) {
 			want:    []byte(`{"driver_id":"1001","customer_id":"2002","feast_features":{"customer_id":{"columns":["customer_id","customer_trips:average_daily_rides"],"data":[["2002",2.2]]},"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1]]}}}`),
 			wantErr: false,
 		},
+		{
+			name: "geohash entity from latitude and longitude",
+			fields: fields{
+				config: &transformer.StandardTransformerConfig{
+					TransformerConfig: &transformer.TransformerConfig{
+						Feast: []*transformer.FeatureTable{
+							{
+								Project: "geohash",
+								Entities: []*transformer.Entity{
+									{
+										Name:      "geohash",
+										ValueType: "STRING",
+										Extractor: &transformer.Entity_Udf{
+											Udf: "Geohash(\"$.latitude\", \"$.longitude\", 12)",
+										},
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "geohash_statistics:average_daily_rides",
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"latitude":1.0,"longitude":2.0}`),
+			},
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "geohash",
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
+										"geohash":                                feast.StrVal(geohash.Encode(1.0, 2.0)),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"geohash":                                serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"geohash":{"columns":["geohash","geohash_statistics:average_daily_rides"],"data":[["s01mtw037ms0",3.2]]}}}`),
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -501,7 +574,9 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 				},
 			},
@@ -519,7 +594,9 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 				},
 			},
@@ -538,12 +615,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 				},
 			},
@@ -561,12 +642,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 				},
 			},
@@ -585,12 +670,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 				},
 			},
@@ -609,12 +698,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 				},
 			},
@@ -634,12 +727,16 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 				},
 			},
@@ -660,17 +757,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id",
+						},
 					},
 				},
 			},
@@ -688,17 +791,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id[*]",
+						},
 					},
 				},
 			},
@@ -719,17 +828,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id[*]",
+						},
 					},
 				},
 			},
@@ -750,17 +865,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id",
+						},
 					},
 				},
 			},
@@ -780,17 +901,23 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id[*]",
+						},
 					},
 				},
 			},
@@ -815,22 +942,30 @@ func Test_buildEntitiesRequest(t *testing.T) {
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						JsonPath:  "$.customer_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.customer_id[*]",
+						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						JsonPath:  "$.merchant_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.merchant_id[*]",
+						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						JsonPath:  "$.driver_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.driver_id[*]",
+						},
 					},
 					{
 						Name:      "order_id",
 						ValueType: "STRING",
-						JsonPath:  "$.order_id[*]",
+						Extractor: &transformer.Entity_JsonPath{
+							JsonPath: "$.order_id[*]",
+						},
 					},
 				},
 			},
@@ -859,6 +994,26 @@ func Test_buildEntitiesRequest(t *testing.T) {
 				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
 				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
 				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "geohash entity from latitude and longitude",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"latitude": 1.0, "longitude": 2.0}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "my_geohash",
+						ValueType: "STRING",
+						Extractor: &transformer.Entity_Udf{
+							Udf: "Geohash(\"$.latitude\", \"$.longitude\", 12)",
+						},
+					},
+				},
+			},
+			want: []feast.Row{
+				{"my_geohash": feast.StrVal(geohash.Encode(1.0, 2.0))},
 			},
 			wantErr: false,
 		},

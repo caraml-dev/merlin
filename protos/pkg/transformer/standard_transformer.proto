@@ -21,7 +21,10 @@ message FeatureTable {
 message Entity {
   string name = 1;
   string valueType = 2;
-  string jsonPath = 3;
+  oneof extractor {
+    string jsonPath = 3;
+    string udf = 4;
+  };
 }
 
 message Feature {

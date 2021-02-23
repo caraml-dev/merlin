@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/vm"
 	"math"
 	"strings"
 	"time"
@@ -65,6 +67,7 @@ type Transformer struct {
 	options          *Options
 	defaultValues    map[string]*types.Value
 	compiledJsonPath map[string]*jsonpath.Compiled
+	compiledUdf      map[string]*vm.Program
 }
 
 // NewTransformer initializes a new Transformer.
@@ -86,13 +89,24 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 	}
 
 	compiledJsonPath := make(map[string]*jsonpath.Compiled)
+	compiledUdf := make(map[string]*vm.Program)
 	for _, ft := range config.TransformerConfig.Feast {
 		for _, configEntity := range ft.Entities {
-			c, err := jsonpath.Compile(configEntity.JsonPath)
-			if err != nil {
-				return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.JsonPath)
+			switch configEntity.Extractor.(type) {
+			case *transformer.Entity_JsonPath:
+				c, err := jsonpath.Compile(configEntity.GetJsonPath())
+				if err != nil {
+					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
+				}
+				compiledJsonPath[configEntity.GetJsonPath()] = c
+			case *transformer.Entity_Udf:
+				c, err := expr.Compile(configEntity.GetUdf(), expr.Env(UdfEnv{}))
+				if err != nil {
+					return nil, err
+				}
+				compiledUdf[configEntity.GetUdf()] = c
 			}
-			compiledJsonPath[configEntity.JsonPath] = c
+
 		}
 	}
 
@@ -103,6 +117,7 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 		logger:           logger,
 		defaultValues:    defaultValues,
 		compiledJsonPath: compiledJsonPath,
+		compiledUdf:      compiledUdf,
 	}, nil
 }
 
@@ -205,16 +220,19 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 	}
 
 	for _, configEntity := range configEntities {
-		c, ok := t.compiledJsonPath[configEntity.JsonPath]
-		if !ok {
-			c, err := jsonpath.Compile(configEntity.JsonPath)
-			if err != nil {
-				return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.JsonPath)
+		switch configEntity.Extractor.(type) {
+		case *transformer.Entity_JsonPath:
+			_, ok := t.compiledJsonPath[configEntity.GetJsonPath()]
+			if !ok {
+				c, err := jsonpath.Compile(configEntity.GetJsonPath())
+				if err != nil {
+					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
+				}
+				t.compiledJsonPath[configEntity.GetJsonPath()] = c
 			}
-			t.compiledJsonPath[configEntity.JsonPath] = c
 		}
 
-		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, c)
+		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[configEntity.GetUdf()])
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}
