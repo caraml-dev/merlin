@@ -283,6 +283,10 @@ paths:
           name: "model_id"
           type: "integer"
           required: true
+        - in: "body"
+          name: "body"
+          schema:
+            $ref: "#/definitions/Version"
       responses:
         200:
           description: "Created"
@@ -1154,6 +1158,10 @@ definitions:
           $ref: "#/definitions/VersionEndpoint"
       properties:
         type: "object"
+      labels:
+        type: "object"
+        additionalProperties:
+          type: "string"
       created_at:
         type: "string"
         format: "date-time"
