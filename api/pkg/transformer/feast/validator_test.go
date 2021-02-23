@@ -96,6 +96,40 @@ func TestValidateTransformerConfig(t *testing.T) {
 			NewValidationError("entity not found: customer_id"),
 		},
 		{
+			"extractor not specified",
+			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
+				Feast: []*transformer.FeatureTable{
+					{
+						Project: "default",
+						Entities: []*transformer.Entity{
+							{
+								Name:      "customer_id",
+								ValueType: "STRING",
+							},
+						},
+						Features: []*transformer.Feature{
+							{
+								Name: "total_booking",
+							},
+						},
+					},
+				},
+			},
+			},
+			&core.ListEntitiesResponse{
+				Entities: []*core.Entity{
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "customer_id",
+							ValueType: types.ValueType_STRING,
+						},
+					},
+				},
+			},
+			nil,
+			NewValidationError("one of json_path, udf must be specified"),
+		},
+		{
 			"json path not specified",
 			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
 				Feast: []*transformer.FeatureTable{
@@ -103,7 +137,9 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Project: "default",
 						Entities: []*transformer.Entity{
 							{
-								Name: "customer_id",
+								Name:      "customer_id",
+								ValueType: "STRING",
+								Extractor: &transformer.Entity_JsonPath{},
 							},
 						},
 						Features: []*transformer.Feature{
@@ -129,6 +165,42 @@ func TestValidateTransformerConfig(t *testing.T) {
 			NewValidationError("json path for customer_id is not specified"),
 		},
 		{
+			"invalid json path",
+			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
+				Feast: []*transformer.FeatureTable{
+					{
+						Project: "default",
+						Entities: []*transformer.Entity{
+							{
+								Name: "customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "customer_id",
+								},
+							},
+						},
+						Features: []*transformer.Feature{
+							{
+								Name: "total_booking",
+							},
+						},
+					},
+				},
+			},
+			},
+			&core.ListEntitiesResponse{
+				Entities: []*core.Entity{
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "customer_id",
+							ValueType: types.ValueType_STRING,
+						},
+					},
+				},
+			},
+			nil,
+			NewValidationError("jsonpath compilation failed: should start with '$'"),
+		},
+		{
 			"mismatched entity value type",
 			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
 				Feast: []*transformer.FeatureTable{
@@ -136,8 +208,10 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Project: "default",
 						Entities: []*transformer.Entity{
 							{
-								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Name: "customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "INTEGER",
 							},
 						},
@@ -171,13 +245,17 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Project: "default",
 						Entities: []*transformer.Entity{
 							{
-								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Name: "customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
-								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Name: "hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},
@@ -221,13 +299,17 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Project: "default",
 						Entities: []*transformer.Entity{
 							{
-								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Name: "customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
-								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Name: "hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},
@@ -277,13 +359,17 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Project: "default",
 						Entities: []*transformer.Entity{
 							{
-								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Name: "customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
-								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Name: "hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},
@@ -333,13 +419,17 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Project: "default",
 						Entities: []*transformer.Entity{
 							{
-								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Name: "customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
-								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Name: "hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},
@@ -389,13 +479,17 @@ func TestValidateTransformerConfig(t *testing.T) {
 						Project: "default",
 						Entities: []*transformer.Entity{
 							{
-								Name:      "customer_id",
-								JsonPath:  "$.customer_id",
+								Name: "customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
 								ValueType: "STRING",
 							},
 							{
-								Name:      "hour_of_day",
-								JsonPath:  "$.hour_of_day",
+								Name: "hour_of_day",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.hour_of_day",
+								},
 								ValueType: "INT32",
 							},
 						},
@@ -436,6 +530,44 @@ func TestValidateTransformerConfig(t *testing.T) {
 				},
 			},
 			nil,
+		},
+		{
+			name: "invalid udf expression",
+			trfConfig: &transformer.StandardTransformerConfig{
+				TransformerConfig: &transformer.TransformerConfig{
+					Feast: []*transformer.FeatureTable{
+						{
+							Project: "default",
+							Entities: []*transformer.Entity{
+								{
+									Name:      "geohash",
+									ValueType: "String",
+									Extractor: &transformer.Entity_Udf{
+										Udf: "unknown()",
+									},
+								},
+							},
+							Features: []*transformer.Feature{
+								{
+									Name:      "average_daily_rides",
+									ValueType: "DOUBLE",
+								},
+							},
+						},
+					},
+				},
+			},
+			listEntitiesResponse: &core.ListEntitiesResponse{
+				Entities: []*core.Entity{
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "geohash",
+							ValueType: types.ValueType_STRING,
+						},
+					},
+				},
+			},
+			wantError: NewValidationError("udf compilation failed: unknown func unknown (1:1)\n | unknown()\n | ^"),
 		},
 	}
 	for _, test := range tests {
