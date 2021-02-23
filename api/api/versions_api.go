@@ -100,8 +100,13 @@ func (c *VersionsController) ListVersions(r *http.Request, vars map[string]strin
 	return OkWithHeaders(versions, responseHeaders)
 }
 
-func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {
+func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
+
+	versionPost, ok := body.(*models.VersionPost)
+	if !ok {
+		return InternalServerError("Unable to parse request body")
+	}
 
 	modelID, _ := models.ParseID(vars["model_id"])
 
@@ -120,6 +125,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 		ModelID:     modelID,
 		RunID:       run.Info.RunID,
 		ArtifactURI: run.Info.ArtifactURI,
+		Labels:      versionPost.Labels,
 	}
 
 	version, _ = c.VersionsService.Save(ctx, version, c.MonitoringConfig)

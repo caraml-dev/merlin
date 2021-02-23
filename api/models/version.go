@@ -33,7 +33,12 @@ type Version struct {
 	ArtifactURI string             `json:"artifact_uri" gorm:"artifact_uri"`
 	Endpoints   []*VersionEndpoint `json:"endpoints" gorm:"foreignkey:VersionID,VersionModelID;association_foreignkey:ID,ModelID;"`
 	Properties  KV                 `json:"properties" gorm:"properties"`
+	Labels      KV                 `json:"labels" gorm:"labels"`
 	CreatedUpdated
+}
+
+type VersionPost struct {
+	Labels KV `json:"labels" gorm:"labels"`
 }
 
 type VersionPatch struct {
