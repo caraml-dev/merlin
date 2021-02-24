@@ -522,6 +522,66 @@ func TestTransformer_Transform(t *testing.T) {
 			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"geohash":{"columns":["geohash","geohash_statistics:average_daily_rides"],"data":[["s01mtw037ms0",3.2]]}}}`),
 			wantErr: false,
 		},
+		//TODO
+		{
+			name: "jsonextract entity from nested json string",
+			fields: fields{
+				config: &transformer.StandardTransformerConfig{
+					TransformerConfig: &transformer.TransformerConfig{
+						Feast: []*transformer.FeatureTable{
+							{
+								Project: "jsonextract",
+								Entities: []*transformer.Entity{
+									{
+										Name:      "jsonextract",
+										ValueType: "STRING",
+										Extractor: &transformer.Entity_Udf{
+											Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
+										},
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "geohash_statistics:average_daily_rides",
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"details": "{\"merchant_id\": 9001}"}`),
+			},
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "jsonextract",
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
+										"jsonextract":                                feast.DoubleVal(9001),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"jsonextract":                                serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    []byte(`{"details": "{\"merchant_id\": 9001}","feast_features":{"jsonextract":{"columns":["jsonextract","geohash_statistics:average_daily_rides"],"data":[[9001,3.2]]}}}`),
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
