@@ -56,6 +56,7 @@ import (
 	"github.com/gojek/merlin/imagebuilder"
 	"github.com/gojek/merlin/istio"
 	"github.com/gojek/merlin/log"
+	"github.com/gojek/merlin/mlflow"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/service"
@@ -176,9 +177,9 @@ func main() {
 	}
 	tracker.Start()
 
+	mlflowClientFactory := mlflow.NewClientFactory()
 	appCtx := api.AppContext{
-		EnvironmentService: environmentService,
-
+		EnvironmentService:        environmentService,
 		ProjectsService:           projectsService,
 		ModelsService:             modelsService,
 		ModelEndpointsService:     modelEndpointService,
@@ -194,6 +195,7 @@ func main() {
 		DB:                        db,
 		Enforcer:                  authEnforcer,
 		FeastCoreClient:           coreClient,
+		MlFlowClientFactory:       mlflowClientFactory,
 	}
 
 	router := mux.NewRouter()

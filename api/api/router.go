@@ -33,6 +33,7 @@ import (
 	"github.com/gojek/merlin/config"
 
 	"github.com/gojek/merlin/middleware"
+	"github.com/gojek/merlin/mlflow"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/service"
@@ -56,6 +57,7 @@ type AppContext struct {
 	AlertEnabled              bool
 	Enforcer                  enforcer.Enforcer
 	FeastCoreClient           core.CoreServiceClient
+	MlFlowClientFactory       mlflow.ClientFactory
 }
 
 // Handler handles the API requests and responses.
