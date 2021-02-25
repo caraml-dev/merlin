@@ -514,13 +514,13 @@ func TestPatchVersion(t *testing.T) {
 	}
 }
 
-type mockClient struct{}
+type mockMlflowClient struct{}
 
-func (c *mockClient) CreateExperiment(name string) (string, error) {
+func (c *mockMlflowClient) CreateExperiment(name string) (string, error) {
 	return "hello", nil
 }
 
-func (c *mockClient) CreateRun(experimentID string) (*mlflow.Run, error) {
+func (c *mockMlflowClient) CreateRun(experimentID string) (*mlflow.Run, error) {
 	return &mlflow.Run{
 		Info: mlflow.Info{
 			RunID:       "1",
@@ -568,7 +568,7 @@ func TestCreateVersion(t *testing.T) {
 			},
 			mlflowClientFactory: func() *mlfmocks.ClientFactory {
 				svc := &mlfmocks.ClientFactory{}
-				svc.On("NewClient", mock.Anything, "http://www.notinuse.com").Return(&mockClient{})
+				svc.On("NewClient", mock.Anything, "http://www.notinuse.com").Return(&mockMlflowClient{})
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -638,7 +638,7 @@ func TestCreateVersion(t *testing.T) {
 						MonitoringBaseURL: "http://grafana",
 					},
 					AlertEnabled:        true,
-					MlFlowClientFactory: mlflowClientFactory,
+					MlflowClientFactory: mlflowClientFactory,
 					ModelsService:       modelsSvc,
 				},
 			}
