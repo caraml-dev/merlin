@@ -143,8 +143,8 @@ func TestJsonExtract(t *testing.T) {
 		{
 			name:           "should be able to extract array value using nested key from JSON string",
 			keyJsonPath:    "$.array",
-			nestedJsonPath: "$.child_node.array[0]",
-			extractedValue: float64(1),
+			nestedJsonPath: "$.child_node.array[*]",
+			extractedValue: []interface {}{float64(1), float64(2)},
 		},
 		{
 			name:           "should throw error when value specified by key does not exist in nested JSON",
