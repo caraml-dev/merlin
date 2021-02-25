@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
 	"math"
 	"strings"
 	"time"
+
+	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/vm"
 
 	"github.com/buger/jsonparser"
 	feast "github.com/feast-dev/feast/sdk/go"
@@ -50,6 +51,18 @@ var (
 		Help:       "Summary of feature value",
 		AgeBuckets: 1,
 	}, []string{"feature"})
+
+	feastCacheFetching = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: transformer.PromNamespace,
+		Name:      "feast_cache_fetching_count",
+		Help:      "Fetching feature from cache",
+	})
+
+	feastCacheHit = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: transformer.PromNamespace,
+		Name:      "feast_cache_hit_count",
+		Help:      "Cache is hitted",
+	})
 )
 
 // Options for the Feast transformer.
@@ -57,6 +70,14 @@ type Options struct {
 	ServingURL              string `envconfig:"FEAST_SERVING_URL" required:"true"`
 	StatusMonitoringEnabled bool   `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
 	ValueMonitoringEnabled  bool   `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
+	BatchSize               int    `envconfig:"FEAST_BATCH_SIZE" default:"10"`
+	CacheEnabled            bool   `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
+	CacheTTLInSec           int    `envconfig:"FEAST_TTL_IN_SEC" default:"60"`
+}
+
+type Cache interface {
+	Insert(key []byte, value []byte, ttlInSec int) error
+	Fetch(key []byte) ([]byte, error)
 }
 
 // Transformer wraps feast serving client to retrieve features.
@@ -68,10 +89,11 @@ type Transformer struct {
 	defaultValues    map[string]*types.Value
 	compiledJsonPath map[string]*jsonpath.Compiled
 	compiledUdf      map[string]*vm.Program
+	cache            Cache
 }
 
 // NewTransformer initializes a new Transformer.
-func NewTransformer(feastClient feast.Client, config *transformer.StandardTransformerConfig, options *Options, logger *zap.Logger) (*Transformer, error) {
+func NewTransformer(feastClient feast.Client, config *transformer.StandardTransformerConfig, options *Options, logger *zap.Logger, cache Cache) (*Transformer, error) {
 	defaultValues := make(map[string]*types.Value)
 	// populate default values
 	for _, ft := range config.TransformerConfig.Feast {
@@ -118,12 +140,17 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 		defaultValues:    defaultValues,
 		compiledJsonPath: compiledJsonPath,
 		compiledUdf:      compiledUdf,
+		cache:            cache,
 	}, nil
 }
 
+type FeaturesData []FeatureData
+
+type FeatureData []interface{}
+
 type FeastFeature struct {
-	Columns []string        `json:"columns"`
-	Data    [][]interface{} `json:"data"`
+	Columns []string     `json:"columns"`
+	Data    FeaturesData `json:"data"`
 }
 
 type result struct {
@@ -181,31 +208,113 @@ func (t *Transformer) getFeastFeature(ctx context.Context, tableName string, req
 		features = append(features, feature.Name)
 	}
 
-	feastRequest := feast.OnlineFeaturesRequest{
-		Project:  config.Project,
-		Entities: entities,
-		Features: features,
-	}
-	t.logger.Debug("feast_request", zap.Any("feast_request", feastRequest))
-
-	startTime := time.Now()
-	feastResponse, err := t.feastClient.GetOnlineFeatures(ctx, &feastRequest)
-	durationMs := time.Now().Sub(startTime).Milliseconds()
-	if err != nil {
-		feastLatency.WithLabelValues("error").Observe(float64(durationMs))
-		feastError.Inc()
-		return nil, err
-	}
-	feastLatency.WithLabelValues("success").Observe(float64(durationMs))
-
-	t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
-
-	feastFeature, err := t.buildFeastFeatures(ctx, feastResponse, config)
+	feastFeature, err := t.feastFeatureBatchFetching(ctx, entities, config, features)
 	if err != nil {
 		return nil, err
 	}
-
 	return feastFeature, nil
+}
+
+type batchResult struct {
+	featuresData FeaturesData
+	err          error
+}
+
+func (t *Transformer) feastFeatureBatchFetching(ctx context.Context, entities []feast.Row, config *transformer.FeatureTable, features []string) (*FeastFeature, error) {
+
+	var cachedValues FeaturesData
+	entityNotInCache := entities
+
+	if t.options.CacheEnabled {
+		cachedValues, entityNotInCache = fetchFeaturesFromCache(t.cache, entities)
+	}
+
+	numOfBatchBeforeCeil := float64(len(entityNotInCache)) / float64(t.options.BatchSize)
+	numOfBatch := int(math.Ceil(numOfBatchBeforeCeil))
+
+	batchResultChan := make(chan batchResult, numOfBatch)
+	feastColumns := t.getFeastColumns(config)
+	entityIndices := t.getEntityIndicesFromColumns(feastColumns, config.Entities)
+	for i := 0; i < numOfBatch; i++ {
+		startIndex := i * t.options.BatchSize
+		batchedEntities := entityNotInCache[startIndex:]
+		if i != numOfBatch-1 {
+			batchedEntities = entityNotInCache[startIndex : startIndex+t.options.BatchSize]
+		}
+
+		go func(project string, entityList []feast.Row, columns []string) {
+			feastRequest := feast.OnlineFeaturesRequest{
+				Project:  project,
+				Entities: entityList,
+				Features: features,
+			}
+			startTime := time.Now()
+			feastResponse, err := t.feastClient.GetOnlineFeatures(ctx, &feastRequest)
+			durationMs := time.Now().Sub(startTime).Milliseconds()
+			if err != nil {
+				feastLatency.WithLabelValues("error").Observe(float64(durationMs))
+				feastError.Inc()
+
+				batchResultChan <- batchResult{featuresData: nil, err: err}
+				return
+			}
+			feastLatency.WithLabelValues("success").Observe(float64(durationMs))
+
+			t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
+
+			feastFeature, willBeCachedFeatures, err := t.buildFeastFeaturesData(ctx, feastResponse, config, columns, entityIndices)
+			if err != nil {
+				batchResultChan <- batchResult{featuresData: nil, err: err}
+				return
+			}
+
+			if err := insertMultipleFeaturesToCache(t.cache, willBeCachedFeatures, t.options.CacheTTLInSec); err != nil {
+				t.logger.Error("insert_to_cache", zap.Any("error", err))
+			}
+
+			batchResultChan <- batchResult{featuresData: feastFeature, err: nil}
+		}(config.Project, batchedEntities, feastColumns)
+	}
+
+	data := cachedValues
+
+	for i := 0; i < numOfBatch; i++ {
+		res := <-batchResultChan
+		if res.err != nil {
+			return nil, res.err
+		}
+		data = append(data, res.featuresData...)
+	}
+
+	return &FeastFeature{
+		Columns: feastColumns,
+		Data:    data,
+	}, nil
+}
+
+func (t *Transformer) getFeastColumns(config *transformer.FeatureTable) []string {
+	columns := make([]string, 0, len(config.Entities)+len(config.Features))
+	for _, entity := range config.Entities {
+		columns = append(columns, entity.Name)
+	}
+	for _, feature := range config.Features {
+		columns = append(columns, feature.Name)
+	}
+	return columns
+}
+
+func (t *Transformer) getEntityIndicesFromColumns(columns []string, entitiesConfig []*transformer.Entity) map[int]int {
+	indicesMapping := make(map[int]int, len(entitiesConfig))
+	entitiesConfigMap := make(map[string]*transformer.Entity)
+	for _, entityConfig := range entitiesConfig {
+		entitiesConfigMap[entityConfig.Name] = entityConfig
+	}
+	for i, column := range columns {
+		if _, found := entitiesConfigMap[column]; found {
+			indicesMapping[i] = i
+		}
+	}
+	return indicesMapping
 }
 
 func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
@@ -263,30 +372,39 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 	return entities, nil
 }
 
-func (t *Transformer) buildFeastFeatures(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, config *transformer.FeatureTable) (*FeastFeature, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildFeastFeatures")
+type cacheableFeatureData struct {
+	key   feast.Row
+	value FeatureData
+}
+
+func (t *Transformer) buildFeastFeaturesData(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, config *transformer.FeatureTable, columns []string, entityIndexMap map[int]int) (FeaturesData, []cacheableFeatureData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildFeastFeaturesData")
 	defer span.Finish()
 
-	var columns []string
-	for _, entity := range config.Entities {
-		columns = append(columns, entity.Name)
-	}
-	for _, feature := range config.Features {
-		columns = append(columns, feature.Name)
-	}
-
-	var data [][]interface{}
+	var data FeaturesData
+	var cacheData []cacheableFeatureData
 	status := feastResponse.Statuses()
+
 	for i, feastRow := range feastResponse.Rows() {
-		var row []interface{}
-		for _, column := range columns {
+		var row FeatureData
+
+		// create entity object, for cache key purpose
+		entity := feast.Row{}
+		for index, column := range columns {
 			featureStatus := status[i][column]
+			_, isEntityIndex := entityIndexMap[index]
 			switch featureStatus {
 			case serving.GetOnlineFeaturesResponse_PRESENT:
 				rawValue := feastRow[column]
+
+				// set value of entity
+				if isEntityIndex {
+					entity[column] = rawValue
+				}
+
 				featVal, err := getFeatureValue(rawValue)
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
 				row = append(row, featVal)
 
@@ -306,11 +424,11 @@ func (t *Transformer) buildFeastFeatures(ctx context.Context, feastResponse *fea
 				}
 				featVal, err := getFeatureValue(defVal)
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
 				row = append(row, featVal)
 			default:
-				return nil, fmt.Errorf("Unsupported feature retrieval status: %s", featureStatus)
+				return nil, nil, fmt.Errorf("Unsupported feature retrieval status: %s", featureStatus)
 			}
 			// put behind feature toggle since it will generate high cardinality metrics
 			if t.options.StatusMonitoringEnabled {
@@ -318,12 +436,13 @@ func (t *Transformer) buildFeastFeatures(ctx context.Context, feastResponse *fea
 			}
 		}
 		data = append(data, row)
+
+		if t.options.CacheEnabled {
+			cacheData = append(cacheData, cacheableFeatureData{key: entity, value: row})
+		}
 	}
 
-	return &FeastFeature{
-		Columns: columns,
-		Data:    data,
-	}, nil
+	return data, cacheData, nil
 }
 
 func getFloatValue(val interface{}) (float64, error) {
