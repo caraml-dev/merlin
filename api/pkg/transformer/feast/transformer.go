@@ -72,7 +72,7 @@ type Options struct {
 	ValueMonitoringEnabled  bool   `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
 	BatchSize               int    `envconfig:"FEAST_BATCH_SIZE" default:"50"`
 	CacheEnabled            bool   `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
-	CacheTTLInSec           int    `envconfig:"FEAST_TTL_IN_SEC" default:"60"`
+	CacheTTLInSec           int    `envconfig:"FEAST_CACHE_TTL_IN_SEC" default:"60"`
 }
 
 type Cache interface {
