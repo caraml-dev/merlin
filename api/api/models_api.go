@@ -55,7 +55,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 		return NotFound(err.Error())
 	}
 
-	mlflowClient := c.MlFlowClientFactory.NewClient(nil, project.MlflowTrackingUrl)
+	mlflowClient := c.MlflowClientFactory.NewClient(nil, project.MlflowTrackingUrl)
 	experimentName := fmt.Sprintf("%s/%s", project.Name, model.Name)
 
 	experimentID, err := mlflowClient.CreateExperiment(experimentName)

@@ -104,7 +104,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 
 	versionPost, ok := body.(*models.VersionPost)
 	if !ok {
-		return InternalServerError("Unable to parse request body")
+		return BadRequest("Unable to parse request body")
 	}
 
 	modelID, _ := models.ParseID(vars["model_id"])
@@ -114,7 +114,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
 
-	mlflowClient := c.MlFlowClientFactory.NewClient(nil, model.Project.MlflowTrackingUrl)
+	mlflowClient := c.MlflowClientFactory.NewClient(nil, model.Project.MlflowTrackingUrl)
 	run, err := mlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentID))
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to create mlflow run: %s", err.Error()))

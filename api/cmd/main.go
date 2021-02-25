@@ -195,7 +195,7 @@ func main() {
 		DB:                        db,
 		Enforcer:                  authEnforcer,
 		FeastCoreClient:           coreClient,
-		MlFlowClientFactory:       mlflowClientFactory,
+		MlflowClientFactory:       mlflowClientFactory,
 	}
 
 	router := mux.NewRouter()
