@@ -112,7 +112,8 @@ func TestJsonExtract(t *testing.T) {
 		"details": "{\"merchant_id\": 9001}",
 		"nested": "{\"child_node\": { \"grandchild_node\": \"gen-z\"}}",
 		"not_json": "i_am_not_json_string",
-		"not_string": 1024
+		"not_string": 1024,
+		"array": "{\"child_node\": { \"array\": [1, 2]}}"
 	}`)
 	var testJsonUnmarshallled interface{}
 	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
@@ -138,6 +139,12 @@ func TestJsonExtract(t *testing.T) {
 			keyJsonPath:    "$.nested",
 			nestedJsonPath: "$.child_node.grandchild_node",
 			extractedValue: "gen-z",
+		},
+		{
+			name:           "should be able to extract array value using nested key from JSON string",
+			keyJsonPath:    "$.array",
+			nestedJsonPath: "$.child_node.array[0]",
+			extractedValue: float64(1),
 		},
 		{
 			name:           "should throw error when value specified by key does not exist in nested JSON",

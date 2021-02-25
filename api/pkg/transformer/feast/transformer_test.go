@@ -522,7 +522,6 @@ func TestTransformer_Transform(t *testing.T) {
 			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"geohash":{"columns":["geohash","geohash_statistics:average_daily_rides"],"data":[["s01mtw037ms0",3.2]]}}}`),
 			wantErr: false,
 		},
-		//TODO
 		{
 			name: "jsonextract entity from nested json string",
 			fields: fields{
@@ -646,6 +645,26 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "1 entity with jsonextract UDF",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"details": "{\"merchant_id\": 9001}"}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						Extractor: &transformer.Entity_Udf{
+							Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
+						},
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(9001)},
+			},
+			wantErr: false,
+		},
+		{
 			name: "1 entity with multiple values",
 			args: args{
 				ctx:     context.Background(),
@@ -694,7 +713,7 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "2 entities with the fisrt one has 2 values",
+			name: "2 entities with the first one has 2 values",
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":[1111,2222],"merchant_id":"M111"}`),
