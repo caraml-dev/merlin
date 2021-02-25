@@ -21,6 +21,8 @@ import (
 	"testing"
 
 	"github.com/gojek/merlin/config"
+	"github.com/gojek/merlin/mlflow"
+	mlfmocks "github.com/gojek/merlin/mlflow/mocks"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/service/mocks"
@@ -507,6 +509,140 @@ func TestPatchVersion(t *testing.T) {
 				},
 			}
 			resp := ctl.PatchVersion(&http.Request{}, tC.vars, tC.requestBody)
+			assert.Equal(t, tC.expected, resp)
+		})
+	}
+}
+
+type mockClient struct{}
+
+func (c *mockClient) CreateExperiment(name string) (string, error) {
+	return "hello", nil
+}
+
+func (c *mockClient) CreateRun(experimentID string) (*mlflow.Run, error) {
+	return &mlflow.Run{
+		Info: mlflow.Info{
+			RunID:       "1",
+			ArtifactURI: "artifact/url/run",
+		},
+	}, nil
+}
+
+func TestCreateVersion(t *testing.T) {
+	testCases := []struct {
+		desc                string
+		vars                map[string]string
+		body                models.VersionPost
+		versionService      func() *mocks.VersionsService
+		mlflowClientFactory func() *mlfmocks.ClientFactory
+		modelsService       func() *mocks.ModelsService
+		expected            *Response
+	}{
+		{
+			desc: "Should successfully create version",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"service_type":   "GO-FOOD",
+					"targeting_date": "2021-02-01",
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MlflowTrackingUrl: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			mlflowClientFactory: func() *mlfmocks.ClientFactory {
+				svc := &mlfmocks.ClientFactory{}
+				svc.On("NewClient", mock.Anything, "http://www.notinuse.com").Return(&mockClient{})
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{
+					ModelID:     models.ID(1),
+					RunID:       "1",
+					ArtifactURI: "artifact/url/run",
+					Labels: models.KV{
+						"service_type":   "GO-FOOD",
+						"targeting_date": "2021-02-01",
+					},
+				}, mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "sklearn",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					Labels: models.KV{
+						"service_type":   "GO-FOOD",
+						"targeting_date": "2021-02-01",
+					},
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusCreated,
+				data: &models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "sklearn",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					Labels: models.KV{
+						"service_type":   "GO-FOOD",
+						"targeting_date": "2021-02-01",
+					},
+				},
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			versionSvc := tC.versionService()
+			modelsSvc := tC.modelsService()
+			mlflowClientFactory := tC.mlflowClientFactory()
+
+			ctl := &VersionsController{
+				AppContext: &AppContext{
+					VersionsService: versionSvc,
+					MonitoringConfig: config.MonitoringConfig{
+						MonitoringEnabled: true,
+						MonitoringBaseURL: "http://grafana",
+					},
+					AlertEnabled:        true,
+					MlFlowClientFactory: mlflowClientFactory,
+					ModelsService:       modelsSvc,
+				},
+			}
+			resp := ctl.CreateVersion(&http.Request{}, tC.vars, &tC.body)
 			assert.Equal(t, tC.expected, resp)
 		})
 	}
