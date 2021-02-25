@@ -114,6 +114,12 @@ spec:
     prometheus:
       enabled: false
   components:
+    pilot:
+      k8s:
+        resources:
+          requests:
+            cpu: 20m
+            memory: 64Mi
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true

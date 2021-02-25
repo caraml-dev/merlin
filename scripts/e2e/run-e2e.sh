@@ -21,4 +21,4 @@ curl "${E2E_MERLIN_URL}/v1/projects"
 cd ./merlin/python/sdk
 pip install pipenv
 pipenv install --dev --skip-lock
-pipenv run pytest -n=3 -W=ignore --cov=merlin test/integration_test.py -k 'not test_standard_transformer_feast_pyfunc'
+pipenv run pytest -n=1 -W=ignore --cov=merlin test/integration_test.py -k 'not test_standard_transformer_feast_pyfunc'
