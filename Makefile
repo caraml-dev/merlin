@@ -139,7 +139,7 @@ generate-client: generate-client-go generate-client-python
 
 CLIENT_GO_OUTPUT_DIR = ./api/client
 TEMP_CLIENT_GO_OUTPUT_DIR = ./api/client_tmp
-CLIENT_GO_EXAMPLES_DIR = ./api/client/examples/
+CLIENT_GO_EXAMPLES_DIR = ./api/client/examples
 TEMP_CLIENT_GO_EXAMPLES_DIR  = ./api/client_examples_temp
 .PHONY: generate-client-go
 generate-client-go:
