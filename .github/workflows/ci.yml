@@ -155,7 +155,7 @@ jobs:
           password: ${{ secrets.GHCR_TOKEN }}
           registry: ghcr.io
           build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
-          tag_with_ref: true
+          tags: ${{ github.head_ref }}
 
   publish-merlin-transformer-docker:
     if: >-
@@ -178,7 +178,7 @@ jobs:
           repository: gojek/merlin-transformer
           build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
           dockerfile: transformer.Dockerfile
-          tag_with_ref: true
+          tags: ${{ github.head_ref }}
 
   publish-pyfunc-base-docker:
     if: >-
@@ -201,8 +201,7 @@ jobs:
           repository: gojek/merlin-pyfunc-base
           path: python/pyfunc-server
           dockerfile: python/pyfunc-server/base.Dockerfile
-          tags: dev
-          tag_with_ref: true
+          tags: ${{ github.head_ref }}
 
   publish-pyspark-base-docker:
     if: >-
@@ -225,7 +224,7 @@ jobs:
           repository: gojek/merlin-pyspark-base
           path: python
           dockerfile: python/batch-predictor/docker/base.Dockerfile
-          tag_with_ref: true
+          tags: ${{ github.head_ref }}
 
   publish-mlflow-docker:
     if: >-
