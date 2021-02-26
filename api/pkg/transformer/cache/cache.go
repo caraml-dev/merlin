@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"time"
+
 	"github.com/coocood/freecache"
 )
 
@@ -21,8 +23,8 @@ func NewCache(options Options) *Cache {
 	return &Cache{cacheExecutor: executor}
 }
 
-func (c *Cache) Insert(key []byte, value []byte, ttlInSec int) error {
-	return c.cacheExecutor.Set(key, value, ttlInSec)
+func (c *Cache) Insert(key []byte, value []byte, ttl time.Duration) error {
+	return c.cacheExecutor.Set(key, value, int(ttl/time.Second))
 }
 
 func (c *Cache) Fetch(key []byte) ([]byte, error) {

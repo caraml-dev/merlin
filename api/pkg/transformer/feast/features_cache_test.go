@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
@@ -161,7 +162,7 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 	}
 	testCases := []struct {
 		desc             string
-		willBeCachedData []cacheableFeatureData
+		willBeCachedData []entityFeaturePair
 		cacheMocks       []mockCache
 		expectedError    error
 	}{
@@ -183,7 +184,7 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					errInsertingCache: nil,
 				},
 			},
-			willBeCachedData: []cacheableFeatureData{
+			willBeCachedData: []entityFeaturePair{
 				{
 					key: feast.Row{
 						"driver_id": feast.StrVal("1001"),
@@ -216,7 +217,7 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					errInsertingCache: fmt.Errorf("Value is to big"),
 				},
 			},
-			willBeCachedData: []cacheableFeatureData{
+			willBeCachedData: []entityFeaturePair{
 				{
 					key: feast.Row{
 						"driver_id": feast.StrVal("1001"),
@@ -250,7 +251,7 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					errInsertingCache: fmt.Errorf("Value is to big"),
 				},
 			},
-			willBeCachedData: []cacheableFeatureData{
+			willBeCachedData: []entityFeaturePair{
 				{
 					key: feast.Row{
 						"driver_id": feast.StrVal("1001"),
@@ -278,7 +279,7 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 				mockCache.On("Insert", keyByte, value, mock.Anything).Return(cc.errInsertingCache)
 
 			}
-			err := insertMultipleFeaturesToCache(mockCache, tt.willBeCachedData, 60)
+			err := insertMultipleFeaturesToCache(mockCache, tt.willBeCachedData, 60*time.Second)
 			assert.Equal(t, tt.expectedError, err)
 		})
 	}

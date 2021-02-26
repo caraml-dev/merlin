@@ -52,13 +52,13 @@ var (
 		AgeBuckets: 1,
 	}, []string{"feature"})
 
-	feastCacheFetching = promauto.NewCounter(prometheus.CounterOpts{
+	feastCacheRetrievalCount = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: transformer.PromNamespace,
-		Name:      "feast_cache_fetching_count",
-		Help:      "Fetching feature from cache",
+		Name:      "feast_cache_retrieval_count",
+		Help:      "Retrieve feature from cache",
 	})
 
-	feastCacheHit = promauto.NewCounter(prometheus.CounterOpts{
+	feastCacheHitCount = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: transformer.PromNamespace,
 		Name:      "feast_cache_hit_count",
 		Help:      "Cache is hitted",
@@ -67,16 +67,16 @@ var (
 
 // Options for the Feast transformer.
 type Options struct {
-	ServingURL              string `envconfig:"FEAST_SERVING_URL" required:"true"`
-	StatusMonitoringEnabled bool   `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
-	ValueMonitoringEnabled  bool   `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
-	BatchSize               int    `envconfig:"FEAST_BATCH_SIZE" default:"50"`
-	CacheEnabled            bool   `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
-	CacheTTLInSec           int    `envconfig:"FEAST_CACHE_TTL_IN_SEC" default:"60"`
+	ServingURL              string        `envconfig:"FEAST_SERVING_URL" required:"true"`
+	StatusMonitoringEnabled bool          `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
+	ValueMonitoringEnabled  bool          `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
+	BatchSize               int           `envconfig:"FEAST_BATCH_SIZE" default:"50"`
+	CacheEnabled            bool          `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
+	CacheTTL                time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
 }
 
 type Cache interface {
-	Insert(key []byte, value []byte, ttlInSec int) error
+	Insert(key []byte, value []byte, ttl time.Duration) error
 	Fetch(key []byte) ([]byte, error)
 }
 
@@ -208,7 +208,7 @@ func (t *Transformer) getFeastFeature(ctx context.Context, tableName string, req
 		features = append(features, feature.Name)
 	}
 
-	feastFeature, err := t.feastFeatureBatchFetching(ctx, entities, config, features)
+	feastFeature, err := t.getFeatureFromFeast(ctx, entities, config, features)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ type batchResult struct {
 	err          error
 }
 
-func (t *Transformer) feastFeatureBatchFetching(ctx context.Context, entities []feast.Row, config *transformer.FeatureTable, features []string) (*FeastFeature, error) {
+func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.Row, config *transformer.FeatureTable, features []string) (*FeastFeature, error) {
 
 	var cachedValues FeaturesData
 	entityNotInCache := entities
@@ -237,10 +237,11 @@ func (t *Transformer) feastFeatureBatchFetching(ctx context.Context, entities []
 	entityIndices := t.getEntityIndicesFromColumns(feastColumns, config.Entities)
 	for i := 0; i < numOfBatch; i++ {
 		startIndex := i * t.options.BatchSize
-		batchedEntities := entityNotInCache[startIndex:]
-		if i != numOfBatch-1 {
-			batchedEntities = entityNotInCache[startIndex : startIndex+t.options.BatchSize]
+		endIndex := len(entityNotInCache)
+		if endIndex > startIndex+t.options.BatchSize {
+			endIndex = startIndex + t.options.BatchSize
 		}
+		batchedEntities := entityNotInCache[startIndex:endIndex]
 
 		go func(project string, entityList []feast.Row, columns []string) {
 			feastRequest := feast.OnlineFeaturesRequest{
@@ -262,17 +263,24 @@ func (t *Transformer) feastFeatureBatchFetching(ctx context.Context, entities []
 
 			t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
 
-			feastFeature, willBeCachedFeatures, err := t.buildFeastFeaturesData(ctx, feastResponse, config, columns, entityIndices)
+			entityFeaturePairs, err := t.buildFeastFeaturesData(ctx, feastResponse, columns, entityIndices)
 			if err != nil {
 				batchResultChan <- batchResult{featuresData: nil, err: err}
 				return
 			}
 
-			if err := insertMultipleFeaturesToCache(t.cache, willBeCachedFeatures, t.options.CacheTTLInSec); err != nil {
-				t.logger.Error("insert_to_cache", zap.Any("error", err))
+			var featuresData FeaturesData
+			for _, data := range entityFeaturePairs {
+				featuresData = append(featuresData, data.value)
 			}
 
-			batchResultChan <- batchResult{featuresData: feastFeature, err: nil}
+			if t.options.CacheEnabled {
+				if err := insertMultipleFeaturesToCache(t.cache, entityFeaturePairs, t.options.CacheTTL); err != nil {
+					t.logger.Error("insert_to_cache", zap.Any("error", err))
+				}
+			}
+
+			batchResultChan <- batchResult{featuresData: featuresData, err: nil}
 		}(config.Project, batchedEntities, feastColumns)
 	}
 
@@ -372,17 +380,16 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 	return entities, nil
 }
 
-type cacheableFeatureData struct {
+type entityFeaturePair struct {
 	key   feast.Row
 	value FeatureData
 }
 
-func (t *Transformer) buildFeastFeaturesData(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, config *transformer.FeatureTable, columns []string, entityIndexMap map[int]int) (FeaturesData, []cacheableFeatureData, error) {
+func (t *Transformer) buildFeastFeaturesData(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, columns []string, entityIndexMap map[int]int) ([]entityFeaturePair, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildFeastFeaturesData")
 	defer span.Finish()
 
-	var data FeaturesData
-	var cacheData []cacheableFeatureData
+	var data []entityFeaturePair
 	status := feastResponse.Statuses()
 
 	for i, feastRow := range feastResponse.Rows() {
@@ -404,7 +411,7 @@ func (t *Transformer) buildFeastFeaturesData(ctx context.Context, feastResponse 
 
 				featVal, err := getFeatureValue(rawValue)
 				if err != nil {
-					return nil, nil, err
+					return nil, err
 				}
 				row = append(row, featVal)
 
@@ -424,25 +431,21 @@ func (t *Transformer) buildFeastFeaturesData(ctx context.Context, feastResponse 
 				}
 				featVal, err := getFeatureValue(defVal)
 				if err != nil {
-					return nil, nil, err
+					return nil, err
 				}
 				row = append(row, featVal)
 			default:
-				return nil, nil, fmt.Errorf("Unsupported feature retrieval status: %s", featureStatus)
+				return nil, fmt.Errorf("Unsupported feature retrieval status: %s", featureStatus)
 			}
 			// put behind feature toggle since it will generate high cardinality metrics
 			if t.options.StatusMonitoringEnabled {
 				feastFeatureStatus.WithLabelValues(column, featureStatus.String()).Inc()
 			}
 		}
-		data = append(data, row)
-
-		if t.options.CacheEnabled {
-			cacheData = append(cacheData, cacheableFeatureData{key: entity, value: row})
-		}
+		data = append(data, entityFeaturePair{key: entity, value: row})
 	}
 
-	return data, cacheData, nil
+	return data, nil
 }
 
 func getFloatValue(val interface{}) (float64, error) {

@@ -78,7 +78,7 @@ func TestCache_Expiry(t *testing.T) {
 			dataByte, err := json.Marshal(tC.data)
 			require.NoError(t, err)
 			cache := NewCache(Options{SizeInMB: 1})
-			cache.Insert(tC.key, dataByte, 1)
+			cache.Insert(tC.key, dataByte, 1*time.Second)
 
 			if tC.delayOfFetching > 0 {
 				time.Sleep(time.Duration(tC.delayOfFetching) * time.Second)

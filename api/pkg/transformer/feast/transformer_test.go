@@ -306,7 +306,7 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 				ValueMonitoringEnabled:  true,
 				BatchSize:               1,
 				CacheEnabled:            true,
-				CacheTTLInSec:           60,
+				CacheTTL:                60 * time.Second,
 			},
 			args: args{
 				ctx:     context.Background(),
@@ -503,7 +503,7 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 				ValueMonitoringEnabled:  true,
 				BatchSize:               1,
 				CacheEnabled:            true,
-				CacheTTLInSec:           60,
+				CacheTTL:                60 * time.Second,
 			},
 			args: args{
 				ctx:     context.Background(),
