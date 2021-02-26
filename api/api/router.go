@@ -33,6 +33,7 @@ import (
 	"github.com/gojek/merlin/config"
 
 	"github.com/gojek/merlin/middleware"
+	"github.com/gojek/merlin/mlflow"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/service"
@@ -56,6 +57,7 @@ type AppContext struct {
 	AlertEnabled              bool
 	Enforcer                  enforcer.Enforcer
 	FeastCoreClient           core.CoreServiceClient
+	MlflowClient              mlflow.Client
 }
 
 // Handler handles the API requests and responses.
@@ -164,7 +166,7 @@ func NewRouter(appCtx AppContext) *mux.Router {
 
 		// Version API
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions", nil, versionsController.ListVersions, "ListVersions"},
-		{http.MethodPost, "/models/{model_id:[0-9]+}/versions", nil, versionsController.CreateVersion, "CreateVersion"},
+		{http.MethodPost, "/models/{model_id:[0-9]+}/versions", models.VersionPost{}, versionsController.CreateVersion, "CreateVersion"},
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", nil, versionsController.GetVersion, "GetVersion"},
 		{http.MethodPatch, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", models.VersionPatch{}, versionsController.PatchVersion, "PatchVersion"},
 

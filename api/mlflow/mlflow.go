@@ -29,11 +29,8 @@ type Client interface {
 	CreateRun(experimentID string) (*Run, error)
 }
 
-func NewClient(httpClient *http.Client, trackingURL string) Client {
-	if httpClient == nil {
-		httpClient = http.DefaultClient
-	}
-
+func NewClient(trackingURL string) Client {
+	httpClient := http.DefaultClient
 	return &client{
 		httpClient:  httpClient,
 		trackingURL: trackingURL,

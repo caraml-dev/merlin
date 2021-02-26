@@ -246,3 +246,69 @@ func TestVersionsService_ListVersions(t *testing.T) {
 		assert.Equal(t, "", cursor1)
 	})
 }
+
+func TestVersionsService_Save(t *testing.T) {
+	isDefaultTrue := true
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		env := models.Environment{
+			Name:      "env1",
+			Cluster:   "k8s",
+			IsDefault: &isDefaultTrue,
+		}
+		db.Create(&env)
+
+		p := mlp.Project{
+			Id:                1,
+			Name:              "project_1",
+			MlflowTrackingUrl: "http://mlflow:5000",
+		}
+
+		m := models.Model{
+			ProjectID:    models.ID(p.Id),
+			ExperimentID: 1,
+			Name:         "model_1",
+			Type:         "other",
+		}
+		db.Create(&m)
+
+		mockMlpAPIClient := &mlpMock.APIClient{}
+		mockMlpAPIClient.On("GetProjectByID", mock.Anything, int32(m.ProjectID)).Return(p, nil)
+		versionsService := NewVersionsService(db, mockMlpAPIClient)
+
+		testCases := []struct {
+			desc    string
+			version models.Version
+		}{
+			{
+				desc: "Should successfully persist version with labels",
+				version: models.Version{
+					ModelID:     m.ID,
+					RunID:       "1",
+					ArtifactURI: "gcs:/mlp/1/1",
+					Labels: models.KV{
+						"service_type":   "GO-FOOD",
+						"targeting_date": "2021-02-01",
+					},
+				},
+			},
+			{
+				desc: "Should successfully persist version without labels",
+				version: models.Version{
+					ModelID:     m.ID,
+					RunID:       "1",
+					ArtifactURI: "gcs:/mlp/1/1",
+				},
+			},
+		}
+		for _, tC := range testCases {
+			t.Run(tC.desc, func(t *testing.T) {
+				v, err := versionsService.Save(context.Background(), &tC.version, config.MonitoringConfig{MonitoringEnabled: true})
+				assert.Nil(t, err)
+				assert.Equal(t, tC.version.ModelID, v.ModelID)
+				assert.Equal(t, tC.version.RunID, v.RunID)
+				assert.Equal(t, tC.version.ArtifactURI, v.ArtifactURI)
+				assert.Equal(t, tC.version.Labels, v.Labels)
+			})
+		}
+	})
+}

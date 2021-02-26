@@ -33,15 +33,17 @@ type createRunResponse struct {
 }
 
 type Run struct {
-	Info struct {
-		RunID          string `json:"run_id"`
-		ExperimentID   string `json:"experiment_id"`
-		StartTime      string `json:"start_time"`
-		EndTime        string `json:"end_time"`
-		ArtifactURI    string `json:"artifact_uri"`
-		LifecycleStage string `json:"lifecycle_stage"`
-		Status         string `json:"status"`
-	} `json:"info"`
+	Info Info `json:"info"`
+}
+
+type Info struct {
+	RunID          string `json:"run_id"`
+	ExperimentID   string `json:"experiment_id"`
+	StartTime      string `json:"start_time"`
+	EndTime        string `json:"end_time"`
+	ArtifactURI    string `json:"artifact_uri"`
+	LifecycleStage string `json:"lifecycle_stage"`
+	Status         string `json:"status"`
 }
 
 type errorResponse struct {

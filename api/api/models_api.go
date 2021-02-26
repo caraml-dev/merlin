@@ -55,10 +55,8 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 		return NotFound(err.Error())
 	}
 
-	mlflowClient := mlflow.NewClient(nil, project.MlflowTrackingUrl)
 	experimentName := fmt.Sprintf("%s/%s", project.Name, model.Name)
-
-	experimentID, err := mlflowClient.CreateExperiment(experimentName)
+	experimentID, err := c.MlflowClient.CreateExperiment(experimentName)
 	if err != nil {
 		switch err.Error() {
 		case mlflow.ResourceAlreadyExists:
