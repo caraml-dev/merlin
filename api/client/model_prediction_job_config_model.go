@@ -10,7 +10,7 @@
 package client
 
 type PredictionJobConfigModel struct {
-	Type_   string                          `json:"type,omitempty"`
+	Type    string                          `json:"type,omitempty"`
 	Uri     string                          `json:"uri,omitempty"`
 	Result  *PredictionJobConfigModelResult `json:"result,omitempty"`
 	Options map[string]string               `json:"options,omitempty"`

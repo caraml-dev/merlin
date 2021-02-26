@@ -23,7 +23,7 @@ type PredictionJob struct {
 	Environment     *Environment `json:"environment,omitempty"`
 	Config          *Config      `json:"config,omitempty"`
 	Status          string       `json:"status,omitempty"`
-	Error_          string       `json:"error,omitempty"`
+	Error           string       `json:"error,omitempty"`
 	CreatedAt       time.Time    `json:"created_at,omitempty"`
 	UpdatedAt       time.Time    `json:"updated_at,omitempty"`
 }
