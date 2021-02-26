@@ -222,7 +222,7 @@ spec:
                 name: "{{ .Release.Name }}-mlp-api-encryption-key"
                 key: encryption-key
           - name: MLFLOW_TRACKING_URL
-            value: 'http://{{ template "mlflow.fullname" }}:{{ .Values.mlflow.service.externalPort}}'
+            value: 'http://{{ template "mlflow.fullname" .}}:{{ .Values.mlflow.service.externalPort}}'
           {{- if .Values.merlin.gcpServiceAccount }}
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /etc/gcp_service_account/service-account.json
