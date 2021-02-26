@@ -1,19 +1,16 @@
 name: ci
 on: [pull_request, pull_request_target]
 
-.before_job_script: &before_job_script
-  if: >-
-    (
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository
-    ) || (
-      github.event_name == 'pull_request_target' &&
-      github.event.pull_request.head.repo.full_name != github.repository
-    )
-
 jobs:
   lint-ui:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout to the target branch
@@ -27,7 +24,14 @@ jobs:
         run: make lint-ui
 
   lint-api:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -42,7 +46,14 @@ jobs:
         run: make lint-api
 
   build-ui:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -55,7 +66,14 @@ jobs:
         run: make build-ui
 
   build-api:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -68,7 +86,14 @@ jobs:
         run: make build-api
 
   unit-test-python-sdk:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -87,7 +112,14 @@ jobs:
         run: make unit-test
 
   integration-test-api:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -126,7 +158,14 @@ jobs:
           tag_with_ref: true
 
   publish-merlin-transformer-docker:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -142,7 +181,14 @@ jobs:
           tag_with_ref: true
 
   publish-pyfunc-base-docker:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -159,7 +205,14 @@ jobs:
           tag_with_ref: true
 
   publish-pyspark-base-docker:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -175,7 +228,14 @@ jobs:
           tag_with_ref: true
 
   publish-mlflow-docker:
-    <<: *before_job_script
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
