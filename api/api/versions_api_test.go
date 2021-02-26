@@ -623,6 +623,73 @@ func TestCreateVersion(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "Should successfully create version without labels",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MlflowTrackingUrl: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			mlflowClientFactory: func() *mlfmocks.ClientFactory {
+				svc := &mlfmocks.ClientFactory{}
+				svc.On("NewClient", mock.Anything, "http://www.notinuse.com").Return(&mockMlflowClient{})
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{
+					ModelID:     models.ID(1),
+					RunID:       "1",
+					ArtifactURI: "artifact/url/run",
+				}, mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "sklearn",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusCreated,
+				data: &models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "sklearn",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+				},
+			},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
