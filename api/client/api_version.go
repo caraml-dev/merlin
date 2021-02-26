@@ -120,7 +120,9 @@ func (a *VersionApiService) ModelsModelIdVersionsGet(ctx context.Context, modelI
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -150,10 +152,17 @@ func (a *VersionApiService) ModelsModelIdVersionsGet(ctx context.Context, modelI
 VersionApiService Log a new version of the models
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param modelId
+ * @param optional nil or *VersionApiModelsModelIdVersionsPostOpts - Optional Parameters:
+     * @param "Body" (optional.Interface of Version) -
 
 @return Version
 */
-func (a *VersionApiService) ModelsModelIdVersionsPost(ctx context.Context, modelId int32) (Version, *http.Response, error) {
+
+type VersionApiModelsModelIdVersionsPostOpts struct {
+	Body optional.Interface
+}
+
+func (a *VersionApiService) ModelsModelIdVersionsPost(ctx context.Context, modelId int32, localVarOptionals *VersionApiModelsModelIdVersionsPostOpts) (Version, *http.Response, error) {
 	var (
 		localVarHttpMethod  = strings.ToUpper("Post")
 		localVarPostBody    interface{}
@@ -187,6 +196,15 @@ func (a *VersionApiService) ModelsModelIdVersionsPost(ctx context.Context, model
 	if localVarHttpHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
+	// body params
+	if localVarOptionals != nil && localVarOptionals.Body.IsSet() {
+
+		localVarOptionalBody, localVarOptionalBodyok := localVarOptionals.Body.Value().(Version)
+		if !localVarOptionalBodyok {
+			return localVarReturnValue, nil, reportError("body should be Version")
+		}
+		localVarPostBody = &localVarOptionalBody
+	}
 	if ctx != nil {
 		// API Key Authentication
 		if auth, ok := ctx.Value(ContextAPIKey).(APIKey); ok {
@@ -219,7 +237,9 @@ func (a *VersionApiService) ModelsModelIdVersionsPost(ctx context.Context, model
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -320,7 +340,9 @@ func (a *VersionApiService) ModelsModelIdVersionsVersionIdGet(ctx context.Contex
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
