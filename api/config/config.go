@@ -43,6 +43,7 @@ type Config struct {
 	ReactAppConfig            ReactAppConfig
 	UI                        UIConfig
 	StandardTransformerConfig StandardTransformerConfig
+	MlflowConfig              MlflowConfig
 }
 
 // UIConfig stores the configuration for the UI.
@@ -139,6 +140,10 @@ type StandardTransformerConfig struct {
 	ImageName       string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
 	FeastServingURL string `envconfig:"FEAST_SERVING_URL" required:"true"`
 	FeastCoreURL    string `envconfig:"FEAST_CORE_URL" required:"true"`
+}
+
+type MlflowConfig struct {
+	TrackingURL string `envconfig:"MLFLOW_TRACKING_URL" required:"true"`
 }
 
 func InitConfigEnv() (*Config, error) {

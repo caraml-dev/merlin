@@ -57,7 +57,7 @@ type AppContext struct {
 	AlertEnabled              bool
 	Enforcer                  enforcer.Enforcer
 	FeastCoreClient           core.CoreServiceClient
-	MlflowClientFactory       mlflow.ClientFactory
+	MlflowClient              mlflow.Client
 }
 
 // Handler handles the API requests and responses.

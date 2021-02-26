@@ -177,7 +177,8 @@ func main() {
 	}
 	tracker.Start()
 
-	mlflowClientFactory := mlflow.NewClientFactory()
+	mlflowConfig := cfg.MlflowConfig
+	mlflowClient := mlflow.NewClient(mlflowConfig.TrackingURL)
 	appCtx := api.AppContext{
 		EnvironmentService:        environmentService,
 		ProjectsService:           projectsService,
@@ -195,7 +196,7 @@ func main() {
 		DB:                        db,
 		Enforcer:                  authEnforcer,
 		FeastCoreClient:           coreClient,
-		MlflowClientFactory:       mlflowClientFactory,
+		MlflowClient:              mlflowClient,
 	}
 
 	router := mux.NewRouter()

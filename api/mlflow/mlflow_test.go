@@ -33,7 +33,7 @@ func Test_client(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client := NewClientFactory().NewClient(nil, ts.URL)
+	client := NewClient(ts.URL)
 
 	expID, err := client.CreateExperiment("test")
 	assert.Nil(t, err)

@@ -114,8 +114,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
 
-	mlflowClient := c.MlflowClientFactory.NewClient(nil, model.Project.MlflowTrackingUrl)
-	run, err := mlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentID))
+	run, err := c.MlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentID))
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to create mlflow run: %s", err.Error()))
 	}

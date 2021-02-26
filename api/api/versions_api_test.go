@@ -514,30 +514,15 @@ func TestPatchVersion(t *testing.T) {
 	}
 }
 
-type mockMlflowClient struct{}
-
-func (c *mockMlflowClient) CreateExperiment(name string) (string, error) {
-	return "hello", nil
-}
-
-func (c *mockMlflowClient) CreateRun(experimentID string) (*mlflow.Run, error) {
-	return &mlflow.Run{
-		Info: mlflow.Info{
-			RunID:       "1",
-			ArtifactURI: "artifact/url/run",
-		},
-	}, nil
-}
-
 func TestCreateVersion(t *testing.T) {
 	testCases := []struct {
-		desc                string
-		vars                map[string]string
-		body                models.VersionPost
-		versionService      func() *mocks.VersionsService
-		mlflowClientFactory func() *mlfmocks.ClientFactory
-		modelsService       func() *mocks.ModelsService
-		expected            *Response
+		desc           string
+		vars           map[string]string
+		body           models.VersionPost
+		versionService func() *mocks.VersionsService
+		mlflowClient   func() *mlfmocks.Client
+		modelsService  func() *mocks.ModelsService
+		expected       *Response
 	}{
 		{
 			desc: "Should successfully create version",
@@ -566,9 +551,14 @@ func TestCreateVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			mlflowClientFactory: func() *mlfmocks.ClientFactory {
-				svc := &mlfmocks.ClientFactory{}
-				svc.On("NewClient", mock.Anything, "http://www.notinuse.com").Return(&mockMlflowClient{})
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{
+					Info: mlflow.Info{
+						RunID:       "1",
+						ArtifactURI: "artifact/url/run",
+					},
+				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -645,9 +635,14 @@ func TestCreateVersion(t *testing.T) {
 				}, nil)
 				return svc
 			},
-			mlflowClientFactory: func() *mlfmocks.ClientFactory {
-				svc := &mlfmocks.ClientFactory{}
-				svc.On("NewClient", mock.Anything, "http://www.notinuse.com").Return(&mockMlflowClient{})
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{
+					Info: mlflow.Info{
+						RunID:       "1",
+						ArtifactURI: "artifact/url/run",
+					},
+				}, nil)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -695,7 +690,7 @@ func TestCreateVersion(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			versionSvc := tC.versionService()
 			modelsSvc := tC.modelsService()
-			mlflowClientFactory := tC.mlflowClientFactory()
+			mlflowClient := tC.mlflowClient()
 
 			ctl := &VersionsController{
 				AppContext: &AppContext{
@@ -704,9 +699,9 @@ func TestCreateVersion(t *testing.T) {
 						MonitoringEnabled: true,
 						MonitoringBaseURL: "http://grafana",
 					},
-					AlertEnabled:        true,
-					MlflowClientFactory: mlflowClientFactory,
-					ModelsService:       modelsSvc,
+					AlertEnabled:  true,
+					MlflowClient:  mlflowClient,
+					ModelsService: modelsSvc,
 				},
 			}
 			resp := ctl.CreateVersion(&http.Request{}, tC.vars, &tC.body)

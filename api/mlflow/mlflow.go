@@ -24,26 +24,13 @@ import (
 	"github.com/gojek/merlin/utils"
 )
 
-type ClientFactory interface {
-	NewClient(httpClient *http.Client, trackingURL string) Client
-}
-
-func NewClientFactory() ClientFactory {
-	return &clientFactory{}
-}
-
-type clientFactory struct{}
-
 type Client interface {
 	CreateExperiment(name string) (string, error)
 	CreateRun(experimentID string) (*Run, error)
 }
 
-func (cf *clientFactory) NewClient(httpClient *http.Client, trackingURL string) Client {
-	if httpClient == nil {
-		httpClient = http.DefaultClient
-	}
-
+func NewClient(trackingURL string) Client {
+	httpClient := http.DefaultClient
 	return &client{
 		httpClient:  httpClient,
 		trackingURL: trackingURL,
