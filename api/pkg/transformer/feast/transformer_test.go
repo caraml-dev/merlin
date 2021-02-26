@@ -51,7 +51,6 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 		name       string
 		fields     fields
 		args       args
-		options    Options
 		feastMocks []mockFeast
 		cacheMocks []mockCache
 		want       []byte
@@ -86,15 +85,27 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 					},
 				},
 			},
-			options: Options{
-				StatusMonitoringEnabled: true,
-				ValueMonitoringEnabled:  true,
-				BatchSize:               1,
-				CacheEnabled:            false,
-			},
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}]}`),
+			},
+			cacheMocks: []mockCache{
+				{
+					key: feast.Row{
+						"driver_id": feast.StrVal("1001"),
+					},
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  FeatureData([]interface{}{"1001", 1.1}),
+				},
+				{
+					key: feast.Row{
+						"driver_id": feast.StrVal("2002"),
+					},
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  FeatureData([]interface{}{"2002", 2.2}),
+				},
 			},
 			feastMocks: []mockFeast{
 				{
@@ -183,12 +194,6 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 						},
 					},
 				},
-			},
-			options: Options{
-				StatusMonitoringEnabled: true,
-				ValueMonitoringEnabled:  true,
-				BatchSize:               1,
-				CacheEnabled:            true,
 			},
 			args: args{
 				ctx:     context.Background(),
@@ -301,13 +306,6 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 					},
 				},
 			},
-			options: Options{
-				StatusMonitoringEnabled: true,
-				ValueMonitoringEnabled:  true,
-				BatchSize:               1,
-				CacheEnabled:            true,
-				CacheTTL:                60 * time.Second,
-			},
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}]}`),
@@ -389,15 +387,26 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 					},
 				},
 			},
-			options: Options{
-				StatusMonitoringEnabled: true,
-				ValueMonitoringEnabled:  true,
-				BatchSize:               1,
-				CacheEnabled:            false,
-			},
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}]}`),
+			},
+			cacheMocks: []mockCache{
+				{
+					key: feast.Row{
+						"driver_id": feast.StrVal("1001"),
+					},
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  FeatureData([]interface{}{"1001", 1.1}),
+				},
+				{
+					key: feast.Row{
+						"driver_id": feast.StrVal("2002"),
+					},
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+				},
 			},
 			feastMocks: []mockFeast{
 				{
@@ -498,13 +507,6 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 					},
 				},
 			},
-			options: Options{
-				StatusMonitoringEnabled: true,
-				ValueMonitoringEnabled:  true,
-				BatchSize:               1,
-				CacheEnabled:            true,
-				CacheTTL:                60 * time.Second,
-			},
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"drivers":[{"id":"1001"},{"id":"2002"}],"merchants":[{"id":"1"},{"id":"2"}],"customer_id":1}`),
@@ -578,6 +580,7 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 	for _, tt := range tests {
 		mockFeast := &mocks.Client{}
 		mockCache := &mocks.Cache{}
+		logger.Debug("Test Case %", zap.String("title", tt.name))
 		for _, cc := range tt.cacheMocks {
 			keyByte, err := json.Marshal(cc.key)
 			require.NoError(t, err)
@@ -599,7 +602,13 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 			}
 
 		}
-		f, err := NewTransformer(mockFeast, tt.fields.config, &tt.options, logger, mockCache)
+		f, err := NewTransformer(mockFeast, tt.fields.config, &Options{
+			StatusMonitoringEnabled: true,
+			ValueMonitoringEnabled:  true,
+			BatchSize:               1,
+			CacheEnabled:            true,
+			CacheTTL:                60 * time.Second,
+		}, logger, mockCache)
 
 		assert.NoError(t, err)
 

@@ -15,11 +15,11 @@ type Cache struct {
 }
 
 const (
-	oneMB = 1024 * 1024
+	MB = 1024 * 1024
 )
 
 func NewCache(options Options) *Cache {
-	executor := freecache.NewCache(options.SizeInMB * oneMB)
+	executor := freecache.NewCache(options.SizeInMB * MB)
 	return &Cache{cacheExecutor: executor}
 }
 

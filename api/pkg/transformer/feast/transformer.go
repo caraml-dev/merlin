@@ -233,8 +233,8 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 	numOfBatch := int(math.Ceil(numOfBatchBeforeCeil))
 
 	batchResultChan := make(chan batchResult, numOfBatch)
-	feastColumns := t.getFeastColumns(config)
-	entityIndices := t.getEntityIndicesFromColumns(feastColumns, config.Entities)
+	columns := t.getColumnNames(config)
+	entityIndices := t.getEntityIndicesFromColumns(columns, config.Entities)
 	for i := 0; i < numOfBatch; i++ {
 		startIndex := i * t.options.BatchSize
 		endIndex := len(entityNotInCache)
@@ -281,7 +281,7 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 			}
 
 			batchResultChan <- batchResult{featuresData: featuresData, err: nil}
-		}(config.Project, batchedEntities, feastColumns)
+		}(config.Project, batchedEntities, columns)
 	}
 
 	data := cachedValues
@@ -295,12 +295,12 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 	}
 
 	return &FeastFeature{
-		Columns: feastColumns,
+		Columns: columns,
 		Data:    data,
 	}, nil
 }
 
-func (t *Transformer) getFeastColumns(config *transformer.FeatureTable) []string {
+func (t *Transformer) getColumnNames(config *transformer.FeatureTable) []string {
 	columns := make([]string, 0, len(config.Entities)+len(config.Features))
 	for _, entity := range config.Entities {
 		columns = append(columns, entity.Name)
