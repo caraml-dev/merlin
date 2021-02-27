@@ -130,11 +130,11 @@ def test_model_int():
         # wait till the server is up
         _wait_server_ready("http://localhost:8081/")
 
-        for request_file_json in os.listdir("payload"):
+        for request_file_json in os.listdir("benchmark"):
             if not request_file_json.endswith(".json"):
                 continue
 
-            with open(os.path.join("payload", request_file_json), "r") as f:
+            with open(os.path.join("benchmark", request_file_json), "r") as f:
                 req = json.load(f)
 
             resp = requests.post("http://localhost:8081/v1/models/model:predict",
@@ -161,7 +161,7 @@ def test_model_headers():
         # wait till the server is up
         _wait_server_ready("http://localhost:8081/")
 
-        with open(os.path.join("payload", "small.json"), "r") as f:
+        with open(os.path.join("benchmark", "small.json"), "r") as f:
             req = json.load(f)
 
         resp = requests.post("http://localhost:8081/v1/models/model:predict",
