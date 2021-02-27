@@ -16,6 +16,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/jinzhu/gorm"
@@ -144,6 +146,57 @@ func getVersionSearchTerms(query string) map[string]string {
 		}
 	}
 	return terms
+}
+
+// versionLabelsRegex is the regular expression to match the labels key and values in the version
+// query by labels. The accepted characters in label keys and values roughly follows that in
+// Kubernetes labels:
+// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names
+var versionLabelsRegex = regexp.MustCompile(`(?i)([a-z0-9A-Z-_]+)\s+in\s+\(([a-z0-9A-Z-_ ,]+)\),?\s*`)
+
+// generateLabelsWhereQuery parses the labels free text query in this format:
+//   <LABEL_KEY_1> IN (LABEL_VAL_1, LABEL_VAL_2,...), <LABEL_KEY_2> IN (LABEL_VAL1, LABEL_VAL2,...)
+// into a pair of SQL query template and arguments. The query template and arguments are
+// intended to be passed as arguments to go-orm db.Where method to filter rows by matching labels.
+//
+// In the free text query, label values for each key must be enclosed by a pair of parentheses.
+// Multiple label values for the same key are separated by "," character.
+//
+// For example, with the following labels query:
+//   animal in (cat, dog), color in (white)
+// generateLabelsWhereQuery will return query and args pairs which can be used to generate
+// this SQL statement:
+//   ( labels @> {"animal": "cat"} OR labels @> {"animal": "dog"} ) AND ( labels @> {"color": "white"} )
+// where the labels column is assumed to be in "jsonb" data type in Postgresql database.
+func generateLabelsWhereQuery(freeTextQuery string) (query string, args []interface{})  {
+	// queryParts from the SQL to match pair(s) of label key-value(s).
+	var queryParts []string
+	for _, match := range versionLabelsRegex.FindAllStringSubmatch(freeTextQuery, -1) {
+		if len(match) != 3 {
+			// match should have 3 items where the 2nd and 3rd item are the label key and label value
+			// respectively. If this is not the case, skip the match.
+			continue
+		}
+		// querySubparts form the SQL query to match the value(s) for a label key.
+		var querySubparts []string
+		// key, vals form the JSON object(s) to be matched.
+		key, vals := strings.TrimSpace(match[1]), match[2]
+		for _, val := range strings.Split(vals, ",") {
+			val = strings.TrimSpace(val)
+			if val != "" {
+				// queryParts form the template for the parameterized SQL query
+				querySubparts = append(querySubparts, "labels @> ?")
+				// argument for the parameterized query template
+				arg := fmt.Sprintf(`{"%s": "%s"}`, key, val)
+				args = append(args, arg)
+			}
+		}
+		if len(querySubparts) > 0 {
+			querySubpartsSQL := fmt.Sprintf("(%s)", strings.Join(querySubparts, " OR "))
+			queryParts = append(queryParts, querySubpartsSQL)
+		}
+	}
+	return strings.Join(queryParts, " AND "), args
 }
 
 func (service *versionsService) ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig, query VersionQuery) (versions []*models.Version, nextCursor string, err error) {

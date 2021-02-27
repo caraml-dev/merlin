@@ -83,3 +83,93 @@ func Test_getVersionSearchTerms(t *testing.T) {
 		})
 	}
 }
+
+func Test_generateLabelsWhereQuery(t *testing.T) {
+	type args struct {
+		freeTextQuery string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantQuery string
+		wantArgs  []interface{}
+	}{
+		{
+			name:      "empty query",
+			args:      args{freeTextQuery: ""},
+			wantQuery: "",
+			wantArgs:  nil,
+		},
+		{
+			name:      "empty label key, one label value",
+			args:      args{freeTextQuery: " in (GO-RIDE)"},
+			wantQuery: "",
+			wantArgs:  nil,
+		},
+		{
+			name:      "one label key, one label value",
+			args:      args{freeTextQuery: "service_type in (GO-RIDE)"},
+			wantQuery: "(labels @> ?)",
+			wantArgs:  []interface{}{`{"service_type": "GO-RIDE"}`},
+		},
+		{
+			name:      "one label key, one label value with unclosed parenthesis",
+			args:      args{freeTextQuery: "service_type in (GO-RIDE"},
+			wantQuery: "",
+			wantArgs:  nil,
+		},
+		{
+			name:      "one label key, empty value",
+			args:      args{freeTextQuery: "service_type in ()"},
+			wantQuery: "",
+			wantArgs:  nil,
+		},
+		{
+			name:      "one label key, one label value with invalid chars, should ignore parts before invalid chars",
+			args:      args{freeTextQuery: "service%%__type in (GO-RIDE)"},
+			wantQuery: "(labels @> ?)",
+			wantArgs:  []interface{}{`{"__type": "GO-RIDE"}`},
+		},
+		{
+			name:      "one label key, multiple label values",
+			args:      args{freeTextQuery: "service_type in (GO-RIDE, GO-CAR)"},
+			wantQuery: "(labels @> ? OR labels @> ?)",
+			wantArgs:  []interface{}{`{"service_type": "GO-RIDE"}`, `{"service_type": "GO-CAR"}`},
+		},
+		{
+			name:      "one label key, multiple label values with extra whitespaces and uppercase 'in'",
+			args:      args{freeTextQuery: "   service_type IN   (GO-RIDE  ,   GO-CAR )"},
+			wantQuery: "(labels @> ? OR labels @> ?)",
+			wantArgs:  []interface{}{`{"service_type": "GO-RIDE"}`, `{"service_type": "GO-CAR"}`},
+		},
+		{
+			name:      "multiple label keys and multiple label values",
+			args:      args{freeTextQuery: "service_type in (GO-RIDE, GO-CAR), service2-area in (S-9_G3)"},
+			wantQuery: "(labels @> ? OR labels @> ?) AND (labels @> ?)",
+			wantArgs:  []interface{}{`{"service_type": "GO-RIDE"}`, `{"service_type": "GO-CAR"}`, `{"service2-area": "S-9_G3"}`},
+		},
+		{
+			name:      "multiple label keys and multiple label values with empty keys",
+			args:      args{freeTextQuery: "service_type in (GO-RIDE, GO-CAR), service-area in (SG), in (foo)"},
+			wantQuery: "(labels @> ? OR labels @> ?) AND (labels @> ?)",
+			wantArgs:  []interface{}{`{"service_type": "GO-RIDE"}`, `{"service_type": "GO-CAR"}`, `{"service-area": "SG"}`},
+		},
+		{
+			name:      "multiple label keys and multiple label values with extra meaningless terms",
+			args:      args{freeTextQuery: "service_type in (GO-RIDE, GO-CAR), service-area in (SG), quick, brown in fox, moomin in (troll)"},
+			wantQuery: "(labels @> ? OR labels @> ?) AND (labels @> ?) AND (labels @> ?)",
+			wantArgs:  []interface{}{`{"service_type": "GO-RIDE"}`, `{"service_type": "GO-CAR"}`, `{"service-area": "SG"}`, `{"moomin": "troll"}`},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotQuery, gotArgs := generateLabelsWhereQuery(tt.args.freeTextQuery)
+			if gotQuery != tt.wantQuery {
+				t.Errorf("generateLabelsWhereQuery() gotQuery = %v, want %v", gotQuery, tt.wantQuery)
+			}
+			if !reflect.DeepEqual(gotArgs, tt.wantArgs) {
+				t.Errorf("generateLabelsWhereQuery() gotArgs = %v, want %v", gotArgs, tt.wantArgs)
+			}
+		})
+	}
+}
