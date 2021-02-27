@@ -103,6 +103,49 @@ func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search stri
 	return searchQuery
 }
 
+// getVersionSearchTerms parses a search query in this string format:
+//   <SEARCH_KEY_1>:<SEARCH_VAL_1> <SEARCH_KEY_2>:<SEARCH_VAL_2> ...
+// where pairs of search key-value are separated by whitespace, and returns
+// the search terms, a map of search key and the corresponding value.
+//
+// If the same search key is specified multiple times, the last one will override the former one.
+// Empty search key will be ignored since it has no meaning when searching.
+func getVersionSearchTerms(query string) map[string]string {
+	terms := map[string]string{}
+	tokens := strings.Split(query, ":")
+	key, val, nextKey := "", "" , ""
+	for i, token := range tokens {
+		token = strings.TrimSpace(token)
+		if i == 0 {
+			// First token is always the search key
+			key = token
+		} else if i == len(tokens) - 1 {
+			// Last token is always the search value
+			val = token
+		} else {
+			// Tokens in between contain both value for the current key and the next key
+			idx := strings.LastIndex(token, " ")
+			if idx >= 0 {
+				val = strings.TrimSpace(token[:idx])
+				nextKey = strings.TrimSpace(token[idx:])
+			} else {
+				// For cases like foo:bar:baz or foo::bar
+				val = ""
+				nextKey = token
+			}
+		}
+		if key != "" {
+			// Only consider non-empty keys because empty key has no meaning when searching
+			terms[key] = val
+		}
+		if i > 0 {
+			// For non-first token, it will contain value for the next key
+			key = nextKey
+		}
+	}
+	return terms
+}
+
 func (service *versionsService) ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig, query VersionQuery) (versions []*models.Version, nextCursor string, err error) {
 	dbQuery := service.buildListVersionsQuery(modelID, query)
 
