@@ -21,13 +21,18 @@ To install locally (including test dependency):
 
 ```bash
 pipenv shell
-make dev_install
+make setup
 ```
 
 To run all test
 
 ```bash
 make test
+```
+
+To dun benchmark
+```bash
+make benchmark
 ```
 
 ## Building Docker Image
