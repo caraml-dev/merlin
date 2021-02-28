@@ -17,6 +17,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/gojek/merlin/log"
 	"regexp"
 	"strings"
 
@@ -86,21 +87,28 @@ func (service *versionsService) buildListVersionsQuery(modelID models.ID, query 
 }
 
 func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search string) *gorm.DB {
-	// parse search query
-	//
-	searchComponents := strings.Split(search, ":")
-	// search query without specifying key
-	// currently will search only based on mlflow run_id, in the future can be searched on anything
-	if len(searchComponents) == 1 {
+	// If the search string does not contain any colons, assumes the user wants to look for
+	// a specific mlflow run_id.
+	if !strings.Contains(search, ":") {
 		return listQuery.Where("versions.mlflow_run_id = ?", search)
 	}
 
+	// Else searching by key "environment_name" or "labels" are supported. Other search keys are ignored.
 	searchQuery := listQuery
-	// if query has key e.g environment_name:id-dev
-	searchKey := searchComponents[0]
-	searchString := searchComponents[1]
-	if searchKey == "environment_name" {
-		searchQuery = listQuery.Joins("JOIN version_endpoints on version_endpoints.version_id = versions.id AND version_endpoints.version_model_id = versions.model_id AND version_endpoints.environment_name=? AND version_endpoints.status != ?", searchString, models.EndpointTerminated)
+	for key, val := range getVersionSearchTerms(search) {
+		switch key {
+		case "environment_name":
+			searchQuery = searchQuery.Joins(
+				"JOIN version_endpoints on version_endpoints.version_id = versions.id " +
+					"AND version_endpoints.version_model_id = versions.model_id " +
+					"AND version_endpoints.environment_name=? " +
+					"AND version_endpoints.status != ?", val, models.EndpointTerminated)
+		case "labels":
+			query, args := generateLabelsWhereQuery(val)
+			searchQuery = searchQuery.Where(query, args...)
+		default:
+			log.Debugf("Skipping unknown search key: " + key)
+		}
 	}
 	return searchQuery
 }
