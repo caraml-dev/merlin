@@ -151,7 +151,7 @@ def active_model() -> Optional[Model]:
 
 
 @contextmanager
-def new_model_version():
+def new_model_version(labels: Dict[str, str] = None):
     """
     Create new model version under currently active model
 
@@ -163,7 +163,8 @@ def new_model_version():
         _check_active_project()
         _check_active_model()
         v = _merlin_client.new_model_version(_active_model.name,
-                                             _active_project.name)
+                                             _active_project.name,
+                                             labels)
         v.start()
         global _active_model_version
         _active_model_version = v

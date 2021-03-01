@@ -210,19 +210,20 @@ class MerlinClient:
 
         return Model(model, prj, self._api_client)
 
-    def new_model_version(self, model_name: str, project_name: str) \
+    def new_model_version(self, model_name: str, project_name: str, labels: Dict[str, str] = None) \
             -> ModelVersion:
         """
         Create new model version for the given model and project
 
         :param model_name:
         :param project_name:
+        :param labels:
         :return:
         """
         mdl = self.get_model(model_name, project_name)
         if mdl is None:
             raise ValueError(f"Model with name: {model_name} is not found")
-        return mdl.new_model_version()
+        return mdl.new_model_version(labels=labels)
 
     def deploy(self, model_version: ModelVersion,
                environment_name: str = None,

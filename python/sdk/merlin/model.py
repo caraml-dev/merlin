@@ -369,14 +369,15 @@ class Model:
             result.append(ModelVersion(v, self, self._api_client))
         return result, next_cursor
 
-    def new_model_version(self) -> 'ModelVersion':
+    def new_model_version(self, labels: Dict[str, str] = None) -> 'ModelVersion':
         """
         Create a new version of this model
 
+        :param labels:
         :return:  new ModelVersion
         """
         version_api = VersionApi(self._api_client)
-        v = version_api.models_model_id_versions_post(int(self.id))
+        v = version_api.models_model_id_versions_post(int(self.id), body={"labels": labels})
         return ModelVersion(v, self, self._api_client)
 
     def serve_traffic(self, traffic_rule: Dict['VersionEndpoint', int],
@@ -589,6 +590,7 @@ class ModelVersion:
         self._properties = version.properties
         self._model = model
         self._artifact_uri = version.artifact_uri
+        self._labels = version.labels
         mlflow.set_tracking_uri(model.project.mlflow_tracking_url)
 
     @property
@@ -641,6 +643,10 @@ class ModelVersion:
     @property
     def artifact_uri(self):
         return self._artifact_uri
+
+    @property
+    def labels(self):
+        return self._labels
 
     @property
     def url(self) -> str:
