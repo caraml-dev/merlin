@@ -28,7 +28,7 @@ pipenv run pytest -n=1 -W=ignore --cov=merlin test/integration_test.py::test_pyt
 # pipenv run pytest -n=1 -W=ignore --cov=merlin test/integration_test.py::test_trasformer_pytorch_logger
 kubectl get inferenceservice -o yaml -n ${E2E_PROJECT_NAME}
 kubectl get pods -n ${E2E_PROJECT_NAME}
-# kubectl logs kfserving-controller-manager-0 manager -n kfserving-system
+kubectl logs kfserving-controller-manager-0 manager -n kfserving-system
 kubectl logs -l gojek.com/app=pytorch-logger -c inferenceservice-logger -n ${E2E_PROJECT_NAME}
 kubectl logs -l gojek.com/app=pytorch-logger -c kfserving-container -n ${E2E_PROJECT_NAME}
 

@@ -2,20 +2,20 @@
 
 set -ex
 
-export CLUSTER_NAME=dev
-export KIND_NODE_VERSION=v1.16.15
-export VAULT_VERSION=0.7.0
-export ISTIO_VERSION=1.5.4
-export KNATIVE_VERSION=v0.14.3
-export KNATIVE_NET_ISTIO_VERSION=v0.15.0
-export CERT_MANAGER_VERSION=v1.1.0
-export KFSERVING_VERSION=v0.4.0
+  export CLUSTER_NAME=dev
+  export KIND_NODE_VERSION=v1.16.15
+  export VAULT_VERSION=0.7.0
+  export ISTIO_VERSION=1.5.4
+  export KNATIVE_VERSION=v0.14.3
+  export KNATIVE_NET_ISTIO_VERSION=v0.15.0
+  export CERT_MANAGER_VERSION=v1.1.0
+  export KFSERVING_VERSION=v0.4.0
 
-export VAULT_VERSION=0.7.0
-export MINIO_VERSION=7.0.2
+  export VAULT_VERSION=0.7.0
+  export MINIO_VERSION=7.0.2
 
-export OAUTH_CLIENT_ID="<put your oauth client id here>"
-export MERLIN_VERSION=v0.10.0
+  export OAUTH_CLIENT_ID="<put your oauth client id here>"
+  export MERLIN_VERSION=v0.10.0
 
 ########################################
 # Install tools
