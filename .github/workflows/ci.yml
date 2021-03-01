@@ -1,10 +1,13 @@
 name: ci
-on: pull_request
+on: [pull_request, pull_request_target, push]
+
 jobs:
   lint-ui:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout to the target branch
+        uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: 12
@@ -14,6 +17,7 @@ jobs:
         run: make lint-ui
 
   lint-api:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -28,6 +32,7 @@ jobs:
         run: make lint-api
 
   build-ui:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -40,6 +45,7 @@ jobs:
         run: make build-ui
 
   build-api:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -52,6 +58,7 @@ jobs:
         run: make build-api
 
   unit-test-python-sdk:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -70,6 +77,17 @@ jobs:
         run: make unit-test
 
   integration-test-api:
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      ) || (
+        github.event_name == 'push' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      )
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -93,33 +111,24 @@ jobs:
           POSTGRES_PASSWORD: merlin
         run: make it-test-api-ci
 
-  publish-python-sdk:
-    if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
-      - name: Install dependencies
-        working-directory: ./python/sdk
-        run: |
-          python -m pip install --upgrade pip
-          pip install setuptools wheel twine
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        working-directory: ./python/sdk
-        run: |
-          python setup.py sdist bdist_wheel
-          twine upload dist/*
-
   publish-merlin-docker:
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      ) || (
+        github.event_name == 'push' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      )
     runs-on: ubuntu-latest
     needs: integration-test-api
     steps:
       - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build and push Merlin Docker image
         uses: docker/build-push-action@v1
         with:
@@ -127,12 +136,25 @@ jobs:
           password: ${{ secrets.GHCR_TOKEN }}
           registry: ghcr.io
           build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
-          tag_with_ref: true
+          tags: ${{ env.branch_name }}
 
   publish-merlin-transformer-docker:
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      ) || (
+        github.event_name == 'push' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build and push Merlin Standard Transformer Docker image
         uses: docker/build-push-action@v1
         with:
@@ -142,12 +164,25 @@ jobs:
           repository: gojek/merlin-transformer
           build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
           dockerfile: transformer.Dockerfile
-          tag_with_ref: true
+          tags: ${{ env.branch_name }}
 
   publish-pyfunc-base-docker:
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      ) || (
+        github.event_name == 'push' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build and push PyFunc Base Docker image
         uses: docker/build-push-action@v1
         with:
@@ -157,13 +192,25 @@ jobs:
           repository: gojek/merlin-pyfunc-base
           path: python/pyfunc-server
           dockerfile: python/pyfunc-server/base.Dockerfile
-          tags: dev
-          tag_with_ref: true
+          tags: ${{ env.branch_name }}
 
   publish-pyspark-base-docker:
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      ) || (
+        github.event_name == 'push' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build and push PySpark Base Docker image
         uses: docker/build-push-action@v1
         with:
@@ -173,9 +220,20 @@ jobs:
           repository: gojek/merlin-pyspark-base
           path: python
           dockerfile: python/batch-predictor/docker/base.Dockerfile
-          tag_with_ref: true
+          tags: ${{ env.branch_name }}
 
   publish-mlflow-docker:
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      ) || (
+        github.event_name == 'push' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -192,6 +250,17 @@ jobs:
           tags: 1.3.0
 
   e2e-test:
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      ) || (
+        github.event_name == 'push' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      )
     runs-on: ubuntu-latest
     needs: publish-merlin-docker
     steps:
@@ -202,7 +271,6 @@ jobs:
         with:
           repository: gojek/mlp
           ref: main
-          token: ${{ secrets.DSP_REPO_TOKEN }}
           path: mlp
       - uses: actions/setup-go@v2
         with:
