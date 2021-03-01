@@ -1,6 +1,6 @@
 merlin:
   environment: dev
-  loggerDestinationURL: "http://logger.default"
+  loggerDestinationURL: "http://message-dumper.mlp.svc.cluster.local"
   image:
     tag: 0.7.0
   replicaCount: 1

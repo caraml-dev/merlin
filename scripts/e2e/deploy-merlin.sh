@@ -56,4 +56,19 @@ EOF
 kubectl patch service/merlin-mlflow -n mlp --patch="$(cat patch-merlin-mlflow-nodeport.yaml)"
 sleep 12
 
+cat <<EOF > ./logger-sample.yaml
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: message-dumper
+  namespace: mlp
+spec:
+  template:
+    spec:
+      containers:
+      - image: gcr.io/knative-releases/knative.dev/eventing-contrib/cmd/event_display
+EOF
+kubectl apply -f logger-sample.yaml
+sleep 12
+
 set +ex
