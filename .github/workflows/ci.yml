@@ -127,6 +127,8 @@ jobs:
     needs: integration-test-api
     steps:
       - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build and push Merlin Docker image
         uses: docker/build-push-action@v1
         with:
@@ -134,7 +136,7 @@ jobs:
           password: ${{ secrets.GHCR_TOKEN }}
           registry: ghcr.io
           build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
-          tags: ${{ github.head_ref }}
+          tags: ${{ env.branch_name }}
 
   publish-merlin-transformer-docker:
     if: >-
@@ -151,6 +153,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build and push Merlin Standard Transformer Docker image
         uses: docker/build-push-action@v1
         with:
@@ -160,7 +164,7 @@ jobs:
           repository: gojek/merlin-transformer
           build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
           dockerfile: transformer.Dockerfile
-          tags: ${{ github.head_ref }}
+          tags: ${{ env.branch_name }}
 
   publish-pyfunc-base-docker:
     if: >-
@@ -177,6 +181,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build and push PyFunc Base Docker image
         uses: docker/build-push-action@v1
         with:
@@ -186,7 +192,7 @@ jobs:
           repository: gojek/merlin-pyfunc-base
           path: python/pyfunc-server
           dockerfile: python/pyfunc-server/base.Dockerfile
-          tags: ${{ github.head_ref }}
+          tags: ${{ env.branch_name }}
 
   publish-pyspark-base-docker:
     if: >-
@@ -203,6 +209,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build and push PySpark Base Docker image
         uses: docker/build-push-action@v1
         with:
@@ -212,7 +220,7 @@ jobs:
           repository: gojek/merlin-pyspark-base
           path: python
           dockerfile: python/batch-predictor/docker/base.Dockerfile
-          tags: ${{ github.head_ref }}
+          tags: ${{ env.branch_name }}
 
   publish-mlflow-docker:
     if: >-
