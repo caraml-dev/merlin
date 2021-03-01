@@ -263,7 +263,6 @@ jobs:
         with:
           repository: gojek/mlp
           ref: main
-          token: ${{ secrets.DSP_REPO_TOKEN }}
           path: mlp
       - uses: actions/setup-go@v2
         with:
