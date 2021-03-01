@@ -9,6 +9,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/antonmedv/expr v1.8.9
 	github.com/buger/jsonparser v1.1.1
+	github.com/coocood/freecache v1.1.1
 	github.com/feast-dev/feast/sdk/go v0.9.2
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-openapi/spec v0.19.9 // indirect
