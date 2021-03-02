@@ -511,6 +511,8 @@ def test_pytorch_logger(integration_test_url, project_name, use_google_oauth):
     assert resp.json() is not None
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
+    undeploy_all_version()
+
 
 @pytest.mark.integration
 def test_trasformer_pytorch_logger(integration_test_url, project_name, use_google_oauth):
@@ -550,24 +552,24 @@ def test_trasformer_pytorch_logger(integration_test_url, project_name, use_googl
     sleep(5)
     resp = requests.post(f"{endpoint.url}", json=req)
 
-    # assert resp.status_code == 200
-    # assert resp.json() is not None
-    # assert len(resp.json()['predictions']) == len(req['instances'])
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()['predictions']) == len(req['instances'])
 
-    # model_endpoint = merlin.serve_traffic({endpoint: 100})
-    # sleep(5)
-    # resp = requests.post(f"{model_endpoint.url}", json=req)
+    model_endpoint = merlin.serve_traffic({endpoint: 100})
+    sleep(5)
+    resp = requests.post(f"{model_endpoint.url}", json=req)
 
-    # assert resp.status_code == 200
-    # assert resp.json() is not None
-    # assert len(resp.json()['predictions']) == len(req['instances'])
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()['predictions']) == len(req['instances'])
 
-    # # Try to undeploy serving model version. It must be fail
-    # with pytest.raises(Exception):
-    #     assert merlin.undeploy(v)
+    # Try to undeploy serving model version. It must be fail
+    with pytest.raises(Exception):
+        assert merlin.undeploy(v)
 
-    # # Undeploy other running model version endpoints
-    # undeploy_all_version()
+    # Undeploy other running model version endpoints
+    undeploy_all_version()
 
 
 @pytest.mark.integration

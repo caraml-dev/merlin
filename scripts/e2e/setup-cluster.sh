@@ -213,7 +213,8 @@ kubectl apply --filename=https://raw.githubusercontent.com/kubeflow/kfserving/ma
 cat <<EOF > ./patch-config-inferenceservice.json
 {
   "data": {
-    "storageInitializer": "{\n\"image\":\"ghcr.io/ariefrahmansyah/kfserving-storage-init:latest\",\n\"memoryRequest\":\"100Mi\",\n\"memoryLimit\":\"1Gi\",\n\"cpuRequest\":\"100m\",\n\"cpuLimit\":\"1\"\n}"
+    "storageInitializer": "{\n\"image\":\"ghcr.io/ariefrahmansyah/kfserving-storage-init:latest\",\n\"memoryRequest\":\"100Mi\",\n\"memoryLimit\":\"1Gi\",\n\"cpuRequest\":\"100m\",\n\"cpuLimit\":\"1\"\n}",
+    "logger": "{\n\"image\":\"ghcr.io/gojek/logger:v0.4.0-predictor-health-check\",\n\"memoryRequest\":\"100Mi\",\n\"memoryLimit\":\"1Gi\",\n\"cpuRequest\":\"100m\",\n\"cpuLimit\":\"1\",\n\"defaultUrl\":\"http://default-broker\"\n}"
   }
 }
 EOF

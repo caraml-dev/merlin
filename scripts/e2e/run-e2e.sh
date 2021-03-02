@@ -22,15 +22,4 @@ curl "${E2E_MERLIN_URL}/v1/projects"
 cd ./merlin/python/sdk
 pip install pipenv
 pipenv install --dev --skip-lock
-# pipenv run pytest -n=1 -W=ignore --cov=merlin test/integration_test.py -k 'not test_standard_transformer_feast_pyfunc'
-# pipenv run pytest -n=1 -W=ignore --cov=merlin test/pyfunc_integration_test.py 
-pipenv run pytest -n=1 -W=ignore --cov=merlin test/integration_test.py::test_pytorch_logger
-# pipenv run pytest -n=1 -W=ignore --cov=merlin test/integration_test.py::test_trasformer_pytorch_logger
-kubectl get inferenceservice -o yaml -n ${E2E_PROJECT_NAME}
-kubectl get pods -n ${E2E_PROJECT_NAME}
-kubectl logs kfserving-controller-manager-0 manager -n kfserving-system
-kubectl logs -l gojek.com/app=pytorch-logger -c inferenceservice-logger -n ${E2E_PROJECT_NAME}
-kubectl logs -l gojek.com/app=pytorch-logger -c kfserving-container -n ${E2E_PROJECT_NAME}
-
-# kubectl logs -l gojek.com/app=transformer-logger -c inferenceservice-logger -n ${E2E_PROJECT_NAME}
-# kubectl logs -l gojek.com/app=transformer-logger -c kfserving-container -n ${E2E_PROJECT_NAME}
+pipenv run pytest -n=1 -W=ignore --cov=merlin test/integration_test.py -k 'not test_standard_transformer_feast_pyfunc'
