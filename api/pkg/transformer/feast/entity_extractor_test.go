@@ -24,6 +24,7 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		"booleanString" : "false",
 		"latitude": 1.0,
 		"longitude": 2.0,
+		"details": "{\"merchant_id\": 9001}",
 		"struct" : {
                 "integer" : 1234,
 				"float" : 1234.111,
@@ -329,6 +330,20 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 			},
 			[]*feastType.Value{
 				feast.StrVal(geohash.Encode(1.0, 2.0)),
+			},
+			nil,
+		},
+		{
+			"JsonExtract udf",
+			&transformer.Entity{
+				Name:      "jsonextract",
+				ValueType: "STRING",
+				Extractor: &transformer.Entity_Udf{
+					Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal("9001"),
 			},
 			nil,
 		},
