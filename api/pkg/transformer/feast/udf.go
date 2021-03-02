@@ -1,6 +1,7 @@
 package feast
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/antonmedv/expr"
@@ -26,6 +27,36 @@ func (env UdfEnv) Geohash(latitudeJsonPath, longitudeJsonPath string, precision 
 		Value: value,
 		Error: err,
 	}
+}
+
+func (env UdfEnv) JsonExtract(keyJsonPath, nestedJsonPath string) UdfResult {
+	value, err := jsonExtract(env.UnmarshalledJsonRequest, keyJsonPath, nestedJsonPath)
+	return UdfResult{
+		Value: value,
+		Error: err,
+	}
+}
+
+func jsonExtract(jsonRequestBody interface{}, keyJsonPath, nestedJsonPath string) (interface{}, error) {
+	node, err := jsonpath.JsonPathLookup(jsonRequestBody, keyJsonPath)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeString, ok := node.(string)
+	if ok != true {
+		return nil, fmt.Errorf("the value specified in path `%s` should be of string type", keyJsonPath)
+	}
+	var js map[string]interface{}
+	if err := json.Unmarshal([]byte(nodeString), &js); err != nil {
+		return nil, fmt.Errorf("the value specified in path `%s` should be a valid JSON", keyJsonPath)
+	}
+
+	innerNode, err := jsonpath.JsonPathLookup(js, nestedJsonPath)
+	if err != nil {
+		return nil, err
+	}
+	return innerNode, nil
 }
 
 func toFloat64(o interface{}) (float64, error) {
