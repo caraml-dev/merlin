@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
+	"github.com/golang/geo/s2"
 	"github.com/mmcloughlin/geohash"
 	"github.com/oliveagle/jsonpath"
 	"reflect"
@@ -22,10 +23,28 @@ type UdfEnv struct {
 }
 
 func (env UdfEnv) Geohash(latitudeJsonPath, longitudeJsonPath string, precision uint) UdfResult {
-	value, err := extractGeohash(env.UnmarshalledJsonRequest, latitudeJsonPath, longitudeJsonPath, precision)
+	latLong, err := extractLatLong(env.UnmarshalledJsonRequest, latitudeJsonPath, longitudeJsonPath)
+	if err != nil {
+		return UdfResult{
+			Error: err,
+		}
+	}
+	switch latLong.(type) {
+	case []*LatLong:
+		var value []string
+		for _, ll := range latLong.([]*LatLong) {
+			value = append(value, ll.toGeoHash(precision))
+		}
+		return UdfResult{
+			Value: value,
+		}
+	case *LatLong:
+		return UdfResult{
+			Value: latLong.(*LatLong).toGeoHash(precision),
+		}
+	}
 	return UdfResult{
-		Value: value,
-		Error: err,
+		Error: fmt.Errorf("unknown type from type casting"),
 	}
 }
 
@@ -34,6 +53,32 @@ func (env UdfEnv) JsonExtract(keyJsonPath, nestedJsonPath string) UdfResult {
 	return UdfResult{
 		Value: value,
 		Error: err,
+	}
+}
+
+func (env UdfEnv) S2ID(latitudeJsonPath, longitudeJsonPath string, level int) UdfResult {
+	latLong, err := extractLatLong(env.UnmarshalledJsonRequest, latitudeJsonPath, longitudeJsonPath)
+	if err != nil {
+		return UdfResult{
+			Error: err,
+		}
+	}
+	switch latLong.(type) {
+	case []*LatLong:
+		var value []string
+		for _, ll := range latLong.([]*LatLong) {
+			value = append(value, ll.toS2ID(level))
+		}
+		return UdfResult{
+			Value: value,
+		}
+	case *LatLong:
+		return UdfResult{
+			Value: latLong.(*LatLong).toS2ID(level),
+		}
+	}
+	return UdfResult{
+		Error: fmt.Errorf("unknown type from type casting"),
 	}
 }
 
@@ -79,7 +124,12 @@ func toFloat64(o interface{}) (float64, error) {
 
 }
 
-func extractGeohash(jsonRequestBody interface{}, latitudeJsonPath, longitudeJsonPath string, precision uint) (interface{}, error) {
+type LatLong struct {
+	lat float64
+	long float64
+}
+
+func extractLatLong(jsonRequestBody interface{}, latitudeJsonPath, longitudeJsonPath string) (interface{}, error) {
 	latitude, err := jsonpath.JsonPathLookup(jsonRequestBody, latitudeJsonPath)
 	if err != nil {
 		return nil, err
@@ -94,7 +144,7 @@ func extractGeohash(jsonRequestBody interface{}, latitudeJsonPath, longitudeJson
 		return nil, errors.New("latitude and longitude must have the same types")
 	}
 
-	var geohashValue interface{}
+	var latLong interface{}
 
 	switch latitude.(type) {
 	case []interface{}:
@@ -106,7 +156,7 @@ func extractGeohash(jsonRequestBody interface{}, latitudeJsonPath, longitudeJson
 			return nil, errors.New("empty arrays of latitudes and longitude provided")
 		}
 
-		geohashArray := make([]string, len(latitude.([]interface{})))
+		var latLongArray []*LatLong
 		for index, lat := range latitude.([]interface{}) {
 			latitudeFloat, err := toFloat64(lat)
 			if err != nil {
@@ -117,9 +167,12 @@ func extractGeohash(jsonRequestBody interface{}, latitudeJsonPath, longitudeJson
 			if err != nil {
 				return nil, err
 			}
-			geohashArray[index] = geohash.EncodeWithPrecision(latitudeFloat, longitudeFloat, precision)
+			latLongArray = append(latLongArray, &LatLong{
+				lat:  latitudeFloat,
+				long: longitudeFloat,
+			})
 		}
-		geohashValue = geohashArray
+		latLong = latLongArray
 
 	case interface{}:
 		latitudeFloat, err := toFloat64(latitude)
@@ -130,11 +183,21 @@ func extractGeohash(jsonRequestBody interface{}, latitudeJsonPath, longitudeJson
 		if err != nil {
 			return nil, err
 		}
-		geohashValue = geohash.EncodeWithPrecision(latitudeFloat, longitudeFloat, precision)
+		latLong = &LatLong{
+			lat:  latitudeFloat,
+			long: longitudeFloat,
+		}
 	}
 
-	return geohashValue, nil
+	return latLong, nil
+}
 
+func (l *LatLong) toGeoHash(precision uint) string {
+	return geohash.EncodeWithPrecision(l.lat, l.long, precision)
+}
+
+func (l *LatLong) toS2ID(level int) string {
+	return strconv.FormatUint(s2.CellFromLatLng(s2.LatLngFromDegrees(l.lat, l.long)).ID().Parent(level).Pos(), 10)
 }
 
 func mustCompileUdf(udfString string) *vm.Program {
