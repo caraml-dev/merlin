@@ -1132,6 +1132,65 @@ func TestTransformer_Transform(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "jsonextract entity from nested json string",
+			fields: fields{
+				config: &transformer.StandardTransformerConfig{
+					TransformerConfig: &transformer.TransformerConfig{
+						Feast: []*transformer.FeatureTable{
+							{
+								Project: "jsonextract",
+								Entities: []*transformer.Entity{
+									{
+										Name:      "jsonextract",
+										ValueType: "STRING",
+										Extractor: &transformer.Entity_Udf{
+											Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
+										},
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "geohash_statistics:average_daily_rides",
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"details": "{\"merchant_id\": 9001}"}`),
+			},
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "jsonextract",
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
+										"jsonextract":                                feast.DoubleVal(9001),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"jsonextract":                                serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    []byte(`{"details": "{\"merchant_id\": 9001}","feast_features":{"jsonextract":{"columns":["jsonextract","geohash_statistics:average_daily_rides"],"data":[[9001,3.2]]}}}`),
+			wantErr: false,
+		},
+		{
 			name: "one config: retrieve multiple entities, one feature, batch",
 			fields: fields{
 				config: &transformer.StandardTransformerConfig{
@@ -1266,6 +1325,26 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "1 entity with jsonextract UDF",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"details": "{\"merchant_id\": 9001}"}`),
+				configEntities: []*transformer.Entity{
+					{
+						Name:      "customer_id",
+						ValueType: "INT64",
+						Extractor: &transformer.Entity_Udf{
+							Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
+						},
+					},
+				},
+			},
+			want: []feast.Row{
+				{"customer_id": feast.Int64Val(9001)},
+			},
+			wantErr: false,
+		},
+		{
 			name: "1 entity with multiple values",
 			args: args{
 				ctx:     context.Background(),
@@ -1314,7 +1393,7 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "2 entities with the fisrt one has 2 values",
+			name: "2 entities with the first one has 2 values",
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":[1111,2222],"merchant_id":"M111"}`),

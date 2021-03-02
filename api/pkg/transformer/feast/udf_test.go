@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/mmcloughlin/geohash"
 	"github.com/stretchr/testify/assert"
+	"fmt"
 	"testing"
 )
 
@@ -102,6 +103,81 @@ func TestExtractGeohash(t *testing.T) {
 				}
 			}
 			assert.Equal(t, test.expValue, actual)
+		})
+	}
+}
+
+func TestJsonExtract(t *testing.T) {
+	testJsonString := []byte(`{
+		"details": "{\"merchant_id\": 9001}",
+		"nested": "{\"child_node\": { \"grandchild_node\": \"gen-z\"}}",
+		"not_json": "i_am_not_json_string",
+		"not_string": 1024,
+		"array": "{\"child_node\": { \"array\": [1, 2]}}"
+	}`)
+	var testJsonUnmarshallled interface{}
+	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
+	if err != nil {
+		panic(err)
+	}
+
+	tests := []struct {
+		name           string
+		keyJsonPath    string
+		nestedJsonPath string
+		extractedValue interface{}
+		expError       error
+	}{
+		{
+			name:           "should be able to extract value from JSON string",
+			keyJsonPath:    "$.details",
+			nestedJsonPath: "$.merchant_id",
+			extractedValue: float64(9001),
+		},
+		{
+			name:           "should be able to extract value using nested key from JSON string",
+			keyJsonPath:    "$.nested",
+			nestedJsonPath: "$.child_node.grandchild_node",
+			extractedValue: "gen-z",
+		},
+		{
+			name:           "should be able to extract array value using nested key from JSON string",
+			keyJsonPath:    "$.array",
+			nestedJsonPath: "$.child_node.array[*]",
+			extractedValue: []interface {}{float64(1), float64(2)},
+		},
+		{
+			name:           "should throw error when value specified by key does not exist in nested JSON",
+			keyJsonPath:    "$.nested",
+			nestedJsonPath: "$.child_node.does_not_exist_node",
+			expError: fmt.Errorf("key error: does_not_exist_node not found in object"),
+		},
+		{
+			name:           "should throw error when value obtained by key is not valid json",
+			keyJsonPath:    "$.not_json",
+			nestedJsonPath: "$.not_exist",
+			expError: fmt.Errorf("the value specified in path `$.not_json` should be a valid JSON"),
+		},
+		{
+			name:           "should throw error when value obtained by key is not string",
+			keyJsonPath:    "$.not_string",
+			nestedJsonPath: "$.not_exist",
+			expError: fmt.Errorf("the value specified in path `$.not_string` should be of string type"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual, err := jsonExtract(testJsonUnmarshallled, test.keyJsonPath, test.nestedJsonPath)
+			if err != nil {
+				if test.expError != nil {
+					assert.EqualError(t, err, test.expError.Error())
+					return
+				} else {
+					assert.Fail(t, err.Error())
+				}
+			}
+			assert.Equal(t, test.extractedValue, actual)
 		})
 	}
 }
