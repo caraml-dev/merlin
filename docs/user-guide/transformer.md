@@ -151,7 +151,7 @@ Config
 ```yaml
 - name: s2id
   valueType: STRING
-  udf: Geohash($.latitude, $.longitude, 12)
+  udf: S2ID($.latitude, $.longitude, 12)
 ```
 
 Output: `"1154732743855177728"`
