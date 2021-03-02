@@ -36,7 +36,7 @@ setup(
         "cloudpickle==1.2.2",
         "merlin-sdk==0.10.0",
         "prometheus_client==0.7.1",
-        "uvloop>=0.14.0",
+        "uvloop>=0.15.2",
         "orjson==2.6.8"
     ],
     tests_require=tests_require,
