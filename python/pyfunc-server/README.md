@@ -30,7 +30,7 @@ To run all test
 make test
 ```
 
-To dun benchmark
+To run benchmark
 ```bash
 make benchmark
 ```
