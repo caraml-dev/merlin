@@ -20,6 +20,7 @@ require (
 	github.com/gojek/merlin-pyspark-app v0.0.3
 	github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8
 	github.com/golang-migrate/migrate/v4 v4.11.0
+	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-containerregistry v0.0.0-20191009212737-d753c5604768
 	github.com/google/uuid v1.1.1

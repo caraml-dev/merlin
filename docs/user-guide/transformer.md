@@ -134,6 +134,28 @@ Config
 
 Output: `"9001"`
 
+#### S2ID
+Takes in JsonPath to latitude and longitude, and an additional level parameter to generate the s2id
+
+##### Example
+
+Input
+```json
+{
+  "latitude":1.0,
+  "longitude":2.0
+}
+```
+
+Config
+```yaml
+- name: s2id
+  valueType: STRING
+  udf: Geohash($.latitude, $.longitude, 12)
+```
+
+Output: `"1154732743855177728"`
+
 ### Standard Transformer Response Output
 
 The output of the standard transformer becomes the input to your model. Here’s we describe how it looks like so you can consume it correctly in your model.
