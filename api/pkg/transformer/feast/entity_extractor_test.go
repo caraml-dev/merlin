@@ -348,6 +348,20 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 			nil,
 		},
 		{
+			"S2ID udf",
+			&transformer.Entity{
+				Name:      "s2id",
+				ValueType: "STRING",
+				Extractor: &transformer.Entity_Udf{
+					Udf: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal("1154732743855177728"),
+			},
+			nil,
+		},
+		{
 			"unsupported feast type",
 			&transformer.Entity{
 				Name:      "my_entity",
