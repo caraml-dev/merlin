@@ -7,7 +7,9 @@ require (
 	github.com/GoogleCloudPlatform/spark-on-k8s-operator v0.0.0-20200424034326-7cd886c7ec44
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/antihax/optional v1.0.0
+	github.com/antonmedv/expr v1.8.9
 	github.com/buger/jsonparser v1.1.1
+	github.com/coocood/freecache v1.1.1
 	github.com/feast-dev/feast/sdk/go v0.9.2
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-openapi/spec v0.19.9 // indirect
@@ -18,6 +20,7 @@ require (
 	github.com/gojek/merlin-pyspark-app v0.0.3
 	github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8
 	github.com/golang-migrate/migrate/v4 v4.11.0
+	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-containerregistry v0.0.0-20191009212737-d753c5604768
 	github.com/google/uuid v1.1.1
@@ -30,6 +33,7 @@ require (
 	github.com/jinzhu/gorm v1.9.11
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kubeflow/kfserving v0.4.1
+	github.com/mmcloughlin/geohash v0.10.0
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0

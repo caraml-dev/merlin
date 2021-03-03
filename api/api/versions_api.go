@@ -21,7 +21,6 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/mlflow"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/service"
 )
@@ -100,8 +99,13 @@ func (c *VersionsController) ListVersions(r *http.Request, vars map[string]strin
 	return OkWithHeaders(versions, responseHeaders)
 }
 
-func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {
+func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
+
+	versionPost, ok := body.(*models.VersionPost)
+	if !ok {
+		return BadRequest("Unable to parse request body")
+	}
 
 	modelID, _ := models.ParseID(vars["model_id"])
 
@@ -110,8 +114,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
 
-	mlflowClient := mlflow.NewClient(nil, model.Project.MlflowTrackingUrl)
-	run, err := mlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentID))
+	run, err := c.MlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentID))
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to create mlflow run: %s", err.Error()))
 	}
@@ -120,6 +123,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 		ModelID:     modelID,
 		RunID:       run.Info.RunID,
 		ArtifactURI: run.Info.ArtifactURI,
+		Labels:      versionPost.Labels,
 	}
 
 	version, _ = c.VersionsService.Save(ctx, version, c.MonitoringConfig)

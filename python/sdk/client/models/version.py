@@ -38,6 +38,7 @@ class Version(object):
         'artifact_uri': 'str',
         'endpoints': 'list[VersionEndpoint]',
         'properties': 'object',
+        'labels': 'dict(str, str)',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -50,11 +51,12 @@ class Version(object):
         'artifact_uri': 'artifact_uri',
         'endpoints': 'endpoints',
         'properties': 'properties',
+        'labels': 'labels',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, model_id=None, mlflow_run_id=None, mlflow_url=None, artifact_uri=None, endpoints=None, properties=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, id=None, model_id=None, mlflow_run_id=None, mlflow_url=None, artifact_uri=None, endpoints=None, properties=None, labels=None, created_at=None, updated_at=None):  # noqa: E501
         """Version - a model defined in Swagger"""  # noqa: E501
 
         self._id = None
@@ -64,6 +66,7 @@ class Version(object):
         self._artifact_uri = None
         self._endpoints = None
         self._properties = None
+        self._labels = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -82,6 +85,8 @@ class Version(object):
             self.endpoints = endpoints
         if properties is not None:
             self.properties = properties
+        if labels is not None:
+            self.labels = labels
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -233,6 +238,27 @@ class Version(object):
         """
 
         self._properties = properties
+
+    @property
+    def labels(self):
+        """Gets the labels of this Version.  # noqa: E501
+
+
+        :return: The labels of this Version.  # noqa: E501
+        :rtype: dict(str, str)
+        """
+        return self._labels
+
+    @labels.setter
+    def labels(self, labels):
+        """Sets the labels of this Version.
+
+
+        :param labels: The labels of this Version.  # noqa: E501
+        :type: dict(str, str)
+        """
+
+        self._labels = labels
 
     @property
     def created_at(self):

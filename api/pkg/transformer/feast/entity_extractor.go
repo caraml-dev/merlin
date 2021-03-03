@@ -2,6 +2,8 @@ package feast
 
 import (
 	"fmt"
+	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/vm"
 	"strconv"
 
 	feast "github.com/feast-dev/feast/sdk/go"
@@ -11,18 +13,36 @@ import (
 	"github.com/gojek/merlin/pkg/transformer"
 )
 
-func getValuesFromJSONPayload(nodesBody interface{}, entity *transformer.Entity, compiledJsonPath *jsonpath.Compiled) ([]*feastType.Value, error) {
+func getValuesFromJSONPayload(nodesBody interface{}, entity *transformer.Entity, compiledJsonPath *jsonpath.Compiled, udf *vm.Program) ([]*feastType.Value, error) {
 	feastValType := feastType.ValueType_Enum(feastType.ValueType_Enum_value[entity.ValueType])
 
-	o, err := compiledJsonPath.Lookup(nodesBody)
-	if err != nil {
-		return nil, err
+	var entityVal interface{}
+	switch entity.Extractor.(type) {
+	case *transformer.Entity_JsonPath:
+		entityValFromJsonPath, err := compiledJsonPath.Lookup(nodesBody)
+		if err != nil {
+			return nil, err
+		}
+		entityVal = entityValFromJsonPath
+	case *transformer.Entity_Udf:
+		env := UdfEnv{nodesBody}
+		exprResult, err := expr.Run(udf, env)
+		if err != nil {
+			return nil, err
+		}
+		udfResult := exprResult.(UdfResult)
+
+		if udfResult.Error != nil {
+			return nil, udfResult.Error
+		}
+
+		entityVal = udfResult.Value
 	}
 
-	switch o.(type) {
+	switch entityVal.(type) {
 	case []interface{}:
 		vals := make([]*feastType.Value, 0)
-		for _, v := range o.([]interface{}) {
+		for _, v := range entityVal.([]interface{}) {
 			nv, err := getValue(v, feastValType)
 			if err != nil {
 				return nil, err
@@ -31,13 +51,13 @@ func getValuesFromJSONPayload(nodesBody interface{}, entity *transformer.Entity,
 		}
 		return vals, nil
 	case interface{}:
-		v, err := getValue(o, feastValType)
+		v, err := getValue(entityVal, feastValType)
 		if err != nil {
 			return nil, err
 		}
 		return []*feastType.Value{v}, nil
 	default:
-		return nil, fmt.Errorf("unknown value type: %T", o)
+		return nil, fmt.Errorf("unknown value type: %T", entityVal)
 	}
 }
 

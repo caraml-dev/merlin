@@ -3,6 +3,8 @@ package feast
 import (
 	"context"
 	"fmt"
+	"github.com/antonmedv/expr"
+	"github.com/oliveagle/jsonpath"
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/pkg/errors"
@@ -52,8 +54,22 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 				return NewValidationError("entity not found: " + entity.Name)
 			}
 
-			if len(entity.JsonPath) == 0 {
-				return NewValidationError(fmt.Sprintf("json path for %s is not specified", entity.Name))
+			switch entity.Extractor.(type) {
+			case *transformer.Entity_JsonPath:
+				if len(entity.GetJsonPath()) == 0 {
+					return NewValidationError(fmt.Sprintf("json path for %s is not specified", entity.Name))
+				}
+				_, err = jsonpath.Compile(entity.GetJsonPath())
+				if err != nil {
+					return NewValidationError(fmt.Sprintf("jsonpath compilation failed: %v", err))
+				}
+			case *transformer.Entity_Udf:
+				_, err = expr.Compile(entity.GetUdf(), expr.Env(UdfEnv{}))
+				if err != nil {
+					return NewValidationError(fmt.Sprintf("udf compilation failed: %v", err))
+				}
+			default:
+				return NewValidationError(fmt.Sprintf("one of json_path, udf must be specified"))
 			}
 
 			if spec.ValueType.String() != entity.ValueType {

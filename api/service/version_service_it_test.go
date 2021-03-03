@@ -19,6 +19,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/google/uuid"
@@ -142,12 +143,33 @@ func TestVersionsService_ListVersions(t *testing.T) {
 		db.Create(&m)
 
 		numOfVersions := 10
-		indexEndpointActive := 9
+		indexEndpointActive := map[int]interface{}{
+			0: nil, 1: nil, 2: nil, 4: nil, 8: nil, 9: nil,
+		}
 		for i := 0; i < numOfVersions; i++ {
 			v := models.Version{
 				ModelID:     m.ID,
 				RunID:       fmt.Sprintf("%d", i+1),
 				ArtifactURI: "gcs:/mlp/1/1",
+				// Version objects will have these labels test cases:
+				// +----+------------+------------+------------+------------+
+				// | ID | label_key1 | label_val1 | label_key2 | label_val2 |
+				// +----+------------+------------+------------+------------+
+				// |  1 | foo        | foo0       | bar        | bar0       |
+				// |  2 | foo        | foo1       | bar        | bar1       |
+				// |  3 | foo        | foo2       | bar        | bar2       |
+				// |  4 | foo        | foo0       | bar        | bar3       |
+				// |  5 | foo        | foo1       | bar        | bar4       |
+				// |  6 | foo        | foo2       | bar        | bar0       |
+				// |  7 | foo        | foo0       | bar        | bar1       |
+				// |  8 | foo        | foo1       | bar        | bar2       |
+				// |  9 | foo        | foo2       | bar        | bar3       |
+				// | 10 | foo        | foo0       | bar        | bar4       |
+				// +----+------------+------------+------------+------------+
+				Labels: map[string]interface{}{
+					"foo": fmt.Sprintf("foo%d", i%3),
+					"bar": fmt.Sprintf("bar%d", i%5),
+				},
 			}
 			db.Create(&v)
 			endpoint1 := &models.VersionEndpoint{
@@ -169,7 +191,8 @@ func TestVersionsService_ListVersions(t *testing.T) {
 			db.Create(&endpoint2)
 
 			endpoint3Status := models.EndpointTerminated
-			if i == indexEndpointActive {
+
+			if _, ok := indexEndpointActive[i]; ok {
 				endpoint3Status = models.EndpointRunning
 			}
 			endpoint3 := &models.VersionEndpoint{
@@ -231,8 +254,8 @@ func TestVersionsService_ListVersions(t *testing.T) {
 			Search: "environment_name:env1",
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, 1, len(versionsBasedOnEnv))
-		assert.Equal(t, "", cursor)
+		assert.Equal(t, 3, len(versionsBasedOnEnv))
+		assert.NotEmpty(t, cursor)
 
 		//search environment_name:env2 not exist env
 		versionsBasedOnEnv1, cursor1, err := versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
@@ -244,5 +267,203 @@ func TestVersionsService_ListVersions(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(versionsBasedOnEnv1))
 		assert.Equal(t, "", cursor1)
+
+		//search environment_name:env1 and non-matching label
+		got, _, err := versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "environment_name:env1 labels:baz IN (qux)",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(got))
+
+		//search environment_name:env1 and matching 1 label key with single value
+		got, _, err = versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "environment_name:env1 labels:foo IN (foo0)",
+		})
+		wantIDs := []int{1, 10}
+		gotIDs := make([]int, 0)
+		for _, version := range got {
+			gotIDs = append(gotIDs, int(version.ID))
+		}
+		sort.Ints(gotIDs)
+		assert.NoError(t, err)
+		assert.Equal(t, len(wantIDs), len(got))
+		assert.Equal(t, wantIDs, gotIDs)
+
+		//search environment_name:env1 and matching 1 label key with multiple values
+		got, _, err = versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "environment_name:env1 labels:foo IN (foo0, foo1)",
+		})
+		wantIDs = []int{1, 2, 5, 10}
+		gotIDs = make([]int, 0)
+		for _, version := range got {
+			gotIDs = append(gotIDs, int(version.ID))
+		}
+		sort.Ints(gotIDs)
+		assert.NoError(t, err)
+		assert.Equal(t, len(wantIDs), len(got))
+		assert.Equal(t, wantIDs, gotIDs)
+
+		//search environment_name:env1 and matching multiple label key with some multiple values
+		got, _, err = versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "environment_name:env1 labels:foo IN (foo0), bar IN (bar1, bar4)",
+		})
+		wantIDs = []int{10}
+		gotIDs = make([]int, 0)
+		for _, version := range got {
+			gotIDs = append(gotIDs, int(version.ID))
+		}
+		sort.Ints(gotIDs)
+		assert.NoError(t, err)
+		assert.Equal(t, len(wantIDs), len(got))
+		assert.Equal(t, wantIDs, gotIDs)
+
+		//search environment_name:env1 and matching multiple label key with all multiple values
+		got, _, err = versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "environment_name:env1 labels:foo IN (foo0, foo1), bar IN (bar1, bar4)",
+		})
+		wantIDs = []int{2, 5, 10}
+		gotIDs = make([]int, 0)
+		for _, version := range got {
+			gotIDs = append(gotIDs, int(version.ID))
+		}
+		sort.Ints(gotIDs)
+		assert.NoError(t, err)
+		assert.Equal(t, len(wantIDs), len(got))
+		assert.Equal(t, wantIDs, gotIDs)
+
+		//search non-matching label
+		got, _, err = versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "labels:foo IN (foo0), megaman in (8), rockman in IN (x4,x5)",
+		})
+		wantIDs = make([]int, 0)
+		gotIDs = make([]int, 0)
+		for _, version := range got {
+			gotIDs = append(gotIDs, int(version.ID))
+		}
+		sort.Ints(gotIDs)
+		assert.NoError(t, err)
+		assert.Equal(t, len(wantIDs), len(got))
+
+		//search matching 1 label key with single value
+		got, _, err = versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "labels:foo IN (foo0)",
+		})
+		wantIDs = []int{1, 4, 7, 10}
+		gotIDs = make([]int, 0)
+		for _, version := range got {
+			gotIDs = append(gotIDs, int(version.ID))
+		}
+		sort.Ints(gotIDs)
+		assert.NoError(t, err)
+		assert.Equal(t, len(wantIDs), len(got))
+		assert.Equal(t, wantIDs, gotIDs)
+
+		//search matching 1 label key with multiple values
+		got, _, err = versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "labels:foo IN (foo0, foo2)",
+		})
+		wantIDs = []int{1, 3, 4, 6, 7, 9, 10}
+		gotIDs = make([]int, 0)
+		for _, version := range got {
+			gotIDs = append(gotIDs, int(version.ID))
+		}
+		sort.Ints(gotIDs)
+		assert.NoError(t, err)
+		assert.Equal(t, len(wantIDs), len(got))
+		assert.Equal(t, wantIDs, gotIDs)
+
+		//search matching multiple label key with some multiple values
+		got, _, err = versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "labels:foo IN (foo0), bar IN (bar1, bar4)",
+		})
+		wantIDs = []int{7, 10}
+		gotIDs = make([]int, 0)
+		for _, version := range got {
+			gotIDs = append(gotIDs, int(version.ID))
+		}
+		sort.Ints(gotIDs)
+		assert.NoError(t, err)
+		assert.Equal(t, len(wantIDs), len(got))
+		assert.Equal(t, wantIDs, gotIDs)
+
+		//search environment_name:env1 and matching multiple label key with all multiple values
+		got, _, err = versionsService.ListVersions(context.Background(), m.ID, config.MonitoringConfig{MonitoringEnabled: true}, VersionQuery{
+			Search: "labels:foo IN (foo0, foo1), bar IN (bar1, bar4)",
+		})
+		wantIDs = []int{2, 5, 7, 10}
+		gotIDs = make([]int, 0)
+		for _, version := range got {
+			gotIDs = append(gotIDs, int(version.ID))
+		}
+		sort.Ints(gotIDs)
+		assert.NoError(t, err)
+		assert.Equal(t, len(wantIDs), len(got))
+		assert.Equal(t, wantIDs, gotIDs)
+	})
+}
+
+func TestVersionsService_Save(t *testing.T) {
+	isDefaultTrue := true
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		env := models.Environment{
+			Name:      "env1",
+			Cluster:   "k8s",
+			IsDefault: &isDefaultTrue,
+		}
+		db.Create(&env)
+
+		p := mlp.Project{
+			Id:                1,
+			Name:              "project_1",
+			MlflowTrackingUrl: "http://mlflow:5000",
+		}
+
+		m := models.Model{
+			ProjectID:    models.ID(p.Id),
+			ExperimentID: 1,
+			Name:         "model_1",
+			Type:         "other",
+		}
+		db.Create(&m)
+
+		mockMlpAPIClient := &mlpMock.APIClient{}
+		mockMlpAPIClient.On("GetProjectByID", mock.Anything, int32(m.ProjectID)).Return(p, nil)
+		versionsService := NewVersionsService(db, mockMlpAPIClient)
+
+		testCases := []struct {
+			desc    string
+			version models.Version
+		}{
+			{
+				desc: "Should successfully persist version with labels",
+				version: models.Version{
+					ModelID:     m.ID,
+					RunID:       "1",
+					ArtifactURI: "gcs:/mlp/1/1",
+					Labels: models.KV{
+						"service_type":   "GO-FOOD",
+						"targeting_date": "2021-02-01",
+					},
+				},
+			},
+			{
+				desc: "Should successfully persist version without labels",
+				version: models.Version{
+					ModelID:     m.ID,
+					RunID:       "1",
+					ArtifactURI: "gcs:/mlp/1/1",
+				},
+			},
+		}
+		for _, tC := range testCases {
+			t.Run(tC.desc, func(t *testing.T) {
+				v, err := versionsService.Save(context.Background(), &tC.version, config.MonitoringConfig{MonitoringEnabled: true})
+				assert.Nil(t, err)
+				assert.Equal(t, tC.version.ModelID, v.ModelID)
+				assert.Equal(t, tC.version.RunID, v.RunID)
+				assert.Equal(t, tC.version.ArtifactURI, v.ArtifactURI)
+				assert.Equal(t, tC.version.Labels, v.Labels)
+			})
+		}
 	})
 }

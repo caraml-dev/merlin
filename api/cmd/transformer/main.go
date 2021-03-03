@@ -18,6 +18,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/server"
 )
@@ -30,10 +31,10 @@ func main() {
 	cfg := struct {
 		Server server.Options
 		Feast  feast.Options
+		Cache  cache.Options
 
 		StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
-
-		LogLevel string `envconfig:"LOG_LEVEL"`
+		LogLevel                      string `envconfig:"LOG_LEVEL"`
 	}{}
 
 	if err := envconfig.Process("", &cfg); err != nil {
@@ -74,7 +75,12 @@ func main() {
 		logger.Fatal("Unable to initialize Feast client", zap.Error(err))
 	}
 
-	f, err := feast.NewTransformer(feastClient, config, &cfg.Feast, logger)
+	var memoryCache *cache.Cache
+	if cfg.Feast.CacheEnabled {
+		memoryCache = cache.NewCache(cfg.Cache)
+	}
+
+	f, err := feast.NewTransformer(feastClient, config, &cfg.Feast, logger, memoryCache)
 	if err != nil {
 		logger.Fatal("Unable to initialize transformer", zap.Error(err))
 	}

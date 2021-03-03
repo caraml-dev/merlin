@@ -144,6 +144,7 @@ class VersionApi(object):
 
         :param async_req bool
         :param int model_id: (required)
+        :param Version body:
         :return: Version
                  If the method is called asynchronously,
                  returns the request thread.
@@ -165,12 +166,13 @@ class VersionApi(object):
 
         :param async_req bool
         :param int model_id: (required)
+        :param Version body:
         :return: Version
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['model_id']  # noqa: E501
+        all_params = ['model_id', 'body']  # noqa: E501
         all_params.append('async_req')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -204,6 +206,8 @@ class VersionApi(object):
         local_var_files = {}
 
         body_params = None
+        if 'body' in params:
+            body_params = params['body']
         # Authentication setting
         auth_settings = ['Bearer']  # noqa: E501
 

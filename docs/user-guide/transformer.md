@@ -79,6 +79,9 @@ transformerConfig:
         - name: merchant_id # the entity name
           valueType: STRING # the entity value type. please refer to feast for it
           jsonPath: $.merchants_id # JSON Path syntax on how to parse the entity value from the request
+        - name: geohash # the entity name
+          valueType: STRING # the entity value type
+          udf: Geohash($.bid.from.latitude, $.bid.from.longitude, 7) # using the geohash udf. A list of supported UDFs is documented in later section
       features: # list of features to be retrieved
         - name: merchant_t1_discovery:t1_estimate # feature name. make sure to include feature set
           valueType: DOUBLE # feature value type
@@ -86,6 +89,72 @@ transformerConfig:
 ```
 
 > To learn more about JSON Path syntax, please go to [this link](https://goessner.net/articles/JsonPath/), [this](https://restfulapi.net/json-jsonpath/) or [this](https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html).
+
+### List of Support UDFs
+#### Geohash
+Takes in JsonPath to latitude and longitude, and an additional precision parameter to generate the geohash
+
+##### Example
+
+Input
+```json
+{
+  "latitude":1.0,
+  "longitude":2.0
+}
+```
+
+Config
+```yaml
+- name: geohash
+  valueType: STRING
+  udf: Geohash($.latitude, $.longitude, 12)
+```
+
+Output: `"s01mtw037ms0"`
+
+#### JsonExtract
+Used to extract value from JSON string
+
+##### Example
+
+Input
+```json
+{
+  "details": "{\"merchant_id\": 9001}"
+}
+```
+
+Config
+```yaml
+- name: merchant_id
+  valueType: STRING
+  udf: JsonExtract($.details, $.merchant_id)
+```
+
+Output: `"9001"`
+
+#### S2ID
+Takes in JsonPath to latitude and longitude, and an additional level parameter to generate the s2id
+
+##### Example
+
+Input
+```json
+{
+  "latitude":1.0,
+  "longitude":2.0
+}
+```
+
+Config
+```yaml
+- name: s2id
+  valueType: STRING
+  udf: S2ID($.latitude, $.longitude, 12)
+```
+
+Output: `"1154732743855177728"`
 
 ### Standard Transformer Response Output
 

@@ -4,7 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [packages]
-pyfuncserver = {editable = true,extras = ["test"],path = "."}
+pyfuncserver = {editable = true, extras = ["test"], path = "."}
 merlin-sdk = "*"
 uvloop = "*"
 

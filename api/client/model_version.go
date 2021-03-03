@@ -21,6 +21,7 @@ type Version struct {
 	ArtifactUri string            `json:"artifact_uri,omitempty"`
 	Endpoints   []VersionEndpoint `json:"endpoints,omitempty"`
 	Properties  *interface{}      `json:"properties,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
 	CreatedAt   time.Time         `json:"created_at,omitempty"`
 	UpdatedAt   time.Time         `json:"updated_at,omitempty"`
 }

@@ -104,7 +104,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdCon
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -292,7 +294,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdGet
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -411,7 +415,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPut
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -512,7 +518,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointGet(ctx conte
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -629,7 +637,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointPost(ctx cont
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {

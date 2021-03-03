@@ -262,6 +262,13 @@ paths:
           name: "search"
           type: "string"
           required: false
+          description: |
+            Search query to filter the model versions. These searches are currently supported:
+            - Search by "mlflow_run_id" e.g. `?search=cfca7716b45f4b149479630a98332a13`
+            - Search by "environment_name" e.g `?search=environment_name:myenv`
+            - Search by "labels" e.g. `?search=labels:app IN (nginx,postgres), country in (SG)`
+            - Search by "environment_name" and "labels" e.g. 
+              `?search=environment_name:myenv labels:app IN (nginx,postgres), country in (SG)`
       responses:
         200:
           description: "OK"
@@ -283,6 +290,10 @@ paths:
           name: "model_id"
           type: "integer"
           required: true
+        - in: "body"
+          name: "body"
+          schema:
+            $ref: "#/definitions/Version"
       responses:
         200:
           description: "Created"
@@ -1154,6 +1165,10 @@ definitions:
           $ref: "#/definitions/VersionEndpoint"
       properties:
         type: "object"
+      labels:
+        type: "object"
+        additionalProperties:
+          type: "string"
       created_at:
         type: "string"
         format: "date-time"
