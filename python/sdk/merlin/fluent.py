@@ -155,6 +155,7 @@ def new_model_version(labels: Dict[str, str] = None):
     """
     Create new model version under currently active model
 
+    :param model:
     :return: ModelVersion
     """
     v = None
