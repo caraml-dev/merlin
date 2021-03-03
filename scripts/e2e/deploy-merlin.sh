@@ -43,6 +43,9 @@ helm install --debug merlin ${CHART_PATH} --namespace=mlp --values=${CHART_PATH}
   --timeout=5m \
   --wait
 
+
+kubectl set env deployment/merlin -n mlp MLFLOW_TRACKING_URL="http://${HOST_IP}:31100"
+
 cat <<EOF > ./patch-merlin-mlflow-nodeport.yaml
 spec:
   type: NodePort
