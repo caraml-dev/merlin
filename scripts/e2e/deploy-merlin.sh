@@ -5,6 +5,7 @@ set -ex
 CHART_PATH="$1"
 export INGRESS_HOST=127.0.0.1
 export MERLIN_VERSION=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}}
+export HOST_IP=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
 
 
 helm install --debug merlin ${CHART_PATH} --namespace=mlp --values=${CHART_PATH}/values-e2e.yaml \
