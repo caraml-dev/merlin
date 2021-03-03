@@ -85,7 +85,7 @@ const CollapsibleLabelsPanel = ({labels, labelOnClick, minLabelsCount = 2, maxLa
         // Toggle collapse button
         (!isExpanded && labels && Object.keys(labels).length > minLabelsCount) &&
         <EuiLink {...getToggleProps()}>
-          {isExpanded ? "" : `Show All [${Object.keys(labels).length}]`}
+          {isExpanded ? "" : `Show All [${Object.keys(labels).length - minLabelsCount}]`}
         </EuiLink>
       }
     </EuiBadgeGroup>
