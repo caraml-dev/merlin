@@ -174,7 +174,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
     {
       name: "Value Type",
       field: "valueType",
-      width: "25%",
+      width: "20%",
       render: (value, item) => (
         <EuiComboBox
           fullWidth
@@ -193,7 +193,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
     {
       name: "Field Type",
       field: "fieldType",
-      width: "30%",
+      width: "15%",
       render: (value, item) => (
         <EuiComboBox
           fullWidth
@@ -218,7 +218,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
         </EuiToolTip>
       ),
       field: "jsonPath",
-      width: "20%",
+      width: "35%",
       render: (value, item) => (
         <EuiFieldText
           controlOnly
@@ -230,7 +230,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
       )
     },
     {
-      width: "10%",
+      width: "5%",
       actions: [
         {
           render: item => {
