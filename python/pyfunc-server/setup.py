@@ -34,7 +34,6 @@ setup(
         "numpy >= 1.8.2",
         "mlflow==1.6.0",
         "cloudpickle==1.2.2",
-        "merlin-sdk==0.10.0",
         "prometheus_client==0.7.1",
         "uvloop>=0.15.2",
         "orjson==2.6.8"
