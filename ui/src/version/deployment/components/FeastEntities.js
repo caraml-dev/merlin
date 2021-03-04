@@ -92,7 +92,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
           name: item.name,
           valueType: item.valueType,
           fieldType: item.fieldType,
-          jsonPath: item.jsonPath
+          field: item.field
         }));
         onChange(updatedItems);
       } else {
@@ -112,7 +112,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
     setItems(_ =>
       items[items.length - 1].name &&
       items[items.length - 1].valueType &&
-      items[items.length - 1].jsonPath &&
+      items[items.length - 1].field &&
       items[items.length - 1].fieldType
         ? [...items, { idx: items.length }]
         : [...items]
@@ -217,7 +217,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
           </span>
         </EuiToolTip>
       ),
-      field: "jsonPath",
+      field: "field",
       width: "35%",
       render: (value, item) => (
         <EuiFieldText
@@ -225,7 +225,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
           fullWidth
           placeholder="Field"
           value={value || ""}
-          onChange={onChangeRow(item.idx, "jsonPath")}
+          onChange={onChangeRow(item.idx, "field")}
         />
       )
     },
