@@ -99,7 +99,7 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
         config.transformerConfig.feast &&
         transformer.env_vars
       ) {
-        const newConfigJSON = JSON.stringify(config);
+        const newConfigJSON = JSON.stringify(transformToConfigJSON(config));
         // Find the index of env_var that contains transformer config
         // If it's not exist, create new env var
         // If it's exist, update it
@@ -217,11 +217,27 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
         buttonContent={<EuiText size="xs">See YAML configuration</EuiText>}
         paddingSize="m">
         <EuiCodeBlock language="yaml" fontSize="m" paddingSize="m" isCopyable>
-          {yaml.dump(config)}
+          {yaml.dump(transformToConfigJSON(config))}
         </EuiCodeBlock>
       </EuiAccordion>
     </>
   );
+};
+
+const transformToConfigJSON = config => {
+  let output = JSON.parse(JSON.stringify(config));
+  if (output.transformerConfig) {
+    output.transformerConfig.feast.forEach(feastConfig => {
+      feastConfig.entities.forEach(entity => {
+        if (entity.fieldType === "UDF") {
+          entity["udf"] = entity.jsonPath;
+          delete entity["jsonPath"];
+        }
+        delete entity["fieldType"];
+      });
+    });
+  }
+  return output;
 };
 
 StandardTransformerForm.propTypes = {

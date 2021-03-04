@@ -91,6 +91,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
         const updatedItems = items.slice(0, items.length - 1).map(item => ({
           name: item.name,
           valueType: item.valueType,
+          fieldType: item.fieldType,
           jsonPath: item.jsonPath
         }));
         onChange(updatedItems);
@@ -111,7 +112,8 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
     setItems(_ =>
       items[items.length - 1].name &&
       items[items.length - 1].valueType &&
-      items[items.length - 1].jsonPath
+      items[items.length - 1].jsonPath &&
+      items[items.length - 1].fieldType
         ? [...items, { idx: items.length }]
         : [...items]
     );
@@ -172,7 +174,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
     {
       name: "Value Type",
       field: "valueType",
-      width: "30%",
+      width: "20%",
       render: (value, item) => (
         <EuiComboBox
           fullWidth
@@ -189,27 +191,46 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
       )
     },
     {
+      name: "Field Type",
+      field: "fieldType",
+      width: "15%",
+      render: (value, item) => (
+        <EuiComboBox
+          fullWidth
+          singleSelection={{ asPlainText: true }}
+          isClearable={false}
+          placeholder="Field Type"
+          options={[{ label: "JSONPath" }, { label: "UDF" }]}
+          onChange={onEntityChange(item.idx, "fieldType")}
+          onCreateOption={searchValue =>
+            onEntityCreate(searchValue, item.idx, "fieldType")
+          }
+          selectedOptions={getSelectedOption(value)}
+        />
+      )
+    },
+    {
       name: (
-        <EuiToolTip content="Specify the JSONPath syntax to extract entity value from the request payload.">
+        <EuiToolTip content="Specify the JSONPath/UDF syntax to extract entity value from the request payload.">
           <span>
-            JSONPath <EuiIcon type="questionInCircle" color="subdued" />
+            Field <EuiIcon type="questionInCircle" color="subdued" />
           </span>
         </EuiToolTip>
       ),
       field: "jsonPath",
-      width: "30%",
+      width: "35%",
       render: (value, item) => (
         <EuiFieldText
           controlOnly
           fullWidth
-          placeholder="JSON Path"
+          placeholder="Field"
           value={value || ""}
           onChange={onChangeRow(item.idx, "jsonPath")}
         />
       )
     },
     {
-      width: "10%",
+      width: "5%",
       actions: [
         {
           render: item => {
