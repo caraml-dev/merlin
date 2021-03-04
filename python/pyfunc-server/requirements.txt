@@ -1,4 +1,9 @@
-joblib==0.14.1
-numpy==1.17.2
-scikit-learn==0.22.1
-xgboost==0.90
+kfserving==0.2.1.1
+argparse>=1.4.0
+numpy >= 1.8.2
+mlflow==1.6.0
+cloudpickle==1.2.2
+prometheus_client==0.7.1
+uvloop>=0.15.2
+orjson==2.6.8
+merlin-sdk==0.10.0
