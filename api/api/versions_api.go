@@ -17,12 +17,17 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/jinzhu/gorm"
 
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/service"
+)
+
+var (
+	labelsCheck = regexp.MustCompile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")
 )
 
 type VersionsController struct {
@@ -106,6 +111,10 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 	if !ok {
 		return BadRequest("Unable to parse request body")
 	}
+	validLabel := validateLabels(versionPost.Labels)
+	if !validLabel {
+		return BadRequest("Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between.")
+	}
 
 	modelID, _ := models.ParseID(vars["model_id"])
 
@@ -128,4 +137,26 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 
 	version, _ = c.VersionsService.Save(ctx, version, c.MonitoringConfig)
 	return Created(version)
+}
+
+func validateLabels(labels models.KV) bool {
+	for key, element := range labels {
+		value, ok := element.(string)
+		if !ok {
+			return false
+		}
+
+		lengthNameCheckResult := len(key) < 64
+		lengthValueCheckResult := len(value) < 64
+		if !(lengthNameCheckResult && lengthValueCheckResult) {
+			return false
+		}
+
+		labelNameCheckResult := labelsCheck.MatchString(key)
+		labelValueCheckResult := labelsCheck.MatchString(value)
+		if !(labelNameCheckResult && labelValueCheckResult) {
+			return false
+		}
+	}
+	return true
 }
