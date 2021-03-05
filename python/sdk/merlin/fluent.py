@@ -151,10 +151,11 @@ def active_model() -> Optional[Model]:
 
 
 @contextmanager
-def new_model_version():
+def new_model_version(labels: Dict[str, str] = None):
     """
     Create new model version under currently active model
 
+    :param model:
     :return: ModelVersion
     """
     v = None
@@ -162,8 +163,7 @@ def new_model_version():
         _check_active_client()
         _check_active_project()
         _check_active_model()
-        v = _merlin_client.new_model_version(_active_model.name,
-                                             _active_project.name)
+        v = _merlin_client.new_model_version(_active_model.name, _active_project.name, labels)  # type: ignore
         v.start()
         global _active_model_version
         _active_model_version = v
@@ -425,7 +425,7 @@ def create_prediction_job(job_config: PredictionJobConfig, sync: bool = True) ->
     _check_active_model()
     _check_active_model_version()
 
-    return _active_model_version.create_prediction_job(job_config=job_config, sync=sync) # type: ignore
+    return _active_model_version.create_prediction_job(job_config=job_config, sync=sync)  # type: ignore
 
 
 def _check_active_project():
