@@ -1,29 +1,25 @@
 #!/bin/bash
 
-export API_PATH="$1"
+export API_PATH="merlin/api"
 
-export MLP_API_BASEPATH="http://127.0.0.1:8081/v1"
-export MERLIN_API_BASEPATH="http://127.0.0.1:8080/v1"
+export INGRESS_HOST=127.0.0.1
+export MLP_API_BASEPATH="http://mlp.mlp.${INGRESS_HOST}.nip.io/v1"
+export MERLIN_API_BASEPATH="http://merlin.mlp.${INGRESS_HOST}.nip.io"
 
-kubectl port-forward --namespace=mlp svc/mlp 8081:8080 &
-MLP_SVC_PID=$!
-kubectl port-forward --namespace=mlp svc/merlin 8080 &
-MERLIN_SVC_PID=$!
+export E2E_MLP_URL="http://mlp.mlp.${INGRESS_HOST}.nip.io"
+export E2E_MERLIN_URL="http://merlin.mlp.${INGRESS_HOST}.nip.io"
+#export E2E_PROJECT_NAME="merlin-e2e-${GITHUB_SHA::8}"
+export E2E_PROJECT_NAME="merlin-e2e"
 
-sleep 15
+export AWS_ACCESS_KEY_ID=YOURACCESSKEY
+export AWS_SECRET_ACCESS_KEY=YOURSECRETKEY
+export MLFLOW_S3_ENDPOINT_URL=http://minio.minio.${INGRESS_HOST}.nip.io
 
-echo "Creating merlin project: e2e-test"
-curl "${MLP_API_BASEPATH}/projects" -d '{"name": "e2e-test", "team": "gojek", "stream": "gojek"}'
-sleep 5
+curl "${E2E_MERLIN_URL}/v1/projects"
+curl -X POST "${E2E_MLP_URL}/v1/projects" -d "{\"name\": \"${E2E_PROJECT_NAME}\", \"team\": \"gojek\", \"stream\": \"gojek\", \"mlflow_tracking_url\": \"${E2E_MLFLOW_URL}\"}"
+curl "${E2E_MERLIN_URL}/v1/projects"
 
-cd ${API_PATH}
-for example in client/examples/*; do
-    [[ -e $example ]] || continue
-    echo $example
-    go run $example/main.go
-done
-
-# TODO: Run python/sdk e2e test
-
-kill ${MLP_SVC_PID}
-kill ${MERLIN_SVC_PID}
+cd ./merlin/python/sdk
+pip install pipenv
+pipenv install --dev --skip-lock
+pipenv run pytest -n=1 -W=ignore --cov=merlin test/integration_test.py -k 'not test_standard_transformer_feast_pyfunc'
