@@ -531,8 +531,9 @@ func TestCreateVersion(t *testing.T) {
 			},
 			body: models.VersionPost{
 				Labels: models.KV{
-					"service_type":   "GO-FOOD",
-					"targeting_date": "2021-02-01",
+					"service.type":     "GO-FOOD",
+					"1-targeting_date": "2021-02-01",
+					"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
 				},
 			},
 			modelsService: func() *mocks.ModelsService {
@@ -568,8 +569,9 @@ func TestCreateVersion(t *testing.T) {
 					RunID:       "1",
 					ArtifactURI: "artifact/url/run",
 					Labels: models.KV{
-						"service_type":   "GO-FOOD",
-						"targeting_date": "2021-02-01",
+						"service.type":     "GO-FOOD",
+						"1-targeting_date": "2021-02-01",
+						"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
 					},
 				}, mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
@@ -585,8 +587,9 @@ func TestCreateVersion(t *testing.T) {
 					},
 					MlflowURL: "http://mlflow.com",
 					Labels: models.KV{
-						"service_type":   "GO-FOOD",
-						"targeting_date": "2021-02-01",
+						"service.type":     "GO-FOOD",
+						"1-targeting_date": "2021-02-01",
+						"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
 					},
 				}, nil)
 				return svc
@@ -607,10 +610,191 @@ func TestCreateVersion(t *testing.T) {
 					},
 					MlflowURL: "http://mlflow.com",
 					Labels: models.KV{
-						"service_type":   "GO-FOOD",
-						"targeting_date": "2021-02-01",
+						"service.type":     "GO-FOOD",
+						"1-targeting_date": "2021-02-01",
+						"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
 					},
 				},
+			},
+		},
+		{
+			desc: "Should fail label key validation: start with non alphanumeric",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"-service_type": "GO-FOOD",
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
+			},
+		},
+		{
+			desc: "Should fail label key validation: end with non alphanumeric",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"service_type-": "GO-FOOD",
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
+			},
+		},
+		{
+			desc: "Should fail label key validation: 64 characters",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverTheL": "GO-FOOD",
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
+			},
+		},
+		{
+			desc: "Should fail label value validation: start with non alphanumeric",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"service_type": "-GO-FOOD",
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
+			},
+		},
+		{
+			desc: "Should fail label value validation: end with non alphanumeric",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"service_type": "GO-FOOD-",
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
+			},
+		},
+		{
+			desc: "Should fail label value validation: 64 characters",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"some_valid_key": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverTheL",
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
 			},
 		},
 		{
