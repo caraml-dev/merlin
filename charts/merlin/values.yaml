@@ -131,6 +131,10 @@ merlin:
   encryption:
     key: "password"
 
+  mlflow:
+    # This should be the actual DNS registered
+    trackingURL: "http://www.example.com"
+
 mlflow:
   image:
     registry: ghcr.io

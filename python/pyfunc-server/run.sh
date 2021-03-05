@@ -14,5 +14,5 @@
 # limitations under the License.
 
 
-source activate model_env
+source activate merlin-model
 python -m pyfuncserver --model_dir ./model --model_name $MODEL_NAME --workers $WORKERS

@@ -14,10 +14,10 @@
 
 FROM continuumio/miniconda3
 
-COPY pyfuncserver /pyfuncserver
-COPY setup.py /setup.py
-COPY run.sh /run.sh
-COPY README.md /README.md
-
+COPY . .
+RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-265.0.0-linux-x86_64.tar.gz | tar xzf -
+ENV PATH=$PATH:/google-cloud-sdk/bin
 RUN mkdir /prom_dir
 ENV prometheus_multiproc_dir=/prom_dir
+RUN conda env create -f ./environment.yaml && \
+    rm -rf /root/.cache

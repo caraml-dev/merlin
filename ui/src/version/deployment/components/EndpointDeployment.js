@@ -209,7 +209,7 @@ export const EndpointDeployment = ({
       <EuiSpacer size="l" />
 
       <EuiFlexGroup justifyContent="spaceAround">
-        <EuiFlexItem style={{ maxWidth: 700 }}>
+        <EuiFlexItem style={{ maxWidth: 1200 }}>
           <EuiForm
             isInvalid={!!response.error}
             error={response.error ? [response.error.message] : ""}>
