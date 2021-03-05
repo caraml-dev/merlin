@@ -104,6 +104,26 @@ def test_new_model_version(url, project, model, version, mock_oauth, use_google_
 
         assert v.mlflow_run_id == version.mlflow_run_id
 
+@responses.activate
+def test_new_model_version_with_labels(url, project, model, version, mock_oauth, use_google_oauth):
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
+    _mock_get_project_call(project)
+    merlin.set_project(project.name)
+    _mock_get_model_call(project, model)
+    merlin.set_model(model.name, model.type)
+
+    # Insert labels
+    labels = {"model": "T-800", "software": "skynet"}
+    _mock_new_model_version_call(model, version, labels)
+
+    with merlin.new_model_version(labels=labels) as v:
+        assert v is not None
+        assert isinstance(v, ModelVersion)
+
+        assert v.mlflow_run_id == version.mlflow_run_id
+        for key, value in v.labels.items():
+            assert labels[key] == value
+
 
 @responses.activate
 def test_list_environment(url, mock_oauth, use_google_oauth):
@@ -196,19 +216,22 @@ def _mock_get_model_call(project, model):
                   )
 
 
-def _mock_new_model_version_call(model, version):
+def _mock_new_model_version_call(model, version, labels=None):
+    body = {
+        "id": version.id,
+        "mlflow_run_id": version.mlflow_run_id,
+        "is_serving": False,
+        "mlflow_url": version.mlflow_url,
+        "created_at": "2019-09-04T03:09:13.842Z",
+        "updated_at": "2019-09-04T03:09:13.842Z"
+    }
+    if labels is not None:
+        body["labels"] = labels
+
     responses.add('POST', f"/v1/models/{model.id}/versions",
-                  body=f"""{{
-                        "id": {version.id},
-                        "mlflow_run_id": "{version.mlflow_run_id}",
-                        "is_serving": false,
-                        "mlflow_url": "{version.mlflow_url}",
-                        "created_at": "2019-09-04T03:09:13.842Z",
-                        "updated_at": "2019-09-04T03:09:13.842Z"
-                      }}""",
+                  body=json.dumps(body),
                   status=200,
-                  content_type='application/json'
-                  )
+                  content_type='application/json')
 
 
 def _mock_list_environment_call():

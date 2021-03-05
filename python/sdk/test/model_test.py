@@ -606,6 +606,7 @@ class TestModelVersion:
 class TestModel:
     v1 = cl.Version(id=1, model_id=1)
     v2 = cl.Version(id=2, model_id=1)
+    v3 = cl.Version(id=3, model_id=1, labels={"model": "T-800"})
 
     @responses.activate
     def test_list_version(self, model):
@@ -625,6 +626,18 @@ class TestModel:
         assert versions[0].id == 1
         assert versions[1].id == 2
 
+    @responses.activate
+    def test_list_version_with_labels(self, model):
+        responses.add("GET",
+                      "/v1/models/1/versions?limit=50&cursor=&search=labels%3Amodel+in+%28T-800%29",
+                      body=json.dumps([self.v3.to_dict()]),
+                      status=200,
+                      match_querystring=True,
+                      content_type='application/json')
+        versions = model.list_version({"model": ["T-800"]})
+        assert len(versions) == 1
+        assert versions[0].id == 3
+        assert versions[0].labels["model"] == "T-800"
 
         @responses.activate
         def test_list_endpoint(self, model):
@@ -643,20 +656,6 @@ class TestModel:
             v = model.get_version(1)
             assert v.id == 1
             assert model.get_version(3) is None
-
-        @responses.activate
-        def test_list_endpoint(self, model):
-            responses.add("GET", '/v1/models/1/endpoints',
-                          body=json.dumps(
-                              [mdl_endpoint_1.to_dict(),
-                               mdl_endpoint_2.to_dict()]),
-                          status=200,
-                          content_type='application/json')
-
-            endpoints = model.list_endpoint()
-            assert len(endpoints) == 2
-            assert endpoints[0].id == str(mdl_endpoint_1.id)
-            assert endpoints[1].id == str(mdl_endpoint_2.id)
 
         @responses.activate
         def test_serve_traffic(self, model):
