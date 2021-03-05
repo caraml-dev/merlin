@@ -64,13 +64,6 @@ def test_model_version_with_labels(integration_test_url, project_name, use_googl
         assert len(v.labels) == 1
         assert v.labels["model"] == "T-800"
 
-    endpoint = merlin.deploy(v)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
-
     merlin_active_model = merlin.active_model()
     all_versions = merlin_active_model.list_version(labels={"model": ["T-800"]})
     assert len(all_versions) == 1
@@ -80,12 +73,6 @@ def test_model_version_with_labels(integration_test_url, project_name, use_googl
 
     should_not_exist_versions = merlin_active_model.list_version(labels={"model": ["T-1000"]})
     assert len(should_not_exist_versions) == 0
-
-    merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 @pytest.mark.integration
