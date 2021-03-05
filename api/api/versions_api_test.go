@@ -618,6 +618,36 @@ func TestCreateVersion(t *testing.T) {
 			},
 		},
 		{
+			desc: "Should fail label key validation: has emoji inside",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"😊😊😊😊😊": "GO-FOOD",
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
+			},
+		},
+		{
 			desc: "Should fail label key validation: start with non alphanumeric",
 			vars: map[string]string{
 				"model_id": "1",
@@ -685,6 +715,36 @@ func TestCreateVersion(t *testing.T) {
 			body: models.VersionPost{
 				Labels: models.KV{
 					"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverTheL": "GO-FOOD",
+				},
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{}, nil)
+				return svc
+			},
+			mlflowClient: func() *mlfmocks.Client {
+				svc := &mlfmocks.Client{}
+				svc.On("CreateRun", "1").Return(&mlflow.Run{}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("Save", mock.Anything, &models.Version{}, mock.Anything).Return(&models.Version{}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between."},
+			},
+		},
+		{
+			desc: "Should fail label value validation: has emoji inside",
+			vars: map[string]string{
+				"model_id": "1",
+			},
+			body: models.VersionPost{
+				Labels: models.KV{
+					"emoji-label": "😊😊😊😊😊",
 				},
 			},
 			modelsService: func() *mocks.ModelsService {
