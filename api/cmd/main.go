@@ -38,6 +38,7 @@ import (
 	"github.com/rs/cors"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/balancer/roundrobin"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -124,8 +125,15 @@ func main() {
 	}
 
 	mlpAPIClient := mlp.NewAPIClient(mlpHTTPClient, cfg.MlpAPIConfig.APIHost, cfg.MlpAPIConfig.EncryptionKey)
-
-	cc, err := grpc.Dial(cfg.StandardTransformerConfig.FeastCoreURL, grpc.WithInsecure())
+	var cc *grpc.ClientConn
+	if cfg.StandardTransformerConfig.ClientLoadBalancingEnabled {
+		cc, err = grpc.Dial(cfg.StandardTransformerConfig.FeastCoreURL,
+			grpc.WithInsecure(),
+			grpc.WithDefaultServiceConfig(fmt.Sprintf(`{"loadBalancingPolicy":"%s"}`, roundrobin.Name)),
+			grpc.WithBlock())
+	} else {
+		cc, err = grpc.Dial(cfg.StandardTransformerConfig.FeastCoreURL, grpc.WithInsecure())
+	}
 	if err != nil {
 		panic(err)
 	}

@@ -92,6 +92,7 @@ var (
 		ImageName:       "merlin-standard-transformer",
 		FeastServingURL: "serving.feast.dev:8081",
 		FeastCoreURL:    "core.feast.dev:8081",
+		ClientLoadBalancingEnabled: true,
 	}
 )
 

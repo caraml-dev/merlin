@@ -140,6 +140,7 @@ type StandardTransformerConfig struct {
 	ImageName       string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
 	FeastServingURL string `envconfig:"FEAST_SERVING_URL" required:"true"`
 	FeastCoreURL    string `envconfig:"FEAST_CORE_URL" required:"true"`
+	ClientLoadBalancingEnabled bool `envconfig:"CLIENT_LOAD_BALANCING_ENABLED" default:"false"`
 }
 
 type MlflowConfig struct {
