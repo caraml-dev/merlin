@@ -545,6 +545,8 @@ def test_pytorch_logger(integration_test_url, project_name, use_google_oauth):
     assert resp.json() is not None
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
+    undeploy_all_version()
+
 
 @pytest.mark.integration
 def test_trasformer_pytorch_logger(integration_test_url, project_name, use_google_oauth):
