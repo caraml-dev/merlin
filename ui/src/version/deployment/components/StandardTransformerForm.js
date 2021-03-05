@@ -54,7 +54,7 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
 
         // If standard transformer config already exists, parse that value and set it to config
         if (envVar && envVar.value) {
-          const envVarJSON = JSON.parse(envVar.value);
+          const envVarJSON = transformToConfig(JSON.parse(envVar.value));
           if (envVarJSON) {
             const tc = Config.from(envVarJSON);
             setConfig(tc);
@@ -230,14 +230,33 @@ const transformToConfigJSON = config => {
     output.transformerConfig.feast.forEach(feastConfig => {
       feastConfig.entities.forEach(entity => {
         if (entity.fieldType === "UDF") {
-          entity["udf"] = entity.jsonPath;
-          delete entity["jsonPath"];
+          entity["udf"] = entity.field;
+        } else {
+          entity["jsonPath"] = entity.field;
         }
+        delete entity["field"];
         delete entity["fieldType"];
       });
     });
   }
   return output;
+};
+
+const transformToConfig = config => {
+  if (config.transformerConfig) {
+    config.transformerConfig.feast.forEach(feastConfig => {
+      feastConfig.entities.forEach(entity => {
+        if (entity.udf) {
+          entity["fieldType"] = "UDF";
+          entity["field"] = entity.udf;
+        } else {
+          entity["fieldType"] = "JSONPath";
+          entity["field"] = entity.jsonPath;
+        }
+      });
+    });
+  }
+  return config;
 };
 
 StandardTransformerForm.propTypes = {
