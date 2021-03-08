@@ -40,7 +40,8 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 	}
 
 	type mockCache struct {
-		key               feast.Row
+		entity            feast.Row
+		project           string
 		value             FeatureData
 		willInsertValue   FeatureData
 		errFetchingCache  error
@@ -91,17 +92,19 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 			},
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
+					project:          "default",
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  FeatureData([]interface{}{"1001", 1.1}),
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
+					project:          "default",
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  FeatureData([]interface{}{"2002", 2.2}),
@@ -201,17 +204,19 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 			},
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
+					project:          "default",
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  FeatureData([]interface{}{"1001", 1.1}),
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
+					project:           "default",
 					value:             nil,
 					errFetchingCache:  fmt.Errorf("Value not found"),
 					willInsertValue:   FeatureData([]interface{}{"2002", 2.2}),
@@ -341,15 +346,17 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 			},
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value: FeatureData([]interface{}{"1001", 1.1}),
+					project: "default",
+					value:   FeatureData([]interface{}{"1001", 1.1}),
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
+					project:          "default",
 					value:            nil,
 					willInsertValue:  FeatureData([]interface{}{"2002", 2.2}),
 					errFetchingCache: fmt.Errorf("Value not found"),
@@ -393,17 +400,19 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 			},
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
+					project:          "default",
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  FeatureData([]interface{}{"1001", 1.1}),
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
+					project:          "default",
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 				},
@@ -513,32 +522,36 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 			},
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value: FeatureData([]interface{}{"1001", 1.1}),
+					project: "default",
+					value:   FeatureData([]interface{}{"1001", 1.1}),
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
+					project:         "default",
 					willInsertValue: FeatureData([]interface{}{"2002", 2.2}),
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"merchant_uuid": feast.StrVal("1"),
 						"customer_id":   feast.Int64Val(1),
 					},
+					project:          "project",
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Cache not found"),
 					willInsertValue:  FeatureData([]interface{}{"1", 1, 10}),
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"merchant_uuid": feast.StrVal("2"),
 						"customer_id":   feast.Int64Val(1),
 					},
-					value: FeatureData([]interface{}{"2", 1, 20}),
+					project: "project",
+					value:   FeatureData([]interface{}{"2", 1, 20}),
 				},
 			},
 			feastMocks: []mockFeast{
@@ -574,7 +587,161 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			want:    []byte(`{"drivers":[{"id":"1001"},{"id":"2002"}],"merchants":[{"id":"1"},{"id":"2"}],"customer_id":1,"feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1],null]},"merchant_uuid_customer_id":{"columns":["merchant_uuid","customer_id","customer_merchant_interaction:int_order_count_24weeks"],"data":[["2",1,20],["1",1,10]]}}}`),
+			want:    []byte(`{"drivers":[{"id":"1001"},{"id":"2002"}],"merchants":[{"id":"1"},{"id":"2"}],"customer_id":1,"feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1],null]},"merchant_uuid_customer_id_project":{"columns":["merchant_uuid","customer_id","customer_merchant_interaction:int_order_count_24weeks"],"data":[["2",1,20],["1",1,10]]}}}`),
+		},
+		{
+			name: "one config: retrieve multiple entities, 2 feature tables but same entity name, batched",
+			fields: fields{
+				config: &transformer.StandardTransformerConfig{
+					TransformerConfig: &transformer.TransformerConfig{
+						Feast: []*transformer.FeatureTable{
+							{
+								Project: "default",
+								Entities: []*transformer.Entity{
+									{
+										Name:      "driver_id",
+										ValueType: "STRING",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.drivers[*].id",
+										},
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "driver_trips:average_daily_rides",
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
+									},
+								},
+							},
+							{
+								Project: "sample",
+								Entities: []*transformer.Entity{
+									{
+										Name:      "driver_id",
+										ValueType: "STRING",
+										Extractor: &transformer.Entity_JsonPath{
+											JsonPath: "$.drivers[*].id",
+										},
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "driver_trips:avg_rating",
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}]}`),
+			},
+			cacheMocks: []mockCache{
+				{
+					entity: feast.Row{
+						"driver_id": feast.StrVal("1001"),
+					},
+					project: "default",
+					value:   FeatureData([]interface{}{"1001", 1.1}),
+				},
+				{
+					entity: feast.Row{
+						"driver_id": feast.StrVal("1001"),
+					},
+					project: "sample",
+					value:   FeatureData([]interface{}{"1001", 4.5}),
+				},
+				{
+					entity: feast.Row{
+						"driver_id": feast.StrVal("2002"),
+					},
+					project:          "default",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  FeatureData([]interface{}{"2002", 2.2}),
+				},
+				{
+					entity: feast.Row{
+						"driver_id": feast.StrVal("2002"),
+					},
+					project:          "default",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  FeatureData([]interface{}{"2002", 2.2}),
+				},
+				{
+					entity: feast.Row{
+						"driver_id": feast.StrVal("2002"),
+					},
+					project:          "sample",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  FeatureData([]interface{}{"2002", 5}),
+				},
+			},
+			feastMocks: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default",
+						Entities: []feast.Row{
+							{
+								"driver_id": feast.StrVal("2002"),
+							},
+						},
+						Features: []string{"driver_trips:average_daily_rides"},
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(2.2),
+										"driver_id":                        feast.StrVal("2002"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "sample",
+						Entities: []feast.Row{
+							{
+								"driver_id": feast.StrVal("2002"),
+							},
+						},
+						Features: []string{"driver_trips:avg_rating"},
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"driver_trips:avg_rating": feast.DoubleVal(5),
+										"driver_id":               feast.StrVal("2002"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:avg_rating": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":               serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}],"feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1],["2002",2.2]]},"driver_id_sample":{"columns":["driver_id","driver_trips:avg_rating"],"data":[["1001",4.5],["2002",5]]}}}`),
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -582,7 +749,8 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 		mockCache := &mocks.Cache{}
 		logger.Debug("Test Case %", zap.String("title", tt.name))
 		for _, cc := range tt.cacheMocks {
-			keyByte, err := json.Marshal(cc.key)
+			key := CacheKey{Entity: cc.entity, Project: cc.project}
+			keyByte, err := json.Marshal(key)
 			require.NoError(t, err)
 			value, err := json.Marshal(cc.value)
 			require.NoError(t, err)
@@ -619,6 +787,8 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 		}
 
 		t.Logf("Got %v", string(got))
+		t.Logf("Want %v", string(tt.want))
+
 		assert.ElementsMatch(t, got, tt.want)
 
 		mockFeast.AssertExpectations(t)
@@ -1069,7 +1239,7 @@ func TestTransformer_Transform(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"driver_id":"1001","customer_id":"2002","feast_features":{"customer_id":{"columns":["customer_id","customer_trips:average_daily_rides"],"data":[["2002",2.2]]},"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1]]}}}`),
+			want:    []byte(`{"driver_id":"1001","customer_id":"2002","feast_features":{"customer_id_customer_id":{"columns":["customer_id","customer_trips:average_daily_rides"],"data":[["2002",2.2]]},"driver_id_driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1]]}}}`),
 			wantErr: false,
 		},
 		{
@@ -1128,7 +1298,7 @@ func TestTransformer_Transform(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"geohash":{"columns":["geohash","geohash_statistics:average_daily_rides"],"data":[["s01mtw037ms0",3.2]]}}}`),
+			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"geohash_geohash":{"columns":["geohash","geohash_statistics:average_daily_rides"],"data":[["s01mtw037ms0",3.2]]}}}`),
 			wantErr: false,
 		},
 		{
@@ -1175,11 +1345,11 @@ func TestTransformer_Transform(t *testing.T) {
 								{
 									Fields: map[string]*types.Value{
 										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
-										"jsonextract":                                feast.DoubleVal(9001),
+										"jsonextract":                            feast.DoubleVal(9001),
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"jsonextract":                                serving.GetOnlineFeaturesResponse_PRESENT,
+										"jsonextract":                            serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 							},
@@ -1187,7 +1357,7 @@ func TestTransformer_Transform(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"details": "{\"merchant_id\": 9001}","feast_features":{"jsonextract":{"columns":["jsonextract","geohash_statistics:average_daily_rides"],"data":[[9001,3.2]]}}}`),
+			want:    []byte(`{"details": "{\"merchant_id\": 9001}","feast_features":{"jsonextract_jsonextract":{"columns":["jsonextract","geohash_statistics:average_daily_rides"],"data":[[9001,3.2]]}}}`),
 			wantErr: false,
 		},
 		{
@@ -1234,11 +1404,11 @@ func TestTransformer_Transform(t *testing.T) {
 								{
 									Fields: map[string]*types.Value{
 										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
-										"s2id":                                feast.StrVal("1154732743855177728"),
+										"s2id":                                   feast.StrVal("1154732743855177728"),
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"s2id":                                serving.GetOnlineFeaturesResponse_PRESENT,
+										"s2id":                                   serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 							},
@@ -1246,7 +1416,7 @@ func TestTransformer_Transform(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"s2id":{"columns":["s2id","geohash_statistics:average_daily_rides"],"data":[["1154732743855177728",3.2]]}}}`),
+			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"s2id_s2id":{"columns":["s2id","geohash_statistics:average_daily_rides"],"data":[["1154732743855177728",3.2]]}}}`),
 			wantErr: false,
 		},
 		{
