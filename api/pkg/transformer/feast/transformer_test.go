@@ -587,7 +587,7 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			want:    []byte(`{"drivers":[{"id":"1001"},{"id":"2002"}],"merchants":[{"id":"1"},{"id":"2"}],"customer_id":1,"feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1],null]},"merchant_uuid_customer_id_project":{"columns":["merchant_uuid","customer_id","customer_merchant_interaction:int_order_count_24weeks"],"data":[["2",1,20],["1",1,10]]}}}`),
+			want:    []byte(`{"drivers":[{"id":"1001"},{"id":"2002"}],"merchants":[{"id":"1"},{"id":"2"}],"customer_id":1,"feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1],null]},"project_merchant_uuid_customer_id":{"columns":["merchant_uuid","customer_id","customer_merchant_interaction:int_order_count_24weeks"],"data":[["2",1,20],["1",1,10]]}}}`),
 		},
 		{
 			name: "one config: retrieve multiple entities, 2 feature tables but same entity name, batched",
@@ -740,7 +740,7 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}],"feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1],["2002",2.2]]},"driver_id_sample":{"columns":["driver_id","driver_trips:avg_rating"],"data":[["1001",4.5],["2002",5]]}}}`),
+			want:    []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}],"feast_features":{"driver_id":{"columns":["driver_id","driver_trips:average_daily_rides"],"data":[["1001",1.1],["2002",2.2]]},"sample_driver_id":{"columns":["driver_id","driver_trips:avg_rating"],"data":[["1001",4.5],["2002",5]]}}}`),
 			wantErr: false,
 		},
 	}

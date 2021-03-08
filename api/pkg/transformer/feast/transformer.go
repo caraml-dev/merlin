@@ -473,7 +473,7 @@ func createTableName(entities []*transformer.Entity, project string) string {
 
 	tableName := strings.Join(entityNames, "_")
 	if project != defaultProjectName {
-		tableName = tableName + "_" + project
+		tableName = project + "_" + tableName
 	}
 
 	return tableName
