@@ -135,6 +135,9 @@ merlin:
     # This should be the actual DNS registered
     trackingURL: "http://www.example.com"
 
+  database:
+    host: "localhost"
+
 mlflow:
   image:
     registry: ghcr.io
