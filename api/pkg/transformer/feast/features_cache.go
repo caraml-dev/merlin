@@ -9,11 +9,17 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 )
 
-func fetchFeaturesFromCache(cache Cache, entities []feast.Row) (FeaturesData, []feast.Row) {
+type CacheKey struct {
+	Entity  feast.Row
+	Project string
+}
+
+func fetchFeaturesFromCache(cache Cache, entities []feast.Row, project string) (FeaturesData, []feast.Row) {
 	var entityNotInCache []feast.Row
 	var featuresFromCache FeaturesData
 	for _, entity := range entities {
-		keyByte, err := json.Marshal(entity)
+		key := CacheKey{Entity: entity, Project: project}
+		keyByte, err := json.Marshal(key)
 		if err != nil {
 			entityNotInCache = append(entityNotInCache, entity)
 			continue
@@ -37,11 +43,16 @@ func fetchFeaturesFromCache(cache Cache, entities []feast.Row) (FeaturesData, []
 	return featuresFromCache, entityNotInCache
 }
 
-func insertFeaturesToCache(cache Cache, data entityFeaturePair, ttl time.Duration) error {
-	keyByte, err := json.Marshal(data.key)
+func insertFeaturesToCache(cache Cache, data entityFeaturePair, project string, ttl time.Duration) error {
+	key := CacheKey{
+		Entity:  data.entity,
+		Project: project,
+	}
+	keyByte, err := json.Marshal(key)
 	if err != nil {
 		return err
 	}
+
 	dataByte, err := json.Marshal(data.value)
 	if err != nil {
 		return err
@@ -49,10 +60,10 @@ func insertFeaturesToCache(cache Cache, data entityFeaturePair, ttl time.Duratio
 	return cache.Insert(keyByte, dataByte, ttl)
 }
 
-func insertMultipleFeaturesToCache(cache Cache, cacheData []entityFeaturePair, ttl time.Duration) error {
+func insertMultipleFeaturesToCache(cache Cache, cacheData []entityFeaturePair, project string, ttl time.Duration) error {
 	var errorMsgs []string
 	for _, data := range cacheData {
-		if err := insertFeaturesToCache(cache, data, ttl); err != nil {
+		if err := insertFeaturesToCache(cache, data, project, ttl); err != nil {
 			errorMsgs = append(errorMsgs, fmt.Sprintf("(value: %v, with message: %v)", data.value, err.Error()))
 		}
 	}

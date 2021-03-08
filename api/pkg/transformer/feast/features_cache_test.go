@@ -15,7 +15,7 @@ import (
 
 func TestFetchFeaturesFromCache(t *testing.T) {
 	type mockCache struct {
-		key              feast.Row
+		entity           feast.Row
 		value            FeatureData
 		errFetchingCache error
 	}
@@ -23,20 +23,22 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 		desc              string
 		cacheMocks        []mockCache
 		entities          []feast.Row
+		project           string
 		featuresFromCache FeaturesData
 		entityNotInCache  []feast.Row
 	}{
 		{
-			desc: "Success - 1, all entity has value in cache",
+			desc:    "Success - 1, all entity has value in cache",
+			project: "default",
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
 					value: FeatureData{"1001", 1.1},
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
 					value: FeatureData{"2002", 2.2},
@@ -63,16 +65,17 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 			entityNotInCache: nil,
 		},
 		{
-			desc: "Success - 2, one of  entity has value in cache",
+			desc:    "Success - 2, one of  entity has value in cache",
+			project: "default",
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
 					value: FeatureData{"1001", 1.1},
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
 					value:            nil,
@@ -100,17 +103,18 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 			},
 		},
 		{
-			desc: "Success - 3, none of entity has value in cache",
+			desc:    "Success - 3, none of entity has value in cache",
+			project: "default",
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
 					value:            nil,
@@ -140,14 +144,15 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			mockCache := &mocks.Cache{}
 			for _, cc := range tt.cacheMocks {
-				keyByte, err := json.Marshal(cc.key)
+				key := CacheKey{Entity: cc.entity, Project: tt.project}
+				keyByte, err := json.Marshal(key)
 				require.NoError(t, err)
 				value, err := json.Marshal(cc.value)
 				require.NoError(t, err)
 				mockCache.On("Fetch", keyByte).Return(value, cc.errFetchingCache)
 
 			}
-			cached, notInCacheEntity := fetchFeaturesFromCache(mockCache, tt.entities)
+			cached, notInCacheEntity := fetchFeaturesFromCache(mockCache, tt.entities, tt.project)
 			assert.ElementsMatch(t, tt.featuresFromCache, cached)
 			assert.Equal(t, tt.entityNotInCache, notInCacheEntity)
 		})
@@ -156,28 +161,30 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 
 func TestInsertMultipleFeaturesToCache(t *testing.T) {
 	type mockCache struct {
-		key               feast.Row
+		entity            feast.Row
 		value             FeatureData
 		errInsertingCache error
 	}
 	testCases := []struct {
 		desc             string
 		willBeCachedData []entityFeaturePair
+		project          string
 		cacheMocks       []mockCache
 		expectedError    error
 	}{
 		{
-			desc: "Success - all features are successfully inserted to cache",
+			desc:    "Success - all features are successfully inserted to cache",
+			project: "default",
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
 					value:             FeatureData{"1001", 1.1},
 					errInsertingCache: nil,
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
 					value:             FeatureData{"2002", 2.2},
@@ -186,13 +193,13 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 			},
 			willBeCachedData: []entityFeaturePair{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
 					value: FeatureData{"1001", 1.1},
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
 					value: FeatureData{"2002", 2.2},
@@ -200,17 +207,18 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 			},
 		},
 		{
-			desc: "Success - one feature is failing inserted to cache",
+			desc:    "Success - one feature is failing inserted to cache",
+			project: "sample",
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
 					value:             FeatureData{"1001", 1.1},
 					errInsertingCache: nil,
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
 					value:             FeatureData{"2002", 2.2},
@@ -219,13 +227,13 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 			},
 			willBeCachedData: []entityFeaturePair{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
 					value: FeatureData{"1001", 1.1},
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
 					value: FeatureData{"2002", 2.2},
@@ -234,17 +242,18 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 			expectedError: fmt.Errorf("error inserting to cached: (value: [2002 2.2], with message: Value is to big)"),
 		},
 		{
-			desc: "Success - all features are failing inserted to cache",
+			desc:    "Success - all features are failing inserted to cache",
+			project: "test",
 			cacheMocks: []mockCache{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
 					value:             FeatureData{"1001", 1.1},
 					errInsertingCache: fmt.Errorf("Memory is full"),
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
 					value:             FeatureData{"2002", 2.2},
@@ -253,13 +262,13 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 			},
 			willBeCachedData: []entityFeaturePair{
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
 					value: FeatureData{"1001", 1.1},
 				},
 				{
-					key: feast.Row{
+					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
 					value: FeatureData{"2002", 2.2},
@@ -272,14 +281,15 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			mockCache := &mocks.Cache{}
 			for _, cc := range tt.cacheMocks {
-				keyByte, err := json.Marshal(cc.key)
+				key := CacheKey{Entity: cc.entity, Project: tt.project}
+				keyByte, err := json.Marshal(key)
 				require.NoError(t, err)
 				value, err := json.Marshal(cc.value)
 				require.NoError(t, err)
 				mockCache.On("Insert", keyByte, value, mock.Anything).Return(cc.errInsertingCache)
 
 			}
-			err := insertMultipleFeaturesToCache(mockCache, tt.willBeCachedData, 60*time.Second)
+			err := insertMultipleFeaturesToCache(mockCache, tt.willBeCachedData, tt.project, 60*time.Second)
 			assert.Equal(t, tt.expectedError, err)
 		})
 	}
