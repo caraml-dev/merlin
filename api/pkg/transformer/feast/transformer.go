@@ -65,6 +65,8 @@ var (
 	})
 )
 
+const defaultProjectName = "default"
+
 // Options for the Feast transformer.
 type Options struct {
 	ServingURL              string        `envconfig:"FEAST_SERVING_URL" required:"true"`
@@ -170,7 +172,7 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	resChan := make(chan result, len(t.config.TransformerConfig.Feast))
 	for _, config := range t.config.TransformerConfig.Feast {
 		go func(cfg *transformer.FeatureTable) {
-			tableName := createTableName(cfg.Entities)
+			tableName := createTableName(cfg.Entities, cfg.Project)
 			val, err := t.getFeastFeature(ctx, tableName, request, cfg)
 			resChan <- result{tableName, val, err}
 		}(config)
@@ -226,7 +228,7 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 	entityNotInCache := entities
 
 	if t.options.CacheEnabled {
-		cachedValues, entityNotInCache = fetchFeaturesFromCache(t.cache, entities)
+		cachedValues, entityNotInCache = fetchFeaturesFromCache(t.cache, entities, config.Project)
 	}
 
 	numOfBatchBeforeCeil := float64(len(entityNotInCache)) / float64(t.options.BatchSize)
@@ -275,7 +277,7 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 			}
 
 			if t.options.CacheEnabled {
-				if err := insertMultipleFeaturesToCache(t.cache, entityFeaturePairs, t.options.CacheTTL); err != nil {
+				if err := insertMultipleFeaturesToCache(t.cache, entityFeaturePairs, project, t.options.CacheTTL); err != nil {
 					t.logger.Error("insert_to_cache", zap.Any("error", err))
 				}
 			}
@@ -381,8 +383,8 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 }
 
 type entityFeaturePair struct {
-	key   feast.Row
-	value FeatureData
+	entity feast.Row
+	value  FeatureData
 }
 
 func (t *Transformer) buildFeastFeaturesData(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, columns []string, entityIndexMap map[int]int) ([]entityFeaturePair, error) {
@@ -442,7 +444,7 @@ func (t *Transformer) buildFeastFeaturesData(ctx context.Context, feastResponse 
 				feastFeatureStatus.WithLabelValues(column, featureStatus.String()).Inc()
 			}
 		}
-		data = append(data, entityFeaturePair{key: entity, value: row})
+		data = append(data, entityFeaturePair{entity: entity, value: row})
 	}
 
 	return data, nil
@@ -463,13 +465,18 @@ func getFloatValue(val interface{}) (float64, error) {
 	}
 }
 
-func createTableName(entities []*transformer.Entity) string {
+func createTableName(entities []*transformer.Entity, project string) string {
 	entityNames := make([]string, 0)
 	for _, n := range entities {
 		entityNames = append(entityNames, n.Name)
 	}
 
-	return strings.Join(entityNames, "_")
+	tableName := strings.Join(entityNames, "_")
+	if project != defaultProjectName {
+		tableName = project + "_" + tableName
+	}
+
+	return tableName
 }
 
 func getFeatureValue(val *types.Value) (interface{}, error) {
