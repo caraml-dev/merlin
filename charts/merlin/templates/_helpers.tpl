@@ -20,11 +20,7 @@
 {{- end -}}
 
 {{- define "postgresql.host" -}}
-{{- if .Values.postgresql.enabled -}}
 {{- printf "%s-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
-{{- else -}}
-{{- printf "%s" .Values.merlin.database.host -}}
-{{- end -}}
 {{- end -}}
 
 {{- define "mlflow.backendStoreUri" -}}
