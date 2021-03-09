@@ -70,6 +70,7 @@ merlin:
     host: "localhost"
 
 postgresql:
+  enabled: true
   resources:
     requests:
       cpu: 25m

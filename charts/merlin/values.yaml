@@ -150,6 +150,7 @@ mlflow:
     postgresqlUsername: mlflow
 
 postgresql:
+  enabled: false
   resources:
     requests:
       memory: 2Gi
