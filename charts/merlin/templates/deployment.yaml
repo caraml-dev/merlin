@@ -86,7 +86,6 @@ spec:
           - name: DATABASE_HOST
             value: {{ .Values.merlin.database.host }}
           {{- end }}
-          {{- end }}
           - name: DATABASE_USER
             value: "{{ .Values.postgresql.postgresqlUsername }}"
           - name: DATABASE_PASSWORD
