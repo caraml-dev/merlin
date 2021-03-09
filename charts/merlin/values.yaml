@@ -137,6 +137,8 @@ merlin:
 
   database:
     host: "localhost"
+    user: "root"
+    name: "merlin"
 
 mlflow:
   image:

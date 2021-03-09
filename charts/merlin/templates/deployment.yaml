@@ -82,19 +82,23 @@ spec:
           {{- if .Values.postgresql.enabled }}
           - name: DATABASE_HOST
             value: {{ template "postgresql.host" . }}
-          {{- else -}}
-          - name: DATABASE_HOST
-            value: {{ .Values.merlin.database.host }}
-          {{- end }}
           - name: DATABASE_USER
             value: "{{ .Values.postgresql.postgresqlUsername }}"
+          - name: DATABASE_NAME
+            value: "{{ .Values.postgresql.postgresqlDatabase }}"
+          {{- else -}}
+          - name: DATABASE_HOST
+            value: "{{ .Values.merlin.database.host }}"
+          - name: DATABASE_USER
+            value: "{{ .Values.merlin.database.user }}"
+          - name: DATABASE_NAME
+            value: "{{ .Values.merlin.database.name }}"
+          {{- end }}
           - name: DATABASE_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: {{ .Release.Name }}-postgresql
                 key: postgresql-password
-          - name: DATABASE_NAME
-            value: "{{ .Values.postgresql.postgresqlDatabase }}"
           - name: REACT_APP_OAUTH_CLIENT_ID
             value: "{{ .Values.merlin.oauthClientID }}"
           - name: REACT_APP_ENVIRONMENT

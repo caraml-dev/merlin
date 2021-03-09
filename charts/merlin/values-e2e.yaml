@@ -68,6 +68,8 @@ merlin:
 
   database:
     host: "localhost"
+    user: "root"
+    name: "mlflow"
 
 postgresql:
   enabled: true
