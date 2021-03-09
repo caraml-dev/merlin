@@ -66,6 +66,9 @@ merlin:
     # This should be the actual DNS registered
     trackingURL: "http://www.example.com"
 
+  database:
+    host: "localhost"
+
 postgresql:
   resources:
     requests:
