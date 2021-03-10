@@ -138,14 +138,22 @@ merlin:
   # Database connection used by Merlin backend when postgres is disabled
   #
   # database:
-  #   host: database host
-  #   user: database user
-  #   name: database name
+  #   host: "database host"
+  #   user: "database user"
+  #   name: "database name"
+  #   password:
+  #     secretName: "the name of secret to refer"
+  #     secretKey: "the key inside secret name to get password value"
+  #     value: "database password"
 
   # database:
   #   host: "localhost"
   #   user: "root"
   #   name: "merlin"
+  #   password:
+  #     secretName: "merlin-postgrsql" 
+  #     secretKey: "database-password"
+  #     value: "password"
 
 mlflow:
   image:
