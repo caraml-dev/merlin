@@ -135,10 +135,17 @@ merlin:
     # This should be the actual DNS registered
     trackingURL: "http://www.example.com"
 
-  database:
-    host: "localhost"
-    user: "root"
-    name: "merlin"
+  # Database connection used by Merlin backend when postgres is disabled
+  #
+  # database:
+  #   host: database host
+  #   user: database user
+  #   name: database name
+
+  # database:
+  #   host: "localhost"
+  #   user: "root"
+  #   name: "merlin"
 
 mlflow:
   image:
