@@ -56,9 +56,3 @@ valueFrom:
     key:  {{ .Values.merlin.database.password.secretKey }}
 {{- end }}
 {{- end -}}
-
-{{- define "mlflow.backendStoreUri" -}}
-{{- if .Values.mlflow.postgresql.enabled }}
-{{- printf "postgresql://%s:%s@%s:5432/%s" .Values.postgresql.postgresqlUsername .Values.postgresql.postgresqlPassword (include "database.host" .) .Values.postgresql.postgresqlDatabase -}}
-{{- end }}
-{{- end -}}
