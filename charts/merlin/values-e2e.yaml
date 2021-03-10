@@ -67,16 +67,14 @@ merlin:
     trackingURL: "http://www.example.com"
 
   # Database connection used by Merlin backend when postgres is disabled
-  #
-  # database:
-  #   host: database host
-  #   user: database user
-  #   name: database name
-
   # database:
   #   host: "localhost"
   #   user: "root"
   #   name: "merlin"
+  #   password:
+  #     secretName: "merlin-postgrsql" 
+  #     secretKey: "database-password"
+  #     value: "password"
 
 postgresql:
   enabled: true
