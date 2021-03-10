@@ -23,7 +23,7 @@
 {{- if .Values.postgresql.enabled }}
 {{- printf "%s-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
 {{- else -}}
-
+{{- .Values.merlin.database.host -}}
 {{- end }}
 {{- end -}}
 
