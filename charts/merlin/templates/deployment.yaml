@@ -79,31 +79,14 @@ spec:
             value: "{{ .Values.merlin.loggerDestinationURL }}"
           - name: PORT
             value: "{{ .Values.merlin.service.internalPort }}"
-          {{- if .Values.postgresql.enabled }}
           - name: DATABASE_HOST
-            value: {{ template "postgresql.host" . }}
+            value: {{ template "database.host" . }}
           - name: DATABASE_USER
-            value: "{{ .Values.postgresql.postgresqlUsername }}"
+            value: {{ template "database.user" . }}
           - name: DATABASE_NAME
-            value: "{{ .Values.postgresql.postgresqlDatabase }}"
+            value: {{ template "database.name" . }}
           - name: DATABASE_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Release.Name }}-postgresql
-                key: postgresql-password
-          {{- else -}}
-          - name: DATABASE_HOST
-            value: "{{ .Values.merlin.database.host }}"
-          - name: DATABASE_USER
-            value: "{{ .Values.merlin.database.user }}"
-          - name: DATABASE_NAME
-            value: "{{ .Values.merlin.database.name }}"
-          - name: DATABASE_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.merlin.database.password.secretName }}
-                key:  {{ .Values.merlin.database.password.secretKey }}
-          {{- end }}
+            {{ include "database.password" . | indent 12 }}
           - name: REACT_APP_OAUTH_CLIENT_ID
             value: "{{ .Values.merlin.oauthClientID }}"
           - name: REACT_APP_ENVIRONMENT
