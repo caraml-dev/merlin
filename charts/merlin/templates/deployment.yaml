@@ -86,7 +86,7 @@ spec:
           - name: DATABASE_NAME
             value: {{ template "database.name" . }}
           - name: DATABASE_PASSWORD
-            {{ include "database.password" . | indent 12 }}
+            {{- include "database.password" . | indent 12 }}
           - name: REACT_APP_OAUTH_CLIENT_ID
             value: "{{ .Values.merlin.oauthClientID }}"
           - name: REACT_APP_ENVIRONMENT
