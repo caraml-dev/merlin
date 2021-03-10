@@ -66,7 +66,18 @@ merlin:
     # This should be the actual DNS registered
     trackingURL: "http://www.example.com"
 
+  # Database connection used by Merlin backend when postgres is disabled
+  # database:
+  #   host: "localhost"
+  #   user: "root"
+  #   name: "merlin"
+  #   password:
+  #     secretName: "merlin-postgrsql" 
+  #     secretKey: "database-password"
+  #     value: "password"
+
 postgresql:
+  enabled: true
   resources:
     requests:
       cpu: 25m
