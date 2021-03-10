@@ -31,6 +31,7 @@ import (
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 
 	"github.com/gojek/merlin/config"
+	"github.com/gojek/merlin/queue"
 
 	"github.com/gojek/merlin/middleware"
 	"github.com/gojek/merlin/mlflow"
@@ -58,6 +59,7 @@ type AppContext struct {
 	Enforcer                  enforcer.Enforcer
 	FeastCoreClient           core.CoreServiceClient
 	MlflowClient              mlflow.Client
+	Dispatcher                *queue.Dispatcher
 }
 
 // Handler handles the API requests and responses.
