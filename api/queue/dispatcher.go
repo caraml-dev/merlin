@@ -10,9 +10,11 @@ type Dispatcher struct {
 	sync.Mutex
 	db         *gorm.DB
 	workers    []*worker
-	jobFuncMap map[string]func(*Job) error
+	jobFuncMap map[string]JobFn
 	jobChan    chan *Job
 }
+
+type JobFn func(*Job) error
 
 type Config struct {
 	NumWorkers int
@@ -28,7 +30,7 @@ type Job struct {
 func NewDispatcher(cfg Config) *Dispatcher {
 	workers := make([]*worker, 0, cfg.NumWorkers)
 	jobChan := make(chan *Job)
-	jobFuncMap := make(map[string]func(*Job) error)
+	jobFuncMap := make(map[string]JobFn)
 	for i := 0; i < cfg.NumWorkers; i++ {
 		worker := newWorker(cfg.Db, jobChan)
 		workers = append(workers, worker)
@@ -37,11 +39,15 @@ func NewDispatcher(cfg Config) *Dispatcher {
 		workers:    workers,
 		db:         cfg.Db,
 		jobFuncMap: jobFuncMap,
+		jobChan:    jobChan,
 	}
 }
 
 func (d *Dispatcher) EnqueueJob(job *Job) error {
-	d.jobChan <- job
+	go func() {
+		d.jobChan <- job
+	}()
+
 	return nil
 }
 

@@ -8,7 +8,7 @@ import (
 
 type worker struct {
 	quitChan   chan bool
-	jobFuncMap map[string]func(*Job) error
+	jobFuncMap map[string]JobFn
 	jobChan    chan *Job
 	db         *gorm.DB
 }
@@ -17,7 +17,7 @@ func newWorker(db *gorm.DB, jobChan chan *Job) *worker {
 	return &worker{db: db, jobChan: jobChan}
 }
 
-func (w *worker) updateWorkerJobFunction(jobFn map[string]func(*Job) error) {
+func (w *worker) updateWorkerJobFunction(jobFn map[string]JobFn) {
 	w.jobFuncMap = jobFn
 }
 

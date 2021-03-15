@@ -176,6 +176,7 @@ func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB) api.Ap
 	})
 	dispatcher.RegisterJob("test", func(j *queue.Job) error {
 		log.Debugf("Job name %s", j.Name)
+		time.Sleep(10 * time.Second)
 		return nil
 	})
 	dispatcher.StartWorkers()
