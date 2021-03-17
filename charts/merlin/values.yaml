@@ -137,6 +137,7 @@ merlin:
 
   # Database connection used by Merlin backend when postgres is disabled
   # database:
+  #   enabled: false
   #   host: "localhost"
   #   user: "root"
   #   name: "merlin"
