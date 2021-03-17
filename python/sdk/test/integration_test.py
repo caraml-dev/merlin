@@ -66,10 +66,8 @@ def test_model_version_with_labels(integration_test_url, project_name, use_googl
 
     merlin_active_model = merlin.active_model()
     all_versions = merlin_active_model.list_version(labels={"model": ["T-800"]})
-    assert len(all_versions) == 1
-    version = all_versions[0]
-    assert len(version.labels) == 1
-    assert version.labels["model"] == "T-800"
+    for version in all_versions:
+        assert version.labels["model"] == "T-800"
 
     should_not_exist_versions = merlin_active_model.list_version(labels={"model": ["T-1000"]})
     assert len(should_not_exist_versions) == 0
