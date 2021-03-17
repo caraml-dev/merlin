@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"math/big"
 	"sync"
 
 	"github.com/jinzhu/gorm"
@@ -21,10 +22,13 @@ type Config struct {
 	Db         *gorm.DB
 }
 
+type Status string
+
 type Job struct {
-	ID   string
-	Data interface{}
-	Name string
+	ID        big.Int     `json:"id" gorm:"primary_key;"`
+	Arguments interface{} `json:"arguments"`
+	Status    Status      `json:"status"`
+	Name      string      `json:"name"`
 }
 
 func NewDispatcher(cfg Config) *Dispatcher {
