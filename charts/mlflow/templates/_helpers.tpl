@@ -13,10 +13,17 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 {{- end -}}
 
+{{- define "postgresql.host" -}}
+{{- if eq .Values.postgresql.type "external" -}}
+{{- .Values.postgresql.postgresqlServer -}}
+{{- else -}}
+{{- printf "%s-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "mlflow.backendStoreUri" -}}
 {{- if .Values.postgresql.enabled -}}
-{{- $posgresqlService := include "mlflow.fullname" . -}}
-{{- printf "postgresql://%s:%s@%s-postgresql.%s:5432/%s" .Values.postgresql.postgresqlUsername .Values.postgresql.postgresqlPassword $posgresqlService .Release.Namespace .Values.postgresql.postgresqlDatabase -}}
+{{- printf "postgresql://%s:%s@%s:5432/%s" .Values.postgresql.postgresqlUsername .Values.postgresql.postgresqlPassword (include "postgresql.host" .) .Values.postgresql.postgresqlDatabase -}}
 {{- else -}}
 {{- printf .Values.backendStoreUri -}}
 {{- end -}}

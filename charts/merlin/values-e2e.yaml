@@ -67,6 +67,7 @@ merlin:
     trackingURL: "http://www.example.com"
 
 postgresql:
+  type: internal
   resources:
     requests:
       cpu: 25m
@@ -87,6 +88,7 @@ postgresql:
 mlflow:
   postgresql:
     enabled: false
+    type: internal
     postgresqlDatabase: mlflow
     postgresqlUsername: mlflow
   artifactRoot: s3://mlflow

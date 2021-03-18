@@ -20,7 +20,11 @@
 {{- end -}}
 
 {{- define "postgresql.host" -}}
+{{- if eq .Values.postgresql.type "external" -}}
+{{- .Values.postgresql.postgresqlServer -}}
+{{- else -}}
 {{- printf "%s-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "mlflow.backendStoreUri" -}}
