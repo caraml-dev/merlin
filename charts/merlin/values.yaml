@@ -135,12 +135,6 @@ merlin:
     # This should be the actual DNS registered
     trackingURL: "http://www.example.com"
 
-  # Configuration value to select database type
-  # Option to use "postgresql" or "cloudsql" database type, by default "postgresql" is chosen
-  # Set the "enable" field to true of the database type you select (if you want to use internal database) and false of the one you don't select
-  database:
-    type: postgresql
-
 mlflow:
   image:
     registry: ghcr.io
@@ -153,7 +147,6 @@ mlflow:
     postgresqlUsername: mlflow
 
 postgresql:
-  enabled: true
   resources:
     requests:
       memory: 2Gi
@@ -179,17 +172,6 @@ postgresql:
     numSynchronousReplicas: 2
     ## Replication Cluster application name. Useful for defining multiple replication policies
     applicationName: merlin
-
-# Sample CloudSQL Database configuration
-cloudqsl:
-  enable: false
-  #   host: "localhost"
-  #   user: "root"
-  #   name: "merlin"
-  #   password:
-  #     secretName: "merlin-postgrsql" 
-  #     secretKey: "database-password"
-  #     value: "password"
 
 swagger:
   enabled: true
