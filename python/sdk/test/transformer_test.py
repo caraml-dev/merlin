@@ -19,22 +19,22 @@ from merlin.resource_request import ResourceRequest
 
 @pytest.mark.unit
 def test_standard_transformer():
-    transformer_config_path = os.path.join("test/transformer", "feast_standard_transformer.yaml")
+    transformer_config_path = os.path.join("test/transformer", "standard_transformer.yaml")
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=False)
-    assert transformer.env_vars == {'STANDARD_TRANSFORMER_CONFIG': '{"transformerConfig": {"feast": [{"entities": [{"name": "customer_id", "valueType": "STRING", "jsonPath": "$.customer_id"}], "features": [{"name": "total_booking_1w", "defaultValue": "0.0"}, {"name": "total_booking_4w", "defaultValue": "0.0"}]}, {"entities": [{"name": "merchant_id", "valueType": "STRING", "jsonPath": "$.merchant_id"}], "features": [{"name": "total_completed_order_1w", "defaultValue": "0.0"}, {"name": "avg_completed_order_1w", "defaultValue": "0.0"}]}]}}'}
+    assert transformer.env_vars == {'STANDARD_TRANSFORMER_CONFIG': '{"transformerConfig": {"feast": [{"project": "merlin", "entities": [{"name": "merlin_test_driver_id", "valueType": "STRING", "jsonPath": "$.driver_id"}], "features": [{"name": "merlin_test_driver_features:test_int32", "valueType": "INT32", "defaultValue": "0"}, {"name": "merlin_test_driver_features:test_float", "valueType": "FLOAT", "defaultValue": "0.0"}, {"name": "merlin_test_driver_features:test_double", "valueType": "DOUBLE", "defaultValue": "0.0"}, {"name": "merlin_test_driver_features:test_string", "valueType": "STRING", "defaultValue": ""}]}]}}'}
     assert not transformer.enabled
     assert transformer.command is None
     assert transformer.args is None
     assert transformer.transformer_type == TransformerType.STANDARD_TRANSFORMER
 
 def test_standard_transformer_with_env_vars():
-    transformer_config_path = os.path.join("test/transformer", "feast_standard_transformer.yaml")
+    transformer_config_path = os.path.join("test/transformer", "standard_transformer.yaml")
     resource = ResourceRequest(min_replica=1, max_replica=2, cpu_request="100m", memory_request="128Mi")
     transformer = StandardTransformer(config_file=transformer_config_path,
                                       enabled=True,
                                       resource_request=resource,
                                       env_vars={"MODEL_URL": "http://model.default"})
-    assert transformer.env_vars == {'MODEL_URL': "http://model.default", 'STANDARD_TRANSFORMER_CONFIG': '{"transformerConfig": {"feast": [{"entities": [{"name": "customer_id", "valueType": "STRING", "jsonPath": "$.customer_id"}], "features": [{"name": "total_booking_1w", "defaultValue": "0.0"}, {"name": "total_booking_4w", "defaultValue": "0.0"}]}, {"entities": [{"name": "merchant_id", "valueType": "STRING", "jsonPath": "$.merchant_id"}], "features": [{"name": "total_completed_order_1w", "defaultValue": "0.0"}, {"name": "avg_completed_order_1w", "defaultValue": "0.0"}]}]}}'}
+    assert transformer.env_vars == {'MODEL_URL': "http://model.default", 'STANDARD_TRANSFORMER_CONFIG': '{"transformerConfig": {"feast": [{"project": "merlin", "entities": [{"name": "merlin_test_driver_id", "valueType": "STRING", "jsonPath": "$.driver_id"}], "features": [{"name": "merlin_test_driver_features:test_int32", "valueType": "INT32", "defaultValue": "0"}, {"name": "merlin_test_driver_features:test_float", "valueType": "FLOAT", "defaultValue": "0.0"}, {"name": "merlin_test_driver_features:test_double", "valueType": "DOUBLE", "defaultValue": "0.0"}, {"name": "merlin_test_driver_features:test_string", "valueType": "STRING", "defaultValue": ""}]}]}}'}
     assert transformer.enabled
     assert transformer.command is None
     assert transformer.args is None

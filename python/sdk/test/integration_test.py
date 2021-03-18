@@ -661,7 +661,7 @@ def test_standard_transformer_feast_pyfunc(integration_test_url, project_name, u
                            code_dir=["test"],
                            artifacts={})
 
-    transformer_config_path = os.path.join("test/transformer", "standard_transformer_input.yaml")
+    transformer_config_path = os.path.join("test/transformer", "standard_transformer.yaml")
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
 
     request_json = {"driver_id": "1000"}
