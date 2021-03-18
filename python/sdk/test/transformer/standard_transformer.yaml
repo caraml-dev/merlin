@@ -1,6 +1,6 @@
 transformerConfig:
   feast:
-  - project: default
+  - project: merlin
     entities:
     - name: merlin_test_driver_id
       valueType: STRING
