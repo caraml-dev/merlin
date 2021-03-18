@@ -2,15 +2,19 @@ transformerConfig:
   feast:
   - project: merlin
     entities:
-    - name: merlin_driver_id
+    - name: merlin_test_driver_id
       valueType: STRING
       jsonPath: "$.driver_id"
     features:
-    - name: test_int32
+    - name: merlin_test_driver_features:test_int32
+      valueType: INT32
       defaultValue: "0"
-    - name: test_float
+    - name: merlin_test_driver_features:test_float
+      valueType: FLOAT
       defaultValue: "0.0"
-    - name: test_double
+    - name: merlin_test_driver_features:test_double
+      valueType: DOUBLE
       defaultValue: "0.0"
-    - name: test_string
+    - name: merlin_test_driver_features:test_string
+      valueType: STRING
       defaultValue: ""
