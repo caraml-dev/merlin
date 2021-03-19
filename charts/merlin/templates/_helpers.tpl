@@ -20,10 +20,10 @@
 {{- end -}}
 
 {{- define "postgresql.host" -}}
-{{- if empty .Values.postgresql.postgresqlServer -}}
+{{- if empty .Values.postgresql.postgresqlHost -}}
 {{- printf "%s-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
 {{- else -}}
-{{- .Values.postgresql.postgresqlServer -}}
+{{- .Values.postgresql.postgresqlHost -}}
 {{- end -}}
 {{- end -}}
 

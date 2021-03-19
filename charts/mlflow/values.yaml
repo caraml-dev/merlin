@@ -72,7 +72,7 @@ ingress:
 postgresql:
   enabled: false
   ## To use an external PostgreSQL instance uncomment the line below:
-  ## postgresqlServer: ""
+  ## postgresqlHost: ""
   postgresqlUsername: username
   postgresqlPassword: password
   postgresqlDatabase: mlflow

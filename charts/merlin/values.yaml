@@ -154,7 +154,7 @@ postgresql:
   persistence:
     size: 100Gi
   ## To use an external PostgreSQL instance uncomment the line below:
-  ## postgresqlServer: ""
+  ## postgresqlHost: ""
   postgresqlUsername: merlin
   postgresqlDatabase: merlin
   metrics:
