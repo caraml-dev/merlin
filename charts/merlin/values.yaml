@@ -265,26 +265,26 @@ mlflow:
     # orchestrator: unknown
 
 mlflowPostgresql:
+  enabled: true
+  ## To use an external PostgreSQL instance uncomment the line below:
+  ## postgresqlHost: ""
+  postgresqlUsername: username
+  postgresqlPassword: password
+  postgresqlDatabase: mlflow
+  ## Set this to your mlflow postgresql Password
+  # The password secret will be created using this password
+  # postgresqlPassword: ""
+
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+  persistence:
     enabled: true
-    ## To use an external PostgreSQL instance uncomment the line below:
-    ## postgresqlHost: ""
-    postgresqlUsername: username
-    postgresqlPassword: password
-    postgresqlDatabase: mlflow
-    ## Set this to your mlflow postgresql Password
-    # The password secret will be created using this password
-    # postgresqlPassword: ""
-  
-    replicaCount: 1
-  
-    resources:
-      requests:
-        cpu: 500m
-        memory: 512Mi
-  
-    persistence:
-      enabled: true
-      size: 100Gi
+    size: 100Gi
 
 swagger:
   enabled: true
