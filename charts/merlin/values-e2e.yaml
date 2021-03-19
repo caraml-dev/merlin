@@ -67,6 +67,7 @@ merlin:
     trackingURL: "http://www.example.com"
 
 postgresql:
+  enabled: true
   resources:
     requests:
       cpu: 25m

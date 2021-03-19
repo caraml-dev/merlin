@@ -2,6 +2,7 @@ dependencies:
   - name: postgresql
     repository: "@stable"
     version: 7.0.0
+    condition: postgresql.enabled
   - name: mlflow
     repository: "file://../mlflow"
     version: 0.4.1
