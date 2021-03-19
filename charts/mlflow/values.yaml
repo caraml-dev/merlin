@@ -71,8 +71,6 @@ ingress:
 
 postgresql:
   enabled: false
-  ## Option to use postgresql "internal" or "external" database type, by default internal is chosen
-  type: internal
   ## To use an external PostgreSQL instance uncomment the line below:
   ## postgresqlServer: ""
   postgresqlUsername: username

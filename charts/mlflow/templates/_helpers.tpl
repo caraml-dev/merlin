@@ -14,10 +14,10 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{- define "postgresql.host" -}}
-{{- if eq .Values.postgresql.type "external" -}}
-{{- .Values.postgresql.postgresqlServer -}}
-{{- else -}}
+{{- if empty .Values.postgresql.postgresqlServer -}}
 {{- printf "%s-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
+{{- else -}}
+{{- .Values.postgresql.postgresqlServer -}}
 {{- end -}}
 {{- end -}}
 

@@ -153,8 +153,6 @@ postgresql:
       cpu: 500m
   persistence:
     size: 100Gi
-  ## Option to use postgresql "internal" or "external" database type, by default internal is chosen
-  type: internal
   ## To use an external PostgreSQL instance uncomment the line below:
   ## postgresqlServer: ""
   postgresqlUsername: merlin
