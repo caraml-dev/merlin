@@ -6,6 +6,8 @@ image:
 
 replicaCount: 1
 
+environment: dev
+
 rollingUpdate:
   maxSurge: 1
   maxUnavailable: 0
@@ -86,6 +88,16 @@ postgresql:
   persistence:
     enabled: true
     size: 100Gi
+
+database:
+  enabled: false
+  host: localhost
+  username: mlflow
+  databaseName: mlflow
+  password:
+    secretName: mlflow-postgresql
+    secretKey: database-password
+    value: password
 
 # These labels help us to account for the usage and cost of each deployment used in all environments and also the teams using them.
 # For the `app` label, there will be problems relabelling them since the replication controller uses the old values.
