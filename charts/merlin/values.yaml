@@ -155,9 +155,12 @@ postgresql:
   persistence:
     size: 100Gi
   ## To use an external PostgreSQL instance uncomment the line below:
-  ## postgresqlHost: ""
+  # postgresqlHost: ""
   postgresqlUsername: merlin
   postgresqlDatabase: merlin
+  ## Set this to your merlin postgresql Password
+  # The password secret will be created using this password
+  # postgresqlPassword: ""
   metrics:
     enabled: true
     serviceMonitor:

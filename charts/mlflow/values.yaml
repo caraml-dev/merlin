@@ -76,6 +76,9 @@ postgresql:
   postgresqlUsername: username
   postgresqlPassword: password
   postgresqlDatabase: mlflow
+  ## Set this to your mlflow postgresql Password
+  # The password secret will be created using this password
+  # postgresqlPassword: ""
 
   replicaCount: 1
 
