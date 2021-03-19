@@ -66,7 +66,7 @@ merlin:
     # This should be the actual DNS registered
     trackingURL: "http://www.example.com"
 
-merlinPostgresql:
+merlin-postgresql:
   enabled: true
   resources:
     requests:
@@ -98,7 +98,7 @@ mlflow:
     AWS_DEFAULT_REGION: ap-southeast-2
     MLFLOW_S3_ENDPOINT_URL: http://minio.minio:9000
 
-mlflowPostgresql:
+mlflow-postgresql:
   enabled: false
   postgresqlDatabase: mlflow
   postgresqlUsername: mlflow

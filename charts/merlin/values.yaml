@@ -38,7 +38,7 @@ merlin:
   mlpApi:
     apiHost: http://mlp.mlp:8080/v1
     # encryptionKey must be specified using --set flag.
-    # encryptionKey:
+    encryptionKey: secret-encyrption
 
   feastCoreApi:
     apiHost: http://feast-core.mlp:8080/v1
@@ -145,7 +145,7 @@ merlin:
 postgresql:
   enabled: true
 
-merlinPostgresql:
+merlin-postgresql:
   enabled: true
   resources:
     requests:
@@ -264,7 +264,7 @@ mlflow:
     # stream: unknown
     # orchestrator: unknown
 
-mlflowPostgresql:
+mlflow-postgresql:
   enabled: true
   ## To use an external PostgreSQL instance uncomment the line below:
   ## postgresqlHost: ""

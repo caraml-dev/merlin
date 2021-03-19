@@ -32,25 +32,25 @@
 {{- end -}}
 {{- end -}}
 
-{{- define "merlinPostgresql.host" -}}
-{{- if .Values.merlinPostgresql.enabled -}}
-{{- printf "%s-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
+{{- define "merlin-postgresql.host" -}}
+{{- if index .Values "merlin-postgresql" "enabled" -}}
+{{- printf "%s-merlin-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
 {{- else -}}
-{{- .Values.merlinPostgresql.postgresqlHost -}}
+{{- index .Values "merlin-postgresql" "postgresqlHost" -}}
 {{- end -}}
 {{- end -}}
 
-{{- define "mlflowPostgresql.host" -}}
-{{- if .Values.mlflowPostgresql.enabled -}}
-{{- printf "%s-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
+{{- define "mlflow-postgresql.host" -}}
+{{- if index .Values "mlflow-postgresql" "enabled" -}}
+{{- printf "%s-mlflow-postgresql" "%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
 {{- else -}}
-{{- .Values.mlflowPostgresql.postgresqlHost -}}
+{{- index .Values "mlflow-postgresql" "postgresqlHost" -}}
 {{- end -}}
 {{- end -}}
 
 {{- define "mlflow.backendStoreUri" -}}
-{{- if .Values.mlflowPostgresql.enabled -}}
-{{- printf "postgresql://%s:%s@%s:5432/%s" .Values.mlflowPostgresql.postgresqlUsername .Values.mlflowPostgresql.postgresqlPassword (include "mlflowPostgresql.host" .) .Values.mlflowPostgresql.postgresqlDatabase -}}
+{{- if index .Values "mlflow-postgresql" "enabled" -}}
+{{- printf "postgresql://%s:%s@%s:5432/%s" (index .Values "mlflow-postgresql" "postgresqlUsername") (index .Values "mlflow-postgresql" "postgresqlPassword") (include "mlflow-postgresql.host" .) (index .Values "mlflow-postgresql" "postgresqlDatabase") -}}
 {{- else -}}
 {{- printf .Values.mlflow.backendStoreUri -}}
 {{- end -}}
