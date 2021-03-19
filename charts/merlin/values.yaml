@@ -147,36 +147,39 @@ postgresql:
 
 merlin-postgresql:
   enabled: true
-  resources:
-    requests:
-      memory: 2Gi
-      cpu: 500m
-  persistence:
-    size: 100Gi
+
   ## To use an external PostgreSQL instance uncomment the line below:
   # postgresqlHost: ""
   postgresqlUsername: merlin
   postgresqlDatabase: merlin
-  ## Set this to your merlin postgresql Password
   # The password secret will be created using this password
-  # postgresqlPassword: ""
-  metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-  replication:
-    enabled: true
-    user: repl_user
-    password: repl_password
-    slaveReplicas: 2
-    ## Set synchronous commit mode: on, off, remote_apply, remote_write and local
-    ## ref: https://www.postgresql.org/docs/9.6/runtime-config-wal.html#GUC-WAL-LEVEL
-    synchronousCommit: "on"
-    ## From the number of `slaveReplicas` defined above, set the number of those that will have synchronous replication
-    ## NOTE: It cannot be > slaveReplicas
-    numSynchronousReplicas: 2
-    ## Replication Cluster application name. Useful for defining multiple replication policies
-    applicationName: merlin
+  postgresqlPassword: merlin
+
+  resources:
+    requests:
+      memory: 2Gi
+      cpu: 500m
+
+  persistence:
+    size: 100Gi
+
+  # metrics:
+  #   enabled: true
+  #   serviceMonitor:
+  #     enabled: false
+  # replication:
+  #   enabled: false
+  #   user: repl_user
+  #   password: repl_password
+  #   slaveReplicas: 2
+  #   Set synchronous commit mode: on, off, remote_apply, remote_write and local
+  #   ref: https://www.postgresql.org/docs/9.6/runtime-config-wal.html#GUC-WAL-LEVEL
+  #   synchronousCommit: "on"
+  #   From the number of `slaveReplicas` defined above, set the number of those that will have synchronous replication
+  #   NOTE: It cannot be > slaveReplicas
+  #   numSynchronousReplicas: 2
+  #   Replication Cluster application name. Useful for defining multiple replication policies
+  #   applicationName: merlin
 
 mlflow:
   ## mlflow container name

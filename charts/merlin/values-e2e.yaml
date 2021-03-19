@@ -52,7 +52,6 @@ merlin:
       cpu_request: "25m"
       memory_request: "128Mi"
 
-
   imageBuilder:
     clusterName: "dev"
 
@@ -68,40 +67,34 @@ merlin:
 
 merlin-postgresql:
   enabled: true
+  persistence:
+    enabled: false
+  postgresqlUsername: merlin
+  postgresqlDatabase: merlin
+  postgresqlPassword: merlin
   resources:
     requests:
       cpu: 25m
       memory: 256Mi
-  persistence:
-    enabled: false
-  postgresqlUsername: merlin
-  postgresqlPassword: merlin
-  postgresqlDatabase: merlin
-  metrics:
-    enabled: false
-    serviceMonitor:
-      enabled: false
-  replication:
-    enabled: false
-  initdbScriptsSecret: merlin-postgresql-mlflow-init-scripts
 
 mlflow:
-  ## mlflow container name
-  ##
   name: mlflow
-
   artifactRoot: s3://mlflow
   extraEnvs:
-    # MinIO credentials
     AWS_ACCESS_KEY_ID: YOURACCESSKEY
     AWS_SECRET_ACCESS_KEY: YOURSECRETKEY
     AWS_DEFAULT_REGION: ap-southeast-2
     MLFLOW_S3_ENDPOINT_URL: http://minio.minio:9000
 
 mlflow-postgresql:
-  enabled: false
-  postgresqlDatabase: mlflow
+  enabled: true
   postgresqlUsername: mlflow
+  postgresqlDatabase: mlflow
+  postgresqlPassword: mlflow
+  resources:
+      requests:
+        cpu: 25m
+        memory: 256Mi
 
 swagger:
   enabled: false

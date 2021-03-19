@@ -49,8 +49,10 @@
 {{- end -}}
 
 {{- define "mlflow.backendStoreUri" -}}
-{{- if index .Values "mlflow-postgresql" "enabled" -}}
+{{- if (index .Values "mlflow-postgresql" "enabled") -}}
 {{- printf "postgresql://%s:%s@%s:5432/%s" (index .Values "mlflow-postgresql" "postgresqlUsername") (index .Values "mlflow-postgresql" "postgresqlPassword") (include "mlflow-postgresql.host" .) (index .Values "mlflow-postgresql" "postgresqlDatabase") -}}
+{{- else if (index .Values "mlflow-postgresql" "postgresqlHost") -}}
+{{- printf "postgresql://%s:%s@%s:5432/%s" (index .Values "mlflow-postgresql" "postgresqlUsername") (index .Values "mlflow-postgresql" "postgresqlPassword") (index .Values "mlflow-postgresql" "postgresqlHost") (index .Values "mlflow-postgresql" "postgresqlDatabase") -}}
 {{- else -}}
 {{- printf .Values.mlflow.backendStoreUri -}}
 {{- end -}}
