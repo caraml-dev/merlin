@@ -3,3 +3,8 @@ dependencies:
     repository: "@stable"
     version: 7.0.0
     condition: postgresql.enabled
+  - name: postgresql
+    repository: "@stable"
+    version: 7.0.0
+    condition: mlflow-postgresql.enabled
+    alias: mlflow-postgresql

@@ -1,9 +1,17 @@
+{{/* vim: set filetype=mustache: */}}
+{{/*
+Expand the name of the chart.
+*/}}
 {{- define "merlin.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
 {{- define "merlin.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -29,15 +37,11 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 */}}
 
 {{- define "mlflow.fullname" -}}
-{{- if .Values.mlflow.fullnameOverride -}}
-{{- .Values.mlflow.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}
 {{- printf "%s-%s" .Release.Name .Values.mlflow.name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- printf "%s-%s-%s" .Release.Name $name .Values.mlflow.name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
 {{- end -}}
 {{- end -}}
 
