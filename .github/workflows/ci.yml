@@ -285,49 +285,49 @@ jobs:
           build_args: MLFLOW_VERSION=1.3.0
           tags: 1.3.0
 
-  e2e-test:
-    if: >-
-      (
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.full_name == github.repository
-      ) || (
-        github.event_name == 'pull_request_target' &&
-        github.event.pull_request.head.repo.full_name != github.repository
-      ) || (
-        github.event_name == 'push' &&
-        github.event.pull_request.head.repo.full_name == github.repository
-      )
-    runs-on: ubuntu-latest
-    needs: publish-merlin-docker
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          path: merlin
-      - uses: actions/checkout@master
-        with:
-          repository: gojek/mlp
-          ref: main
-          path: mlp
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.13
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
-
-      - name: Setup cluster
-        run: ./merlin/scripts/e2e/setup-cluster.sh
-      - name: Setup mlp namespace
-        run: |
-          kubectl create namespace mlp
-          kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
-      - name: Deploy MLP
-        run: |
-          helm install mlp mlp/chart --namespace=mlp \
-            --values=mlp/chart/values-e2e.yaml \
-            --set mlp.image.tag=main \
-            --wait --timeout=5m
-      - name: Deploy Merlin
-        run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
-      - name: Run E2E test
-        run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
+#  e2e-test:
+#    if: >-
+#      (
+#        github.event_name == 'pull_request' &&
+#        github.event.pull_request.head.repo.full_name == github.repository
+#      ) || (
+#        github.event_name == 'pull_request_target' &&
+#        github.event.pull_request.head.repo.full_name != github.repository
+#      ) || (
+#        github.event_name == 'push' &&
+#        github.event.pull_request.head.repo.full_name == github.repository
+#      )
+#    runs-on: ubuntu-latest
+#    needs: publish-merlin-docker
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          path: merlin
+#      - uses: actions/checkout@master
+#        with:
+#          repository: gojek/mlp
+#          ref: main
+#          path: mlp
+#      - uses: actions/setup-go@v2
+#        with:
+#          go-version: 1.13
+#      - uses: actions/setup-python@v2
+#        with:
+#          python-version: 3.7
+#
+#      - name: Setup cluster
+#        run: ./merlin/scripts/e2e/setup-cluster.sh
+#      - name: Setup mlp namespace
+#        run: |
+#          kubectl create namespace mlp
+#          kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
+#      - name: Deploy MLP
+#        run: |
+#          helm install mlp mlp/chart --namespace=mlp \
+#            --values=mlp/chart/values-e2e.yaml \
+#            --set mlp.image.tag=main \
+#            --wait --timeout=5m
+#      - name: Deploy Merlin
+#        run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
+#      - name: Run E2E test
+#        run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
