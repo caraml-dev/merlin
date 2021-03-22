@@ -135,16 +135,6 @@ merlin:
     # This should be the actual DNS registered
     trackingURL: "http://www.example.com"
 
-  # Database connection used by Merlin backend when postgres is disabled
-  # database:
-  #   host: "localhost"
-  #   user: "root"
-  #   name: "merlin"
-  #   password:
-  #     secretName: "merlin-postgrsql" 
-  #     secretKey: "database-password"
-  #     value: "password"
-
 mlflow:
   image:
     registry: ghcr.io
@@ -157,7 +147,6 @@ mlflow:
     postgresqlUsername: mlflow
 
 postgresql:
-  enabled: true
   resources:
     requests:
       memory: 2Gi

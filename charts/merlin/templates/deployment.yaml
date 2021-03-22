@@ -80,13 +80,16 @@ spec:
           - name: PORT
             value: "{{ .Values.merlin.service.internalPort }}"
           - name: DATABASE_HOST
-            value: {{ template "database.host" . }}
+            value: {{ template "postgresql.host" . }}
           - name: DATABASE_USER
-            value: {{ template "database.user" . }}
-          - name: DATABASE_NAME
-            value: {{ template "database.name" . }}
+            value: "{{ .Values.postgresql.postgresqlUsername }}"
           - name: DATABASE_PASSWORD
-            {{- include "database.password" . | indent 12 }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-postgresql
+                key: postgresql-password
+          - name: DATABASE_NAME
+            value: "{{ .Values.postgresql.postgresqlDatabase }}"
           - name: REACT_APP_OAUTH_CLIENT_ID
             value: "{{ .Values.merlin.oauthClientID }}"
           - name: REACT_APP_ENVIRONMENT
