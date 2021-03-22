@@ -33,7 +33,7 @@ import {
   EuiTextAlign,
   EuiToolTip,
   EuiBadgeGroup,
-  EuiSearchBar,
+  EuiSearchBar
 } from "@elastic/eui";
 import { DateFromNow } from "@gojek/mlp-ui";
 import PropTypes from "prop-types";
@@ -48,7 +48,6 @@ const moment = require("moment");
 const defaultTextSize = "s";
 const defaultIconSize = "s";
 
-
 /**
  * CollapsibleLabelsPanel is a collapsible panel that groups labels for a model version.
  * By default, only 2 labels are shown, and a "Show All" button needs to be clicked
@@ -61,36 +60,43 @@ const defaultIconSize = "s";
  * @returns {JSX.Element}
  * @constructor
  */
-const CollapsibleLabelsPanel = ({labels, labelOnClick, minLabelsCount = 2, maxLabelLength = 9}) => {
-  const {getToggleProps, isExpanded} = useCollapse();
+const CollapsibleLabelsPanel = ({
+  labels,
+  labelOnClick,
+  minLabelsCount = 2,
+  maxLabelLength = 9
+}) => {
+  const { getToggleProps, isExpanded } = useCollapse();
 
   return (
     <EuiBadgeGroup>
-      {labels && Object.entries(labels)
-        .map(
+      {labels &&
+        Object.entries(labels).map(
           ([key, val], index) =>
-            (isExpanded || index < minLabelsCount) &&
-            <EuiBadge
-              key={key}
-              onClick={() => {
-                const queryText = `labels: ${key} in (${val})`
-                labelOnClick({queryText})
-              }}
-              onClickAriaLabel="search by label">
-              <EllipsisText text={key} length={maxLabelLength}/>:<EllipsisText text={val} length={maxLabelLength}/>
-            </EuiBadge>
-        )
-      }
-      {
-        // Toggle collapse button
-        (!isExpanded && labels && Object.keys(labels).length > minLabelsCount) &&
+            (isExpanded || index < minLabelsCount) && (
+              <EuiBadge
+                key={key}
+                onClick={() => {
+                  const queryText = `labels: ${key} in (${val})`;
+                  labelOnClick({ queryText });
+                }}
+                onClickAriaLabel="search by label">
+                <EllipsisText text={key} length={maxLabelLength} />:
+                <EllipsisText text={val} length={maxLabelLength} />
+              </EuiBadge>
+            )
+        )}
+      {// Toggle collapse button
+      !isExpanded && labels && Object.keys(labels).length > minLabelsCount && (
         <EuiLink {...getToggleProps()}>
-          {isExpanded ? "" : `Show All [${Object.keys(labels).length - minLabelsCount}]`}
+          {isExpanded
+            ? ""
+            : `Show All [${Object.keys(labels).length - minLabelsCount}]`}
         </EuiLink>
-      }
+      )}
     </EuiBadgeGroup>
-  )
-}
+  );
+};
 
 const VersionListTable = ({
   versions,
@@ -430,7 +436,9 @@ const VersionListTable = ({
       field: "labels",
       name: "Labels",
       width: "20%",
-      render: labels => <CollapsibleLabelsPanel labels={labels} labelOnClick={onChange}/>
+      render: labels => (
+        <CollapsibleLabelsPanel labels={labels} labelOnClick={onChange} />
+      )
     },
     {
       field: "created_at",
@@ -565,7 +573,7 @@ const VersionListTable = ({
   };
 
   // Query for the search bar
-  const [query, setQuery] = useState(new EuiSearchBar.Query.parse(""))
+  const [query, setQuery] = useState(new EuiSearchBar.Query.parse(""));
 
   const onChange = ({ queryText }) => {
     // When the search bar currently contains labels search term e.g labels: foo in (bar),
@@ -573,17 +581,17 @@ const VersionListTable = ({
     // This regex will replace the existing search term with only environment_name filter to make the search term valid
     // for simplicity. Users who want multiple search terms (e.g. search by both labels and environment_name) are
     // considered advanced users and they can do this by typing directly on to the search bar.
-    queryText = queryText.replace(/\(labels\\.*\)/i,"").trim()
+    queryText = queryText.replace(/\(labels\\.*\)/i, "").trim();
     searchCallback(queryText);
 
     // query is a dummy query object that can be parsed correctly by the default Elastic UI search bar
     // query parser. We need this because the syntax of our free text query does not match the syntax
     // of the query parser in the Elastic UI search bar. As of Feb 2021, there is no way to allow bad string in the
     // search bar. https://github.com/elastic/eui/issues/4386
-    const query = new EuiSearchBar.Query.parse("")
+    const query = new EuiSearchBar.Query.parse("");
     // Override the text field of the query, once the query has been parsed correctly.
-    query.text = queryText
-    setQuery(query)
+    query.text = queryText;
+    setQuery(query);
   };
 
   const search = {
