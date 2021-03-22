@@ -1,9 +1,9 @@
 dependencies:
 - name: postgresql
-  repository: https://kubernetes-charts.storage.googleapis.com/
+  repository: https://charts.helm.sh/stable
   version: 7.0.0
-- name: mlflow
-  repository: file://../mlflow
-  version: 0.4.1
-digest: sha256:97298bf6868fedabca4b4dd4e494e2ca6c4631188d8cb23151df4d7df6e471a1
-generated: "2020-09-28T23:18:49.077269+07:00"
+- name: postgresql
+  repository: https://charts.helm.sh/stable
+  version: 7.0.0
+digest: sha256:90b2793500ca645901cfb360cb0908c71d475f9bee44adb83cb3ac1b452ffde2
+generated: "2021-03-19T20:18:42.479909+07:00"

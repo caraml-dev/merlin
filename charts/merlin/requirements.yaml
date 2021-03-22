@@ -2,8 +2,10 @@ dependencies:
   - name: postgresql
     repository: "@stable"
     version: 7.0.0
-    condition: postgresql.enabled
-  - name: mlflow
-    repository: "file://../mlflow"
-    version: 0.4.1
-    alias: mlflow
+    alias: merlin-postgresql
+    condition: merlin-postgresql.enabled
+  - name: postgresql
+    repository: "@stable"
+    version: 7.0.0
+    alias: mlflow-postgresql
+    condition: mlflow-postgresql.enabled

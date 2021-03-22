@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "mlflow.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "mlflow.fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  {{- if .Values.mlflow.podLabels}}
+    {{ toYaml .Values.mlflow.podLabels | nindent 4 }}
+  {{- end}}
+spec:
+  replicas: {{ .Values.mlflow.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "mlflow.fullname" . }}
+      release: {{ .Release.Name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.mlflow.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.mlflow.rollingUpdate.maxUnavailable }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "mlflow.fullname" . }}
+        release: {{ .Release.Name }}
+      {{- if .Values.mlflow.podLabels}}
+        {{ toYaml .Values.mlflow.podLabels | nindent 8 }}
+      {{- end}}
+    spec:
+      containers:
+      - name: {{ template "mlflow.fullname" . }}
+        image: {{ .Values.mlflow.image.registry }}/{{ .Values.mlflow.image.repository }}:{{ .Values.mlflow.image.tag }}
+        imagePullPolicy: {{ .Values.mlflow.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.mlflow.service.internalPort }}
+          name: "http"
+        livenessProbe:
+          httpGet:
+            path: {{ default "/api/2.0/mlflow/experiments/list" .Values.mlflow.livenessProbe.path }}
+            port: {{ .Values.mlflow.service.internalPort }}
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.mlflow.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.mlflow.livenessProbe.periodSeconds }}
+          successThreshold: {{ .Values.mlflow.livenessProbe.successThreshold }}
+          timeoutSeconds: {{ .Values.mlflow.livenessProbe.timeoutSeconds }}
+        readinessProbe:
+          httpGet:
+            path: {{ default "/api/2.0/mlflow/experiments/list" .Values.mlflow.readinessProbe.path }}
+            port: {{ .Values.mlflow.service.internalPort }}
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.mlflow.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.mlflow.readinessProbe.periodSeconds }}
+          successThreshold: {{ .Values.mlflow.readinessProbe.successThreshold }}
+          timeoutSeconds: {{ .Values.mlflow.readinessProbe.timeoutSeconds }}
+        resources:
+{{ toYaml .Values.mlflow.resources | indent 10 }}
+        env:
+        - name: BACKEND_STORE_URI
+          value: "{{ template "mlflow.backendStoreUri" . }}"
+        - name: ARTIFACT_ROOT
+          value: "{{ .Values.mlflow.artifactRoot }}"
+        - name: HOST
+          value: "{{ .Values.mlflow.host }}"
+        - name: PORT
+          value: "{{ .Values.mlflow.service.internalPort }}"
+        {{- range $key, $val := .Values.mlflow.extraEnvs }}
+        - name: {{ $key }}
+          value: {{ $val | quote }}
+        {{- end}}
+
+{{- if .Values.mlflow.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.mlflow.imagePullSecrets | indent 6 }}
+{{- end }}
+
+{{- if .Values.mlflow.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.mlflow.nodeSelector | indent 8 }}
+{{- end }}

@@ -66,12 +66,7 @@ spec:
           successThreshold: 1
           timeoutSeconds: 5
         resources:
-          requests:
-            cpu: {{ .Values.merlin.resources.requests.cpu }}
-            memory: {{ .Values.merlin.resources.requests.memory }}
-          limits:
-            cpu: {{ .Values.merlin.resources.limits.cpu }}
-            memory: {{ .Values.merlin.resources.limits.memory }}
+{{ toYaml .Values.merlin.resources | indent 10 }}
         env:
           - name: ENVIRONMENT
             value: "{{ .Values.merlin.environment }}"
@@ -80,13 +75,16 @@ spec:
           - name: PORT
             value: "{{ .Values.merlin.service.internalPort }}"
           - name: DATABASE_HOST
-            value: {{ template "database.host" . }}
+            value: {{ template "merlin-postgresql.host" . }}
           - name: DATABASE_USER
-            value: {{ template "database.user" . }}
-          - name: DATABASE_NAME
-            value: {{ template "database.name" . }}
+            value: {{ index .Values "merlin-postgresql" "postgresqlUsername"}}
           - name: DATABASE_PASSWORD
-            {{- include "database.password" . | indent 12 }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-merlin-postgresql
+                key: postgresql-password
+          - name: DATABASE_NAME
+            value: {{ index .Values "merlin-postgresql" "postgresqlDatabase" }}
           - name: REACT_APP_OAUTH_CLIENT_ID
             value: "{{ .Values.merlin.oauthClientID }}"
           - name: REACT_APP_ENVIRONMENT

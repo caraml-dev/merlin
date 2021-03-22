@@ -1,0 +1,19 @@
+{{- if .Values.mlflow.ingress.enabled }}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "mlflow.fullname" .}}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    kubernetes.io/ingress.class: "{{ .Values.mlflow.ingress.class }}"
+spec:
+  rules:
+    - host: {{ .Values.mlflow.ingress.host }}
+      http:
+        paths:
+          - path: {{ .Values.mlflow.ingress.path | default "/" }}
+            backend:
+              serviceName: {{ template "mlflow.fullname" .}}
+              servicePort: {{ .Values.mlflow.service.externalPort }}
+{{- end }}
+
