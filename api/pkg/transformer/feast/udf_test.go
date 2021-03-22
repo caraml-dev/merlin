@@ -3,9 +3,9 @@ package feast
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/mmcloughlin/geohash"
 	"github.com/stretchr/testify/assert"
-	"fmt"
 	"testing"
 )
 
@@ -84,7 +84,7 @@ func TestGeohash(t *testing.T) {
 			latitudeJsonPath:  "$.latitudeArrays",
 			longitudeJsonPath: "$.longitudeArrays",
 			precision:         12,
-			expValue: []string{
+			expValue: []interface{}{
 				geohash.Encode(1.0, 1.0),
 				geohash.Encode(2.0, 2.0),
 			},
@@ -93,7 +93,7 @@ func TestGeohash(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			udf := &UdfEnv{UnmarshalledJsonRequest:testJsonUnmarshallled}
+			udf := &UdfEnv{UnmarshalledJsonRequest: testJsonUnmarshallled}
 			udfResult := udf.Geohash(test.latitudeJsonPath, test.longitudeJsonPath, test.precision)
 			if udfResult.Error != nil {
 				if test.expError != nil {
@@ -183,7 +183,7 @@ func TestS2ID(t *testing.T) {
 			latitudeJsonPath:  "$.latitudeArrays",
 			longitudeJsonPath: "$.longitudeArrays",
 			level:             12,
-			expValue: []string{
+			expValue: []interface{}{
 				"1153277815093723136",
 				"1154346540395921408",
 			},
@@ -192,7 +192,7 @@ func TestS2ID(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			udf := &UdfEnv{UnmarshalledJsonRequest:testJsonUnmarshallled}
+			udf := &UdfEnv{UnmarshalledJsonRequest: testJsonUnmarshallled}
 			udfResult := udf.S2ID(test.latitudeJsonPath, test.longitudeJsonPath, test.level)
 			if udfResult.Error != nil {
 				if test.expError != nil {
@@ -244,25 +244,25 @@ func TestJsonExtract(t *testing.T) {
 			name:           "should be able to extract array value using nested key from JSON string",
 			keyJsonPath:    "$.array",
 			nestedJsonPath: "$.child_node.array[*]",
-			extractedValue: []interface {}{float64(1), float64(2)},
+			extractedValue: []interface{}{float64(1), float64(2)},
 		},
 		{
 			name:           "should throw error when value specified by key does not exist in nested JSON",
 			keyJsonPath:    "$.nested",
 			nestedJsonPath: "$.child_node.does_not_exist_node",
-			expError: fmt.Errorf("key error: does_not_exist_node not found in object"),
+			expError:       fmt.Errorf("key error: does_not_exist_node not found in object"),
 		},
 		{
 			name:           "should throw error when value obtained by key is not valid json",
 			keyJsonPath:    "$.not_json",
 			nestedJsonPath: "$.not_exist",
-			expError: fmt.Errorf("the value specified in path `$.not_json` should be a valid JSON"),
+			expError:       fmt.Errorf("the value specified in path `$.not_json` should be a valid JSON"),
 		},
 		{
 			name:           "should throw error when value obtained by key is not string",
 			keyJsonPath:    "$.not_string",
 			nestedJsonPath: "$.not_exist",
-			expError: fmt.Errorf("the value specified in path `$.not_string` should be of string type"),
+			expError:       fmt.Errorf("the value specified in path `$.not_string` should be of string type"),
 		},
 	}
 

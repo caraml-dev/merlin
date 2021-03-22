@@ -3,12 +3,12 @@ package feast
 import (
 	"encoding/json"
 	"errors"
-	"github.com/antonmedv/expr/vm"
-	"github.com/mmcloughlin/geohash"
 	"testing"
 
+	"github.com/antonmedv/expr/vm"
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/mmcloughlin/geohash"
 	"github.com/oliveagle/jsonpath"
 	"github.com/stretchr/testify/assert"
 
@@ -24,6 +24,16 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		"booleanString" : "false",
 		"latitude": 1.0,
 		"longitude": 2.0,
+		"locations": [
+		 {
+			"latitude": 1.0,
+			"longitude": 2.0
+		 },
+		 {
+			"latitude": 1.0,
+			"longitude": 2.0
+ 		 }
+        ],
 		"details": "{\"merchant_id\": 9001}",
 		"struct" : {
                 "integer" : 1234,
@@ -52,20 +62,6 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		expValues    []*feastType.Value
 		expError     error
 	}{
-		{
-			"integer to int32",
-			&transformer.Entity{
-				Name:      "my_entity",
-				ValueType: "INT32",
-				Extractor: &transformer.Entity_JsonPath{
-					JsonPath: "$.integer",
-				},
-			},
-			[]*feastType.Value{
-				feast.Int32Val(1234),
-			},
-			nil,
-		},
 		{
 			"integer to int64",
 			&transformer.Entity{
@@ -306,6 +302,21 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 			nil,
 		},
 		{
+			"array of string",
+			&transformer.Entity{
+				Name:      "my_entity",
+				ValueType: "STRING",
+				Extractor: &transformer.Entity_JsonPath{
+					JsonPath: "$.array[*].string",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal("value1"),
+				feast.StrVal("value2"),
+			},
+			nil,
+		},
+		{
 			"struct integer",
 			&transformer.Entity{
 				Name:      "my_entity",
@@ -334,6 +345,21 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 			nil,
 		},
 		{
+			"Array of Geohash udf",
+			&transformer.Entity{
+				Name:      "my_geohash",
+				ValueType: "STRING",
+				Extractor: &transformer.Entity_Udf{
+					Udf: "Geohash(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal(geohash.Encode(1.0, 2.0)),
+				feast.StrVal(geohash.Encode(1.0, 2.0)),
+			},
+			nil,
+		},
+		{
 			"JsonExtract udf",
 			&transformer.Entity{
 				Name:      "jsonextract",
@@ -357,6 +383,21 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 				},
 			},
 			[]*feastType.Value{
+				feast.StrVal("1154732743855177728"),
+			},
+			nil,
+		},
+		{
+			"Array of S2ID udf",
+			&transformer.Entity{
+				Name:      "s2id",
+				ValueType: "STRING",
+				Extractor: &transformer.Entity_Udf{
+					Udf: "S2ID(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal("1154732743855177728"),
 				feast.StrVal("1154732743855177728"),
 			},
 			nil,

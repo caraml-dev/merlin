@@ -31,7 +31,7 @@ func (env UdfEnv) Geohash(latitudeJsonPath, longitudeJsonPath string, precision 
 	}
 	switch latLong.(type) {
 	case []*LatLong:
-		var value []string
+		var value []interface{}
 		for _, ll := range latLong.([]*LatLong) {
 			value = append(value, ll.toGeoHash(precision))
 		}
@@ -65,7 +65,7 @@ func (env UdfEnv) S2ID(latitudeJsonPath, longitudeJsonPath string, level int) Ud
 	}
 	switch latLong.(type) {
 	case []*LatLong:
-		var value []string
+		var value []interface{}
 		for _, ll := range latLong.([]*LatLong) {
 			value = append(value, ll.toS2ID(level))
 		}
@@ -125,7 +125,7 @@ func toFloat64(o interface{}) (float64, error) {
 }
 
 type LatLong struct {
-	lat float64
+	lat  float64
 	long float64
 }
 
@@ -192,11 +192,11 @@ func extractLatLong(jsonRequestBody interface{}, latitudeJsonPath, longitudeJson
 	return latLong, nil
 }
 
-func (l *LatLong) toGeoHash(precision uint) string {
+func (l *LatLong) toGeoHash(precision uint) interface{} {
 	return geohash.EncodeWithPrecision(l.lat, l.long, precision)
 }
 
-func (l *LatLong) toS2ID(level int) string {
+func (l *LatLong) toS2ID(level int) interface{} {
 	return strconv.FormatUint(s2.CellFromLatLng(s2.LatLngFromDegrees(l.lat, l.long)).ID().Parent(level).Pos(), 10)
 }
 
