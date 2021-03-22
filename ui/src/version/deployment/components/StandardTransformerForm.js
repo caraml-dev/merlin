@@ -54,7 +54,7 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
 
         // If standard transformer config already exists, parse that value and set it to config
         if (envVar && envVar.value) {
-          const envVarJSON = JSON.parse(envVar.value);
+          const envVarJSON = transformToConfig(JSON.parse(envVar.value));
           if (envVarJSON) {
             const tc = Config.from(envVarJSON);
             setConfig(tc);
@@ -99,7 +99,7 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
         config.transformerConfig.feast &&
         transformer.env_vars
       ) {
-        const newConfigJSON = JSON.stringify(config);
+        const newConfigJSON = JSON.stringify(transformToConfigJSON(config));
         // Find the index of env_var that contains transformer config
         // If it's not exist, create new env var
         // If it's exist, update it
@@ -217,11 +217,46 @@ export const StandardTransformerForm = ({ transformer, onChange }) => {
         buttonContent={<EuiText size="xs">See YAML configuration</EuiText>}
         paddingSize="m">
         <EuiCodeBlock language="yaml" fontSize="m" paddingSize="m" isCopyable>
-          {yaml.dump(config)}
+          {yaml.dump(transformToConfigJSON(config))}
         </EuiCodeBlock>
       </EuiAccordion>
     </>
   );
+};
+
+const transformToConfigJSON = config => {
+  let output = JSON.parse(JSON.stringify(config));
+  if (output.transformerConfig) {
+    output.transformerConfig.feast.forEach(feastConfig => {
+      feastConfig.entities.forEach(entity => {
+        if (entity.fieldType === "UDF") {
+          entity["udf"] = entity.field;
+        } else {
+          entity["jsonPath"] = entity.field;
+        }
+        delete entity["field"];
+        delete entity["fieldType"];
+      });
+    });
+  }
+  return output;
+};
+
+const transformToConfig = config => {
+  if (config.transformerConfig) {
+    config.transformerConfig.feast.forEach(feastConfig => {
+      feastConfig.entities.forEach(entity => {
+        if (entity.udf) {
+          entity["fieldType"] = "UDF";
+          entity["field"] = entity.udf;
+        } else {
+          entity["fieldType"] = "JSONPath";
+          entity["field"] = entity.jsonPath;
+        }
+      });
+    });
+  }
+  return config;
 };
 
 StandardTransformerForm.propTypes = {

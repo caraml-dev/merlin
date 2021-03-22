@@ -18,13 +18,11 @@ import os
 import subprocess
 import time
 from abc import abstractmethod
-from time import sleep
 
 import mlflow.pyfunc
 import pytest
 import requests
 import tornado.web
-from merlin import model
 from prometheus_client import Counter, Gauge
 
 from pyfuncserver import PyFuncModel

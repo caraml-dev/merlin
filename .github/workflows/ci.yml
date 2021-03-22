@@ -314,7 +314,6 @@ jobs:
 #      - uses: actions/setup-python@v2
 #        with:
 #          python-version: 3.7
-#
 #      - name: Setup cluster
 #        run: ./merlin/scripts/e2e/setup-cluster.sh
 #      - name: Setup mlp namespace
@@ -323,11 +322,19 @@ jobs:
 #          kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
 #      - name: Deploy MLP
 #        run: |
-#          helm install mlp mlp/chart --namespace=mlp \
-#            --values=mlp/chart/values-e2e.yaml \
-#            --set mlp.image.tag=main \
-#            --wait --timeout=5m
+#          export INGRESS_HOST=127.0.0.1
+#          export HOST_IP=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
+#          helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yaml \
+#          --set mlp.image.tag=main \
+#          --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
+#          --set mlp.oauthClientID=${OAUTH_CLIENT_ID} \
+#          --set mlp.mlflowTrackingUrl=http://${HOST_IP}:31100 \
+#          --set mlp.ingress.enabled=true \
+#          --set mlp.ingress.class=istio \
+#          --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
+#          --set mlp.ingress.path="/*" \
+#          --wait --timeout=5m
 #      - name: Deploy Merlin
 #        run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
 #      - name: Run E2E test
-#        run: ./merlin/scripts/e2e/run-e2e.sh "merlin/api"
+#        run: ./merlin/scripts/e2e/run-e2e.sh

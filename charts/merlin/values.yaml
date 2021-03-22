@@ -38,10 +38,10 @@ merlin:
 
   imageBuilder:
     clusterName: "dev"
-    buildContextURI: "git://TOKEN@github.com/gojek/merlin.git#refs/tags/v0.1"
+    buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
     baseImage: ""
     dockerfilePath: "./Dockerfile"
-    predictionJobBuildContextURI: "git://TOKEN@github.com/gojek/merlin.git#refs/tags/v0.1"
+    predictionJobBuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
     predictionJobBaseImage: "gojek/mlp/merlin-pyspark:v0.4.1"
     predictionJobDockerfilePath: "docker/app.Dockerfile"
     namespace: "mlp"
@@ -131,6 +131,20 @@ merlin:
   encryption:
     key: "password"
 
+  mlflow:
+    # This should be the actual DNS registered
+    trackingURL: "http://www.example.com"
+
+  # Database connection used by Merlin backend when postgres is disabled
+  # database:
+  #   host: "localhost"
+  #   user: "root"
+  #   name: "merlin"
+  #   password:
+  #     secretName: "merlin-postgrsql" 
+  #     secretKey: "database-password"
+  #     value: "password"
+
 mlflow:
   image:
     registry: ghcr.io
@@ -143,6 +157,7 @@ mlflow:
     postgresqlUsername: mlflow
 
 postgresql:
+  enabled: true
   resources:
     requests:
       memory: 2Gi

@@ -1,5 +1,6 @@
 merlin:
   environment: dev
+  loggerDestinationURL: "http://message-dumper.mlp.svc.cluster.local"
   image:
     tag: 0.7.0
   replicaCount: 1
@@ -61,7 +62,22 @@ merlin:
       coreURL: core.feast.dev
     image: merlin-transformer:1.0.0
 
+  mlflow:
+    # This should be the actual DNS registered
+    trackingURL: "http://www.example.com"
+
+  # Database connection used by Merlin backend when postgres is disabled
+  # database:
+  #   host: "localhost"
+  #   user: "root"
+  #   name: "merlin"
+  #   password:
+  #     secretName: "merlin-postgrsql" 
+  #     secretKey: "database-password"
+  #     value: "password"
+
 postgresql:
+  enabled: true
   resources:
     requests:
       cpu: 25m
@@ -89,6 +105,7 @@ mlflow:
     # MinIO credentials
     AWS_ACCESS_KEY_ID: YOURACCESSKEY
     AWS_SECRET_ACCESS_KEY: YOURSECRETKEY
+    AWS_DEFAULT_REGION: ap-southeast-2
     MLFLOW_S3_ENDPOINT_URL: http://minio.minio:9000
 
 swagger:

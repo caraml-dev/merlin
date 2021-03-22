@@ -21,10 +21,12 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiIcon,
-  EuiLink
+  EuiLink,
+  EuiBadge
 } from "@elastic/eui";
 import { ConfigSection, ConfigSectionPanel } from "../../components/section";
 import { CopyableUrl } from "../../components/CopyableUrl";
+import EllipsisText from "react-ellipsis-text";
 
 export const ModelVersionPanelHeader = ({ model, version }) => {
   const items = [
@@ -52,6 +54,17 @@ export const ModelVersionPanelHeader = ({ model, version }) => {
     {
       title: "Artifact URI",
       description: <CopyableUrl text={version.artifact_uri} />
+    },
+    {
+      title: "Labels",
+      description:
+        version.labels &&
+        Object.entries(version.labels).map(([key, val]) => (
+          <EuiBadge key={key}>
+            <EllipsisText text={key} length={16} />:
+            <EllipsisText text={val} length={16} />
+          </EuiBadge>
+        ))
     }
   ];
 

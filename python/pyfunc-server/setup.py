@@ -19,6 +19,10 @@ tests_require = [
     'pytest-tornasync',
     'mypy'
 ]
+
+with open('requirements.txt') as f:
+    REQUIRE = f.read().splitlines()
+
 setup(
     name='pyfuncserver',
     version='0.5.2',
@@ -28,17 +32,7 @@ setup(
     long_description=open('README.md').read(),
     python_requires='>=3.7',
     packages=find_packages("pyfuncserver"),
-    install_requires=[
-        "kfserving==0.2.1.1",
-        "argparse>=1.4.0",
-        "numpy >= 1.8.2",
-        "mlflow==1.6.0",
-        "cloudpickle==1.2.2",
-        "merlin-sdk==0.10.0",
-        "prometheus_client==0.7.1",
-        "uvloop>=0.15.2",
-        "orjson==2.6.8"
-    ],
+    install_requires=REQUIRE,
     tests_require=tests_require,
     extras_require={'test': tests_require}
 )

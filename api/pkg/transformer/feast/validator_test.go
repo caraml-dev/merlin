@@ -569,11 +569,68 @@ func TestValidateTransformerConfig(t *testing.T) {
 			},
 			wantError: NewValidationError("udf compilation failed: unknown func unknown (1:1)\n | unknown()\n | ^"),
 		},
+		{
+			"success case with fully qualified feature name from non-default project name",
+			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
+				Feast: []*transformer.FeatureTable{
+					{
+						Project: "merlin",
+						Entities: []*transformer.Entity{
+							{
+								Name: "customer_id",
+								Extractor: &transformer.Entity_JsonPath{
+									JsonPath: "$.customer_id",
+								},
+								ValueType: "STRING",
+							},
+						},
+						Features: []*transformer.Feature{
+							{
+								Name:      "customer_feature_table:total_booking",
+								ValueType: "INT32",
+							},
+						},
+					},
+				},
+			},
+			},
+			&core.ListEntitiesResponse{
+				Entities: []*core.Entity{
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "customer_id",
+							ValueType: types.ValueType_STRING,
+						},
+					},
+				},
+			},
+			[]*core.ListFeaturesResponse{
+				{
+					Features: map[string]*core.FeatureSpecV2{
+						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+							Name:      "total_booking",
+							ValueType: types.ValueType_INT32,
+						},
+					},
+				},
+			},
+			nil,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			mockClient := &mocks.CoreServiceClient{}
-			mockClient.On("ListEntities", mock.Anything, &core.ListEntitiesRequest{}).Return(test.listEntitiesResponse, nil)
+
+			if test.trfConfig.TransformerConfig != nil {
+				for _, config := range test.trfConfig.TransformerConfig.Feast {
+					mockClient.On("ListEntities", mock.Anything, &core.ListEntitiesRequest{
+						Filter: &core.ListEntitiesRequest_Filter{
+							Project: config.Project,
+						},
+					}).Return(test.listEntitiesResponse, nil)
+				}
+			}
+
 			for _, fr := range test.listFeaturesResponses {
 				mockClient.On("ListFeatures", mock.Anything, mock.Anything).Return(fr, nil)
 			}

@@ -40,6 +40,38 @@ request_json = {
     ]
 }
 
+@pytest.mark.integration
+@pytest.mark.dependency()
+def test_model_version_with_labels(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("sklearn-labels", ModelType.SKLEARN)
+
+    model_dir = "test/sklearn-model"
+    MODEL_FILE = "model.joblib"
+
+    undeploy_all_version()
+
+    with merlin.new_model_version(labels={"model": "T-800"}) as v:
+        clf = svm.SVC(gamma='scale')
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        clf.fit(X, y)
+        dump(clf, os.path.join(model_dir, MODEL_FILE))
+
+        # Upload the serialized model to MLP
+        merlin.log_model(model_dir=model_dir)
+        assert len(v.labels) == 1
+        assert v.labels["model"] == "T-800"
+
+    merlin_active_model = merlin.active_model()
+    all_versions = merlin_active_model.list_version(labels={"model": ["T-800"]})
+    for version in all_versions:
+        assert version.labels["model"] == "T-800"
+
+    should_not_exist_versions = merlin_active_model.list_version(labels={"model": ["T-1000"]})
+    assert len(should_not_exist_versions) == 0
+
 
 @pytest.mark.integration
 @pytest.mark.dependency()
@@ -511,6 +543,8 @@ def test_pytorch_logger(integration_test_url, project_name, use_google_oauth):
     assert resp.json() is not None
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
+    undeploy_all_version()
+
 
 @pytest.mark.integration
 def test_trasformer_pytorch_logger(integration_test_url, project_name, use_google_oauth):
@@ -627,7 +661,7 @@ def test_standard_transformer_feast_pyfunc(integration_test_url, project_name, u
                            code_dir=["test"],
                            artifacts={})
 
-    transformer_config_path = os.path.join("test/transformer", "standard_transformer_input.yaml")
+    transformer_config_path = os.path.join("test/transformer", "standard_transformer.yaml")
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
 
     request_json = {"driver_id": "1000"}

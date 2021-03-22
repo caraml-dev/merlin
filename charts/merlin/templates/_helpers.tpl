@@ -19,10 +19,40 @@
 {{- end -}}
 {{- end -}}
 
-{{- define "postgresql.host" -}}
+{{- define "database.host" -}}
+{{- if .Values.postgresql.enabled }}
 {{- printf "%s-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
+{{- else -}}
+{{- .Values.merlin.database.host -}}
+{{- end }}
 {{- end -}}
 
-{{- define "mlflow.backendStoreUri" -}}
-{{- printf "postgresql://%s:%s@%s:5432/%s" .Values.postgresql.postgresqlUsername .Values.postgresql.postgresqlPassword (include "postgresql.host" .) .Values.postgresql.postgresqlDatabase -}}
+{{- define "database.user" -}}
+{{- if .Values.postgresql.enabled }}
+{{- .Values.postgresql.postgresqlUsername -}}
+{{- else -}}
+{{- .Values.merlin.database.user -}}
+{{- end }}
+{{- end -}}
+
+{{- define "database.name" -}}
+{{- if .Values.postgresql.enabled }}
+{{- .Values.postgresql.postgresqlDatabase -}}
+{{- else -}}
+{{- .Values.merlin.database.name -}}
+{{- end }}
+{{- end -}}
+
+{{- define "database.password" -}}
+{{- if .Values.postgresql.enabled }}
+valueFrom:
+  secretKeyRef:
+    name: {{ .Release.Name }}-postgresql
+    key: postgresql-password
+{{- else -}}
+valueFrom:
+  secretKeyRef:
+    name: {{ .Values.merlin.database.password.secretName }}
+    key:  {{ .Values.merlin.database.password.secretKey }}
+{{- end }}
 {{- end -}}

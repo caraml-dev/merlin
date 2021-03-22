@@ -3,6 +3,7 @@ package feast
 import (
 	"context"
 	"fmt"
+
 	"github.com/antonmedv/expr"
 	"github.com/oliveagle/jsonpath"
 
@@ -22,18 +23,6 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 		return NewValidationError("feature retrieval config is empty")
 	}
 
-	req := &core.ListEntitiesRequest{}
-	res, err := coreClient.ListEntities(ctx, req)
-	if err != nil {
-		return errors.Wrap(err, "error retrieving list of entity")
-	}
-
-	// allEntities contains all entities registerd in feast
-	allEntities := make(map[string]*core.EntitySpecV2)
-	for _, entity := range res.GetEntities() {
-		allEntities[entity.GetSpec().GetName()] = entity.GetSpec()
-	}
-
 	// for each feature retrieval table
 	for _, config := range trfCfg.TransformerConfig.Feast {
 		if len(config.Entities) == 0 {
@@ -43,6 +32,23 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 		if len(config.Features) == 0 {
 			return NewValidationError("no feature")
 		}
+
+		entitiesReq := &core.ListEntitiesRequest{
+			Filter: &core.ListEntitiesRequest_Filter{
+				Project: config.Project,
+			},
+		}
+		entitiesRes, err := coreClient.ListEntities(ctx, entitiesReq)
+		if err != nil {
+			return errors.Wrapf(err, "error retrieving list of entity for project %s", config.Project)
+		}
+
+		// allEntities contains all entities registerd in feast
+		allEntities := make(map[string]*core.EntitySpecV2)
+		for _, entity := range entitiesRes.GetEntities() {
+			allEntities[entity.GetSpec().GetName()] = entity.GetSpec()
+		}
+
 		// check that entities is non empty
 		// check that all entity has json path
 		// check that all entity has type
@@ -80,23 +86,25 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 		}
 
 		// get all features that are referenced by all entities defined in config
-		req := &core.ListFeaturesRequest{Filter: &core.ListFeaturesRequest_Filter{
-			Entities: entities,
-			Project:  config.Project,
-		}}
-		res, err := coreClient.ListFeatures(ctx, req)
+		featuresReq := &core.ListFeaturesRequest{
+			Filter: &core.ListFeaturesRequest_Filter{
+				Entities: entities,
+				Project:  config.Project,
+			},
+		}
+		featuresRes, err := coreClient.ListFeatures(ctx, featuresReq)
 		if err != nil {
 			return errors.Wrap(err, "error retrieving list of features")
 		}
 
 		featureShortNames := make(map[string]*core.FeatureSpecV2)
-		for _, feature := range res.Features {
+		for _, feature := range featuresRes.Features {
 			featureShortNames[feature.Name] = feature
 		}
 
 		for _, feature := range config.Features {
 			// check against feature short name or fully qualified name
-			fs, fqNameFound := res.Features[feature.Name]
+			fs, fqNameFound := featuresRes.Features[feature.Name]
 			fs2, shortNameFound := featureShortNames[feature.Name]
 			if !fqNameFound && !shortNameFound {
 				return NewValidationError(fmt.Sprintf("feature not found for entities %s in project %s: %s", entities, config.Project, feature.Name))
