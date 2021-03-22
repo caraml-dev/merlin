@@ -3,9 +3,9 @@ kind: Service
 metadata:
   name: {{ template "mlflow.fullname" . }}
   namespace: {{ .Release.Namespace }}
-{{- if .Values.service.annotations }}
+{{- if .Values.mlflow.service.annotations }}
   annotations:
-{{ toYaml .Values.service.annotations | indent 4 }}
+{{ toYaml .Values.mlflow.service.annotations | indent 4 }}
 {{- end }}
   labels:
     app: {{ template "mlflow.fullname" . }}
@@ -13,24 +13,24 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  type: {{ .Values.service.type }}
-{{- if .Values.service.clusterIP }}
-  clusterIP: {{ .Values.service.clusterIP }}
+  type: {{ .Values.mlflow.service.type }}
+{{- if .Values.mlflow.service.clusterIP }}
+  clusterIP: {{ .Values.mlflow.service.clusterIP }}
 {{- end }}
-{{- if .Values.service.loadBalancerIP }}
-  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+{{- if .Values.mlflow.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.mlflow.service.loadBalancerIP }}
 {{- end }}
 {{- /*
   Customizing loadBalancerSourceRanges, following the approach from
   https://github.com/helm/charts/blob/master/incubator/haproxy-ingress
 */ -}}
-{{- if .Values.service.loadBalancerSourceRanges }}
+{{- if .Values.mlflow.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
-{{ toYaml .Values.service.loadBalancerSourceRanges | indent 2 }}
+{{ toYaml .Values.mlflow.service.loadBalancerSourceRanges | indent 2 }}
 {{- end }}
   ports:
-  - port: {{ .Values.service.externalPort }}
-    targetPort: {{ .Values.service.internalPort }}
+  - port: {{ .Values.mlflow.service.externalPort }}
+    targetPort: {{ .Values.mlflow.service.internalPort }}
     protocol: TCP
   selector:
     app: {{ template "mlflow.fullname" . }}

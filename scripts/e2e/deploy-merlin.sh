@@ -7,6 +7,21 @@ export INGRESS_HOST=127.0.0.1
 export MERLIN_VERSION=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}}
 export HOST_IP=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
 
+helm install --debug --dry-run merlin ${CHART_PATH} --namespace=mlp --values=${CHART_PATH}/values-e2e.yaml \
+  --set merlin.image.tag=${MERLIN_VERSION} \
+  --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}.nip.io/v1 \
+  --set merlin.mlpApi.apiHost=http://mlp.mlp.svc.cluster.local:8080/v1 \
+  --set merlin.ingress.enabled=true \
+  --set merlin.ingress.class=istio \
+  --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST}.nip.io \
+  --set merlin.ingress.path="/*" \
+  --set mlflow.ingress.enabled=true \
+  --set mlflow.ingress.class=istio \
+  --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
+  --set mlflow.extraEnvs.MLFLOW_S3_ENDPOINT_URL=http://minio.minio.svc.cluster.local:9000 \
+  --set mlflow.ingress.path="/*" \
+  --set mlflow.resources.requests.cpu="25m" \
+  --set mlflow.resources.requests.memory="256Mi"
 
 helm install --debug merlin ${CHART_PATH} --namespace=mlp --values=${CHART_PATH}/values-e2e.yaml \
   --set merlin.image.tag=${MERLIN_VERSION} \
@@ -26,6 +41,7 @@ helm install --debug merlin ${CHART_PATH} --namespace=mlp --values=${CHART_PATH}
   --timeout=5m \
   --wait
 
+kubectl get pods -o yaml -n mlp
 
 kubectl set env deployment/merlin -n mlp MLFLOW_TRACKING_URL="http://${HOST_IP}:31100"
 
