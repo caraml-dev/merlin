@@ -10,6 +10,7 @@ export E2E_MLP_URL="http://mlp.mlp.${INGRESS_HOST}.nip.io"
 export E2E_MERLIN_URL="http://merlin.mlp.${INGRESS_HOST}.nip.io"
 #export E2E_PROJECT_NAME="merlin-e2e-${GITHUB_SHA::8}"
 export E2E_PROJECT_NAME="merlin-e2e"
+export E2E_MERLIN_ENVIRONMENT="id-dev"
 
 export AWS_ACCESS_KEY_ID=YOURACCESSKEY
 export AWS_SECRET_ACCESS_KEY=YOURSECRETKEY

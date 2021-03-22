@@ -31,9 +31,10 @@ def deployment_info():
     filename = os.path.join(dirname, 'test/sklearn-model')
     url = os.environ.get("E2E_MERLIN_URL", default="http://127.0.0.1:8080")
     project = os.environ.get("E2E_PROJECT_NAME", default="integration-test")
+    env = os.environ.get("E2E_MERLIN_ENVIRONMENT", default="id-dev")
 
     info = {
-        'env': "id-dev",
+        'env': env,
         'model_dir': filename,
         'model_type': "sklearn",
         'project': project,
