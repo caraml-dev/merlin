@@ -42,7 +42,7 @@
 
 {{- define "mlflow-postgresql.host" -}}
 {{- if index .Values "mlflow-postgresql" "enabled" -}}
-{{- printf "%s-mlflow-postgresql" "%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
+{{- printf "%s-mlflow-postgresql.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
 {{- else -}}
 {{- index .Values "mlflow-postgresql" "postgresqlHost" -}}
 {{- end -}}

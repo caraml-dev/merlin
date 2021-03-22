@@ -88,6 +88,8 @@ mlflow:
 
 mlflow-postgresql:
   enabled: true
+  persistence:
+    enabled: false
   postgresqlUsername: mlflow
   postgresqlDatabase: mlflow
   postgresqlPassword: mlflow
