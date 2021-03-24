@@ -25,7 +25,7 @@ COPY api .
 COPY python/batch-predictor ../python/batch-predictor
 COPY db-migrations ./db-migrations
 
-RUN go build -o bin/merlin_api ./cmd/main.go
+RUN go build -o bin/merlin_api ./cmd
 
 # ============================================================
 # Build stage 2: Build UI
