@@ -18,7 +18,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -44,6 +47,9 @@ import (
 	"github.com/gojek/merlin/storage"
 	"github.com/gojek/merlin/warden"
 )
+
+var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
+var onlyOneSignalHandler = make(chan struct{})
 
 func main() {
 	ctx := context.Background()
@@ -71,7 +77,17 @@ func main() {
 
 	runDBMigration(db, cfg.DbConfig.MigrationPath)
 
-	appCtx := initAppContext(ctx, cfg, db)
+	dispatcher := queue.NewDispatcher(queue.Config{
+		NumWorkers: cfg.NumOfQueueWorkers,
+		Db:         db,
+	})
+	defer dispatcher.Stop()
+
+	appCtx := initAppContext(ctx, cfg, db, dispatcher)
+
+	registerQueueJob(dispatcher, appCtx.EndpointsService, appCtx.PredictionJobService)
+	dispatcher.Start()
+
 	tracker, err := cronjob.NewTracker(appCtx.ProjectsService,
 		appCtx.ModelsService,
 		storage.NewPredictionJobStorage(db),
@@ -115,7 +131,46 @@ func main() {
 	router.PathPrefix(uiHomePage).Handler(http.StripPrefix(uiHomePage, ui))
 
 	log.Infof("listening at port :%d", cfg.Port)
-	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), cors.AllowAll().Handler(router))
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.Port),
+		Handler: cors.AllowAll().Handler(router),
+	}
+
+	stopCh := setupSignalHandler()
+	errCh := make(chan error, 1)
+	go func() {
+		// Don't forward ErrServerClosed as that indicates we're already shutting down.
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			errCh <- fmt.Errorf("server failed: %+v", err)
+		}
+	}()
+
+	// Exit as soon as we see a shutdown signal or the server failed.
+	select {
+	case <-stopCh:
+	case err := <-errCh:
+		log.Errorf("error %+v", err)
+	}
+
+	if err := srv.Shutdown(context.Background()); err != nil {
+		log.Errorf("failed to shutdown HTTP server")
+	}
+}
+
+func setupSignalHandler() (stopCh <-chan struct{}) {
+	close(onlyOneSignalHandler) // panics when called twice
+
+	stop := make(chan struct{})
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, shutdownSignals...)
+	go func() {
+		<-c
+		close(stop)
+		<-c
+		os.Exit(1) // second signal. Exit directly.
+	}()
+
+	return stop
 }
 
 func mount(r *mux.Router, path string, handler http.Handler) {
@@ -127,7 +182,12 @@ func mount(r *mux.Router, path string, handler http.Handler) {
 	)
 }
 
-func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB) api.AppContext {
+func registerQueueJob(consumer queue.Consumer, endpointSvc service.EndpointsService, predictionJobSvc service.PredictionJobService) {
+	consumer.RegisterJob(service.RealtimeDeploymentJob, endpointSvc.ExecuteDeployment)
+	consumer.RegisterJob(service.BatchDeploymentJob, predictionJobSvc.ExecuteDeployment)
+}
+
+func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB, dispatcher *queue.Dispatcher) api.AppContext {
 	mlpAPIClient := initMLPAPIClient(ctx, cfg.MlpAPIConfig)
 	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL)
 
@@ -135,10 +195,10 @@ func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB) api.Ap
 	webServiceBuilder, predJobBuilder := initImageBuilder(cfg, vaultClient)
 
 	modelEndpointService := initModelEndpointService(cfg, vaultClient, db)
-	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, vaultClient, db)
-	predictionJobService := initPredictionJobService(cfg, mlpAPIClient, predJobBuilder, vaultClient, db)
-	logService := initLogService(cfg, vaultClient)
 
+	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, vaultClient, db, dispatcher)
+	predictionJobService := initPredictionJobService(cfg, mlpAPIClient, predJobBuilder, vaultClient, db, dispatcher)
+	logService := initLogService(cfg, vaultClient)
 	// use "mlp" as product name for enforcer so that same policy can be reused by excalibur
 	authEnforcer, err := enforcer.NewEnforcerBuilder().
 		URL(cfg.AuthorizationConfig.AuthorizationServerURL).
@@ -170,16 +230,6 @@ func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB) api.Ap
 
 	mlflowConfig := cfg.MlflowConfig
 	mlflowClient := mlflow.NewClient(mlflowConfig.TrackingURL)
-	dispatcher := queue.NewDispatcher(queue.Config{
-		NumWorkers: 2,
-		Db:         db,
-	})
-	dispatcher.RegisterJob("test", func(j *queue.Job) error {
-		log.Debugf("Job name %s", j.Name)
-		time.Sleep(10 * time.Second)
-		return nil
-	})
-	dispatcher.StartWorkers()
 	return api.AppContext{
 		EnvironmentService:        environmentService,
 		ProjectsService:           projectsService,
@@ -198,6 +248,5 @@ func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB) api.Ap
 		Enforcer:                  authEnforcer,
 		FeastCoreClient:           coreClient,
 		MlflowClient:              mlflowClient,
-		Dispatcher:                dispatcher,
 	}
 }

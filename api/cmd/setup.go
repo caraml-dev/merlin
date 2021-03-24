@@ -17,6 +17,7 @@ import (
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/service"
 	"github.com/gojek/merlin/storage"
 	"github.com/gojek/merlin/vault"
@@ -335,7 +336,7 @@ func initModelEndpointService(cfg *config.Config, vaultClient vault.Client, db *
 	return service.NewModelEndpointsService(istioClients, db, cfg.Environment)
 }
 
-func initPredictionJobService(cfg *config.Config, mlpAPIClient mlp.APIClient, builder imagebuilder.ImageBuilder, vaultClient vault.Client, db *gorm.DB) service.PredictionJobService {
+func initPredictionJobService(cfg *config.Config, mlpAPIClient mlp.APIClient, builder imagebuilder.ImageBuilder, vaultClient vault.Client, db *gorm.DB, producer queue.Producer) service.PredictionJobService {
 	controllers := make(map[string]batch.Controller)
 	predictionJobStorage := storage.NewPredictionJobStorage(db)
 	for _, env := range cfg.EnvironmentConfigs {
@@ -378,10 +379,10 @@ func initPredictionJobService(cfg *config.Config, mlpAPIClient mlp.APIClient, bu
 		controllers[env.Name] = ctl
 	}
 
-	return service.NewPredictionJobService(controllers, builder, predictionJobStorage, clock.RealClock{}, cfg.Environment)
+	return service.NewPredictionJobService(controllers, builder, predictionJobStorage, clock.RealClock{}, cfg.Environment, producer)
 }
 
-func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBuilder, vaultClient vault.Client, db *gorm.DB) service.EndpointsService {
+func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBuilder, vaultClient vault.Client, db *gorm.DB, producer queue.Producer) service.EndpointsService {
 	controllers := make(map[string]cluster.Controller)
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
@@ -408,9 +409,19 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 		controllers[env.Name] = ctl
 	}
 
-	return service.NewEndpointService(controllers, builder, storage.NewVersionEndpointStorage(db),
-		storage.NewDeploymentStorage(db), cfg.Environment,
-		cfg.FeatureToggleConfig.MonitoringConfig, cfg.LoggerDestinationURL)
+	return service.NewEndpointService(service.EndpointServiceParams{
+		ClusterControllers:   controllers,
+		ImageBuilder:         builder,
+		Storage:              storage.NewVersionEndpointStorage(db),
+		DeploymentStorage:    storage.NewDeploymentStorage(db),
+		MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
+		LoggerDestinationURL: cfg.LoggerDestinationURL,
+		JobProducer:          producer,
+	})
+
+	// return service.NewEndpointService(controllers, builder, storage.NewVersionEndpointStorage(db),
+	// 	storage.NewDeploymentStorage(db), cfg.Environment,
+	// 	cfg.FeatureToggleConfig.MonitoringConfig, cfg.LoggerDestinationURL)
 }
 
 func initLogService(cfg *config.Config, vaultClient vault.Client) service.LogService {

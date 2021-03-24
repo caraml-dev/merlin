@@ -15,6 +15,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -24,7 +25,9 @@ import (
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/imagebuilder"
 	"github.com/gojek/merlin/log"
+	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/storage"
 )
 
@@ -48,9 +51,21 @@ type EndpointsService interface {
 	UndeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
 	CountEndpoints(environment *models.Environment, model *models.Model) (int, error)
 	ListContainers(model *models.Model, version *models.Version, id uuid.UUID) ([]*models.Container, error)
+	ExecuteDeployment(job *queue.Job) error
 }
 
 const defaultWorkers = 1
+
+type EndpointServiceParams struct {
+	ClusterControllers   map[string]cluster.Controller
+	ImageBuilder         imagebuilder.ImageBuilder
+	Storage              storage.VersionEndpointStorage
+	DeploymentStorage    storage.DeploymentStorage
+	Environment          string
+	MonitoringConfig     config.MonitoringConfig
+	LoggerDestinationURL string
+	JobProducer          queue.Producer
+}
 
 type endpointService struct {
 	clusterControllers   map[string]cluster.Controller
@@ -60,24 +75,106 @@ type endpointService struct {
 	environment          string
 	monitoringConfig     config.MonitoringConfig
 	loggerDestinationURL string
+	jobProducer          queue.Producer
 }
 
-func NewEndpointService(clusterControllers map[string]cluster.Controller,
-	imageBuilder imagebuilder.ImageBuilder,
-	storage storage.VersionEndpointStorage,
-	deploymentStorage storage.DeploymentStorage,
-	environment string,
-	monitoringConfig config.MonitoringConfig,
-	loggerDestinationURL string) EndpointsService {
+func NewEndpointService(params EndpointServiceParams) EndpointsService {
 	return &endpointService{
-		clusterControllers:   clusterControllers,
-		imageBuilder:         imageBuilder,
-		storage:              storage,
-		deploymentStorage:    deploymentStorage,
-		environment:          environment,
-		monitoringConfig:     monitoringConfig,
-		loggerDestinationURL: loggerDestinationURL,
+		clusterControllers:   params.ClusterControllers,
+		imageBuilder:         params.ImageBuilder,
+		storage:              params.Storage,
+		deploymentStorage:    params.DeploymentStorage,
+		environment:          params.Environment,
+		monitoringConfig:     params.MonitoringConfig,
+		loggerDestinationURL: params.LoggerDestinationURL,
+		jobProducer:          params.JobProducer,
 	}
+}
+
+type EndpointJobArgs struct {
+	Endpoint *models.VersionEndpoint
+	Model    *models.Model
+	Version  *models.Version
+	Project  mlp.Project
+}
+
+// ExecuteDeployment will create inferenceservice based on job that already queued
+func (k *endpointService) ExecuteDeployment(job *queue.Job) error {
+	data := job.Arguments[dataArgKey]
+	byte, _ := json.Marshal(data)
+	var jobArgs EndpointJobArgs
+	if err := json.Unmarshal(byte, &jobArgs); err != nil {
+		return err
+	}
+
+	endpointArg := jobArgs.Endpoint
+	endpoint, err := k.storage.Get(endpointArg.ID)
+	if err != nil {
+		log.Errorf("could not fetch version endpoint with id %s and error: %v", endpointArg.ID, err)
+		return err
+	}
+
+	project := jobArgs.Project
+	model := jobArgs.Model
+	model.Project = project
+	version := jobArgs.Version
+	log.Infof("creating deployment for model %s version %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.ID)
+
+	// copy endpoint to avoid race condition
+	endpoint.Status = models.EndpointFailed
+	defer func() {
+		deploymentCounter.WithLabelValues(model.Project.Name, model.Name, string(endpoint.Status)).Inc()
+
+		// record the deployment result
+		if _, err := k.deploymentStorage.Save(&models.Deployment{
+			ProjectID:         model.ProjectID,
+			VersionModelID:    model.ID,
+			VersionID:         endpoint.VersionID,
+			VersionEndpointID: endpoint.ID,
+			Status:            endpoint.Status,
+			Error:             endpoint.Message,
+		}); err != nil {
+			log.Warnf("unable to insert deployment history", err)
+		}
+
+		if err := k.storage.Save(endpoint); err != nil {
+			log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+		}
+	}()
+
+	modelOpt := &models.ModelOption{}
+	if model.Type == models.ModelTypePyFunc {
+		imageRef, err := k.imageBuilder.BuildImage(model.Project, model, version)
+		modelOpt.PyFuncImageName = imageRef
+		if err != nil {
+			endpoint.Message = err.Error()
+			return err
+		}
+	} else if model.Type == models.ModelTypePyTorch {
+		modelOpt = models.NewPyTorchModelOption(version)
+	}
+
+	modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment, endpoint.Transformer, endpoint.Logger)
+	ctl, ok := k.clusterControllers[endpoint.EnvironmentName]
+	if !ok {
+		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
+	}
+	svc, err := ctl.Deploy(modelService)
+	if err != nil {
+		log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+		endpoint.Message = err.Error()
+		return err
+	}
+
+	endpoint.URL = svc.URL
+	previousStatus := endpointArg.Status
+	if previousStatus == models.EndpointServing {
+		endpoint.Status = models.EndpointServing
+	} else {
+		endpoint.Status = models.EndpointRunning
+	}
+	endpoint.ServiceName = svc.ServiceName
+	return nil
 }
 
 func (k *endpointService) ListEndpoints(model *models.Model, version *models.Version) ([]*models.VersionEndpoint, error) {
@@ -94,12 +191,8 @@ func (k *endpointService) FindByID(uuid uuid.UUID) (*models.VersionEndpoint, err
 }
 
 func (k *endpointService) DeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, newEndpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
-	ctl, ok := k.clusterControllers[environment.Name]
-	if !ok {
-		return nil, fmt.Errorf("unable to find cluster controller for environment %s", environment.Name)
-	}
 
-	endpoint, ok := version.GetEndpointByEnvironmentName(environment.Name)
+	endpoint, _ := version.GetEndpointByEnvironmentName(environment.Name)
 	if endpoint == nil {
 		endpoint = models.NewVersionEndpoint(environment, model.Project, model, version, k.monitoringConfig)
 	}
@@ -149,68 +242,27 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 		}
 	}
 
-	previousStatus := endpoint.Status
-	endpoint.Status = models.EndpointPending
+	originalEndpoint := *endpoint
 
+	if err := k.jobProducer.EnqueueJob(&queue.Job{
+		Name: RealtimeDeploymentJob,
+		Arguments: queue.Argument{
+			dataArgKey: EndpointJobArgs{
+				Endpoint: &originalEndpoint,
+				Version:  version,
+				Model:    model,
+				Project:  model.Project,
+			},
+		},
+	}); err != nil {
+		return nil, err
+	}
+
+	endpoint.Status = models.EndpointPending
 	err := k.storage.Save(endpoint)
 	if err != nil {
 		return nil, err
 	}
-
-	go func() {
-		log.Infof("creating deployment for model %s version %s with endpoint id: %s", model.Name, version.ID, endpoint.ID)
-
-		// copy endpoint to avoid race condition
-		ep := *endpoint
-		ep.Status = models.EndpointFailed
-		defer func() {
-			deploymentCounter.WithLabelValues(model.Project.Name, model.Name, string(ep.Status)).Inc()
-
-			// record the deployment result
-			if _, err := k.deploymentStorage.Save(&models.Deployment{
-				ProjectID:         model.ProjectID,
-				VersionModelID:    model.ID,
-				VersionID:         version.ID,
-				VersionEndpointID: ep.ID,
-				Status:            ep.Status,
-				Error:             ep.Message,
-			}); err != nil {
-				log.Warnf("unable to insert deployment history", err)
-			}
-
-			if err := k.storage.Save(&ep); err != nil {
-				log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
-			}
-		}()
-
-		modelOpt := &models.ModelOption{}
-		if model.Type == models.ModelTypePyFunc {
-			imageRef, err := k.imageBuilder.BuildImage(model.Project, model, version)
-			modelOpt.PyFuncImageName = imageRef
-			if err != nil {
-				ep.Message = err.Error()
-				return
-			}
-		} else if model.Type == models.ModelTypePyTorch {
-			modelOpt = models.NewPyTorchModelOption(version)
-		}
-
-		modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment, endpoint.Transformer, endpoint.Logger)
-		svc, err := ctl.Deploy(modelService)
-		if err != nil {
-			log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
-			ep.Message = err.Error()
-			return
-		}
-
-		ep.URL = svc.URL
-		if previousStatus == models.EndpointServing {
-			ep.Status = models.EndpointServing
-		} else {
-			ep.Status = models.EndpointRunning
-		}
-		ep.ServiceName = svc.ServiceName
-	}()
 
 	return endpoint, nil
 }

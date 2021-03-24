@@ -15,10 +15,10 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
-	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/log"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -28,6 +28,7 @@ import (
 	"github.com/gojek/merlin/imagebuilder"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/storage"
 )
 
@@ -42,6 +43,8 @@ type PredictionJobService interface {
 	ListContainers(env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) ([]*models.Container, error)
 	// StopPredictionJob deletes the spark application resource and cleans up the resource
 	StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
+	// ExecuteDeployment creates prediction job based on queue job that produce by CreatePredictionJob method
+	ExecuteDeployment(job *queue.Job) error
 }
 
 // ListPredictionJobQuery represent query string for list prediction job api
@@ -60,10 +63,56 @@ type predictionJobService struct {
 	batchControllers map[string]batch.Controller
 	clock            clock2.Clock
 	environmentLabel string
+	producer         queue.Producer
 }
 
-func NewPredictionJobService(batchControllers map[string]batch.Controller, imageBuilder imagebuilder.ImageBuilder, store storage.PredictionJobStorage, clock clock2.Clock, environmentLabel string) PredictionJobService {
-	return &predictionJobService{store: store, imageBuilder: imageBuilder, batchControllers: batchControllers, clock: clock, environmentLabel: environmentLabel}
+type BatchJobArgs struct {
+	Job         *models.PredictionJob
+	Model       *models.Model
+	Version     *models.Version
+	Project     mlp.Project
+	Environment *models.Environment
+}
+
+func NewPredictionJobService(batchControllers map[string]batch.Controller, imageBuilder imagebuilder.ImageBuilder, store storage.PredictionJobStorage, clock clock2.Clock, environmentLabel string, producer queue.Producer) PredictionJobService {
+	svc := predictionJobService{store: store, imageBuilder: imageBuilder, batchControllers: batchControllers, clock: clock, environmentLabel: environmentLabel, producer: producer}
+	return &svc
+}
+
+func (p *predictionJobService) ExecuteDeployment(job *queue.Job) error {
+	data := job.Arguments[dataArgKey]
+	byte, _ := json.Marshal(data)
+	var jobArgs BatchJobArgs
+	if err := json.Unmarshal(byte, &jobArgs); err != nil {
+		return err
+	}
+
+	predictionJobArg := jobArgs.Job
+	predictionJob, err := p.store.Get(predictionJobArg.ID)
+	if err != nil {
+		return err
+	}
+	project := jobArgs.Project
+	model := jobArgs.Model
+	model.Project = project
+	version := jobArgs.Version
+	version.Model = model
+	env := jobArgs.Environment
+
+	defer batch.BatchCounter.WithLabelValues(model.Project.Name, model.Name, string(predictionJob.Status)).Inc()
+
+	err = p.doCreatePredictionJob(env, model, version, predictionJob)
+	if err != nil {
+		batch.BatchCounter.WithLabelValues(model.Project.Name, model.Name, string(models.JobFailedSubmission)).Inc()
+		predictionJob.Status = models.JobFailedSubmission
+		predictionJob.Error = err.Error()
+		if err := p.store.Save(predictionJob); err != nil {
+			log.Warnf("failed updating prediction job: %v", err)
+		}
+		return err
+	}
+
+	return nil
 }
 
 // GetPredictionJob return prediction job with given ID
@@ -116,24 +165,21 @@ func (p *predictionJobService) CreatePredictionJob(env *models.Environment, mode
 		return nil, errors.Wrapf(err, "failed saving prediction job")
 	}
 
-	// Run asynchronously
-	go func() {
-		// copy to avoid data race
-		job := new(models.PredictionJob)
-		_ = copier.Copy(job, predictionJob)
+	if err := p.producer.EnqueueJob(&queue.Job{
+		Name: BatchDeploymentJob,
+		Arguments: queue.Argument{
+			dataArgKey: BatchJobArgs{
+				Job:         predictionJob,
+				Model:       model,
+				Version:     version,
+				Project:     model.Project,
+				Environment: env,
+			},
+		},
+	}); err != nil {
+		return nil, err
+	}
 
-		err := p.doCreatePredictionJob(env, model, version, job)
-		if err != nil {
-			batch.BatchCounter.WithLabelValues(model.Project.Name, model.Name, string(models.JobFailedSubmission)).Inc()
-			predictionJob.Status = models.JobFailedSubmission
-			predictionJob.Error = err.Error()
-			if err := p.store.Save(predictionJob); err != nil {
-				log.Warnf("failed updating prediction job: %v", err)
-			}
-		}
-
-		batch.BatchCounter.WithLabelValues(model.Project.Name, model.Name, string(job.Status)).Inc()
-	}()
 	return predictionJob, nil
 }
 

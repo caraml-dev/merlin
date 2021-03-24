@@ -1,9 +1,15 @@
 package queue
 
 import (
-	"fmt"
+	"time"
 
+	"github.com/gojek/merlin/log"
 	"github.com/jinzhu/gorm"
+)
+
+var (
+	findJobQuery           = "SELECT * FROM jobs where id = ? AND completed = ? FOR UPDATE SKIP LOCKED"
+	allIncompleteJobsQuery = "SELECT * FROM jobs where completed = ? FOR UPDATE SKIP LOCKED"
 )
 
 type worker struct {
@@ -14,7 +20,8 @@ type worker struct {
 }
 
 func newWorker(db *gorm.DB, jobChan chan *Job) *worker {
-	return &worker{db: db, jobChan: jobChan}
+	quitChan := make(chan bool)
+	return &worker{db: db, jobChan: jobChan, quitChan: quitChan}
 }
 
 func (w *worker) updateWorkerJobFunction(jobFn map[string]JobFn) {
@@ -28,32 +35,51 @@ func (w *worker) start() {
 			case <-w.quitChan:
 				return
 			case job := <-w.jobChan:
-				err := w.processJob(job)
-				if err != nil {
-
-				}
+				go w.processJob(job)
 			}
 		}
 	}()
 }
 
-func (w *worker) processJob(job *Job) error {
-	// Lock database row
-	// ctx := context.Background()
-	// w.db.BeginTx(ctx, &sql.TxOptions{})
-	// w.db.Exec("SELECT * FROM jobs WHERE id = ?")
+func (w *worker) processJob(job *Job) {
+	var refreshedJob Job
+	tx := w.db.Begin()
+	err := tx.Raw(findJobQuery, job.ID, false).Scan(&refreshedJob).Error
+	if err == gorm.ErrRecordNotFound {
+		tx.Rollback()
+		log.Warnf("Job records not found with id: %d", job.ID)
+		return
+	}
+
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
 	jobFn, ok := w.jobFuncMap[job.Name]
 	if !ok {
-		return fmt.Errorf("no function for job %s", job.Name)
+		log.Warnf("There is no function be run for job %s", job.Name)
+		tx.Rollback()
+		return
 	}
 	if err := jobFn(job); err != nil {
-		return err
+		log.Errorf("Job execution is failed, with id:%d and error: %v", job.ID, err)
+		tx.Rollback()
+		return
 	}
 
-	return nil
+	refreshedJob.UpdatedAt = time.Now()
+	refreshedJob.Completed = true
+	if err := tx.Save(refreshedJob).Error; err != nil {
+		log.Errorf("Failed to save job %d with error: %v", refreshedJob.ID, err)
+		tx.Rollback()
+		return
+	}
+
+	tx.Commit()
 }
 
-func (w *worker) Stop() {
+func (w *worker) stop() {
 	go func() {
 		w.quitChan <- true
 	}()

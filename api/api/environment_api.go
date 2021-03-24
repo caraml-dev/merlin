@@ -16,8 +16,6 @@ package api
 
 import (
 	"net/http"
-
-	"github.com/gojek/merlin/queue"
 )
 
 // EnvironmentController controls environment API.
@@ -31,10 +29,6 @@ func (c *EnvironmentController) ListEnvironments(r *http.Request, vars map[strin
 	if err != nil {
 		return InternalServerError(err.Error())
 	}
-	c.Dispatcher.EnqueueJob(&queue.Job{
-		Name: "test",
-		Data: "Just for test",
-	})
 
 	return Ok(environments)
 }

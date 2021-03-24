@@ -23,6 +23,7 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/clock"
 
 	"github.com/gojek/merlin/batch"
@@ -30,6 +31,8 @@ import (
 	imageBuilderMock "github.com/gojek/merlin/imagebuilder/mocks"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/queue"
+	queueMock "github.com/gojek/merlin/queue/mocks"
 	storageMock "github.com/gojek/merlin/storage/mocks"
 )
 
@@ -120,8 +123,92 @@ var (
 	}
 )
 
+func TestPrediction_ExecuteDeployment(t *testing.T) {
+	savedJob := new(models.PredictionJob)
+	err := copier.Copy(savedJob, job)
+	require.NoError(t, err)
+
+	savedJob.Config.ImageRef = imageRef
+	testCases := []struct {
+		desc             string
+		deployErr        error
+		controllerMock   func(*mocks.Controller)
+		imageBuilderMock func(*imageBuilderMock.ImageBuilder)
+		mockStorage      func(*storageMock.PredictionJobStorage)
+	}{
+		{
+			desc:      "Success",
+			deployErr: nil,
+			controllerMock: func(ctrl *mocks.Controller) {
+				ctrl.On("Submit", savedJob, project.Name).Return(nil)
+			},
+			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
+				imgBuilder.On("BuildImage", project, model, version).Return(imageRef, nil)
+			},
+			mockStorage: func(st *storageMock.PredictionJobStorage) {
+				st.On("Get", savedJob.ID).Return(savedJob, nil)
+			},
+		},
+		{
+			desc:           "Failed: building image fail",
+			deployErr:      fmt.Errorf("failed building image"),
+			controllerMock: func(ctrl *mocks.Controller) {},
+			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
+				imgBuilder.On("BuildImage", project, model, version).Return("", fmt.Errorf("failed building image"))
+			},
+			mockStorage: func(st *storageMock.PredictionJobStorage) {
+				st.On("Get", savedJob.ID).Return(savedJob, nil)
+				st.On("Save", savedJob).Return(nil)
+			},
+		},
+		{
+			desc:      "Failed: submit job failed",
+			deployErr: fmt.Errorf("failed submit job"),
+			controllerMock: func(ctrl *mocks.Controller) {
+				ctrl.On("Submit", savedJob, project.Name).Return(fmt.Errorf("failed submit job"))
+			},
+			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
+				imgBuilder.On("BuildImage", project, model, version).Return(imageRef, nil)
+			},
+			mockStorage: func(st *storageMock.PredictionJobStorage) {
+				st.On("Get", savedJob.ID).Return(savedJob, nil)
+				st.On("Save", savedJob).Return(nil)
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			svc, mockControllers, mockImageBuilder, mockStorage, _ := newMockPredictionJobService()
+			mockController := mockControllers[envName]
+			ctrl := mockController.(*mocks.Controller)
+			tC.controllerMock(ctrl)
+			tC.imageBuilderMock(mockImageBuilder)
+			tC.mockStorage(mockStorage)
+			job := &queue.Job{
+				Name: "job",
+				Arguments: queue.Argument{
+					dataArgKey: &BatchJobArgs{
+						Job:         savedJob,
+						Model:       model,
+						Version:     version,
+						Project:     project,
+						Environment: predJobEnv,
+					},
+				},
+			}
+
+			err := svc.ExecuteDeployment(job)
+			if tC.deployErr != nil {
+				assert.Equal(t, tC.deployErr, err)
+			}
+			mockStorage.AssertExpectations(t)
+			mockImageBuilder.AssertExpectations(t)
+			mockController.(*mocks.Controller).AssertExpectations(t)
+		})
+	}
+}
 func TestGetPredictionJob(t *testing.T) {
-	svc, _, _, mockStorage := newMockPredictionJobService()
+	svc, _, _, mockStorage, _ := newMockPredictionJobService()
 	mockStorage.On("Get", job.ID).Return(job, nil)
 	j, err := svc.GetPredictionJob(predJobEnv, model, version, job.ID)
 	assert.NoError(t, err)
@@ -131,7 +218,7 @@ func TestGetPredictionJob(t *testing.T) {
 
 func TestListPredictionJob(t *testing.T) {
 	jobs := []*models.PredictionJob{job}
-	svc, _, _, mockStorage := newMockPredictionJobService()
+	svc, _, _, mockStorage, _ := newMockPredictionJobService()
 	query := &ListPredictionJobQuery{
 		ID:        1,
 		Name:      "test",
@@ -158,7 +245,7 @@ func TestListPredictionJob(t *testing.T) {
 }
 
 func TestCreatePredictionJob(t *testing.T) {
-	svc, mockControllers, mockImageBuilder, mockStorage := newMockPredictionJobService()
+	svc, mockControllers, mockImageBuilder, mockStorage, mockJobProducer := newMockPredictionJobService()
 
 	// test positive case
 	savedJob := new(models.PredictionJob)
@@ -169,19 +256,16 @@ func TestCreatePredictionJob(t *testing.T) {
 	mockImageBuilder.On("BuildImage", project, model, version).Return(imageRef, nil)
 	mockController := mockControllers[envName]
 	mockController.(*mocks.Controller).On("Submit", savedJob, project.Name).Return(nil)
+	mockJobProducer.On("EnqueueJob", mock.Anything).Return(nil)
 
 	j, err := svc.CreatePredictionJob(predJobEnv, model, version, reqJob)
-	time.Sleep(10 * time.Millisecond)
+	// time.Sleep(10 * time.Millisecond)
 	assert.NoError(t, err)
 	assert.Equal(t, job, j)
-
-	mockStorage.AssertExpectations(t)
-	mockImageBuilder.AssertExpectations(t)
-	mockController.(*mocks.Controller).AssertExpectations(t)
 }
 
 func TestStopPredictionJob(t *testing.T) {
-	svc, mockControllers, mockImageBuilder, mockStorage := newMockPredictionJobService()
+	svc, mockControllers, mockImageBuilder, mockStorage, _ := newMockPredictionJobService()
 
 	// test positive case
 	savedJob := new(models.PredictionJob)
@@ -246,7 +330,7 @@ func TestInvalidResourceRequest(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			svc, _, _, _ := newMockPredictionJobService()
+			svc, _, _, _, _ := newMockPredictionJobService()
 			reqJob.Config = &models.Config{
 				ResourceRequest: test.resourceRequest,
 			}
@@ -332,7 +416,7 @@ func TestPredictionJobService_ListContainers(t *testing.T) {
 		imgBuilder.On("GetContainers", mock.Anything, mock.Anything, mock.Anything).
 			Return(tt.mock.imageBuilderContainer, nil)
 
-		svc, mockControllers, _, _ := newMockPredictionJobService()
+		svc, mockControllers, _, _, _ := newMockPredictionJobService()
 		mockController := mockControllers[tt.args.env.Name]
 		mockController.(*mocks.Controller).On("GetContainers", "my-project", "prediction-job-id=2").Return(tt.mock.modelContainers, nil)
 
@@ -352,13 +436,14 @@ func TestPredictionJobService_ListContainers(t *testing.T) {
 	}
 }
 
-func newMockPredictionJobService() (PredictionJobService, map[string]batch.Controller, *imageBuilderMock.ImageBuilder, *storageMock.PredictionJobStorage) {
+func newMockPredictionJobService() (PredictionJobService, map[string]batch.Controller, *imageBuilderMock.ImageBuilder, *storageMock.PredictionJobStorage, *queueMock.Producer) {
 	mockController := &mocks.Controller{}
 	mockControllers := map[string]batch.Controller{
 		predJobEnv.Name: mockController,
 	}
+	mockJobProducer := &queueMock.Producer{}
 	mockImageBuilder := &imageBuilderMock.ImageBuilder{}
 	mockStorage := &storageMock.PredictionJobStorage{}
 	mockClock := clock.NewFakeClock(now)
-	return NewPredictionJobService(mockControllers, mockImageBuilder, mockStorage, mockClock, environmentLabel), mockControllers, mockImageBuilder, mockStorage
+	return NewPredictionJobService(mockControllers, mockImageBuilder, mockStorage, mockClock, environmentLabel, mockJobProducer), mockControllers, mockImageBuilder, mockStorage, mockJobProducer
 }
