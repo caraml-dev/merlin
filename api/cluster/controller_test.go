@@ -47,6 +47,7 @@ const (
 	getMethod    = "get"
 	createMethod = "create"
 	updateMethod = "update"
+	deleteMethod = "delete"
 
 	kfservingGroup           = "kubeflow.com/kfserving"
 	inferenceServiceResource = "inferenceservices"
@@ -581,6 +582,10 @@ func TestController_DeployInferenceService(t *testing.T) {
 			})
 			kfClient.PrependReactor(updateMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, tt.updateResult.isvc, tt.updateResult.err
+			})
+
+			kfClient.PrependReactor(deleteMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, nil, nil
 			})
 
 			v1Client := fake.NewSimpleClientset().CoreV1()

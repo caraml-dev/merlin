@@ -132,6 +132,7 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 	}
 
 	svcName := modelService.Name
+	isNewResource := false
 	s, err := k.servingClient.InferenceServices(modelService.Namespace).Get(svcName, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
@@ -139,6 +140,7 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 			return nil, ErrUnableToGetInferenceServiceStatus
 		}
 
+		isNewResource = true
 		// create new resource
 		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(k.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, k.deploymentConfig))
 		if err != nil {
@@ -156,6 +158,13 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 
 	s, err = k.waitInferenceServiceReady(s)
 	if err != nil {
+		// remove newly created inferenceservice when got error
+		if isNewResource {
+			if err := k.deleteInferenceService(svcName, modelService.Namespace); err != nil {
+				log.Warnf("unable to delete inference service %s with error %v", svcName, err)
+			}
+		}
+
 		return nil, err
 	}
 
@@ -176,13 +185,19 @@ func (k *controller) Delete(modelService *models.Service) (*models.Service, erro
 		}
 		return modelService, nil
 	}
-	gracePeriod := int64(deletionGracePeriodSecond)
-	err = k.servingClient.InferenceServices(modelService.Namespace).Delete(modelService.Name, &metav1.DeleteOptions{GracePeriodSeconds: &gracePeriod})
-	if client.IgnoreNotFound(err) != nil {
-		return nil, errors.Wrapf(err, "unable to delete inference service: %s", infSvc.Name)
+	if err := k.deleteInferenceService(modelService.Name, modelService.Namespace); err != nil {
+		return nil, err
 	}
-
 	return modelService, nil
+}
+
+func (k *controller) deleteInferenceService(serviceName string, namespace string) error {
+	gracePeriod := int64(deletionGracePeriodSecond)
+	err := k.servingClient.InferenceServices(namespace).Delete(serviceName, &metav1.DeleteOptions{GracePeriodSeconds: &gracePeriod})
+	if client.IgnoreNotFound(err) != nil {
+		return errors.Wrapf(err, "unable to delete inference service: %s %v", serviceName, err)
+	}
+	return nil
 }
 
 func (k *controller) waitInferenceServiceReady(service *kfsv1alpha2.InferenceService) (*kfsv1alpha2.InferenceService, error) {

@@ -95,8 +95,10 @@ func (p *predictionJobService) ExecuteDeployment(job *queue.Job) error {
 	project := jobArgs.Project
 	model := jobArgs.Model
 	model.Project = project
+
 	version := jobArgs.Version
 	version.Model = model
+
 	env := jobArgs.Environment
 
 	defer batch.BatchCounter.WithLabelValues(model.Project.Name, model.Name, string(predictionJob.Status)).Inc()

@@ -334,7 +334,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 		},
 		{
-			name:      "Failed: imgage builder failed",
+			name:      "Failed: image builder failed",
 			model:     &models.Model{Name: "model", Project: project, Type: models.ModelTypePyFunc},
 			version:   version,
 			deployErr: errors.New("Failed to build image"),

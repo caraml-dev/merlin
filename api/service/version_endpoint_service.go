@@ -114,10 +114,16 @@ func (k *endpointService) ExecuteDeployment(job *queue.Job) error {
 		return err
 	}
 
+	version := jobArgs.Version
 	project := jobArgs.Project
 	model := jobArgs.Model
+
+	// Need to reassign destionationURL cause it is ignored when marshalled and unmarshalled
+	if endpoint.Logger != nil {
+		endpoint.Logger.DestinationURL = k.loggerDestinationURL
+	}
+
 	model.Project = project
-	version := jobArgs.Version
 	log.Infof("creating deployment for model %s version %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.ID)
 
 	// copy endpoint to avoid race condition
@@ -142,16 +148,10 @@ func (k *endpointService) ExecuteDeployment(job *queue.Job) error {
 		}
 	}()
 
-	modelOpt := &models.ModelOption{}
-	if model.Type == models.ModelTypePyFunc {
-		imageRef, err := k.imageBuilder.BuildImage(model.Project, model, version)
-		modelOpt.PyFuncImageName = imageRef
-		if err != nil {
-			endpoint.Message = err.Error()
-			return err
-		}
-	} else if model.Type == models.ModelTypePyTorch {
-		modelOpt = models.NewPyTorchModelOption(version)
+	modelOpt, err := k.generateModelOptions(model, version)
+	if err != nil {
+		endpoint.Message = err.Error()
+		return err
 	}
 
 	modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment, endpoint.Transformer, endpoint.Logger)
@@ -175,6 +175,21 @@ func (k *endpointService) ExecuteDeployment(job *queue.Job) error {
 	}
 	endpoint.ServiceName = svc.ServiceName
 	return nil
+}
+
+func (k *endpointService) generateModelOptions(model *models.Model, version *models.Version) (*models.ModelOption, error) {
+	modelOpt := &models.ModelOption{}
+	switch model.Type {
+	case models.ModelTypePyFunc:
+		imageRef, err := k.imageBuilder.BuildImage(model.Project, model, version)
+		if err != nil {
+			return modelOpt, err
+		}
+		modelOpt.PyFuncImageName = imageRef
+	case models.ModelTypePyTorch:
+		modelOpt = models.NewPyTorchModelOption(version)
+	}
+	return modelOpt, nil
 }
 
 func (k *endpointService) ListEndpoints(model *models.Model, version *models.Version) ([]*models.VersionEndpoint, error) {
