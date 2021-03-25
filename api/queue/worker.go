@@ -64,8 +64,6 @@ func (w *worker) processJob(job *Job) {
 	}
 	if err := jobFn(job); err != nil {
 		log.Errorf("Job execution is failed, with id:%d and error: %v", job.ID, err)
-		tx.Rollback()
-		return
 	}
 
 	refreshedJob.UpdatedAt = time.Now()

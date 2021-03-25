@@ -104,6 +104,37 @@ func TestEnqueueAndConsumeJob(t *testing.T) {
 	})
 }
 
+func TestEnqueueAndConsumeJob_JobFunctionError(t *testing.T) {
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		dispatcher := NewDispatcher(Config{
+			NumWorkers: 1,
+			Db:         db,
+		})
+
+		dispatcher.RegisterJob("sample-1", func(j *Job) error {
+			fmt.Printf("Job ID %d is failing\n", j.ID)
+			return fmt.Errorf("something went wrong")
+		})
+
+		dispatcher.Start()
+
+		err := dispatcher.EnqueueJob(&Job{
+			Name: "sample-1",
+			Arguments: Argument{
+				"data": "value",
+			},
+		})
+		require.NoError(t, err)
+
+		time.Sleep(1 * time.Second)
+		var jobs []Job
+		res := db.Where("completed = ?", true).Find(&jobs)
+		require.NoError(t, res.Error)
+		assert.Equal(t, 1, len(jobs))
+		dispatcher.Stop()
+	})
+}
+
 func TestEnqueueAndConsumeJob_RestartCase(t *testing.T) {
 	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
 		dispatcher := NewDispatcher(Config{

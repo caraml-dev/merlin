@@ -179,6 +179,11 @@ func (p *predictionJobService) CreatePredictionJob(env *models.Environment, mode
 			},
 		},
 	}); err != nil {
+		// if error enqueue job, mark job status to failedsubmission
+		predictionJob.Status = models.JobFailedSubmission
+		if err := p.store.Save(predictionJob); err != nil {
+			log.Errorf("error to update predictionJob %d status to failed: %v", predictionJob.ID, err)
+		}
 		return nil, err
 	}
 

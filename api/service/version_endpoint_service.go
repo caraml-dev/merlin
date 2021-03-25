@@ -259,6 +259,12 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 
 	originalEndpoint := *endpoint
 
+	endpoint.Status = models.EndpointPending
+	err := k.storage.Save(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := k.jobProducer.EnqueueJob(&queue.Job{
 		Name: RealtimeDeploymentJob,
 		Arguments: queue.Argument{
@@ -270,12 +276,11 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 			},
 		},
 	}); err != nil {
-		return nil, err
-	}
-
-	endpoint.Status = models.EndpointPending
-	err := k.storage.Save(endpoint)
-	if err != nil {
+		// if error enqueue job, mark endpoint status to failed
+		endpoint.Status = models.EndpointFailed
+		if err := k.storage.Save(endpoint); err != nil {
+			log.Errorf("error to update endpoint %s status to failed: %v", endpoint.ID, err)
+		}
 		return nil, err
 	}
 
