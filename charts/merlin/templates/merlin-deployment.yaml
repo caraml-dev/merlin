@@ -72,6 +72,8 @@ spec:
             value: "{{ .Values.merlin.environment }}"
           - name: LOGGER_DESTINATION_URL
             value: "{{ .Values.merlin.loggerDestinationURL }}"
+          - name: NUM_OF_WORKERS
+            value: "{{ .Values.merlin.queue.numOfWorkers }}"
           - name: PORT
             value: "{{ .Values.merlin.service.internalPort }}"
           - name: DATABASE_HOST

@@ -35,6 +35,9 @@ import (
 )
 
 const (
+	ModelServiceDeployment = "model_service_deployment"
+	BatchDeployment        = "batch_deployment"
+
 	defaultGateway      = "knative-ingress-gateway.knative-serving"
 	defaultIstioGateway = "istio-ingressgateway.istio-system.svc.cluster.local"
 
@@ -47,6 +50,8 @@ const (
 	labelEnvironment      = "gojek.com/environment"
 	labelOrchestratorName = "gojek.com/orchestrator"
 	labelUsersHeading     = "gojek.com/user-labels/"
+
+	dataArgKey = "data"
 )
 
 // ModelEndpointsService interface.
