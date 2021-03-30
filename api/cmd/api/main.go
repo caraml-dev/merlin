@@ -191,7 +191,7 @@ func registerQueueJob(consumer queue.Consumer, modelServiceDepl *work.ModelServi
 
 func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dispatcher *queue.Dispatcher) deps {
 	mlpAPIClient := initMLPAPIClient(ctx, cfg.MlpAPIConfig)
-	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL)
+	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL, cfg.StandardTransformerConfig.FeastCoreAuthAudience)
 
 	vaultClient := initVault(cfg.VaultConfig)
 	webServiceBuilder, predJobBuilder := initImageBuilder(cfg, vaultClient)
