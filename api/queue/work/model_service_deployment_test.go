@@ -362,7 +362,7 @@ func TestExecuteDeployment(t *testing.T) {
 			job := &queue.Job{
 				Name: "job",
 				Arguments: queue.Arguments{
-					dataArgKey: models.EndpointJob{
+					dataArgKey: EndpointJob{
 						Endpoint: tt.endpoint,
 						Version:  tt.version,
 						Model:    tt.model,

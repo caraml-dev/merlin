@@ -7,6 +7,7 @@ import (
 	"github.com/gojek/merlin/batch"
 	"github.com/gojek/merlin/imagebuilder"
 	"github.com/gojek/merlin/log"
+	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/storage"
@@ -22,10 +23,18 @@ type BatchDeployment struct {
 	EnvironmentLabel string
 }
 
+type BatchJob struct {
+	Job         *models.PredictionJob
+	Model       *models.Model
+	Version     *models.Version
+	Project     mlp.Project
+	Environment *models.Environment
+}
+
 func (depl *BatchDeployment) Deploy(job *queue.Job) error {
 	data := job.Arguments[dataArgKey]
 	byte, _ := json.Marshal(data)
-	var jobArgs models.BatchJob
+	var jobArgs BatchJob
 	if err := json.Unmarshal(byte, &jobArgs); err != nil {
 		return err
 	}

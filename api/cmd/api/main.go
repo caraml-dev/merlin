@@ -43,10 +43,10 @@ import (
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlflow"
 	"github.com/gojek/merlin/queue"
+	"github.com/gojek/merlin/queue/work"
 	"github.com/gojek/merlin/service"
 	"github.com/gojek/merlin/storage"
 	"github.com/gojek/merlin/warden"
-	"github.com/gojek/merlin/work"
 )
 
 var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}

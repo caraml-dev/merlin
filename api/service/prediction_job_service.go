@@ -28,6 +28,7 @@ import (
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/queue"
+	"github.com/gojek/merlin/queue/work"
 	"github.com/gojek/merlin/storage"
 )
 
@@ -121,7 +122,7 @@ func (p *predictionJobService) CreatePredictionJob(env *models.Environment, mode
 	if err := p.producer.EnqueueJob(&queue.Job{
 		Name: BatchDeployment,
 		Arguments: queue.Arguments{
-			dataArgKey: models.BatchJob{
+			dataArgKey: work.BatchJob{
 				Job:         predictionJob,
 				Model:       model,
 				Version:     version,

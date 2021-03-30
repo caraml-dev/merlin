@@ -182,7 +182,7 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 			job := &queue.Job{
 				Name: "job",
 				Arguments: queue.Arguments{
-					dataArgKey: &models.BatchJob{
+					dataArgKey: &BatchJob{
 						Job:         savedJob,
 						Model:       model,
 						Version:     version,

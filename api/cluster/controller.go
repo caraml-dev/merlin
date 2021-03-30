@@ -132,7 +132,6 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 	}
 
 	svcName := modelService.Name
-	isNewResource := false
 	s, err := k.servingClient.InferenceServices(modelService.Namespace).Get(svcName, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
@@ -140,7 +139,6 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 			return nil, ErrUnableToGetInferenceServiceStatus
 		}
 
-		isNewResource = true
 		// create new resource
 		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(k.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, k.deploymentConfig))
 		if err != nil {
@@ -158,11 +156,9 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 
 	s, err = k.waitInferenceServiceReady(s)
 	if err != nil {
-		// remove newly created inferenceservice when got error
-		if isNewResource {
-			if err := k.deleteInferenceService(svcName, modelService.Namespace); err != nil {
-				log.Warnf("unable to delete inference service %s with error %v", svcName, err)
-			}
+		// remove created inferenceservice when got error
+		if err := k.deleteInferenceService(svcName, modelService.Namespace); err != nil {
+			log.Warnf("unable to delete inference service %s with error %v", svcName, err)
 		}
 
 		return nil, err

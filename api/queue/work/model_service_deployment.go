@@ -7,6 +7,7 @@ import (
 	"github.com/gojek/merlin/cluster"
 	"github.com/gojek/merlin/imagebuilder"
 	"github.com/gojek/merlin/log"
+	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/storage"
@@ -37,10 +38,17 @@ type ModelServiceDeployment struct {
 	LoggerDestinationURL string
 }
 
+type EndpointJob struct {
+	Endpoint *models.VersionEndpoint
+	Model    *models.Model
+	Version  *models.Version
+	Project  mlp.Project
+}
+
 func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	data := job.Arguments[dataArgKey]
 	byte, _ := json.Marshal(data)
-	var jobArgs models.EndpointJob
+	var jobArgs EndpointJob
 	if err := json.Unmarshal(byte, &jobArgs); err != nil {
 		return err
 	}
