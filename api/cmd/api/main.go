@@ -46,6 +46,7 @@ import (
 	"github.com/gojek/merlin/service"
 	"github.com/gojek/merlin/storage"
 	"github.com/gojek/merlin/warden"
+	"github.com/gojek/merlin/work"
 )
 
 var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
@@ -83,11 +84,12 @@ func main() {
 	})
 	defer dispatcher.Stop()
 
-	appCtx := initAppContext(ctx, cfg, db, dispatcher)
+	dependencies := buildDependencies(ctx, cfg, db, dispatcher)
 
-	registerQueueJob(dispatcher, appCtx.EndpointsService, appCtx.PredictionJobService)
+	registerQueueJob(dispatcher, dependencies.modelDeployment, dependencies.batchDeployment)
 	dispatcher.Start()
 
+	appCtx := dependencies.apiContext
 	tracker, err := cronjob.NewTracker(appCtx.ProjectsService,
 		appCtx.ModelsService,
 		storage.NewPredictionJobStorage(db),
@@ -182,12 +184,12 @@ func mount(r *mux.Router, path string, handler http.Handler) {
 	)
 }
 
-func registerQueueJob(consumer queue.Consumer, endpointSvc service.EndpointsService, predictionJobSvc service.PredictionJobService) {
-	consumer.RegisterJob(service.RealtimeDeploymentJob, endpointSvc.ExecuteDeployment)
-	consumer.RegisterJob(service.BatchDeploymentJob, predictionJobSvc.ExecuteDeployment)
+func registerQueueJob(consumer queue.Consumer, modelServiceDepl *work.ModelServiceDeployment, batchDepl *work.BatchDeployment) {
+	consumer.RegisterJob(service.ModelServiceDeployment, modelServiceDepl.Deploy)
+	consumer.RegisterJob(service.BatchDeployment, batchDepl.Deploy)
 }
 
-func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB, dispatcher *queue.Dispatcher) api.AppContext {
+func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dispatcher *queue.Dispatcher) deps {
 	mlpAPIClient := initMLPAPIClient(ctx, cfg.MlpAPIConfig)
 	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL)
 
@@ -196,8 +198,13 @@ func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB, dispat
 
 	modelEndpointService := initModelEndpointService(cfg, vaultClient, db)
 
-	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, vaultClient, db, dispatcher)
-	predictionJobService := initPredictionJobService(cfg, mlpAPIClient, predJobBuilder, vaultClient, db, dispatcher)
+	clusterControllers := initClusterControllers(cfg, vaultClient)
+	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db)
+	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, dispatcher)
+
+	batchControllers := initBatchControllers(cfg, vaultClient, db, mlpAPIClient)
+	batchDeployment := initBatchDeployment(cfg, db, batchControllers, predJobBuilder)
+	predictionJobService := initPredictionJobService(cfg, batchControllers, predJobBuilder, db, dispatcher)
 	logService := initLogService(cfg, vaultClient)
 	// use "mlp" as product name for enforcer so that same policy can be reused by excalibur
 	authEnforcer, err := enforcer.NewEnforcerBuilder().
@@ -230,7 +237,7 @@ func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB, dispat
 
 	mlflowConfig := cfg.MlflowConfig
 	mlflowClient := mlflow.NewClient(mlflowConfig.TrackingURL)
-	return api.AppContext{
+	apiContext := api.AppContext{
 		EnvironmentService:        environmentService,
 		ProjectsService:           projectsService,
 		ModelsService:             modelsService,
@@ -248,5 +255,10 @@ func initAppContext(ctx context.Context, cfg *config.Config, db *gorm.DB, dispat
 		Enforcer:                  authEnforcer,
 		FeastCoreClient:           coreClient,
 		MlflowClient:              mlflowClient,
+	}
+	return deps{
+		apiContext:      apiContext,
+		modelDeployment: modelServiceDeployment,
+		batchDeployment: batchDeployment,
 	}
 }

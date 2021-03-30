@@ -35,8 +35,8 @@ import (
 )
 
 const (
-	RealtimeDeploymentJob = "realtime"
-	BatchDeploymentJob    = "batch"
+	ModelServiceDeployment = "model_service_deployment"
+	BatchDeployment        = "batch_deployment"
 
 	defaultGateway      = "knative-ingress-gateway.knative-serving"
 	defaultIstioGateway = "istio-ingressgateway.istio-system.svc.cluster.local"

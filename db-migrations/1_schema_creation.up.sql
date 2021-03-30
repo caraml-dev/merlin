@@ -16,7 +16,7 @@ CREATE TYPE endpoint_status as ENUM ('pending', 'running', 'serving', 'failed', 
 
 CREATE TABLE IF NOT EXISTS projects
 (
-    id                  bigserial PRIMARY KEY,
+    id                  serial PRIMARY KEY,
     name                varchar(50)  NOT NULL,
     mlflow_tracking_url varchar(100) NOT NULL,
     k8s_cluster_name    varchar(100) NOT NULL default '',

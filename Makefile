@@ -90,7 +90,7 @@ build-ui: clean-ui
 .PHONY: build-api
 build-api: clean-bin
 	@echo "> Building API binary ..."
-	@cd ${API_PATH} && go build -o ../bin/${BIN_NAME} ./cmd
+	@cd ${API_PATH} && go build -o ../bin/${BIN_NAME} ./cmd/api
 
 # ============================================================
 # Run recipe

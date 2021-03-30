@@ -7,9 +7,6 @@ import (
 	mock "github.com/stretchr/testify/mock"
 
 	models "github.com/gojek/merlin/models"
-
-	queue "github.com/gojek/merlin/queue"
-
 	service "github.com/gojek/merlin/service"
 )
 
@@ -39,20 +36,6 @@ func (_m *PredictionJobService) CreatePredictionJob(env *models.Environment, mod
 	}
 
 	return r0, r1
-}
-
-// ExecuteDeployment provides a mock function with given fields: job
-func (_m *PredictionJobService) ExecuteDeployment(job *queue.Job) error {
-	ret := _m.Called(job)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*queue.Job) error); ok {
-		r0 = rf(job)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
 
 // GetPredictionJob provides a mock function with given fields: env, model, version, id

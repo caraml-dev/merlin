@@ -15,7 +15,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -43,8 +42,6 @@ type PredictionJobService interface {
 	ListContainers(env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) ([]*models.Container, error)
 	// StopPredictionJob deletes the spark application resource and cleans up the resource
 	StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
-	// ExecuteDeployment creates prediction job based on queue job that produce by CreatePredictionJob method
-	ExecuteDeployment(job *queue.Job) error
 }
 
 // ListPredictionJobQuery represent query string for list prediction job api
@@ -66,55 +63,9 @@ type predictionJobService struct {
 	producer         queue.Producer
 }
 
-type BatchJobArgs struct {
-	Job         *models.PredictionJob
-	Model       *models.Model
-	Version     *models.Version
-	Project     mlp.Project
-	Environment *models.Environment
-}
-
 func NewPredictionJobService(batchControllers map[string]batch.Controller, imageBuilder imagebuilder.ImageBuilder, store storage.PredictionJobStorage, clock clock2.Clock, environmentLabel string, producer queue.Producer) PredictionJobService {
 	svc := predictionJobService{store: store, imageBuilder: imageBuilder, batchControllers: batchControllers, clock: clock, environmentLabel: environmentLabel, producer: producer}
 	return &svc
-}
-
-func (p *predictionJobService) ExecuteDeployment(job *queue.Job) error {
-	data := job.Arguments[dataArgKey]
-	byte, _ := json.Marshal(data)
-	var jobArgs BatchJobArgs
-	if err := json.Unmarshal(byte, &jobArgs); err != nil {
-		return err
-	}
-
-	predictionJobArg := jobArgs.Job
-	predictionJob, err := p.store.Get(predictionJobArg.ID)
-	if err != nil {
-		return err
-	}
-	project := jobArgs.Project
-	model := jobArgs.Model
-	model.Project = project
-
-	version := jobArgs.Version
-	version.Model = model
-
-	env := jobArgs.Environment
-
-	defer batch.BatchCounter.WithLabelValues(model.Project.Name, model.Name, string(predictionJob.Status)).Inc()
-
-	err = p.doCreatePredictionJob(env, model, version, predictionJob)
-	if err != nil {
-		batch.BatchCounter.WithLabelValues(model.Project.Name, model.Name, string(models.JobFailedSubmission)).Inc()
-		predictionJob.Status = models.JobFailedSubmission
-		predictionJob.Error = err.Error()
-		if err := p.store.Save(predictionJob); err != nil {
-			log.Warnf("failed updating prediction job: %v", err)
-		}
-		return err
-	}
-
-	return nil
 }
 
 // GetPredictionJob return prediction job with given ID
@@ -168,9 +119,9 @@ func (p *predictionJobService) CreatePredictionJob(env *models.Environment, mode
 	}
 
 	if err := p.producer.EnqueueJob(&queue.Job{
-		Name: BatchDeploymentJob,
-		Arguments: queue.Argument{
-			dataArgKey: BatchJobArgs{
+		Name: BatchDeployment,
+		Arguments: queue.Arguments{
+			dataArgKey: models.BatchJob{
 				Job:         predictionJob,
 				Model:       model,
 				Version:     version,
@@ -211,26 +162,6 @@ func (p *predictionJobService) ListContainers(env *models.Environment, model *mo
 	containers = append(containers, modelContainers...)
 
 	return containers, nil
-}
-
-func (p *predictionJobService) doCreatePredictionJob(env *models.Environment, model *models.Model, version *models.Version, job *models.PredictionJob) error {
-	project := model.Project
-
-	// build image
-	imageRef, err := p.imageBuilder.BuildImage(project, model, version)
-	if err != nil {
-		return err
-	}
-	job.Config.ImageRef = imageRef
-
-	ctl, ok := p.batchControllers[env.Name]
-	if !ok {
-		log.Errorf("environment %s is not found", env.Name)
-		return fmt.Errorf("environment %s is not found", env.Name)
-	}
-
-	// submit spark application
-	return ctl.Submit(job, project.Name)
 }
 
 func (p *predictionJobService) StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error) {

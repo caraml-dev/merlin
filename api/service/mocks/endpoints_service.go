@@ -6,8 +6,6 @@ import (
 	models "github.com/gojek/merlin/models"
 	mock "github.com/stretchr/testify/mock"
 
-	queue "github.com/gojek/merlin/queue"
-
 	uuid "github.com/google/uuid"
 )
 
@@ -58,20 +56,6 @@ func (_m *EndpointsService) DeployEndpoint(environment *models.Environment, mode
 	}
 
 	return r0, r1
-}
-
-// ExecuteDeployment provides a mock function with given fields: job
-func (_m *EndpointsService) ExecuteDeployment(job *queue.Job) error {
-	ret := _m.Called(job)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*queue.Job) error); ok {
-		r0 = rf(job)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
 
 // FindByID provides a mock function with given fields: uuid2

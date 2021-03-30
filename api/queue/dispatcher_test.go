@@ -38,13 +38,13 @@ func TestEnqueueJob(t *testing.T) {
 		jobTestCases := []Job{
 			{
 				Name: "sample",
-				Arguments: Argument{
+				Arguments: Arguments{
 					"data": "value",
 				},
 			},
 			{
 				Name: "sample",
-				Arguments: Argument{
+				Arguments: Arguments{
 					"data": "value2",
 				},
 			},
@@ -77,13 +77,13 @@ func TestEnqueueAndConsumeJob(t *testing.T) {
 		jobTestCases := []Job{
 			{
 				Name: "sample",
-				Arguments: Argument{
+				Arguments: Arguments{
 					"data": "value",
 				},
 			},
 			{
 				Name: "sample",
-				Arguments: Argument{
+				Arguments: Arguments{
 					"data": "value2",
 				},
 			},
@@ -120,7 +120,7 @@ func TestEnqueueAndConsumeJob_JobFunctionError(t *testing.T) {
 
 		err := dispatcher.EnqueueJob(&Job{
 			Name: "sample-1",
-			Arguments: Argument{
+			Arguments: Arguments{
 				"data": "value",
 			},
 		})
@@ -155,13 +155,13 @@ func TestEnqueueAndConsumeJob_RestartCase(t *testing.T) {
 		jobTestCases := []Job{
 			{
 				Name: "sample-1",
-				Arguments: Argument{
+				Arguments: Arguments{
 					"data": "value",
 				},
 			},
 			{
 				Name: "sample-2",
-				Arguments: Argument{
+				Arguments: Arguments{
 					"data": "value2",
 				},
 			},

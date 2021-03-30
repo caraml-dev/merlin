@@ -15,7 +15,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -51,7 +50,6 @@ type EndpointsService interface {
 	UndeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
 	CountEndpoints(environment *models.Environment, model *models.Model) (int, error)
 	ListContainers(model *models.Model, version *models.Version, id uuid.UUID) ([]*models.Container, error)
-	ExecuteDeployment(job *queue.Job) error
 }
 
 const defaultWorkers = 1
@@ -99,98 +97,98 @@ type EndpointJobArgs struct {
 }
 
 // ExecuteDeployment will create inferenceservice based on job that already queued
-func (k *endpointService) ExecuteDeployment(job *queue.Job) error {
-	data := job.Arguments[dataArgKey]
-	byte, _ := json.Marshal(data)
-	var jobArgs EndpointJobArgs
-	if err := json.Unmarshal(byte, &jobArgs); err != nil {
-		return err
-	}
+// func (k *endpointService) ExecuteDeployment(job *queue.Job) error {
+// 	data := job.Arguments[dataArgKey]
+// 	byte, _ := json.Marshal(data)
+// 	var jobArgs models.EndpointJob
+// 	if err := json.Unmarshal(byte, &jobArgs); err != nil {
+// 		return err
+// 	}
 
-	endpointArg := jobArgs.Endpoint
-	endpoint, err := k.storage.Get(endpointArg.ID)
-	if err != nil {
-		log.Errorf("could not fetch version endpoint with id %s and error: %v", endpointArg.ID, err)
-		return err
-	}
+// 	endpointArg := jobArgs.Endpoint
+// 	endpoint, err := k.storage.Get(endpointArg.ID)
+// 	if err != nil {
+// 		log.Errorf("could not fetch version endpoint with id %s and error: %v", endpointArg.ID, err)
+// 		return err
+// 	}
 
-	version := jobArgs.Version
-	project := jobArgs.Project
-	model := jobArgs.Model
+// 	version := jobArgs.Version
+// 	project := jobArgs.Project
+// 	model := jobArgs.Model
 
-	// Need to reassign destionationURL cause it is ignored when marshalled and unmarshalled
-	if endpoint.Logger != nil {
-		endpoint.Logger.DestinationURL = k.loggerDestinationURL
-	}
+// 	// Need to reassign destionationURL cause it is ignored when marshalled and unmarshalled
+// 	if endpoint.Logger != nil {
+// 		endpoint.Logger.DestinationURL = k.loggerDestinationURL
+// 	}
 
-	model.Project = project
-	log.Infof("creating deployment for model %s version %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.ID)
+// 	model.Project = project
+// 	log.Infof("creating deployment for model %s version %s with endpoint id: %s", model.Name, endpoint.VersionID, endpoint.ID)
 
-	// copy endpoint to avoid race condition
-	endpoint.Status = models.EndpointFailed
-	defer func() {
-		deploymentCounter.WithLabelValues(model.Project.Name, model.Name, string(endpoint.Status)).Inc()
+// 	// copy endpoint to avoid race condition
+// 	endpoint.Status = models.EndpointFailed
+// 	defer func() {
+// 		deploymentCounter.WithLabelValues(model.Project.Name, model.Name, string(endpoint.Status)).Inc()
 
-		// record the deployment result
-		if _, err := k.deploymentStorage.Save(&models.Deployment{
-			ProjectID:         model.ProjectID,
-			VersionModelID:    model.ID,
-			VersionID:         endpoint.VersionID,
-			VersionEndpointID: endpoint.ID,
-			Status:            endpoint.Status,
-			Error:             endpoint.Message,
-		}); err != nil {
-			log.Warnf("unable to insert deployment history", err)
-		}
+// 		// record the deployment result
+// 		if _, err := k.deploymentStorage.Save(&models.Deployment{
+// 			ProjectID:         model.ProjectID,
+// 			VersionModelID:    model.ID,
+// 			VersionID:         endpoint.VersionID,
+// 			VersionEndpointID: endpoint.ID,
+// 			Status:            endpoint.Status,
+// 			Error:             endpoint.Message,
+// 		}); err != nil {
+// 			log.Warnf("unable to insert deployment history", err)
+// 		}
 
-		if err := k.storage.Save(endpoint); err != nil {
-			log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
-		}
-	}()
+// 		if err := k.storage.Save(endpoint); err != nil {
+// 			log.Errorf("unable to update endpoint status for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+// 		}
+// 	}()
 
-	modelOpt, err := k.generateModelOptions(model, version)
-	if err != nil {
-		endpoint.Message = err.Error()
-		return err
-	}
+// 	modelOpt, err := k.generateModelOptions(model, version)
+// 	if err != nil {
+// 		endpoint.Message = err.Error()
+// 		return err
+// 	}
 
-	modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment, endpoint.Transformer, endpoint.Logger)
-	ctl, ok := k.clusterControllers[endpoint.EnvironmentName]
-	if !ok {
-		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
-	}
-	svc, err := ctl.Deploy(modelService)
-	if err != nil {
-		log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
-		endpoint.Message = err.Error()
-		return err
-	}
+// 	modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, k.environment, endpoint.Transformer, endpoint.Logger)
+// 	ctl, ok := k.clusterControllers[endpoint.EnvironmentName]
+// 	if !ok {
+// 		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
+// 	}
+// 	svc, err := ctl.Deploy(modelService)
+// 	if err != nil {
+// 		log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
+// 		endpoint.Message = err.Error()
+// 		return err
+// 	}
 
-	endpoint.URL = svc.URL
-	previousStatus := endpointArg.Status
-	if previousStatus == models.EndpointServing {
-		endpoint.Status = models.EndpointServing
-	} else {
-		endpoint.Status = models.EndpointRunning
-	}
-	endpoint.ServiceName = svc.ServiceName
-	return nil
-}
+// 	endpoint.URL = svc.URL
+// 	previousStatus := endpointArg.Status
+// 	if previousStatus == models.EndpointServing {
+// 		endpoint.Status = models.EndpointServing
+// 	} else {
+// 		endpoint.Status = models.EndpointRunning
+// 	}
+// 	endpoint.ServiceName = svc.ServiceName
+// 	return nil
+// }
 
-func (k *endpointService) generateModelOptions(model *models.Model, version *models.Version) (*models.ModelOption, error) {
-	modelOpt := &models.ModelOption{}
-	switch model.Type {
-	case models.ModelTypePyFunc:
-		imageRef, err := k.imageBuilder.BuildImage(model.Project, model, version)
-		if err != nil {
-			return modelOpt, err
-		}
-		modelOpt.PyFuncImageName = imageRef
-	case models.ModelTypePyTorch:
-		modelOpt = models.NewPyTorchModelOption(version)
-	}
-	return modelOpt, nil
-}
+// func (k *endpointService) generateModelOptions(model *models.Model, version *models.Version) (*models.ModelOption, error) {
+// 	modelOpt := &models.ModelOption{}
+// 	switch model.Type {
+// 	case models.ModelTypePyFunc:
+// 		imageRef, err := k.imageBuilder.BuildImage(model.Project, model, version)
+// 		if err != nil {
+// 			return modelOpt, err
+// 		}
+// 		modelOpt.PyFuncImageName = imageRef
+// 	case models.ModelTypePyTorch:
+// 		modelOpt = models.NewPyTorchModelOption(version)
+// 	}
+// 	return modelOpt, nil
+// }
 
 func (k *endpointService) ListEndpoints(model *models.Model, version *models.Version) ([]*models.VersionEndpoint, error) {
 	endpoints, err := k.storage.ListEndpoints(model, version)
@@ -266,9 +264,9 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 	}
 
 	if err := k.jobProducer.EnqueueJob(&queue.Job{
-		Name: RealtimeDeploymentJob,
-		Arguments: queue.Argument{
-			dataArgKey: EndpointJobArgs{
+		Name: ModelServiceDeployment,
+		Arguments: queue.Arguments{
+			dataArgKey: models.EndpointJob{
 				Endpoint: &originalEndpoint,
 				Version:  version,
 				Model:    model,

@@ -1,23 +1,23 @@
 package queue
 
 import (
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"sync"
-	"time"
 
 	"github.com/gojek/merlin/log"
 	"github.com/jinzhu/gorm"
 )
 
 type Producer interface {
+	// EnqueueJob return error indicate that whether job is successfully queue or not
 	EnqueueJob(job *Job) error
 }
 
 type Consumer interface {
-	RegisterJob(jobName string, jobFn func(*Job) error)
+	// RegisterJob will register function that will be run for specific job name
+	RegisterJob(jobName string, jobFn JobFn)
+	// Start will run consumer workers which will consume job from queue
 	Start()
+	// Stop will stop all consumer workers
 	Stop()
 }
 
@@ -25,7 +25,7 @@ type Dispatcher struct {
 	sync.Mutex
 	db         *gorm.DB
 	workers    []*worker
-	jobFuncMap map[string]JobFn
+	jobFuncMap *sync.Map
 	jobChan    chan *Job
 }
 
@@ -36,36 +36,10 @@ type Config struct {
 	Db         *gorm.DB
 }
 
-type Status string
-
-type Argument map[string]interface{}
-
-type Job struct {
-	ID        int64     `json:"id" gorm:"primary_key;"`
-	Arguments Argument  `json:"arguments"`
-	Completed bool      `json:"completed"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-func (a Argument) Value() (driver.Value, error) {
-	return json.Marshal(a)
-}
-
-func (a *Argument) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion to []byte failed")
-	}
-
-	return json.Unmarshal(b, &a)
-}
-
 func NewDispatcher(cfg Config) *Dispatcher {
 	workers := make([]*worker, 0, cfg.NumWorkers)
 	jobChan := make(chan *Job)
-	jobFuncMap := make(map[string]JobFn)
+	jobFuncMap := &sync.Map{}
 	for i := 0; i < cfg.NumWorkers; i++ {
 		worker := newWorker(cfg.Db, jobChan)
 		workers = append(workers, worker)
@@ -91,9 +65,9 @@ func (d *Dispatcher) EnqueueJob(job *Job) error {
 	return nil
 }
 
-func (d *Dispatcher) RegisterJob(jobName string, jobFn func(*Job) error) {
+func (d *Dispatcher) RegisterJob(jobName string, jobFn JobFn) {
 	d.Lock()
-	d.jobFuncMap[jobName] = jobFn
+	d.jobFuncMap.Store(jobName, jobFn)
 	d.updateWorkersJobFunction()
 	d.Unlock()
 }
