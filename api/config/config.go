@@ -32,6 +32,7 @@ type Config struct {
 	Sentry                sentry.Config   `envconfig:"SENTRY" split_words:"false"`
 	NewRelic              newrelic.Config `envconfig:"NEWRELIC" split_words:"false" `
 	EnvironmentConfigPath string          `envconfig:"DEPLOYMENT_CONFIG_PATH" required:"true"`
+	NumOfQueueWorkers     int             `envconfig:"NUM_OF_WORKERS" default:"2"`
 
 	DbConfig                  DatabaseConfig
 	VaultConfig               VaultConfig
