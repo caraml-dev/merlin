@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+import "transformer/common.proto";
+
+option go_package = "github.com/gojek/merlin/pkg/transformer";
+
+
+message Variable {
+  string name = 1 ;
+  oneof value {
+    string literal = 2;
+    string expression = 3;
+    FromJson fromJson = 4;
+  }
+}

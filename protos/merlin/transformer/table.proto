@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+import "transformer/common.proto";
+
+option go_package = "github.com/gojek/merlin/pkg/transformer";
+
+
+message Table {
+  string name = 1;
+  BaseTable baseTable = 2;
+  repeated Column columns = 3;
+}
+
+message BaseTable {
+  oneof baseTable {
+    FromJson fromJson = 1;
+    FromTable fromTable = 2;
+  }
+}
+
+message Column {
+  string name = 1;
+  oneof value {
+    FromJson fromJson = 2;
+    string expression = 3;
+  }
+}
+
+message TableTransformation {
+  string inputTable = 1;
+  string outputTable = 2;
+  repeated TransformationStep steps = 3;
+}
+
+message TransformationStep {
+  repeated string dropColumns = 1;
+  repeated SortColumnRule sort = 2;
+  RenameColumn renameColumn = 3;
+  AddOrUpdateColumn addOrUpdateColumn = 4;
+}
+
+message SortColumnRule {
+  string column = 1;
+  SortOrder order = 2;
+}
+
+enum SortOrder {
+  INVALID_SORT_ORDER = 0;
+  ASC = 1;
+  DESC = 2;
+}
+
+message RenameColumn {
+  string from = 1;
+  string to = 2;
+}
+
+message AddOrUpdateColumn {
+  string column = 1;
+  string expression = 2;
+}
+
+message TableJoin {
+  string left = 1;
+  string right = 2;
+  string output = 3;
+  JoinMethod how = 4;
+  string onLeft = 5;
+  string onRight = 6;
+}
+
+enum JoinMethod {
+  INVALID_JOIN = 0;
+  LEFT = 1;
+  RIGHT = 2;
+  INNER = 3;
+  OUTER = 4;
+  CROSS = 5;
+  CONCAT = 6;
+}

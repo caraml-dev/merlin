@@ -4,18 +4,11 @@ package merlin.transformer;
 
 option go_package = "github.com/gojek/merlin/pkg/transformer";
 
-message StandardTransformerConfig {
-  TransformerConfig transformerConfig = 1;
-}
-
-message TransformerConfig {
-  repeated FeatureTable feast = 1;
-}
-
 message FeatureTable {
   string project = 1;
   repeated Entity entities = 2;
   repeated Feature features = 3;
+  string tableName = 4;
 }
 
 message Entity {
@@ -24,6 +17,7 @@ message Entity {
   oneof extractor {
     string jsonPath = 3;
     string udf = 4;
+    string expression = 5;
   };
 }
 

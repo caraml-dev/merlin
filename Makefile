@@ -167,4 +167,4 @@ generate-client-python:
 .PHONY: gen-proto
 gen-proto:
 	@echo "> Generating specification configuration from Proto file..."
-	@cd protos && protoc -I=. --go_out=../api --go-json_out=../api --go_opt=module=github.com/gojek/merlin pkg/transformer/*.proto
+	@cd protos/merlin && protoc -I=. --go_out=../../api --go-json_out=../../api/pkg --go_opt=module=github.com/gojek/merlin transformer/*.proto

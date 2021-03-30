@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+import "transformer/common.proto";
+
+option go_package = "github.com/gojek/merlin/pkg/transformer";
+
+message JsonOutput {
+  JsonTemplate jsonTemplate = 1;
+}
+
+message JsonTemplate {
+  BaseJson baseJson = 1;
+  repeated Field fields = 2;
+}
+
+message BaseJson {
+  oneof baseJson {
+    FromJson fromJson = 1;
+    FromTable fromTable = 2;
+  }
+}
+
+message Field {
+  repeated Field fields = 1;
+  oneof value {
+    FromJson fromJson = 2;
+    FromTable fromTable = 3;
+    string expression = 4;
+  }
+}
