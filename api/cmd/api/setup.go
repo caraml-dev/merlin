@@ -84,13 +84,18 @@ func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClien
 	return mlp.NewAPIClient(mlpHTTPClient, cfg.APIHost, cfg.EncryptionKey)
 }
 
-func initFeastCoreClient(feastCoreURL, feastAuthAudience string) core.CoreServiceClient {
-	cred, err := feast.NewGoogleCredential(feastAuthAudience)
-	if err != nil {
-		panic(err)
+func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool) core.CoreServiceClient {
+
+	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
+	if enableAuth {
+		cred, err := feast.NewGoogleCredential(feastAuthAudience)
+		if err != nil {
+			panic(err)
+		}
+		dialOpts = append(dialOpts, grpc.WithPerRPCCredentials(cred))
 	}
 
-	cc, err := grpc.Dial(feastCoreURL, grpc.WithInsecure(), grpc.WithPerRPCCredentials(cred))
+	cc, err := grpc.Dial(feastCoreURL, dialOpts...)
 	if err != nil {
 		panic(err)
 	}

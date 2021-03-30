@@ -89,10 +89,9 @@ var (
 	}
 
 	standardTransformerConfig = config.StandardTransformerConfig{
-		ImageName:                "merlin-standard-transformer",
-		FeastServingURL:          "serving.feast.dev:8081",
-		FeastCoreURL:             "core.feast.dev:8081",
-		FeastServingAuthAudience: "serving.feast.dev:8081",
+		ImageName:       "merlin-standard-transformer",
+		FeastServingURL: "serving.feast.dev:8081",
+		FeastCoreURL:    "core.feast.dev:8081",
 	}
 )
 
@@ -678,7 +677,6 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Image: standardTransformerConfig.ImageName,
 									Env: []v1.EnvVar{
 										{Name: transformer.FeastServingURLEnvName, Value: standardTransformerConfig.FeastServingURL},
-										{Name: transformer.FeastServingAuthAudience, Value: standardTransformerConfig.FeastServingAuthAudience},
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},

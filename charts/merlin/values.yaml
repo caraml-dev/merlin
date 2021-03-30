@@ -88,7 +88,7 @@ merlin:
       servingURL: serving.feast.dev
       coreURL: core.feast.dev
       coreAuthAudience: core.feast.dev
-      servingAuthAudience: serving.feast.dev
+      authEnabled: false
     image: merlin-transformer:1.0.0
 
   # Google service account used to access GCP's resources.

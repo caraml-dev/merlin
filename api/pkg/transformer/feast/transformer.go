@@ -75,7 +75,6 @@ type Options struct {
 	BatchSize               int           `envconfig:"FEAST_BATCH_SIZE" default:"50"`
 	CacheEnabled            bool          `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
 	CacheTTL                time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
-	AuthAudience            string        `envconfig:"FEAST_AUTH_AUDIENCE" required:"true"`
 }
 
 type Cache interface {

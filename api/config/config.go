@@ -138,11 +138,11 @@ type MlpAPIConfig struct {
 }
 
 type StandardTransformerConfig struct {
-	ImageName                string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
-	FeastServingURL          string `envconfig:"FEAST_SERVING_URL" required:"true"`
-	FeastCoreURL             string `envconfig:"FEAST_CORE_URL" required:"true"`
-	FeastCoreAuthAudience    string `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
-	FeastServingAuthAudience string `envconfig:"FEAST_SERVING_AUTH_AUDIENCE" required:"true"`
+	ImageName             string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
+	FeastServingURL       string `envconfig:"FEAST_SERVING_URL" required:"true"`
+	FeastCoreURL          string `envconfig:"FEAST_CORE_URL" required:"true"`
+	FeastCoreAuthAudience string `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
+	EnableAuth            bool   `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
 }
 
 type MlflowConfig struct {

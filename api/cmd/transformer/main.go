@@ -71,13 +71,7 @@ func main() {
 		logger.Fatal("Unable to parse Feast Serving Port", zap.String("feast-serving-port", feastPort), zap.Error(err))
 	}
 
-	cred, err := feastSdk.NewGoogleCredential(cfg.Feast.AuthAudience)
-	if err != nil {
-		logger.Fatal("Unable to create credentials", zap.Error(err))
-	}
-	feastClient, err := feastSdk.NewSecureGrpcClient(feastHost, feastPortInt, feastSdk.SecurityConfig{
-		Credential: cred,
-	})
+	feastClient, err := feastSdk.NewGrpcClient(feastHost, feastPortInt)
 	if err != nil {
 		logger.Fatal("Unable to initialize Feast client", zap.Error(err))
 	}
