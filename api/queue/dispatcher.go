@@ -22,7 +22,6 @@ type Consumer interface {
 }
 
 type Dispatcher struct {
-	sync.Mutex
 	db         *gorm.DB
 	workers    []*worker
 	jobFuncMap *sync.Map
@@ -66,10 +65,8 @@ func (d *Dispatcher) EnqueueJob(job *Job) error {
 }
 
 func (d *Dispatcher) RegisterJob(jobName string, jobFn JobFn) {
-	d.Lock()
 	d.jobFuncMap.Store(jobName, jobFn)
 	d.updateWorkersJobFunction()
-	d.Unlock()
 }
 
 func (d *Dispatcher) Start() {
