@@ -70,6 +70,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("Unable to parse Feast Serving Port", zap.String("feast-serving-port", feastPort), zap.Error(err))
 	}
+
 	feastClient, err := feastSdk.NewGrpcClient(feastHost, feastPortInt)
 	if err != nil {
 		logger.Fatal("Unable to initialize Feast client", zap.Error(err))

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned"
+	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/gojek/merlin/api"
 	"github.com/gojek/merlin/batch"
@@ -83,8 +84,18 @@ func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClien
 	return mlp.NewAPIClient(mlpHTTPClient, cfg.APIHost, cfg.EncryptionKey)
 }
 
-func initFeastCoreClient(feastCoreURL string) core.CoreServiceClient {
-	cc, err := grpc.Dial(feastCoreURL, grpc.WithInsecure())
+func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool) core.CoreServiceClient {
+
+	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
+	if enableAuth {
+		cred, err := feast.NewGoogleCredential(feastAuthAudience)
+		if err != nil {
+			panic(err)
+		}
+		dialOpts = append(dialOpts, grpc.WithPerRPCCredentials(cred))
+	}
+
+	cc, err := grpc.Dial(feastCoreURL, dialOpts...)
 	if err != nil {
 		panic(err)
 	}
