@@ -143,6 +143,10 @@ spec:
             value: "{{ .Values.merlin.transformer.feast.servingURL }}"
           - name: FEAST_CORE_URL
             value: "{{ .Values.merlin.transformer.feast.coreURL }}"
+          - name: FEAST_CORE_AUTH_AUDIENCE
+            value: "{{ .Values.merlin.transformer.feast.coreAuthAudience }}"
+          - name: FEAST_AUTH_ENABLED
+            value: "{{ .Values.merlin.transformer.feast.authEnabled }}"
           - name: STANDARD_TRANSFORMER_IMAGE_NAME
             value: "{{ .Values.merlin.transformer.image }}"
           - name: VAULT_ADDRESS
