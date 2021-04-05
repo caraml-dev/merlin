@@ -23,43 +23,44 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 var (
 	feastError = promauto.NewCounter(prometheus.CounterOpts{
-		Namespace: transformer.PromNamespace,
+		Namespace: spec.PromNamespace,
 		Name:      "feast_serving_error_count",
 		Help:      "The total number of error returned by feast serving",
 	})
 
 	feastLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: transformer.PromNamespace,
+		Namespace: spec.PromNamespace,
 		Name:      "feast_serving_request_duration_ms",
 		Help:      "Feast serving latency histogram",
 		Buckets:   prometheus.ExponentialBuckets(1, 2, 10), // 1,2,4,8,16,32,64,128,256,512,+Inf
 	}, []string{"result"})
 
 	feastFeatureStatus = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: transformer.PromNamespace,
+		Namespace: spec.PromNamespace,
 		Name:      "feast_feature_status_count",
 		Help:      "Feature status by feature",
 	}, []string{"feature", "status"})
 
 	feastFeatureSummary = promauto.NewSummaryVec(prometheus.SummaryOpts{
-		Namespace:  transformer.PromNamespace,
+		Namespace:  spec.PromNamespace,
 		Name:       "feast_feature_value",
 		Help:       "Summary of feature value",
 		AgeBuckets: 1,
 	}, []string{"feature"})
 
 	feastCacheRetrievalCount = promauto.NewCounter(prometheus.CounterOpts{
-		Namespace: transformer.PromNamespace,
+		Namespace: spec.PromNamespace,
 		Name:      "feast_cache_retrieval_count",
 		Help:      "Retrieve feature from cache",
 	})
 
 	feastCacheHitCount = promauto.NewCounter(prometheus.CounterOpts{
-		Namespace: transformer.PromNamespace,
+		Namespace: spec.PromNamespace,
 		Name:      "feast_cache_hit_count",
 		Help:      "Cache is hitted",
 	})
@@ -67,7 +68,7 @@ var (
 
 const defaultProjectName = "default"
 
-// Options for the Feast transformer.
+// Options for the Feast spec.
 type Options struct {
 	ServingURL              string        `envconfig:"FEAST_SERVING_URL" required:"true"`
 	StatusMonitoringEnabled bool          `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
@@ -85,7 +86,7 @@ type Cache interface {
 // Transformer wraps feast serving client to retrieve features.
 type Transformer struct {
 	feastClient      feast.Client
-	config           *transformer.StandardTransformerConfig
+	config           *spec.StandardTransformerConfig
 	logger           *zap.Logger
 	options          *Options
 	defaultValues    map[string]*types.Value
@@ -94,8 +95,8 @@ type Transformer struct {
 	cache            Cache
 }
 
-// NewTransformer initializes a new Transformer.
-func NewTransformer(feastClient feast.Client, config *transformer.StandardTransformerConfig, options *Options, logger *zap.Logger, cache Cache) (*Transformer, error) {
+// NewTransformer initializes a new spec.
+func NewTransformer(feastClient feast.Client, config *spec.StandardTransformerConfig, options *Options, logger *zap.Logger, cache Cache) (*Transformer, error) {
 	defaultValues := make(map[string]*types.Value)
 	// populate default values
 	for _, ft := range config.TransformerConfig.Feast {
@@ -117,13 +118,13 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 	for _, ft := range config.TransformerConfig.Feast {
 		for _, configEntity := range ft.Entities {
 			switch configEntity.Extractor.(type) {
-			case *transformer.Entity_JsonPath:
+			case *spec.Entity_JsonPath:
 				c, err := jsonpath.Compile(configEntity.GetJsonPath())
 				if err != nil {
 					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
 				}
 				compiledJsonPath[configEntity.GetJsonPath()] = c
-			case *transformer.Entity_Udf:
+			case *spec.Entity_Udf:
 				c, err := expr.Compile(configEntity.GetUdf(), expr.Env(UdfEnv{}))
 				if err != nil {
 					return nil, err
@@ -171,7 +172,7 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	// parallelize feast call per feature table
 	resChan := make(chan result, len(t.config.TransformerConfig.Feast))
 	for _, config := range t.config.TransformerConfig.Feast {
-		go func(cfg *transformer.FeatureTable) {
+		go func(cfg *spec.FeatureTable) {
 			tableName := createTableName(cfg.Entities, cfg.Project)
 			val, err := t.getFeastFeature(ctx, tableName, request, cfg)
 			resChan <- result{tableName, val, err}
@@ -195,7 +196,7 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	return out, err
 }
 
-func (t *Transformer) getFeastFeature(ctx context.Context, tableName string, request []byte, config *transformer.FeatureTable) (*FeastFeature, error) {
+func (t *Transformer) getFeastFeature(ctx context.Context, tableName string, request []byte, config *spec.FeatureTable) (*FeastFeature, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.getFeastFeature")
 	span.SetTag("table.name", tableName)
 	defer span.Finish()
@@ -222,7 +223,7 @@ type batchResult struct {
 	err          error
 }
 
-func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.Row, config *transformer.FeatureTable, features []string) (*FeastFeature, error) {
+func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.Row, config *spec.FeatureTable, features []string) (*FeastFeature, error) {
 
 	var cachedValues FeaturesData
 	entityNotInCache := entities
@@ -302,7 +303,7 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 	}, nil
 }
 
-func (t *Transformer) getColumnNames(config *transformer.FeatureTable) []string {
+func (t *Transformer) getColumnNames(config *spec.FeatureTable) []string {
 	columns := make([]string, 0, len(config.Entities)+len(config.Features))
 	for _, entity := range config.Entities {
 		columns = append(columns, entity.Name)
@@ -313,9 +314,9 @@ func (t *Transformer) getColumnNames(config *transformer.FeatureTable) []string 
 	return columns
 }
 
-func (t *Transformer) getEntityIndicesFromColumns(columns []string, entitiesConfig []*transformer.Entity) map[int]int {
+func (t *Transformer) getEntityIndicesFromColumns(columns []string, entitiesConfig []*spec.Entity) map[int]int {
 	indicesMapping := make(map[int]int, len(entitiesConfig))
-	entitiesConfigMap := make(map[string]*transformer.Entity)
+	entitiesConfigMap := make(map[string]*spec.Entity)
 	for _, entityConfig := range entitiesConfig {
 		entitiesConfigMap[entityConfig.Name] = entityConfig
 	}
@@ -327,7 +328,7 @@ func (t *Transformer) getEntityIndicesFromColumns(columns []string, entitiesConf
 	return indicesMapping
 }
 
-func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
+func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*spec.Entity) ([]feast.Row, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildEntitiesRequest")
 	defer span.Finish()
 
@@ -340,7 +341,7 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 
 	for _, configEntity := range configEntities {
 		switch configEntity.Extractor.(type) {
-		case *transformer.Entity_JsonPath:
+		case *spec.Entity_JsonPath:
 			_, ok := t.compiledJsonPath[configEntity.GetJsonPath()]
 			if !ok {
 				c, err := jsonpath.Compile(configEntity.GetJsonPath())
@@ -465,7 +466,7 @@ func getFloatValue(val interface{}) (float64, error) {
 	}
 }
 
-func createTableName(entities []*transformer.Entity, project string) string {
+func createTableName(entities []*spec.Entity, project string) string {
 	entityNames := make([]string, 0)
 	for _, n := range entities {
 		entityNames = append(entityNames, n.Name)
@@ -523,7 +524,7 @@ func enrichRequest(ctx context.Context, request []byte, feastFeatures map[string
 		return nil, err
 	}
 
-	out, err := jsonparser.Set(request, feastFeatureJSON, transformer.FeastFeatureJSONField)
+	out, err := jsonparser.Set(request, feastFeatureJSON, spec.FeastFeatureJSONField)
 	if err != nil {
 		return nil, err
 	}

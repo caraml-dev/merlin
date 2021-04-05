@@ -9,40 +9,40 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 func TestValidateTransformerConfig(t *testing.T) {
 	tests := []struct {
 		name                  string
-		trfConfig             *transformer.StandardTransformerConfig
+		trfConfig             *spec.StandardTransformerConfig
 		listEntitiesResponse  *core.ListEntitiesResponse
 		listFeaturesResponses []*core.ListFeaturesResponse
 		wantError             error
 	}{
 		{
 			"empty config",
-			&transformer.StandardTransformerConfig{},
+			&spec.StandardTransformerConfig{},
 			nil,
 			nil,
 			NewValidationError("transformerConfig is empty"),
 		},
 		{
 			"empty feature table",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{}},
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{}},
 			nil,
 			nil,
 			NewValidationError("feature retrieval config is empty"),
 		},
 		{
 			"no entity in config",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project:  "default",
-						Entities: []*transformer.Entity{},
-						Features: []*transformer.Feature{},
+						Entities: []*spec.Entity{},
+						Features: []*spec.Feature{},
 					},
 				},
 			},
@@ -53,16 +53,16 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"no feature in config",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
 							},
 						},
-						Features: []*transformer.Feature{},
+						Features: []*spec.Feature{},
 					},
 				},
 			},
@@ -73,16 +73,16 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"entity not registered in feast",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -97,17 +97,17 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"extractor not specified",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name:      "customer_id",
 								ValueType: "STRING",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -131,18 +131,18 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"json path not specified",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name:      "customer_id",
 								ValueType: "STRING",
-								Extractor: &transformer.Entity_JsonPath{},
+								Extractor: &spec.Entity_JsonPath{},
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -166,19 +166,19 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"invalid json path",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "customer_id",
 								},
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -202,20 +202,20 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"mismatched entity value type",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "INTEGER",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -239,27 +239,27 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"feature not registered",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -293,27 +293,27 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"mismatch feature value type",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "total_booking",
 								ValueType: "INT32",
@@ -353,27 +353,27 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"mismatch feature value type using fq name",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "customer_feature_table:total_booking",
 								ValueType: "INT32",
@@ -413,27 +413,27 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"success case with shorthand name",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "total_booking",
 								ValueType: "INT32",
@@ -473,27 +473,27 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"success case with fully qualified feature name",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "customer_feature_table:total_booking",
 								ValueType: "INT32",
@@ -533,21 +533,21 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			name: "invalid udf expression",
-			trfConfig: &transformer.StandardTransformerConfig{
-				TransformerConfig: &transformer.TransformerConfig{
-					Feast: []*transformer.FeatureTable{
+			trfConfig: &spec.StandardTransformerConfig{
+				TransformerConfig: &spec.TransformerConfig{
+					Feast: []*spec.FeatureTable{
 						{
 							Project: "default",
-							Entities: []*transformer.Entity{
+							Entities: []*spec.Entity{
 								{
 									Name:      "geohash",
 									ValueType: "String",
-									Extractor: &transformer.Entity_Udf{
+									Extractor: &spec.Entity_Udf{
 										Udf: "unknown()",
 									},
 								},
 							},
-							Features: []*transformer.Feature{
+							Features: []*spec.Feature{
 								{
 									Name:      "average_daily_rides",
 									ValueType: "DOUBLE",
@@ -571,20 +571,20 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"success case with fully qualified feature name from non-default project name",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "merlin",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "customer_feature_table:total_booking",
 								ValueType: "INT32",

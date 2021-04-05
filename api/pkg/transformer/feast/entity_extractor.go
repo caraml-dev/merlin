@@ -10,21 +10,21 @@ import (
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/oliveagle/jsonpath"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
-func getValuesFromJSONPayload(nodesBody interface{}, entity *transformer.Entity, compiledJsonPath *jsonpath.Compiled, udf *vm.Program) ([]*feastType.Value, error) {
+func getValuesFromJSONPayload(nodesBody interface{}, entity *spec.Entity, compiledJsonPath *jsonpath.Compiled, udf *vm.Program) ([]*feastType.Value, error) {
 	feastValType := feastType.ValueType_Enum(feastType.ValueType_Enum_value[entity.ValueType])
 
 	var entityVal interface{}
 	switch entity.Extractor.(type) {
-	case *transformer.Entity_JsonPath:
+	case *spec.Entity_JsonPath:
 		entityValFromJsonPath, err := compiledJsonPath.Lookup(nodesBody)
 		if err != nil {
 			return nil, err
 		}
 		entityVal = entityValFromJsonPath
-	case *transformer.Entity_Udf:
+	case *spec.Entity_Udf:
 		env := UdfEnv{nodesBody}
 		exprResult, err := expr.Run(udf, env)
 		if err != nil {

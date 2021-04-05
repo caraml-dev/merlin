@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package merlin.transformer;
 
-import "transformer/common.proto";
+import "transformer/spec/common.proto";
 
-option go_package = "github.com/gojek/merlin/pkg/transformer";
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
 message JsonOutput {
   JsonTemplate jsonTemplate = 1;

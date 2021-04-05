@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package merlin.transformer;
 
-import "transformer/feast.proto";
-import "transformer/table.proto";
-import "transformer/variable.proto";
-import "transformer/json.proto";
+import "transformer/spec/feast.proto";
+import "transformer/spec/table.proto";
+import "transformer/spec/variable.proto";
+import "transformer/spec/json.proto";
 
-option go_package = "github.com/gojek/merlin/pkg/transformer";
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
 message StandardTransformerConfig {
   TransformerConfig transformerConfig = 1;

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package merlin.transformer;
 
-option go_package = "github.com/gojek/merlin/pkg/transformer";
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
 
 message FromTable {

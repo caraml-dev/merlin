@@ -18,14 +18,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	type fields struct {
-		config *transformer.StandardTransformerConfig
+		config *spec.StandardTransformerConfig
 	}
 
 	type args struct {
@@ -60,21 +60,21 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 		{
 			name: "one config: retrieve multiple entities, single feature table, batched",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -172,21 +172,21 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 		{
 			name: "one config: retrieve multiple entities, single feature table, batched, cached enabled, fail insert cached",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -285,21 +285,21 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 		{
 			name: "one config: retrieve multiple entities, single feature table, batched, one value is cached",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -368,21 +368,21 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 		{
 			name: "one config: retrieve multiple entities, single feature table, batched, one of batch call is failed",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -464,21 +464,21 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 		{
 			name: "two config: retrieve multiple entities, multiple feature table, batched, cached",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -488,23 +488,23 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 							},
 							{
 								Project: "project",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "merchant_uuid",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.merchants[*].id",
 										},
 									},
 									{
 										Name:      "customer_id",
 										ValueType: "INT64",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.customer_id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "customer_merchant_interaction:int_order_count_24weeks",
 										DefaultValue: "0",
@@ -592,21 +592,21 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 		{
 			name: "one config: retrieve multiple entities, 2 feature tables but same entity name, batched",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -616,16 +616,16 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 							},
 							{
 								Project: "sample",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:avg_rating",
 										DefaultValue: "0.0",
@@ -782,7 +782,7 @@ func TestTransformer_Transform_With_Batching_Cache(t *testing.T) {
 
 		got, err := f.Transform(tt.args.ctx, tt.args.request)
 		if (err != nil) != tt.wantErr {
-			t.Errorf("Transformer.Transform() error = %v, wantErr %v", err, tt.wantErr)
+			t.Errorf("spec.Transform() error = %v, wantErr %v", err, tt.wantErr)
 			return
 		}
 
@@ -799,7 +799,7 @@ func TestTransformer_Transform(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 
 	type fields struct {
-		config *transformer.StandardTransformerConfig
+		config *spec.StandardTransformerConfig
 	}
 	type args struct {
 		ctx     context.Context
@@ -821,22 +821,22 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "one config: retrieve one entity, one feature",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.driver_id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -881,21 +881,21 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "different type between json and entity type in feast",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "INT32",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.driver_id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -940,21 +940,21 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "one config: retrieve multiple entities, one feature",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -1010,21 +1010,21 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "missing value without default",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name: "driver_trips:average_daily_rides",
 									},
@@ -1077,21 +1077,21 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "missing value with default",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.5",
@@ -1146,21 +1146,21 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "two configs: each retrieve one entity, one feature",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "driver_id",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.driver_id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -1170,16 +1170,16 @@ func TestTransformer_Transform(t *testing.T) {
 							},
 							{
 								Project: "customer_id",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "customer_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.customer_id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "customer_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -1245,21 +1245,21 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "geohash entity from latitude and longitude",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "geohash",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "geohash",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_Udf{
+										Extractor: &spec.Entity_Udf{
 											Udf: "Geohash(\"$.latitude\", \"$.longitude\", 12)",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "geohash_statistics:average_daily_rides",
 										DefaultValue: "0.0",
@@ -1304,21 +1304,21 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "jsonextract entity from nested json string",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "jsonextract",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "jsonextract",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_Udf{
+										Extractor: &spec.Entity_Udf{
 											Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "geohash_statistics:average_daily_rides",
 										DefaultValue: "0.0",
@@ -1363,21 +1363,21 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "s2id entity from latitude and longitude",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "s2id",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "s2id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_Udf{
+										Extractor: &spec.Entity_Udf{
 											Udf: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "geohash_statistics:average_daily_rides",
 										DefaultValue: "0.0",
@@ -1422,21 +1422,21 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "one config: retrieve multiple entities, one feature, batch",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project: "default",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "driver_id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_JsonPath{
+										Extractor: &spec.Entity_JsonPath{
 											JsonPath: "$.drivers[*].id",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "driver_trips:average_daily_rides",
 										DefaultValue: "0.0",
@@ -1509,11 +1509,11 @@ func TestTransformer_Transform(t *testing.T) {
 
 			got, err := f.Transform(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Transformer.Transform() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("spec.Transform() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Transformer.Transform() = %s, want %s", got, tt.want)
+				t.Errorf("spec.Transform() = %s, want %s", got, tt.want)
 			}
 
 			mockFeast.AssertExpectations(t)
@@ -1525,7 +1525,7 @@ func Test_buildEntitiesRequest(t *testing.T) {
 	type args struct {
 		ctx            context.Context
 		request        []byte
-		configEntities []*transformer.Entity
+		configEntities []*spec.Entity
 	}
 	tests := []struct {
 		name    string
@@ -1538,11 +1538,11 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":1111}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id",
 						},
 					},
@@ -1558,11 +1558,11 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"details": "{\"merchant_id\": 9001}"}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_Udf{
+						Extractor: &spec.Entity_Udf{
 							Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
 						},
 					},
@@ -1578,11 +1578,11 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":[1111,2222]}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id[*]",
 						},
 					},
@@ -1599,18 +1599,18 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":1111,"merchant_id":"M111"}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id",
 						},
 					},
@@ -1626,18 +1626,18 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":[1111,2222],"merchant_id":"M111"}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id[*]",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id",
 						},
 					},
@@ -1654,18 +1654,18 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":1111,"merchant_id":["M111","M222"]}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id",
 						},
 					},
@@ -1682,18 +1682,18 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":1111,"merchant_id":["M111","M222","M333"]}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id[*]",
 						},
 					},
@@ -1711,18 +1711,18 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":[1111,2222],"merchant_id":["M111","M222"]}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id[*]",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id[*]",
 						},
 					},
@@ -1741,25 +1741,25 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":1111,"merchant_id":"M111","driver_id":"D111"}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id",
 						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.driver_id",
 						},
 					},
@@ -1775,25 +1775,25 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":1111,"merchant_id":"M111","driver_id":["D111","D222","D333","D444"]}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id",
 						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.driver_id[*]",
 						},
 					},
@@ -1812,25 +1812,25 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":1111,"merchant_id":["M111","M222"],"driver_id":["D111","D222"]}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id[*]",
 						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.driver_id[*]",
 						},
 					},
@@ -1849,25 +1849,25 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":[1111,2222,3333],"merchant_id":"M111","driver_id":"D111"}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id[*]",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id",
 						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.driver_id",
 						},
 					},
@@ -1885,25 +1885,25 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":[1111,2222],"merchant_id":["M111","M222"],"driver_id":["D111","D222"]}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id[*]",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id[*]",
 						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.driver_id[*]",
 						},
 					},
@@ -1926,32 +1926,32 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":[1111,2222,3333],"merchant_id":["M111","M222"],"driver_id":["D111","D222"],"order_id":["O111","O222"]}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "customer_id",
 						ValueType: "INT64",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.customer_id[*]",
 						},
 					},
 					{
 						Name:      "merchant_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.merchant_id[*]",
 						},
 					},
 					{
 						Name:      "driver_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.driver_id[*]",
 						},
 					},
 					{
 						Name:      "order_id",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_JsonPath{
+						Extractor: &spec.Entity_JsonPath{
 							JsonPath: "$.order_id[*]",
 						},
 					},
@@ -1990,11 +1990,11 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"latitude": 1.0, "longitude": 2.0}`),
-				configEntities: []*transformer.Entity{
+				configEntities: []*spec.Entity{
 					{
 						Name:      "my_geohash",
 						ValueType: "STRING",
-						Extractor: &transformer.Entity_Udf{
+						Extractor: &spec.Entity_Udf{
 							Udf: "Geohash(\"$.latitude\", \"$.longitude\", 12)",
 						},
 					},
@@ -2011,7 +2011,7 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			mockFeast := &mocks.Client{}
 			logger, _ := zap.NewDevelopment()
 
-			f, err := NewTransformer(mockFeast, &transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{Feast: []*transformer.FeatureTable{
+			f, err := NewTransformer(mockFeast, &spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{Feast: []*spec.FeatureTable{
 				{
 					Entities: tt.args.configEntities,
 				},

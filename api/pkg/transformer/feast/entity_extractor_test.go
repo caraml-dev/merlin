@@ -12,7 +12,7 @@ import (
 	"github.com/oliveagle/jsonpath"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 func TestGetValuesFromJSONPayload(t *testing.T) {
@@ -58,16 +58,16 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		entityConfig *transformer.Entity
+		entityConfig *spec.Entity
 		expValues    []*feastType.Value
 		expError     error
 	}{
 		{
 			"integer to int64",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT64",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
@@ -78,10 +78,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"integer to float",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "FLOAT",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
@@ -92,10 +92,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"integer to double",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "DOUBLE",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
@@ -106,10 +106,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"integer to string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
@@ -120,10 +120,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to int32",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -134,10 +134,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to int64",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT64",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -148,10 +148,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to float",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "FLOAT",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -162,10 +162,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to double",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "DOUBLE",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -176,10 +176,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -190,10 +190,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to int32",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -204,10 +204,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to int64",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT64",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -218,10 +218,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to float",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "FLOAT",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -232,10 +232,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to double",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "DOUBLE",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -246,10 +246,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -260,10 +260,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"boolean to boolean",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "BOOL",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.boolean",
 				},
 			},
@@ -274,10 +274,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to boolean",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "BOOL",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.booleanString",
 				},
 			},
@@ -288,10 +288,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"array of integer",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.array[*].integer",
 				},
 			},
@@ -303,10 +303,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"array of string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.array[*].string",
 				},
 			},
@@ -318,10 +318,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"struct integer",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.struct.integer",
 				},
 			},
@@ -332,10 +332,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"Geohash udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_geohash",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "Geohash(\"$.latitude\", \"$.longitude\", 12)",
 				},
 			},
@@ -346,10 +346,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"Array of Geohash udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_geohash",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "Geohash(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
 				},
 			},
@@ -361,10 +361,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"JsonExtract udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "jsonextract",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
 				},
 			},
@@ -375,10 +375,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"S2ID udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
 				},
 			},
@@ -389,10 +389,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"Array of S2ID udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "S2ID(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
 				},
 			},
@@ -404,10 +404,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"unsupported feast type",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "BYTES",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.booleanString",
 				},
 			},
@@ -420,9 +420,9 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 			var compiledJsonPath *jsonpath.Compiled = nil
 			var compiledUdf *vm.Program = nil
 			switch test.entityConfig.Extractor.(type) {
-			case *transformer.Entity_JsonPath:
+			case *spec.Entity_JsonPath:
 				compiledJsonPath, _ = jsonpath.Compile(test.entityConfig.GetJsonPath())
-			case *transformer.Entity_Udf:
+			case *spec.Entity_Udf:
 				compiledUdf = mustCompileUdf(test.entityConfig.GetUdf())
 			}
 
@@ -444,10 +444,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 }
 
 func BenchmarkGetValuesFromJSONPayload100Entity(b *testing.B) {
-	entityConfig := &transformer.Entity{
+	entityConfig := &spec.Entity{
 		Name:      "",
 		ValueType: "INT32",
-		Extractor: &transformer.Entity_JsonPath{
+		Extractor: &spec.Entity_JsonPath{
 			JsonPath: "$.array[*].id",
 		},
 	}
@@ -463,10 +463,10 @@ func BenchmarkGetValuesFromJSONPayload100Entity(b *testing.B) {
 
 func BenchmarkGetValuesFromJSONPayload1StringEntity(b *testing.B) {
 	b.ReportAllocs()
-	entityConfig := &transformer.Entity{
+	entityConfig := &spec.Entity{
 		Name:      "",
 		ValueType: "STRING",
-		Extractor: &transformer.Entity_JsonPath{
+		Extractor: &spec.Entity_JsonPath{
 			JsonPath: "$.string",
 		},
 	}
@@ -482,10 +482,10 @@ func BenchmarkGetValuesFromJSONPayload1StringEntity(b *testing.B) {
 
 func BenchmarkGetValuesFromJSONPayload1IntegerEntity(b *testing.B) {
 	b.ReportAllocs()
-	entityConfig := &transformer.Entity{
+	entityConfig := &spec.Entity{
 		Name:      "",
 		ValueType: "INT32",
-		Extractor: &transformer.Entity_JsonPath{
+		Extractor: &spec.Entity_JsonPath{
 			JsonPath: "$.integer",
 		},
 	}
@@ -501,10 +501,10 @@ func BenchmarkGetValuesFromJSONPayload1IntegerEntity(b *testing.B) {
 
 func BenchmarkGetValuesFromJSONPayload1FloatEntity(b *testing.B) {
 	b.ReportAllocs()
-	entityConfig := &transformer.Entity{
+	entityConfig := &spec.Entity{
 		Name:      "",
 		ValueType: "DOUBLE",
-		Extractor: &transformer.Entity_JsonPath{
+		Extractor: &spec.Entity_JsonPath{
 			JsonPath: "$.float",
 		},
 	}
@@ -523,10 +523,10 @@ func BenchmarkGetValuesFromJSONPayloadGeohashUdf(b *testing.B) {
 	udfString := "Geohash(\"$.latitude\", \"$.longitude\")"
 	compiledUdf := mustCompileUdf(udfString)
 	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(benchData, &transformer.Entity{
+		Result, _ = getValuesFromJSONPayload(benchData, &spec.Entity{
 			Name:      "my_geohash",
 			ValueType: "STRING",
-			Extractor: &transformer.Entity_Udf{
+			Extractor: &spec.Entity_Udf{
 				Udf: udfString,
 			},
 		},

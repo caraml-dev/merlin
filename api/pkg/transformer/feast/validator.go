@@ -10,11 +10,11 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/pkg/errors"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 // ValidateTransformerConfig validate transformer config by checking the presence of entity and features in feast core
-func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, trfCfg *transformer.StandardTransformerConfig) error {
+func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, trfCfg *spec.StandardTransformerConfig) error {
 	if trfCfg.TransformerConfig == nil {
 		return NewValidationError("transformerConfig is empty")
 	}
@@ -55,13 +55,13 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 		// check all entity given in config are all registered ones
 		entities := make([]string, 0)
 		for _, entity := range config.Entities {
-			spec, found := allEntities[entity.Name]
+			entitySpec, found := allEntities[entity.Name]
 			if !found {
 				return NewValidationError("entity not found: " + entity.Name)
 			}
 
 			switch entity.Extractor.(type) {
-			case *transformer.Entity_JsonPath:
+			case *spec.Entity_JsonPath:
 				if len(entity.GetJsonPath()) == 0 {
 					return NewValidationError(fmt.Sprintf("json path for %s is not specified", entity.Name))
 				}
@@ -69,7 +69,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 				if err != nil {
 					return NewValidationError(fmt.Sprintf("jsonpath compilation failed: %v", err))
 				}
-			case *transformer.Entity_Udf:
+			case *spec.Entity_Udf:
 				_, err = expr.Compile(entity.GetUdf(), expr.Env(UdfEnv{}))
 				if err != nil {
 					return NewValidationError(fmt.Sprintf("udf compilation failed: %v", err))
@@ -78,8 +78,8 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 				return NewValidationError(fmt.Sprintf("one of json_path, udf must be specified"))
 			}
 
-			if spec.ValueType.String() != entity.ValueType {
-				return NewValidationError(fmt.Sprintf("mismatched value type for %s, expect: %s, got: %s", entity.Name, spec.ValueType.String(), entity.ValueType))
+			if entitySpec.ValueType.String() != entity.ValueType {
+				return NewValidationError(fmt.Sprintf("mismatched value type for %s, expect: %s, got: %s", entity.Name, entitySpec.ValueType.String(), entity.ValueType))
 			}
 
 			entities = append(entities, entity.Name)
