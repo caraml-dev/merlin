@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -33,6 +32,7 @@ import (
 	imageBuilderMock "github.com/gojek/merlin/imagebuilder/mocks"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	queueMock "github.com/gojek/merlin/queue/mocks"
 	"github.com/gojek/merlin/storage/mocks"
 )
 
@@ -64,14 +64,11 @@ func TestDeployEndpoint(t *testing.T) {
 	version := &models.Version{ID: 1}
 
 	iSvcName := fmt.Sprintf("%s-%d", model.Name, version.ID)
-	svcName := fmt.Sprintf("%s-%d.project.svc.cluster.local", model.Name, version.ID)
-	url := fmt.Sprintf("%s-%d.example.com", model.Name, version.ID)
 
 	tests := []struct {
-		name                string
-		args                args
-		wantDeployError     bool
-		wantBuildImageError bool
+		name            string
+		args            args
+		wantDeployError bool
 	}{
 		{
 			"success: new endpoint default resource request",
@@ -81,7 +78,6 @@ func TestDeployEndpoint(t *testing.T) {
 				version,
 				&models.VersionEndpoint{},
 			},
-			false,
 			false,
 		},
 		{
@@ -100,7 +96,6 @@ func TestDeployEndpoint(t *testing.T) {
 				},
 			},
 			false,
-			false,
 		},
 		{
 			"success: pytorch model",
@@ -112,7 +107,6 @@ func TestDeployEndpoint(t *testing.T) {
 				}},
 				&models.VersionEndpoint{},
 			},
-			false,
 			false,
 		},
 		{
@@ -126,7 +120,6 @@ func TestDeployEndpoint(t *testing.T) {
 				},
 			},
 			false,
-			false,
 		},
 		{
 			"success: empty pyfunc model",
@@ -139,20 +132,6 @@ func TestDeployEndpoint(t *testing.T) {
 				},
 			},
 			false,
-			false,
-		},
-		{
-			"failed: error building pyfunc image",
-			args{
-				env,
-				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyFunc},
-				&models.Version{ID: 1},
-				&models.VersionEndpoint{
-					ResourceRequest: env.DefaultResourceRequest,
-				},
-			},
-			true,
-			true,
 		},
 		{
 			"failed: error deploying",
@@ -163,7 +142,6 @@ func TestDeployEndpoint(t *testing.T) {
 				&models.VersionEndpoint{},
 			},
 			true,
-			false,
 		},
 		{
 			"success: pytorch model with transformer",
@@ -182,34 +160,20 @@ func TestDeployEndpoint(t *testing.T) {
 				},
 			},
 			false,
-			false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			envController := &clusterMock.Controller{}
+			mockQueueProducer := &queueMock.Producer{}
 			if tt.wantDeployError {
-				envController.On("Deploy", mock.Anything, mock.Anything).
-					Return(nil, errors.New("error deploying"))
+				mockQueueProducer.On("EnqueueJob", mock.Anything).Return(errors.New("Failed to queue job"))
 			} else {
-				envController.On("Deploy", mock.Anything, mock.Anything).
-					Return(&models.Service{
-						Name:        iSvcName,
-						Namespace:   project.Name,
-						ServiceName: svcName,
-						URL:         url,
-					}, nil)
+				mockQueueProducer.On("EnqueueJob", mock.Anything).Return(nil)
 			}
 
 			imgBuilder := &imageBuilderMock.ImageBuilder{}
-			if tt.wantBuildImageError {
-				imgBuilder.On("BuildImage", tt.args.model.Project, tt.args.model, tt.args.version).
-					Return("", errors.New("error building image"))
-			} else {
-				imgBuilder.On("BuildImage", tt.args.model.Project, tt.args.model, tt.args.version).
-					Return(fmt.Sprintf("gojek/mymodel-1:latest"), nil)
-			}
 			mockStorage := &mocks.VersionEndpointStorage{}
 			mockDeploymentStorage := &mocks.DeploymentStorage{}
 			mockStorage.On("Save", mock.Anything).Return(nil)
@@ -224,47 +188,43 @@ func TestDeployEndpoint(t *testing.T) {
 			}
 
 			controllers := map[string]cluster.Controller{env.Name: envController}
-			endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, mockCfg.Environment, mockCfg.FeatureToggleConfig.MonitoringConfig, loggerDestinationURL)
+			// endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, mockCfg.Environment, mockCfg.FeatureToggleConfig.MonitoringConfig, loggerDestinationURL)
+			endpointSvc := NewEndpointService(EndpointServiceParams{
+				ClusterControllers:   controllers,
+				ImageBuilder:         imgBuilder,
+				Storage:              mockStorage,
+				DeploymentStorage:    mockDeploymentStorage,
+				Environment:          mockCfg.Environment,
+				MonitoringConfig:     mockCfg.FeatureToggleConfig.MonitoringConfig,
+				LoggerDestinationURL: loggerDestinationURL,
+				JobProducer:          mockQueueProducer,
+			})
 			errRaised, err := endpointSvc.DeployEndpoint(tt.args.environment, tt.args.model, tt.args.version, tt.args.endpoint)
 
 			// delay to make second save happen before checking
-			time.Sleep(20 * time.Millisecond)
+			// time.Sleep(20 * time.Millisecond)
 
-			assert.NoError(t, err)
-			assert.Equal(t, "", errRaised.URL)
-			assert.Equal(t, models.EndpointPending, errRaised.Status)
-			assert.Equal(t, project.Name, errRaised.Namespace)
-			assert.Equal(t, iSvcName, errRaised.InferenceServiceName)
-
-			if tt.args.endpoint.ResourceRequest != nil {
-				assert.Equal(t, errRaised.ResourceRequest, tt.args.endpoint.ResourceRequest)
+			if tt.wantDeployError {
+				assert.True(t, err != nil)
 			} else {
-				assert.Equal(t, errRaised.ResourceRequest, tt.args.environment.DefaultResourceRequest)
-			}
+				assert.NoError(t, err)
+				assert.Equal(t, "", errRaised.URL)
+				assert.Equal(t, models.EndpointPending, errRaised.Status)
+				assert.Equal(t, project.Name, errRaised.Namespace)
+				assert.Equal(t, iSvcName, errRaised.InferenceServiceName)
 
-			mockStorage.AssertNumberOfCalls(t, "Save", 2)
-			savedEndpoint := mockStorage.Calls[1].Arguments[0].(*models.VersionEndpoint)
-			assert.Equal(t, tt.args.model.ID, savedEndpoint.VersionModelID)
-			assert.Equal(t, tt.args.version.ID, savedEndpoint.VersionID)
-			assert.Equal(t, tt.args.model.Project.Name, savedEndpoint.Namespace)
-			assert.Equal(t, tt.args.environment.Name, savedEndpoint.EnvironmentName)
-
-			if tt.args.endpoint.ResourceRequest != nil {
-				assert.Equal(t, tt.args.endpoint.ResourceRequest, savedEndpoint.ResourceRequest)
-			} else {
-				assert.Equal(t, tt.args.environment.DefaultResourceRequest, savedEndpoint.ResourceRequest)
-			}
-			if tt.wantDeployError || tt.wantBuildImageError {
-				assert.Equal(t, models.EndpointFailed, savedEndpoint.Status)
-			} else {
-				assert.Equal(t, models.EndpointRunning, savedEndpoint.Status)
-				assert.Equal(t, url, savedEndpoint.URL)
-				assert.Equal(t, iSvcName, savedEndpoint.InferenceServiceName)
+				if tt.args.endpoint.ResourceRequest != nil {
+					assert.Equal(t, errRaised.ResourceRequest, tt.args.endpoint.ResourceRequest)
+				} else {
+					assert.Equal(t, errRaised.ResourceRequest, tt.args.environment.DefaultResourceRequest)
+				}
+				mockStorage.AssertNumberOfCalls(t, "Save", 1)
 			}
 
 			if tt.args.endpoint.Transformer != nil {
 				assert.Equal(t, tt.args.endpoint.Transformer.Enabled, errRaised.Transformer.Enabled)
 			}
+
 		})
 	}
 }
@@ -376,8 +336,16 @@ func TestListContainers(t *testing.T) {
 		mockStorage.On("Get", mock.Anything).Return(tt.mock.versionEndpoint, nil)
 		mockDeploymentStorage.On("Save", mock.Anything).Return(nil, nil)
 
-		endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, cfg.Environment, cfg.FeatureToggleConfig.MonitoringConfig, loggerDestinationURL)
-
+		// endpointSvc := NewEndpointService(controllers, imgBuilder, mockStorage, mockDeploymentStorage, cfg.Environment, cfg.FeatureToggleConfig.MonitoringConfig, loggerDestinationURL)
+		endpointSvc := NewEndpointService(EndpointServiceParams{
+			ClusterControllers:   controllers,
+			ImageBuilder:         imgBuilder,
+			Storage:              mockStorage,
+			DeploymentStorage:    mockDeploymentStorage,
+			Environment:          cfg.Environment,
+			MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
+			LoggerDestinationURL: loggerDestinationURL,
+		})
 		containers, err := endpointSvc.ListContainers(tt.args.model, tt.args.version, tt.args.id)
 		if !tt.wantError {
 			assert.Nil(t, err, "unwanted error %v", err)

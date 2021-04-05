@@ -32,6 +32,7 @@ type Config struct {
 	Sentry                sentry.Config   `envconfig:"SENTRY" split_words:"false"`
 	NewRelic              newrelic.Config `envconfig:"NEWRELIC" split_words:"false" `
 	EnvironmentConfigPath string          `envconfig:"DEPLOYMENT_CONFIG_PATH" required:"true"`
+	NumOfQueueWorkers     int             `envconfig:"NUM_OF_WORKERS" default:"2"`
 
 	DbConfig                  DatabaseConfig
 	VaultConfig               VaultConfig
@@ -137,9 +138,11 @@ type MlpAPIConfig struct {
 }
 
 type StandardTransformerConfig struct {
-	ImageName       string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
-	FeastServingURL string `envconfig:"FEAST_SERVING_URL" required:"true"`
-	FeastCoreURL    string `envconfig:"FEAST_CORE_URL" required:"true"`
+	ImageName             string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
+	FeastServingURL       string `envconfig:"FEAST_SERVING_URL" required:"true"`
+	FeastCoreURL          string `envconfig:"FEAST_CORE_URL" required:"true"`
+	FeastCoreAuthAudience string `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
+	EnableAuth            bool   `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
 }
 
 type MlflowConfig struct {
