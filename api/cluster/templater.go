@@ -24,7 +24,7 @@ import (
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
-	transformerpkg "github.com/gojek/merlin/pkg/transformer"
+	transformer2 "github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/utils"
 )
 
@@ -222,7 +222,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	envVars := transformer.EnvVars
 	if transformer.TransformerType == models.StandardTransformerType {
 		transformer.Image = t.standardTransformerConfig.ImageName
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLEnvName, Value: t.standardTransformerConfig.FeastServingURL})
+		envVars = append(envVars, models.EnvVar{Name: transformer2.FeastServingURLEnvName, Value: t.standardTransformerConfig.FeastServingURL})
 	}
 
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})

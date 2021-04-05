@@ -28,39 +28,39 @@ import (
 
 var (
 	feastError = promauto.NewCounter(prometheus.CounterOpts{
-		Namespace: spec.PromNamespace,
+		Namespace: transformer.PromNamespace,
 		Name:      "feast_serving_error_count",
 		Help:      "The total number of error returned by feast serving",
 	})
 
 	feastLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: spec.PromNamespace,
+		Namespace: transformer.PromNamespace,
 		Name:      "feast_serving_request_duration_ms",
 		Help:      "Feast serving latency histogram",
 		Buckets:   prometheus.ExponentialBuckets(1, 2, 10), // 1,2,4,8,16,32,64,128,256,512,+Inf
 	}, []string{"result"})
 
 	feastFeatureStatus = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: spec.PromNamespace,
+		Namespace: transformer.PromNamespace,
 		Name:      "feast_feature_status_count",
 		Help:      "Feature status by feature",
 	}, []string{"feature", "status"})
 
 	feastFeatureSummary = promauto.NewSummaryVec(prometheus.SummaryOpts{
-		Namespace:  spec.PromNamespace,
+		Namespace:  transformer.PromNamespace,
 		Name:       "feast_feature_value",
 		Help:       "Summary of feature value",
 		AgeBuckets: 1,
 	}, []string{"feature"})
 
 	feastCacheRetrievalCount = promauto.NewCounter(prometheus.CounterOpts{
-		Namespace: spec.PromNamespace,
+		Namespace: transformer.PromNamespace,
 		Name:      "feast_cache_retrieval_count",
 		Help:      "Retrieve feature from cache",
 	})
 
 	feastCacheHitCount = promauto.NewCounter(prometheus.CounterOpts{
-		Namespace: spec.PromNamespace,
+		Namespace: transformer.PromNamespace,
 		Name:      "feast_cache_hit_count",
 		Help:      "Cache is hitted",
 	})
@@ -524,7 +524,7 @@ func enrichRequest(ctx context.Context, request []byte, feastFeatures map[string
 		return nil, err
 	}
 
-	out, err := jsonparser.Set(request, feastFeatureJSON, spec.FeastFeatureJSONField)
+	out, err := jsonparser.Set(request, feastFeatureJSON, transformer.FeastFeatureJSONField)
 	if err != nil {
 		return nil, err
 	}

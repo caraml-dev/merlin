@@ -17,10 +17,10 @@ import (
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/server"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 func init() {
@@ -57,7 +57,7 @@ func main() {
 		defer closer.Close()
 	}
 
-	config := &transformer.StandardTransformerConfig{}
+	config := &spec.StandardTransformerConfig{}
 	if err := jsonpb.UnmarshalString(cfg.StandardTransformerConfigJSON, config); err != nil {
 		logger.Fatal("Unable to parse standard transformer config", zap.Error(err))
 	}

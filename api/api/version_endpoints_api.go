@@ -29,6 +29,7 @@ import (
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 type EndpointsController struct {
@@ -385,7 +386,7 @@ func (c *EndpointsController) validateTransformer(ctx context.Context, trans *mo
 }
 
 func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Context, cfg string) error {
-	stdTransformerConfig := &transformer.StandardTransformerConfig{}
+	stdTransformerConfig := &spec.StandardTransformerConfig{}
 	err := jsonpb.UnmarshalString(cfg, stdTransformerConfig)
 	if err != nil {
 		return err
