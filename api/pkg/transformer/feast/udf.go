@@ -197,7 +197,7 @@ func (l *LatLong) toGeoHash(precision uint) interface{} {
 }
 
 func (l *LatLong) toS2ID(level int) interface{} {
-	return strconv.FormatUint(s2.CellFromLatLng(s2.LatLngFromDegrees(l.lat, l.long)).ID().Parent(level).Pos(), 10)
+	return fmt.Sprintf("%d", s2.CellFromLatLng(s2.LatLngFromDegrees(l.lat, l.long)).ID().Parent(level))
 }
 
 func mustCompileUdf(udfString string) *vm.Program {
