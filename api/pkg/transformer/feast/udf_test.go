@@ -110,19 +110,19 @@ func TestGeohash(t *testing.T) {
 
 func TestS2ID(t *testing.T) {
 	testJsonString := []byte(`{
-		"latitude" : 1.0,
-		"latitudeString": "1.0",
+		"latitude" : 1.3539049,
+		"latitudeString": "1.3539049",
 		"latitudeWrongType": "abcde",
 		"location": {
-			"latitude": 0.1,
-			"longitude": 2.0
+			"latitude": 1.3539049,
+			"longitude": 103.9724141
 		},
-		"latitudeArrays": [1.0, 2.0],
-		"longitude" : 2.0,
-		"longitudeString" : "2.0",
+		"latitudeArrays": [1.3539049, 1.3539049],
+		"longitude" : 103.9724141,
+		"longitudeString" : "103.9724141",
 		"longitudeInteger": 1,
-		"longitudeArrays": [1.0, 2.0],
-		"longitudeLongArrays": [1.0, 2.0, 3.0]
+		"longitudeArrays": [103.9724141, 103.9724141],
+		"longitudeLongArrays": [103.9724141, 103.9724141, 103.9724141]
 	}`)
 	var testJsonUnmarshallled interface{}
 	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
@@ -142,22 +142,22 @@ func TestS2ID(t *testing.T) {
 			name:              "geohash from json fields",
 			latitudeJsonPath:  "$.latitude",
 			longitudeJsonPath: "$.longitude",
-			level:             7,
-			expValue:          "1154680723211288576",
+			level:             12,
+			expValue:          "3592250654271209472",
 		},
 		{
 			name:              "geohash from json struct",
 			latitudeJsonPath:  "$.location.latitude",
 			longitudeJsonPath: "$.location.longitude",
-			level:             7,
-			expValue:          "1155102935676354560",
+			level:             12,
+			expValue:          "3592250654271209472",
 		},
 		{
 			name:              "type conversion for latitude and longitude input",
 			latitudeJsonPath:  "$.latitudeString",
 			longitudeJsonPath: "$.longitudeString",
-			level:             12,
-			expValue:          "1154732743855177728",
+			level:             7,
+			expValue:          "3592254021525569536",
 		},
 		{
 			name:              "Type difference error",
@@ -182,10 +182,10 @@ func TestS2ID(t *testing.T) {
 			name:              "latitude and longitude arrays",
 			latitudeJsonPath:  "$.latitudeArrays",
 			longitudeJsonPath: "$.longitudeArrays",
-			level:             12,
+			level:             11,
 			expValue: []interface{}{
-				"1153277815093723136",
-				"1154346540395921408",
+				"3592250448112779264",
+				"3592250448112779264",
 			},
 		},
 	}
