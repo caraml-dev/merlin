@@ -1422,22 +1422,22 @@ func TestTransformer_Transform(t *testing.T) {
 		{
 			name: "s2id entity from latitude and longitude - expression",
 			fields: fields{
-				config: &transformer.StandardTransformerConfig{
-					TransformerConfig: &transformer.TransformerConfig{
-						Feast: []*transformer.FeatureTable{
+				config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Feast: []*spec.FeatureTable{
 							{
 								Project:   "s2id",
 								TableName: "s2id_tables",
-								Entities: []*transformer.Entity{
+								Entities: []*spec.Entity{
 									{
 										Name:      "s2id",
 										ValueType: "STRING",
-										Extractor: &transformer.Entity_Expression{
+										Extractor: &spec.Entity_Expression{
 											Expression: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
 										},
 									},
 								},
-								Features: []*transformer.Feature{
+								Features: []*spec.Feature{
 									{
 										Name:         "geohash_statistics:average_daily_rides",
 										DefaultValue: "0.0",
