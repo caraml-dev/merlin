@@ -22,6 +22,27 @@ func mustCompileExpression(expression string) *vm.Program {
 	return cpl
 }
 
+const (
+	rawRequestJson = `
+		{
+		  "signature_name" : "predict",
+		  "instances": [
+			{"sepal_length":2.8, "sepal_width":1.0, "petal_length":6.8, "petal_width":0.4},
+			{"sepal_length":0.1, "sepal_width":0.5, "petal_length":1.8, "petal_width":2.4}
+		  ]
+		}
+		`
+
+	modelResponseJson = `
+		{
+		  "predictions": [
+			1, 2
+		  ],
+          "model_name" : "iris-classifier"
+		}
+    `
+)
+
 func TestVariableDeclarationOp_Execute(t *testing.T) {
 	type fields struct {
 		variableSpec []*spec.Variable
@@ -36,7 +57,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 	}
 
 	var rawRequestData types.UnmarshalledJSON
-	json.Unmarshal([]byte(jsonpath.rawRequestJson), &rawRequestData)
+	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
 
 	tests := []struct {
 		name         string
