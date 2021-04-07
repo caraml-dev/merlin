@@ -414,6 +414,35 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 			nil,
 			errors.New("unsupported type BYTES"),
 		},
+		{
+			"S2ID expression",
+			&transformer.Entity{
+				Name:      "s2id",
+				ValueType: "STRING",
+				Extractor: &transformer.Entity_Expression{
+					Expression: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal("1154732743855177728"),
+			},
+			nil,
+		},
+		{
+			"Array of S2ID expression",
+			&transformer.Entity{
+				Name:      "s2id",
+				ValueType: "STRING",
+				Extractor: &transformer.Entity_Expression{
+					Expression: "S2ID(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal("1154732743855177728"),
+				feast.StrVal("1154732743855177728"),
+			},
+			nil,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -422,8 +451,8 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 			switch test.entityConfig.Extractor.(type) {
 			case *transformer.Entity_JsonPath:
 				compiledJsonPath, _ = jsonpath.Compile(test.entityConfig.GetJsonPath())
-			case *transformer.Entity_Udf:
-				compiledUdf = mustCompileUdf(test.entityConfig.GetUdf())
+			case *transformer.Entity_Udf, *transformer.Entity_Expression:
+				compiledUdf = mustCompileUdf(getExpressionExtractor(test.entityConfig))
 			}
 
 			var nodesBody interface{}

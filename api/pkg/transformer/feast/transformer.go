@@ -123,14 +123,14 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
 				}
 				compiledJsonPath[configEntity.GetJsonPath()] = c
-			case *transformer.Entity_Udf:
-				c, err := expr.Compile(configEntity.GetUdf(), expr.Env(UdfEnv{}))
+			case *transformer.Entity_Udf, *transformer.Entity_Expression:
+				expressionExtractor := getExpressionExtractor(configEntity)
+				c, err := expr.Compile(expressionExtractor, expr.Env(UdfEnv{}))
 				if err != nil {
 					return nil, err
 				}
-				compiledUdf[configEntity.GetUdf()] = c
+				compiledUdf[expressionExtractor] = c
 			}
-
 		}
 	}
 
@@ -327,6 +327,13 @@ func (t *Transformer) getEntityIndicesFromColumns(columns []string, entitiesConf
 	return indicesMapping
 }
 
+func getExpressionExtractor(entity *transformer.Entity) string {
+	if extractor := entity.GetExpression(); extractor != "" {
+		return extractor
+	}
+	return entity.GetUdf()
+}
+
 func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildEntitiesRequest")
 	defer span.Finish()
@@ -351,7 +358,8 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 			}
 		}
 
-		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[configEntity.GetUdf()])
+		expressionExtractor := getExpressionExtractor(configEntity)
+		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[expressionExtractor])
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}
