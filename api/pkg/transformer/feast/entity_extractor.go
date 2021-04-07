@@ -24,7 +24,7 @@ func getValuesFromJSONPayload(nodesBody interface{}, entity *spec.Entity, compil
 			return nil, err
 		}
 		entityVal = entityValFromJsonPath
-	case *spec.Entity_Udf:
+	case *spec.Entity_Udf, *spec.Entity_Expression:
 		env := UdfEnv{nodesBody}
 		exprResult, err := expr.Run(udf, env)
 		if err != nil {

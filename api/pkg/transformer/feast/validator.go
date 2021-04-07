@@ -69,8 +69,9 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 				if err != nil {
 					return NewValidationError(fmt.Sprintf("jsonpath compilation failed: %v", err))
 				}
-			case *spec.Entity_Udf:
-				_, err = expr.Compile(entity.GetUdf(), expr.Env(UdfEnv{}))
+			case *spec.Entity_Udf, *spec.Entity_Expression:
+				expressionExtractor := getExpressionExtractor(entity)
+				_, err = expr.Compile(expressionExtractor, expr.Env(UdfEnv{}))
 				if err != nil {
 					return NewValidationError(fmt.Sprintf("udf compilation failed: %v", err))
 				}

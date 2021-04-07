@@ -1420,6 +1420,66 @@ func TestTransformer_Transform(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "s2id entity from latitude and longitude - expression",
+			fields: fields{
+				config: &transformer.StandardTransformerConfig{
+					TransformerConfig: &transformer.TransformerConfig{
+						Feast: []*transformer.FeatureTable{
+							{
+								Project:   "s2id",
+								TableName: "s2id_tables",
+								Entities: []*transformer.Entity{
+									{
+										Name:      "s2id",
+										ValueType: "STRING",
+										Extractor: &transformer.Entity_Expression{
+											Expression: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
+										},
+									},
+								},
+								Features: []*transformer.Feature{
+									{
+										Name:         "geohash_statistics:average_daily_rides",
+										DefaultValue: "0.0",
+										ValueType:    "DOUBLE",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"latitude":1.0,"longitude":2.0}`),
+			},
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "s2id",
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*types.Value{
+										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
+										"s2id":                                   feast.StrVal("1154732743855177728"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"s2id":                                   serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"s2id_tables":{"columns":["s2id","geohash_statistics:average_daily_rides"],"data":[["1154732743855177728",3.2]]}}}`),
+			wantErr: false,
+		},
+		{
 			name: "one config: retrieve multiple entities, one feature, batch",
 			fields: fields{
 				config: &spec.StandardTransformerConfig{

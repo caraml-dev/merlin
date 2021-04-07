@@ -68,7 +68,7 @@ var (
 
 const defaultProjectName = "default"
 
-// Options for the Feast spec.
+// Options for the Feast transformer.
 type Options struct {
 	ServingURL              string        `envconfig:"FEAST_SERVING_URL" required:"true"`
 	StatusMonitoringEnabled bool          `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
@@ -95,7 +95,7 @@ type Transformer struct {
 	cache            Cache
 }
 
-// NewTransformer initializes a new spec.
+// NewTransformer initializes a new Transformer.
 func NewTransformer(feastClient feast.Client, config *spec.StandardTransformerConfig, options *Options, logger *zap.Logger, cache Cache) (*Transformer, error) {
 	defaultValues := make(map[string]*types.Value)
 	// populate default values
@@ -124,14 +124,14 @@ func NewTransformer(feastClient feast.Client, config *spec.StandardTransformerCo
 					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
 				}
 				compiledJsonPath[configEntity.GetJsonPath()] = c
-			case *spec.Entity_Udf:
-				c, err := expr.Compile(configEntity.GetUdf(), expr.Env(UdfEnv{}))
+			case *spec.Entity_Udf, *spec.Entity_Expression:
+				expressionExtractor := getExpressionExtractor(configEntity)
+				c, err := expr.Compile(expressionExtractor, expr.Env(UdfEnv{}))
 				if err != nil {
 					return nil, err
 				}
 				compiledUdf[configEntity.GetUdf()] = c
 			}
-
 		}
 	}
 
@@ -173,7 +173,10 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	resChan := make(chan result, len(t.config.TransformerConfig.Feast))
 	for _, config := range t.config.TransformerConfig.Feast {
 		go func(cfg *spec.FeatureTable) {
-			tableName := createTableName(cfg.Entities, cfg.Project)
+			tableName := cfg.TableName
+			if tableName == "" {
+				tableName = createTableName(cfg.Entities, cfg.Project)
+			}
 			val, err := t.getFeastFeature(ctx, tableName, request, cfg)
 			resChan <- result{tableName, val, err}
 		}(config)
@@ -326,6 +329,13 @@ func (t *Transformer) getEntityIndicesFromColumns(columns []string, entitiesConf
 		}
 	}
 	return indicesMapping
+}
+
+func getExpressionExtractor(entity *spec.Entity) string {
+	if extractor := entity.GetExpression(); extractor != "" {
+		return extractor
+	}
+	return entity.GetUdf()
 }
 
 func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*spec.Entity) ([]feast.Row, error) {
