@@ -9,8 +9,9 @@ import (
 	"github.com/antonmedv/expr/vm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 func mustCompileExpression(expression string) *vm.Program {
@@ -30,12 +31,12 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 		"Now()": mustCompileExpression("Now()"),
 	}
 
-	compiledJsonPath := map[string]*CompiledJSONPath{
-		"$.signature_name": MustCompileJsonPath("$.signature_name"),
+	compiledJsonPath := map[string]*jsonpath.CompiledJSONPath{
+		"$.signature_name": jsonpath.MustCompileJsonPath("$.signature_name"),
 	}
 
-	var rawRequestData transformer.UnmarshalledJSON
-	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
+	var rawRequestData types.UnmarshalledJSON
+	json.Unmarshal([]byte(jsonpath.rawRequestJson), &rawRequestData)
 
 	tests := []struct {
 		name         string
@@ -127,7 +128,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 				compiledPipeline: &CompiledPipeline{
 					compiledJsonpath: compiledJsonPath,
 				},
-				sourceJson: map[spec.FromJson_SourceEnum]transformer.UnmarshalledJSON{
+				sourceJSONs: map[spec.FromJson_SourceEnum]types.UnmarshalledJSON{
 					spec.FromJson_RAW_REQUEST: rawRequestData,
 				},
 			},

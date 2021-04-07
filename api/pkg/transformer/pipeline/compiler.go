@@ -7,6 +7,7 @@ import (
 	"github.com/antonmedv/expr/vm"
 	"github.com/pkg/errors"
 
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
@@ -45,9 +46,9 @@ func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipel
 	}, nil
 }
 
-func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline) (ops []Op, compiledJsonPaths map[string]*CompiledJSONPath, compiledExpressions map[string]*vm.Program, err error) {
+func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline) (ops []Op, compiledJsonPaths map[string]*jsonpath.CompiledJSONPath, compiledExpressions map[string]*vm.Program, err error) {
 	ops = make([]Op, 0)
-	compiledJsonPaths = make(map[string]*CompiledJSONPath)
+	compiledJsonPaths = make(map[string]*jsonpath.CompiledJSONPath)
 	compiledExpressions = make(map[string]*vm.Program)
 
 	// input
@@ -90,8 +91,8 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline) (ops []Op, compile
 	return
 }
 
-func (c *Compiler) parseVariablesSpec(variables []*spec.Variable) (Op, map[string]*CompiledJSONPath, map[string]*vm.Program, error) {
-	compiledJsonPaths := make(map[string]*CompiledJSONPath)
+func (c *Compiler) parseVariablesSpec(variables []*spec.Variable) (Op, map[string]*jsonpath.CompiledJSONPath, map[string]*vm.Program, error) {
+	compiledJsonPaths := make(map[string]*jsonpath.CompiledJSONPath)
 	compiledExpressions := make(map[string]*vm.Program)
 
 	for _, variable := range variables {
@@ -107,7 +108,7 @@ func (c *Compiler) parseVariablesSpec(variables []*spec.Variable) (Op, map[strin
 			compiledExpressions[v.Expression] = compiledExpression
 
 		case *spec.Variable_JsonPath:
-			compiledJsonPath, err := CompileJsonPath(v.JsonPath)
+			compiledJsonPath, err := jsonpath.CompileJsonPath(v.JsonPath)
 			if err != nil {
 				return nil, nil, nil, errors.Wrapf(err, "unable to compile jsonpath %s for variable %s", v.JsonPath, variable.Name)
 			}
@@ -121,8 +122,8 @@ func (c *Compiler) parseVariablesSpec(variables []*spec.Variable) (Op, map[strin
 	return NewVariableDeclarationOp(variables), compiledJsonPaths, compiledExpressions, nil
 }
 
-func (c *Compiler) parseFeastSpec(featureTables []*spec.FeatureTable) (Op, map[string]*CompiledJSONPath, map[string]*vm.Program, error) {
-	compiledJsonPaths := make(map[string]*CompiledJSONPath)
+func (c *Compiler) parseFeastSpec(featureTables []*spec.FeatureTable) (Op, map[string]*jsonpath.CompiledJSONPath, map[string]*vm.Program, error) {
+	compiledJsonPaths := make(map[string]*jsonpath.CompiledJSONPath)
 	compiledExpressions := make(map[string]*vm.Program)
 
 	for _, featureTable := range featureTables {
@@ -141,7 +142,7 @@ func (c *Compiler) parseFeastSpec(featureTables []*spec.FeatureTable) (Op, map[s
 				}
 				compiledExpressions[entity.GetExpression()] = compiledExpression
 			case *spec.Entity_JsonPath:
-				compiledJsonPath, err := CompileJsonPath(extractor.JsonPath)
+				compiledJsonPath, err := jsonpath.CompileJsonPath(extractor.JsonPath)
 				if err != nil {
 					return nil, nil, nil, errors.Wrapf(err, "unable to compile jsonpath %s for variable %s", extractor.JsonPath, entity.Name)
 				}
@@ -155,7 +156,7 @@ func (c *Compiler) parseFeastSpec(featureTables []*spec.FeatureTable) (Op, map[s
 	return NewFeastOp(featureTables), compiledJsonPaths, compiledExpressions, nil
 }
 
-func (c *Compiler) parseTablesSpec(tables []*spec.Table) (Op, map[string]*CompiledJSONPath, map[string]*vm.Program, error) {
+func (c *Compiler) parseTablesSpec(tables []*spec.Table) (Op, map[string]*jsonpath.CompiledJSONPath, map[string]*vm.Program, error) {
 	panic("TODO: parseTablesSpec")
 }
 
@@ -163,7 +164,7 @@ func (c *Compiler) compileExpression(expression string) (*vm.Program, error) {
 	return expr.Compile(expression, expr.Env(c.sr), expr.AllowUndefinedVariables())
 }
 
-func mergeJSONPathMap(dst, src map[string]*CompiledJSONPath) map[string]*CompiledJSONPath {
+func mergeJSONPathMap(dst, src map[string]*jsonpath.CompiledJSONPath) map[string]*jsonpath.CompiledJSONPath {
 	for k, v := range src {
 		dst[k] = v
 	}

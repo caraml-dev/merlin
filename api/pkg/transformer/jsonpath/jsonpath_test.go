@@ -1,13 +1,14 @@
-package pipeline
+package jsonpath
 
 import (
 	"encoding/json"
 	"reflect"
 	"testing"
 
-	"github.com/gojek/merlin/pkg/transformer"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/oliveagle/jsonpath"
+
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 const (
@@ -91,7 +92,7 @@ func TestCompileJsonPath(t *testing.T) {
 
 func TestCompiled_Lookup(t *testing.T) {
 
-	var rawRequestData transformer.UnmarshalledJSON
+	var rawRequestData types.UnmarshalledJSON
 	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
 
 	type fields struct {
@@ -102,7 +103,7 @@ func TestCompiled_Lookup(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		jsonObj transformer.UnmarshalledJSON
+		jsonObj types.UnmarshalledJSON
 		want    interface{}
 		wantErr bool
 	}{
@@ -137,17 +138,15 @@ func TestCompiled_Lookup(t *testing.T) {
 }
 
 func TestCompiled_LookupEnv(t *testing.T) {
-	var rawRequestData transformer.UnmarshalledJSON
-	var modelResponseData transformer.UnmarshalledJSON
+	var rawRequestData types.UnmarshalledJSON
+	var modelResponseData types.UnmarshalledJSON
 
 	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
 	json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
 
-	env := &Environment{
-		sourceJson: map[spec.FromJson_SourceEnum]transformer.UnmarshalledJSON{
-			spec.FromJson_RAW_REQUEST:    rawRequestData,
-			spec.FromJson_MODEL_RESPONSE: modelResponseData,
-		},
+	sourceJSONs := map[spec.FromJson_SourceEnum]types.UnmarshalledJSON{
+		spec.FromJson_RAW_REQUEST:    rawRequestData,
+		spec.FromJson_MODEL_RESPONSE: modelResponseData,
 	}
 
 	type fields struct {
@@ -155,11 +154,11 @@ func TestCompiled_LookupEnv(t *testing.T) {
 		source spec.FromJson_SourceEnum
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		env     *Environment
-		want    interface{}
-		wantErr bool
+		name        string
+		fields      fields
+		sourceJSONs types.SourceJSON
+		want        interface{}
+		wantErr     bool
 	}{
 		{
 			"json path to the raw request",
@@ -167,7 +166,7 @@ func TestCompiled_LookupEnv(t *testing.T) {
 				cpl:    jsonpath.MustCompile("$.signature_name"),
 				source: spec.FromJson_RAW_REQUEST,
 			},
-			env,
+			sourceJSONs,
 			"predict",
 			false,
 		},
@@ -177,7 +176,7 @@ func TestCompiled_LookupEnv(t *testing.T) {
 				cpl:    jsonpath.MustCompile("$.model_name"),
 				source: spec.FromJson_MODEL_RESPONSE,
 			},
-			env,
+			sourceJSONs,
 			"iris-classifier",
 			false,
 		},
@@ -188,13 +187,13 @@ func TestCompiled_LookupEnv(t *testing.T) {
 				cpl:    tt.fields.cpl,
 				source: tt.fields.source,
 			}
-			got, err := c.LookupEnv(tt.env)
+			got, err := c.LookupFromSource(tt.sourceJSONs)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("LookupEnv() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("LookupFromSource() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("LookupEnv() got = %v, want %v", got, tt.want)
+				t.Errorf("LookupFromSource() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

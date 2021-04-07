@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-gota/gota/series"
 
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/pipeline/function"
 )
 
@@ -27,7 +28,7 @@ func (sr SymbolRegistry) JsonExtract(parentJsonPath, nestedJsonPath string) inte
 	pipelineEnv := sr.getEnvironment()
 	cplJsonPath := pipelineEnv.CompiledJSONPath(nestedJsonPath)
 	if cplJsonPath == nil {
-		c, err := CompileJsonPath(nestedJsonPath)
+		c, err := jsonpath.CompileJsonPath(nestedJsonPath)
 		if err != nil {
 			panic(err)
 		}
@@ -105,14 +106,14 @@ func (sr SymbolRegistry) getEnvironment() *Environment {
 func (sr SymbolRegistry) evalArg(arg interface{}) (interface{}, error) {
 	switch val := arg.(type) {
 	case string:
-		if !strings.HasPrefix(val, jsonPathPrefix) {
+		if !strings.HasPrefix(val, jsonpath.Prefix) {
 			return arg, nil
 		}
 
 		pipelineEnv := sr.getEnvironment()
 		cplJsonPath := pipelineEnv.CompiledJSONPath(val)
 		if cplJsonPath == nil {
-			c, err := CompileJsonPath(val)
+			c, err := jsonpath.CompileJsonPath(val)
 			if err != nil {
 				return nil, err
 			}
@@ -120,7 +121,7 @@ func (sr SymbolRegistry) evalArg(arg interface{}) (interface{}, error) {
 			cplJsonPath = c
 		}
 
-		return cplJsonPath.LookupEnv(pipelineEnv)
+		return cplJsonPath.LookupFromSource(pipelineEnv.SourceJSON())
 	case series.Series:
 		switch val.Type() {
 		case series.String:

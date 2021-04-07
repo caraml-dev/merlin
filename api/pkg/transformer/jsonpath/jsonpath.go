@@ -1,4 +1,4 @@
-package pipeline
+package jsonpath
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 
 	"github.com/oliveagle/jsonpath"
 
-	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 type CompiledJSONPath struct {
@@ -16,9 +16,10 @@ type CompiledJSONPath struct {
 }
 
 const (
-	jsonPathPrefix              = "$."
-	jsonPathRawRequestPrefix    = "$.raw_request"
-	jsonPathModelResponsePrefix = "$.model_response"
+	Prefix = "$."
+
+	RawRequestPrefix    = "$.raw_request"
+	ModelResponsePrefix = "$.model_response"
 )
 
 var (
@@ -29,7 +30,7 @@ func CompileJsonPath(jsonPath string) (*CompiledJSONPath, error) {
 	source := spec.FromJson_RAW_REQUEST
 	match := sourceJsonPattern.FindString(jsonPath)
 	if match != "" {
-		if match == jsonPathModelResponsePrefix {
+		if match == ModelResponsePrefix {
 			source = spec.FromJson_MODEL_RESPONSE
 		}
 
@@ -55,12 +56,12 @@ func MustCompileJsonPath(jsonPath string) *CompiledJSONPath {
 	return cpl
 }
 
-func (c *CompiledJSONPath) Lookup(jsonObj transformer.UnmarshalledJSON) (interface{}, error) {
+func (c *CompiledJSONPath) Lookup(jsonObj types.UnmarshalledJSON) (interface{}, error) {
 	return c.cpl.Lookup(jsonObj)
 }
 
-func (c *CompiledJSONPath) LookupEnv(env *Environment) (interface{}, error) {
-	sourceJson := env.SourceJSON(c.source)
+func (c *CompiledJSONPath) LookupFromSource(source types.SourceJSON) (interface{}, error) {
+	sourceJson := source[c.source]
 	if sourceJson == nil {
 		return nil, fmt.Errorf("source json is not set: %s", c.source.String())
 	}

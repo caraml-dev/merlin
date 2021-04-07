@@ -3,16 +3,17 @@ package pipeline
 import (
 	"github.com/antonmedv/expr/vm"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 type Environment struct {
 	symbolRegistry   SymbolRegistry
 	compiledPipeline *CompiledPipeline
 
-	sourceJson map[spec.FromJson_SourceEnum]transformer.UnmarshalledJSON
-	outputJson transformer.UnmarshalledJSON
+	sourceJSONs types.SourceJSON
+	outputJson  types.UnmarshalledJSON
 }
 
 const (
@@ -24,41 +25,41 @@ func NewEnvironment(symbolRegistry SymbolRegistry, compiledPipeline *CompiledPip
 		symbolRegistry:   symbolRegistry,
 		compiledPipeline: compiledPipeline,
 
-		sourceJson: make(map[spec.FromJson_SourceEnum]transformer.UnmarshalledJSON),
+		sourceJSONs: make(types.SourceJSON, 2),
 	}
 	// add reference to the environment in the symbol registry, so that built-in function can access the environment
 	symbolRegistry[EnvironmentKey] = env
 	return env
 }
 
-func (e *Environment) Preprocess(rawRequest transformer.UnmarshalledJSON) (transformer.UnmarshalledJSON, error) {
+func (e *Environment) Preprocess(rawRequest types.UnmarshalledJSON) (types.UnmarshalledJSON, error) {
 	e.SetSourceJSON(spec.FromJson_RAW_REQUEST, rawRequest)
 	e.SetOutputJSON(rawRequest)
 
 	return e.compiledPipeline.Preprocess(e)
 }
 
-func (e *Environment) Postprocess(modelResponse transformer.UnmarshalledJSON) (transformer.UnmarshalledJSON, error) {
+func (e *Environment) Postprocess(modelResponse types.UnmarshalledJSON) (types.UnmarshalledJSON, error) {
 	e.SetSourceJSON(spec.FromJson_MODEL_RESPONSE, modelResponse)
 	e.SetOutputJSON(modelResponse)
 
 	return e.compiledPipeline.Postprocess(e)
 }
 
-func (e *Environment) SetOutputJSON(jsonObj transformer.UnmarshalledJSON) {
+func (e *Environment) SetOutputJSON(jsonObj types.UnmarshalledJSON) {
 	e.outputJson = jsonObj
 }
 
-func (e *Environment) OutputJSON(jsonObj transformer.UnmarshalledJSON) {
+func (e *Environment) OutputJSON(jsonObj types.UnmarshalledJSON) {
 	e.outputJson = jsonObj
 }
 
-func (e *Environment) SourceJSON(source spec.FromJson_SourceEnum) transformer.UnmarshalledJSON {
-	return e.sourceJson[source]
+func (e *Environment) SourceJSON() types.SourceJSON {
+	return e.sourceJSONs
 }
 
-func (e *Environment) SetSourceJSON(source spec.FromJson_SourceEnum, jsonObj transformer.UnmarshalledJSON) {
-	e.sourceJson[source] = jsonObj
+func (e *Environment) SetSourceJSON(source spec.FromJson_SourceEnum, jsonObj types.UnmarshalledJSON) {
+	e.sourceJSONs[source] = jsonObj
 }
 
 func (e *Environment) SetSymbol(name string, value interface{}) {
@@ -69,7 +70,7 @@ func (e *Environment) SymbolRegistry() SymbolRegistry {
 	return e.symbolRegistry
 }
 
-func (e *Environment) CompiledJSONPath(name string) *CompiledJSONPath {
+func (e *Environment) CompiledJSONPath(name string) *jsonpath.CompiledJSONPath {
 	return e.compiledPipeline.CompiledJSONPath(name)
 }
 
@@ -77,6 +78,6 @@ func (e *Environment) CompiledExpression(name string) *vm.Program {
 	return e.compiledPipeline.compiledExpression[name]
 }
 
-func (e *Environment) AddCompiledJsonPath(name string, jsonPath *CompiledJSONPath) {
+func (e *Environment) AddCompiledJsonPath(name string, jsonPath *jsonpath.CompiledJSONPath) {
 	e.compiledPipeline.SetCompiledJSONPath(name, jsonPath)
 }

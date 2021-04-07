@@ -48,7 +48,7 @@ func (v *VariableDeclarationOp) Execute(env *Environment) error {
 				return fmt.Errorf("compiled jsonpath %s not found", v.JsonPath)
 			}
 
-			result, err := jsonPath.LookupEnv(env)
+			result, err := jsonPath.LookupFromSource(env.SourceJSON())
 			if err != nil {
 				return nil
 			}

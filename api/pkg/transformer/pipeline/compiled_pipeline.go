@@ -4,18 +4,19 @@ import (
 	"github.com/antonmedv/expr/vm"
 	"github.com/pkg/errors"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 type CompiledPipeline struct {
-	compiledJsonpath   map[string]*CompiledJSONPath
+	compiledJsonpath   map[string]*jsonpath.CompiledJSONPath
 	compiledExpression map[string]*vm.Program
 
 	preprocessOps  []Op
 	postprocessOps []Op
 }
 
-func NewCompiledPipeline(compiledJSONPath map[string]*CompiledJSONPath, compiledExpression map[string]*vm.Program, preprocessOps []Op, postprocessOps []Op) *CompiledPipeline {
+func NewCompiledPipeline(compiledJSONPath map[string]*jsonpath.CompiledJSONPath, compiledExpression map[string]*vm.Program, preprocessOps []Op, postprocessOps []Op) *CompiledPipeline {
 	return &CompiledPipeline{
 		compiledJsonpath:   compiledJSONPath,
 		compiledExpression: compiledExpression,
@@ -25,7 +26,7 @@ func NewCompiledPipeline(compiledJSONPath map[string]*CompiledJSONPath, compiled
 	}
 }
 
-func (p *CompiledPipeline) Preprocess(env *Environment) (transformer.UnmarshalledJSON, error) {
+func (p *CompiledPipeline) Preprocess(env *Environment) (types.UnmarshalledJSON, error) {
 	for _, op := range p.preprocessOps {
 		err := op.Execute(env)
 		if err != nil {
@@ -37,7 +38,7 @@ func (p *CompiledPipeline) Preprocess(env *Environment) (transformer.Unmarshalle
 	return nil, nil
 }
 
-func (p *CompiledPipeline) Postprocess(env *Environment) (transformer.UnmarshalledJSON, error) {
+func (p *CompiledPipeline) Postprocess(env *Environment) (types.UnmarshalledJSON, error) {
 	for _, op := range p.postprocessOps {
 		err := op.Execute(env)
 		if err != nil {
@@ -48,11 +49,11 @@ func (p *CompiledPipeline) Postprocess(env *Environment) (transformer.Unmarshall
 	return nil, nil
 }
 
-func (p *CompiledPipeline) CompiledJSONPath(name string) *CompiledJSONPath {
+func (p *CompiledPipeline) CompiledJSONPath(name string) *jsonpath.CompiledJSONPath {
 	return p.compiledJsonpath[name]
 }
 
-func (p *CompiledPipeline) SetCompiledJSONPath(name string, compiled *CompiledJSONPath) {
+func (p *CompiledPipeline) SetCompiledJSONPath(name string, compiled *jsonpath.CompiledJSONPath) {
 	p.compiledJsonpath[name] = compiled
 }
 

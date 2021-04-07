@@ -12,8 +12,9 @@ import (
 	"github.com/magiconair/properties/assert"
 	"github.com/mmcloughlin/geohash"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 func TestSymbolRegistry_Geohash(t *testing.T) {
@@ -32,14 +33,14 @@ func TestSymbolRegistry_Geohash(t *testing.T) {
 		"longitudeArrays": [1.0, 2.0],
 		"longitudeLongArrays": [1.0, 2.0, 3.0]
 	}`)
-	var testJsonUnmarshallled transformer.UnmarshalledJSON
+	var testJsonUnmarshallled types.UnmarshalledJSON
 	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
 	if err != nil {
 		panic(err)
 	}
 
 	sr := SymbolRegistry{}
-	env := NewEnvironment(sr, NewCompiledPipeline(make(map[string]*CompiledJSONPath), make(map[string]*vm.Program), nil, nil))
+	env := NewEnvironment(sr, NewCompiledPipeline(make(map[string]*jsonpath.CompiledJSONPath), make(map[string]*vm.Program), nil, nil))
 	env.SetSourceJSON(spec.FromJson_RAW_REQUEST, testJsonUnmarshallled)
 
 	type args struct {
@@ -209,14 +210,14 @@ func TestSymbolRegistry_S2ID(t *testing.T) {
 		"longitudeArrays": [1.0, 2.0],
 		"longitudeLongArrays": [1.0, 2.0, 3.0]
 	}`)
-	var testJsonUnmarshallled transformer.UnmarshalledJSON
+	var testJsonUnmarshallled types.UnmarshalledJSON
 	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
 	if err != nil {
 		panic(err)
 	}
 
 	sr := SymbolRegistry{}
-	env := NewEnvironment(sr, NewCompiledPipeline(make(map[string]*CompiledJSONPath), make(map[string]*vm.Program), nil, nil))
+	env := NewEnvironment(sr, NewCompiledPipeline(make(map[string]*jsonpath.CompiledJSONPath), make(map[string]*vm.Program), nil, nil))
 	env.SetSourceJSON(spec.FromJson_RAW_REQUEST, testJsonUnmarshallled)
 
 	type args struct {
@@ -376,14 +377,14 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 		"not_string": 1024,
 		"array": "{\"child_node\": { \"array\": [1, 2]}}"
 	}`)
-	var testJsonUnmarshallled transformer.UnmarshalledJSON
+	var testJsonUnmarshallled types.UnmarshalledJSON
 	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
 	if err != nil {
 		panic(err)
 	}
 
 	sr := SymbolRegistry{}
-	env := NewEnvironment(sr, NewCompiledPipeline(make(map[string]*CompiledJSONPath), make(map[string]*vm.Program), nil, nil))
+	env := NewEnvironment(sr, NewCompiledPipeline(make(map[string]*jsonpath.CompiledJSONPath), make(map[string]*vm.Program), nil, nil))
 	env.SetSourceJSON(spec.FromJson_RAW_REQUEST, testJsonUnmarshallled)
 
 	type args struct {
