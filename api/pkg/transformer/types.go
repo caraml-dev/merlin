@@ -7,3 +7,5 @@ const (
 
 	PromNamespace = "merlin_transformer"
 )
+
+type UnmarshalledJSON map[string]interface{}

@@ -501,7 +501,7 @@ type SortColumnRule struct {
 	unknownFields protoimpl.UnknownFields
 
 	Column string    `protobuf:"bytes,1,opt,name=column,proto3" json:"column,omitempty"`
-	Order  SortOrder `protobuf:"varint,2,opt,name=order,proto3,enum=merlin.spec.SortOrder" json:"order,omitempty"`
+	Order  SortOrder `protobuf:"varint,2,opt,name=order,proto3,enum=merlin.transformer.SortOrder" json:"order,omitempty"`
 }
 
 func (x *SortColumnRule) Reset() {
@@ -668,7 +668,7 @@ type TableJoin struct {
 	Left    string     `protobuf:"bytes,1,opt,name=left,proto3" json:"left,omitempty"`
 	Right   string     `protobuf:"bytes,2,opt,name=right,proto3" json:"right,omitempty"`
 	Output  string     `protobuf:"bytes,3,opt,name=output,proto3" json:"output,omitempty"`
-	How     JoinMethod `protobuf:"varint,4,opt,name=how,proto3,enum=merlin.spec.JoinMethod" json:"how,omitempty"`
+	How     JoinMethod `protobuf:"varint,4,opt,name=how,proto3,enum=merlin.transformer.JoinMethod" json:"how,omitempty"`
 	OnLeft  string     `protobuf:"bytes,5,opt,name=onLeft,proto3" json:"onLeft,omitempty"`
 	OnRight string     `protobuf:"bytes,6,opt,name=onRight,proto3" json:"onRight,omitempty"`
 }
@@ -864,32 +864,32 @@ func file_transformer_spec_table_proto_rawDescGZIP() []byte {
 var file_transformer_spec_table_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_transformer_spec_table_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_transformer_spec_table_proto_goTypes = []interface{}{
-	(SortOrder)(0),              // 0: merlin.spec.SortOrder
-	(JoinMethod)(0),             // 1: merlin.spec.JoinMethod
-	(*Table)(nil),               // 2: merlin.spec.Table
-	(*BaseTable)(nil),           // 3: merlin.spec.BaseTable
-	(*Column)(nil),              // 4: merlin.spec.Column
-	(*TableTransformation)(nil), // 5: merlin.spec.TableTransformation
-	(*TransformationStep)(nil),  // 6: merlin.spec.TransformationStep
-	(*SortColumnRule)(nil),      // 7: merlin.spec.SortColumnRule
-	(*RenameColumn)(nil),        // 8: merlin.spec.RenameColumn
-	(*AddOrUpdateColumn)(nil),   // 9: merlin.spec.AddOrUpdateColumn
-	(*TableJoin)(nil),           // 10: merlin.spec.TableJoin
-	(*FromJson)(nil),            // 11: merlin.spec.FromJson
-	(*FromTable)(nil),           // 12: merlin.spec.FromTable
+	(SortOrder)(0),              // 0: merlin.transformer.SortOrder
+	(JoinMethod)(0),             // 1: merlin.transformer.JoinMethod
+	(*Table)(nil),               // 2: merlin.transformer.Table
+	(*BaseTable)(nil),           // 3: merlin.transformer.BaseTable
+	(*Column)(nil),              // 4: merlin.transformer.Column
+	(*TableTransformation)(nil), // 5: merlin.transformer.TableTransformation
+	(*TransformationStep)(nil),  // 6: merlin.transformer.TransformationStep
+	(*SortColumnRule)(nil),      // 7: merlin.transformer.SortColumnRule
+	(*RenameColumn)(nil),        // 8: merlin.transformer.RenameColumn
+	(*AddOrUpdateColumn)(nil),   // 9: merlin.transformer.AddOrUpdateColumn
+	(*TableJoin)(nil),           // 10: merlin.transformer.TableJoin
+	(*FromJson)(nil),            // 11: merlin.transformer.FromJson
+	(*FromTable)(nil),           // 12: merlin.transformer.FromTable
 }
 var file_transformer_spec_table_proto_depIdxs = []int32{
-	3,  // 0: merlin.spec.Table.baseTable:type_name -> merlin.spec.BaseTable
-	4,  // 1: merlin.spec.Table.columns:type_name -> merlin.spec.Column
-	11, // 2: merlin.spec.BaseTable.fromJson:type_name -> merlin.spec.FromJson
-	12, // 3: merlin.spec.BaseTable.fromTable:type_name -> merlin.spec.FromTable
-	11, // 4: merlin.spec.Column.fromJson:type_name -> merlin.spec.FromJson
-	6,  // 5: merlin.spec.TableTransformation.steps:type_name -> merlin.spec.TransformationStep
-	7,  // 6: merlin.spec.TransformationStep.sort:type_name -> merlin.spec.SortColumnRule
-	8,  // 7: merlin.spec.TransformationStep.renameColumn:type_name -> merlin.spec.RenameColumn
-	9,  // 8: merlin.spec.TransformationStep.addOrUpdateColumn:type_name -> merlin.spec.AddOrUpdateColumn
-	0,  // 9: merlin.spec.SortColumnRule.order:type_name -> merlin.spec.SortOrder
-	1,  // 10: merlin.spec.TableJoin.how:type_name -> merlin.spec.JoinMethod
+	3,  // 0: merlin.transformer.Table.baseTable:type_name -> merlin.transformer.BaseTable
+	4,  // 1: merlin.transformer.Table.columns:type_name -> merlin.transformer.Column
+	11, // 2: merlin.transformer.BaseTable.fromJson:type_name -> merlin.transformer.FromJson
+	12, // 3: merlin.transformer.BaseTable.fromTable:type_name -> merlin.transformer.FromTable
+	11, // 4: merlin.transformer.Column.fromJson:type_name -> merlin.transformer.FromJson
+	6,  // 5: merlin.transformer.TableTransformation.steps:type_name -> merlin.transformer.TransformationStep
+	7,  // 6: merlin.transformer.TransformationStep.sort:type_name -> merlin.transformer.SortColumnRule
+	8,  // 7: merlin.transformer.TransformationStep.renameColumn:type_name -> merlin.transformer.RenameColumn
+	9,  // 8: merlin.transformer.TransformationStep.addOrUpdateColumn:type_name -> merlin.transformer.AddOrUpdateColumn
+	0,  // 9: merlin.transformer.SortColumnRule.order:type_name -> merlin.transformer.SortOrder
+	1,  // 10: merlin.transformer.TableJoin.how:type_name -> merlin.transformer.JoinMethod
 	11, // [11:11] is the sub-list for method output_type
 	11, // [11:11] is the sub-list for method input_type
 	11, // [11:11] is the sub-list for extension type_name

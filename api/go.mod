@@ -12,6 +12,7 @@ require (
 	github.com/coocood/freecache v1.1.1
 	github.com/feast-dev/feast/sdk/go v0.9.2
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-gota/gota v0.10.1
 	github.com/go-openapi/spec v0.19.9 // indirect
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
@@ -33,6 +34,7 @@ require (
 	github.com/jinzhu/gorm v1.9.11
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kubeflow/kfserving v0.4.1
+	github.com/magiconair/properties v1.8.1
 	github.com/mmcloughlin/geohash v0.10.0
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/opentracing-contrib/go-stdlib v1.0.0

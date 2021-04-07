@@ -318,13 +318,13 @@ func file_transformer_spec_feast_proto_rawDescGZIP() []byte {
 
 var file_transformer_spec_feast_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_transformer_spec_feast_proto_goTypes = []interface{}{
-	(*FeatureTable)(nil), // 0: merlin.spec.FeatureTable
-	(*Entity)(nil),       // 1: merlin.spec.Entity
-	(*Feature)(nil),      // 2: merlin.spec.Feature
+	(*FeatureTable)(nil), // 0: merlin.transformer.FeatureTable
+	(*Entity)(nil),       // 1: merlin.transformer.Entity
+	(*Feature)(nil),      // 2: merlin.transformer.Feature
 }
 var file_transformer_spec_feast_proto_depIdxs = []int32{
-	1, // 0: merlin.spec.FeatureTable.entities:type_name -> merlin.spec.Entity
-	2, // 1: merlin.spec.FeatureTable.features:type_name -> merlin.spec.Feature
+	1, // 0: merlin.transformer.FeatureTable.entities:type_name -> merlin.transformer.Entity
+	2, // 1: merlin.transformer.FeatureTable.features:type_name -> merlin.transformer.Feature
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name

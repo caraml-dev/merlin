@@ -15,17 +15,11 @@ message StandardTransformerConfig {
 
 message TransformerConfig {
   repeated FeatureTable feast = 1; // for backward compatibility
-  Preprocess preprocess = 2;
-  Postprocess postprocess = 3;
+  Pipeline preprocess = 2;
+  Pipeline postprocess = 3;
 }
 
-message Preprocess {
-  repeated Input inputs = 1;
-  repeated Transformation transformations = 2;
-  repeated Output outputs = 3;
-}
-
-message Postprocess {
+message Pipeline {
   repeated Input inputs = 1;
   repeated Transformation transformations = 2;
   repeated Output outputs = 3;

@@ -368,22 +368,22 @@ func file_transformer_spec_json_proto_rawDescGZIP() []byte {
 
 var file_transformer_spec_json_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_transformer_spec_json_proto_goTypes = []interface{}{
-	(*JsonOutput)(nil),   // 0: merlin.spec.JsonOutput
-	(*JsonTemplate)(nil), // 1: merlin.spec.JsonTemplate
-	(*BaseJson)(nil),     // 2: merlin.spec.BaseJson
-	(*Field)(nil),        // 3: merlin.spec.Field
-	(*FromJson)(nil),     // 4: merlin.spec.FromJson
-	(*FromTable)(nil),    // 5: merlin.spec.FromTable
+	(*JsonOutput)(nil),   // 0: merlin.transformer.JsonOutput
+	(*JsonTemplate)(nil), // 1: merlin.transformer.JsonTemplate
+	(*BaseJson)(nil),     // 2: merlin.transformer.BaseJson
+	(*Field)(nil),        // 3: merlin.transformer.Field
+	(*FromJson)(nil),     // 4: merlin.transformer.FromJson
+	(*FromTable)(nil),    // 5: merlin.transformer.FromTable
 }
 var file_transformer_spec_json_proto_depIdxs = []int32{
-	1, // 0: merlin.spec.JsonOutput.jsonTemplate:type_name -> merlin.spec.JsonTemplate
-	2, // 1: merlin.spec.JsonTemplate.baseJson:type_name -> merlin.spec.BaseJson
-	3, // 2: merlin.spec.JsonTemplate.fields:type_name -> merlin.spec.Field
-	4, // 3: merlin.spec.BaseJson.fromJson:type_name -> merlin.spec.FromJson
-	5, // 4: merlin.spec.BaseJson.fromTable:type_name -> merlin.spec.FromTable
-	3, // 5: merlin.spec.Field.fields:type_name -> merlin.spec.Field
-	4, // 6: merlin.spec.Field.fromJson:type_name -> merlin.spec.FromJson
-	5, // 7: merlin.spec.Field.fromTable:type_name -> merlin.spec.FromTable
+	1, // 0: merlin.transformer.JsonOutput.jsonTemplate:type_name -> merlin.transformer.JsonTemplate
+	2, // 1: merlin.transformer.JsonTemplate.baseJson:type_name -> merlin.transformer.BaseJson
+	3, // 2: merlin.transformer.JsonTemplate.fields:type_name -> merlin.transformer.Field
+	4, // 3: merlin.transformer.BaseJson.fromJson:type_name -> merlin.transformer.FromJson
+	5, // 4: merlin.transformer.BaseJson.fromTable:type_name -> merlin.transformer.FromTable
+	3, // 5: merlin.transformer.Field.fields:type_name -> merlin.transformer.Field
+	4, // 6: merlin.transformer.Field.fromJson:type_name -> merlin.transformer.FromJson
+	5, // 7: merlin.transformer.Field.fromTable:type_name -> merlin.transformer.FromTable
 	8, // [8:8] is the sub-list for method output_type
 	8, // [8:8] is the sub-list for method input_type
 	8, // [8:8] is the sub-list for extension type_name

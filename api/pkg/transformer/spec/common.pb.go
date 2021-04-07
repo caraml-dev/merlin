@@ -129,7 +129,7 @@ type FromJson struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Source       FromJson_SourceEnum `protobuf:"varint,1,opt,name=source,proto3,enum=merlin.spec.FromJson_SourceEnum" json:"source,omitempty"`
+	Source       FromJson_SourceEnum `protobuf:"varint,1,opt,name=source,proto3,enum=merlin.transformer.FromJson_SourceEnum" json:"source,omitempty"`
 	JsonPath     string              `protobuf:"bytes,2,opt,name=jsonPath,proto3" json:"jsonPath,omitempty"`
 	AddRowNumber bool                `protobuf:"varint,3,opt,name=addRowNumber,proto3" json:"addRowNumber,omitempty"`
 }
@@ -231,12 +231,12 @@ func file_transformer_spec_common_proto_rawDescGZIP() []byte {
 var file_transformer_spec_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_transformer_spec_common_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_transformer_spec_common_proto_goTypes = []interface{}{
-	(FromJson_SourceEnum)(0), // 0: merlin.spec.FromJson.SourceEnum
-	(*FromTable)(nil),        // 1: merlin.spec.FromTable
-	(*FromJson)(nil),         // 2: merlin.spec.FromJson
+	(FromJson_SourceEnum)(0), // 0: merlin.transformer.FromJson.SourceEnum
+	(*FromTable)(nil),        // 1: merlin.transformer.FromTable
+	(*FromJson)(nil),         // 2: merlin.transformer.FromJson
 }
 var file_transformer_spec_common_proto_depIdxs = []int32{
-	0, // 0: merlin.spec.FromJson.source:type_name -> merlin.spec.FromJson.SourceEnum
+	0, // 0: merlin.transformer.FromJson.source:type_name -> merlin.transformer.FromJson.SourceEnum
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
