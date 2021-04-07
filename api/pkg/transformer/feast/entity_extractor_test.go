@@ -24,6 +24,7 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		"booleanString" : "false",
 		"latitude": 1.0,
 		"longitude": 2.0,
+		"longInteger": 12986086,
 		"locations": [
 		 {
 			"latitude": 1.0,
@@ -119,6 +120,20 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 			nil,
 		},
 		{
+			"long integer to string",
+			&transformer.Entity{
+				Name:      "my_entity",
+				ValueType: "STRING",
+				Extractor: &transformer.Entity_JsonPath{
+					JsonPath: "$.longInteger",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal("12986086"),
+			},
+			nil,
+		},
+		{
 			"float to int32",
 			&transformer.Entity{
 				Name:      "my_entity",
@@ -184,7 +199,7 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 				},
 			},
 			[]*feastType.Value{
-				feast.StrVal("1234.111"),
+				feast.StrVal("1234"),
 			},
 			nil,
 		},
