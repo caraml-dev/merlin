@@ -2,9 +2,10 @@ package feast
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	"strconv"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
@@ -24,7 +25,7 @@ func getValuesFromJSONPayload(nodesBody interface{}, entity *transformer.Entity,
 			return nil, err
 		}
 		entityVal = entityValFromJsonPath
-	case *transformer.Entity_Udf:
+	case *transformer.Entity_Udf, *transformer.Entity_Expression:
 		env := UdfEnv{nodesBody}
 		exprResult, err := expr.Run(udf, env)
 		if err != nil {
