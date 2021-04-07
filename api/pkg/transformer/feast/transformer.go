@@ -123,14 +123,14 @@ func NewTransformer(feastClient feast.Client, config *transformer.StandardTransf
 					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
 				}
 				compiledJsonPath[configEntity.GetJsonPath()] = c
-			case *transformer.Entity_Udf:
-				c, err := expr.Compile(configEntity.GetUdf(), expr.Env(UdfEnv{}))
+			case *transformer.Entity_Udf, *transformer.Entity_Expression:
+				expressionExtractor := getExpressionExtractor(configEntity)
+				c, err := expr.Compile(expressionExtractor, expr.Env(UdfEnv{}))
 				if err != nil {
 					return nil, err
 				}
-				compiledUdf[configEntity.GetUdf()] = c
+				compiledUdf[expressionExtractor] = c
 			}
-
 		}
 	}
 
@@ -172,7 +172,10 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	resChan := make(chan result, len(t.config.TransformerConfig.Feast))
 	for _, config := range t.config.TransformerConfig.Feast {
 		go func(cfg *transformer.FeatureTable) {
-			tableName := createTableName(cfg.Entities, cfg.Project)
+			tableName := cfg.TableName
+			if tableName == "" {
+				tableName = createTableName(cfg.Entities, cfg.Project)
+			}
 			val, err := t.getFeastFeature(ctx, tableName, request, cfg)
 			resChan <- result{tableName, val, err}
 		}(config)
@@ -327,6 +330,13 @@ func (t *Transformer) getEntityIndicesFromColumns(columns []string, entitiesConf
 	return indicesMapping
 }
 
+func getExpressionExtractor(entity *transformer.Entity) string {
+	if extractor := entity.GetExpression(); extractor != "" {
+		return extractor
+	}
+	return entity.GetUdf()
+}
+
 func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildEntitiesRequest")
 	defer span.Finish()
@@ -351,7 +361,8 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 			}
 		}
 
-		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[configEntity.GetUdf()])
+		expressionExtractor := getExpressionExtractor(configEntity)
+		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[expressionExtractor])
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}
