@@ -1476,7 +1476,7 @@ func TestTransformer_Transform(t *testing.T) {
 					},
 				},
 			},
-			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"s2id_s2id":{"columns":["s2id","geohash_statistics:average_daily_rides"],"data":[["1154732743855177728",3.2]]}}}`),
+			want:    []byte(`{"latitude":1.0,"longitude":2.0,"feast_features":{"s2id_tables":{"columns":["s2id","geohash_statistics:average_daily_rides"],"data":[["1154732743855177728",3.2]]}}}`),
 			wantErr: false,
 		},
 		{

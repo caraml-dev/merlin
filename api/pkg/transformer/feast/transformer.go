@@ -172,7 +172,10 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 	resChan := make(chan result, len(t.config.TransformerConfig.Feast))
 	for _, config := range t.config.TransformerConfig.Feast {
 		go func(cfg *transformer.FeatureTable) {
-			tableName := createTableName(cfg.Entities, cfg.Project)
+			tableName := cfg.TableName
+			if tableName == "" {
+				tableName = createTableName(cfg.Entities, cfg.Project)
+			}
 			val, err := t.getFeastFeature(ctx, tableName, request, cfg)
 			resChan <- result{tableName, val, err}
 		}(config)
