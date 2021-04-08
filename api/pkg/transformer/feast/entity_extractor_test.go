@@ -121,10 +121,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"long integer to string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.longInteger",
 				},
 			},
