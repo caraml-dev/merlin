@@ -76,9 +76,9 @@ func main() {
 		logger.Fatal("Unable to initialize Feast client", zap.Error(err))
 	}
 
-	var memoryCache *cache.Cache
+	var memoryCache *cache.inMemoryCache
 	if cfg.Feast.CacheEnabled {
-		memoryCache = cache.NewCache(cfg.Cache)
+		memoryCache = cache.NewInMemoryCache(cfg.Cache)
 	}
 
 	f, err := feast.NewTransformer(feastClient, config, &cfg.Feast, logger, memoryCache)
