@@ -10,11 +10,6 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
-type CompiledJSONPath struct {
-	cpl    *jsonpath.Compiled
-	source spec.FromJson_SourceEnum
-}
-
 const (
 	Prefix = "$."
 
@@ -26,7 +21,16 @@ var (
 	sourceJsonPattern = regexp.MustCompile("\\$\\.raw_request|\\$\\.model_response")
 )
 
-func CompileJsonPath(jsonPath string) (*CompiledJSONPath, error) {
+// Compile compile a jsonPath string into a jsonpath.Compiled instance
+// jsonPath string should follow format specified in http://goessner.net/articles/JsonPath/
+// In the jsonPath string user can also specify which json payload to extract from by prefixing the json field selector
+// either with "$.raw_request" or "$.model_response", in which Compiled.LookupFromContainer will either use the transformer raw request payload or
+// model response payload. If the prefix is not defined Compiled.LookupFromContainer will use raw request payload as default
+// E.g.:
+// "$.book" : Compiled.LookupFromContainer extract "book" field from raw request payload
+// "$.raw_request.book" : Compiled.LookupFromContainer extract "book" field from raw request payload
+// "$.model_response.book" : Compiled.LookupFromContainer extract "book" field from model response payload
+func Compile(jsonPath string) (*Compiled, error) {
 	source := spec.FromJson_RAW_REQUEST
 	match := sourceJsonPattern.FindString(jsonPath)
 	if match != "" {
@@ -42,28 +46,33 @@ func CompileJsonPath(jsonPath string) (*CompiledJSONPath, error) {
 		return nil, err
 	}
 
-	return &CompiledJSONPath{
+	return &Compiled{
 		cpl:    compiledJsonpath,
 		source: source,
 	}, nil
 }
 
-func MustCompileJsonPath(jsonPath string) *CompiledJSONPath {
-	cpl, err := CompileJsonPath(jsonPath)
+func MustCompileJsonPath(jsonPath string) *Compiled {
+	cpl, err := Compile(jsonPath)
 	if err != nil {
 		panic(err)
 	}
 	return cpl
 }
 
-func (c *CompiledJSONPath) Lookup(jsonObj types.UnmarshalledJSON) (interface{}, error) {
+type Compiled struct {
+	cpl    *jsonpath.Compiled
+	source spec.FromJson_SourceEnum
+}
+
+func (c *Compiled) Lookup(jsonObj types.JSONObject) (interface{}, error) {
 	return c.cpl.Lookup(jsonObj)
 }
 
-func (c *CompiledJSONPath) LookupFromSource(source types.SourceJSON) (interface{}, error) {
-	sourceJson := source[c.source]
+func (c *Compiled) LookupFromContainer(container types.JSONObjectContainer) (interface{}, error) {
+	sourceJson := container[c.source]
 	if sourceJson == nil {
-		return nil, fmt.Errorf("source json is not set: %s", c.source.String())
+		return nil, fmt.Errorf("container json is not set: %s", c.source.String())
 	}
 
 	return c.cpl.Lookup(sourceJson)

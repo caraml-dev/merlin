@@ -2,9 +2,11 @@ package jsonpath
 
 import (
 	"encoding/json"
+	"errors"
 	"reflect"
 	"testing"
 
+	"github.com/magiconair/properties/assert"
 	"github.com/oliveagle/jsonpath"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -36,31 +38,31 @@ func TestCompileJsonPath(t *testing.T) {
 	tests := []struct {
 		name     string
 		jsonPath string
-		want     *CompiledJSONPath
+		want     *Compiled
 		wantErr  bool
 	}{
 		{
-			"without source json",
+			"without jsonContainer json",
 			"$.book",
-			&CompiledJSONPath{
+			&Compiled{
 				cpl:    jsonpath.MustCompile("$.book"),
 				source: spec.FromJson_RAW_REQUEST,
 			},
 			false,
 		},
 		{
-			"using raw request as source json",
+			"using raw request as jsonContainer json",
 			"$.raw_request.book",
-			&CompiledJSONPath{
+			&Compiled{
 				cpl:    jsonpath.MustCompile("$.book"),
 				source: spec.FromJson_RAW_REQUEST,
 			},
 			false,
 		},
 		{
-			"using model response as source json",
+			"using model response as jsonContainer json",
 			"$.model_response.book",
-			&CompiledJSONPath{
+			&Compiled{
 				cpl:    jsonpath.MustCompile("$.book"),
 				source: spec.FromJson_MODEL_RESPONSE,
 			},
@@ -69,7 +71,7 @@ func TestCompileJsonPath(t *testing.T) {
 		{
 			"nested case",
 			"$.nested.model_response.book",
-			&CompiledJSONPath{
+			&Compiled{
 				cpl:    jsonpath.MustCompile("$.nested.model_response.book"),
 				source: spec.FromJson_RAW_REQUEST,
 			},
@@ -78,13 +80,56 @@ func TestCompileJsonPath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CompileJsonPath(tt.jsonPath)
+			got, err := Compile(tt.jsonPath)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CompileJsonPath() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Compile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CompileJsonPath() got = %v, want %v", got, tt.want)
+				t.Errorf("Compile() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMustCompileJsonPath(t *testing.T) {
+
+	tests := []struct {
+		name     string
+		jsonPath string
+		want     *Compiled
+		wantErr  bool
+		expError error
+	}{
+		{
+			"succeful compile",
+			"$.book",
+			&Compiled{
+				cpl:    jsonpath.MustCompile("$.book"),
+				source: spec.FromJson_RAW_REQUEST,
+			},
+			false,
+			nil,
+		},
+		{
+			"without jsonContainer json",
+			".book",
+			nil,
+			true,
+			errors.New("should start with '\\$'"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantErr {
+				assert.Panic(t, func() {
+					MustCompileJsonPath(tt.jsonPath)
+				}, tt.expError.Error())
+				return
+			}
+
+			if got := MustCompileJsonPath(tt.jsonPath); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MustCompileJsonPath() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -92,7 +137,7 @@ func TestCompileJsonPath(t *testing.T) {
 
 func TestCompiled_Lookup(t *testing.T) {
 
-	var rawRequestData types.UnmarshalledJSON
+	var rawRequestData types.JSONObject
 	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
 
 	type fields struct {
@@ -103,7 +148,7 @@ func TestCompiled_Lookup(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		jsonObj types.UnmarshalledJSON
+		jsonObj types.JSONObject
 		want    interface{}
 		wantErr bool
 	}{
@@ -120,7 +165,7 @@ func TestCompiled_Lookup(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &CompiledJSONPath{
+			c := &Compiled{
 				cpl:    tt.fields.cpl,
 				source: tt.fields.source,
 			}
@@ -137,63 +182,77 @@ func TestCompiled_Lookup(t *testing.T) {
 	}
 }
 
-func TestCompiled_LookupEnv(t *testing.T) {
-	var rawRequestData types.UnmarshalledJSON
-	var modelResponseData types.UnmarshalledJSON
+func TestCompiled_LookupFromContainer(t *testing.T) {
+	var rawRequestData types.JSONObject
+	var modelResponseData types.JSONObject
 
 	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
 	json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
 
-	sourceJSONs := map[spec.FromJson_SourceEnum]types.UnmarshalledJSON{
+	jsonContainer := types.JSONObjectContainer{
 		spec.FromJson_RAW_REQUEST:    rawRequestData,
 		spec.FromJson_MODEL_RESPONSE: modelResponseData,
 	}
 
 	type fields struct {
-		cpl    *jsonpath.Compiled
-		source spec.FromJson_SourceEnum
+		cpl           *jsonpath.Compiled
+		jsonContainer spec.FromJson_SourceEnum
 	}
 	tests := []struct {
 		name        string
 		fields      fields
-		sourceJSONs types.SourceJSON
+		sourceJSONs types.JSONObjectContainer
 		want        interface{}
 		wantErr     bool
+		expErr      error
 	}{
 		{
 			"json path to the raw request",
 			fields{
-				cpl:    jsonpath.MustCompile("$.signature_name"),
-				source: spec.FromJson_RAW_REQUEST,
+				cpl:           jsonpath.MustCompile("$.signature_name"),
+				jsonContainer: spec.FromJson_RAW_REQUEST,
 			},
-			sourceJSONs,
+			jsonContainer,
 			"predict",
 			false,
+			nil,
 		},
 		{
 			"json path to the model response",
 			fields{
-				cpl:    jsonpath.MustCompile("$.model_name"),
-				source: spec.FromJson_MODEL_RESPONSE,
+				cpl:           jsonpath.MustCompile("$.model_name"),
+				jsonContainer: spec.FromJson_MODEL_RESPONSE,
 			},
-			sourceJSONs,
+			jsonContainer,
 			"iris-classifier",
 			false,
+			nil,
+		},
+		{
+			"json path from unset json source",
+			fields{
+				cpl:           jsonpath.MustCompile("$.model_name"),
+				jsonContainer: spec.FromJson_INVALID,
+			},
+			jsonContainer,
+			nil,
+			true,
+			errors.New("container json is not set: INVALID"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &CompiledJSONPath{
+			c := &Compiled{
 				cpl:    tt.fields.cpl,
-				source: tt.fields.source,
+				source: tt.fields.jsonContainer,
 			}
-			got, err := c.LookupFromSource(tt.sourceJSONs)
+			got, err := c.LookupFromContainer(tt.sourceJSONs)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("LookupFromSource() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("LookupFromContainer() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("LookupFromSource() got = %v, want %v", got, tt.want)
+				t.Errorf("LookupFromContainer() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
