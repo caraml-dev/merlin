@@ -1,4 +1,4 @@
-package pipeline
+package symbol
 
 import (
 	"encoding/json"
@@ -7,18 +7,16 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/antonmedv/expr/vm"
 	"github.com/go-gota/gota/series"
 	"github.com/magiconair/properties/assert"
 	"github.com/mmcloughlin/geohash"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
-func TestSymbolRegistry_Geohash(t *testing.T) {
-	testJsonString := []byte(`{
+var (
+	requestJSONString = []byte(`{
 		"latitude" : 1.0,
 		"latitudeString": "1.0",
 		"latitudeWrongType": "abcde",
@@ -33,15 +31,30 @@ func TestSymbolRegistry_Geohash(t *testing.T) {
 		"longitudeArrays": [1.0, 2.0],
 		"longitudeLongArrays": [1.0, 2.0, 3.0]
 	}`)
-	var testJsonUnmarshallled types.UnmarshalledJSON
-	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
-	if err != nil {
-		panic(err)
-	}
 
-	sr := SymbolRegistry{}
-	env := NewEnvironment(sr, NewCompiledPipeline(make(map[string]*jsonpath.CompiledJSONPath), make(map[string]*vm.Program), nil, nil))
-	env.SetSourceJSON(spec.FromJson_RAW_REQUEST, testJsonUnmarshallled)
+	responseJSONString = []byte(`{
+		"latitude" : 1.0,
+		"latitudeString": "1.0",
+		"latitudeWrongType": "abcde",
+		"location": {
+			"latitude": 0.1,
+			"longitude": 2.0
+		},
+		"latitudeArrays": [1.0, 2.0],
+		"longitude" : 2.0,
+		"longitudeString" : "2.0",
+		"longitudeInteger": 1,
+		"longitudeArrays": [1.0, 2.0],
+		"longitudeLongArrays": [1.0, 2.0, 3.0]
+	}`)
+)
+
+func TestSymbolRegistry_Geohash(t *testing.T) {
+	requestJSONObject, responseJSONObject := getTestJSONObjects()
+
+	sr := NewRegistryWithCompiledJSONPath(make(map[string]*jsonpath.Compiled))
+	sr.SetRawRequestJSON(requestJSONObject)
+	sr.SetModelResponseJSON(responseJSONObject)
 
 	type args struct {
 		latitude  interface{}
@@ -60,6 +73,17 @@ func TestSymbolRegistry_Geohash(t *testing.T) {
 			args{
 				latitude:  "$.latitude",
 				longitude: "$.longitude",
+				precision: 7,
+			},
+			geohash.EncodeWithPrecision(1.0, 2.0, 7),
+			false,
+			nil,
+		},
+		{
+			"geohash from json path fields in model response",
+			args{
+				latitude:  "$.model_response.latitude",
+				longitude: "$.model_response.longitude",
 				precision: 7,
 			},
 			geohash.EncodeWithPrecision(1.0, 2.0, 7),
@@ -195,30 +219,11 @@ func TestSymbolRegistry_Geohash(t *testing.T) {
 }
 
 func TestSymbolRegistry_S2ID(t *testing.T) {
-	testJsonString := []byte(`{
-		"latitude" : 1.0,
-		"latitudeString": "1.0",
-		"latitudeWrongType": "abcde",
-		"location": {
-			"latitude": 0.1,
-			"longitude": 2.0
-		},
-		"latitudeArrays": [1.0, 2.0],
-		"longitude" : 2.0,
-		"longitudeString" : "2.0",
-		"longitudeInteger": 1,
-		"longitudeArrays": [1.0, 2.0],
-		"longitudeLongArrays": [1.0, 2.0, 3.0]
-	}`)
-	var testJsonUnmarshallled types.UnmarshalledJSON
-	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
-	if err != nil {
-		panic(err)
-	}
+	requestJSONObject, responseJSONObject := getTestJSONObjects()
 
-	sr := SymbolRegistry{}
-	env := NewEnvironment(sr, NewCompiledPipeline(make(map[string]*jsonpath.CompiledJSONPath), make(map[string]*vm.Program), nil, nil))
-	env.SetSourceJSON(spec.FromJson_RAW_REQUEST, testJsonUnmarshallled)
+	sr := NewRegistryWithCompiledJSONPath(make(map[string]*jsonpath.Compiled))
+	sr.SetRawRequestJSON(requestJSONObject)
+	sr.SetModelResponseJSON(responseJSONObject)
 
 	type args struct {
 		latitude  interface{}
@@ -237,6 +242,17 @@ func TestSymbolRegistry_S2ID(t *testing.T) {
 			args{
 				latitude:  "$.latitude",
 				longitude: "$.longitude",
+				level:     7,
+			},
+			"1154680723211288576",
+			false,
+			nil,
+		},
+		{
+			"s2id from json path fields in model response",
+			args{
+				latitude:  "$.model_response.latitude",
+				longitude: "$.model_response.longitude",
 				level:     7,
 			},
 			"1154680723211288576",
@@ -377,15 +393,15 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 		"not_string": 1024,
 		"array": "{\"child_node\": { \"array\": [1, 2]}}"
 	}`)
-	var testJsonUnmarshallled types.UnmarshalledJSON
-	err := json.Unmarshal(testJsonString, &testJsonUnmarshallled)
+
+	var jsonObject types.JSONObject
+	err := json.Unmarshal(testJsonString, &jsonObject)
 	if err != nil {
 		panic(err)
 	}
 
-	sr := SymbolRegistry{}
-	env := NewEnvironment(sr, NewCompiledPipeline(make(map[string]*jsonpath.CompiledJSONPath), make(map[string]*vm.Program), nil, nil))
-	env.SetSourceJSON(spec.FromJson_RAW_REQUEST, testJsonUnmarshallled)
+	sr := NewRegistryWithCompiledJSONPath(make(map[string]*jsonpath.Compiled))
+	sr.SetRawRequestJSON(jsonObject)
 
 	type args struct {
 		parentJsonPath string
@@ -467,4 +483,20 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getTestJSONObjects() (types.JSONObject, types.JSONObject) {
+	var requestJSONObject types.JSONObject
+	err := json.Unmarshal(requestJSONString, &requestJSONObject)
+	if err != nil {
+		panic(err)
+	}
+
+	var responseJSONObject types.JSONObject
+	err = json.Unmarshal(responseJSONString, &responseJSONObject)
+	if err != nil {
+		panic(err)
+	}
+
+	return requestJSONObject, responseJSONObject
 }
