@@ -7,6 +7,12 @@ import (
 	"time"
 
 	feast "github.com/feast-dev/feast/sdk/go"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+
+	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/cache"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 type CacheKey struct {
@@ -14,9 +20,23 @@ type CacheKey struct {
 	Project string
 }
 
-func fetchFeaturesFromCache(cache Cache, entities []feast.Row, project string) (FeaturesData, []feast.Row) {
+var (
+	feastCacheRetrievalCount = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: transformer.PromNamespace,
+		Name:      "feast_cache_retrieval_count",
+		Help:      "Retrieve feature from cache",
+	})
+
+	feastCacheHitCount = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: transformer.PromNamespace,
+		Name:      "feast_cache_hit_count",
+		Help:      "Cache is hitted",
+	})
+)
+
+func fetchFeaturesFromCache(cache cache.Cache, entities []feast.Row, project string) (types.ValueRows, []feast.Row) {
 	var entityNotInCache []feast.Row
-	var featuresFromCache FeaturesData
+	var featuresFromCache types.ValueRows
 	for _, entity := range entities {
 		key := CacheKey{Entity: entity, Project: project}
 		keyByte, err := json.Marshal(key)
@@ -33,7 +53,7 @@ func fetchFeaturesFromCache(cache Cache, entities []feast.Row, project string) (
 		}
 
 		feastCacheHitCount.Inc()
-		var cacheData FeatureData
+		var cacheData types.ValueRow
 		if err := json.Unmarshal(val, &cacheData); err != nil {
 			entityNotInCache = append(entityNotInCache, entity)
 			continue
@@ -43,7 +63,7 @@ func fetchFeaturesFromCache(cache Cache, entities []feast.Row, project string) (
 	return featuresFromCache, entityNotInCache
 }
 
-func insertFeaturesToCache(cache Cache, data entityFeaturePair, project string, ttl time.Duration) error {
+func insertFeaturesToCache(cache cache.Cache, data entityFeaturePair, project string, ttl time.Duration) error {
 	key := CacheKey{
 		Entity:  data.entity,
 		Project: project,
@@ -60,7 +80,7 @@ func insertFeaturesToCache(cache Cache, data entityFeaturePair, project string, 
 	return cache.Insert(keyByte, dataByte, ttl)
 }
 
-func insertMultipleFeaturesToCache(cache Cache, cacheData []entityFeaturePair, project string, ttl time.Duration) error {
+func insertMultipleFeaturesToCache(cache cache.Cache, cacheData []entityFeaturePair, project string, ttl time.Duration) error {
 	var errorMsgs []string
 	for _, data := range cacheData {
 		if err := insertFeaturesToCache(cache, data, project, ttl); err != nil {

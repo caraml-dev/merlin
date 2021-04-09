@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
 
 // ValidateTransformerConfig validate transformer config by checking the presence of entity and features in feast core
@@ -71,7 +72,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 				}
 			case *spec.Entity_Udf, *spec.Entity_Expression:
 				expressionExtractor := getExpressionExtractor(entity)
-				_, err = expr.Compile(expressionExtractor, expr.Env(UdfEnv{}))
+				_, err = expr.Compile(expressionExtractor, expr.Env(symbol.NewRegistryWithCompiledJSONPath(nil)))
 				if err != nil {
 					return NewValidationError(fmt.Sprintf("udf compilation failed: %v", err))
 				}

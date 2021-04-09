@@ -7,16 +7,18 @@ import (
 	"time"
 
 	feast "github.com/feast-dev/feast/sdk/go"
-	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	mocks2 "github.com/gojek/merlin/pkg/transformer/cache/mocks"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 func TestFetchFeaturesFromCache(t *testing.T) {
 	type mockCache struct {
 		entity           feast.Row
-		value            FeatureData
+		value            types.ValueRow
 		errFetchingCache error
 	}
 	testCases := []struct {
@@ -24,7 +26,7 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 		cacheMocks        []mockCache
 		entities          []feast.Row
 		project           string
-		featuresFromCache FeaturesData
+		featuresFromCache types.ValueRows
 		entityNotInCache  []feast.Row
 	}{
 		{
@@ -35,13 +37,13 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value: FeatureData{"1001", 1.1},
+					value: types.ValueRow{"1001", 1.1},
 				},
 				{
 					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
-					value: FeatureData{"2002", 2.2},
+					value: types.ValueRow{"2002", 2.2},
 				},
 			},
 			entities: []feast.Row{
@@ -52,7 +54,7 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 					"driver_id": feast.StrVal("2002"),
 				},
 			},
-			featuresFromCache: FeaturesData{
+			featuresFromCache: types.ValueRows{
 				{
 					"1001",
 					1.1,
@@ -72,7 +74,7 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value: FeatureData{"1001", 1.1},
+					value: types.ValueRow{"1001", 1.1},
 				},
 				{
 					entity: feast.Row{
@@ -90,7 +92,7 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 					"driver_id": feast.StrVal("2002"),
 				},
 			},
-			featuresFromCache: FeaturesData{
+			featuresFromCache: types.ValueRows{
 				{
 					"1001",
 					1.1,
@@ -142,7 +144,7 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.desc, func(t *testing.T) {
-			mockCache := &mocks.Cache{}
+			mockCache := &mocks2.Cache{}
 			for _, cc := range tt.cacheMocks {
 				key := CacheKey{Entity: cc.entity, Project: tt.project}
 				keyByte, err := json.Marshal(key)
@@ -162,9 +164,10 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 func TestInsertMultipleFeaturesToCache(t *testing.T) {
 	type mockCache struct {
 		entity            feast.Row
-		value             FeatureData
+		value             types.ValueRow
 		errInsertingCache error
 	}
+
 	testCases := []struct {
 		desc             string
 		willBeCachedData []entityFeaturePair
@@ -180,14 +183,14 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value:             FeatureData{"1001", 1.1},
+					value:             types.ValueRow{"1001", 1.1},
 					errInsertingCache: nil,
 				},
 				{
 					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
-					value:             FeatureData{"2002", 2.2},
+					value:             types.ValueRow{"2002", 2.2},
 					errInsertingCache: nil,
 				},
 			},
@@ -196,13 +199,13 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value: FeatureData{"1001", 1.1},
+					value: types.ValueRow{"1001", 1.1},
 				},
 				{
 					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
-					value: FeatureData{"2002", 2.2},
+					value: types.ValueRow{"2002", 2.2},
 				},
 			},
 		},
@@ -214,14 +217,14 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value:             FeatureData{"1001", 1.1},
+					value:             types.ValueRow{"1001", 1.1},
 					errInsertingCache: nil,
 				},
 				{
 					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
-					value:             FeatureData{"2002", 2.2},
+					value:             types.ValueRow{"2002", 2.2},
 					errInsertingCache: fmt.Errorf("Value is to big"),
 				},
 			},
@@ -230,13 +233,13 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value: FeatureData{"1001", 1.1},
+					value: types.ValueRow{"1001", 1.1},
 				},
 				{
 					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
-					value: FeatureData{"2002", 2.2},
+					value: types.ValueRow{"2002", 2.2},
 				},
 			},
 			expectedError: fmt.Errorf("error inserting to cached: (value: [2002 2.2], with message: Value is to big)"),
@@ -249,14 +252,14 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value:             FeatureData{"1001", 1.1},
+					value:             types.ValueRow{"1001", 1.1},
 					errInsertingCache: fmt.Errorf("Memory is full"),
 				},
 				{
 					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
-					value:             FeatureData{"2002", 2.2},
+					value:             types.ValueRow{"2002", 2.2},
 					errInsertingCache: fmt.Errorf("Value is to big"),
 				},
 			},
@@ -265,13 +268,13 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					value: FeatureData{"1001", 1.1},
+					value: types.ValueRow{"1001", 1.1},
 				},
 				{
 					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
-					value: FeatureData{"2002", 2.2},
+					value: types.ValueRow{"2002", 2.2},
 				},
 			},
 			expectedError: fmt.Errorf("error inserting to cached: (value: [1001 1.1], with message: Memory is full),(value: [2002 2.2], with message: Value is to big)"),
@@ -279,7 +282,7 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.desc, func(t *testing.T) {
-			mockCache := &mocks.Cache{}
+			mockCache := &mocks2.Cache{}
 			for _, cc := range tt.cacheMocks {
 				key := CacheKey{Entity: cc.entity, Project: tt.project}
 				keyByte, err := json.Marshal(key)

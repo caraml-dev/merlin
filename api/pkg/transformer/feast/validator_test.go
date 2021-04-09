@@ -541,7 +541,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 							Entities: []*spec.Entity{
 								{
 									Name:      "geohash",
-									ValueType: "String",
+									ValueType: "STRING",
 									Extractor: &spec.Entity_Udf{
 										Udf: "unknown()",
 									},

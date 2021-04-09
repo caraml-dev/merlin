@@ -2,41 +2,63 @@ package feast
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	"strconv"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/oliveagle/jsonpath"
 
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
 
-func getValuesFromJSONPayload(nodesBody interface{}, entity *spec.Entity, compiledJsonPath *jsonpath.Compiled, udf *vm.Program) ([]*feastType.Value, error) {
-	feastValType := feastType.ValueType_Enum(feastType.ValueType_Enum_value[entity.ValueType])
+// EntityExtractor is responsible to extract entity values from symbol registry
+type EntityExtractor struct {
+	compiledJsonPath   map[string]*jsonpath.Compiled
+	compiledExpression map[string]*vm.Program
+}
+
+func NewEntityExtractor(compiledJsonPath map[string]*jsonpath.Compiled, compiledExpression map[string]*vm.Program) *EntityExtractor {
+	return &EntityExtractor{
+		compiledJsonPath:   compiledJsonPath,
+		compiledExpression: compiledExpression,
+	}
+}
+
+// ExtractValuesFromSymbolRegistry extracts entity values from symbol registry
+// Which means it can be used to extract entity values from json object, variables, expression, or table.
+func (er *EntityExtractor) ExtractValuesFromSymbolRegistry(symbolRegistry symbol.Registry, entitySpec *spec.Entity) ([]*feastType.Value, error) {
+	feastValType := feastType.ValueType_Enum(feastType.ValueType_Enum_value[entitySpec.ValueType])
 
 	var entityVal interface{}
-	switch entity.Extractor.(type) {
+	switch entitySpec.Extractor.(type) {
 	case *spec.Entity_JsonPath:
-		entityValFromJsonPath, err := compiledJsonPath.Lookup(nodesBody)
+		compiledJsonPath, ok := er.compiledJsonPath[entitySpec.GetJsonPath()]
+		if !ok {
+			fmt.Errorf("jsonpath %s in entity %s is not found", entitySpec.GetJsonPath(), entitySpec.Name)
+		}
+
+		entityValFromJsonPath, err := compiledJsonPath.LookupFromContainer(symbolRegistry.JSONContainer())
 		if err != nil {
 			return nil, err
 		}
 		entityVal = entityValFromJsonPath
 	case *spec.Entity_Udf, *spec.Entity_Expression:
-		env := UdfEnv{nodesBody}
-		exprResult, err := expr.Run(udf, env)
+		expression := getExpressionExtractor(entitySpec)
+		compiledExpression, ok := er.compiledExpression[expression]
+		if !ok {
+			return nil, fmt.Errorf("expression %s in entity %s is not found", expression, entitySpec.Name)
+		}
+
+		exprResult, err := expr.Run(compiledExpression, symbolRegistry)
 		if err != nil {
 			return nil, err
 		}
-		udfResult := exprResult.(UdfResult)
 
-		if udfResult.Error != nil {
-			return nil, udfResult.Error
-		}
-
-		entityVal = udfResult.Value
+		entityVal = exprResult
 	}
 
 	switch entityVal.(type) {
@@ -59,6 +81,13 @@ func getValuesFromJSONPayload(nodesBody interface{}, entity *spec.Entity, compil
 	default:
 		return nil, fmt.Errorf("unknown value type: %T", entityVal)
 	}
+}
+
+func getExpressionExtractor(entitySpec *spec.Entity) string {
+	if extractor := entitySpec.GetExpression(); extractor != "" {
+		return extractor
+	}
+	return entitySpec.GetUdf()
 }
 
 func getValue(v interface{}, valueType feastType.ValueType_Enum) (*feastType.Value, error) {
