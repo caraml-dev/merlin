@@ -9,22 +9,19 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
 )
 
 // Transformer wraps feast serving client to retrieve features.
 type Transformer struct {
 	featureRetriever FeatureRetriever
-	config           *spec.StandardTransformerConfig
 	logger           *zap.Logger
 }
 
 // NewTransformer initializes a new Transformer.
-func NewTransformer(featureRetriever FeatureRetriever, config *spec.StandardTransformerConfig, logger *zap.Logger) (*Transformer, error) {
+func NewTransformer(featureRetriever FeatureRetriever, logger *zap.Logger) (*Transformer, error) {
 	return &Transformer{
 		featureRetriever: featureRetriever,
-		config:           config,
 		logger:           logger,
 	}, nil
 }

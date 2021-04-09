@@ -27,29 +27,30 @@ func init() {
 	prometheus.MustRegister(version.NewCollector("feast_transformer"))
 }
 
+type AppConfig struct {
+	Server server.Options
+	Feast  feast.Options
+	Cache  cache.Options
+
+	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
+	LogLevel                      string `envconfig:"LOG_LEVEL"`
+}
+
 func main() {
-	cfg := struct {
-		Server server.Options
-		Feast  feast.Options
-		Cache  cache.Options
-
-		StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
-		LogLevel                      string `envconfig:"LOG_LEVEL"`
-	}{}
-
-	if err := envconfig.Process("", &cfg); err != nil {
+	appConfig := AppConfig{}
+	if err := envconfig.Process("", &appConfig); err != nil {
 		log.Fatal(errors.Wrap(err, "Error processing environment variables"))
 	}
 
 	logger, _ := zap.NewProduction()
-	if cfg.LogLevel == "DEBUG" {
+	if appConfig.LogLevel == "DEBUG" {
 		logger, _ = zap.NewDevelopment()
 	}
 	defer logger.Sync()
 
-	logger.Info("configuration loaded", zap.Any("cfg", cfg))
+	logger.Info("configuration loaded", zap.Any("appConfig", appConfig))
 
-	closer, err := initTracing(cfg.Server.ModelName + "-transformer")
+	closer, err := initTracing(appConfig.Server.ModelName + "-transformer")
 	if err != nil {
 		logger.Error("Unable to initialize tracing", zap.Error(err))
 	}
@@ -57,14 +58,14 @@ func main() {
 		defer closer.Close()
 	}
 
-	config := &spec.StandardTransformerConfig{}
-	if err := jsonpb.UnmarshalString(cfg.StandardTransformerConfigJSON, config); err != nil {
-		logger.Fatal("Unable to parse standard transformer config", zap.Error(err))
+	transformerConfig := &spec.StandardTransformerConfig{}
+	if err := jsonpb.UnmarshalString(appConfig.StandardTransformerConfigJSON, transformerConfig); err != nil {
+		logger.Fatal("Unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
-	feastHost, feastPort, err := net.SplitHostPort(cfg.Feast.ServingURL)
+	feastHost, feastPort, err := net.SplitHostPort(appConfig.Feast.ServingURL)
 	if err != nil {
-		logger.Fatal("Unable to parse Feast Serving URL", zap.String("feast-serving-url", cfg.Feast.ServingURL), zap.Error(err))
+		logger.Fatal("Unable to parse Feast Serving URL", zap.String("feast-serving-url", appConfig.Feast.ServingURL), zap.Error(err))
 	}
 	feastPortInt, err := strconv.Atoi(feastPort)
 	if err != nil {
@@ -76,20 +77,47 @@ func main() {
 		logger.Fatal("Unable to initialize Feast client", zap.Error(err))
 	}
 
-	var memoryCache *cache.inMemoryCache
-	if cfg.Feast.CacheEnabled {
-		memoryCache = cache.NewInMemoryCache(cfg.Cache)
-	}
-
-	f, err := feast.NewTransformer(feastClient, config, &cfg.Feast, logger, memoryCache)
+	feastTransformer, err := initFeastTransformer(appConfig, feastClient, transformerConfig, logger)
 	if err != nil {
 		logger.Fatal("Unable to initialize transformer", zap.Error(err))
 	}
 
-	s := server.New(&cfg.Server, logger)
-	s.PreprocessHandler = f.Transform
+	s := server.New(&appConfig.Server, logger)
+	s.PreprocessHandler = feastTransformer.Transform
 
 	s.Run()
+}
+
+func initFeastTransformer(appCfg AppConfig,
+	feastClient *feastSdk.GrpcClient,
+	transformerConfig *spec.StandardTransformerConfig,
+	logger *zap.Logger) (*feast.Transformer, error) {
+
+	var memoryCache cache.Cache
+	if appCfg.Feast.CacheEnabled {
+		memoryCache = cache.NewInMemoryCache(appCfg.Cache)
+	}
+
+	compiledJSONPaths, err := feast.CompileJSONPaths(transformerConfig.TransformerConfig.Feast)
+	if err != nil {
+		return nil, err
+	}
+
+	compiledExpressions, err := feast.CompileExpressions(transformerConfig.TransformerConfig.Feast)
+	if err != nil {
+		return nil, err
+	}
+
+	entityExtractor := feast.NewEntityExtractor(compiledJSONPaths, compiledExpressions)
+	featureRetriever := feast.NewFeastRetriever(feastClient,
+		entityExtractor,
+		transformerConfig.TransformerConfig.Feast,
+		&appCfg.Feast,
+		memoryCache,
+		logger,
+	)
+
+	return feast.NewTransformer(featureRetriever, logger)
 }
 
 func initTracing(serviceName string) (io.Closer, error) {

@@ -913,12 +913,12 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest(t *testing.T) {
 				})).Return(m.response, nil)
 			}
 
-			compiledJSONPaths, err := compileJSONPaths(tt.fields.featureTableSpecs)
+			compiledJSONPaths, err := CompileJSONPaths(tt.fields.featureTableSpecs)
 			if err != nil {
 				panic(err)
 			}
 
-			compiledExpressions, err := compileExpressions(tt.fields.featureTableSpecs)
+			compiledExpressions, err := CompileExpressions(tt.fields.featureTableSpecs)
 			if err != nil {
 				panic(err)
 			}
@@ -1742,12 +1742,12 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 
 			}
 
-			compiledJSONPaths, err := compileJSONPaths(tt.fields.featureTableSpecs)
+			compiledJSONPaths, err := CompileJSONPaths(tt.fields.featureTableSpecs)
 			if err != nil {
 				panic(err)
 			}
 
-			compiledExpressions, err := compileExpressions(tt.fields.featureTableSpecs)
+			compiledExpressions, err := CompileExpressions(tt.fields.featureTableSpecs)
 			if err != nil {
 				panic(err)
 			}
@@ -2295,12 +2295,12 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 					Entities: tt.args.entitySpecs,
 				},
 			}
-			compiledJSONPaths, err := compileJSONPaths(featureTableSpecs)
+			compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs)
 			if err != nil {
 				panic(err)
 			}
 
-			compiledExpressions, err := compileExpressions(featureTableSpecs)
+			compiledExpressions, err := CompileExpressions(featureTableSpecs)
 			if err != nil {
 				panic(err)
 			}
