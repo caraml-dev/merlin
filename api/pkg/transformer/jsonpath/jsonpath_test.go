@@ -46,7 +46,7 @@ func TestCompileJsonPath(t *testing.T) {
 			"$.book",
 			&Compiled{
 				cpl:    jsonpath.MustCompile("$.book"),
-				source: spec.FromJson_RAW_REQUEST,
+				source: spec.JsonType_RAW_REQUEST,
 			},
 			false,
 		},
@@ -55,7 +55,7 @@ func TestCompileJsonPath(t *testing.T) {
 			"$.raw_request.book",
 			&Compiled{
 				cpl:    jsonpath.MustCompile("$.book"),
-				source: spec.FromJson_RAW_REQUEST,
+				source: spec.JsonType_RAW_REQUEST,
 			},
 			false,
 		},
@@ -64,7 +64,7 @@ func TestCompileJsonPath(t *testing.T) {
 			"$.model_response.book",
 			&Compiled{
 				cpl:    jsonpath.MustCompile("$.book"),
-				source: spec.FromJson_MODEL_RESPONSE,
+				source: spec.JsonType_MODEL_RESPONSE,
 			},
 			false,
 		},
@@ -73,7 +73,7 @@ func TestCompileJsonPath(t *testing.T) {
 			"$.nested.model_response.book",
 			&Compiled{
 				cpl:    jsonpath.MustCompile("$.nested.model_response.book"),
-				source: spec.FromJson_RAW_REQUEST,
+				source: spec.JsonType_RAW_REQUEST,
 			},
 			false,
 		},
@@ -106,7 +106,7 @@ func TestMustCompileJsonPath(t *testing.T) {
 			"$.book",
 			&Compiled{
 				cpl:    jsonpath.MustCompile("$.book"),
-				source: spec.FromJson_RAW_REQUEST,
+				source: spec.JsonType_RAW_REQUEST,
 			},
 			false,
 			nil,
@@ -142,7 +142,7 @@ func TestCompiled_Lookup(t *testing.T) {
 
 	type fields struct {
 		cpl    *jsonpath.Compiled
-		source spec.FromJson_SourceEnum
+		source spec.JsonType
 	}
 
 	tests := []struct {
@@ -156,7 +156,7 @@ func TestCompiled_Lookup(t *testing.T) {
 			"test lookup",
 			fields{
 				cpl:    jsonpath.MustCompile("$.signature_name"),
-				source: spec.FromJson_RAW_REQUEST,
+				source: spec.JsonType_RAW_REQUEST,
 			},
 			rawRequestData,
 			"predict",
@@ -190,13 +190,13 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 	json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
 
 	jsonContainer := types.JSONObjectContainer{
-		spec.FromJson_RAW_REQUEST:    rawRequestData,
-		spec.FromJson_MODEL_RESPONSE: modelResponseData,
+		spec.JsonType_RAW_REQUEST:    rawRequestData,
+		spec.JsonType_MODEL_RESPONSE: modelResponseData,
 	}
 
 	type fields struct {
 		cpl           *jsonpath.Compiled
-		jsonContainer spec.FromJson_SourceEnum
+		jsonContainer spec.JsonType
 	}
 	tests := []struct {
 		name        string
@@ -210,7 +210,7 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 			"json path to the raw request",
 			fields{
 				cpl:           jsonpath.MustCompile("$.signature_name"),
-				jsonContainer: spec.FromJson_RAW_REQUEST,
+				jsonContainer: spec.JsonType_RAW_REQUEST,
 			},
 			jsonContainer,
 			"predict",
@@ -221,7 +221,7 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 			"json path to the model response",
 			fields{
 				cpl:           jsonpath.MustCompile("$.model_name"),
-				jsonContainer: spec.FromJson_MODEL_RESPONSE,
+				jsonContainer: spec.JsonType_MODEL_RESPONSE,
 			},
 			jsonContainer,
 			"iris-classifier",
@@ -232,7 +232,7 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 			"json path from unset json source",
 			fields{
 				cpl:           jsonpath.MustCompile("$.model_name"),
-				jsonContainer: spec.FromJson_INVALID,
+				jsonContainer: spec.JsonType_INVALID,
 			},
 			jsonContainer,
 			nil,

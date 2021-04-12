@@ -31,11 +31,11 @@ var (
 // "$.raw_request.book" : Compiled.LookupFromContainer extract "book" field from raw request payload
 // "$.model_response.book" : Compiled.LookupFromContainer extract "book" field from model response payload
 func Compile(jsonPath string) (*Compiled, error) {
-	source := spec.FromJson_RAW_REQUEST
+	source := spec.JsonType_RAW_REQUEST
 	match := sourceJsonPattern.FindString(jsonPath)
 	if match != "" {
 		if match == ModelResponsePrefix {
-			source = spec.FromJson_MODEL_RESPONSE
+			source = spec.JsonType_MODEL_RESPONSE
 		}
 
 		jsonPath = sourceJsonPattern.ReplaceAllString(jsonPath, "$")
@@ -62,7 +62,7 @@ func MustCompileJsonPath(jsonPath string) *Compiled {
 
 type Compiled struct {
 	cpl    *jsonpath.Compiled
-	source spec.FromJson_SourceEnum
+	source spec.JsonType
 }
 
 func (c *Compiled) Lookup(jsonObj types.JSONObject) (interface{}, error) {

@@ -11,12 +11,6 @@ message FromTable {
 }
 
 message FromJson {
-  SourceEnum source = 1;
-  string jsonPath = 2;
-  bool addRowNumber = 3;
-  enum SourceEnum {
-    INVALID = 0;
-    RAW_REQUEST = 1;
-    MODEL_RESPONSE = 2;
-  }
+  string jsonPath = 1;
+  bool addRowNumber = 2;
 }

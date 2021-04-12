@@ -30,3 +30,9 @@ message Field {
     string expression = 4;
   }
 }
+
+enum JsonType {
+  INVALID = 0;
+  RAW_REQUEST = 1;
+  MODEL_RESPONSE = 2;
+}
