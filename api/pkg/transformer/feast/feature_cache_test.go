@@ -271,7 +271,7 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
-			expectedError: fmt.Errorf("error inserting to cached: (cacheValue: [2002 2.2], with message: Value is to big)"),
+			expectedError: fmt.Errorf("error inserting to cached: (value: [2002 2.2], with message: Value is to big)"),
 		},
 		{
 			desc:    "Success - all features are failing inserted to cache",
@@ -314,7 +314,7 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
-			expectedError: fmt.Errorf("error inserting to cached: (cacheValue: [1001 1.1], with message: Memory is full),(cacheValue: [2002 2.2], with message: Value is to big)"),
+			expectedError: fmt.Errorf("error inserting to cached: (value: [1001 1.1], with message: Memory is full),(value: [2002 2.2], with message: Value is to big)"),
 		},
 	}
 	for _, tt := range testCases {
