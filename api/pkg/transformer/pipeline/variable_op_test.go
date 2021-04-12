@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
@@ -52,13 +54,18 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 		"Now()": mustCompileExpression("Now()"),
 	}
 
-	compiledJsonPath := map[string]*jsonpath.CompiledJSONPath{
+	compiledJsonPath := map[string]*jsonpath.Compiled{
 		"$.signature_name": jsonpath.MustCompileJsonPath("$.signature_name"),
 	}
 
-	var rawRequestData types.UnmarshalledJSON
-	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
+	var rawRequestJSON types.JSONObject
+	err := json.Unmarshal([]byte(rawRequestJson), &rawRequestJSON)
+	if err != nil {
+		panic(err)
+	}
 
+	symbolRegistry := symbol.NewRegistryWithCompiledJSONPath(compiledJsonPath)
+	symbolRegistry.SetRawRequestJSON(rawRequestJSON)
 	tests := []struct {
 		name         string
 		fields       fields
@@ -98,7 +105,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 			},
 
 			&Environment{
-				symbolRegistry: NewRegistry(),
+				symbolRegistry: symbol.NewRegistryWithCompiledJSONPath(compiledJsonPath),
 			},
 			map[string]interface{}{
 				"myIntegerLiteral": int64(1),
@@ -121,7 +128,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 			},
 
 			&Environment{
-				symbolRegistry: NewRegistry(),
+				symbolRegistry: symbol.NewRegistryWithCompiledJSONPath(compiledJsonPath),
 				compiledPipeline: &CompiledPipeline{
 					compiledExpression: compiledExpression,
 				},
@@ -145,12 +152,9 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 			},
 
 			&Environment{
-				symbolRegistry: NewRegistry(),
+				symbolRegistry: symbolRegistry,
 				compiledPipeline: &CompiledPipeline{
 					compiledJsonpath: compiledJsonPath,
-				},
-				sourceJSONs: map[spec.FromJson_SourceEnum]types.UnmarshalledJSON{
-					spec.FromJson_RAW_REQUEST: rawRequestData,
 				},
 			},
 			map[string]interface{}{
@@ -164,7 +168,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 			v := &VariableDeclarationOp{
 				variableSpec: tt.fields.variableSpec,
 			}
-			if err := v.Execute(tt.env); (err != nil) != tt.wantErr {
+			if err := v.Execute(context.Background(), tt.env); (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 			}
 

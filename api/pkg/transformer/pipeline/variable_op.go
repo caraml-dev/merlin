@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/antonmedv/expr"
@@ -18,7 +19,7 @@ func NewVariableDeclarationOp(variables []*spec.Variable) Op {
 	}
 }
 
-func (v *VariableDeclarationOp) Execute(env *Environment) error {
+func (v *VariableDeclarationOp) Execute(context context.Context, env *Environment) error {
 	for _, varDef := range v.variableSpec {
 		switch v := varDef.Value.(type) {
 		case *spec.Variable_Literal:
@@ -48,7 +49,7 @@ func (v *VariableDeclarationOp) Execute(env *Environment) error {
 				return fmt.Errorf("compiled jsonpath %s not found", v.JsonPath)
 			}
 
-			result, err := jsonPath.LookupFromSource(env.SourceJSON())
+			result, err := jsonPath.LookupFromContainer(env.JSONContainer())
 			if err != nil {
 				return nil
 			}
