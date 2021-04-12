@@ -7,6 +7,7 @@ import (
 	"time"
 
 	feast "github.com/feast-dev/feast/sdk/go"
+	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -18,6 +19,11 @@ import (
 type CacheKey struct {
 	Entity  feast.Row
 	Project string
+}
+
+type CacheValue struct {
+	ValueRow   types.ValueRow
+	ValueTypes []feastTypes.ValueType_Enum
 }
 
 var (
@@ -34,9 +40,10 @@ var (
 	})
 )
 
-func fetchFeaturesFromCache(cache cache.Cache, entities []feast.Row, project string) (types.ValueRows, []feast.Row) {
+func fetchFeaturesFromCache(cache cache.Cache, entities []feast.Row, project string) (types.ValueRows, []feastTypes.ValueType_Enum, []feast.Row) {
 	var entityNotInCache []feast.Row
 	var featuresFromCache types.ValueRows
+	var columnTypes []feastTypes.ValueType_Enum
 	for _, entity := range entities {
 		key := CacheKey{Entity: entity, Project: project}
 		keyByte, err := json.Marshal(key)
@@ -53,14 +60,15 @@ func fetchFeaturesFromCache(cache cache.Cache, entities []feast.Row, project str
 		}
 
 		feastCacheHitCount.Inc()
-		var cacheData types.ValueRow
-		if err := json.Unmarshal(val, &cacheData); err != nil {
+		var cacheValue CacheValue
+		if err := json.Unmarshal(val, &cacheValue); err != nil {
 			entityNotInCache = append(entityNotInCache, entity)
 			continue
 		}
-		featuresFromCache = append(featuresFromCache, cacheData)
+		featuresFromCache = append(featuresFromCache, cacheValue.ValueRow)
+		columnTypes = mergeColumnTypes(columnTypes, cacheValue.ValueTypes)
 	}
-	return featuresFromCache, entityNotInCache
+	return featuresFromCache, columnTypes, entityNotInCache
 }
 
 func insertFeaturesToCache(cache cache.Cache, data entityFeaturePair, project string, ttl time.Duration) error {
@@ -73,7 +81,11 @@ func insertFeaturesToCache(cache cache.Cache, data entityFeaturePair, project st
 		return err
 	}
 
-	dataByte, err := json.Marshal(data.value)
+	value := CacheValue{
+		ValueRow:   data.value,
+		ValueTypes: data.columnTypes,
+	}
+	dataByte, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
