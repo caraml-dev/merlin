@@ -6,12 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-gota/gota/series"
-
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol/function"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
 // Registry contains all symbol (variable and functions) that can be used for expression evaluation
@@ -38,6 +37,9 @@ func NewRegistry() Registry {
 const (
 	sourceJSONKey       = "__source_json_key__"
 	compiledJSONPathKey = "__compiled_jsonpath_key__"
+
+	rawRequestHeadersKey    = "raw_request_headers"
+	modelResponseHeadersKey = "model_response_headers"
 )
 
 // JsonExtract extract json field pointed by nestedJsonPath within a json string pointed by nestedJsonPath
@@ -161,16 +163,16 @@ func (sr Registry) evalArg(arg interface{}) (interface{}, error) {
 		}
 
 		return cplJsonPath.LookupFromContainer(sr.jsonObjectContainer())
-	case series.Series:
+	case *series.Series:
 		switch val.Type() {
 		case series.String:
-			return val.Records(), nil
+			return val.Series().Records(), nil
 		case series.Float:
-			return val.Float(), nil
+			return val.Series().Float(), nil
 		case series.Int:
-			return val.Int()
+			return val.Series().Int()
 		case series.Bool:
-			return val.Bool()
+			return val.Series().Bool()
 		default:
 			return nil, fmt.Errorf("unknown series type")
 		}
@@ -198,4 +200,12 @@ func (sr Registry) jsonObjectContainer() types.JSONObjectContainer {
 		return nil
 	}
 	return p.(types.JSONObjectContainer)
+}
+
+func (sr Registry) SetRawRequestHeaders(headers map[string]string) {
+	sr[rawRequestHeadersKey] = headers
+}
+
+func (sr Registry) SetModelResponseHeaders(headers map[string]string) {
+	sr[modelResponseHeadersKey] = headers
 }

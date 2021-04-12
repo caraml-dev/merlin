@@ -7,12 +7,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-gota/gota/series"
 	"github.com/magiconair/properties/assert"
 	"github.com/mmcloughlin/geohash"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
 var (
