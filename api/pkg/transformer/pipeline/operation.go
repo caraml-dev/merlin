@@ -1,5 +1,7 @@
 package pipeline
 
+import "context"
+
 type Op interface {
-	Execute(environment *Environment) error
+	Execute(context context.Context, environment *Environment) error
 }
