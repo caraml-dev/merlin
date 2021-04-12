@@ -13,7 +13,7 @@ type FeatureRetriever struct {
 }
 
 // RetrieveFeatureUsingRequest provides a mock function with given fields: ctx, requestJson
-func (_m *FeatureRetriever) RetrieveFeatureUsingRequest(ctx context.Context, requestJson types.JSONObject) ([]*types.FeatureTable, error) {
+func (_m *FeatureRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson types.JSONObject) ([]*types.FeatureTable, error) {
 	ret := _m.Called(ctx, requestJson)
 
 	var r0 []*types.FeatureTable
@@ -36,7 +36,7 @@ func (_m *FeatureRetriever) RetrieveFeatureUsingRequest(ctx context.Context, req
 }
 
 // RetrieveFeatureUsingSymbolRegistry provides a mock function with given fields: ctx, symbolRegistry
-func (_m *FeatureRetriever) RetrieveFeatureUsingSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*types.FeatureTable, error) {
+func (_m *FeatureRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*types.FeatureTable, error) {
 	ret := _m.Called(ctx, symbolRegistry)
 
 	var r0 []*types.FeatureTable

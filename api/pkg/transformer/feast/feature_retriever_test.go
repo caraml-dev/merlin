@@ -25,7 +25,7 @@ import (
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
 )
 
-func TestFeatureRetriever_RetrieveFeatureFromRequest(t *testing.T) {
+func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 
 	type fields struct {
@@ -942,7 +942,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest(t *testing.T) {
 				panic(err)
 			}
 
-			got, err := fr.RetrieveFeatureUsingRequest(tt.args.ctx, requestJson)
+			got, err := fr.RetrieveFeatureOfEntityInRequest(tt.args.ctx, requestJson)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("spec.Transform() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1773,7 +1773,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 				panic(err)
 			}
 
-			gotFeatureTables, err := fr.RetrieveFeatureUsingRequest(tt.args.ctx, requestJson)
+			gotFeatureTables, err := fr.RetrieveFeatureOfEntityInRequest(tt.args.ctx, requestJson)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("spec.Transform() error = %v, wantErr %v", err, tt.wantErr)
 				return

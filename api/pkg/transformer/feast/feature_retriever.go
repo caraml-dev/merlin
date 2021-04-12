@@ -22,8 +22,8 @@ import (
 )
 
 type FeatureRetriever interface {
-	RetrieveFeatureUsingRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error)
-	RetrieveFeatureUsingSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error)
+	RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error)
+	RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error)
 }
 
 type FeastRetriever struct {
@@ -85,17 +85,17 @@ type parallelCallResult struct {
 	err          error
 }
 
-func (fr *FeastRetriever) RetrieveFeatureUsingRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {
+func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.Transform")
 	defer span.Finish()
 
 	sr := symbol.NewRegistryWithCompiledJSONPath(fr.entityExtractor.compiledJsonPath)
 	sr.SetRawRequestJSON(requestJson)
 
-	return fr.RetrieveFeatureUsingSymbolRegistry(ctx, sr)
+	return fr.RetrieveFeatureOfEntityInSymbolRegistry(ctx, sr)
 }
 
-func (fr *FeastRetriever) RetrieveFeatureUsingSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error) {
+func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.Transform")
 	defer span.Finish()
 

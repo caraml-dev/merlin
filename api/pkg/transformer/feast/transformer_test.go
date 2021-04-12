@@ -611,7 +611,7 @@ func TestTransformer_Transform(t *testing.T) {
 			}
 
 			mockFeatureRetriever := &mocks.FeatureRetriever{}
-			mockFeatureRetriever.On("RetrieveFeatureUsingRequest", mock.Anything, requestJson).
+			mockFeatureRetriever.On("RetrieveFeatureOfEntityInRequest", mock.Anything, requestJson).
 				Return(tt.mockFeatureRetriever.result, tt.mockFeatureRetriever.error)
 
 			f, err := NewTransformer(mockFeatureRetriever, logger)

@@ -37,7 +37,7 @@ func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, er
 		return nil, err
 	}
 
-	feastFeatures, err := t.featureRetriever.RetrieveFeatureUsingRequest(ctx, requestJson)
+	feastFeatures, err := t.featureRetriever.RetrieveFeatureOfEntityInRequest(ctx, requestJson)
 	if err != nil {
 		return nil, err
 	}
