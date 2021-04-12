@@ -71,12 +71,14 @@ type Options struct {
 const defaultProjectName = "default"
 
 type entityFeaturePair struct {
-	entity feast.Row
-	value  transTypes.ValueRow
+	entity      feast.Row
+	value       transTypes.ValueRow
+	columnTypes []types.ValueType_Enum
 }
 
 type batchResult struct {
 	featuresData transTypes.ValueRows
+	columnTypes  []types.ValueType_Enum
 	err          error
 }
 
@@ -186,9 +188,10 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 
 	var cachedValues transTypes.ValueRows
 	entityNotInCache := entities
+	var columnTypes []types.ValueType_Enum
 
 	if fr.options.CacheEnabled {
-		cachedValues, entityNotInCache = fetchFeaturesFromCache(fr.cache, entities, featureTableSpec.Project)
+		cachedValues, columnTypes, entityNotInCache = fetchFeaturesFromCache(fr.cache, entities, featureTableSpec.Project)
 	}
 
 	var features []string
@@ -232,7 +235,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 
 			entityFeaturePairs, err := fr.buildFeastFeaturesData(ctx, feastResponse, columns, entityIndices)
 			if err != nil {
-				batchResultChan <- batchResult{featuresData: nil, err: err}
+				batchResultChan <- batchResult{featuresData: nil, columnTypes: nil, err: err}
 				return
 			}
 
@@ -247,24 +250,25 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 				}
 			}
 
-			batchResultChan <- batchResult{featuresData: featuresData, err: nil}
+			batchResultChan <- batchResult{featuresData: featuresData, columnTypes: entityFeaturePairs[0].columnTypes, err: nil}
 		}(featureTableSpec.Project, batchedEntities, columns)
 	}
 
 	data := cachedValues
-
 	for i := 0; i < numOfBatch; i++ {
 		res := <-batchResultChan
 		if res.err != nil {
 			return nil, res.err
 		}
 		data = append(data, res.featuresData...)
+		columnTypes = mergeColumnTypes(columnTypes, res.columnTypes)
 	}
 
 	return &transTypes.FeatureTable{
-		Name:    featureTableSpec.TableName,
-		Columns: columns,
-		Data:    data,
+		Name:        featureTableSpec.TableName,
+		Columns:     columns,
+		ColumnTypes: columnTypes,
+		Data:        data,
 	}, nil
 }
 
@@ -275,14 +279,15 @@ func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastRespo
 	var data []entityFeaturePair
 	status := feastResponse.Statuses()
 
-	for i, feastRow := range feastResponse.Rows() {
+	columnTypes := make([]types.ValueType_Enum, len(columns))
+	for rowIdx, feastRow := range feastResponse.Rows() {
 		var row transTypes.ValueRow
 
 		// create entity object, for cache key purpose
 		entity := feast.Row{}
-		for index, column := range columns {
-			featureStatus := status[i][column]
-			_, isEntityIndex := entityIndexMap[index]
+		for colIdx, column := range columns {
+			featureStatus := status[rowIdx][column]
+			_, isEntityIndex := entityIndexMap[colIdx]
 			switch featureStatus {
 			case serving.GetOnlineFeaturesResponse_PRESENT:
 				rawValue := feastRow[column]
@@ -292,12 +297,15 @@ func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastRespo
 					entity[column] = rawValue
 				}
 
-				featVal, err := getFeatureValue(rawValue)
+				featVal, valType, err := getFeatureValue(rawValue)
 				if err != nil {
 					return nil, err
 				}
-				row = append(row, featVal)
 
+				if columnTypes[colIdx] == types.ValueType_INVALID {
+					columnTypes[colIdx] = valType
+				}
+				row = append(row, featVal)
 				// put behind feature toggle since it will generate high cardinality metrics
 				if fr.options.ValueMonitoringEnabled {
 					v, err := getFloatValue(featVal)
@@ -312,9 +320,13 @@ func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastRespo
 					row = append(row, nil)
 					continue
 				}
-				featVal, err := getFeatureValue(defVal)
+				featVal, valType, err := getFeatureValue(defVal)
 				if err != nil {
 					return nil, err
+				}
+
+				if columnTypes[colIdx] == types.ValueType_INVALID {
+					columnTypes[colIdx] = valType
 				}
 				row = append(row, featVal)
 			default:
@@ -325,7 +337,7 @@ func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastRespo
 				feastFeatureStatus.WithLabelValues(column, featureStatus.String()).Inc()
 			}
 		}
-		data = append(data, entityFeaturePair{entity: entity, value: row})
+		data = append(data, entityFeaturePair{entity: entity, value: row, columnTypes: columnTypes})
 	}
 
 	return data, nil
@@ -385,41 +397,55 @@ func createTableName(entities []*spec.Entity, project string) string {
 	return tableName
 }
 
-func getFeatureValue(val *types.Value) (interface{}, error) {
+func getFeatureValue(val *types.Value) (interface{}, types.ValueType_Enum, error) {
 	switch val.Val.(type) {
 	case *types.Value_StringVal:
-		return val.GetStringVal(), nil
+		return val.GetStringVal(), types.ValueType_STRING, nil
 	case *types.Value_DoubleVal:
-		return val.GetDoubleVal(), nil
+		return val.GetDoubleVal(), types.ValueType_DOUBLE, nil
 	case *types.Value_FloatVal:
-		return val.GetFloatVal(), nil
+		return val.GetFloatVal(), types.ValueType_FLOAT, nil
 	case *types.Value_Int32Val:
-		return val.GetInt32Val(), nil
+		return val.GetInt32Val(), types.ValueType_INT32, nil
 	case *types.Value_Int64Val:
-		return val.GetInt64Val(), nil
+		return val.GetInt64Val(), types.ValueType_INT64, nil
 	case *types.Value_BoolVal:
-		return val.GetBoolVal(), nil
+		return val.GetBoolVal(), types.ValueType_BOOL, nil
 	case *types.Value_StringListVal:
-		return val.GetStringListVal().GetVal(), nil
+		return val.GetStringListVal().GetVal(), types.ValueType_STRING_LIST, nil
 	case *types.Value_DoubleListVal:
-		return val.GetDoubleListVal().GetVal(), nil
+		return val.GetDoubleListVal().GetVal(), types.ValueType_DOUBLE_LIST, nil
 	case *types.Value_FloatListVal:
-		return val.GetFloatListVal().GetVal(), nil
+		return val.GetFloatListVal().GetVal(), types.ValueType_FLOAT_LIST, nil
 	case *types.Value_Int32ListVal:
-		return val.GetInt32ListVal().GetVal(), nil
+		return val.GetInt32ListVal().GetVal(), types.ValueType_INT32_LIST, nil
 	case *types.Value_Int64ListVal:
-		return val.GetInt64ListVal().GetVal(), nil
+		return val.GetInt64ListVal().GetVal(), types.ValueType_INT64_LIST, nil
 	case *types.Value_BoolListVal:
-		return val.GetBoolListVal().GetVal(), nil
+		return val.GetBoolListVal().GetVal(), types.ValueType_BOOL_LIST, nil
 	case *types.Value_BytesVal:
-		return base64.StdEncoding.EncodeToString(val.GetBytesVal()), nil
+		return base64.StdEncoding.EncodeToString(val.GetBytesVal()), types.ValueType_STRING, nil
 	case *types.Value_BytesListVal:
 		results := make([]string, 0)
 		for _, bytes := range val.GetBytesListVal().GetVal() {
 			results = append(results, base64.StdEncoding.EncodeToString(bytes))
 		}
-		return results, nil
+		return results, types.ValueType_STRING_LIST, nil
 	default:
-		return nil, fmt.Errorf("unknown feature value type: %T", val.Val)
+		return nil, types.ValueType_INVALID, fmt.Errorf("unknown feature cacheValue type: %T", val.Val)
 	}
+}
+
+func mergeColumnTypes(dst []types.ValueType_Enum, src []types.ValueType_Enum) []types.ValueType_Enum {
+	if len(dst) == 0 {
+		dst = src
+		return dst
+	}
+
+	for i, t := range dst {
+		if t == types.ValueType_INVALID {
+			dst[i] = src[i]
+		}
+	}
+	return dst
 }

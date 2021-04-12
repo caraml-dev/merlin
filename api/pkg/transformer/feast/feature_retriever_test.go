@@ -106,8 +106,9 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 			},
 			want: []*transTypes.FeatureTable{
 				{
-					Name:    "driver_id",
-					Columns: []string{"driver_id", "driver_trips:average_daily_rides"},
+					Name:        "driver_id",
+					Columns:     []string{"driver_id", "driver_trips:average_daily_rides"},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 					Data: transTypes.ValueRows{
 						transTypes.ValueRow{"1001", 1.1},
 					},
@@ -169,8 +170,9 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 			},
 			want: []*transTypes.FeatureTable{
 				{
-					Name:    "driver_id",
-					Columns: []string{"driver_id", "driver_trips:average_daily_rides"},
+					Name:        "driver_id",
+					Columns:     []string{"driver_id", "driver_trips:average_daily_rides"},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INT32, feastTypes.ValueType_DOUBLE},
 					Data: transTypes.ValueRows{
 						transTypes.ValueRow{int32(1001), 1.1},
 					},
@@ -249,6 +251,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						transTypes.ValueRow{"1001", 1.1},
 						transTypes.ValueRow{"2002", 2.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -321,6 +324,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						transTypes.ValueRow{"1001", 1.1},
 						transTypes.ValueRow{"2002", nil},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -395,6 +399,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						transTypes.ValueRow{"1001", 1.1},
 						transTypes.ValueRow{"2002", 0.5},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -498,6 +503,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					Data: transTypes.ValueRows{
 						transTypes.ValueRow{"2002", 2.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					Name:    "driver_id_driver_id",
@@ -505,6 +511,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					Data: transTypes.ValueRows{
 						transTypes.ValueRow{"1001", 1.1},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -568,6 +575,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					Data: transTypes.ValueRows{
 						transTypes.ValueRow{"s01mtw037ms0", 3.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -631,6 +639,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					Data: transTypes.ValueRows{
 						transTypes.ValueRow{"9001", 3.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -694,6 +703,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					Data: transTypes.ValueRows{
 						transTypes.ValueRow{"1154732743855177728", 3.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -758,6 +768,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					Data: transTypes.ValueRows{
 						transTypes.ValueRow{"1154732743855177728", 3.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -833,6 +844,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						transTypes.ValueRow{"1001", 1.1},
 						transTypes.ValueRow{"2002", 2.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -898,6 +910,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					Data: transTypes.ValueRows{
 						transTypes.ValueRow{"1001", []float64{111.1111, 222.2222}},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE_LIST},
 				},
 			},
 			wantErr: false,
@@ -955,7 +968,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 	}
 }
 
-func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T) {
+func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	type fields struct {
 		featureTableSpecs []*spec.FeatureTable
@@ -977,6 +990,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 		project           string
 		value             transTypes.ValueRow
 		willInsertValue   transTypes.ValueRow
+		columnTypes       []feastTypes.ValueType_Enum
 		errFetchingCache  error
 		errInsertingCache error
 	}
@@ -1028,6 +1042,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
@@ -1037,6 +1052,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  transTypes.ValueRow([]interface{}{"2002", 2.2}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			feastMocks: []mockFeast{
@@ -1103,6 +1119,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 						transTypes.ValueRow{"1001", 1.1},
 						transTypes.ValueRow{"2002", 2.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -1145,6 +1162,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
@@ -1155,6 +1173,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					errFetchingCache:  fmt.Errorf("Value not found"),
 					willInsertValue:   transTypes.ValueRow([]interface{}{"2002", 2.2}),
 					errInsertingCache: fmt.Errorf("Value to big"),
+					columnTypes:       []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			feastMocks: []mockFeast{
@@ -1221,6 +1240,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 						transTypes.ValueRow{"1001", 1.1},
 						transTypes.ValueRow{"2002", 2.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -1288,8 +1308,9 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					project: "default",
-					value:   transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					project:     "default",
+					value:       transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
@@ -1298,6 +1319,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					project:          "default",
 					value:            nil,
 					willInsertValue:  transTypes.ValueRow([]interface{}{"2002", 2.2}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 					errFetchingCache: fmt.Errorf("Value not found"),
 				},
 			},
@@ -1309,6 +1331,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 						transTypes.ValueRow{"1001", 1.1},
 						transTypes.ValueRow{"2002", 2.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -1351,6 +1374,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
@@ -1465,15 +1489,17 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					project: "default",
-					value:   transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					project:     "default",
+					value:       transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
 						"driver_id": feast.StrVal("2002"),
 					},
-					project: "default",
-					value:   transTypes.ValueRow([]interface{}{"2002", 2.2}),
+					project:     "default",
+					value:       transTypes.ValueRow([]interface{}{"2002", 2.2}),
+					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
@@ -1484,14 +1510,16 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Cache not found"),
 					willInsertValue:  transTypes.ValueRow([]interface{}{"1", 12345678910, 10}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_INT64, feastTypes.ValueType_INT64},
 				},
 				{
 					entity: feast.Row{
 						"merchant_uuid": feast.StrVal("2"),
 						"customer_id":   feast.Int64Val(12345678910),
 					},
-					project: "project",
-					value:   transTypes.ValueRow([]interface{}{"2", 12345678910, 20}),
+					project:     "project",
+					value:       transTypes.ValueRow([]interface{}{"2", 12345678910, 20}),
+					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_INT64, feastTypes.ValueType_INT64},
 				},
 			},
 			feastMocks: []mockFeast{
@@ -1534,6 +1562,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 						transTypes.ValueRow{"1001", 1.1},
 						transTypes.ValueRow{"2002", 2.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					Name:    "project_merchant_uuid_customer_id",
@@ -1542,12 +1571,13 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 						transTypes.ValueRow{"2", float64(12345678910), float64(20)},
 						transTypes.ValueRow{"1", int64(12345678910), int64(10)},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INT64, feastTypes.ValueType_INT64},
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "one config: retrieve multiple entities, 2 feature tables but same entity name, batched",
+			name: "one config: retrieve multiple entities, 2 feature tables but same cacheKey name, batched",
 			fields: fields{
 				featureTableSpecs: []*spec.FeatureTable{
 					{
@@ -1599,15 +1629,17 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					project: "default",
-					value:   transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					project:     "default",
+					value:       transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
 						"driver_id": feast.StrVal("1001"),
 					},
-					project: "sample",
-					value:   transTypes.ValueRow([]interface{}{"1001", 4.5}),
+					project:     "sample",
+					value:       transTypes.ValueRow([]interface{}{"1001", 4.5}),
+					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
@@ -1617,6 +1649,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  transTypes.ValueRow([]interface{}{"2002", 2.2}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
@@ -1626,6 +1659,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  transTypes.ValueRow([]interface{}{"2002", 2.2}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					entity: feast.Row{
@@ -1635,6 +1669,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 					value:            nil,
 					errFetchingCache: fmt.Errorf("Value not found"),
 					willInsertValue:  transTypes.ValueRow([]interface{}{"2002", 5}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			feastMocks: []mockFeast{
@@ -1701,6 +1736,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 						transTypes.ValueRow{"1001", 4.5},
 						transTypes.ValueRow{"2002", float64(5)},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 				{
 					Name:    "driver_id",
@@ -1709,6 +1745,7 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 						transTypes.ValueRow{"1001", 1.1},
 						transTypes.ValueRow{"2002", 2.2},
 					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
 			},
 			wantErr: false,
@@ -1723,11 +1760,17 @@ func TestFeatureRetriever_RetrieveFeatureFromRequest_BatchingCache(t *testing.T)
 				key := CacheKey{Entity: cc.entity, Project: cc.project}
 				keyByte, err := json.Marshal(key)
 				require.NoError(t, err)
-				value, err := json.Marshal(cc.value)
+				value, err := json.Marshal(CacheValue{
+					ValueRow:   cc.value,
+					ValueTypes: cc.columnTypes,
+				})
 				require.NoError(t, err)
 				mockCache.On("Fetch", keyByte).Return(value, cc.errFetchingCache)
 				if cc.willInsertValue != nil {
-					nextVal, err := json.Marshal(cc.willInsertValue)
+					nextVal, err := json.Marshal(CacheValue{
+						ValueRow:   cc.willInsertValue,
+						ValueTypes: cc.columnTypes,
+					})
 					require.NoError(t, err)
 					mockCache.On("Insert", keyByte, nextVal, mock.Anything).Return(cc.errInsertingCache)
 				}
@@ -2343,52 +2386,60 @@ func Test_getFeatureValue(t *testing.T) {
 		val *feastTypes.Value
 	}
 	tests := []struct {
-		name    string
-		val     *feastTypes.Value
-		want    interface{}
-		wantErr bool
+		name        string
+		val         *feastTypes.Value
+		want        interface{}
+		wantValType feastTypes.ValueType_Enum
+		wantErr     bool
 	}{
 		{
-			name:    "string",
-			val:     feast.StrVal("hello"),
-			want:    "hello",
-			wantErr: false,
+			name:        "string",
+			val:         feast.StrVal("hello"),
+			want:        "hello",
+			wantValType: feastTypes.ValueType_STRING,
+			wantErr:     false,
 		},
 		{
-			name:    "double",
-			val:     feast.DoubleVal(123456789.123456789),
-			want:    123456789.123456789,
-			wantErr: false,
+			name:        "double",
+			val:         feast.DoubleVal(123456789.123456789),
+			want:        123456789.123456789,
+			wantValType: feastTypes.ValueType_DOUBLE,
+			wantErr:     false,
 		},
 		{
-			name:    "float",
-			val:     feast.FloatVal(1.1),
-			want:    float32(1.1),
-			wantErr: false,
+			name:        "float",
+			val:         feast.FloatVal(1.1),
+			want:        float32(1.1),
+			wantValType: feastTypes.ValueType_FLOAT,
+			wantErr:     false,
 		},
 		{
-			name:    "int32",
-			val:     feast.Int32Val(1234),
-			want:    int32(1234),
-			wantErr: false,
+			name:        "int32",
+			val:         feast.Int32Val(1234),
+			want:        int32(1234),
+			wantValType: feastTypes.ValueType_INT32,
+			wantErr:     false,
 		},
 		{
-			name:    "int64",
-			val:     feast.Int64Val(12345678),
-			want:    int64(12345678),
-			wantErr: false,
+			name:        "int64",
+			val:         feast.Int64Val(12345678),
+			want:        int64(12345678),
+			wantValType: feastTypes.ValueType_INT64,
+			wantErr:     false,
 		},
 		{
-			name:    "bool",
-			val:     feast.BoolVal(true),
-			want:    true,
-			wantErr: false,
+			name:        "bool",
+			val:         feast.BoolVal(true),
+			want:        true,
+			wantValType: feastTypes.ValueType_BOOL,
+			wantErr:     false,
 		},
 		{
-			name:    "bytes",
-			val:     feast.BytesVal([]byte("hello")),
-			want:    base64.StdEncoding.EncodeToString([]byte("hello")),
-			wantErr: false,
+			name:        "bytes",
+			val:         feast.BytesVal([]byte("hello")),
+			want:        base64.StdEncoding.EncodeToString([]byte("hello")),
+			wantValType: feastTypes.ValueType_STRING,
+			wantErr:     false,
 		},
 		{
 			name: "string list",
@@ -2400,7 +2451,8 @@ func Test_getFeatureValue(t *testing.T) {
 				"hello",
 				"world",
 			},
-			wantErr: false,
+			wantValType: feastTypes.ValueType_STRING_LIST,
+			wantErr:     false,
 		},
 		{
 			name: "double list",
@@ -2412,7 +2464,8 @@ func Test_getFeatureValue(t *testing.T) {
 				123.45,
 				123.45,
 			},
-			wantErr: false,
+			wantValType: feastTypes.ValueType_DOUBLE_LIST,
+			wantErr:     false,
 		},
 		{
 			name: "float list",
@@ -2424,7 +2477,8 @@ func Test_getFeatureValue(t *testing.T) {
 				123.45,
 				123.45,
 			},
-			wantErr: false,
+			wantValType: feastTypes.ValueType_FLOAT_LIST,
+			wantErr:     false,
 		},
 		{
 			name: "int32 list",
@@ -2436,7 +2490,8 @@ func Test_getFeatureValue(t *testing.T) {
 				1234,
 				1234,
 			},
-			wantErr: false,
+			wantValType: feastTypes.ValueType_INT32_LIST,
+			wantErr:     false,
 		},
 		{
 			name: "int64 list",
@@ -2448,7 +2503,8 @@ func Test_getFeatureValue(t *testing.T) {
 				1234,
 				1234,
 			},
-			wantErr: false,
+			wantValType: feastTypes.ValueType_INT64_LIST,
+			wantErr:     false,
 		},
 		{
 			name: "bool list",
@@ -2460,7 +2516,8 @@ func Test_getFeatureValue(t *testing.T) {
 				true,
 				false,
 			},
-			wantErr: false,
+			wantValType: feastTypes.ValueType_BOOL_LIST,
+			wantErr:     false,
 		},
 		{
 			name: "bytes list",
@@ -2472,12 +2529,13 @@ func Test_getFeatureValue(t *testing.T) {
 				base64.StdEncoding.EncodeToString([]byte("hello")),
 				base64.StdEncoding.EncodeToString([]byte("world")),
 			},
-			wantErr: false,
+			wantValType: feastTypes.ValueType_STRING_LIST,
+			wantErr:     false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getFeatureValue(tt.val)
+			got, gotValType, err := getFeatureValue(tt.val)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getFeatureValue() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -2485,6 +2543,7 @@ func Test_getFeatureValue(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getFeatureValue() got = %v, want %v", got, tt.want)
 			}
+			assert.Equal(t, tt.wantValType, gotValType)
 		})
 	}
 }
