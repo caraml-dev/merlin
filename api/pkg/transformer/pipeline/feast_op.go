@@ -40,7 +40,11 @@ func (op *FeastOp) Execute(context context.Context, environment *Environment) er
 	}
 
 	for _, featureTable := range featureTables {
-		environment.SetSymbol(featureTable.Name, featureTable.AsTable())
+		table, err := featureTable.AsTable()
+		if err != nil {
+			return err
+		}
+		environment.SetSymbol(featureTable.Name, table)
 	}
 
 	return nil
