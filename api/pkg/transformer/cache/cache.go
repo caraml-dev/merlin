@@ -23,7 +23,7 @@ const (
 	MB = 1024 * 1024
 )
 
-func NewInMemoryCache(options Options) *inMemoryCache {
+func NewInMemoryCache(options *Options) *inMemoryCache {
 	executor := freecache.NewCache(options.SizeInMB * MB)
 	return &inMemoryCache{cache: executor}
 }

@@ -37,7 +37,7 @@ func TestCache(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			dataByte, err := json.Marshal(tC.data)
 			require.NoError(t, err)
-			cache := NewInMemoryCache(Options{SizeInMB: 1})
+			cache := NewInMemoryCache(&Options{SizeInMB: 1})
 			cache.Insert(tC.key, dataByte, 1)
 			cachedValue, err := cache.Fetch(tC.key)
 			require.NoError(t, err)
@@ -77,7 +77,7 @@ func TestCache_Expiry(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			dataByte, err := json.Marshal(tC.data)
 			require.NoError(t, err)
-			cache := NewInMemoryCache(Options{SizeInMB: 1})
+			cache := NewInMemoryCache(&Options{SizeInMB: 1})
 			cache.Insert(tC.key, dataByte, 1*time.Second)
 
 			if tC.delayOfFetching > 0 {
