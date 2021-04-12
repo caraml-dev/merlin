@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"context"
+
 	"github.com/antonmedv/expr/vm"
 	"github.com/pkg/errors"
 
@@ -9,14 +11,14 @@ import (
 )
 
 type CompiledPipeline struct {
-	compiledJsonpath   map[string]*jsonpath.CompiledJSONPath
+	compiledJsonpath   map[string]*jsonpath.Compiled
 	compiledExpression map[string]*vm.Program
 
 	preprocessOps  []Op
 	postprocessOps []Op
 }
 
-func NewCompiledPipeline(compiledJSONPath map[string]*jsonpath.CompiledJSONPath, compiledExpression map[string]*vm.Program, preprocessOps []Op, postprocessOps []Op) *CompiledPipeline {
+func NewCompiledPipeline(compiledJSONPath map[string]*jsonpath.Compiled, compiledExpression map[string]*vm.Program, preprocessOps []Op, postprocessOps []Op) *CompiledPipeline {
 	return &CompiledPipeline{
 		compiledJsonpath:   compiledJSONPath,
 		compiledExpression: compiledExpression,
@@ -26,34 +28,41 @@ func NewCompiledPipeline(compiledJSONPath map[string]*jsonpath.CompiledJSONPath,
 	}
 }
 
-func (p *CompiledPipeline) Preprocess(env *Environment) (types.UnmarshalledJSON, error) {
+func (p *CompiledPipeline) Preprocess(context context.Context, env *Environment) (types.JSONObject, error) {
 	for _, op := range p.preprocessOps {
-		err := op.Execute(env)
+		err := op.Execute(context, env)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error executing preprocessing operation: %T", op)
 		}
 	}
 
-	// Get output
-	return nil, nil
+	output := env.OutputJSON()
+	if output == nil {
+		return nil, errors.New("output json is not computed")
+	}
+	return output, nil
 }
 
-func (p *CompiledPipeline) Postprocess(env *Environment) (types.UnmarshalledJSON, error) {
+func (p *CompiledPipeline) Postprocess(context context.Context, env *Environment) (types.JSONObject, error) {
 	for _, op := range p.postprocessOps {
-		err := op.Execute(env)
+		err := op.Execute(context, env)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error executing postprocessing operation: %T", op)
 		}
 	}
 
-	return nil, nil
+	output := env.OutputJSON()
+	if output == nil {
+		return nil, errors.New("output json is not computed")
+	}
+	return output, nil
 }
 
-func (p *CompiledPipeline) CompiledJSONPath(name string) *jsonpath.CompiledJSONPath {
+func (p *CompiledPipeline) CompiledJSONPath(name string) *jsonpath.Compiled {
 	return p.compiledJsonpath[name]
 }
 
-func (p *CompiledPipeline) SetCompiledJSONPath(name string, compiled *jsonpath.CompiledJSONPath) {
+func (p *CompiledPipeline) SetCompiledJSONPath(name string, compiled *jsonpath.Compiled) {
 	p.compiledJsonpath[name] = compiled
 }
 
