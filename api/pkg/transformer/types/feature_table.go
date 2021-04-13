@@ -1,11 +1,9 @@
 package types
 
 import (
-	"fmt"
-	"strconv"
-
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 
+	"github.com/gojek/merlin/pkg/transformer/types/converter"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
@@ -48,68 +46,15 @@ func convertValue(val interface{}, typeEnum types.ValueType_Enum) (interface{}, 
 
 	switch typeEnum {
 	case types.ValueType_BOOL:
-		return asBool(val)
+		return converter.ToBool(val)
 	case types.ValueType_DOUBLE, types.ValueType_FLOAT:
-		return asFloat64(val)
+		return converter.ToFloat64(val)
 	case types.ValueType_INT32:
-		return asInt(val)
+		return converter.ToInt(val)
 	case types.ValueType_INT64:
-		return asInt(val)
+		return converter.ToInt(val)
 	default:
-		return asString(val)
-	}
-}
-
-func asString(val interface{}) (string, error) {
-	return fmt.Sprintf("%v", val), nil
-}
-
-func asInt(v interface{}) (int, error) {
-	switch v := v.(type) {
-	case float64:
-		return int(v), nil
-	case float32:
-		return int(v), nil
-	case int:
-		return int(v), nil
-	case int32:
-		return int(v), nil
-	case int64:
-		return int(v), nil
-	case string:
-		return strconv.Atoi(v)
-	default:
-		return 0, fmt.Errorf("unsupported conversion from %T to float64", v)
-	}
-}
-
-func asFloat64(v interface{}) (float64, error) {
-	switch v := v.(type) {
-	case float64:
-		return v, nil
-	case float32:
-		return float64(v), nil
-	case int:
-		return float64(v), nil
-	case int32:
-		return float64(v), nil
-	case int64:
-		return float64(v), nil
-	case string:
-		return strconv.ParseFloat(v, 64)
-	default:
-		return 0, fmt.Errorf("unsupported conversion from %T to float64", v)
-	}
-}
-
-func asBool(v interface{}) (bool, error) {
-	switch v := v.(type) {
-	case bool:
-		return v, nil
-	case string:
-		return strconv.ParseBool(v)
-	default:
-		return false, fmt.Errorf("unsupported conversion from %T to bool", v)
+		return converter.ToString(val)
 	}
 }
 
