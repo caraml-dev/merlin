@@ -20,8 +20,10 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
+	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/server"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
@@ -79,13 +81,28 @@ func main() {
 		logger.Fatal("Unable to initialize Feast client", zap.Error(err))
 	}
 
-	feastTransformer, err := initFeastTransformer(appConfig, feastClient, transformerConfig, logger)
-	if err != nil {
-		logger.Fatal("Unable to initialize transformer", zap.Error(err))
-	}
-
 	s := server.New(&appConfig.Server, logger)
-	s.PreprocessHandler = feastTransformer.Transform
+
+	if transformerConfig.TransformerConfig.Feast != nil {
+		// Feast Enricher
+		feastTransformer, err := initFeastTransformer(appConfig, feastClient, transformerConfig, logger)
+		if err != nil {
+			logger.Fatal("Unable to initialize transformer", zap.Error(err))
+		}
+		s.PreprocessHandler = feastTransformer.Transform
+	} else {
+		// Standard Transformer
+		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClient, &appConfig.Feast, &appConfig.Cache, logger)
+		compiledPipeline, err := compiler.Compile(transformerConfig)
+		if err != nil {
+			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
+		}
+
+		handler := pipeline.NewHandler(compiledPipeline)
+		s.PreprocessHandler = handler.Preprocess
+		s.PostprocessHandler = handler.Postprocess
+		s.ContextModifier = handler.EmbedEnvironment
+	}
 
 	s.Run()
 }
