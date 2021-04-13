@@ -52,3 +52,24 @@ func (t *Table) Col(colName string) (*series.Series, error) {
 func (t *Table) DataFrame() *dataframe.DataFrame {
 	return t.dataFrame
 }
+
+func (t *Table) Copy() *Table {
+	df := t.dataFrame.Copy()
+	return NewTable(&df)
+}
+
+func (t *Table) ConcatColumn(tbl *Table) (*Table, error) {
+	if t.DataFrame().Nrow() != tbl.DataFrame().Nrow() {
+		return nil, fmt.Errorf("different number of row")
+	}
+
+	leftDf := *t.DataFrame()
+	rightDf := *tbl.DataFrame()
+
+	for _, col := range rightDf.Names() {
+		leftDf = leftDf.Mutate(rightDf.Col(col))
+	}
+
+	t.dataFrame = &leftDf
+	return t, nil
+}

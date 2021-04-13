@@ -32,7 +32,6 @@ func TestTable_New(t *testing.T) {
 
 	table2 := NewTable(&gotaDataFrame)
 	assert.Equal(t, gotaDataFrame, *table2.DataFrame())
-
 }
 
 func TestTable_Col(t *testing.T) {
@@ -60,4 +59,47 @@ func TestTable_Row(t *testing.T) {
 	row, err = table.Row(2)
 	assert.Error(t, err)
 	assert.Equal(t, "invalid row number, expected: 0 <= row < 2, got: 2", err.Error())
+}
+
+func TestTable_Copy(t *testing.T) {
+	table := New(
+		series.New([]string{"1111", "2222"}, series.String, "string_col"),
+		series.New([]string{"1111", "2222"}, series.String, "string_col_2"),
+	)
+
+	tableCopy := table.Copy()
+	assert.Equal(t, table.DataFrame(), tableCopy.DataFrame())
+
+	// assert that modifying copy won't affect the original
+	df := tableCopy.DataFrame().Drop("string_col_2")
+	assert.ElementsMatch(t, []string{"string_col"}, df.Names())
+	assert.ElementsMatch(t, []string{"string_col", "string_col_2"}, table.DataFrame().Names())
+}
+
+func TestTable_ConcatColumn(t *testing.T) {
+	table1 := New(
+		series.New([]string{"1111", "1111"}, series.String, "string_col"),
+		series.New([]string{"11", "22"}, series.String, "string_col_2"),
+	)
+
+	table2 := New(
+		series.New([]string{"1111", "2222"}, series.String, "string_col_2"),
+		series.New([]string{"1111", "2222"}, series.String, "string_col_3"),
+	)
+
+	table3, err := table1.ConcatColumn(table2)
+	assert.NoError(t, err)
+	assert.Equal(t, New(
+		series.New([]string{"1111", "1111"}, series.String, "string_col"),
+		series.New([]string{"1111", "2222"}, series.String, "string_col_2"),
+		series.New([]string{"1111", "2222"}, series.String, "string_col_3"),
+	).DataFrame(), table3.DataFrame())
+
+	longerTable := New(
+		series.New([]string{"1111", "1111", "1111"}, series.String, "string_col_3"),
+	)
+
+	table3, err = table1.ConcatColumn(longerTable)
+	assert.Error(t, err)
+	assert.Nil(t, table3)
 }
