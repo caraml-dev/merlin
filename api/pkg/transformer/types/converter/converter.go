@@ -17,6 +17,10 @@ func ToInt(v interface{}) (int, error) {
 		return int(v), nil
 	case int:
 		return int(v), nil
+	case int8:
+		return int(v), nil
+	case int16:
+		return int(v), nil
 	case int32:
 		return int(v), nil
 	case int64:
@@ -24,7 +28,7 @@ func ToInt(v interface{}) (int, error) {
 	case string:
 		return strconv.Atoi(v)
 	default:
-		return 0, fmt.Errorf("unsupported conversion from %T to float64", v)
+		return 0, fmt.Errorf("unsupported conversion from %T to int", v)
 	}
 }
 
@@ -35,6 +39,10 @@ func ToFloat64(v interface{}) (float64, error) {
 	case float32:
 		return float64(v), nil
 	case int:
+		return float64(v), nil
+	case int8:
+		return float64(v), nil
+	case int16:
 		return float64(v), nil
 	case int32:
 		return float64(v), nil
