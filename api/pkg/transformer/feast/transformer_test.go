@@ -617,7 +617,7 @@ func TestTransformer_Transform(t *testing.T) {
 			f, err := NewTransformer(mockFeatureRetriever, logger)
 			assert.NoError(t, err)
 
-			got, err := f.Transform(tt.args.ctx, tt.args.request)
+			got, err := f.Transform(tt.args.ctx, tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("spec.Transform() error = %v, wantErr %v", err, tt.wantErr)
 				return

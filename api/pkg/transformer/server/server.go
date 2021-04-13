@@ -46,9 +46,9 @@ type Server struct {
 	router     *mux.Router
 	logger     *zap.Logger
 
-	PreprocessHandler  func(ctx context.Context, request []byte) ([]byte, error)
-	PostprocessHandler func(ctx context.Context, request []byte) ([]byte, error)
-	LivenessHandler    func(w http.ResponseWriter, r *http.Request)
+	ContextModifier    func(ctx context.Context) context.Context
+	PreprocessHandler  func(ctx context.Context, request []byte, requestHeaders map[string]string) ([]byte, error)
+	PostprocessHandler func(ctx context.Context, response []byte, responseHeaders map[string]string) ([]byte, error)
 }
 
 // New initializes a new Server.
@@ -68,6 +68,10 @@ func New(o *Options, logger *zap.Logger) *Server {
 // PredictHandler handles prediction request to the transformer and model.
 func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	if s.ContextModifier != nil {
+		ctx = s.ContextModifier(ctx)
+	}
+
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
 	defer span.Finish()
 
@@ -82,7 +86,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	preprocessedRequestBody := requestBody
 	if s.PreprocessHandler != nil {
-		preprocessedRequestBody, err = s.preprocess(ctx, requestBody)
+		preprocessedRequestBody, err = s.preprocess(ctx, requestBody, r.Header)
 		if err != nil {
 			s.logger.Error("preprocess error", zap.Error(err))
 			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
@@ -103,16 +107,33 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	postprocessedRequestBody := respBody
+	if s.PostprocessHandler != nil {
+		postprocessedRequestBody, err = s.postprocess(ctx, respBody, resp.Header)
+		if err != nil {
+			s.logger.Error("postprocess error", zap.Error(err))
+			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "postprocessing error")).Write(w)
+			return
+		}
+	}
+
 	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
-	w.Write(respBody)
+	w.Write(postprocessedRequestBody)
 }
 
-func (s *Server) preprocess(ctx context.Context, request []byte) ([]byte, error) {
+func (s *Server) preprocess(ctx context.Context, request []byte, requestHeader http.Header) ([]byte, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "preprocess")
 	defer span.Finish()
 
-	return s.PreprocessHandler(ctx, request)
+	return s.PreprocessHandler(ctx, request, getHeaders(requestHeader))
+}
+
+func (s *Server) postprocess(ctx context.Context, response []byte, responseHeader http.Header) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postprocess")
+	defer span.Finish()
+
+	return s.PostprocessHandler(ctx, response, getHeaders(responseHeader))
 }
 
 func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (*http.Response, error) {
@@ -206,4 +227,12 @@ func copyHeader(dst, src http.Header) {
 			dst.Set(k, v)
 		}
 	}
+}
+
+func getHeaders(headers http.Header) map[string]string {
+	resultHeaders := make(map[string]string, len(headers))
+	for k, v := range headers {
+		resultHeaders[k] = strings.Join(v, ",")
+	}
+	return resultHeaders
 }

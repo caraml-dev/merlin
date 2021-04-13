@@ -72,7 +72,7 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
-			mockPreprocessHandler := func(ctx context.Context, request []byte) ([]byte, error) {
+			mockPreprocessHandler := func(ctx context.Context, request []byte, requestHeaders map[string]string) ([]byte, error) {
 				return test.expModelRequest, nil
 			}
 

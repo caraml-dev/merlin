@@ -27,7 +27,7 @@ func NewTransformer(featureRetriever FeatureRetriever, logger *zap.Logger) (*Tra
 }
 
 // Transform retrieves the Feast features values and add them into the request.
-func (t *Transformer) Transform(ctx context.Context, request []byte) ([]byte, error) {
+func (t *Transformer) Transform(ctx context.Context, request []byte, _ map[string]string) ([]byte, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.Transform")
 	defer span.Finish()
 
