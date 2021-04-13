@@ -131,11 +131,11 @@ func (sr Registry) Now() time.Time {
 }
 
 func (sr Registry) SetRawRequestJSON(jsonObj types.JSONObject) {
-	sr[sourceJSONKey].(types.JSONObjectContainer)[spec.FromJson_RAW_REQUEST] = jsonObj
+	sr[sourceJSONKey].(types.JSONObjectContainer)[spec.JsonType_RAW_REQUEST] = jsonObj
 }
 
 func (sr Registry) SetModelResponseJSON(jsonObj types.JSONObject) {
-	sr[sourceJSONKey].(types.JSONObjectContainer)[spec.FromJson_MODEL_RESPONSE] = jsonObj
+	sr[sourceJSONKey].(types.JSONObjectContainer)[spec.JsonType_MODEL_RESPONSE] = jsonObj
 }
 
 func (sr Registry) JSONContainer() types.JSONObjectContainer {
