@@ -127,7 +127,7 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Co
 
 func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry symbol.Registry, featureTableSpec *spec.FeatureTable) (*transTypes.FeatureTable, error) {
 	if featureTableSpec.TableName == "" {
-		featureTableSpec.TableName = createTableName(featureTableSpec.Entities, featureTableSpec.Project)
+		featureTableSpec.TableName = GetTableName(featureTableSpec)
 	}
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.getFeaturePerTable")
@@ -383,15 +383,19 @@ func getFloatValue(val interface{}) (float64, error) {
 	}
 }
 
-func createTableName(entities []*spec.Entity, project string) string {
+func GetTableName(featureTableSpec *spec.FeatureTable) string {
+	if featureTableSpec.TableName != "" {
+		return featureTableSpec.TableName
+	}
+
 	entityNames := make([]string, 0)
-	for _, n := range entities {
+	for _, n := range featureTableSpec.Entities {
 		entityNames = append(entityNames, n.Name)
 	}
 
 	tableName := strings.Join(entityNames, "_")
-	if project != defaultProjectName {
-		tableName = project + "_" + tableName
+	if featureTableSpec.Project != defaultProjectName {
+		tableName = featureTableSpec.Project + "_" + tableName
 	}
 
 	return tableName

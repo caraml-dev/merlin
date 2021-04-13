@@ -25,6 +25,10 @@ type Compiler struct {
 	logger *zap.Logger
 }
 
+func NewCompiler(sr symbol.Registry, feastClient feastSdk.Client, feastOptions *feast.Options, cacheOptions *cache.Options, logger *zap.Logger) *Compiler {
+	return &Compiler{sr: sr, feastClient: feastClient, feastOptions: feastOptions, cacheOptions: cacheOptions, logger: logger}
+}
+
 func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipeline, error) {
 	preprocessOps := make([]Op, 0)
 	postprocessOps := make([]Op, 0)
@@ -104,6 +108,7 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 
 func (c *Compiler) parseVariablesSpec(variables []*spec.Variable, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
 	for _, variable := range variables {
+		c.registerDummyVariable(variable.Name)
 		switch v := variable.Value.(type) {
 		case *spec.Variable_Literal:
 			continue
@@ -143,6 +148,10 @@ func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compil
 	}
 	compiledExpressions.AddAll(expressions)
 
+	for _, featureTableSpec := range featureTableSpecs {
+		c.registerDummyVariable(feast.GetTableName(featureTableSpec))
+	}
+
 	var memoryCache cache.Cache
 	if c.feastOptions.CacheEnabled {
 		memoryCache = cache.NewInMemoryCache(c.cacheOptions)
@@ -154,6 +163,7 @@ func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compil
 
 func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
 	for _, tableSpec := range tableSpecs {
+		c.registerDummyVariable(tableSpec.Name)
 		if tableSpec.BaseTable != nil {
 			switch bt := tableSpec.BaseTable.BaseTable.(type) {
 			case *spec.BaseTable_FromJson:
@@ -189,5 +199,9 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 }
 
 func (c *Compiler) compileExpression(expression string) (*vm.Program, error) {
-	return expr.Compile(expression, expr.Env(c.sr), expr.AllowUndefinedVariables())
+	return expr.Compile(expression, expr.Env(c.sr))
+}
+
+func (c *Compiler) registerDummyVariable(varName string) {
+	c.sr[varName] = nil
 }
