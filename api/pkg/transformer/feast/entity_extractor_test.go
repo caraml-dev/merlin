@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/mmcloughlin/geohash"
@@ -16,6 +15,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
@@ -435,8 +435,8 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			compiledJsonPaths := make(map[string]*jsonpath.Compiled)
-			compiledExpressions := make(map[string]*vm.Program)
+			compiledJsonPaths := jsonpath.NewStorage()
+			compiledExpressions := expression.NewStorage()
 
 			var nodesBody transTypes.JSONObject
 			err := json.Unmarshal(testData, &nodesBody)
@@ -450,10 +450,10 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 			switch test.entityConfig.Extractor.(type) {
 			case *spec.Entity_JsonPath:
 				compiledJsonPath, _ := jsonpath.Compile(test.entityConfig.GetJsonPath())
-				compiledJsonPaths[test.entityConfig.GetJsonPath()] = compiledJsonPath
+				compiledJsonPaths.Set(test.entityConfig.GetJsonPath(), compiledJsonPath)
 			case *spec.Entity_Udf:
 				compiledUdf, _ := expr.Compile(test.entityConfig.GetUdf(), expr.Env(sr), expr.AllowUndefinedVariables())
-				compiledExpressions[test.entityConfig.GetUdf()] = compiledUdf
+				compiledExpressions.Set(test.entityConfig.GetUdf(), compiledUdf)
 			}
 
 			er := NewEntityExtractor(compiledJsonPaths, compiledExpressions)
@@ -568,8 +568,8 @@ func BenchmarkEntityExtractor_ExtractValuesFromSymbolRegistry_100S2IDUdf(b *test
 
 func doRunBenchmark(b *testing.B, entityConfig *spec.Entity) {
 	b.StopTimer()
-	compiledJsonPaths := make(map[string]*jsonpath.Compiled)
-	compiledExpressions := make(map[string]*vm.Program)
+	compiledJsonPaths := jsonpath.NewStorage()
+	compiledExpressions := expression.NewStorage()
 
 	switch entityConfig.Extractor.(type) {
 	case *spec.Entity_JsonPath:
@@ -577,14 +577,14 @@ func doRunBenchmark(b *testing.B, entityConfig *spec.Entity) {
 		if err != nil {
 			panic(err)
 		}
-		compiledJsonPaths[entityConfig.GetJsonPath()] = c
+		compiledJsonPaths.Set(entityConfig.GetJsonPath(), c)
 	case *spec.Entity_Expression, *spec.Entity_Udf:
 		exp := getExpressionExtractor(entityConfig)
 		p, err := expr.Compile(exp, expr.Env(symbol.NewRegistry()), expr.AllowUndefinedVariables())
 		if err != nil {
 			panic(err)
 		}
-		compiledExpressions[exp] = p
+		compiledExpressions.Set(exp, p)
 	}
 
 	var nodesBody transTypes.JSONObject

@@ -14,20 +14,23 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
 func TestCreateTableOp_Execute(t *testing.T) {
-	compiledExpression := map[string]*vm.Program{
+	compiledExpression := expression.NewStorage()
+	compiledExpression.AddAll(map[string]*vm.Program{
 		"Now()":                            mustCompileExpression("Now()"),
 		"existing_table.Col('string_col')": mustCompileExpression("existing_table.Col('string_col')"),
 		"existing_table.Col('int_col')":    mustCompileExpression("existing_table.Col('int_col')"),
 		"existing_table.Col('float_col')":  mustCompileExpression("existing_table.Col('float_col')"),
 		"existing_table.Col('bool_col')":   mustCompileExpression("existing_table.Col('bool_col')"),
-	}
+	})
 
-	compiledJsonPath := map[string]*jsonpath.Compiled{
+	compiledJsonPath := jsonpath.NewStorage()
+	compiledJsonPath.AddAll(map[string]*jsonpath.Compiled{
 		"$.signature_name": jsonpath.MustCompileJsonPath("$.signature_name"),
 		"$.instances":      jsonpath.MustCompileJsonPath("$.instances"),
 		"$.array_int":      jsonpath.MustCompileJsonPath("$.array_int"),
@@ -35,7 +38,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 		"$.array_float_2":  jsonpath.MustCompileJsonPath("$.array_float_2"),
 		"$.int":            jsonpath.MustCompileJsonPath("$.int"),
 		"$.unknown_field":  jsonpath.MustCompileJsonPath("$.unknown_field"),
-	}
+	})
 
 	var rawRequestJSON types.JSONObject
 	err := json.Unmarshal([]byte(rawRequestJson), &rawRequestJSON)

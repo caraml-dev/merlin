@@ -18,7 +18,7 @@ import (
 // All exported method of Registry is accessible as built-in function
 type Registry map[string]interface{}
 
-func NewRegistryWithCompiledJSONPath(compiledJSONPaths map[string]*jsonpath.Compiled) Registry {
+func NewRegistryWithCompiledJSONPath(compiledJSONPaths *jsonpath.Storage) Registry {
 	r := Registry{}
 	r[compiledJSONPathKey] = compiledJSONPaths
 	r[sourceJSONKey] = types.JSONObjectContainer{}
@@ -28,7 +28,7 @@ func NewRegistryWithCompiledJSONPath(compiledJSONPaths map[string]*jsonpath.Comp
 
 func NewRegistry() Registry {
 	r := Registry{}
-	r[compiledJSONPathKey] = make(map[string]*jsonpath.Compiled)
+	r[compiledJSONPathKey] = jsonpath.NewStorage()
 	r[sourceJSONKey] = types.JSONObjectContainer{}
 
 	return r
@@ -182,16 +182,16 @@ func (sr Registry) evalArg(arg interface{}) (interface{}, error) {
 }
 
 func (sr Registry) getCompiledJSONPath(jsonPath string) *jsonpath.Compiled {
-	compiledJSONPaths, ok := sr[compiledJSONPathKey].(map[string]*jsonpath.Compiled)
+	compiledJSONPaths, ok := sr[compiledJSONPathKey].(*jsonpath.Storage)
 	if !ok {
 		return nil
 	}
 
-	return compiledJSONPaths[jsonPath]
+	return compiledJSONPaths.Get(jsonPath)
 }
 
 func (sr Registry) addCompiledJsonPath(jsonPath string, c *jsonpath.Compiled) {
-	sr[compiledJSONPathKey].(map[string]*jsonpath.Compiled)[jsonPath] = c
+	sr[compiledJSONPathKey].(*jsonpath.Storage).Set(jsonPath, c)
 }
 
 func (sr Registry) jsonObjectContainer() types.JSONObjectContainer {

@@ -52,7 +52,7 @@ var (
 func TestSymbolRegistry_Geohash(t *testing.T) {
 	requestJSONObject, responseJSONObject := getTestJSONObjects()
 
-	sr := NewRegistryWithCompiledJSONPath(make(map[string]*jsonpath.Compiled))
+	sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
 	sr.SetRawRequestJSON(requestJSONObject)
 	sr.SetModelResponseJSON(responseJSONObject)
 
@@ -221,7 +221,7 @@ func TestSymbolRegistry_Geohash(t *testing.T) {
 func TestSymbolRegistry_S2ID(t *testing.T) {
 	requestJSONObject, responseJSONObject := getTestJSONObjects()
 
-	sr := NewRegistryWithCompiledJSONPath(make(map[string]*jsonpath.Compiled))
+	sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
 	sr.SetRawRequestJSON(requestJSONObject)
 	sr.SetModelResponseJSON(responseJSONObject)
 
@@ -400,7 +400,7 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 		panic(err)
 	}
 
-	sr := NewRegistryWithCompiledJSONPath(make(map[string]*jsonpath.Compiled))
+	sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
 	sr.SetRawRequestJSON(jsonObject)
 
 	type args struct {

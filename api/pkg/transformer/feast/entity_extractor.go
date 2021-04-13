@@ -5,23 +5,22 @@ import (
 	"strconv"
 
 	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
-
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 // EntityExtractor is responsible to extract entity values from symbol registry
 type EntityExtractor struct {
-	compiledJsonPath   map[string]*jsonpath.Compiled
-	compiledExpression map[string]*vm.Program
+	compiledJsonPath   *jsonpath.Storage
+	compiledExpression *expression.Storage
 }
 
-func NewEntityExtractor(compiledJsonPath map[string]*jsonpath.Compiled, compiledExpression map[string]*vm.Program) *EntityExtractor {
+func NewEntityExtractor(compiledJsonPath *jsonpath.Storage, compiledExpression *expression.Storage) *EntityExtractor {
 	return &EntityExtractor{
 		compiledJsonPath:   compiledJsonPath,
 		compiledExpression: compiledExpression,
@@ -36,9 +35,9 @@ func (er *EntityExtractor) ExtractValuesFromSymbolRegistry(symbolRegistry symbol
 	var entityVal interface{}
 	switch entitySpec.Extractor.(type) {
 	case *spec.Entity_JsonPath:
-		compiledJsonPath, ok := er.compiledJsonPath[entitySpec.GetJsonPath()]
-		if !ok {
-			fmt.Errorf("jsonpath %s in entity %s is not found", entitySpec.GetJsonPath(), entitySpec.Name)
+		compiledJsonPath := er.compiledJsonPath.Get(entitySpec.GetJsonPath())
+		if compiledJsonPath == nil {
+			return nil, fmt.Errorf("jsonpath %s in entity %s is not found", entitySpec.GetJsonPath(), entitySpec.Name)
 		}
 
 		entityValFromJsonPath, err := compiledJsonPath.LookupFromContainer(symbolRegistry.JSONContainer())
@@ -47,10 +46,10 @@ func (er *EntityExtractor) ExtractValuesFromSymbolRegistry(symbolRegistry symbol
 		}
 		entityVal = entityValFromJsonPath
 	case *spec.Entity_Udf, *spec.Entity_Expression:
-		expression := getExpressionExtractor(entitySpec)
-		compiledExpression, ok := er.compiledExpression[expression]
-		if !ok {
-			return nil, fmt.Errorf("expression %s in entity %s is not found", expression, entitySpec.Name)
+		exp := getExpressionExtractor(entitySpec)
+		compiledExpression := er.compiledExpression.Get(exp)
+		if compiledExpression == nil {
+			return nil, fmt.Errorf("expression %s in entity %s is not found", exp, entitySpec.Name)
 		}
 
 		exprResult, err := expr.Run(compiledExpression, symbolRegistry)

@@ -8,17 +8,18 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 type CompiledPipeline struct {
-	compiledJsonpath   map[string]*jsonpath.Compiled
-	compiledExpression map[string]*vm.Program
+	compiledJsonpath   *jsonpath.Storage
+	compiledExpression *expression.Storage
 
 	preprocessOps  []Op
 	postprocessOps []Op
 }
 
-func NewCompiledPipeline(compiledJSONPath map[string]*jsonpath.Compiled, compiledExpression map[string]*vm.Program, preprocessOps []Op, postprocessOps []Op) *CompiledPipeline {
+func NewCompiledPipeline(compiledJSONPath *jsonpath.Storage, compiledExpression *expression.Storage, preprocessOps []Op, postprocessOps []Op) *CompiledPipeline {
 	return &CompiledPipeline{
 		compiledJsonpath:   compiledJSONPath,
 		compiledExpression: compiledExpression,
@@ -59,13 +60,13 @@ func (p *CompiledPipeline) Postprocess(context context.Context, env *Environment
 }
 
 func (p *CompiledPipeline) CompiledJSONPath(name string) *jsonpath.Compiled {
-	return p.compiledJsonpath[name]
+	return p.compiledJsonpath.Get(name)
 }
 
 func (p *CompiledPipeline) SetCompiledJSONPath(name string, compiled *jsonpath.Compiled) {
-	p.compiledJsonpath[name] = compiled
+	p.compiledJsonpath.Set(name, compiled)
 }
 
 func (p *CompiledPipeline) CompiledExpression(name string) *vm.Program {
-	return p.compiledExpression[name]
+	return p.compiledExpression.Get(name)
 }

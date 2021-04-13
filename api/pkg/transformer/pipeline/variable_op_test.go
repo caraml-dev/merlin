@@ -14,6 +14,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 func mustCompileExpression(expression string) *vm.Program {
@@ -57,13 +58,15 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 		variableSpec []*spec.Variable
 	}
 
-	compiledExpression := map[string]*vm.Program{
+	compiledExpression := expression.NewStorage()
+	compiledExpression.AddAll(map[string]*vm.Program{
 		"Now()": mustCompileExpression("Now()"),
-	}
+	})
 
-	compiledJsonPath := map[string]*jsonpath.Compiled{
+	compiledJsonPath := jsonpath.NewStorage()
+	compiledJsonPath.AddAll(map[string]*jsonpath.Compiled{
 		"$.signature_name": jsonpath.MustCompileJsonPath("$.signature_name"),
-	}
+	})
 
 	var rawRequestJSON types.JSONObject
 	err := json.Unmarshal([]byte(rawRequestJson), &rawRequestJSON)

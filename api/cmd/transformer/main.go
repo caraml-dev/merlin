@@ -19,8 +19,10 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/server"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 func init() {
@@ -108,7 +110,11 @@ func initFeastTransformer(appCfg AppConfig,
 		return nil, err
 	}
 
-	entityExtractor := feast.NewEntityExtractor(compiledJSONPaths, compiledExpressions)
+	jsonPathStorage := jsonpath.NewStorage()
+	jsonPathStorage.AddAll(compiledJSONPaths)
+	expressionStorage := expression.NewStorage()
+	expressionStorage.AddAll(compiledExpressions)
+	entityExtractor := feast.NewEntityExtractor(jsonPathStorage, expressionStorage)
 	featureRetriever := feast.NewFeastRetriever(feastClient,
 		entityExtractor,
 		transformerConfig.TransformerConfig.Feast,

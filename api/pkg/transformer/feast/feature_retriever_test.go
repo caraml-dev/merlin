@@ -20,9 +20,11 @@ import (
 
 	mocks2 "github.com/gojek/merlin/pkg/transformer/cache/mocks"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
@@ -936,7 +938,11 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				panic(err)
 			}
 
-			entityExtractor := NewEntityExtractor(compiledJSONPaths, compiledExpressions)
+			jsonPathStorage := jsonpath.NewStorage()
+			jsonPathStorage.AddAll(compiledJSONPaths)
+			expressionStorage := expression.NewStorage()
+			expressionStorage.AddAll(compiledExpressions)
+			entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
 			fr := NewFeastRetriever(mockFeast,
 				entityExtractor,
 				tt.fields.featureTableSpecs,
@@ -1795,7 +1801,11 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 				panic(err)
 			}
 
-			entityExtractor := NewEntityExtractor(compiledJSONPaths, compiledExpressions)
+			jsonPathStorage := jsonpath.NewStorage()
+			jsonPathStorage.AddAll(compiledJSONPaths)
+			expressionStorage := expression.NewStorage()
+			expressionStorage.AddAll(compiledExpressions)
+			entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
 			fr := NewFeastRetriever(mockFeast,
 				entityExtractor,
 				tt.fields.featureTableSpecs,
@@ -2348,7 +2358,11 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 				panic(err)
 			}
 
-			entityExtractor := NewEntityExtractor(compiledJSONPaths, compiledExpressions)
+			jsonPathStorage := jsonpath.NewStorage()
+			jsonPathStorage.AddAll(compiledJSONPaths)
+			expressionStorage := expression.NewStorage()
+			expressionStorage.AddAll(compiledExpressions)
+			entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
 			fr := NewFeastRetriever(mockFeast,
 				entityExtractor,
 				featureTableSpecs,
@@ -2382,9 +2396,6 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 }
 
 func Test_getFeatureValue(t *testing.T) {
-	type args struct {
-		val *feastTypes.Value
-	}
 	tests := []struct {
 		name        string
 		val         *feastTypes.Value
