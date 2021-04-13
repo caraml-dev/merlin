@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
@@ -499,7 +498,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("unable to override column for table my_table: columns array_float has different dimension: 5, expected: 4"),
+			expError: errors.New("unable to override column for table my_table: columns array_float has different dimension"),
 		},
 	}
 	for _, tt := range tests {
@@ -520,9 +519,6 @@ func TestCreateTableOp_Execute(t *testing.T) {
 				case time.Time:
 					assert.True(t, v.Sub(tt.env.symbolRegistry[varName].(time.Time)) < time.Second)
 				default:
-					fmt.Println(v.(*table.Table).DataFrame().String())
-					fmt.Println(tt.env.symbolRegistry[varName].(*table.Table).DataFrame().String())
-
 					assert.Equal(t, v, tt.env.symbolRegistry[varName])
 				}
 			}

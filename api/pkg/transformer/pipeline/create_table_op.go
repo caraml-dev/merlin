@@ -135,7 +135,7 @@ func createTableFromColumnMaps(colMap map[string]interface{}) (*table.Table, err
 		valueLength := getLength(v)
 		// check that length is either 1 or maxLength
 		if valueLength != 1 && maxLength != 1 && valueLength != maxLength {
-			return nil, fmt.Errorf("columns %s has different dimension: %d, expected: %d", k, valueLength, maxLength)
+			return nil, fmt.Errorf("columns %s has different dimension", k)
 		}
 
 		if valueLength > maxLength {
