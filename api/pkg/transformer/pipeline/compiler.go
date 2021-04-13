@@ -1,86 +1,97 @@
 package pipeline
 
 import (
-	"fmt"
-
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
+	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
+	"github.com/gojek/merlin/pkg/transformer/cache"
+	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 type Compiler struct {
-	sr *SymbolRegistry
-}
+	sr symbol.Registry
 
-func NewCompiler(sr *SymbolRegistry) *Compiler {
-	return &Compiler{
-		sr: sr,
-	}
+	feastClient  feastSdk.Client
+	feastOptions *feast.Options
+	cacheOptions *cache.Options
+
+	logger *zap.Logger
 }
 
 func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipeline, error) {
-	preprocessOps, preprocessJSONPath, preprocessExpressions, err := c.doCompilePipeline(spec.TransformerConfig.Preprocess)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to compile preprocessing pipeline")
+	preprocessOps := make([]Op, 0)
+	postprocessOps := make([]Op, 0)
+	jsonPathStorage := jsonpath.NewStorage()
+	expressionStorage := expression.NewStorage()
+	if spec.TransformerConfig == nil {
+		return NewCompiledPipeline(
+			jsonPathStorage,
+			expressionStorage,
+			preprocessOps,
+			postprocessOps,
+		), nil
 	}
 
-	postprocessOps, postprocessJSONPath, postprocessExpressions, err := c.doCompilePipeline(spec.TransformerConfig.Postprocess)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to compile postprocessing pipeline")
+	if spec.TransformerConfig.Preprocess != nil {
+		ops, err := c.doCompilePipeline(spec.TransformerConfig.Preprocess, jsonPathStorage, expressionStorage)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to compile preprocessing pipeline")
+		}
+		preprocessOps = append(preprocessOps, ops...)
 	}
 
-	// merge compiled jsonpath
-	preprocessJSONPath = mergeJSONPathMap(preprocessJSONPath, postprocessJSONPath)
+	if spec.TransformerConfig.Postprocess != nil {
+		ops, err := c.doCompilePipeline(spec.TransformerConfig.Postprocess, jsonPathStorage, expressionStorage)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to compile postprocessing pipeline")
+		}
+		postprocessOps = append(postprocessOps, ops...)
+	}
 
-	// merge compiled expressions
-	preprocessExpressions = mergeExpressionMap(preprocessExpressions, postprocessExpressions)
-
-	return &CompiledPipeline{
-		compiledJsonpath:   preprocessJSONPath,
-		compiledExpression: preprocessExpressions,
-		preprocessOps:      preprocessOps,
-		postprocessOps:     postprocessOps,
-	}, nil
+	return NewCompiledPipeline(
+		jsonPathStorage,
+		expressionStorage,
+		preprocessOps,
+		postprocessOps,
+	), nil
 }
 
-func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline) (ops []Op, compiledJsonPaths map[string]*jsonpath.CompiledJSONPath, compiledExpressions map[string]*vm.Program, err error) {
-	ops = make([]Op, 0)
-	compiledJsonPaths = make(map[string]*jsonpath.CompiledJSONPath)
-	compiledExpressions = make(map[string]*vm.Program)
+func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) ([]Op, error) {
+	ops := make([]Op, 0)
 
 	// input
-	for _, input := range pipeline.Inputs {
-		if input.Variables != nil {
-			varOp, cplJsonPaths, cplExpressions, err := c.parseVariablesSpec(input.Variables)
-			if err != nil {
-				return nil, nil, nil, err
+	if pipeline.Inputs != nil {
+		for _, input := range pipeline.Inputs {
+			if input.Variables != nil {
+				varOp, err := c.parseVariablesSpec(input.Variables, compiledJsonPaths, compiledExpressions)
+				if err != nil {
+					return nil, err
+				}
+				ops = append(ops, varOp)
 			}
-			ops = append(ops, varOp)
-			compiledJsonPaths = mergeJSONPathMap(compiledJsonPaths, cplJsonPaths)
-			compiledExpressions = mergeExpressionMap(compiledExpressions, cplExpressions)
-		}
 
-		if input.Tables != nil {
-			tableOp, cplJsonPaths, cplExpressions, err := c.parseTablesSpec(input.Tables)
-			if err != nil {
-				return nil, nil, nil, err
+			if input.Tables != nil {
+				tableOp, err := c.parseTablesSpec(input.Tables, compiledJsonPaths, compiledExpressions)
+				if err != nil {
+					return nil, err
+				}
+				ops = append(ops, tableOp)
 			}
-			ops = append(ops, tableOp)
-			compiledJsonPaths = mergeJSONPathMap(compiledJsonPaths, cplJsonPaths)
-			compiledExpressions = mergeExpressionMap(compiledExpressions, cplExpressions)
-		}
 
-		if input.Feast != nil {
-			feastOp, cplJsonPaths, cplExpressions, err := c.parseFeastSpec(input.Feast)
-			if err != nil {
-				return nil, nil, nil, err
+			if input.Feast != nil {
+				feastOp, err := c.parseFeastSpec(input.Feast, compiledJsonPaths, compiledExpressions)
+				if err != nil {
+					return nil, err
+				}
+				ops = append(ops, feastOp)
 			}
-			ops = append(ops, feastOp)
-			compiledJsonPaths = mergeJSONPathMap(compiledJsonPaths, cplJsonPaths)
-			compiledExpressions = mergeExpressionMap(compiledExpressions, cplExpressions)
 		}
 	}
 
@@ -88,13 +99,10 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline) (ops []Op, compile
 
 	// TODO: output
 
-	return
+	return ops, nil
 }
 
-func (c *Compiler) parseVariablesSpec(variables []*spec.Variable) (Op, map[string]*jsonpath.CompiledJSONPath, map[string]*vm.Program, error) {
-	compiledJsonPaths := make(map[string]*jsonpath.CompiledJSONPath)
-	compiledExpressions := make(map[string]*vm.Program)
-
+func (c *Compiler) parseVariablesSpec(variables []*spec.Variable, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
 	for _, variable := range variables {
 		switch v := variable.Value.(type) {
 		case *spec.Variable_Literal:
@@ -103,77 +111,83 @@ func (c *Compiler) parseVariablesSpec(variables []*spec.Variable) (Op, map[strin
 		case *spec.Variable_Expression:
 			compiledExpression, err := c.compileExpression(v.Expression)
 			if err != nil {
-				return nil, nil, nil, errors.Wrapf(err, "unable to compile expression %s for variable %s", v.Expression, variable.Name)
+				return nil, nil
 			}
-			compiledExpressions[v.Expression] = compiledExpression
+			compiledExpressions.Set(v.Expression, compiledExpression)
 
 		case *spec.Variable_JsonPath:
-			compiledJsonPath, err := jsonpath.CompileJsonPath(v.JsonPath)
+			compiledJsonPath, err := jsonpath.Compile(v.JsonPath)
 			if err != nil {
-				return nil, nil, nil, errors.Wrapf(err, "unable to compile jsonpath %s for variable %s", v.JsonPath, variable.Name)
+				return nil, nil
 			}
-			compiledJsonPaths[v.JsonPath] = compiledJsonPath
+			compiledJsonPaths.Set(v.JsonPath, compiledJsonPath)
 
 		default:
-			return nil, nil, nil, fmt.Errorf("variable %s has unexpected type %T, it should be Expression, Literal, or JsonPath", variable.Name, v)
+			return nil, nil
 		}
 	}
 
-	return NewVariableDeclarationOp(variables), compiledJsonPaths, compiledExpressions, nil
+	return NewVariableDeclarationOp(variables), nil
 }
 
-func (c *Compiler) parseFeastSpec(featureTables []*spec.FeatureTable) (Op, map[string]*jsonpath.CompiledJSONPath, map[string]*vm.Program, error) {
-	compiledJsonPaths := make(map[string]*jsonpath.CompiledJSONPath)
-	compiledExpressions := make(map[string]*vm.Program)
+func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
+	jsonPaths, err := feast.CompileJSONPaths(featureTableSpecs)
+	if err != nil {
+		return nil, err
+	}
+	compiledJsonPaths.AddAll(jsonPaths)
 
-	for _, featureTable := range featureTables {
-		for _, entity := range featureTable.Entities {
-			switch extractor := entity.Extractor.(type) {
-			case *spec.Entity_Udf:
-				compiledExpression, err := c.compileExpression(entity.GetUdf())
+	expressions, err := feast.CompileExpressions(featureTableSpecs)
+	if err != nil {
+		return nil, err
+	}
+	compiledExpressions.AddAll(expressions)
+
+	var memoryCache cache.Cache
+	if c.feastOptions.CacheEnabled {
+		memoryCache = cache.NewInMemoryCache(c.cacheOptions)
+	}
+
+	entityExtractor := feast.NewEntityExtractor(compiledJsonPaths, compiledExpressions)
+	return NewFeastOp(c.feastClient, c.feastOptions, memoryCache, entityExtractor, featureTableSpecs, c.logger), nil
+}
+
+func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
+	for _, tableSpec := range tableSpecs {
+		if tableSpec.BaseTable != nil {
+			switch bt := tableSpec.BaseTable.BaseTable.(type) {
+			case *spec.BaseTable_FromJson:
+				compiledJsonPath, err := jsonpath.Compile(bt.FromJson.JsonPath)
 				if err != nil {
-					return nil, nil, nil, errors.Wrapf(err, "unable to compile expression %s for variable %s", entity.GetUdf(), entity.Name)
+					return nil, err
 				}
-				compiledExpressions[entity.GetUdf()] = compiledExpression
-			case *spec.Entity_Expression:
-				compiledExpression, err := c.compileExpression(entity.GetExpression())
-				if err != nil {
-					return nil, nil, nil, errors.Wrapf(err, "unable to compile expression %s for variable %s", entity.GetExpression(), entity.Name)
+				compiledJsonPaths.Set(bt.FromJson.JsonPath, compiledJsonPath)
+			}
+		}
+
+		if tableSpec.Columns != nil {
+			for _, column := range tableSpec.Columns {
+				switch cv := column.ColumnValue.(type) {
+				case *spec.Column_Expression:
+					compiledExpression, err := c.compileExpression(cv.Expression)
+					if err != nil {
+						return nil, err
+					}
+					compiledExpressions.Set(cv.Expression, compiledExpression)
+				case *spec.Column_FromJson:
+					compiledJsonPath, err := jsonpath.Compile(cv.FromJson.JsonPath)
+					if err != nil {
+						return nil, err
+					}
+					compiledJsonPaths.Set(cv.FromJson.JsonPath, compiledJsonPath)
 				}
-				compiledExpressions[entity.GetExpression()] = compiledExpression
-			case *spec.Entity_JsonPath:
-				compiledJsonPath, err := jsonpath.CompileJsonPath(extractor.JsonPath)
-				if err != nil {
-					return nil, nil, nil, errors.Wrapf(err, "unable to compile jsonpath %s for variable %s", extractor.JsonPath, entity.Name)
-				}
-				compiledJsonPaths[extractor.JsonPath] = compiledJsonPath
-			default:
-				return nil, nil, nil, fmt.Errorf("entity %s has unexpected type %T, it should be Expression, Udf, or JsonPath", entity.Name, extractor)
 			}
 		}
 	}
 
-	return NewFeastOp(featureTables), compiledJsonPaths, compiledExpressions, nil
-}
-
-func (c *Compiler) parseTablesSpec(tables []*spec.Table) (Op, map[string]*jsonpath.CompiledJSONPath, map[string]*vm.Program, error) {
-	panic("TODO: parseTablesSpec")
+	return NewCreateTableOp(tableSpecs), nil
 }
 
 func (c *Compiler) compileExpression(expression string) (*vm.Program, error) {
 	return expr.Compile(expression, expr.Env(c.sr), expr.AllowUndefinedVariables())
-}
-
-func mergeJSONPathMap(dst, src map[string]*jsonpath.CompiledJSONPath) map[string]*jsonpath.CompiledJSONPath {
-	for k, v := range src {
-		dst[k] = v
-	}
-	return dst
-}
-
-func mergeExpressionMap(dst, src map[string]*vm.Program) map[string]*vm.Program {
-	for k, v := range src {
-		dst[k] = v
-	}
-	return dst
 }
