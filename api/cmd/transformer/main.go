@@ -95,7 +95,7 @@ func initFeastTransformer(appCfg AppConfig,
 
 	var memoryCache cache.Cache
 	if appCfg.Feast.CacheEnabled {
-		memoryCache = cache.NewInMemoryCache(appCfg.Cache)
+		memoryCache = cache.NewInMemoryCache(&appCfg.Cache)
 	}
 
 	compiledJSONPaths, err := feast.CompileJSONPaths(transformerConfig.TransformerConfig.Feast)
