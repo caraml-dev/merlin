@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/antonmedv/expr"
-
 	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
@@ -33,23 +31,13 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 			}
 
 		case *spec.Variable_Expression:
-			cplExpr := env.CompiledExpression(v.Expression)
-			if cplExpr == nil {
-				return fmt.Errorf("compiled expression %s not found", v.Expression)
-			}
-
-			result, err := expr.Run(env.CompiledExpression(v.Expression), env.SymbolRegistry())
+			result, err := evalExpression(env, v.Expression)
 			if err != nil {
 				return err
 			}
 			env.SetSymbol(varDef.Name, result)
 		case *spec.Variable_JsonPath:
-			jsonPath := env.CompiledJSONPath(v.JsonPath)
-			if jsonPath == nil {
-				return fmt.Errorf("compiled jsonpath %s not found", v.JsonPath)
-			}
-
-			result, err := jsonPath.LookupFromContainer(env.JSONContainer())
+			result, err := evalJSONPath(env, v.JsonPath)
 			if err != nil {
 				return nil
 			}
