@@ -20,6 +20,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type JsonType int32
+
+const (
+	JsonType_INVALID        JsonType = 0
+	JsonType_RAW_REQUEST    JsonType = 1
+	JsonType_MODEL_RESPONSE JsonType = 2
+)
+
+// Enum value maps for JsonType.
+var (
+	JsonType_name = map[int32]string{
+		0: "INVALID",
+		1: "RAW_REQUEST",
+		2: "MODEL_RESPONSE",
+	}
+	JsonType_value = map[string]int32{
+		"INVALID":        0,
+		"RAW_REQUEST":    1,
+		"MODEL_RESPONSE": 2,
+	}
+)
+
+func (x JsonType) Enum() *JsonType {
+	p := new(JsonType)
+	*p = x
+	return p
+}
+
+func (x JsonType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (JsonType) Descriptor() protoreflect.EnumDescriptor {
+	return file_transformer_spec_json_proto_enumTypes[0].Descriptor()
+}
+
+func (JsonType) Type() protoreflect.EnumType {
+	return &file_transformer_spec_json_proto_enumTypes[0]
+}
+
+func (x JsonType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use JsonType.Descriptor instead.
+func (JsonType) EnumDescriptor() ([]byte, []int) {
+	return file_transformer_spec_json_proto_rawDescGZIP(), []int{0}
+}
+
 type JsonOutput struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -348,10 +397,14 @@ var file_transformer_spec_json_proto_rawDesc = []byte{
 	0x48, 0x00, 0x52, 0x09, 0x66, 0x72, 0x6f, 0x6d, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x12, 0x20, 0x0a,
 	0x0a, 0x65, 0x78, 0x70, 0x72, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28,
 	0x09, 0x48, 0x00, 0x52, 0x0a, 0x65, 0x78, 0x70, 0x72, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x42,
-	0x07, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x42, 0x2e, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6a, 0x65, 0x6b, 0x2f, 0x6d, 0x65, 0x72,
-	0x6c, 0x69, 0x6e, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x6f, 0x72,
-	0x6d, 0x65, 0x72, 0x2f, 0x73, 0x70, 0x65, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x07, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x2a, 0x3c, 0x0a, 0x08, 0x4a, 0x73, 0x6f, 0x6e,
+	0x54, 0x79, 0x70, 0x65, 0x12, 0x0b, 0x0a, 0x07, 0x49, 0x4e, 0x56, 0x41, 0x4c, 0x49, 0x44, 0x10,
+	0x00, 0x12, 0x0f, 0x0a, 0x0b, 0x52, 0x41, 0x57, 0x5f, 0x52, 0x45, 0x51, 0x55, 0x45, 0x53, 0x54,
+	0x10, 0x01, 0x12, 0x12, 0x0a, 0x0e, 0x4d, 0x4f, 0x44, 0x45, 0x4c, 0x5f, 0x52, 0x45, 0x53, 0x50,
+	0x4f, 0x4e, 0x53, 0x45, 0x10, 0x02, 0x42, 0x2e, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
+	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6a, 0x65, 0x6b, 0x2f, 0x6d, 0x65, 0x72, 0x6c, 0x69,
+	0x6e, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x6f, 0x72, 0x6d, 0x65,
+	0x72, 0x2f, 0x73, 0x70, 0x65, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -366,24 +419,26 @@ func file_transformer_spec_json_proto_rawDescGZIP() []byte {
 	return file_transformer_spec_json_proto_rawDescData
 }
 
+var file_transformer_spec_json_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_transformer_spec_json_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_transformer_spec_json_proto_goTypes = []interface{}{
-	(*JsonOutput)(nil),   // 0: merlin.transformer.JsonOutput
-	(*JsonTemplate)(nil), // 1: merlin.transformer.JsonTemplate
-	(*BaseJson)(nil),     // 2: merlin.transformer.BaseJson
-	(*Field)(nil),        // 3: merlin.transformer.Field
-	(*FromJson)(nil),     // 4: merlin.transformer.FromJson
-	(*FromTable)(nil),    // 5: merlin.transformer.FromTable
+	(JsonType)(0),        // 0: merlin.transformer.JsonType
+	(*JsonOutput)(nil),   // 1: merlin.transformer.JsonOutput
+	(*JsonTemplate)(nil), // 2: merlin.transformer.JsonTemplate
+	(*BaseJson)(nil),     // 3: merlin.transformer.BaseJson
+	(*Field)(nil),        // 4: merlin.transformer.Field
+	(*FromJson)(nil),     // 5: merlin.transformer.FromJson
+	(*FromTable)(nil),    // 6: merlin.transformer.FromTable
 }
 var file_transformer_spec_json_proto_depIdxs = []int32{
-	1, // 0: merlin.transformer.JsonOutput.jsonTemplate:type_name -> merlin.transformer.JsonTemplate
-	2, // 1: merlin.transformer.JsonTemplate.baseJson:type_name -> merlin.transformer.BaseJson
-	3, // 2: merlin.transformer.JsonTemplate.fields:type_name -> merlin.transformer.Field
-	4, // 3: merlin.transformer.BaseJson.fromJson:type_name -> merlin.transformer.FromJson
-	5, // 4: merlin.transformer.BaseJson.fromTable:type_name -> merlin.transformer.FromTable
-	3, // 5: merlin.transformer.Field.fields:type_name -> merlin.transformer.Field
-	4, // 6: merlin.transformer.Field.fromJson:type_name -> merlin.transformer.FromJson
-	5, // 7: merlin.transformer.Field.fromTable:type_name -> merlin.transformer.FromTable
+	2, // 0: merlin.transformer.JsonOutput.jsonTemplate:type_name -> merlin.transformer.JsonTemplate
+	3, // 1: merlin.transformer.JsonTemplate.baseJson:type_name -> merlin.transformer.BaseJson
+	4, // 2: merlin.transformer.JsonTemplate.fields:type_name -> merlin.transformer.Field
+	5, // 3: merlin.transformer.BaseJson.fromJson:type_name -> merlin.transformer.FromJson
+	6, // 4: merlin.transformer.BaseJson.fromTable:type_name -> merlin.transformer.FromTable
+	4, // 5: merlin.transformer.Field.fields:type_name -> merlin.transformer.Field
+	5, // 6: merlin.transformer.Field.fromJson:type_name -> merlin.transformer.FromJson
+	6, // 7: merlin.transformer.Field.fromTable:type_name -> merlin.transformer.FromTable
 	8, // [8:8] is the sub-list for method output_type
 	8, // [8:8] is the sub-list for method input_type
 	8, // [8:8] is the sub-list for extension type_name
@@ -461,13 +516,14 @@ func file_transformer_spec_json_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_transformer_spec_json_proto_rawDesc,
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_transformer_spec_json_proto_goTypes,
 		DependencyIndexes: file_transformer_spec_json_proto_depIdxs,
+		EnumInfos:         file_transformer_spec_json_proto_enumTypes,
 		MessageInfos:      file_transformer_spec_json_proto_msgTypes,
 	}.Build()
 	File_transformer_spec_json_proto = out.File

@@ -22,7 +22,7 @@ message BaseTable {
 
 message Column {
   string name = 1;
-  oneof value {
+  oneof columnValue {
     FromJson fromJson = 2;
     string expression = 3;
   }
