@@ -432,6 +432,35 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 			nil,
 			errors.New("unsupported type BYTES"),
 		},
+		{
+			"S2ID expression",
+			&spec.Entity{
+				Name:      "s2id",
+				ValueType: "STRING",
+				Extractor: &spec.Entity_Expression{
+					Expression: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal("1154732743855177728"),
+			},
+			nil,
+		},
+		{
+			"Array of S2ID expression",
+			&spec.Entity{
+				Name:      "s2id",
+				ValueType: "STRING",
+				Extractor: &spec.Entity_Expression{
+					Expression: "S2ID(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
+				},
+			},
+			[]*feastType.Value{
+				feast.StrVal("1154732743855177728"),
+				feast.StrVal("1154732743855177728"),
+			},
+			nil,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -454,6 +483,9 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 			case *spec.Entity_Udf:
 				compiledUdf, _ := expr.Compile(test.entityConfig.GetUdf(), expr.Env(sr), expr.AllowUndefinedVariables())
 				compiledExpressions.Set(test.entityConfig.GetUdf(), compiledUdf)
+			case *spec.Entity_Expression:
+				compiledExpression, _ := expr.Compile(test.entityConfig.GetExpression(), expr.Env(sr), expr.AllowUndefinedVariables())
+				compiledExpressions.Set(test.entityConfig.GetExpression(), compiledExpression)
 			}
 
 			er := NewEntityExtractor(compiledJsonPaths, compiledExpressions)
