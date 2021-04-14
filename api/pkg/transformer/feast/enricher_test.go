@@ -614,16 +614,16 @@ func TestTransformer_Transform(t *testing.T) {
 			mockFeatureRetriever.On("RetrieveFeatureOfEntityInRequest", mock.Anything, requestJson).
 				Return(tt.mockFeatureRetriever.result, tt.mockFeatureRetriever.error)
 
-			f, err := NewTransformer(mockFeatureRetriever, logger)
+			f, err := NewEnricher(mockFeatureRetriever, logger)
 			assert.NoError(t, err)
 
-			got, err := f.Transform(tt.args.ctx, tt.args.request, nil)
+			got, err := f.Enrich(tt.args.ctx, tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("spec.Transform() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("spec.Enrich() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("spec.Transform() = %s, want %s", got, tt.want)
+				t.Errorf("spec.Enrich() = %s, want %s", got, tt.want)
 			}
 
 		})

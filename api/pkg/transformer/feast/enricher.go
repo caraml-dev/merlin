@@ -9,29 +9,29 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer"
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
-// Transformer wraps feast serving client to retrieve features.
-type Transformer struct {
+// Enricher wraps feast serving client to retrieve features.
+type Enricher struct {
 	featureRetriever FeatureRetriever
 	logger           *zap.Logger
 }
 
-// NewTransformer initializes a new Transformer.
-func NewTransformer(featureRetriever FeatureRetriever, logger *zap.Logger) (*Transformer, error) {
-	return &Transformer{
+// NewEnricher initializes a new Enricher.
+func NewEnricher(featureRetriever FeatureRetriever, logger *zap.Logger) (*Enricher, error) {
+	return &Enricher{
 		featureRetriever: featureRetriever,
 		logger:           logger,
 	}, nil
 }
 
-// Transform retrieves the Feast features values and add them into the request.
-func (t *Transformer) Transform(ctx context.Context, request []byte, _ map[string]string) ([]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.Transform")
+// Enrich retrieves the Feast features values and add them into the request.
+func (t *Enricher) Enrich(ctx context.Context, request []byte, _ map[string]string) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.Enrich")
 	defer span.Finish()
 
-	var requestJson transTypes.JSONObject
+	var requestJson types.JSONObject
 	err := json.Unmarshal(request, &requestJson)
 	if err != nil {
 		return nil, err
@@ -50,11 +50,11 @@ func (t *Transformer) Transform(ctx context.Context, request []byte, _ map[strin
 	return out, err
 }
 
-func enrichRequest(ctx context.Context, request []byte, feastFeatures []*transTypes.FeatureTable) ([]byte, error) {
+func enrichRequest(ctx context.Context, request []byte, feastFeatures []*types.FeatureTable) ([]byte, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.enrichRequest")
 	defer span.Finish()
 
-	feastFeatureMap := make(map[string]*transTypes.FeatureTable)
+	feastFeatureMap := make(map[string]*types.FeatureTable)
 	for _, ft := range feastFeatures {
 		feastFeatureMap[ft.Name] = ft
 	}

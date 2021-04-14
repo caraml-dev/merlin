@@ -963,7 +963,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 
 			got, err := fr.RetrieveFeatureOfEntityInRequest(tt.args.ctx, requestJson)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("spec.Transform() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("spec.Enrich() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
@@ -1828,7 +1828,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 
 			gotFeatureTables, err := fr.RetrieveFeatureOfEntityInRequest(tt.args.ctx, requestJson)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("spec.Transform() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("spec.Enrich() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 

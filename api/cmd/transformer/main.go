@@ -89,9 +89,9 @@ func main() {
 		if err != nil {
 			logger.Fatal("Unable to initialize transformer", zap.Error(err))
 		}
-		s.PreprocessHandler = feastTransformer.Transform
+		s.PreprocessHandler = feastTransformer.Enrich
 	} else {
-		// Standard Transformer
+		// Standard Enricher
 		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClient, &appConfig.Feast, &appConfig.Cache, logger)
 		compiledPipeline, err := compiler.Compile(transformerConfig)
 		if err != nil {
@@ -110,7 +110,7 @@ func main() {
 func initFeastTransformer(appCfg AppConfig,
 	feastClient *feastSdk.GrpcClient,
 	transformerConfig *spec.StandardTransformerConfig,
-	logger *zap.Logger) (*feast.Transformer, error) {
+	logger *zap.Logger) (*feast.Enricher, error) {
 
 	var memoryCache cache.Cache
 	if appCfg.Feast.CacheEnabled {
@@ -140,7 +140,7 @@ func initFeastTransformer(appCfg AppConfig,
 		logger,
 	)
 
-	return feast.NewTransformer(featureRetriever, logger)
+	return feast.NewEnricher(featureRetriever, logger)
 }
 
 func initTracing(serviceName string) (io.Closer, error) {
