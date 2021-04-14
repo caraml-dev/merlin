@@ -34,7 +34,6 @@ require (
 	github.com/jinzhu/gorm v1.9.11
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kubeflow/kfserving v0.4.1
-	github.com/magiconair/properties v1.8.1
 	github.com/mmcloughlin/geohash v0.10.0
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/opentracing-contrib/go-stdlib v1.0.0

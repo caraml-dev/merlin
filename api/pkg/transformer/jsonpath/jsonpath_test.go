@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/magiconair/properties/assert"
 	"github.com/oliveagle/jsonpath"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
@@ -116,15 +116,15 @@ func TestMustCompileJsonPath(t *testing.T) {
 			".book",
 			nil,
 			true,
-			errors.New("should start with '\\$'"),
+			errors.New("should start with '$'"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantErr {
-				assert.Panic(t, func() {
+				assert.PanicsWithError(t, tt.expError.Error(), func() {
 					MustCompileJsonPath(tt.jsonPath)
-				}, tt.expError.Error())
+				})
 				return
 			}
 

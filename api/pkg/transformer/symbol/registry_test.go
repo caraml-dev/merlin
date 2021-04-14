@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/magiconair/properties/assert"
 	"github.com/mmcloughlin/geohash"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/types"
@@ -204,9 +204,9 @@ func TestSymbolRegistry_Geohash(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantErr {
-				assert.Panic(t, func() {
+				assert.PanicsWithError(t, tt.wantErrVal.Error(), func() {
 					sr.Geohash(tt.args.latitude, tt.args.longitude, tt.args.precision)
-				}, tt.wantErrVal.Error())
+				})
 				return
 			}
 
@@ -371,9 +371,9 @@ func TestSymbolRegistry_S2ID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantErr {
-				assert.Panic(t, func() {
+				assert.PanicsWithError(t, tt.wantErrVal.Error(), func() {
 					sr.S2ID(tt.args.latitude, tt.args.longitude, tt.args.level)
-				}, tt.wantErrVal.Error())
+				})
 				return
 			}
 
@@ -457,7 +457,7 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 			},
 			nil,
 			true,
-			fmt.Errorf("the value specified in path `\\$.not_json` should be a valid JSON"),
+			fmt.Errorf("the value specified in path `$.not_json` should be a valid JSON"),
 		},
 		{
 			"should throw error when value obtained by key is not string",
@@ -466,15 +466,15 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 			},
 			nil,
 			true,
-			errors.New("the value specified in path `\\$.not_string` should be of string type"),
+			errors.New("the value specified in path `$.not_string` should be of string type"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantErr {
-				assert.Panic(t, func() {
+				assert.PanicsWithError(t, tt.wantErrVal.Error(), func() {
 					sr.JsonExtract(tt.args.parentJsonPath, tt.args.nestedJsonPath)
-				}, tt.wantErrVal.Error())
+				})
 				return
 			}
 
