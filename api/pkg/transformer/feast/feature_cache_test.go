@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	mocks2 "github.com/gojek/merlin/pkg/transformer/cache/mocks"
+	"github.com/gojek/merlin/pkg/transformer/cache/mocks"
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
@@ -32,7 +32,7 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 		entityNotInCache  []feast.Row
 	}{
 		{
-			desc:    "Success - 1, all cacheKey has cacheValue in cache",
+			desc:    "Success - 1, all entity has value in cache",
 			project: "default",
 			cacheMocks: []mockCache{
 				{
@@ -76,7 +76,7 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 			entityNotInCache: nil,
 		},
 		{
-			desc:    "Success - 2, one of  cacheKey has cacheValue in cache",
+			desc:    "Success - 2, one of  entity has value in cache",
 			project: "default",
 			cacheMocks: []mockCache{
 				{
@@ -118,7 +118,7 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 			},
 		},
 		{
-			desc:    "Success - 3, none of cacheKey has cacheValue in cache",
+			desc:    "Success - 3, none of entity has value in cache",
 			project: "default",
 			cacheMocks: []mockCache{
 				{
@@ -157,7 +157,7 @@ func TestFetchFeaturesFromCache(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.desc, func(t *testing.T) {
-			mockCache := &mocks2.Cache{}
+			mockCache := &mocks.Cache{}
 			for _, cc := range tt.cacheMocks {
 				key := CacheKey{Entity: cc.cacheKey, Project: tt.project}
 				keyByte, err := json.Marshal(key)
@@ -319,7 +319,7 @@ func TestInsertMultipleFeaturesToCache(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.desc, func(t *testing.T) {
-			mockCache := &mocks2.Cache{}
+			mockCache := &mocks.Cache{}
 			for _, cc := range tt.cacheMocks {
 				key := CacheKey{Entity: cc.entity, Project: tt.project}
 				keyByte, err := json.Marshal(key)
