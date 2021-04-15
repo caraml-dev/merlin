@@ -95,8 +95,10 @@ spec:
           - name: REACT_APP_SENTRY_DSN
             value: "{{ .Values.merlin.sentry.dsn }}"
           {{- end }}
+          {{- if .Values.merlin.docsURL }}
           - name: REACT_APP_MERLIN_DOCS_URL
-            value: "{{ .Values.merlin.docsURL }}"
+            value: {{ .Values.merlin.docsURL | toJson | quote  }}
+          {{- end }}
           - name: REACT_APP_ALERT_ENABLED
             value: "{{ .Values.merlin.alert.enabled }}"
           - name: REACT_APP_MONITORING_DASHBOARD_ENABLED
