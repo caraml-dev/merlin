@@ -16,15 +16,15 @@
 
 import React from "react";
 import { navigate } from "@reach/router";
+import PropTypes from "prop-types";
 import {
   ApplicationsContextProvider,
   CurrentProjectContextProvider,
   Header,
-  NavDrawer,
   ProjectsContextProvider
 } from "@gojek/mlp-ui";
 import config, { appConfig } from "./config";
-import PropTypes from "prop-types";
+import "./PrivateLayout.scss";
 
 export const PrivateLayout = Component => {
   return props => (
@@ -34,13 +34,14 @@ export const PrivateLayout = Component => {
           <Header
             homeUrl={config.HOMEPAGE}
             appIcon="machineLearningApp"
-            helpLink={appConfig.docsUrl}
+            docLinks={appConfig.docsUrl}
             onProjectSelect={projectId =>
               navigate(`${config.HOMEPAGE}/projects/${projectId}/models`)
             }
           />
-          <NavDrawer homeUrl={config.HOMEPAGE} />
-          <Component {...props} />
+          <div className="main-component-layout">
+            <Component {...props} />
+          </div>
         </CurrentProjectContextProvider>
       </ProjectsContextProvider>
     </ApplicationsContextProvider>
