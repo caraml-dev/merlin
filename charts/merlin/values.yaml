@@ -28,7 +28,9 @@ merlin:
 
   apiHost: http://merlin.mlp/v1
 
-  docsURL: ""
+  docsURL: [
+    {"href":"https://github.com/gojek/merlin/blob/main/docs/getting-started/README.md","label":"Getting Started with Merlin"}
+  ]
 
   # Comma-separated value of Docker registries that can be chosen in deployment page
   dockerRegistries: ghcr.io/gojek,ghcr.io/your-company
@@ -196,7 +198,7 @@ mlflow:
     repository: gojek/mlflow
     tag: 1.3.0
     pullPolicy: Always
-  
+
   replicaCount: 1
 
   rollingUpdate:
@@ -261,7 +263,7 @@ mlflow:
     enabled: false
     class: "nginx"
     # host:
-  
+
   # These labels help us to account for the usage and cost of each deployment used in all environments and also the teams using them.
   # For the `app` label, there will be problems relabelling them since the replication controller uses the old values.
   # Feel free to put other podLabels as you deem fit.
