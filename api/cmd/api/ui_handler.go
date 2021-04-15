@@ -6,18 +6,20 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/gojek/merlin/config"
 )
 
 type uiEnvHandler struct {
-	OauthClientID    string `json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
-	Environment      string `json:"REACT_APP_ENVIRONMENT,omitempty"`
-	SentryDSN        string `json:"REACT_APP_SENTRY_DSN,omitempty"`
-	DocURL           string `json:"REACT_APP_MERLIN_DOCS_URL,omitempty"`
-	HomePage         string `json:"REACT_APP_HOMEPAGE,omitempty"`
-	MerlinURL        string `json:"REACT_APP_MERLIN_API,omitempty"`
-	MlpURL           string `json:"REACT_APP_MLP_API,omitempty"`
-	FeastCoreURL     string `json:"REACT_APP_FEAST_CORE_API,omitempty"`
-	DockerRegistries string `json:"REACT_APP_DOCKER_REGISTRIES,omitempty"`
+	OauthClientID    string                `json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
+	Environment      string                `json:"REACT_APP_ENVIRONMENT,omitempty"`
+	SentryDSN        string                `json:"REACT_APP_SENTRY_DSN,omitempty"`
+	DocURL           config.Documentations `json:"REACT_APP_MERLIN_DOCS_URL,omitempty"`
+	HomePage         string                `json:"REACT_APP_HOMEPAGE,omitempty"`
+	MerlinURL        string                `json:"REACT_APP_MERLIN_API,omitempty"`
+	MlpURL           string                `json:"REACT_APP_MLP_API,omitempty"`
+	FeastCoreURL     string                `json:"REACT_APP_FEAST_CORE_API,omitempty"`
+	DockerRegistries string                `json:"REACT_APP_DOCKER_REGISTRIES,omitempty"`
 
 	MonitoringEnabled              bool   `json:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
 	MonitoringPredictionJobBaseURL string `json:"REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"`

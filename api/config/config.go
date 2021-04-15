@@ -15,6 +15,8 @@
 package config
 
 import (
+	"encoding/json"
+
 	"github.com/kelseyhightower/envconfig"
 
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
@@ -54,17 +56,34 @@ type UIConfig struct {
 }
 
 type ReactAppConfig struct {
-	OauthClientID     string `envconfig:"REACT_APP_OAUTH_CLIENT_ID"`
-	Environment       string `envconfig:"REACT_APP_ENVIRONMENT"`
-	SentryDSN         string `envconfig:"REACT_APP_SENTRY_DSN"`
-	DocURL            string `envconfig:"REACT_APP_MERLIN_DOCS_URL"`
-	AlertEnabled      bool   `envconfig:"REACT_APP_ALERT_ENABLED"`
-	MonitoringEnabled bool   `envconfig:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
-	HomePage          string `envconfig:"REACT_APP_HOMEPAGE"`
-	MerlinURL         string `envconfig:"REACT_APP_MERLIN_API"`
-	MlpURL            string `envconfig:"REACT_APP_MLP_API"`
-	FeastCoreURL      string `envconfig:"REACT_APP_FEAST_CORE_API"`
-	DockerRegistries  string `envconfig:"REACT_APP_DOCKER_REGISTRIES"`
+	OauthClientID     string         `envconfig:"REACT_APP_OAUTH_CLIENT_ID"`
+	Environment       string         `envconfig:"REACT_APP_ENVIRONMENT"`
+	SentryDSN         string         `envconfig:"REACT_APP_SENTRY_DSN"`
+	DocURL            Documentations `envconfig:"REACT_APP_MERLIN_DOCS_URL"`
+	AlertEnabled      bool           `envconfig:"REACT_APP_ALERT_ENABLED"`
+	MonitoringEnabled bool           `envconfig:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
+	HomePage          string         `envconfig:"REACT_APP_HOMEPAGE"`
+	MerlinURL         string         `envconfig:"REACT_APP_MERLIN_API"`
+	MlpURL            string         `envconfig:"REACT_APP_MLP_API"`
+	FeastCoreURL      string         `envconfig:"REACT_APP_FEAST_CORE_API"`
+	DockerRegistries  string         `envconfig:"REACT_APP_DOCKER_REGISTRIES"`
+}
+
+type Documentations []Documentation
+
+type Documentation struct {
+	Label string `json:"label"`
+	Href  string `json:"href"`
+}
+
+func (docs *Documentations) Decode(value string) error {
+	var listOfDoc Documentations
+
+	if err := json.Unmarshal([]byte(value), &listOfDoc); err != nil {
+		return err
+	}
+	*docs = listOfDoc
+	return nil
 }
 
 type DatabaseConfig struct {
