@@ -28,6 +28,8 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 				env.SetSymbol(varDef.Name, val.FloatValue)
 			case *spec.Literal_StringValue:
 				env.SetSymbol(varDef.Name, val.StringValue)
+			case *spec.Literal_BoolValue:
+				env.SetSymbol(varDef.Name, val.BoolValue)
 			}
 
 		case *spec.Variable_Expression:

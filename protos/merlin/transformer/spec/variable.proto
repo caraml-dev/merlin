@@ -19,5 +19,6 @@ message Literal {
     string stringValue = 1;
     int64 intValue = 2;
     double floatValue = 3;
+    bool boolValue = 4;
   }
 }

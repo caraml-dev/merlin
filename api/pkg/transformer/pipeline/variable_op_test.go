@@ -111,6 +111,14 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 							},
 						},
 					},
+					{
+						Name: "myBoolLiteral",
+						Value: &spec.Variable_Literal{
+							Literal: &spec.Literal{
+								LiteralValue: &spec.Literal_BoolValue{true},
+							},
+						},
+					},
 				},
 			},
 
@@ -121,6 +129,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 				"myIntegerLiteral": int64(1),
 				"myFloatLiteral":   float64(1.2345),
 				"myStringLiteral":  "hello world",
+				"myBoolLiteral":    true,
 			},
 			false,
 		},
