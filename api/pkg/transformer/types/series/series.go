@@ -22,6 +22,13 @@ type Series struct {
 	series *series.Series
 }
 
+type contentType struct {
+	hasFloat  bool
+	hasInt    bool
+	hasBool   bool
+	hasString bool
+}
+
 func NewSeries(s *series.Series) *Series {
 	return &Series{s}
 }
@@ -50,7 +57,7 @@ func (s *Series) Type() Type {
 }
 
 func detectType(values interface{}) Type {
-	var hasBool, hasString, hasInt, hasFloat bool
+	contentType := &contentType{}
 	v := reflect.ValueOf(values)
 	switch v.Kind() {
 	case reflect.Slice:
@@ -59,42 +66,38 @@ func detectType(values interface{}) Type {
 				continue
 			}
 
-			switch v.Index(i).Interface().(type) {
-			case float64, float32:
-				hasFloat = true
-			case int, int8, int16, int32, int64:
-				hasInt = true
-			case bool:
-				hasBool = true
-			default:
-				hasString = true
-			}
+			contentType = hasType(v.Index(i).Interface(), contentType)
 		}
 	default:
-		switch values.(type) {
-		case float64, float32:
-			hasFloat = true
-		case int, int8, int16, int32, int64:
-			hasInt = true
-		case bool:
-			hasBool = true
-		default:
-			hasString = true
-		}
+		contentType = hasType(values, contentType)
 	}
 
 	switch {
-	case hasString:
+	case contentType.hasString:
 		return String
-	case hasBool:
+	case contentType.hasBool:
 		return Bool
-	case hasFloat:
+	case contentType.hasFloat:
 		return Float
-	case hasInt:
+	case contentType.hasInt:
 		return Int
 	default:
 		return String
 	}
+}
+
+func hasType(value interface{}, contentType *contentType) *contentType {
+	switch value.(type) {
+	case float64, float32:
+		contentType.hasFloat = true
+	case int, int8, int16, int32, int64:
+		contentType.hasInt = true
+	case bool:
+		contentType.hasBool = true
+	default:
+		contentType.hasString = true
+	}
+	return contentType
 }
 
 func castValues(values interface{}, colType Type) ([]interface{}, error) {
