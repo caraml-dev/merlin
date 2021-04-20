@@ -5,7 +5,6 @@ import (
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -50,23 +49,4 @@ func CompileExpressions(featureTableSpecs []*spec.FeatureTable) (map[string]*vm.
 	}
 
 	return compiledExpression, nil
-}
-
-func compileDefaultValues(featureTableSpecs []*spec.FeatureTable) map[string]*feastTypes.Value {
-	defaultValues := make(map[string]*feastTypes.Value)
-	// populate default values
-	for _, ft := range featureTableSpecs {
-		for _, f := range ft.Features {
-			if len(f.DefaultValue) != 0 {
-				feastValType := feastTypes.ValueType_Enum(feastTypes.ValueType_Enum_value[f.ValueType])
-				defVal, err := getValue(f.DefaultValue, feastValType)
-				if err != nil {
-					continue
-				}
-				defaultValues[f.Name] = defVal
-			}
-		}
-	}
-
-	return defaultValues
 }

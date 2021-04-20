@@ -31,7 +31,7 @@ type FeastRetriever struct {
 	entityExtractor   *EntityExtractor
 	featureTableSpecs []*spec.FeatureTable
 
-	defaultValues map[string]*types.Value
+	defaultValues defaultValues
 	options       *Options
 	cache         cache.Cache
 	logger        *zap.Logger
@@ -233,7 +233,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 
 			fr.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
 
-			entityFeaturePairs, err := fr.buildFeastFeaturesData(ctx, feastResponse, columns, entityIndices)
+			entityFeaturePairs, err := fr.buildFeastFeaturesData(ctx, feastResponse, featureTableSpec.Project, columns, entityIndices)
 			if err != nil {
 				batchResultChan <- batchResult{featuresData: nil, columnTypes: nil, err: err}
 				return
@@ -272,7 +272,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 	}, nil
 }
 
-func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, columns []string, entityIndexMap map[int]int) ([]entityFeaturePair, error) {
+func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, projectName string, columns []string, entityIndexMap map[int]int) ([]entityFeaturePair, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildFeastFeaturesData")
 	defer span.Finish()
 
@@ -315,7 +315,7 @@ func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastRespo
 					feastFeatureSummary.WithLabelValues(column).Observe(v)
 				}
 			case serving.GetOnlineFeaturesResponse_NOT_FOUND, serving.GetOnlineFeaturesResponse_NULL_VALUE, serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
-				defVal, ok := fr.defaultValues[column]
+				defVal, ok := fr.defaultValues.GetDefaultValue(projectName, column)
 				if !ok {
 					row = append(row, nil)
 					continue
