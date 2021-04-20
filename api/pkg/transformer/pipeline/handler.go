@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
@@ -18,6 +20,9 @@ func NewHandler(compiledPipeline *CompiledPipeline) *Handler {
 }
 
 func (h *Handler) Preprocess(ctx context.Context, rawRequest []byte, rawRequestHeaders map[string]string) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "pipeline.Preprocess")
+	defer span.Finish()
+
 	env := getEnvironment(ctx)
 	var rawRequestObj types.JSONObject
 	err := json.Unmarshal(rawRequest, &rawRequestObj)
@@ -30,6 +35,9 @@ func (h *Handler) Preprocess(ctx context.Context, rawRequest []byte, rawRequestH
 }
 
 func (h *Handler) Postprocess(ctx context.Context, modelResponse []byte, modelResponseHeaders map[string]string) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "pipeline.Postprocess")
+	defer span.Finish()
+
 	env := getEnvironment(ctx)
 
 	var modelResponseObj types.JSONObject

@@ -88,7 +88,7 @@ type parallelCallResult struct {
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.Enrich")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.RetrieveFromRequest")
 	defer span.Finish()
 
 	sr := symbol.NewRegistryWithCompiledJSONPath(fr.entityExtractor.compiledJsonPath)
@@ -98,7 +98,7 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, 
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.Enrich")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.RetrieveFromSymbolRegistry")
 	defer span.Finish()
 
 	nbTables := len(fr.featureTableSpecs)
