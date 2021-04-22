@@ -15,17 +15,9 @@ import (
 )
 
 // ValidateTransformerConfig validate transformer config by checking the presence of entity and features in feast core
-func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, trfCfg *spec.StandardTransformerConfig) error {
-	if trfCfg.TransformerConfig == nil {
-		return NewValidationError("transformerConfig is empty")
-	}
-
-	if len(trfCfg.TransformerConfig.Feast) == 0 {
-		return NewValidationError("feature retrieval config is empty")
-	}
-
+func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, featureTableConfigs []*spec.FeatureTable) error {
 	// for each feature retrieval table
-	for _, config := range trfCfg.TransformerConfig.Feast {
+	for _, config := range featureTableConfigs {
 		if len(config.Entities) == 0 {
 			return NewValidationError("no entity")
 		}

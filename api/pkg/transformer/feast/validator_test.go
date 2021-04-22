@@ -22,20 +22,6 @@ func TestValidateTransformerConfig(t *testing.T) {
 		wantError             error
 	}{
 		{
-			"empty config",
-			&spec.StandardTransformerConfig{},
-			nil,
-			nil,
-			NewValidationError("transformerConfig is empty"),
-		},
-		{
-			"empty feature table",
-			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{}},
-			nil,
-			nil,
-			NewValidationError("feature retrieval config is empty"),
-		},
-		{
 			"no entity in config",
 			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
 				Feast: []*spec.FeatureTable{
@@ -635,7 +621,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 				mockClient.On("ListFeatures", mock.Anything, mock.Anything).Return(fr, nil)
 			}
 
-			err := ValidateTransformerConfig(context.Background(), mockClient, test.trfConfig)
+			err := ValidateTransformerConfig(context.Background(), mockClient, test.trfConfig.TransformerConfig.Feast)
 			if test.wantError != nil {
 				assert.EqualError(t, err, test.wantError.Error())
 				return
