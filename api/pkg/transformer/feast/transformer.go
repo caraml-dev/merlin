@@ -203,7 +203,7 @@ func (t *Transformer) getFeastFeature(ctx context.Context, tableName string, req
 	span.SetTag("table.name", tableName)
 	defer span.Finish()
 
-	entities, err := t.buildEntitiesRequest(ctx, request, config.Entities)
+	entities, err := t.buildEntitiesRequest(ctx, request, config.Entities, tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +226,6 @@ type batchResult struct {
 }
 
 func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.Row, config *transformer.FeatureTable, features []string) (*FeastFeature, error) {
-
 	var cachedValues FeaturesData
 	entityNotInCache := entities
 
@@ -240,6 +239,7 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 	batchResultChan := make(chan batchResult, numOfBatch)
 	columns := t.getColumnNames(config)
 	entityIndices := t.getEntityIndicesFromColumns(columns, config.Entities)
+
 	for i := 0; i < numOfBatch; i++ {
 		startIndex := i * t.options.BatchSize
 		endIndex := len(entityNotInCache)
@@ -254,6 +254,7 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 				Entities: entityList,
 				Features: features,
 			}
+
 			startTime := time.Now()
 			feastResponse, err := t.feastClient.GetOnlineFeatures(ctx, &feastRequest)
 			durationMs := time.Now().Sub(startTime).Milliseconds()
@@ -266,6 +267,7 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 			}
 			feastLatency.WithLabelValues("success").Observe(float64(durationMs))
 
+			t.logger.Debug("feast_request", zap.Any("feast_request", feastRequest))
 			t.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
 
 			entityFeaturePairs, err := t.buildFeastFeaturesData(ctx, feastResponse, columns, entityIndices)
@@ -337,60 +339,72 @@ func getExpressionExtractor(entity *transformer.Entity) string {
 	return entity.GetUdf()
 }
 
-func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*transformer.Entity) ([]feast.Row, error) {
+func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, configEntities []*transformer.Entity, tableName string) ([]feast.Row, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildEntitiesRequest")
+	span.SetTag("table.name", tableName)
 	defer span.Finish()
 
-	var entities []feast.Row
 	var nodesBody interface{}
 	err := json.Unmarshal(request, &nodesBody)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, configEntity := range configEntities {
-		switch configEntity.Extractor.(type) {
-		case *transformer.Entity_JsonPath:
-			_, ok := t.compiledJsonPath[configEntity.GetJsonPath()]
-			if !ok {
-				c, err := jsonpath.Compile(configEntity.GetJsonPath())
-				if err != nil {
-					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
-				}
-				t.compiledJsonPath[configEntity.GetJsonPath()] = c
-			}
-		}
+	var allSeries [][]*types.Value
+	maxLength := 1
 
+	for k, configEntity := range configEntities {
 		expressionExtractor := getExpressionExtractor(configEntity)
+
 		vals, err := getValuesFromJSONPayload(nodesBody, configEntity, t.compiledJsonPath[configEntity.GetJsonPath()], t.compiledUdf[expressionExtractor])
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}
 
-		if len(entities) == 0 {
-			for _, val := range vals {
-				entities = append(entities, feast.Row{
-					configEntity.Name: val,
-				})
-			}
-		} else {
-			newEntities := []feast.Row{}
-			for _, entity := range entities {
-				for _, val := range vals {
-					newFeastRow := feast.Row{}
-					for k, v := range entity {
-						newFeastRow[k] = v
-					}
+		seriesLength := len(vals)
 
-					newFeastRow[configEntity.Name] = val
-					newEntities = append(newEntities, newFeastRow)
-				}
-			}
-			entities = newEntities
+		if seriesLength != 1 && maxLength != 1 && seriesLength != maxLength {
+			return nil, fmt.Errorf("entity %s has different dimension", configEntities[k].Name)
+		}
+
+		if seriesLength > maxLength {
+			maxLength = seriesLength
+		}
+
+		allSeries = append(allSeries, vals)
+	}
+
+	entities := make([]feast.Row, maxLength)
+	for k := range entities {
+		entities[k] = feast.Row{}
+	}
+
+	for s, series := range allSeries {
+		entityName := configEntities[s].Name
+		if len(series) == 1 {
+			entities = t.broadcastSeries(entityName, series, entities)
+		}
+
+		if len(series) > 1 {
+			entities = t.addSeries(entityName, series, entities)
 		}
 	}
 
 	return entities, nil
+}
+
+func (t *Transformer) broadcastSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
+	for _, entity := range entities {
+		entity[entityName] = series[0]
+	}
+	return entities
+}
+
+func (t *Transformer) addSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
+	for idx, entity := range entities {
+		entity[entityName] = series[idx]
+	}
+	return entities
 }
 
 type entityFeaturePair struct {
