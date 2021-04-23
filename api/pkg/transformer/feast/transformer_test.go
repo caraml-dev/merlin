@@ -1586,6 +1586,7 @@ func Test_buildEntitiesRequest(t *testing.T) {
 		ctx            context.Context
 		request        []byte
 		configEntities []*transformer.Entity
+		tableName      string
 	}
 	tests := []struct {
 		name    string
@@ -2102,7 +2103,7 @@ func Test_buildEntitiesRequest(t *testing.T) {
 			}, logger, nil)
 			assert.NoError(t, err)
 
-			got, err := f.buildEntitiesRequest(tt.args.ctx, tt.args.request, tt.args.configEntities)
+			got, err := f.buildEntitiesRequest(tt.args.ctx, tt.args.request, tt.args.configEntities, "default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("buildEntitiesRequest() error = %v, wantErr %v", err, tt.wantErr)
 				return
