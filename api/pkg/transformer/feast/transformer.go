@@ -375,12 +375,17 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 	}
 
 	entities := make([]feast.Row, maxLength)
+	for k := range entities {
+		entities[k] = feast.Row{}
+	}
+
 	for s, series := range allSeries {
 		entityName := configEntities[s].Name
-
 		if len(series) == 1 {
 			entities = t.broadcastSeries(entityName, series, entities)
-		} else {
+		}
+
+		if len(series) > 1 {
 			entities = t.addSeries(entityName, series, entities)
 		}
 	}
@@ -389,25 +394,15 @@ func (t *Transformer) buildEntitiesRequest(ctx context.Context, request []byte, 
 }
 
 func (t *Transformer) broadcastSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
-	for e := range entities {
-		newFeastRow := feast.Row{}
-		for k, v := range entities[e] {
-			newFeastRow[k] = v
-		}
-		newFeastRow[entityName] = series[0]
-		entities[e] = newFeastRow
+	for _, entity := range entities {
+		entity[entityName] = series[0]
 	}
 	return entities
 }
 
 func (t *Transformer) addSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
-	for e := range entities {
-		newFeastRow := feast.Row{}
-		for k, v := range entities[e] {
-			newFeastRow[k] = v
-		}
-		newFeastRow[entityName] = series[e]
-		entities[e] = newFeastRow
+	for idx, entity := range entities {
+		entity[entityName] = series[idx]
 	}
 	return entities
 }

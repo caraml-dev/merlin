@@ -2116,3 +2116,48 @@ func Test_buildEntitiesRequest(t *testing.T) {
 		})
 	}
 }
+
+// goos: darwin
+// goarch: amd64
+// pkg: github.com/gojek/merlin/pkg/transformer/feast
+// cpu: Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+// Benchmark_buildEntitiesRequest_geohashArrays-8   	   94250	     12922 ns/op	    4818 B/op	     196 allocs/op
+// PASS
+func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
+	mockFeast := &mocks.Client{}
+	logger, _ := zap.NewDevelopment()
+
+	request := []byte(`{"merchants":[{"id": "M111", "latitude": 1.0, "longitude": 1.0}, {"id": "M222", "latitude": 2.0, "longitude": 2.0}]}`)
+
+	configEntities := []*transformer.Entity{
+		{
+			Name:      "merchant_id",
+			ValueType: "STRING",
+			Extractor: &transformer.Entity_JsonPath{
+				JsonPath: "$.merchants[*].id",
+			},
+		},
+		{
+			Name:      "geohash",
+			ValueType: "STRING",
+			Extractor: &transformer.Entity_Udf{
+				Udf: "Geohash(\"$.merchants[*].latitude\", \"$.merchants[*].longitude\", 12)",
+			},
+		},
+	}
+
+	f, _ := NewTransformer(mockFeast, &transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{Feast: []*transformer.FeatureTable{
+		{
+			Entities: configEntities,
+		},
+	}}}, &Options{
+		StatusMonitoringEnabled: false,
+		ValueMonitoringEnabled:  false,
+	}, logger, nil)
+
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		request, _ := f.buildEntitiesRequest(context.Background(), request, configEntities, "default")
+		_ = request
+	}
+}
