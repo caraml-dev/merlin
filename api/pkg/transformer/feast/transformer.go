@@ -248,7 +248,7 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 		}
 		batchedEntities := entityNotInCache[startIndex:endIndex]
 
-		go func(project string, entityList []feast.Row, columns []string, i int) {
+		go func(project string, entityList []feast.Row, columns []string) {
 			feastRequest := feast.OnlineFeaturesRequest{
 				Project:  project,
 				Entities: entityList,
@@ -288,7 +288,7 @@ func (t *Transformer) getFeatureFromFeast(ctx context.Context, entities []feast.
 			}
 
 			batchResultChan <- batchResult{featuresData: featuresData, err: nil}
-		}(config.Project, batchedEntities, columns, i)
+		}(config.Project, batchedEntities, columns)
 	}
 
 	data := cachedValues
