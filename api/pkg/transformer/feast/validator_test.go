@@ -79,7 +79,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 			},
 			&core.ListEntitiesResponse{},
 			nil,
-			NewValidationError("entity not found: customer_id"),
+			NewValidationError("entity customer_id is not found in project default"),
 		},
 		{
 			"extractor not specified",

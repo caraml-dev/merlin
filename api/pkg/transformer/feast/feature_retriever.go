@@ -134,7 +134,7 @@ func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry
 	span.SetTag("table.name", featureTableSpec.TableName)
 	defer span.Finish()
 
-	entities, err := fr.buildEntityRows(ctx, symbolRegistry, featureTableSpec.Entities)
+	entities, err := fr.buildEntityRows(ctx, symbolRegistry, featureTableSpec.Entities, featureTableSpec.TableName)
 	if err != nil {
 		return nil, err
 	}
@@ -146,42 +146,64 @@ func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry
 	return featureTable, nil
 }
 
-func (fr *FeastRetriever) buildEntityRows(ctx context.Context, symbolRegistry symbol.Registry, configEntities []*spec.Entity) ([]feast.Row, error) {
+func (fr *FeastRetriever) buildEntityRows(ctx context.Context, symbolRegistry symbol.Registry, configEntities []*spec.Entity, tableName string) ([]feast.Row, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildEntityRows")
+	span.SetTag("table.name", tableName)
 	defer span.Finish()
 
-	var entities []feast.Row
+	var allSeries [][]*types.Value
+	maxLength := 1
 
-	for _, configEntity := range configEntities {
+	for k, configEntity := range configEntities {
 		vals, err := fr.entityExtractor.ExtractValuesFromSymbolRegistry(symbolRegistry, configEntity)
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
 		}
 
-		if len(entities) == 0 {
-			for _, val := range vals {
-				entities = append(entities, feast.Row{
-					configEntity.Name: val,
-				})
-			}
-		} else {
-			newEntities := []feast.Row{}
-			for _, entity := range entities {
-				for _, val := range vals {
-					newFeastRow := feast.Row{}
-					for k, v := range entity {
-						newFeastRow[k] = v
-					}
+		seriesLength := len(vals)
 
-					newFeastRow[configEntity.Name] = val
-					newEntities = append(newEntities, newFeastRow)
-				}
-			}
-			entities = newEntities
+		if seriesLength != 1 && maxLength != 1 && seriesLength != maxLength {
+			return nil, fmt.Errorf("entity %s has different dimension", configEntities[k].Name)
+		}
+
+		if seriesLength > maxLength {
+			maxLength = seriesLength
+		}
+
+		allSeries = append(allSeries, vals)
+	}
+
+	entities := make([]feast.Row, maxLength)
+	for k := range entities {
+		entities[k] = feast.Row{}
+	}
+
+	for s, series := range allSeries {
+		entityName := configEntities[s].Name
+		if len(series) == 1 {
+			entities = broadcastSeries(entityName, series, entities)
+		}
+
+		if len(series) > 1 {
+			entities = addSeries(entityName, series, entities)
 		}
 	}
 
 	return entities, nil
+}
+
+func broadcastSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
+	for _, entity := range entities {
+		entity[entityName] = series[0]
+	}
+	return entities
+}
+
+func addSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
+	for idx, entity := range entities {
+		entity[entityName] = series[idx]
+	}
+	return entities
 }
 
 func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.Row, featureTableSpec *spec.FeatureTable) (*transTypes.FeatureTable, error) {

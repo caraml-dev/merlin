@@ -50,7 +50,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 		for _, entity := range config.Entities {
 			entitySpec, found := allEntities[entity.Name]
 			if !found {
-				return NewValidationError("entity not found: " + entity.Name)
+				return NewValidationError(fmt.Sprintf("entity %s is not found in project %s", entity.Name, config.Project))
 			}
 
 			switch entity.Extractor.(type) {

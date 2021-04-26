@@ -2061,8 +2061,6 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 			},
 			want: []feast.Row{
 				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111")},
 				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222")},
 			},
 			wantErr: false,
@@ -2169,8 +2167,6 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 			},
 			want: []feast.Row{
 				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111")},
 				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222")},
 			},
 			wantErr: false,
@@ -2242,18 +2238,40 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 			},
 			want: []feast.Row{
 				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111")},
 				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222")},
 			},
 			wantErr: false,
 		},
 		{
-			name: "4 entities with multiple values each",
+			name: "2 entities from an array",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"merchant":[{"id": "M111", "label": "M" }, {"id": "M222", "label": "M"}]}`),
+				entitySpecs: []*spec.Entity{
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						Extractor: &spec.Entity_JsonPath{
+							JsonPath: "$.merchant[*].id",
+						},
+					},
+					{
+						Name:      "merchant_label",
+						ValueType: "STRING",
+						Extractor: &spec.Entity_JsonPath{
+							JsonPath: "$.merchant[*].label",
+						},
+					},
+				},
+			},
+			want: []feast.Row{
+				{"merchant_id": feast.StrVal("M111"), "merchant_label": feast.StrVal("M")},
+				{"merchant_id": feast.StrVal("M222"), "merchant_label": feast.StrVal("M")},
+			},
+			wantErr: false,
+		},
+		{
+			name: "4 entities with different dimension each",
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"customer_id":[1111,2222,3333],"merchant_id":["M111","M222"],"driver_id":["D111","D222"],"order_id":["O111","O222"]}`),
@@ -2288,33 +2306,8 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 					},
 				},
 			},
-			want: []feast.Row{
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(1111), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(2222), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M111"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D111"), "order_id": feast.StrVal("O222")},
-				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O111")},
-				{"customer_id": feast.Int64Val(3333), "merchant_id": feast.StrVal("M222"), "driver_id": feast.StrVal("D222"), "order_id": feast.StrVal("O222")},
-			},
-			wantErr: false,
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "geohash entity from latitude and longitude",
@@ -2333,6 +2326,34 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 			},
 			want: []feast.Row{
 				{"my_geohash": feast.StrVal(geohash.Encode(1.0, 2.0))},
+			},
+			wantErr: false,
+		},
+		{
+			name: "geohash entity from arrays",
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"merchants":[{"id": "M111", "latitude": 1.0, "longitude": 1.0}, {"id": "M222", "latitude": 2.0, "longitude": 2.0}]}`),
+				entitySpecs: []*spec.Entity{
+					{
+						Name:      "merchant_id",
+						ValueType: "STRING",
+						Extractor: &spec.Entity_JsonPath{
+							JsonPath: "$.merchants[*].id",
+						},
+					},
+					{
+						Name:      "geohash",
+						ValueType: "STRING",
+						Extractor: &spec.Entity_Udf{
+							Udf: "Geohash(\"$.merchants[*].latitude\", \"$.merchants[*].longitude\", 12)",
+						},
+					},
+				},
+			},
+			want: []feast.Row{
+				{"merchant_id": feast.StrVal("M111"), "geohash": feast.StrVal(geohash.Encode(1.0, 1.0))},
+				{"merchant_id": feast.StrVal("M222"), "geohash": feast.StrVal(geohash.Encode(2.0, 2.0))},
 			},
 			wantErr: false,
 		},
@@ -2381,7 +2402,7 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 			}
 			sr.SetRawRequestJSON(requestJson)
 
-			got, err := fr.buildEntityRows(tt.args.ctx, sr, tt.args.entitySpecs)
+			got, err := fr.buildEntityRows(tt.args.ctx, sr, tt.args.entitySpecs, "test_table")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("buildEntityRows() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -2556,5 +2577,80 @@ func Test_getFeatureValue(t *testing.T) {
 			}
 			assert.Equal(t, tt.wantValType, gotValType)
 		})
+	}
+}
+
+// goos: darwin
+// goarch: amd64
+// pkg: github.com/gojek/merlin/pkg/transformer/feast
+// cpu: Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+// Benchmark_buildEntitiesRequest_geohashArrays-8   	   94250	     12922 ns/op	    4818 B/op	     196 allocs/op
+// PASS
+func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
+	b.StopTimer()
+	mockFeast := &mocks.Client{}
+	logger, _ := zap.NewDevelopment()
+
+	request := []byte(`{"merchants":[{"id": "M111", "latitude": 1.0, "longitude": 1.0}, {"id": "M222", "latitude": 2.0, "longitude": 2.0}]}`)
+
+	sr := symbol.NewRegistry()
+	featureTableSpecs := []*spec.FeatureTable{
+		{
+			Entities: []*spec.Entity{
+				{
+					Name:      "merchant_id",
+					ValueType: "STRING",
+					Extractor: &spec.Entity_JsonPath{
+						JsonPath: "$.merchants[*].id",
+					},
+				},
+				{
+					Name:      "geohash",
+					ValueType: "STRING",
+					Extractor: &spec.Entity_Udf{
+						Udf: "Geohash(\"$.merchants[*].latitude\", \"$.merchants[*].longitude\", 12)",
+					},
+				},
+			},
+		},
+	}
+	compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs)
+	if err != nil {
+		panic(err)
+	}
+
+	compiledExpressions, err := CompileExpressions(featureTableSpecs)
+	if err != nil {
+		panic(err)
+	}
+
+	jsonPathStorage := jsonpath.NewStorage()
+	jsonPathStorage.AddAll(compiledJSONPaths)
+	expressionStorage := expression.NewStorage()
+	expressionStorage.AddAll(compiledExpressions)
+	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
+	fr := NewFeastRetriever(mockFeast,
+		entityExtractor,
+		featureTableSpecs,
+		&Options{
+			StatusMonitoringEnabled: true,
+			ValueMonitoringEnabled:  true,
+		},
+		nil,
+		logger,
+	)
+
+	var requestJson transTypes.JSONObject
+	err = json.Unmarshal(request, &requestJson)
+	if err != nil {
+		panic(err)
+	}
+	sr.SetRawRequestJSON(requestJson)
+
+	b.StartTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		request, _ := fr.buildEntityRows(context.Background(), sr, featureTableSpecs[0].Entities, "default")
+		_ = request
 	}
 }

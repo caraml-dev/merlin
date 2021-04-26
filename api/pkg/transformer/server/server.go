@@ -82,7 +82,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	s.logger.Debug("requestBody", zap.ByteString("requestBody", requestBody))
+	s.logger.Debug("raw requestBody", zap.ByteString("requestBody", requestBody))
 
 	preprocessedRequestBody := requestBody
 	if s.PreprocessHandler != nil {
@@ -92,7 +92,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
 			return
 		}
-		s.logger.Debug("preprocess requestBody", zap.ByteString("preprocess_response", preprocessedRequestBody))
+		s.logger.Debug("preprocess response", zap.ByteString("preprocess_response", preprocessedRequestBody))
 	}
 
 	resp, err := s.predict(ctx, r, preprocessedRequestBody)
