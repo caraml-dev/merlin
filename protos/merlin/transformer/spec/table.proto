@@ -36,9 +36,10 @@ message TableTransformation {
 
 message TransformationStep {
   repeated string dropColumns = 1;
-  repeated SortColumnRule sort = 2;
-  RenameColumn renameColumn = 3;
-  AddOrUpdateColumn addOrUpdateColumn = 4;
+  repeated string selectColumns = 2;
+  repeated SortColumnRule sort = 3;
+  map<string, string> renameColumns = 4;
+  repeated UpdateColumn updateColumns = 5;
 }
 
 message SortColumnRule {
@@ -47,17 +48,11 @@ message SortColumnRule {
 }
 
 enum SortOrder {
-  INVALID_SORT_ORDER = 0;
-  ASC = 1;
-  DESC = 2;
+  ASC = 0;
+  DESC = 1;
 }
 
-message RenameColumn {
-  string from = 1;
-  string to = 2;
-}
-
-message AddOrUpdateColumn {
+message UpdateColumn {
   string column = 1;
   string expression = 2;
 }

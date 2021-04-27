@@ -2,10 +2,13 @@ package table
 
 import (
 	"fmt"
+	"reflect"
+	"sort"
 
 	"github.com/go-gota/gota/dataframe"
 	gota "github.com/go-gota/gota/series"
 
+	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
@@ -27,6 +30,16 @@ func New(se ...*series.Series) *Table {
 	return &Table{dataFrame: &df}
 }
 
+func NewRaw(columnValues map[string]interface{}) (*Table, error) {
+	newColumns, err := createSeries(columnValues, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	return New(newColumns...), nil
+}
+
+// Row return a table containing only the specified row
 func (t *Table) Row(row int) (*Table, error) {
 	if row < 0 || row >= t.dataFrame.Nrow() {
 		return nil, fmt.Errorf("invalid row number, expected: 0 <= row < %d, got: %d", t.dataFrame.Nrow(), row)
@@ -40,6 +53,7 @@ func (t *Table) Row(row int) (*Table, error) {
 	return &Table{&subsetDataframe}, nil
 }
 
+// Col return a series containing the column specified by colName
 func (t *Table) Col(colName string) (*series.Series, error) {
 	s := t.dataFrame.Col(colName)
 	if s.Err != nil {
@@ -49,16 +63,36 @@ func (t *Table) Col(colName string) (*series.Series, error) {
 	return series.NewSeries(&s), nil
 }
 
+func (t *Table) NRow() int {
+	return t.dataFrame.Nrow()
+}
+
+func (t *Table) ColumnNames() []string {
+	return t.dataFrame.Names()
+}
+
+func (t *Table) Columns() []*series.Series {
+	columnNames := t.ColumnNames()
+	columns := make([]*series.Series, len(columnNames))
+	for idx, columnName := range columnNames {
+		columns[idx], _ = t.Col(columnName)
+	}
+	return columns
+}
+
+// DataFrame return internal representation of table
 func (t *Table) DataFrame() *dataframe.DataFrame {
 	return t.dataFrame
 }
 
+// Copy create a separate copy of the table
 func (t *Table) Copy() *Table {
 	df := t.dataFrame.Copy()
 	return NewTable(&df)
 }
 
-func (t *Table) ConcatColumn(tbl *Table) (*Table, error) {
+// Concat add all column from tbl to this table with restriction that the number of row in tbl is equal with this table
+func (t *Table) Concat(tbl *Table) (*Table, error) {
 	if t.DataFrame().Nrow() != tbl.DataFrame().Nrow() {
 		return nil, fmt.Errorf("different number of row")
 	}
@@ -72,4 +106,178 @@ func (t *Table) ConcatColumn(tbl *Table) (*Table, error) {
 
 	t.dataFrame = &leftDf
 	return t, nil
+}
+
+// DropColumns drop all columns specified in "columns" argument
+// It will return error if "columns" contains column not existing in the table
+func (t *Table) DropColumns(columns []string) error {
+	df := t.dataFrame.Drop(columns)
+	if df.Err != nil {
+		return df.Err
+	}
+	t.dataFrame = &df
+	return nil
+}
+
+// SelectColumns perform reordering of columns and potentially drop column
+// It will return error if "columns" contains column not existing in the table
+func (t *Table) SelectColumns(columns []string) error {
+	df := t.dataFrame.Select(columns)
+	if df.Err != nil {
+		return df.Err
+	}
+	t.dataFrame = &df
+	return nil
+}
+
+// RenameColumns rename multiple column name using the mapping given by "columnMap"
+// It will return error if "columnMap" contains column not existing in the table
+func (t *Table) RenameColumns(columnMap map[string]string) error {
+	df := t.dataFrame
+	columns := df.Names()
+	renamedSeries := make([]gota.Series, len(columns))
+
+	// check all column in columnMap exists in the original table
+	for colName, _ := range columnMap {
+		found := false
+		for _, origCol := range columns {
+			if colName == origCol {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("unable to rename column: unknown column: %s", colName)
+		}
+	}
+
+	// rename columns
+	for idx, column := range columns {
+		col := df.Col(column)
+		newColName, ok := columnMap[column]
+		if !ok {
+			newColName = column
+		}
+
+		col.Name = newColName
+		renamedSeries[idx] = col
+	}
+
+	newDf := dataframe.New(renamedSeries...)
+	t.dataFrame = &newDf
+	return nil
+}
+
+// Sort sort the table using rule specified in sortRules
+// It will return error if "sortRules" contains column not existing in the table
+func (t *Table) Sort(sortRules []*spec.SortColumnRule) error {
+	df := t.dataFrame
+
+	orders := make([]dataframe.Order, len(sortRules))
+	for idx, sortRule := range sortRules {
+		orders[idx] = dataframe.Order{
+			Colname: sortRule.Column,
+			Reverse: sortRule.Order == spec.SortOrder_DESC,
+		}
+	}
+
+	newDf := df.Arrange(orders...)
+	if newDf.Err != nil {
+		return newDf.Err
+	}
+	t.dataFrame = &newDf
+	return nil
+}
+
+func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
+	origColumns := t.Columns()
+
+	newColumns, err := createSeries(columnValues, t.NRow())
+	if err != nil {
+		return err
+	}
+
+	combinedColumns := make([]*series.Series, 0)
+	combinedColumns = append(combinedColumns, newColumns...)
+	for _, origColumn := range origColumns {
+		origColumnName := origColumn.Series().Name
+		_, ok := columnValues[origColumnName]
+		if ok {
+			continue
+		}
+		combinedColumns = append(combinedColumns, origColumn)
+	}
+
+	newT := New(combinedColumns...)
+	t.dataFrame = newT.dataFrame
+	return nil
+}
+
+func getLength(value interface{}) int {
+	colValueVal := reflect.ValueOf(value)
+	switch colValueVal.Kind() {
+	case reflect.Slice:
+		return colValueVal.Len()
+	default:
+		s, ok := value.(*series.Series)
+		if ok {
+			return s.Series().Len()
+		}
+		return 1
+	}
+}
+
+func broadcastScalar(colMap map[string]interface{}, length int) map[string]interface{} {
+	for k, v := range colMap {
+		valueLength := getLength(v)
+		if valueLength > 1 {
+			continue
+		}
+
+		values := make([]interface{}, length)
+		for i := range values {
+			values[i] = v
+		}
+		colMap[k] = values
+	}
+
+	return colMap
+}
+
+func createSeries(columnValues map[string]interface{}, maxLength int) ([]*series.Series, error) {
+	// ensure all values in columnValues has length either 1 or maxLenght
+	for k, v := range columnValues {
+		valueLength := getLength(v)
+		// check that length is either 1 or maxLength
+		if valueLength != 1 && maxLength != 1 && valueLength != maxLength {
+			return nil, fmt.Errorf("columns %s has different dimension", k)
+		}
+
+		if valueLength > maxLength {
+			maxLength = valueLength
+		}
+	}
+
+	columnValues = broadcastScalar(columnValues, maxLength)
+
+	ss := make([]*series.Series, 0)
+	colNames := make([]string, len(columnValues))
+	// get all column name in colMap as slice
+	i := 0
+	for k := range columnValues {
+		colNames[i] = k
+		i++
+	}
+
+	sort.Strings(colNames)
+	for _, colName := range colNames {
+		s, err := series.NewInferType(columnValues[colName], colName)
+		if err != nil {
+			return nil, err
+		}
+		ss = append(ss, s)
+	}
+
+	return ss, nil
 }
