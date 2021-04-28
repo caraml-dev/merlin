@@ -214,6 +214,61 @@ func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 	return nil
 }
 
+// LeftJoin perform left join with the right table on the specified joinColumn
+// Return new table containing the join result
+func (t *Table) LeftJoin(right *Table, joinColumn string) (*Table, error) {
+	df := t.dataFrame.LeftJoin(*right.dataFrame, joinColumn)
+	if df.Err != nil {
+		return nil, df.Err
+	}
+
+	return NewTable(&df), nil
+}
+
+// RightJoin perform right join with the right table on the specified joinColumn
+// Return new table containing the join result
+func (t *Table) RightJoin(right *Table, joinColumn string) (*Table, error) {
+	df := t.dataFrame.RightJoin(*right.dataFrame, joinColumn)
+	if df.Err != nil {
+		return nil, df.Err
+	}
+
+	return NewTable(&df), nil
+}
+
+// InnerJoin perform inner join with the right table on the specified joinColumn
+// Return new table containing the join result
+func (t *Table) InnerJoin(right *Table, joinColumn string) (*Table, error) {
+	df := t.dataFrame.InnerJoin(*right.dataFrame, joinColumn)
+	if df.Err != nil {
+		return nil, df.Err
+	}
+
+	return NewTable(&df), nil
+}
+
+// OuterJoin perform outer join with the right table on the specified joinColumn
+// Return new table containing the join result
+func (t *Table) OuterJoin(right *Table, joinColumn string) (*Table, error) {
+	df := t.dataFrame.OuterJoin(*right.dataFrame, joinColumn)
+	if df.Err != nil {
+		return nil, df.Err
+	}
+
+	return NewTable(&df), nil
+}
+
+// CrossJoin perform cross join with the right table on the specified joinColumn
+// Return new table containing the join result
+func (t *Table) CrossJoin(right *Table) (*Table, error) {
+	df := t.dataFrame.CrossJoin(*right.dataFrame)
+	if df.Err != nil {
+		return nil, df.Err
+	}
+
+	return NewTable(&df), nil
+}
+
 func getLength(value interface{}) int {
 	colValueVal := reflect.ValueOf(value)
 	switch colValueVal.Kind() {

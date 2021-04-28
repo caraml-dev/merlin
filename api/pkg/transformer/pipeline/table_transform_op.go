@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
 type TableTransformOp struct {
@@ -22,14 +21,9 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 	inputTableName := t.tableTransformSpec.InputTable
 	outputTableName := t.tableTransformSpec.OutputTable
 
-	inputTableRaw := env.symbolRegistry[inputTableName]
-	if inputTableRaw == nil {
-		return fmt.Errorf("table %s is not declared", inputTableName)
-	}
-
-	inputTable, ok := inputTableRaw.(*table.Table)
-	if !ok {
-		return fmt.Errorf("variable %s is not a table", inputTableName)
+	inputTable, err := getTable(env, inputTableName)
+	if err != nil {
+		return err
 	}
 
 	resultTable := inputTable.Copy()
