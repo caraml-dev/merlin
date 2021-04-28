@@ -21,11 +21,11 @@ import (
 func TestCreateTableOp_Execute(t *testing.T) {
 	compiledExpression := expression.NewStorage()
 	compiledExpression.AddAll(map[string]*vm.Program{
-		"Now()":                            mustCompileExpression("Now()"),
-		"existing_table.Col('string_col')": mustCompileExpression("existing_table.Col('string_col')"),
-		"existing_table.Col('int_col')":    mustCompileExpression("existing_table.Col('int_col')"),
-		"existing_table.Col('float_col')":  mustCompileExpression("existing_table.Col('float_col')"),
-		"existing_table.Col('bool_col')":   mustCompileExpression("existing_table.Col('bool_col')"),
+		"Now()":                                  mustCompileExpression("Now()"),
+		"existing_table.GetColumn('string_col')": mustCompileExpression("existing_table.GetColumn('string_col')"),
+		"existing_table.GetColumn('int_col')":    mustCompileExpression("existing_table.GetColumn('int_col')"),
+		"existing_table.GetColumn('float_col')":  mustCompileExpression("existing_table.GetColumn('float_col')"),
+		"existing_table.GetColumn('bool_col')":   mustCompileExpression("existing_table.GetColumn('bool_col')"),
 	})
 
 	compiledJsonPath := jsonpath.NewStorage()
@@ -254,25 +254,25 @@ func TestCreateTableOp_Execute(t *testing.T) {
 						{
 							Name: "string_col",
 							ColumnValue: &spec.Column_Expression{
-								Expression: "existing_table.Col('string_col')",
+								Expression: "existing_table.GetColumn('string_col')",
 							},
 						},
 						{
 							Name: "int_col",
 							ColumnValue: &spec.Column_Expression{
-								Expression: "existing_table.Col('int_col')",
+								Expression: "existing_table.GetColumn('int_col')",
 							},
 						},
 						{
 							Name: "float_col",
 							ColumnValue: &spec.Column_Expression{
-								Expression: "existing_table.Col('float_col')",
+								Expression: "existing_table.GetColumn('float_col')",
 							},
 						},
 						{
 							Name: "bool_col",
 							ColumnValue: &spec.Column_Expression{
-								Expression: "existing_table.Col('bool_col')",
+								Expression: "existing_table.GetColumn('bool_col')",
 							},
 						},
 					},

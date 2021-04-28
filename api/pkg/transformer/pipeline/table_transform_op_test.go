@@ -21,12 +21,12 @@ import (
 func TestTableTransformOp_Execute(t1 *testing.T) {
 	compiledExpression := expression.NewStorage()
 	compiledExpression.AddAll(map[string]*vm.Program{
-		"integer_var":                      mustCompileExpression("integer_var"),
-		"Now().Hour()":                     mustCompileExpression("Now().Hour()"),
-		"existing_table.Col('string_col')": mustCompileExpression("existing_table.Col('string_col')"),
-		"existing_table.Col('int_col')":    mustCompileExpression("existing_table.Col('int_col')"),
-		"existing_table.Col('float_col')":  mustCompileExpression("existing_table.Col('float_col')"),
-		"existing_table.Col('bool_col')":   mustCompileExpression("existing_table.Col('bool_col')"),
+		"integer_var":                            mustCompileExpression("integer_var"),
+		"Now().Hour()":                           mustCompileExpression("Now().Hour()"),
+		"existing_table.GetColumn('string_col')": mustCompileExpression("existing_table.GetColumn('string_col')"),
+		"existing_table.GetColumn('int_col')":    mustCompileExpression("existing_table.GetColumn('int_col')"),
+		"existing_table.GetColumn('float_col')":  mustCompileExpression("existing_table.GetColumn('float_col')"),
+		"existing_table.GetColumn('bool_col')":   mustCompileExpression("existing_table.GetColumn('bool_col')"),
 	})
 
 	compiledJsonPath := jsonpath.NewStorage()
@@ -204,7 +204,7 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 							},
 							{
 								Column:     "string_col_copy",
-								Expression: "existing_table.Col('string_col')",
+								Expression: "existing_table.GetColumn('string_col')",
 							},
 							{
 								Column:     "from_variable",
@@ -249,7 +249,7 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 						UpdateColumns: []*spec.UpdateColumn{
 							{
 								Column:     "string_col_copy",
-								Expression: "existing_table.Col('string_col')",
+								Expression: "existing_table.GetColumn('string_col')",
 							},
 						},
 					},

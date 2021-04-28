@@ -104,12 +104,12 @@ func getTable(env *Environment, tableName string) (*table.Table, error) {
 }
 
 func validateJoinColumn(leftTable *table.Table, rightTable *table.Table, joinColumn string) error {
-	_, err := leftTable.Col(joinColumn)
+	_, err := leftTable.GetColumn(joinColumn)
 	if err != nil {
 		return fmt.Errorf("invalid join column: column %s does not exists in left table", joinColumn)
 	}
 
-	_, err = rightTable.Col(joinColumn)
+	_, err = rightTable.GetColumn(joinColumn)
 	if err != nil {
 		return fmt.Errorf("invalid join column: column %s does not exists in right table", joinColumn)
 	}

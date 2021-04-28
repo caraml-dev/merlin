@@ -41,11 +41,11 @@ func TestTable_Col(t *testing.T) {
 		series.New([]string{"1111", "2222"}, series.String, "string_col"),
 	)
 
-	col, err := table.Col("string_col")
+	col, err := table.GetColumn("string_col")
 	assert.NoError(t, err)
 	assert.Equal(t, series.New([]string{"1111", "2222"}, series.String, "string_col"), col)
 
-	col, err = table.Col("col_not_exists")
+	col, err = table.GetColumn("col_not_exists")
 	assert.Error(t, err, "unknown column name")
 }
 
@@ -54,11 +54,11 @@ func TestTable_Row(t *testing.T) {
 		series.New([]string{"1111", "2222"}, series.String, "string_col"),
 	)
 
-	row, err := table.Row(0)
+	row, err := table.GetRow(0)
 	assert.NoError(t, err)
 	assert.Equal(t, table.DataFrame().Subset(0), *row.DataFrame())
 
-	row, err = table.Row(2)
+	row, err = table.GetRow(2)
 	assert.Error(t, err)
 	assert.Equal(t, "invalid row number, expected: 0 <= row < 2, got: 2", err.Error())
 }

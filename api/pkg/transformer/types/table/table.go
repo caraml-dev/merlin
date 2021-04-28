@@ -40,7 +40,29 @@ func NewRaw(columnValues map[string]interface{}) (*Table, error) {
 }
 
 // Row return a table containing only the specified row
-func (t *Table) Row(row int) (*Table, error) {
+// It's similar to GetRow, however it will panic if the specified row doesn't exists in the table
+// Intended to be used as built-in function in expression
+func (t *Table) Row(row int) *Table {
+	result, err := t.GetRow(row)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+// Col return a series containing the column specified by colName
+// It's similar to GetColumn, however it will panic if the specified column doesn't exists in the table
+// Intended to be used as built-in function in expression
+func (t *Table) Col(colName string) *series.Series {
+	result, err := t.GetColumn(colName)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+// GetRow return a table containing only the specified row
+func (t *Table) GetRow(row int) (*Table, error) {
 	if row < 0 || row >= t.dataFrame.Nrow() {
 		return nil, fmt.Errorf("invalid row number, expected: 0 <= row < %d, got: %d", t.dataFrame.Nrow(), row)
 	}
@@ -53,8 +75,8 @@ func (t *Table) Row(row int) (*Table, error) {
 	return &Table{&subsetDataframe}, nil
 }
 
-// Col return a series containing the column specified by colName
-func (t *Table) Col(colName string) (*series.Series, error) {
+// GetColumn return a series containing the column specified by colName
+func (t *Table) GetColumn(colName string) (*series.Series, error) {
 	s := t.dataFrame.Col(colName)
 	if s.Err != nil {
 		return nil, s.Err
@@ -63,19 +85,22 @@ func (t *Table) Col(colName string) (*series.Series, error) {
 	return series.NewSeries(&s), nil
 }
 
+// NRow return number of row in the table
 func (t *Table) NRow() int {
 	return t.dataFrame.Nrow()
 }
 
+// ColumnNames return slice string containing the column names
 func (t *Table) ColumnNames() []string {
 	return t.dataFrame.Names()
 }
 
+// Columns return slice of series containing all column values
 func (t *Table) Columns() []*series.Series {
 	columnNames := t.ColumnNames()
 	columns := make([]*series.Series, len(columnNames))
 	for idx, columnName := range columnNames {
-		columns[idx], _ = t.Col(columnName)
+		columns[idx], _ = t.GetColumn(columnName)
 	}
 	return columns
 }
@@ -190,6 +215,7 @@ func (t *Table) Sort(sortRules []*spec.SortColumnRule) error {
 	return nil
 }
 
+// UpdateColumnsRaw add or update existing column with values specified in columnValues map
 func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 	origColumns := t.Columns()
 
