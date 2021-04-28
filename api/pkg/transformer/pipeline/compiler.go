@@ -72,52 +72,48 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 	ops := make([]Op, 0)
 
 	// input
-	if pipeline.Inputs != nil {
-		for _, input := range pipeline.Inputs {
-			if input.Variables != nil {
-				varOp, err := c.parseVariablesSpec(input.Variables, compiledJsonPaths, compiledExpressions)
-				if err != nil {
-					return nil, err
-				}
-				ops = append(ops, varOp)
+	for _, input := range pipeline.Inputs {
+		if input.Variables != nil {
+			varOp, err := c.parseVariablesSpec(input.Variables, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
 			}
+			ops = append(ops, varOp)
+		}
 
-			if input.Tables != nil {
-				tableOp, err := c.parseTablesSpec(input.Tables, compiledJsonPaths, compiledExpressions)
-				if err != nil {
-					return nil, err
-				}
-				ops = append(ops, tableOp)
+		if input.Tables != nil {
+			tableOp, err := c.parseTablesSpec(input.Tables, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
 			}
+			ops = append(ops, tableOp)
+		}
 
-			if input.Feast != nil {
-				feastOp, err := c.parseFeastSpec(input.Feast, compiledJsonPaths, compiledExpressions)
-				if err != nil {
-					return nil, err
-				}
-				ops = append(ops, feastOp)
+		if input.Feast != nil {
+			feastOp, err := c.parseFeastSpec(input.Feast, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
 			}
+			ops = append(ops, feastOp)
 		}
 	}
 
 	// transformation
-	if pipeline.Transformations != nil {
-		for _, transformation := range pipeline.Transformations {
-			if transformation.TableTransformation != nil {
-				tableTransformOps, err := c.parseTableTransform(transformation.TableTransformation, compiledJsonPaths, compiledExpressions)
-				if err != nil {
-					return nil, err
-				}
-				ops = append(ops, tableTransformOps)
+	for _, transformation := range pipeline.Transformations {
+		if transformation.TableTransformation != nil {
+			tableTransformOps, err := c.parseTableTransform(transformation.TableTransformation, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
 			}
+			ops = append(ops, tableTransformOps)
+		}
 
-			if transformation.TableJoin != nil {
-				tableJoinOp, err := c.parseTableJoin(transformation.TableJoin, compiledJsonPaths, compiledExpressions)
-				if err != nil {
-					return nil, err
-				}
-				ops = append(ops, tableJoinOp)
+		if transformation.TableJoin != nil {
+			tableJoinOp, err := c.parseTableJoin(transformation.TableJoin, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
 			}
+			ops = append(ops, tableJoinOp)
 		}
 	}
 
