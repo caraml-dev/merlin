@@ -209,7 +209,7 @@ func (sr Registry) ParseTimestamp(timestamp interface{}) interface{} {
 			if err != nil {
 				panic(err)
 			}
-			values = append(values, time.Unix(tsInt64, 0))
+			values = append(values, time.Unix(tsInt64, 0).UTC())
 		}
 		return values
 	default:
@@ -217,7 +217,7 @@ func (sr Registry) ParseTimestamp(timestamp interface{}) interface{} {
 		if err != nil {
 			panic(err)
 		}
-		return time.Unix(tsInt64, 0)
+		return time.Unix(tsInt64, 0).UTC()
 	}
 }
 

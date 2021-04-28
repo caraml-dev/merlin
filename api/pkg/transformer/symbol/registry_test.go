@@ -821,12 +821,12 @@ func TestSymbolRegistry_ParseTimestamp(t *testing.T) {
 		{
 			desc:          "Using literal value (int64) for timestamp",
 			timestamp:     1619541221,
-			expectedValue: time.Date(2021, 4, 27, 23, 33, 41, 0, time.Local),
+			expectedValue: time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
 		},
 		{
 			desc:          "Using literal value (string) for timestamp",
 			timestamp:     "1619541221",
-			expectedValue: time.Date(2021, 4, 27, 23, 33, 41, 0, time.Local),
+			expectedValue: time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
 		},
 		{
 			desc:      "Using single value request jsonPath for timestamp",
@@ -834,7 +834,7 @@ func TestSymbolRegistry_ParseTimestamp(t *testing.T) {
 			requestJSON: []byte(`{
 				"timestamp": 1619541221
 			}`),
-			expectedValue: time.Date(2021, 4, 27, 23, 33, 41, 0, time.Local),
+			expectedValue: time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
 		},
 		{
 			desc:      "Using single value response jsonPath for timestamp",
@@ -842,7 +842,7 @@ func TestSymbolRegistry_ParseTimestamp(t *testing.T) {
 			responseJSON: []byte(`{
 				"timestamp": 1619541221
 			}`),
-			expectedValue: time.Date(2021, 4, 27, 23, 33, 41, 0, time.Local),
+			expectedValue: time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
 		},
 		{
 			desc:      "Using array from request jsonpath for timestamp",
@@ -851,8 +851,8 @@ func TestSymbolRegistry_ParseTimestamp(t *testing.T) {
 				"timestamps": [1619541221, 1619498021]
 			}`),
 			expectedValue: []interface{}{
-				time.Date(2021, 4, 27, 23, 33, 41, 0, time.Local),
-				time.Date(2021, 4, 27, 11, 33, 41, 0, time.Local),
+				time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+				time.Date(2021, 4, 27, 4, 33, 41, 0, time.UTC),
 			},
 		},
 		{
@@ -862,16 +862,16 @@ func TestSymbolRegistry_ParseTimestamp(t *testing.T) {
 				"timestamps": [1619541221, "1619498021"]
 			}`),
 			expectedValue: []interface{}{
-				time.Date(2021, 4, 27, 23, 33, 41, 0, time.Local),
-				time.Date(2021, 4, 27, 11, 33, 41, 0, time.Local),
+				time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+				time.Date(2021, 4, 27, 4, 33, 41, 0, time.UTC),
 			},
 		},
 		{
 			desc:      "Using series",
 			timestamp: series.New([]interface{}{1619541221, 1619498021}, series.Int, "timestamp"),
 			expectedValue: []interface{}{
-				time.Date(2021, 4, 27, 23, 33, 41, 0, time.Local),
-				time.Date(2021, 4, 27, 11, 33, 41, 0, time.Local),
+				time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+				time.Date(2021, 4, 27, 4, 33, 41, 0, time.UTC),
 			},
 		},
 	}
