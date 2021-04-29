@@ -1221,10 +1221,10 @@
     uuid "^8.3.0"
     vfile "^4.2.0"
 
-"@gojek/mlp-ui@1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@gojek/mlp-ui/-/mlp-ui-1.4.0.tgz#3d8bfab3fb70e4c840a13e6c5be07dbaa5e139f1"
-  integrity sha512-AofGbnvSqjb+TmemO3CoWDtUt/t43HlUk0mfg5/5r2U/JnTRzXgJlWq4QJQBUzsZftSS3/09zrlJWWP/ajz8Kg==
+"@gojek/mlp-ui@1.4.1":
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@gojek/mlp-ui/-/mlp-ui-1.4.1.tgz#cdb3e5f6167aded38b515a209c603fa0cfba5e41"
+  integrity sha512-01DSeU/X9FJaMp162VQnatWcvV83cwzdk7NLV5epWFgI66co1xf11ZpFzRTqDWye3s4YASkuzv9o1/7jsHow8A==
   dependencies:
     classnames "^2.2.6"
     lodash "^4.17.20"
