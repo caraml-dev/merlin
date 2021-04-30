@@ -34,7 +34,10 @@ export const appConfig = {
   ],
   dockerRegistries: getEnv("REACT_APP_DOCKER_REGISTRIES")
     ? getEnv("REACT_APP_DOCKER_REGISTRIES").split(",")
-    : []
+    : [],
+  scaling: {
+    maxAllowedReplica: 20
+  }
 };
 
 export const featureToggleConfig = {
