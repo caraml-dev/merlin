@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import DeployModelVersionView from "./version/deploy/DeployModelVersionView";
 import Version from "./version/Version";
 
+export { DeployModelVersionView };
 export { Version };
