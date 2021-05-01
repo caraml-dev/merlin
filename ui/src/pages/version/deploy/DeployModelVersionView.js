@@ -11,7 +11,8 @@ import { PageTitle } from "../../../components/PageTitle";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import mocks from "../../../mocks";
 import { VersionEndpoint } from "../../../services/version_endpoint/VersionEndpoint";
-import { DeployModelVersionForm } from "./DeployModelVersionForm";
+
+import { DeployModelVersionForm } from "../components/forms/DeployModelVersionForm";
 
 const DeployModelVersionView = ({
   projectId,
@@ -72,6 +73,7 @@ const DeployModelVersionView = ({
               model={model}
               version={version}
               onCancel={() => window.history.back()}
+              onSuccess={redirectUrl => props.navigate(redirectUrl)}
             />
           </FormContextProvider>
         </EuiPageContentBody>

@@ -1,9 +1,10 @@
 import * as yup from "yup";
-import { appConfig } from "../../../../config";
+import { appConfig } from "../../../../../config";
 
 const cpuRequestRegex = /^(\d{1,3}(\.\d{1,3})?)$|^(\d{2,5}m)$/,
   memRequestRegex = /^\d+(Ei?|Pi?|Ti?|Gi?|Mi?|Ki?)?$/,
-  envVariableNameRegex = /^[a-z0-9_]*$/i;
+  envVariableNameRegex = /^[a-z0-9_]*$/i,
+  dockerImageRegex = /^([a-z0-9]+(?:[._-][a-z0-9]+)*(?::\d{2,5})?\/)?([a-z0-9]+(?:[._-][a-z0-9]+)*\/)*([a-z0-9]+(?:[._-][a-z0-9]+)*)(?::[a-z0-9]+(?:[._-][a-z0-9]+)*)?$/i;
 
 const resourceRequestSchema = yup.object().shape({
   cpu_request: yup
@@ -50,4 +51,24 @@ export const versionEndpointSchema = yup.object().shape({
   environment_name: yup.string().required("Environment is required"),
   resource_request: resourceRequestSchema,
   env_vars: yup.array(environmentVariableSchema)
+});
+
+export const transformerConfigSchema = yup.object().shape({
+  transformer: yup.object().shape({
+    resource_request: resourceRequestSchema,
+    env_vars: yup.array(environmentVariableSchema)
+  })
+});
+
+const dockerImageSchema = yup
+  .string()
+  .matches(
+    dockerImageRegex,
+    "Valid Docker Image value should be provided, e.g. kennethreitz/httpbin:latest"
+  );
+
+export const customTransformerSchema = yup.object().shape({
+  transformer: yup.object().shape({
+    image: dockerImageSchema.required("Docker Image is required")
+  })
 });

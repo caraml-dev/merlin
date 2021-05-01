@@ -1,24 +1,27 @@
+import { Logger } from "../logger/Logger";
+import { Transformer } from "../transformer/Transformer";
+
 export class VersionEndpoint {
   constructor() {
-    this.id = "";
-    this.version_id = 0;
-    this.model_id = 0;
-    this.status = "";
-    this.url = "";
-    this.service_name = "";
-    this.monitoring_url = "";
+    this.id = undefined;
+    this.version_id = undefined;
+    this.model_id = undefined;
+    this.status = undefined;
+    this.url = undefined;
+    this.service_name = undefined;
+    this.monitoring_url = undefined;
 
     this.environment = {
-      id: 0,
-      name: "",
-      cluster: "",
+      id: undefined,
+      name: undefined,
+      cluster: undefined,
       is_default: false,
-      created_at: "",
-      updated_at: ""
+      created_at: undefined,
+      updated_at: undefined
     };
     this.environment_name = "";
 
-    this.message = "";
+    this.message = undefined;
 
     this.resource_request = {
       min_replica: process.env.REACT_APP_ENVIRONMENT === "production" ? 2 : 0,
@@ -29,10 +32,11 @@ export class VersionEndpoint {
 
     this.env_vars = [];
 
-    // TODO
-    this.transformer = {};
+    this.transformer = new Transformer();
 
-    this.created_at = "";
-    this.updated_at = "";
+    this.logger = new Logger();
+
+    this.created_at = undefined;
+    this.updated_at = undefined;
   }
 }

@@ -1180,10 +1180,10 @@
   dependencies:
     tslib "^1.9.3"
 
-"@elastic/eui@31.10.0":
-  version "31.10.0"
-  resolved "https://registry.yarnpkg.com/@elastic/eui/-/eui-31.10.0.tgz#07c1ca88bc042d124e0a4d3bc38b05bb0c6dd697"
-  integrity sha512-OsFs3WyFNWM1Uvs0y/h1MA50Pnf1c9KBX8A7sBmcFbMRpbD033AKOzH67crK8xmqRHB3vD23Yc+IVQdB6SMEGg==
+"@elastic/eui@32.3.0":
+  version "32.3.0"
+  resolved "https://registry.yarnpkg.com/@elastic/eui/-/eui-32.3.0.tgz#c55984b677585cb593f6e5862c877f4d2f28e36d"
+  integrity sha512-Tf4bLMvJqohkGnpXBNSaPlqfJHJmAxidkGvfus2cgwLo4gIiSYdiACHKf3p7XjdlFSqOF2jvXF2f/6os1hVoUQ==
   dependencies:
     "@types/chroma-js" "^2.0.0"
     "@types/lodash" "^4.14.160"
@@ -1192,11 +1192,12 @@
     "@types/react-input-autosize" "^2.2.0"
     "@types/react-virtualized-auto-sizer" "^1.0.0"
     "@types/react-window" "^1.8.2"
+    "@types/resize-observer-browser" "^0.1.5"
     "@types/vfile-message" "^2.0.0"
     chroma-js "^2.1.0"
     classnames "^2.2.6"
     highlight.js "^9.18.5"
-    lodash "^4.17.20"
+    lodash "^4.17.21"
     numeral "^2.0.6"
     prop-types "^15.6.0"
     react-ace "^7.0.5"
@@ -1217,7 +1218,7 @@
     tabbable "^3.0.0"
     text-diff "^1.0.1"
     unified "^9.2.0"
-    url-parse "^1.4.7"
+    url-parse "^1.5.0"
     uuid "^8.3.0"
     vfile "^4.2.0"
 
@@ -1822,6 +1823,11 @@
   dependencies:
     "@types/prop-types" "*"
     csstype "^3.0.2"
+
+"@types/resize-observer-browser@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@types/resize-observer-browser/-/resize-observer-browser-0.1.5.tgz#36d897708172ac2380cd486da7a3daf1161c1e23"
+  integrity sha512-8k/67Z95Goa6Lznuykxkfhq9YU3l1Qe6LNZmwde1u7802a3x8v44oq0j91DICclxatTr0rNnhXx7+VTIetSrSQ==
 
 "@types/stack-utils@^1.0.1":
   version "1.0.1"
@@ -7607,7 +7613,7 @@ lodash.uniq@^4.5.0:
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
   integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
 
-lodash@^4.17.20:
+lodash@^4.17.20, lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -12322,7 +12328,7 @@ url-parse@^1.4.3:
     querystringify "^2.1.1"
     requires-port "^1.0.0"
 
-url-parse@^1.4.7:
+url-parse@^1.5.0:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/url-parse/-/url-parse-1.5.1.tgz#d5fa9890af8a5e1f274a2c98376510f6425f6e3b"
   integrity sha512-HOfCOUJt7iSYzEx/UqgtwKRMC6EU91NFhsCHMv9oM03VJcVo2Qrp8T8kI9D7amFf1cu+/3CEhgb3rF9zL7k85Q==

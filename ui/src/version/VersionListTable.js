@@ -407,7 +407,7 @@ const VersionListTable = ({
                 )}
                 {(endpoint.status === "serving" ||
                   endpoint.status === "running") && (
-                  <EuiHealth color="none">
+                  <EuiHealth color="success">
                     <EuiText size={defaultTextSize}>
                       <EuiLink
                         onClick={() =>
