@@ -6,10 +6,11 @@ import {
   get,
   useOnChangeHandler
 } from "@gojek/mlp-ui";
-import { appConfig } from "../../../../config";
-import { EnvironmentPanel } from "../forms/EnvironmentPanel";
-import { ResourcesPanel } from "../forms/ResourcesPanel";
-import { EnvVariablesPanel } from "../forms/EnvVariablesPanel";
+import { appConfig } from "../../../../../config";
+import { EnvironmentPanel } from "../components/EnvironmentPanel";
+import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
+import { LoggerPanel } from "../components/LoggerPanel";
+import { ResourcesPanel } from "../components/ResourcesPanel";
 
 export const ModelStep = () => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -32,6 +33,14 @@ export const ModelStep = () => {
           onChangeHandler={onChange("resource_request")}
           maxAllowedReplica={appConfig.scaling.maxAllowedReplica}
           errors={get(errors, "resource_request")}
+        />
+      </EuiFlexItem>
+
+      <EuiFlexItem grow={false}>
+        <LoggerPanel
+          loggerConfig={get(data, "logger.model")}
+          onChangeHandler={onChange("logger.model")}
+          errors={get(errors, "logger.model")}
         />
       </EuiFlexItem>
 

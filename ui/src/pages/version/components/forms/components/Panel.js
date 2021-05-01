@@ -7,7 +7,7 @@ import {
   EuiTitle
 } from "@elastic/eui";
 
-const PanelContent = ({ contentWidth = "75%", children }) => (
+const PanelContent = ({ contentWidth = "70%", children }) => (
   <EuiFlexGroup direction="row" justifyContent="center">
     <EuiFlexItem grow={false} style={{ width: contentWidth }}>
       {children}

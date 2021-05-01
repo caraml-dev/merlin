@@ -7,15 +7,10 @@ import {
   EuiToolTip
 } from "@elastic/eui";
 import sortBy from "lodash/sortBy";
-import EnvironmentsContext from "../../../../providers/environments/context";
+import EnvironmentsContext from "../../../../../providers/environments/context";
 import { Panel } from "./Panel";
 
-export const EnvironmentPanel = ({
-  environment,
-  isEdit,
-  onChange,
-  errors = {}
-}) => {
+export const EnvironmentPanel = ({ environment, onChange, errors = {} }) => {
   const environments = useContext(EnvironmentsContext);
 
   const environmentOptions = sortBy(environments, "name").map(environment => ({
@@ -44,7 +39,6 @@ export const EnvironmentPanel = ({
             valueOfSelected={environment}
             onChange={onChange("environment_name")}
             isInvalid={!!errors.environment_name}
-            disabled={isEdit}
             itemLayoutAlign="top"
             hasDividers
           />

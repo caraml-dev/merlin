@@ -1,0 +1,39 @@
+import React, { useContext } from "react";
+import {
+  EuiFieldText,
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiFormRow
+} from "@elastic/eui";
+import {
+  FormContext,
+  FormLabelWithToolTip,
+  FormValidationContext,
+  get,
+  useOnChangeHandler
+} from "@gojek/mlp-ui";
+import { DockerDeploymentPanel } from "../components/docker_config/DockerDeploymentPanel";
+import { DockerRegistriesContextProvider } from "../../../../../providers/docker/context";
+
+export const CustomTransformerStep = () => {
+  const {
+    data: { transformer },
+    onChangeHandler
+  } = useContext(FormContext);
+  const { onChange } = useOnChangeHandler(onChangeHandler);
+  const { errors } = useContext(FormValidationContext);
+
+  return (
+    <EuiFlexGroup direction="column" gutterSize="m">
+      <EuiFlexItem grow={false}>
+        <DockerRegistriesContextProvider>
+          <DockerDeploymentPanel
+            values={transformer}
+            onChangeHandler={onChange("transformer")}
+            errors={get(errors, "transformer")}
+          />
+        </DockerRegistriesContextProvider>
+      </EuiFlexItem>
+    </EuiFlexGroup>
+  );
+};
