@@ -179,6 +179,45 @@ func TestCompiler_Compile(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "sequential table dependency",
+			fields: fields{
+				sr:          symbol.NewRegistry(),
+				feastClient: &mocks.Client{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/valid_sequential_table_dependency.yaml",
+			want: want{
+				expressions: []string{
+					"Now()",
+					"variable1",
+					"entity_2_table.Col('col1')",
+					"Now().Hour()",
+				},
+				jsonPaths: []string{
+					"$.entity_1[*].id",
+					"$.entity_2.id",
+					"$.entity_3",
+					"$.entity_2",
+				},
+				preprocessOps: []Op{
+					&FeastOp{},
+					&CreateTableOp{},
+					&VariableDeclarationOp{},
+					&TableTransformOp{},
+					&TableTransformOp{},
+					&TableJoinOp{},
+					&TableJoinOp{},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

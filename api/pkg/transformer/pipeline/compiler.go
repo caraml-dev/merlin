@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"fmt"
+
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
@@ -215,6 +217,11 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 }
 
 func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransformation, paths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
+	err := c.checkVariableRegistered(transformationSpecs.InputTable)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, step := range transformationSpecs.Steps {
 		for _, updateColumn := range step.UpdateColumns {
 			compiledExpression, err := c.compileExpression(updateColumn.Expression)
@@ -225,10 +232,22 @@ func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransforma
 		}
 	}
 
+	c.registerDummyTable(transformationSpecs.OutputTable)
 	return NewTableTransformOp(transformationSpecs), nil
 }
 
 func (c *Compiler) parseTableJoin(tableJoinSpecs *spec.TableJoin, paths *jsonpath.Storage, expressions *expression.Storage) (Op, error) {
+	err := c.checkVariableRegistered(tableJoinSpecs.LeftTable)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.checkVariableRegistered(tableJoinSpecs.RightTable)
+	if err != nil {
+		return nil, err
+	}
+
+	c.registerDummyTable(tableJoinSpecs.OutputTable)
 	return NewTableJoinOp(tableJoinSpecs), nil
 }
 
@@ -242,4 +261,13 @@ func (c *Compiler) registerDummyVariable(varName string) {
 
 func (c *Compiler) registerDummyTable(tableName string) {
 	c.sr[tableName] = table.New()
+}
+
+func (c *Compiler) checkVariableRegistered(varName string) error {
+	isRegistered := c.sr[varName] != nil
+	if !isRegistered {
+		return fmt.Errorf("variable %s is not registered", varName)
+	}
+
+	return nil
 }
