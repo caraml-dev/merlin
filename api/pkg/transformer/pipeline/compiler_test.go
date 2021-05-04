@@ -6,6 +6,7 @@ import (
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/ghodss/yaml"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -217,6 +218,64 @@ func TestCompiler_Compile(t *testing.T) {
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "preprocess - postprocess input and output",
+			fields: fields{
+				sr:          symbol.NewRegistry(),
+				feastClient: &mocks.Client{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/input_output.yaml",
+			want: want{
+				expressions: []string{
+					"Now()",
+					"variable1",
+					"entity_3_table",
+					"entity_4_table",
+				},
+				jsonPaths: []string{
+					"$.entity_2.id",
+					"$.entity_3",
+					"$.entity_2",
+					"$.path_1",
+					"$.path_2",
+				},
+				preprocessOps: []Op{
+					&CreateTableOp{},
+					&VariableDeclarationOp{},
+					&JsonOutputOp{},
+				},
+				postprocessOps: []Op{
+					&CreateTableOp{},
+					&VariableDeclarationOp{},
+					&JsonOutputOp{},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "preprocess - postprocess input and output",
+			fields: fields{
+				sr:          symbol.NewRegistry(),
+				feastClient: &mocks.Client{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/invalid_output.yaml",
+			wantErr:          true,
+			expError:         errors.New("unable to compile preprocessing pipeline: unknown name entity_5_table (1:1)\n | entity_5_table\n | ^"),
 		},
 	}
 	for _, tt := range tests {

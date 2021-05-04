@@ -31,6 +31,10 @@ func (h *Handler) Preprocess(ctx context.Context, rawRequest []byte, rawRequestH
 	}
 
 	transformedRequest, err := env.Preprocess(ctx, rawRequestObj, rawRequestHeaders)
+	if err != nil {
+		return nil, err
+	}
+
 	return json.Marshal(transformedRequest)
 }
 
@@ -46,7 +50,11 @@ func (h *Handler) Postprocess(ctx context.Context, modelResponse []byte, modelRe
 		return nil, err
 	}
 
-	transformedResponse, err := env.Preprocess(ctx, modelResponseObj, modelResponseHeaders)
+	transformedResponse, err := env.Postprocess(ctx, modelResponseObj, modelResponseHeaders)
+	if err != nil {
+		return nil, err
+	}
+
 	return json.Marshal(transformedResponse)
 }
 

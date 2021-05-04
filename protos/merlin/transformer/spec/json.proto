@@ -12,18 +12,15 @@ message JsonOutput {
 
 message JsonTemplate {
   BaseJson baseJson = 1;
-  repeated Field fields = 2;
+  map <string, Field>  fields = 2;
 }
 
 message BaseJson {
-  oneof baseJson {
-    FromJson fromJson = 1;
-    FromTable fromTable = 2;
-  }
+  string jsonPath = 1;
 }
 
 message Field {
-  repeated Field fields = 1;
+  map <string, Field>  fields = 1;
   oneof value {
     FromJson fromJson = 2;
     FromTable fromTable = 3;
