@@ -237,8 +237,6 @@ func TestCompiler_Compile(t *testing.T) {
 				expressions: []string{
 					"Now()",
 					"variable1",
-					"entity_3_table",
-					"entity_4_table",
 				},
 				jsonPaths: []string{
 					"$.entity_2.id",
@@ -275,7 +273,7 @@ func TestCompiler_Compile(t *testing.T) {
 			},
 			specYamlFilePath: "./testdata/invalid_output.yaml",
 			wantErr:          true,
-			expError:         errors.New("unable to compile preprocessing pipeline: unknown name entity_5_table (1:1)\n | entity_5_table\n | ^"),
+			expError:         errors.New("unable to compile preprocessing pipeline: variable entity_5_table is not registered"),
 		},
 	}
 	for _, tt := range tests {

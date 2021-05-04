@@ -306,11 +306,10 @@ func (c *Compiler) parseJsonFields(fields map[string]*spec.Field, compiledJsonPa
 
 			// Check whether table name already registered or not
 			tableName := val.FromTable.TableName
-			compiledExpression, err := c.compileExpression(tableName)
-			if err != nil {
+			if err := c.checkVariableRegistered(tableName); err != nil {
 				return err
 			}
-			compiledExpressions.Set(tableName, compiledExpression)
+
 		case *spec.Field_Expression:
 			if len(field.Fields) > 0 {
 				return errors.New("can't specify nested json, if field has value to set")
