@@ -32,6 +32,29 @@ func ToInt(v interface{}) (int, error) {
 	}
 }
 
+func ToInt64(v interface{}) (int64, error) {
+	switch v := v.(type) {
+	case float64:
+		return int64(v), nil
+	case float32:
+		return int64(v), nil
+	case int:
+		return int64(v), nil
+	case int8:
+		return int64(v), nil
+	case int16:
+		return int64(v), nil
+	case int32:
+		return int64(v), nil
+	case int64:
+		return int64(v), nil
+	case string:
+		return strconv.ParseInt(v, 10, 64)
+	default:
+		return 0, fmt.Errorf("unsupported conversion from %T to int", v)
+	}
+}
+
 func ToFloat64(v interface{}) (float64, error) {
 	switch v := v.(type) {
 	case float64:
