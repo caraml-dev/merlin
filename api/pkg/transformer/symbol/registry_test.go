@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/mmcloughlin/geohash"
 	"github.com/stretchr/testify/assert"
@@ -483,6 +484,445 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSymbolRegistry_HaversineDistance(t *testing.T) {
+
+	type arguments struct {
+		lat1 interface{}
+		lon1 interface{}
+		lat2 interface{}
+		lon2 interface{}
+	}
+	testCases := []struct {
+		desc          string
+		requestJSON   []byte
+		responseJSON  []byte
+		args          arguments
+		expectedValue interface{}
+		err           error
+	}{
+		{
+			desc: "Using single value jsonpath from request",
+			requestJSON: []byte(`{
+				"latitude1": -6.2446,
+				"longitude1": 106.8006,
+				"latitude2": -6.2655,
+				"longitude2": 106.7843
+			}`),
+			args: arguments{
+				lat1: "$.latitude1",
+				lon1: "$.longitude1",
+				lat2: "$.latitude2",
+				lon2: "$.longitude2",
+			},
+			expectedValue: 2.9405665374312218,
+		},
+		{
+			desc: "Using literal value from request",
+			args: arguments{
+				lat1: -6.2446,
+				lon1: 106.8006,
+				lat2: -6.2655,
+				lon2: 106.7843,
+			},
+			expectedValue: 2.9405665374312218,
+		},
+		{
+			desc: "Using multiple value jsonpath from request",
+			requestJSON: []byte(`{
+				"first_points": [
+					{
+						"latitude": -6.2446,
+						"longitude": 106.8006
+					},
+					{
+						"latitude": -6.3053,
+						"longitude": 106.6435
+					}
+				],
+				"second_points": [
+					{
+						"latitude": -6.2655,
+						"longitude": 106.7843
+					},
+					{
+						"latitude": -6.2856,
+						"longitude": 106.7280
+					}
+				]
+			}`),
+			args: arguments{
+				lat1: "$.first_points[*].latitude",
+				lon1: "$.first_points[*].longitude",
+				lat2: "$.second_points[*].latitude",
+				lon2: "$.second_points[*].longitude",
+			},
+			expectedValue: []interface{}{
+				2.9405665374312218,
+				9.592767304287772,
+			},
+		},
+		{
+			desc: "Using series",
+			args: arguments{
+				lat1: series.New([]interface{}{-6.2446, -6.3053}, series.Float, "latitude"),
+				lon1: series.New([]interface{}{106.8006, 106.6435}, series.Float, "longitude"),
+				lat2: series.New([]interface{}{-6.2655, -6.2856}, series.Float, "latitude"),
+				lon2: series.New([]interface{}{106.7843, 106.7280}, series.Float, "longitude"),
+			},
+			expectedValue: []interface{}{
+				2.9405665374312218,
+				9.592767304287772,
+			},
+		},
+		{
+			desc: "Error when first point (lat1, lon1) and second points (lat2, lon2) has different type",
+			requestJSON: []byte(`{
+				"latitude1": -6.2446,
+				"longitude1": 106.8006,
+				"second_points": [
+					{
+						"latitude": -6.2655,
+						"longitude": 106.7843
+					}
+				]
+			}`),
+			args: arguments{
+				lat1: "$.latitude1",
+				lon1: "$.longitude1",
+				lat2: "$.second_points[*].latitude",
+				lon2: "$.second_points[*].longitude",
+			},
+			err: errors.New("first point and second point has different format"),
+		},
+		{
+			desc: "Error when first points and second points has different length",
+			requestJSON: []byte(`{
+				"first_points": [
+					{
+						"latitude": -6.2446,
+						"longitude": 106.8006
+					}
+				],
+				"second_points": [
+					{
+						"latitude": -6.2655,
+						"longitude": 106.7843
+					},
+					{
+						"latitude": -6.2856,
+						"longitude": 106.7280
+					}
+				]
+			}`),
+			args: arguments{
+				lat1: "$.first_points[*].latitude",
+				lon1: "$.first_points[*].longitude",
+				lat2: "$.second_points[*].latitude",
+				lon2: "$.second_points[*].longitude",
+			},
+			err: errors.New("both first point and second point arrays must have the same length"),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
+			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
+			if requestJSONObj != nil {
+				sr.SetRawRequestJSON(requestJSONObj)
+			}
+			if responseJSONObj != nil {
+				sr.SetModelResponseJSON(responseJSONObj)
+			}
+
+			if tC.err != nil {
+				assert.PanicsWithError(t, tC.err.Error(), func() {
+					sr.HaversineDistance(tC.args.lat1, tC.args.lon1, tC.args.lat2, tC.args.lon2)
+				})
+				return
+			}
+			res := sr.HaversineDistance(tC.args.lat1, tC.args.lon1, tC.args.lat2, tC.args.lon2)
+			assert.Equal(t, tC.expectedValue, res)
+		})
+	}
+}
+
+func TestSymbolRegistry_PolarAngle(t *testing.T) {
+	type arguments struct {
+		lat1 interface{}
+		lon1 interface{}
+		lat2 interface{}
+		lon2 interface{}
+	}
+	testCases := []struct {
+		desc          string
+		requestJSON   []byte
+		responseJSON  []byte
+		args          arguments
+		expectedValue interface{}
+		err           error
+	}{
+		{
+			desc: "Using single value jsonpath from request",
+			requestJSON: []byte(`{
+				"latitude1": -6.2446,
+				"longitude1": 106.8006,
+				"latitude2": -6.2655,
+				"longitude2": 106.7843
+			}`),
+			args: arguments{
+				lat1: "$.latitude1",
+				lon1: "$.longitude1",
+				lat2: "$.latitude2",
+				lon2: "$.longitude2",
+			},
+			expectedValue: -2.2302696433651628,
+		},
+		{
+			desc: "Using single value jsonpath from request - expected 0 if distance less than 1 km",
+			requestJSON: []byte(`{
+				"latitude1": -6.2446,
+				"longitude1": 106.8006,
+				"latitude2": -6.2446,
+				"longitude2": 106.8006
+			}`),
+			args: arguments{
+				lat1: "$.latitude1",
+				lon1: "$.longitude1",
+				lat2: "$.latitude2",
+				lon2: "$.longitude2",
+			},
+			expectedValue: float64(0),
+		},
+		{
+			desc: "Using literal value from request",
+			args: arguments{
+				lat1: -6.2446,
+				lon1: 106.8006,
+				lat2: -6.2655,
+				lon2: 106.7843,
+			},
+			expectedValue: -2.2302696433651628,
+		},
+		{
+			desc: "Using multiple value jsonpath from request",
+			requestJSON: []byte(`{
+				"first_points": [
+					{
+						"latitude": -6.2446,
+						"longitude": 106.8006
+					},
+					{
+						"latitude": -6.3053,
+						"longitude": 106.6435
+					}
+				],
+				"second_points": [
+					{
+						"latitude": -6.2655,
+						"longitude": 106.7843
+					},
+					{
+						"latitude": -6.2856,
+						"longitude": 106.7280
+					}
+				]
+			}`),
+			args: arguments{
+				lat1: "$.first_points[*].latitude",
+				lon1: "$.first_points[*].longitude",
+				lat2: "$.second_points[*].latitude",
+				lon2: "$.second_points[*].longitude",
+			},
+			expectedValue: []interface{}{
+				-2.2302696433651628,
+				0.2303859540944421,
+			},
+		},
+		{
+			desc: "Using series",
+			args: arguments{
+				lat1: series.New([]interface{}{-6.2446, -6.3053}, series.Float, "latitude"),
+				lon1: series.New([]interface{}{106.8006, 106.6435}, series.Float, "longitude"),
+				lat2: series.New([]interface{}{-6.2655, -6.2856}, series.Float, "latitude"),
+				lon2: series.New([]interface{}{106.7843, 106.7280}, series.Float, "longitude"),
+			},
+			expectedValue: []interface{}{
+				-2.2302696433651628,
+				0.2303859540944421,
+			},
+		},
+		{
+			desc: "Error when first point (lat1, lon1) and second points (lat2, lon2) has different type",
+			requestJSON: []byte(`{
+				"latitude1": -6.2446,
+				"longitude1": 106.8006,
+				"second_points": [
+					{
+						"latitude": -6.2655,
+						"longitude": 106.7843
+					}
+				]
+			}`),
+			args: arguments{
+				lat1: "$.latitude1",
+				lon1: "$.longitude1",
+				lat2: "$.second_points[*].latitude",
+				lon2: "$.second_points[*].longitude",
+			},
+			err: errors.New("first point and second point has different format"),
+		},
+		{
+			desc: "Error when first points and second points has different length",
+			requestJSON: []byte(`{
+				"first_points": [
+					{
+						"latitude": -6.2446,
+						"longitude": 106.8006
+					}
+				],
+				"second_points": [
+					{
+						"latitude": -6.2655,
+						"longitude": 106.7843
+					},
+					{
+						"latitude": -6.2856,
+						"longitude": 106.7280
+					}
+				]
+			}`),
+			args: arguments{
+				lat1: "$.first_points[*].latitude",
+				lon1: "$.first_points[*].longitude",
+				lat2: "$.second_points[*].latitude",
+				lon2: "$.second_points[*].longitude",
+			},
+			err: errors.New("both first point and second point arrays must have the same length"),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
+			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
+			if requestJSONObj != nil {
+				sr.SetRawRequestJSON(requestJSONObj)
+			}
+			if responseJSONObj != nil {
+				sr.SetModelResponseJSON(responseJSONObj)
+			}
+
+			if tC.err != nil {
+				assert.PanicsWithError(t, tC.err.Error(), func() {
+					sr.HaversineDistance(tC.args.lat1, tC.args.lon1, tC.args.lat2, tC.args.lon2)
+				})
+				return
+			}
+			res := sr.PolarAngle(tC.args.lat1, tC.args.lon1, tC.args.lat2, tC.args.lon2)
+			assert.Equal(t, tC.expectedValue, res)
+		})
+	}
+}
+
+func TestSymbolRegistry_ParseTimestamp(t *testing.T) {
+	testCases := []struct {
+		desc          string
+		timestamp     interface{}
+		requestJSON   []byte
+		responseJSON  []byte
+		expectedValue interface{}
+		err           error
+	}{
+		{
+			desc:          "Using literal value (int64) for timestamp",
+			timestamp:     1619541221,
+			expectedValue: time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+		},
+		{
+			desc:          "Using literal value (string) for timestamp",
+			timestamp:     "1619541221",
+			expectedValue: time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+		},
+		{
+			desc:      "Using single value request jsonPath for timestamp",
+			timestamp: "$.timestamp",
+			requestJSON: []byte(`{
+				"timestamp": 1619541221
+			}`),
+			expectedValue: time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+		},
+		{
+			desc:      "Using single value response jsonPath for timestamp",
+			timestamp: "$.model_response.timestamp",
+			responseJSON: []byte(`{
+				"timestamp": 1619541221
+			}`),
+			expectedValue: time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+		},
+		{
+			desc:      "Using array from request jsonpath for timestamp",
+			timestamp: "$.timestamps[*]",
+			requestJSON: []byte(`{
+				"timestamps": [1619541221, 1619498021]
+			}`),
+			expectedValue: []interface{}{
+				time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+				time.Date(2021, 4, 27, 4, 33, 41, 0, time.UTC),
+			},
+		},
+		{
+			desc:      "Using array from request jsonpath for timestamp - different type",
+			timestamp: "$.timestamps[*]",
+			requestJSON: []byte(`{
+				"timestamps": [1619541221, "1619498021"]
+			}`),
+			expectedValue: []interface{}{
+				time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+				time.Date(2021, 4, 27, 4, 33, 41, 0, time.UTC),
+			},
+		},
+		{
+			desc:      "Using series",
+			timestamp: series.New([]interface{}{1619541221, 1619498021}, series.Int, "timestamp"),
+			expectedValue: []interface{}{
+				time.Date(2021, 4, 27, 16, 33, 41, 0, time.UTC),
+				time.Date(2021, 4, 27, 4, 33, 41, 0, time.UTC),
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
+
+			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
+			if requestJSONObj != nil {
+				sr.SetRawRequestJSON(requestJSONObj)
+			}
+			if responseJSONObj != nil {
+				sr.SetModelResponseJSON(responseJSONObj)
+			}
+
+			got := sr.ParseTimestamp(tC.timestamp)
+			assert.Equal(t, tC.expectedValue, got)
+		})
+	}
+}
+
+func createTestJSONObjects(requestJSON, responseJSON []byte) (types.JSONObject, types.JSONObject) {
+	var requestJSONObject types.JSONObject
+	if requestJSON != nil {
+		if err := json.Unmarshal(requestJSON, &requestJSONObject); err != nil {
+			panic(err)
+		}
+	}
+	var responseJSONObject types.JSONObject
+	if responseJSON != nil {
+		if err := json.Unmarshal(responseJSON, &responseJSONObject); err != nil {
+			panic(err)
+		}
+	}
+	return requestJSONObject, responseJSONObject
 }
 
 func getTestJSONObjects() (types.JSONObject, types.JSONObject) {

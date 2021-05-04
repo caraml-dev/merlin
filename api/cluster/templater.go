@@ -15,6 +15,8 @@
 package cluster
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -221,6 +223,20 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 
 	envVars := transformer.EnvVars
 	if transformer.TransformerType == models.StandardTransformerType {
+		// compact standard transformer config
+		envVarsMap := envVars.ToMap()
+		standardTransformerConfig := envVarsMap[transformerpkg.StandardTransformerConfigEnvName]
+		if standardTransformerConfig != "" {
+			compactedfJsonBuffer := new(bytes.Buffer)
+			if err := json.Compact(compactedfJsonBuffer, []byte(standardTransformerConfig)); err == nil {
+				models.MergeEnvVars(envVars, models.EnvVars{
+					{
+						Name:  transformerpkg.StandardTransformerConfigEnvName,
+						Value: compactedfJsonBuffer.String(),
+					},
+				})
+			}
+		}
 		transformer.Image = t.standardTransformerConfig.ImageName
 		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLEnvName, Value: t.standardTransformerConfig.FeastServingURL})
 	}

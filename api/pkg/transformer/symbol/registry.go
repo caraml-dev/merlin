@@ -3,6 +3,7 @@ package symbol
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol/function"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/converter"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
@@ -123,6 +125,100 @@ func (sr Registry) S2ID(latitude interface{}, longitude interface{}, level int) 
 	}
 
 	return result
+}
+
+// HaversineDistance of two points (latitude, longitude)
+// latitude and longitude can be:
+// - Json path string
+// - Slice / gota.Series
+// - float64 value
+func (sr Registry) HaversineDistance(latitude1 interface{}, longitude1 interface{}, latitude2 interface{}, longitude2 interface{}) interface{} {
+	lat1, err := sr.evalArg(latitude1)
+	if err != nil {
+		panic(err)
+	}
+
+	lon1, err := sr.evalArg(longitude1)
+	if err != nil {
+		panic(err)
+	}
+
+	lat2, err := sr.evalArg(latitude2)
+	if err != nil {
+		panic(err)
+	}
+
+	lon2, err := sr.evalArg(longitude2)
+	if err != nil {
+		panic(err)
+	}
+	result, err := function.HaversineDistance(lat1, lon1, lat2, lon2)
+	if err != nil {
+		panic(err)
+	}
+
+	return result
+}
+
+// PolarAngle calculate polar angle of two locations given latitude1, longitude1, latitude1, latitude2
+// latitude and longitude can be:
+// - Json path string
+// - Slice / gota.Series
+// - float64 value
+func (sr Registry) PolarAngle(latitude1 interface{}, longitude1 interface{}, latitude2 interface{}, longitude2 interface{}) interface{} {
+	lat1, err := sr.evalArg(latitude1)
+	if err != nil {
+		panic(err)
+	}
+
+	lon1, err := sr.evalArg(longitude1)
+	if err != nil {
+		panic(err)
+	}
+
+	lat2, err := sr.evalArg(latitude2)
+	if err != nil {
+		panic(err)
+	}
+
+	lon2, err := sr.evalArg(longitude2)
+	if err != nil {
+		panic(err)
+	}
+	result, err := function.PolarAngle(lat1, lon1, lat2, lon2)
+	if err != nil {
+		panic(err)
+	}
+
+	return result
+}
+
+// ParseTimeStamp convert timestamp value into time
+func (sr Registry) ParseTimestamp(timestamp interface{}) interface{} {
+	ts, err := sr.evalArg(timestamp)
+	if err != nil {
+		panic(err)
+	}
+	timestampVals := reflect.ValueOf(ts)
+	switch timestampVals.Kind() {
+	case reflect.Slice:
+		var values []interface{}
+		for idx := 0; idx < timestampVals.Len(); idx++ {
+			val := timestampVals.Index(idx)
+			tsInt64, err := converter.ToInt64(val.Interface())
+			if err != nil {
+				panic(err)
+			}
+			values = append(values, time.Unix(tsInt64, 0).UTC())
+		}
+		return values
+	default:
+		tsInt64, err := converter.ToInt64(ts)
+		if err != nil {
+			panic(err)
+		}
+		return time.Unix(tsInt64, 0).UTC()
+	}
 }
 
 // Now() returns current local time
