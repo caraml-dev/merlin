@@ -86,20 +86,28 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	preprocessedRequestBody := requestBody
 	if s.PreprocessHandler != nil {
+		preprocessStartTime := time.Now()
 		preprocessedRequestBody, err = s.preprocess(ctx, requestBody, r.Header)
+		durationMs := time.Since(preprocessStartTime).Milliseconds()
 		if err != nil {
+			pipelineLatency.WithLabelValues(errorResult, preprocessStep).Observe(float64(durationMs))
 			s.logger.Error("preprocess error", zap.Error(err))
 			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
 			return
 		}
+		pipelineLatency.WithLabelValues(successResult, preprocessStep).Observe(float64(durationMs))
 		s.logger.Debug("preprocess response", zap.ByteString("preprocess_response", preprocessedRequestBody))
 	}
 
+	predictStartTime := time.Now()
 	resp, err := s.predict(ctx, r, preprocessedRequestBody)
+	predictionDurationMs := time.Since(predictStartTime).Milliseconds()
 	if err != nil {
+		pipelineLatency.WithLabelValues(errorResult, predictStep).Observe(float64(predictionDurationMs))
 		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
 		return
 	}
+	pipelineLatency.WithLabelValues(successResult, predictStep).Observe(float64(predictionDurationMs))
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -109,12 +117,16 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	postprocessedRequestBody := respBody
 	if s.PostprocessHandler != nil {
+		postprocessStartTime := time.Now()
 		postprocessedRequestBody, err = s.postprocess(ctx, respBody, resp.Header)
+		postprocessDurationMs := time.Since(postprocessStartTime).Milliseconds()
 		if err != nil {
+			pipelineLatency.WithLabelValues(errorResult, postprocessStep).Observe(float64(postprocessDurationMs))
 			s.logger.Error("postprocess error", zap.Error(err))
 			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "postprocessing error")).Write(w)
 			return
 		}
+		pipelineLatency.WithLabelValues(successResult, postprocessStep).Observe(float64(postprocessDurationMs))
 	}
 
 	copyHeader(w.Header(), resp.Header)
