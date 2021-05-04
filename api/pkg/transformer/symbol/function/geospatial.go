@@ -13,8 +13,10 @@ import (
 )
 
 const (
-	earthRaidusKm = 6371 // radius of the earth in kilometers.
-	pointFive     = 0.5
+	earthRaidusKm   = 6371 // radius of the earth in kilometers.
+	pointFive       = 0.5
+	zero            = 0
+	minimumDistance = 1.0
 )
 
 type LatLong struct {
@@ -114,6 +116,8 @@ func PolarAngle(lat1 interface{}, lon1 interface{}, lat2 interface{}, lon2 inter
 	}
 }
 
+// Haversine distance calculate distance between to points (lat, lon) in km
+// lat1, lon1, lat2, lon2 should be float64 or []float64 or any value that can be converted to those types (float64 or []float64)
 func HaversineDistance(lat1 interface{}, lon1 interface{}, lat2 interface{}, lon2 interface{}) (interface{}, error) {
 	firstPoint, err := extractLatLong(lat1, lon1)
 	if err != nil {
@@ -177,6 +181,10 @@ func calculateDistance(firstPoint *LatLong, secondPoint *LatLong) float64 {
 }
 
 func calculatePolarAngle(firstPoint *LatLong, secondPoint *LatLong) float64 {
+	distance := calculateDistance(firstPoint, secondPoint)
+	if distance < minimumDistance {
+		return zero
+	}
 	lat1 := degreesToRadians(firstPoint.lat)
 	lon1 := degreesToRadians(firstPoint.long)
 	lat2 := degreesToRadians(secondPoint.lat)
