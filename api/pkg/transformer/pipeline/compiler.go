@@ -120,7 +120,6 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 	}
 
 	// TODO: output
-
 	return ops, nil
 }
 
