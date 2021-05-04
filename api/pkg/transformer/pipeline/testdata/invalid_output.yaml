@@ -1,0 +1,84 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - tables:
+          - name: entity_3_table
+            baseTable:
+              fromJson:
+                jsonPath: $.entity_3
+                addRowNumber: true
+          - name: entity_4_table
+            baseTable:
+              fromTable:
+                tableName: entity_3_table
+            columns:
+              - name: column_1
+                expression: Now()
+              - name: column_2
+                fromJson:
+                  jsonPath: $.entity_2
+      - variables:
+          - name: variable1
+            jsonPath: $.entity_2.id
+          - name: variable2
+            expression: variable1
+          - name: variable3
+            literal:
+              stringValue: variable1
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              entity:
+                fromJson:
+                  jsonPath: "$.entity_1"
+              data:
+                fields:
+                  instances:
+                    fromTable:
+                      tableName: "entity_5_table"
+                      format: "RECORD"
+                  path_1:
+                    fromJson:
+                      jsonPath: "$.path_1"
+                  variable_1:
+                    expression: "variable1"
+  postprocess:
+    inputs:
+      - tables:
+          - name: entity_3_table
+            baseTable:
+              fromJson:
+                jsonPath: $.entity_3
+                addRowNumber: true
+          - name: entity_4_table
+            baseTable:
+              fromTable:
+                tableName: entity_3_table
+            columns:
+              - name: column_1
+                expression: Now()
+              - name: column_2
+                fromJson:
+                  jsonPath: $.entity_2
+      - variables:
+          - name: variable1
+            jsonPath: $.entity_2.id
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              entity:
+                fromJson:
+                  jsonPath: "$.entity_1"
+              data:
+                fields:
+                  instances:
+                    fromTable:
+                      tableName: "entity_4_table"
+                      format: "RECORD"
+                  path_2:
+                    fromJson:
+                      jsonPath: "$.path_2"
+                  variable_1:
+                    expression: "variable1"

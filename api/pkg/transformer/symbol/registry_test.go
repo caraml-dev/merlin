@@ -680,7 +680,7 @@ func TestSymbolRegistry_PolarAngle(t *testing.T) {
 			expectedValue: -2.2302696433651628,
 		},
 		{
-			desc: "Using single value jsonpath from request - expected 0 if distance less than 1 km",
+			desc: "Using single value jsonpath from request - expected 0 if distance less than 1 m",
 			requestJSON: []byte(`{
 				"latitude1": -6.2446,
 				"longitude1": 106.8006,

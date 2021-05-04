@@ -119,7 +119,16 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 		}
 	}
 
-	// TODO: output
+	// output stage
+	for _, output := range pipeline.Outputs {
+		if jsonOutput := output.JsonOutput; jsonOutput != nil {
+			jsonOutputOp, err := c.parseJsonOutputSpec(jsonOutput, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
+			}
+			ops = append(ops, jsonOutputOp)
+		}
+	}
 
 	return ops, nil
 }
@@ -249,6 +258,76 @@ func (c *Compiler) parseTableJoin(tableJoinSpecs *spec.TableJoin, paths *jsonpat
 
 	c.registerDummyTable(tableJoinSpecs.OutputTable)
 	return NewTableJoinOp(tableJoinSpecs), nil
+}
+
+func (c *Compiler) parseJsonOutputSpec(jsonSpec *spec.JsonOutput, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
+	template := jsonSpec.JsonTemplate
+	if template == nil {
+		return nil, errors.New("jsontemplate must be specified")
+	}
+	if template.BaseJson != nil {
+		compiledJsonPath, err := jsonpath.Compile(template.BaseJson.JsonPath)
+		if err != nil {
+			return nil, err
+		}
+		compiledJsonPaths.Set(template.BaseJson.JsonPath, compiledJsonPath)
+	}
+
+	if err := c.parseJsonFields(template.Fields, compiledJsonPaths, compiledExpressions); err != nil {
+		return nil, err
+	}
+
+	jsonOutputOp := NewJsonOutputOp(jsonSpec)
+
+	return jsonOutputOp, nil
+}
+
+func (c *Compiler) parseJsonFields(fields map[string]*spec.Field, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) error {
+	for _, field := range fields {
+		switch val := field.Value.(type) {
+		case *spec.Field_FromJson:
+			if len(field.Fields) > 0 {
+				return errors.New("can't specify nested json, if field has value to set")
+			}
+			compiledJsonPath, err := jsonpath.Compile(val.FromJson.JsonPath)
+			if err != nil {
+				return err
+			}
+			compiledJsonPaths.Set(val.FromJson.JsonPath, compiledJsonPath)
+		case *spec.Field_FromTable:
+			if len(field.Fields) > 0 {
+				return errors.New("can't specify nested json, if field has value to set")
+			}
+
+			// Check whether format specified is valid or not
+			if val.FromTable.Format == spec.FromTable_INVALID {
+				return errors.New("table format specified is invalid")
+			}
+
+			// Check whether table name already registered or not
+			tableName := val.FromTable.TableName
+			if err := c.checkVariableRegistered(tableName); err != nil {
+				return err
+			}
+
+		case *spec.Field_Expression:
+			if len(field.Fields) > 0 {
+				return errors.New("can't specify nested json, if field has value to set")
+			}
+			compiledExpression, err := c.compileExpression(val.Expression)
+			if err != nil {
+				return err
+			}
+			compiledExpressions.Set(val.Expression, compiledExpression)
+		default:
+			// value is not specified
+			if field.Fields == nil {
+				return errors.New("fields must be specified if value is empty")
+			}
+			return c.parseJsonFields(field.Fields, compiledJsonPaths, compiledExpressions)
+		}
+	}
+	return nil
 }
 
 func (c *Compiler) compileExpression(expression string) (*vm.Program, error) {

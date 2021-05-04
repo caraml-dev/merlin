@@ -260,18 +260,7 @@ func (sr Registry) evalArg(arg interface{}) (interface{}, error) {
 
 		return cplJsonPath.LookupFromContainer(sr.jsonObjectContainer())
 	case *series.Series:
-		switch val.Type() {
-		case series.String:
-			return val.Series().Records(), nil
-		case series.Float:
-			return val.Series().Float(), nil
-		case series.Int:
-			return val.Series().Int()
-		case series.Bool:
-			return val.Series().Bool()
-		default:
-			return nil, fmt.Errorf("unknown series type")
-		}
+		return val.GetRecords()
 	default:
 		return arg, nil
 	}
