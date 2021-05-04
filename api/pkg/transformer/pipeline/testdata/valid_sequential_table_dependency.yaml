@@ -1,0 +1,91 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - feast:
+          - tableName: entity_1_table
+            project: default
+            entities:
+              - name: entity_1
+                valueType: STRING
+                jsonPath: $.entity_1[*].id
+            features:
+              - name: entity_1:feature_1
+                valueType: INT64
+                defaultValue: '0'
+          - tableName: entity_2_table
+            project: default
+            entities:
+              - name: entity_2
+                valueType: INT64
+                jsonPath: $.entity_2.id
+            features:
+              - name: entity_2
+                valueType: INT64
+                defaultValue: '0'
+      - tables:
+          - name: entity_3_table
+            baseTable:
+              fromJson:
+                jsonPath: $.entity_3
+                addRowNumber: true
+          - name: entity_4_table
+            baseTable:
+              fromTable:
+                tableName: entity_3_table
+            columns:
+              - name: column_1
+                expression: Now()
+              - name: column_2
+                fromJson:
+                  jsonPath: $.entity_2
+      - variables:
+          - name: variable1
+            jsonPath: $.entity_2.id
+          - name: variable2
+            expression: variable1
+          - name: variable3
+            literal:
+              stringValue: variable1
+    transformations:
+      - tableTransformation:
+          inputTable: entity_3_table
+          outputTable: transformed_entity_3_table
+          steps:
+            - dropColumns: ["col1", "col2"]
+            - selectColumns: ["col3", "col4"]
+            - sort:
+                - column: "col5"
+                  order: ASC
+            - renameColumns:
+                col5: col5_new
+            - updateColumns:
+                - column: col6
+                  expression: Now().Hour()
+                - column: col7
+                  expression: entity_2_table.Col('col1')
+      - tableTransformation:
+          inputTable: transformed_entity_3_table
+          outputTable: temp_table
+          steps:
+            - dropColumns: ["col1", "col2"]
+            - selectColumns: ["col3", "col4"]
+            - sort:
+                - column: "col5"
+                  order: ASC
+            - renameColumns:
+                col5: col5_new
+            - updateColumns:
+                - column: col6
+                  expression: Now().Hour()
+                - column: col7
+                  expression: entity_2_table.Col('col1')
+      - tableJoin:
+          leftTable: temp_table
+          rightTable: entity_3_table
+          outputTable: result_table
+          how: LEFT
+      - tableJoin:
+          leftTable: result_table
+          rightTable: entity_3_table
+          outputTable: final_able
+          how: LEFT

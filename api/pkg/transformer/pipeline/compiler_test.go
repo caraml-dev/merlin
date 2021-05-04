@@ -61,7 +61,7 @@ func TestCompiler_Compile(t *testing.T) {
 				},
 				logger: logger,
 			},
-			specYamlFilePath: "./testdata/preprocess_input_only.yaml",
+			specYamlFilePath: "./testdata/valid_preprocess_input_only.yaml",
 			want: want{
 				expressions: []string{
 					"Now()",
@@ -95,7 +95,7 @@ func TestCompiler_Compile(t *testing.T) {
 				},
 				logger: logger,
 			},
-			specYamlFilePath: "./testdata/no_pipeline.yaml",
+			specYamlFilePath: "./testdata/valid_no_pipeline.yaml",
 			want: want{
 				expressions:    []string{},
 				jsonPaths:      []string{},
@@ -117,7 +117,7 @@ func TestCompiler_Compile(t *testing.T) {
 				},
 				logger: logger,
 			},
-			specYamlFilePath: "./testdata/input_only.yaml",
+			specYamlFilePath: "./testdata/valid_input_only.yaml",
 			want: want{
 				expressions: []string{
 					"Now()",
@@ -138,6 +138,82 @@ func TestCompiler_Compile(t *testing.T) {
 					&FeastOp{},
 					&CreateTableOp{},
 					&VariableDeclarationOp{},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "preprocess with input and transformation",
+			fields: fields{
+				sr:          symbol.NewRegistry(),
+				feastClient: &mocks.Client{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/valid_preprocess_input_and_transformation.yaml",
+			want: want{
+				expressions: []string{
+					"Now()",
+					"variable1",
+					"entity_2_table.Col('col1')",
+					"Now().Hour()",
+				},
+				jsonPaths: []string{
+					"$.entity_1[*].id",
+					"$.entity_2.id",
+					"$.entity_3",
+					"$.entity_2",
+				},
+				preprocessOps: []Op{
+					&FeastOp{},
+					&CreateTableOp{},
+					&VariableDeclarationOp{},
+					&TableTransformOp{},
+					&TableJoinOp{},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "sequential table dependency",
+			fields: fields{
+				sr:          symbol.NewRegistry(),
+				feastClient: &mocks.Client{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/valid_sequential_table_dependency.yaml",
+			want: want{
+				expressions: []string{
+					"Now()",
+					"variable1",
+					"entity_2_table.Col('col1')",
+					"Now().Hour()",
+				},
+				jsonPaths: []string{
+					"$.entity_1[*].id",
+					"$.entity_2.id",
+					"$.entity_3",
+					"$.entity_2",
+				},
+				preprocessOps: []Op{
+					&FeastOp{},
+					&CreateTableOp{},
+					&VariableDeclarationOp{},
+					&TableTransformOp{},
+					&TableTransformOp{},
+					&TableJoinOp{},
+					&TableJoinOp{},
 				},
 			},
 			wantErr: false,
@@ -168,6 +244,7 @@ func TestCompiler_Compile(t *testing.T) {
 				assert.EqualError(t, err, tt.expError.Error())
 				return
 			}
+			assert.NoError(t, err)
 
 			for _, jsonPath := range tt.want.jsonPaths {
 				assert.NotNil(t, got.compiledJsonpath.Get(jsonPath), "json path not compiled", jsonPath)

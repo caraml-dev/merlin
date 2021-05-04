@@ -54,8 +54,8 @@ message Transformation {
   // however it's not possible to have repeated field in oneof
   // https://github.com/protocolbuffers/protobuf/issues/2592
   // Thus we will handle the oneof behavior in the code side
-  repeated TableJoin tableJoin = 1;
-  repeated TableTransformation tableTransformation = 2;
+  TableJoin tableJoin = 1;
+  TableTransformation tableTransformation = 2;
 }
 
 message Output {

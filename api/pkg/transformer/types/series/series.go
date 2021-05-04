@@ -39,6 +39,13 @@ func New(values interface{}, t Type, name string) *Series {
 }
 
 func NewInferType(values interface{}, seriesName string) (*Series, error) {
+	s, ok := values.(*Series)
+	if ok {
+		newSeries := s.Series().Copy()
+		newSeries.Name = seriesName
+		return NewSeries(&newSeries), nil
+	}
+
 	seriesType := detectType(values)
 	seriesValues, err := castValues(values, seriesType)
 	if err != nil {

@@ -4,13 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
-	"sort"
 
 	"github.com/go-gota/gota/dataframe"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
@@ -90,7 +87,7 @@ func createBaseTable(env *Environment, baseTableSpec *spec.BaseTable) (*table.Ta
 }
 
 func overrideColumns(env *Environment, t *table.Table, columns []*spec.Column) (*table.Table, error) {
-	columnMap := make(map[string]interface{}, len(columns))
+	columnValues := make(map[string]interface{}, len(columns))
 	for _, col := range columns {
 		switch c := col.GetColumnValue().(type) {
 		case *spec.Column_FromJson:
@@ -99,127 +96,28 @@ func overrideColumns(env *Environment, t *table.Table, columns []*spec.Column) (
 				return nil, err
 			}
 
-			columnMap[col.Name] = result
+			columnValues[col.Name] = result
 		case *spec.Column_Expression:
 			result, err := evalExpression(env, c.Expression)
 			if err != nil {
 				return nil, err
 			}
 
-			columnMap[col.Name] = result
+			columnValues[col.Name] = result
 		}
-	}
-
-	tt, err := createTableFromColumnMaps(columnMap)
-	if err != nil {
-		return nil, err
 	}
 
 	// create a new table
 	if t == nil {
-		return tt, nil
+		return table.NewRaw(columnValues)
 	}
 
 	// update existing table
-	return t.ConcatColumn(tt)
-}
-
-func createTableFromColumnMaps(colMap map[string]interface{}) (*table.Table, error) {
-	colMap, err := castValues(colMap)
+	err := t.UpdateColumnsRaw(columnValues)
 	if err != nil {
 		return nil, err
 	}
-
-	maxLength := 1
-	for k, v := range colMap {
-		valueLength := getLength(v)
-		// check that length is either 1 or maxLength
-		if valueLength != 1 && maxLength != 1 && valueLength != maxLength {
-			return nil, fmt.Errorf("columns %s has different dimension", k)
-		}
-
-		if valueLength > maxLength {
-			maxLength = valueLength
-		}
-	}
-
-	colMap = broadcastScalar(colMap, maxLength)
-	ss, err := createSeries(colMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return table.New(ss...), nil
-}
-
-func createSeries(colMap map[string]interface{}) ([]*series.Series, error) {
-	ss := make([]*series.Series, 0)
-	colNames := make([]string, len(colMap))
-
-	i := 0
-	for k := range colMap {
-		colNames[i] = k
-		i++
-	}
-
-	sort.Strings(colNames)
-	for _, colName := range colNames {
-		s, err := series.NewInferType(colMap[colName], colName)
-		if err != nil {
-			return nil, err
-		}
-		ss = append(ss, s)
-	}
-	return ss, nil
-}
-
-func broadcastScalar(colMap map[string]interface{}, length int) map[string]interface{} {
-	for k, v := range colMap {
-		valueLength := getLength(v)
-		if valueLength > 1 {
-			continue
-		}
-
-		values := make([]interface{}, length)
-		for i := range values {
-			values[i] = v
-		}
-		colMap[k] = values
-	}
-
-	return colMap
-}
-
-func castValues(colMap map[string]interface{}) (map[string]interface{}, error) {
-	for k, v := range colMap {
-		colValue := castSeries(v)
-		colMap[k] = colValue
-	}
-
-	return colMap, nil
-}
-
-func getLength(value interface{}) int {
-	colValueVal := reflect.ValueOf(value)
-	switch colValueVal.Kind() {
-	case reflect.Slice:
-		return colValueVal.Len()
-	default:
-		return 1
-	}
-}
-
-func castSeries(value interface{}) interface{} {
-	switch val := value.(type) {
-	case *series.Series:
-		values := make([]interface{}, val.Series().Len())
-		for i := range values {
-			values[i] = val.Series().Val(i)
-		}
-		return values
-	default:
-		return value
-	}
+	return t, nil
 }
 
 func toMaps(jsonObj interface{}) ([]map[string]interface{}, error) {

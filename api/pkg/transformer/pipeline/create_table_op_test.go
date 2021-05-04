@@ -21,11 +21,11 @@ import (
 func TestCreateTableOp_Execute(t *testing.T) {
 	compiledExpression := expression.NewStorage()
 	compiledExpression.AddAll(map[string]*vm.Program{
-		"Now()":                            mustCompileExpression("Now()"),
-		"existing_table.Col('string_col')": mustCompileExpression("existing_table.Col('string_col')"),
-		"existing_table.Col('int_col')":    mustCompileExpression("existing_table.Col('int_col')"),
-		"existing_table.Col('float_col')":  mustCompileExpression("existing_table.Col('float_col')"),
-		"existing_table.Col('bool_col')":   mustCompileExpression("existing_table.Col('bool_col')"),
+		"Now()":                                  mustCompileExpression("Now()"),
+		"existing_table.GetColumn('string_col')": mustCompileExpression("existing_table.GetColumn('string_col')"),
+		"existing_table.GetColumn('int_col')":    mustCompileExpression("existing_table.GetColumn('int_col')"),
+		"existing_table.GetColumn('float_col')":  mustCompileExpression("existing_table.GetColumn('float_col')"),
+		"existing_table.GetColumn('bool_col')":   mustCompileExpression("existing_table.GetColumn('bool_col')"),
 	})
 
 	compiledJsonPath := jsonpath.NewStorage()
@@ -254,25 +254,25 @@ func TestCreateTableOp_Execute(t *testing.T) {
 						{
 							Name: "string_col",
 							ColumnValue: &spec.Column_Expression{
-								Expression: "existing_table.Col('string_col')",
+								Expression: "existing_table.GetColumn('string_col')",
 							},
 						},
 						{
 							Name: "int_col",
 							ColumnValue: &spec.Column_Expression{
-								Expression: "existing_table.Col('int_col')",
+								Expression: "existing_table.GetColumn('int_col')",
 							},
 						},
 						{
 							Name: "float_col",
 							ColumnValue: &spec.Column_Expression{
-								Expression: "existing_table.Col('float_col')",
+								Expression: "existing_table.GetColumn('float_col')",
 							},
 						},
 						{
 							Name: "bool_col",
 							ColumnValue: &spec.Column_Expression{
-								Expression: "existing_table.Col('bool_col')",
+								Expression: "existing_table.GetColumn('bool_col')",
 							},
 						},
 					},
@@ -325,12 +325,57 @@ func TestCreateTableOp_Execute(t *testing.T) {
 			env: env,
 			expVariables: map[string]interface{}{
 				"my_table": table.New(
+					series.New([]interface{}{1, 2, 3, 4}, series.Float, "array_int"),
+					series.New([]interface{}{1234, 1234, 1234, 1234}, series.Float, "int"),
 					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
 					series.New([]interface{}{1111, 2222, 3333, nil}, series.Int, "int_col"),
 					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
 					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "create table from existing table and override column with same name",
+			tableSpecs: []*spec.Table{
+				{
+					Name: "my_table",
+					BaseTable: &spec.BaseTable{
+						BaseTable: &spec.BaseTable_FromTable{
+							FromTable: &spec.FromTable{
+								TableName: "existing_table",
+							},
+						},
+					},
+					Columns: []*spec.Column{
+						{
+							Name: "array_int",
+							ColumnValue: &spec.Column_FromJson{
+								FromJson: &spec.FromJson{
+									JsonPath: "$.array_int",
+								},
+							},
+						},
+						{
+							Name: "int_col",
+							ColumnValue: &spec.Column_FromJson{
+								FromJson: &spec.FromJson{
+									JsonPath: "$.int",
+								},
+							},
+						},
+					},
+				},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"my_table": table.New(
 					series.New([]interface{}{1, 2, 3, 4}, series.Float, "array_int"),
-					series.New([]interface{}{1234, 1234, 1234, 1234}, series.Float, "int"),
+					series.New([]interface{}{1234, 1234, 1234, 1234}, series.Float, "int_col"),
+					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
+					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
+					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
 				),
 			},
 			wantErr:  false,

@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"fmt"
+
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
@@ -13,6 +15,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
+	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
 type Compiler struct {
@@ -71,35 +74,50 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 	ops := make([]Op, 0)
 
 	// input
-	if pipeline.Inputs != nil {
-		for _, input := range pipeline.Inputs {
-			if input.Variables != nil {
-				varOp, err := c.parseVariablesSpec(input.Variables, compiledJsonPaths, compiledExpressions)
-				if err != nil {
-					return nil, err
-				}
-				ops = append(ops, varOp)
+	for _, input := range pipeline.Inputs {
+		if input.Variables != nil {
+			varOp, err := c.parseVariablesSpec(input.Variables, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
 			}
+			ops = append(ops, varOp)
+		}
 
-			if input.Tables != nil {
-				tableOp, err := c.parseTablesSpec(input.Tables, compiledJsonPaths, compiledExpressions)
-				if err != nil {
-					return nil, err
-				}
-				ops = append(ops, tableOp)
+		if input.Tables != nil {
+			tableOp, err := c.parseTablesSpec(input.Tables, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
 			}
+			ops = append(ops, tableOp)
+		}
 
-			if input.Feast != nil {
-				feastOp, err := c.parseFeastSpec(input.Feast, compiledJsonPaths, compiledExpressions)
-				if err != nil {
-					return nil, err
-				}
-				ops = append(ops, feastOp)
+		if input.Feast != nil {
+			feastOp, err := c.parseFeastSpec(input.Feast, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
 			}
+			ops = append(ops, feastOp)
 		}
 	}
 
-	// TODO: transformation
+	// transformation
+	for _, transformation := range pipeline.Transformations {
+		if transformation.TableTransformation != nil {
+			tableTransformOps, err := c.parseTableTransform(transformation.TableTransformation, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
+			}
+			ops = append(ops, tableTransformOps)
+		}
+
+		if transformation.TableJoin != nil {
+			tableJoinOp, err := c.parseTableJoin(transformation.TableJoin, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, err
+			}
+			ops = append(ops, tableJoinOp)
+		}
+	}
 
 	// TODO: output
 
@@ -149,7 +167,7 @@ func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compil
 	compiledExpressions.AddAll(expressions)
 
 	for _, featureTableSpec := range featureTableSpecs {
-		c.registerDummyVariable(feast.GetTableName(featureTableSpec))
+		c.registerDummyTable(feast.GetTableName(featureTableSpec))
 	}
 
 	var memoryCache cache.Cache
@@ -163,7 +181,7 @@ func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compil
 
 func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
 	for _, tableSpec := range tableSpecs {
-		c.registerDummyVariable(tableSpec.Name)
+		c.registerDummyTable(tableSpec.Name)
 		if tableSpec.BaseTable != nil {
 			switch bt := tableSpec.BaseTable.BaseTable.(type) {
 			case *spec.BaseTable_FromJson:
@@ -198,10 +216,58 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 	return NewCreateTableOp(tableSpecs), nil
 }
 
+func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransformation, paths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
+	err := c.checkVariableRegistered(transformationSpecs.InputTable)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, step := range transformationSpecs.Steps {
+		for _, updateColumn := range step.UpdateColumns {
+			compiledExpression, err := c.compileExpression(updateColumn.Expression)
+			if err != nil {
+				return nil, err
+			}
+			compiledExpressions.Set(updateColumn.Expression, compiledExpression)
+		}
+	}
+
+	c.registerDummyTable(transformationSpecs.OutputTable)
+	return NewTableTransformOp(transformationSpecs), nil
+}
+
+func (c *Compiler) parseTableJoin(tableJoinSpecs *spec.TableJoin, paths *jsonpath.Storage, expressions *expression.Storage) (Op, error) {
+	err := c.checkVariableRegistered(tableJoinSpecs.LeftTable)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.checkVariableRegistered(tableJoinSpecs.RightTable)
+	if err != nil {
+		return nil, err
+	}
+
+	c.registerDummyTable(tableJoinSpecs.OutputTable)
+	return NewTableJoinOp(tableJoinSpecs), nil
+}
+
 func (c *Compiler) compileExpression(expression string) (*vm.Program, error) {
 	return expr.Compile(expression, expr.Env(c.sr))
 }
 
 func (c *Compiler) registerDummyVariable(varName string) {
 	c.sr[varName] = nil
+}
+
+func (c *Compiler) registerDummyTable(tableName string) {
+	c.sr[tableName] = table.New()
+}
+
+func (c *Compiler) checkVariableRegistered(varName string) error {
+	isRegistered := c.sr[varName] != nil
+	if !isRegistered {
+		return fmt.Errorf("variable %s is not registered", varName)
+	}
+
+	return nil
 }
