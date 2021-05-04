@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	earthRaidusKm   = 6371 // radius of the earth in kilometers.
-	pointFive       = 0.5
-	zero            = 0
-	minimumDistance = 1.0
+	earthRadiusKm       = 6371 // radius of the earth in kilometers.
+	pointFive           = 0.5
+	zero                = 0
+	minimumDistanceInKM = 0.001 // 1 meter
 )
 
 type LatLong struct {
@@ -177,12 +177,12 @@ func calculateDistance(firstPoint *LatLong, secondPoint *LatLong) float64 {
 		math.Pow(math.Sin(diffLon/2), 2)
 
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	return c * earthRaidusKm
+	return c * earthRadiusKm
 }
 
 func calculatePolarAngle(firstPoint *LatLong, secondPoint *LatLong) float64 {
-	distance := calculateDistance(firstPoint, secondPoint)
-	if distance < minimumDistance {
+	distanceInKm := calculateDistance(firstPoint, secondPoint)
+	if distanceInKm < minimumDistanceInKM {
 		return zero
 	}
 	lat1 := degreesToRadians(firstPoint.lat)

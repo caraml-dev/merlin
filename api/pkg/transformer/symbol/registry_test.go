@@ -684,8 +684,8 @@ func TestSymbolRegistry_PolarAngle(t *testing.T) {
 			requestJSON: []byte(`{
 				"latitude1": -6.2446,
 				"longitude1": 106.8006,
-				"latitude2": -6.24444,
-				"longitude2": 106.79980
+				"latitude2": -6.2446,
+				"longitude2": 106.8006
 			}`),
 			args: arguments{
 				lat1: "$.latitude1",
