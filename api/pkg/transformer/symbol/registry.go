@@ -238,6 +238,14 @@ func (sr Registry) JSONContainer() types.JSONObjectContainer {
 	return sr[sourceJSONKey].(types.JSONObjectContainer)
 }
 
+func (sr Registry) SetRawRequestHeaders(headers map[string]string) {
+	sr[rawRequestHeadersKey] = headers
+}
+
+func (sr Registry) SetModelResponseHeaders(headers map[string]string) {
+	sr[modelResponseHeadersKey] = headers
+}
+
 // evalArg evaluate argument
 // the argument can be: values or json path string
 // if it's json path string, evalArg will extract the value from json path otherwise it will return as is
@@ -285,12 +293,4 @@ func (sr Registry) jsonObjectContainer() types.JSONObjectContainer {
 		return nil
 	}
 	return p.(types.JSONObjectContainer)
-}
-
-func (sr Registry) SetRawRequestHeaders(headers map[string]string) {
-	sr[rawRequestHeadersKey] = headers
-}
-
-func (sr Registry) SetModelResponseHeaders(headers map[string]string) {
-	sr[modelResponseHeadersKey] = headers
 }
