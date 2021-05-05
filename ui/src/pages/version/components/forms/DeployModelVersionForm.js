@@ -27,11 +27,11 @@ export const DeployModelVersionForm = ({
 }) => {
   const { data: modelVersion } = useContext(FormContext);
   useEffect(() => {
-    console.table(modelVersion);
+    console.table(modelVersion.transformer.feast_enricher_config);
   }, [modelVersion]);
 
   const [submissionResponse, submitForm] = useMerlinApi(
-    `/models/${model.id}/versions/${version.id}/endpoint`,
+    `/models/${model.id}/versions/${version.id}/endpointasd`,
     { method: "POST" },
     {},
     false
@@ -65,9 +65,14 @@ export const DeployModelVersionForm = ({
     //   validationSchema: transformerConfigSchema,
     // },
     {
-      title: "Custom Transformer",
-      children: <CustomTransformerStep />,
-      validationSchema: customTransformerSchema
+      title: "Preprocess",
+      children: <PreprocessStep />
+      // validationSchema: schema[1],
+    },
+    {
+      title: "Postprocess",
+      children: <PostprocessStep />
+      // validationSchema: schema[1],
     }
   ];
 
@@ -86,14 +91,14 @@ export const DeployModelVersionForm = ({
 
   const customTransformerStep = {
     title: "Custom Transformer",
-    children: <CustomTransformerStep />
-    // validationSchema: schema[1],
+    children: <CustomTransformerStep />,
+    validationSchema: customTransformerSchema
   };
 
   const feastTransformerStep = {
     title: "Feast Enricher",
     children: <FeastTransformerStep />
-    // validationSchema: schema[1],
+    // validationSchema: schema[1], // TODO
   };
 
   const [steps, setSteps] = useState(mainSteps);

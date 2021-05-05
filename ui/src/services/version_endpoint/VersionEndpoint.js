@@ -1,6 +1,8 @@
 import { Logger } from "../logger/Logger";
 import { Transformer } from "../transformer/Transformer";
 
+const objectAssignDeep = require(`object-assign-deep`);
+
 export class VersionEndpoint {
   constructor() {
     this.id = undefined;
@@ -38,5 +40,10 @@ export class VersionEndpoint {
 
     this.created_at = undefined;
     this.updated_at = undefined;
+  }
+
+  toJSON() {
+    let obj = objectAssignDeep({}, this);
+    return this;
   }
 }
