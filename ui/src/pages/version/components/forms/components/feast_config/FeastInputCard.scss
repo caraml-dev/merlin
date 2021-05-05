@@ -1,0 +1,13 @@
+.euiCard.euiCard--feastRetrievalInputCard {
+  .euiCard__children {
+    margin-top: 0 !important;
+  }
+
+  .euiCard__description {
+    display: none !important;
+  }
+
+  .euiFlexGroup--removeButton {
+    margin-bottom: -12px !important;
+  }
+}

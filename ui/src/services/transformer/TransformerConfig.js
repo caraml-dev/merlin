@@ -18,6 +18,7 @@ const objectAssignDeep = require(`object-assign-deep`);
 
 export const STANDARD_TRANSFORMER_CONFIG_ENV_NAME =
   "STANDARD_TRANSFORMER_CONFIG";
+
 export class Entity {
   constructor(name, valueType, jsonPath, udf) {
     this.name = name;

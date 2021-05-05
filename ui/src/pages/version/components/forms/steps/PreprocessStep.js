@@ -9,6 +9,7 @@ import {
 import { InputPanel } from "../components/transformer/InputPanel";
 import { OutputPanel } from "../components/transformer/OutputPanel";
 import { TransformationPanel } from "../components/transformer/TransformationPanel";
+import { FeastProjectsContextProvider } from "../../../../../providers/feast/FeastProjectsContext";
 
 export const PreprocessStep = () => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -18,7 +19,9 @@ export const PreprocessStep = () => {
   return (
     <EuiFlexGroup direction="column" gutterSize="m">
       <EuiFlexItem grow={false}>
-        <InputPanel inputs={[]} />
+        <FeastProjectsContextProvider>
+          <InputPanel inputs={[]} />
+        </FeastProjectsContextProvider>
       </EuiFlexItem>
 
       <EuiFlexItem grow={false}>
