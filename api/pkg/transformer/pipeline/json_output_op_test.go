@@ -650,7 +650,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("compiled expression prediction_table not found"),
+			err: errors.New("table prediction_table is not declared"),
 		},
 		{
 			desc: "table has been compiled, but not yet set the value",
@@ -683,7 +683,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("value for prediction_table not in table format"),
+			err: errors.New("table prediction_table is not declared"),
 		},
 		{
 			desc: "table has been compiled, but the value is not table",
@@ -717,7 +717,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("value for prediction_table not in table format"),
+			err: errors.New("variable prediction_table is not a table"),
 		},
 		{
 			desc: "base table - jsonpath is not specified",

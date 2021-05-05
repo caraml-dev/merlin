@@ -2,12 +2,12 @@ package pipeline
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/pkg/errors"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
-	"github.com/pkg/errors"
 )
 
 type JsonOutputOp struct {
@@ -50,17 +50,12 @@ func generateJsonOutput(field *spec.Field, fieldName string, output map[string]i
 		}
 		output[fieldName] = jsonObj
 	case *spec.Field_FromTable:
-		tbl, err := evalExpression(env, val.FromTable.TableName)
+		tbl, err := getTable(env, val.FromTable.TableName)
 		if err != nil {
 			return nil, err
 		}
 
-		tblVal, ok := tbl.(*table.Table)
-		if !ok {
-			return nil, errors.New(fmt.Sprintf("value for %s not in table format", val.FromTable.TableName))
-		}
-
-		tableJsonOutput, err := table.TableToJson(tblVal, val.FromTable.Format)
+		tableJsonOutput, err := table.TableToJson(tbl, val.FromTable.Format)
 		if err != nil {
 			return nil, err
 		}
