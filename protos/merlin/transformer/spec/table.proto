@@ -62,7 +62,7 @@ message TableJoin {
   string rightTable = 2;
   string outputTable = 3;
   JoinMethod how = 4;
-  string on = 5;
+  string onColumn = 5;
 }
 
 enum JoinMethod {

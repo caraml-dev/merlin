@@ -30,7 +30,7 @@ func (t TableJoinOp) Execute(context context.Context, environment *Environment) 
 	}
 
 	var resultTable *table.Table
-	joinColumn := t.tableJoinSpec.On
+	joinColumn := t.tableJoinSpec.OnColumn
 	switch t.tableJoinSpec.How {
 	case spec.JoinMethod_LEFT:
 		err := validateJoinColumn(leftTable, rightTable, joinColumn)
