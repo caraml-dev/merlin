@@ -1,0 +1,17 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - tables:
+          - name: entity_table
+            baseTable:
+              fromJson:
+                jsonPath: $.entities[*]
+                addRowNumber: false
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              instances:
+                fromTable:
+                  tableName: "entity_table"
+                  format: "SPLIT"
