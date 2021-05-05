@@ -14,6 +14,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 var (
@@ -57,6 +58,7 @@ var (
 )
 
 func TestJsonOutputOp_Execute(t *testing.T) {
+	logger, _ := zap.NewDevelopment()
 	testCases := []struct {
 		desc       string
 		envFunc    func() *Environment
@@ -76,7 +78,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -110,7 +112,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -140,7 +142,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -167,7 +169,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -195,7 +197,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -240,7 +242,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -289,7 +291,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -330,7 +332,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -386,7 +388,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -542,7 +544,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -605,7 +607,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -629,7 +631,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -662,7 +664,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -695,7 +697,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
@@ -726,7 +728,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				env := NewEnvironment(&CompiledPipeline{
 					compiledJsonpath:   compiledJsonPath,
 					compiledExpression: compiledExpression,
-				})
+				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
 				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
 				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)

@@ -33,8 +33,8 @@ func NewFeastOp(feastClient feastSdk.Client, feastOptions *feast.Options, cache 
 	}
 }
 
-func (op *FeastOp) Execute(context context.Context, environment *Environment) error {
-	featureTables, err := op.feastRetriever.RetrieveFeatureOfEntityInSymbolRegistry(context, environment.SymbolRegistry())
+func (op *FeastOp) Execute(context context.Context, env *Environment) error {
+	featureTables, err := op.feastRetriever.RetrieveFeatureOfEntityInSymbolRegistry(context, env.SymbolRegistry())
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,8 @@ func (op *FeastOp) Execute(context context.Context, environment *Environment) er
 		if err != nil {
 			return err
 		}
-		environment.SetSymbol(featureTable.Name, table)
+		env.SetSymbol(featureTable.Name, table)
+		env.LogOperation("feast", featureTable.Name)
 	}
 
 	return nil

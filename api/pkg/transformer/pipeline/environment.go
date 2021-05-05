@@ -2,8 +2,10 @@ package pipeline
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/antonmedv/expr/vm"
+	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
@@ -14,13 +16,15 @@ type Environment struct {
 	symbolRegistry   symbol.Registry
 	compiledPipeline *CompiledPipeline
 	outputJSON       types.JSONObject
+	logger           *zap.Logger
 }
 
-func NewEnvironment(compiledPipeline *CompiledPipeline) *Environment {
+func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Environment {
 	sr := symbol.NewRegistryWithCompiledJSONPath(compiledPipeline.compiledJsonpath)
 	env := &Environment{
 		symbolRegistry:   sr,
 		compiledPipeline: compiledPipeline,
+		logger:           logger,
 	}
 
 	return env
@@ -68,4 +72,15 @@ func (e *Environment) CompiledJSONPath(name string) *jsonpath.Compiled {
 
 func (e *Environment) CompiledExpression(name string) *vm.Program {
 	return e.compiledPipeline.compiledExpression.Get(name)
+}
+
+func (e *Environment) LogOperation(opName string, variables ...string) {
+	if ce := e.logger.Check(zap.DebugLevel, "exec operation"); ce != nil {
+		fields := make([]zap.Field, len(variables)+1)
+		fields[0] = zap.String("op_name", opName)
+		for i, varName := range variables {
+			fields[i+1] = zap.String(varName, fmt.Sprintf("%v", e.symbolRegistry[varName]))
+		}
+		ce.Write(fields...)
+	}
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/antonmedv/expr/vm"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -19,6 +20,7 @@ import (
 )
 
 func TestCreateTableOp_Execute(t *testing.T) {
+	logger, _ := zap.NewDevelopment()
 	compiledExpression := expression.NewStorage()
 	compiledExpression.AddAll(map[string]*vm.Program{
 		"Now()":                                  mustCompileExpression("Now()"),
@@ -55,7 +57,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 	env := NewEnvironment(&CompiledPipeline{
 		compiledJsonpath:   compiledJsonPath,
 		compiledExpression: compiledExpression,
-	})
+	}, logger)
 
 	env.SetSymbol("existing_table", existingTable)
 	env.SetSymbol("not_a_table", 12345)

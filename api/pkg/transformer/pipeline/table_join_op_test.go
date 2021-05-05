@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -18,6 +19,7 @@ import (
 func TestTableJoinOp_Execute(t *testing.T) {
 	compiledExpression := expression.NewStorage()
 	compiledJsonPath := jsonpath.NewStorage()
+	logger, _ := zap.NewDevelopment()
 
 	customerTable := table.New(
 		series.New([]interface{}{1, 2, 3, 4}, series.Int, "customer_id"),
@@ -42,7 +44,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 	env := NewEnvironment(&CompiledPipeline{
 		compiledJsonpath:   compiledJsonPath,
 		compiledExpression: compiledExpression,
-	})
+	}, logger)
 
 	env.SetSymbol("customer_table", customerTable)
 	env.SetSymbol("order_table", orderTable)

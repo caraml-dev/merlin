@@ -9,6 +9,7 @@ import (
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -58,6 +59,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 		variableSpec []*spec.Variable
 	}
 
+	logger, _ := zap.NewDevelopment()
 	compiledExpression := expression.NewStorage()
 	compiledExpression.AddAll(map[string]*vm.Program{
 		"Now()": mustCompileExpression("Now()"),
@@ -124,6 +126,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 
 			&Environment{
 				symbolRegistry: symbol.NewRegistryWithCompiledJSONPath(compiledJsonPath),
+				logger:         logger,
 			},
 			map[string]interface{}{
 				"myIntegerLiteral": int64(1),
@@ -151,6 +154,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 				compiledPipeline: &CompiledPipeline{
 					compiledExpression: compiledExpression,
 				},
+				logger: logger,
 			},
 			map[string]interface{}{
 				"currentTime": time.Now(),
@@ -175,6 +179,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 				compiledPipeline: &CompiledPipeline{
 					compiledJsonpath: compiledJsonPath,
 				},
+				logger: logger,
 			},
 			map[string]interface{}{
 				"signature_name": "predict",

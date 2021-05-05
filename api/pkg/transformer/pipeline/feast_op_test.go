@@ -19,6 +19,7 @@ import (
 
 func TestFeastOp_Execute(t *testing.T) {
 	sr := symbol.NewRegistry()
+	logger, _ := zap.NewDevelopment()
 
 	type mockFeastRetriever struct {
 		result []*transTypes.FeatureTable
@@ -63,6 +64,7 @@ func TestFeastOp_Execute(t *testing.T) {
 				context: context.Background(),
 				environment: &Environment{
 					symbolRegistry: sr,
+					logger:         logger,
 				},
 			},
 			expVariables: map[string]interface{}{
@@ -118,6 +120,7 @@ func TestFeastOp_Execute(t *testing.T) {
 				context: context.Background(),
 				environment: &Environment{
 					symbolRegistry: sr,
+					logger:         logger,
 				},
 			},
 			expVariables: map[string]interface{}{

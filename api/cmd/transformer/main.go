@@ -98,7 +98,7 @@ func main() {
 			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
 		}
 
-		handler := pipeline.NewHandler(compiledPipeline)
+		handler := pipeline.NewHandler(compiledPipeline, logger)
 		s.PreprocessHandler = handler.Preprocess
 		s.PostprocessHandler = handler.Postprocess
 		s.ContextModifier = handler.EmbedEnvironment

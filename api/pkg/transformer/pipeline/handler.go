@@ -5,18 +5,23 @@ import (
 	"encoding/json"
 
 	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 type Handler struct {
 	compiledPipeline *CompiledPipeline
+	logger           *zap.Logger
 }
 
 const PipelineEnvironmentContext = "merlin-transfomer-environment"
 
-func NewHandler(compiledPipeline *CompiledPipeline) *Handler {
-	return &Handler{compiledPipeline: compiledPipeline}
+func NewHandler(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Handler {
+	return &Handler{
+		compiledPipeline: compiledPipeline,
+		logger:           logger,
+	}
 }
 
 func (h *Handler) Preprocess(ctx context.Context, rawRequest []byte, rawRequestHeaders map[string]string) ([]byte, error) {
@@ -59,7 +64,7 @@ func (h *Handler) Postprocess(ctx context.Context, modelResponse []byte, modelRe
 }
 
 func (h *Handler) EmbedEnvironment(ctx context.Context) context.Context {
-	env := NewEnvironment(h.compiledPipeline)
+	env := NewEnvironment(h.compiledPipeline, h.logger)
 	return context.WithValue(ctx, PipelineEnvironmentContext, env)
 }
 

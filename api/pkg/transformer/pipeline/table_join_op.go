@@ -87,6 +87,7 @@ func (t TableJoinOp) Execute(context context.Context, environment *Environment) 
 	}
 
 	environment.SetSymbol(t.tableJoinSpec.OutputTable, resultTable)
+	environment.LogOperation("table_join", t.tableJoinSpec.OutputTable)
 	return nil
 }
 

@@ -1,6 +1,7 @@
 package table
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"sort"
@@ -293,6 +294,12 @@ func (t *Table) CrossJoin(right *Table) (*Table, error) {
 	}
 
 	return NewTable(&df), nil
+}
+
+func (t *Table) String() string {
+	jsonTable, _ := tableToJsonSplitFormat(t)
+	jsonStr, _ := json.Marshal(jsonTable)
+	return fmt.Sprintf("%v", string(jsonStr))
 }
 
 func getLength(value interface{}) int {

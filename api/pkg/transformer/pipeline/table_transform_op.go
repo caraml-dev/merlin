@@ -75,5 +75,6 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 	}
 
 	env.SetSymbol(outputTableName, resultTable)
+	env.LogOperation("table_transform", outputTableName)
 	return nil
 }

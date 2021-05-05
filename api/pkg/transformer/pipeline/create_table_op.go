@@ -40,6 +40,7 @@ func (c CreateTableOp) Execute(_ context.Context, env *Environment) error {
 
 		// register to environment
 		env.SetSymbol(tableSpec.Name, t)
+		env.LogOperation("create_table", tableSpec.Name)
 	}
 
 	return nil

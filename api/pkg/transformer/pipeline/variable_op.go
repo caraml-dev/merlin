@@ -47,6 +47,8 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 		default:
 			return fmt.Errorf("Variable.Value has unexpected type %T", v)
 		}
+
+		env.LogOperation("set variable", varDef.Name)
 	}
 
 	return nil
