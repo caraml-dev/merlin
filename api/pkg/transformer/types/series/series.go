@@ -1,7 +1,6 @@
 package series
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 
@@ -65,41 +64,11 @@ func (s *Series) Type() Type {
 }
 
 func (s *Series) GetRecords() ([]interface{}, error) {
-	switch s.Type() {
-	case String:
-		values := s.Series().Records()
-		return toGenericArray(values)
-	case Float:
-		values := s.Series().Float()
-		return toGenericArray(values)
-	case Int:
-		values, err := s.Series().Int()
-		if err != nil {
-			return nil, err
-		}
-		return toGenericArray(values)
-	case Bool:
-		values, err := s.Series().Bool()
-		if err != nil {
-			return nil, err
-		}
-		return toGenericArray(values)
-	default:
-		return nil, fmt.Errorf("unknown series type")
+	genericArr := make([]interface{}, s.series.Len())
+	for i := 0; i < s.series.Len(); i++ {
+		genericArr[i] = s.series.Val(i)
 	}
-}
 
-func toGenericArray(arr interface{}) ([]interface{}, error) {
-	arrVal := reflect.ValueOf(arr)
-	arrKind := arrVal.Kind()
-	if arrKind != reflect.Slice {
-		return nil, errors.New("arr type is not slice")
-	}
-	genericArr := make([]interface{}, 0, arrVal.Len())
-	for i := 0; i < arrVal.Len(); i++ {
-		val := arrVal.Index(i)
-		genericArr = append(genericArr, val.Interface())
-	}
 	return genericArr, nil
 }
 
