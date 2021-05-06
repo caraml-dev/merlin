@@ -62,16 +62,16 @@ export const FeastInputCard = ({
           <EuiFlexItem>
             <EuiFormRow
               label="Table Name *"
-              isInvalid={!!errors.outputTable}
-              error={errors.outputTable}
+              isInvalid={!!errors.tableName}
+              error={errors.tableName}
               display="columnCompressed"
               fullWidth>
               <EuiFieldText
                 placeholder="Table name"
-                value={table.outputTable}
+                value={table.tableName}
                 onChange={e => onChange("tableName", e.target.value)}
-                isInvalid={!!errors.outputTable}
-                name={`output-table-${index}`}
+                isInvalid={!!errors.tableName}
+                name={`table-name-${index}`}
                 fullWidth
               />
             </EuiFormRow>

@@ -79,13 +79,33 @@ export class Pipeline {
   toJSON() {
     let obj = objectAssignDeep({}, this);
 
-    if (this.inputs.length === 0) {
+    if (obj.inputs.length === 0) {
       delete obj["inputs"];
+    } else {
+      obj.inputs.forEach(input => {
+        input.tables &&
+          input.tables.forEach(table => {
+            table.columns &&
+              table.columns.forEach(column => {
+                delete column["idx"];
+                delete column["type"];
+                delete column["value"];
+              });
+          });
+
+        input.variables &&
+          input.variables.forEach(variable => {
+            delete variable["idx"];
+            delete variable["type"];
+            delete variable["value"];
+          });
+      });
     }
-    if (this.transformations.length === 0) {
+
+    if (obj.transformations.length === 0) {
       delete obj["transformations"];
     }
-    if (this.outputs.length === 0) {
+    if (obj.outputs.length === 0) {
       delete obj["outputs"];
     }
 
@@ -111,7 +131,24 @@ export class FeastInput {
 }
 
 export class TablesInput {
-  constructor() {}
+  constructor() {
+    this.name = "";
+    this.baseTable = undefined;
+    this.columns = [];
+  }
+}
+
+export class FromJson {
+  constructor() {
+    this.jsonPath = "";
+    this.addRowNumber = false;
+  }
+}
+
+export class FromTable {
+  constructor() {
+    this.tableName = "";
+  }
 }
 
 export class Transformations {

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from "react";
-import { EuiFlexGroup, EuiFlexItem, EuiText } from "@elastic/eui";
+import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import {
   FormContext,
   FormValidationContext,

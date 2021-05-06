@@ -1,23 +1,17 @@
-import React, { useCallback } from "react";
+import React from "react";
 import {
-  EuiButton,
-  EuiCard,
   EuiDragDropContext,
   euiDragDropReorder,
   EuiDraggable,
   EuiDroppable,
-  EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiForm,
-  EuiFormRow,
-  EuiSpacer,
-  EuiText
+  EuiSpacer
 } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
-import { Panel } from "../../Panel";
-import { TableTransformationStepCard } from "./TableTransformationStepCard";
+import { useOnChangeHandler } from "@gojek/mlp-ui";
 import { AddButton } from "./AddButton";
+import { TableTransformationStepCard } from "./TableTransformationStepCard";
+import { Panel } from "../../Panel";
 
 export const TableTransformationStepPanel = ({
   steps,
@@ -26,9 +20,9 @@ export const TableTransformationStepPanel = ({
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const onAddInput = useCallback(() => {
+  const onAddInput = () => {
     onChangeHandler([...steps, {}]);
-  });
+  };
 
   const onDeleteStep = idx => () => {
     steps.splice(idx, 1);

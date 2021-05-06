@@ -1,13 +1,13 @@
 import React, { useContext } from "react";
-import { EuiFlexGroup, EuiFlexItem, EuiText } from "@elastic/eui";
+import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import {
   FormContext,
   FormValidationContext,
   get,
   useOnChangeHandler
 } from "@gojek/mlp-ui";
-import { FeastProjectsContextProvider } from "../../../../../providers/feast/FeastProjectsContext";
 import { FeastEnricherPanel } from "../components/feast_config/FeastEnricherPanel";
+import { FeastProjectsContextProvider } from "../../../../../providers/feast/FeastProjectsContext";
 
 export const FeastTransformerStep = () => {
   const {

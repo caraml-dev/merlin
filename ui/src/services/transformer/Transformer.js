@@ -1,4 +1,5 @@
 import {
+  Config,
   FeastConfig,
   STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
   TransformerConfig
@@ -27,9 +28,9 @@ export class Transformer {
 
     this.env_vars = [];
 
-    this.feast_enricher_config = [new FeastConfig("", [], [])];
-
     this.config = new TransformerConfig();
+
+    this.feast_enricher_config = [new FeastConfig("", [], [])];
 
     this.created_at = undefined;
     this.updated_at = undefined;
@@ -45,24 +46,49 @@ export class Transformer {
     // Find the index of env_var that contains transformer config
     // If it's not exist, create new env var
     // If it's exist, update it
+    let configJson = "";
+    if (obj.transformer_type === "standard") {
+      configJson = JSON.stringify(new Config(obj.config));
+    }
+
+    if (obj.transformer_type === "feast") {
+      obj.feast_enricher_config.forEach(feastConfig => {
+        feastConfig.entities.forEach(entity => {
+          if (entity.fieldType === "UDF") {
+            entity["udf"] = entity.field;
+          } else {
+            entity["jsonPath"] = entity.field;
+          }
+          delete entity["field"];
+          delete entity["fieldType"];
+        });
+      });
+      configJson = JSON.stringify(
+        new Config(new TransformerConfig(obj.feast_enricher_config))
+      );
+    }
+
     const envVarIndex = obj.env_vars.findIndex(
       e => e.name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME
     );
     if (envVarIndex === -1) {
       obj.env_vars.push({
         name: STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
-        value: "NEW"
+        value: configJson
       });
     } else {
       obj.env_vars[envVarIndex] = {
         ...obj.env_vars[envVarIndex],
-        value: "UPDATED"
+        value: configJson
       };
     }
 
     // Remove properties for optional fields, if not relevant
     //
-    // Delete feast_enricher_config, because we already set the config to env vars
+    // Delete config and feast_enricher_config, because we already set the config to env vars
+    if (obj.config) {
+      delete obj["config"];
+    }
     if (obj.feast_enricher_config) {
       delete obj["feast_enricher_config"];
     }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React from "react";
 import {
   EuiButton,
   EuiDragDropContext,
@@ -10,11 +10,7 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import {
-  DescribedFormGroup,
-  FormLabelWithToolTip,
-  useOnChangeHandler
-} from "@gojek/mlp-ui";
+import { useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "../Panel";
 import { FeastInputCard } from "./components/FeastInputCard";
 import { FeastResourcesContextProvider } from "../../../../../../providers/feast/FeastResourcesContext";
@@ -27,9 +23,9 @@ export const FeastEnricherPanel = ({
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const onAddTable = useCallback(() => {
+  const onAddTable = () => {
     onChangeHandler([...feastConfig, new FeastConfig("", [], [])]);
-  });
+  };
 
   const onDeleteTable = idx => () => {
     feastConfig.splice(idx, 1);

@@ -27,7 +27,7 @@ export const DeployModelVersionForm = ({
 }) => {
   const { data: modelVersion } = useContext(FormContext);
   useEffect(() => {
-    console.log(JSON.stringify(modelVersion.transformer.config));
+    console.log(JSON.stringify(modelVersion, null, 2));
   }, [modelVersion]);
 
   const [submissionResponse, submitForm] = useMerlinApi(
@@ -64,6 +64,11 @@ export const DeployModelVersionForm = ({
     //   children: <TransformerStep />,
     //   validationSchema: transformerConfigSchema,
     // },
+    // {
+    //   title: "Feast Enricher",
+    //   children: <FeastTransformerStep />
+    //   // validationSchema: schema[1], // TODO
+    // }
     {
       title: "Preprocess",
       children: <PreprocessStep />
