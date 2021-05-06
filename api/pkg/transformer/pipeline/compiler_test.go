@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
+	"sigs.k8s.io/yaml"
 
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
