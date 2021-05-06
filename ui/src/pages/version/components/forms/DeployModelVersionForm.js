@@ -68,12 +68,12 @@ export const DeployModelVersionForm = ({
       title: "Preprocess",
       children: <PreprocessStep />
       // validationSchema: schema[1],
-    },
-    {
-      title: "Postprocess",
-      children: <PostprocessStep />
-      // validationSchema: schema[1],
     }
+    // {
+    //   title: "Postprocess",
+    //   children: <PostprocessStep />
+    //   // validationSchema: schema[1],
+    // }
   ];
 
   const standardTransformerSteps = [

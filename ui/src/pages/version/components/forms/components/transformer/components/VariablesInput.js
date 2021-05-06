@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { EuiButtonIcon, EuiFieldText, EuiSpacer } from "@elastic/eui";
+import React from "react";
+import { EuiButtonIcon, EuiFieldText, EuiSuperSelect } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
@@ -24,6 +24,66 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
     };
   };
 
+  const typeOptions = [
+    { value: "jsonpath", inputDisplay: "JSONPath" },
+    { value: "expression", inputDisplay: "Expression" },
+    { value: "string", inputDisplay: "String literal" },
+    { value: "int", inputDisplay: "Integer literal" },
+    { value: "float", inputDisplay: "Float literal" },
+    { value: "bool", inputDisplay: "Boolean literal" }
+  ];
+
+  const onVariableChange = (idx, field, value) => {
+    let newItem = { ...items[idx], [field]: value };
+    if (newItem.literal !== undefined) {
+      delete newItem["literal"];
+    }
+    if (newItem.expression !== undefined) {
+      delete newItem["expression"];
+    }
+    if (newItem.jsonPath !== undefined) {
+      delete newItem["jsonPath"];
+    }
+
+    switch (newItem.type) {
+      case "jsonpath":
+        newItem["jsonPath"] = newItem.value;
+        break;
+      case "expression":
+        newItem["expression"] = newItem.value;
+        break;
+      case "string":
+        newItem = { ...newItem, literal: { stringValue: newItem.value } };
+        break;
+      case "int":
+        newItem = {
+          ...newItem,
+          literal: { intValue: parseInt(newItem.value) }
+        };
+        break;
+      case "float":
+        newItem = {
+          ...newItem,
+          literal: { floatValue: parseFloat(newItem.value) }
+        };
+        break;
+      case "bool":
+        newItem = {
+          ...newItem,
+          literal: {
+            boolValue: newItem.value
+              ? newItem.value.toLowerCase() === "true"
+              : false
+          }
+        };
+        break;
+      default:
+        break;
+    }
+
+    onChange(`${idx}`)(newItem);
+  };
+
   const columns = [
     {
       name: "Name",
@@ -31,8 +91,6 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
       width: "30%",
       render: (name, item) => (
         <EuiFieldText
-          controlOnly
-          className="inlineTableInput"
           placeholder="Name"
           value={name || ""}
           onChange={e => onChange(`${item.idx}.name`)(e.target.value)}
@@ -44,12 +102,11 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
       field: "type",
       width: "30%",
       render: (type, item) => (
-        <EuiFieldText
-          controlOnly
-          className="inlineTableInput"
-          placeholder="Type"
-          value={type || ""}
-          onChange={e => onChange(`${item.idx}.type`)(e.target.value)}
+        <EuiSuperSelect
+          options={typeOptions}
+          valueOfSelected={type || ""}
+          onChange={value => onVariableChange(item.idx, "type", value)}
+          hasDividers
         />
       )
     },
@@ -59,11 +116,9 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
       width: "30%",
       render: (value, item) => (
         <EuiFieldText
-          controlOnly
-          className="inlineTableInput"
           placeholder="Value"
           value={value || ""}
-          onChange={e => onChange(`${item.idx}.value`)(e.target.value)}
+          onChange={e => onVariableChange(item.idx, "value", e.target.value)}
         />
       )
     },
