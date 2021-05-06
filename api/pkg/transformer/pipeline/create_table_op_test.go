@@ -32,13 +32,14 @@ func TestCreateTableOp_Execute(t *testing.T) {
 
 	compiledJsonPath := jsonpath.NewStorage()
 	compiledJsonPath.AddAll(map[string]*jsonpath.Compiled{
-		"$.signature_name": jsonpath.MustCompileJsonPath("$.signature_name"),
-		"$.instances":      jsonpath.MustCompileJsonPath("$.instances"),
-		"$.array_int":      jsonpath.MustCompileJsonPath("$.array_int"),
-		"$.array_float":    jsonpath.MustCompileJsonPath("$.array_float"),
-		"$.array_float_2":  jsonpath.MustCompileJsonPath("$.array_float_2"),
-		"$.int":            jsonpath.MustCompileJsonPath("$.int"),
-		"$.unknown_field":  jsonpath.MustCompileJsonPath("$.unknown_field"),
+		"$.signature_name":   jsonpath.MustCompileJsonPath("$.signature_name"),
+		"$.instances":        jsonpath.MustCompileJsonPath("$.instances"),
+		"$.object_with_null": jsonpath.MustCompileJsonPath("$.object_with_null"),
+		"$.array_int":        jsonpath.MustCompileJsonPath("$.array_int"),
+		"$.array_float":      jsonpath.MustCompileJsonPath("$.array_float"),
+		"$.array_float_2":    jsonpath.MustCompileJsonPath("$.array_float_2"),
+		"$.int":              jsonpath.MustCompileJsonPath("$.int"),
+		"$.unknown_field":    jsonpath.MustCompileJsonPath("$.unknown_field"),
 	})
 
 	var rawRequestJSON types.JSONObject
@@ -146,6 +147,34 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{0, 1}, series.Int, "row_number"),
 					series.New([]interface{}{2.8, 0.1}, series.Float, "sepal_length"),
 					series.New([]interface{}{1.0, 0.5}, series.Float, "sepal_width"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "create table from json containing missing field",
+			tableSpecs: []*spec.Table{
+				{
+					Name: "my_table",
+					BaseTable: &spec.BaseTable{
+						BaseTable: &spec.BaseTable_FromJson{
+							FromJson: &spec.FromJson{
+								JsonPath:     "$.object_with_null",
+								AddRowNumber: true,
+							},
+						},
+					},
+				},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"my_table": table.New(
+					series.New([]interface{}{6.8, nil}, series.Float, "petal_length"),
+					series.New([]interface{}{0.4, 2.4}, series.Float, "petal_width"),
+					series.New([]interface{}{0, 1}, series.Int, "row_number"),
+					series.New([]interface{}{2.8, 0.1}, series.Float, "sepal_length"),
+					series.New([]interface{}{nil, 0.5}, series.Float, "sepal_width"),
 				),
 			},
 			wantErr:  false,

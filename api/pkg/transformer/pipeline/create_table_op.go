@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/go-gota/gota/dataframe"
-
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
@@ -54,22 +52,12 @@ func createBaseTable(env *Environment, baseTableSpec *spec.BaseTable) (*table.Ta
 			return nil, err
 		}
 
-		maps, err := toMaps(jsonObj)
+		rawTable, err := toRawTable(jsonObj, baseTable.FromJson.AddRowNumber)
 		if err != nil {
 			return nil, fmt.Errorf("invalid json pointed by %s: %w", baseTable.FromJson.JsonPath, err)
 		}
 
-		if baseTable.FromJson.AddRowNumber {
-			for i, m := range maps {
-				m["row_number"] = i
-			}
-		}
-
-		df := dataframe.LoadMaps(maps)
-		if df.Err != nil {
-			return nil, df.Err
-		}
-		return table.NewTable(&df), nil
+		return table.NewRaw(rawTable)
 	case *spec.BaseTable_FromTable:
 		s := env.SymbolRegistry()[baseTable.FromTable.TableName]
 		if s == nil {
@@ -121,20 +109,35 @@ func overrideColumns(env *Environment, t *table.Table, columns []*spec.Column) (
 	return t, nil
 }
 
-func toMaps(jsonObj interface{}) ([]map[string]interface{}, error) {
+func toRawTable(jsonObj interface{}, addRowNumber bool) (map[string]interface{}, error) {
 	jsonArray, ok := jsonObj.([]interface{})
 	if !ok {
 		return nil, errors.New("not an array")
 	}
 
-	var result []map[string]interface{}
-	for _, j := range jsonArray {
+	nrow := len(jsonArray)
+	rawTable := make(map[string]interface{})
+	if addRowNumber {
+		rawTable["row_number"] = make([]interface{}, nrow)
+	}
+	for idx, j := range jsonArray {
 		node, ok := j.(map[string]interface{})
 		if !ok {
 			return nil, errors.New("not an array of JSON object")
 		}
-		result = append(result, node)
+		for k, v := range node {
+			ss, ok := rawTable[k]
+			if !ok {
+				ss = make([]interface{}, nrow)
+			}
+			ss.([]interface{})[idx] = v
+			rawTable[k] = ss
+		}
+
+		if addRowNumber {
+			rawTable["row_number"].([]interface{})[idx] = idx
+		}
 	}
 
-	return result, nil
+	return rawTable, nil
 }
