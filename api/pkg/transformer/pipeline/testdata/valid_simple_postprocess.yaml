@@ -11,7 +11,8 @@ transformerConfig:
       - jsonOutput:
           jsonTemplate:
             fields:
-              instances:
+              - fieldName: instances
                 fromTable:
                   tableName: "entity_table"
                   format: "SPLIT"
+                
