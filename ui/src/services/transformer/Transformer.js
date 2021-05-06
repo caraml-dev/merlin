@@ -1,6 +1,7 @@
 import {
   FeastConfig,
-  STANDARD_TRANSFORMER_CONFIG_ENV_NAME
+  STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
+  TransformerConfig
 } from "./TransformerConfig";
 
 const objectAssignDeep = require(`object-assign-deep`);
@@ -27,6 +28,8 @@ export class Transformer {
     this.env_vars = [];
 
     this.feast_enricher_config = [new FeastConfig("", [], [])];
+
+    this.config = new TransformerConfig();
 
     this.created_at = undefined;
     this.updated_at = undefined;

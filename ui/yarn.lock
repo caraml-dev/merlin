@@ -3960,6 +3960,11 @@ d@1, d@^1.0.1:
     es5-ext "^0.10.50"
     type "^1.0.1"
 
+dagre-d3-react@^0.2.4:
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/dagre-d3-react/-/dagre-d3-react-0.2.4.tgz#df6037e0c117fc207f7513ee5f175aefb4a96749"
+  integrity sha512-spYk0zaI8Mm+5E+99veMDS7CG2Prpce1CcjQINHTKmJe0XUkmFEey5yRr4Ag7htXdirw1Lf/rlBiZgORcc1Nyg==
+
 damerau-levenshtein@^1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/damerau-levenshtein/-/damerau-levenshtein-1.0.6.tgz#143c1641cb3d85c60c32329e26899adea8701791"

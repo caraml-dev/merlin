@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   EuiButton,
   EuiDragDropContext,
@@ -16,7 +16,7 @@ import {
   useOnChangeHandler
 } from "@gojek/mlp-ui";
 import { Panel } from "../Panel";
-import { FeastInputCard } from "./FeastInputCard";
+import { FeastInputCard } from "./components/FeastInputCard";
 import { FeastResourcesContextProvider } from "../../../../../../providers/feast/FeastResourcesContext";
 import { FeastConfig } from "../../../../../../services/transformer/TransformerConfig";
 
@@ -27,9 +27,9 @@ export const FeastEnricherPanel = ({
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const onAddTable = () => {
+  const onAddTable = useCallback(() => {
     onChangeHandler([...feastConfig, new FeastConfig("", [], [])]);
-  };
+  });
 
   const onDeleteTable = idx => () => {
     feastConfig.splice(idx, 1);
@@ -51,7 +51,7 @@ export const FeastEnricherPanel = ({
     <Panel title="Feast Enricher" contentWidth="75%">
       <EuiDragDropContext onDragEnd={onDragEnd}>
         <EuiFlexGroup direction="column" gutterSize="s">
-          <EuiDroppable droppableId="CUSTOM_HANDLE_DROPPABLE_AREA" spacing="m">
+          <EuiDroppable droppableId="FEAST_INPUT_DROPPABLE_AREA" spacing="m">
             {feastConfig.map((table, idx) => (
               <EuiDraggable
                 key={`${idx}`}

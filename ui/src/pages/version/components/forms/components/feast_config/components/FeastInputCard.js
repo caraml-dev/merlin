@@ -1,36 +1,26 @@
-import React, { useCallback, useContext, useEffect, Fragment } from "react";
+import React, { useContext, useEffect, Fragment } from "react";
 import {
-  EuiButtonIcon,
-  EuiCard,
   EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiForm,
   EuiFormRow,
   EuiPanel,
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import {
-  FormLabelWithToolTip,
-  get,
-  SelectDockerImageComboBox,
-  useOnChangeHandler
-} from "@gojek/mlp-ui";
-import { appConfig } from "../../../../../../config";
-import DockerRegistriesContext from "../../../../../../providers/docker/context";
-import { Panel } from "../Panel";
+import { get } from "@gojek/mlp-ui";
 import "./FeastInputCard.scss";
-import { FeastProjectComboBox } from "./components/FeastProjectComboBox";
-import { FeastEntities } from "../../../../../../version/deployment/components/FeastEntities";
-import { FeastFeatures } from "../../../../../../version/deployment/components/FeastFeatures";
-import FeastProjectsContext from "../../../../../../providers/feast/FeastProjectsContext";
-import { FeastInputCardHeader } from "./components/FeastInputCardHeader";
-import FeastResourcesContext from "../../../../../../providers/feast/FeastResourcesContext";
+import { FeastProjectComboBox } from "./FeastProjectComboBox";
+import { DraggableHeader } from "../../DraggableHeader";
+import { FeastEntities } from "../../../../../../../version/deployment/components/FeastEntities";
+import { FeastFeatures } from "../../../../../../../version/deployment/components/FeastFeatures";
+import FeastProjectsContext from "../../../../../../../providers/feast/FeastProjectsContext";
+import FeastResourcesContext from "../../../../../../../providers/feast/FeastResourcesContext";
 
 export const FeastInputCard = ({
   index = 0,
   table,
+  tableNameEditable = false,
   onChangeHandler,
   onDelete,
   errors = {},
@@ -38,6 +28,10 @@ export const FeastInputCard = ({
 }) => {
   const projects = useContext(FeastProjectsContext);
   const { entities, featureTables } = useContext(FeastResourcesContext);
+
+  useEffect(() => {
+    console.log("feast table", table);
+  }, [table]);
 
   const onChange = (field, value) => {
     if (JSON.stringify(value) !== JSON.stringify(table[field])) {
@@ -50,7 +44,7 @@ export const FeastInputCard = ({
 
   return (
     <EuiPanel>
-      <FeastInputCardHeader
+      <DraggableHeader
         onDelete={onDelete}
         dragHandleProps={props.dragHandleProps}
       />
@@ -60,16 +54,36 @@ export const FeastInputCard = ({
       <EuiFlexGroup direction="column" gutterSize="s">
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>Retrieval Table #{index + 1}</h4>
+            <h4>#{index + 1} - Feast Table</h4>
           </EuiText>
         </EuiFlexItem>
+
+        {tableNameEditable && (
+          <EuiFlexItem>
+            <EuiFormRow
+              label="Table Name *"
+              isInvalid={!!errors.outputTable}
+              error={errors.outputTable}
+              display="columnCompressed"
+              fullWidth>
+              <EuiFieldText
+                placeholder="Table name"
+                value={table.outputTable}
+                onChange={e => onChange("tableName", e.target.value)}
+                isInvalid={!!errors.outputTable}
+                name={`output-table-${index}`}
+                fullWidth
+              />
+            </EuiFormRow>
+          </EuiFlexItem>
+        )}
 
         <EuiFlexItem>
           <EuiFormRow
             label="Feast Project *"
             display="columnCompressed"
-            isInvalid={!!get(errors, "endpoint")}
-            error={get(errors, "endpoint")}
+            isInvalid={!!get(errors, "project")}
+            error={get(errors, "project")}
             fullWidth>
             <FeastProjectComboBox
               project={table.project || ""}
@@ -82,7 +96,11 @@ export const FeastInputCard = ({
         {table.project !== "" && (
           <Fragment>
             <EuiFlexItem>
-              <EuiFormRow fullWidth label="Entities">
+              <EuiFormRow
+                fullWidth
+                label="Entities"
+                isInvalid={!!get(errors, "entities")}
+                error={get(errors, "entities")}>
                 <FeastEntities
                   entities={table.entities}
                   feastEntities={entities}
@@ -92,7 +110,11 @@ export const FeastInputCard = ({
             </EuiFlexItem>
 
             <EuiFlexItem>
-              <EuiFormRow fullWidth label="Features">
+              <EuiFormRow
+                fullWidth
+                label="Features"
+                isInvalid={!!get(errors, "features")}
+                error={get(errors, "features")}>
                 <FeastFeatures
                   features={table.features}
                   feastFeatureTables={featureTables}

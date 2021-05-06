@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { EuiButtonIcon, EuiFieldText, EuiSpacer } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 
-export const VariablesPanel = ({ variables, onChangeHandler, errors = {} }) => {
+export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const items = [

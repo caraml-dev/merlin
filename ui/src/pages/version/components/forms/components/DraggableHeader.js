@@ -6,7 +6,7 @@ import {
   EuiIcon
 } from "@elastic/eui";
 
-export const FeastInputCardHeader = ({ onDelete, dragHandleProps }) => (
+export const DraggableHeader = ({ onDelete, dragHandleProps }) => (
   <EuiFlexGroup
     {...dragHandleProps}
     justifyContent="spaceBetween"

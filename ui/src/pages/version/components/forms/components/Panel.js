@@ -15,9 +15,9 @@ const PanelContent = ({ contentWidth = "70%", children }) => (
   </EuiFlexGroup>
 );
 
-export const Panel = ({ title, contentWidth, children }) => {
+export const Panel = ({ title, contentWidth, color = "plain", children }) => {
   return (
-    <EuiPanel grow={false}>
+    <EuiPanel grow={false} color={color}>
       <EuiTitle size="xs">
         <h4>{title}</h4>
       </EuiTitle>

@@ -1,69 +1,90 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
-  EuiForm,
-  EuiFormRow,
-  EuiIcon,
-  EuiSuperSelect,
-  EuiText,
-  EuiToolTip
+  EuiDragDropContext,
+  euiDragDropReorder,
+  EuiDraggable,
+  EuiDroppable,
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiSpacer,
+  EuiText
 } from "@elastic/eui";
 import { useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "../Panel";
+import { AddButton } from "./components/AddButton";
+import { JsonOutputCard } from "./components/JsonOutputCard";
+import { JsonOutput } from "../../../../../../services/transformer/TransformerConfig";
 
-export const OutputPanel = ({ onChangeHandler, errors = {} }) => {
+export const OutputPanel = ({
+  outputs,
+  onChangeHandler,
+  errors = {} // TODO
+}) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const jsonTypeOptions = [
-    {
-      value: "prediction-api-v1",
-      inputDisplay: "Prediction API V1"
-    }
-  ];
+  const onAddOutput = useCallback((field, input) => {
+    onChangeHandler([...outputs, { [field]: input }]);
+  });
 
-  const inputTableOptions = [
-    {
-      value: "customer_table",
-      inputDisplay: "customer_table"
+  const onDeleteOutput = idx => () => {
+    outputs.splice(idx, 1);
+    onChangeHandler([...outputs]);
+  };
+
+  const onDragEnd = ({ source, destination }) => {
+    if (source && destination) {
+      const items = euiDragDropReorder(
+        outputs,
+        source.index,
+        destination.index
+      );
+      onChangeHandler([...items]);
     }
-  ];
+  };
 
   return (
-    <Panel title="Output">
-      <EuiForm>
-        <EuiFormRow
-          fullWidth
-          label="JSON Format Type*"
-          isInvalid={!!errors.environment_name}
-          error={errors.environment_name}
-          display="row">
-          <EuiSuperSelect
-            fullWidth
-            options={jsonTypeOptions}
-            valueOfSelected="prediction-api-v1"
-            onChange={onChange("environment_name")}
-            isInvalid={!!errors.environment_name}
-            itemLayoutAlign="top"
-            hasDividers
-          />
-        </EuiFormRow>
+    <Panel title="Output" contentWidth="75%">
+      <EuiDragDropContext onDragEnd={onDragEnd}>
+        <EuiFlexGroup direction="column" gutterSize="s">
+          <EuiDroppable droppableId="OUTPUTS_DROPPABLE_AREA" spacing="m">
+            {outputs.map((output, idx) => (
+              <EuiDraggable
+                key={`${idx}`}
+                index={idx}
+                draggableId={`${idx}`}
+                customDragHandle={true}
+                disableInteractiveElementBlocking>
+                {provided => (
+                  <EuiFlexItem key={`output-${idx}`}>
+                    {output.jsonOutput && (
+                      <JsonOutputCard
+                        index={idx}
+                        data={output}
+                        onChangeHandler={onChange(`${idx}.jsonOutput`)}
+                        onDelete={
+                          outputs.length > 1 ? onDeleteOutput(idx) : undefined
+                        }
+                        dragHandleProps={provided.dragHandleProps}
+                      />
+                    )}
 
-        <EuiFormRow
-          fullWidth
-          label="Input Table*"
-          isInvalid={!!errors.environment_name}
-          error={errors.environment_name}
-          display="row">
-          <EuiSuperSelect
-            fullWidth
-            options={inputTableOptions}
-            valueOfSelected="customer_table"
-            onChange={onChange("environment_name")}
-            isInvalid={!!errors.environment_name}
-            itemLayoutAlign="top"
-            hasDividers
-          />
-        </EuiFormRow>
-      </EuiForm>
+                    <EuiSpacer size="s" />
+                  </EuiFlexItem>
+                )}
+              </EuiDraggable>
+            ))}
+          </EuiDroppable>
+
+          <EuiFlexItem>
+            <AddButton
+              title="+ Add JSON Output"
+              // TODO:
+              // description="Use Feast features as input"
+              onClick={() => onAddOutput("jsonOutput", new JsonOutput())}
+            />
+          </EuiFlexItem>
+        </EuiFlexGroup>
+      </EuiDragDropContext>
     </Panel>
   );
 };
