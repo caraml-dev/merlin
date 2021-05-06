@@ -220,7 +220,7 @@ func TestCompiler_Compile(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "preprocess - postprocess input and output",
+			name: "preprocess - postprocess input and output - valid",
 			fields: fields{
 				sr:          symbol.NewRegistry(),
 				feastClient: &mocks.Client{},
@@ -259,7 +259,7 @@ func TestCompiler_Compile(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "preprocess - postprocess input and output",
+			name: "preprocess - postprocess input and output - invalid",
 			fields: fields{
 				sr:          symbol.NewRegistry(),
 				feastClient: &mocks.Client{},

@@ -282,8 +282,12 @@ func (c *Compiler) parseJsonOutputSpec(jsonSpec *spec.JsonOutput, compiledJsonPa
 	return jsonOutputOp, nil
 }
 
-func (c *Compiler) parseJsonFields(fields map[string]*spec.Field, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) error {
+func (c *Compiler) parseJsonFields(fields []*spec.Field, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) error {
 	for _, field := range fields {
+
+		if field.FieldName == "" {
+			return errors.New("field name must be specified")
+		}
 		switch val := field.Value.(type) {
 		case *spec.Field_FromJson:
 			if len(field.Fields) > 0 {
@@ -321,7 +325,7 @@ func (c *Compiler) parseJsonFields(fields map[string]*spec.Field, compiledJsonPa
 			compiledExpressions.Set(val.Expression, compiledExpression)
 		default:
 			// value is not specified
-			if field.Fields == nil {
+			if len(field.Fields) == 0 {
 				return errors.New("fields must be specified if value is empty")
 			}
 			return c.parseJsonFields(field.Fields, compiledJsonPaths, compiledExpressions)
