@@ -3,7 +3,6 @@ package pipeline
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"testing"
 	"time"
 
@@ -70,7 +69,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 		env          *Environment
 		expVariables map[string]interface{}
 		wantErr      bool
-		expError     error
+		errorPattern string
 	}{
 		{
 			name: "create table from existing table",
@@ -94,8 +93,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
 					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col")),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from json without row number",
@@ -121,8 +119,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{1.0, 0.5}, series.Float, "sepal_width"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from json with row number",
@@ -149,8 +146,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{1.0, 0.5}, series.Float, "sepal_width"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from json containing missing field",
@@ -177,8 +173,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{nil, 0.5}, series.Float, "sepal_width"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from column definition using jsonPath pointing to 2 array same length",
@@ -212,8 +207,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{1, 2, 3, 4}, series.Float, "array_int"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from column definition using jsonPath pointing to 1 array and 1 scalar",
@@ -247,8 +241,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{1234, 1234, 1234, 1234}, series.Float, "int"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from column definition using jsonPath pointing to int",
@@ -273,8 +266,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{1234}, series.Float, "int"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from column definition using expression",
@@ -318,8 +310,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from existing table and override column",
@@ -364,8 +355,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from existing table and override column with same name",
@@ -409,8 +399,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create multiple table",
@@ -451,8 +440,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
 				),
 			},
-			wantErr:  false,
-			expError: nil,
+			wantErr: false,
 		},
 		{
 			name: "create table from not existing table",
@@ -468,9 +456,9 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			env:      env,
-			wantErr:  true,
-			expError: errors.New("unable to create base table for my_table: table not_existing_table is not found"),
+			env:          env,
+			wantErr:      true,
+			errorPattern: "unable to create base table for my_table: table not_existing_table is not found",
 		},
 		{
 			name: "create table from variable pointing to not a table",
@@ -486,9 +474,9 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			env:      env,
-			wantErr:  true,
-			expError: errors.New("unable to create base table for my_table: variable not_a_table is not a table"),
+			env:          env,
+			wantErr:      true,
+			errorPattern: "unable to create base table for my_table: variable not_a_table is not a table",
 		},
 		{
 			name: "create table from json path: field not found",
@@ -505,9 +493,9 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			env:      env,
-			wantErr:  true,
-			expError: errors.New("unable to create base table for my_table: key error: unknown_field not found in object"),
+			env:          env,
+			wantErr:      true,
+			errorPattern: "unable to create base table for my_table: key error: unknown_field not found in object",
 		},
 		{
 			name: "create table from json path: not an array",
@@ -524,9 +512,9 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			env:      env,
-			wantErr:  true,
-			expError: errors.New("unable to create base table for my_table: invalid json pointed by $.int: not an array"),
+			env:          env,
+			wantErr:      true,
+			errorPattern: "unable to create base table for my_table: invalid json pointed by \\$\\.int: not an array",
 		},
 		{
 			name: "create table from json path: not an array of struct",
@@ -543,9 +531,9 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			env:      env,
-			wantErr:  true,
-			expError: errors.New("unable to create base table for my_table: invalid json pointed by $.array_float: not an array of JSON object"),
+			env:          env,
+			wantErr:      true,
+			errorPattern: "unable to create base table for my_table: invalid json pointed by \\$\\.array_float: not an array of JSON object",
 		},
 		{
 			name: "create table from column definition using jsonPath pointing to 2 array with different length",
@@ -572,9 +560,9 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			env:      env,
-			wantErr:  true,
-			expError: errors.New("unable to override column for table my_table: columns array_float has different dimension"),
+			env:          env,
+			wantErr:      true,
+			errorPattern: "unable to override column for table my_table: columns (array_int|array_float) has different dimension",
 		},
 	}
 	for _, tt := range tests {
@@ -585,7 +573,8 @@ func TestCreateTableOp_Execute(t *testing.T) {
 
 			err := c.Execute(context.Background(), tt.env)
 			if tt.wantErr {
-				assert.EqualError(t, err, tt.expError.Error())
+				assert.Error(t, err)
+				assert.Regexp(t, tt.errorPattern, err.Error())
 				return
 			}
 
