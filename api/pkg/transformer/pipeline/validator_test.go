@@ -345,7 +345,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 				},
 			},
 			wantErr:  true,
-			expError: errors.New("invalid transformer config: feature not found for entities [customer_id] in project merlin: customer_feature_table:total_booking"),
+			expError: errors.New("feature not found for entities [customer_id] in project merlin: customer_feature_table:total_booking"),
 		},
 		{
 			name: "error: feature in postprocess is not found",
@@ -399,7 +399,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 				},
 			},
 			wantErr:  true,
-			expError: errors.New("invalid transformer config: feature not found for entities [customer_id] in project merlin: customer_feature_table:total_booking"),
+			expError: errors.New("feature not found for entities [customer_id] in project merlin: customer_feature_table:total_booking"),
 		},
 	}
 	for _, tt := range tests {

@@ -28,7 +28,6 @@ import (
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/transformer"
-	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 )
@@ -171,12 +170,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 		err := c.validateTransformer(ctx, newEndpoint.Transformer)
 		if err != nil {
 			log.Errorf("error validating transformer config: %v", err)
-			target := &feast.ValidationError{}
-			if errors.As(err, &target) {
-				return BadRequest(err.Error())
-			}
-
-			return InternalServerError(err.Error())
+			return BadRequest(err.Error())
 		}
 	}
 
@@ -236,12 +230,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 			err := c.validateTransformer(ctx, newEndpoint.Transformer)
 			if err != nil {
 				log.Errorf("error validating transformer config: %v", err)
-				target := &feast.ValidationError{}
-				if errors.As(err, &target) {
-					return BadRequest(err.Error())
-				}
-
-				return InternalServerError(err.Error())
+				return BadRequest(err.Error())
 			}
 		}
 
