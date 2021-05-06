@@ -72,6 +72,24 @@ export class Pipeline {
     this.inputs = [];
     this.transformations = [];
     this.outputs = [];
+
+    this.toJSON = this.toJSON.bind(this);
+  }
+
+  toJSON() {
+    let obj = objectAssignDeep({}, this);
+
+    if (this.inputs.length === 0) {
+      delete obj["inputs"];
+    }
+    if (this.transformations.length === 0) {
+      delete obj["transformations"];
+    }
+    if (this.outputs.length === 0) {
+      delete obj["outputs"];
+    }
+
+    return obj;
   }
 }
 
@@ -80,16 +98,6 @@ export class Input {
     this.feast = undefined;
     this.tables = undefined;
     this.variables = undefined;
-  }
-
-  toJSON() {
-    let obj = objectAssignDeep({}, this);
-
-    // if (obj.feast === undefined) { delete obj["feast"]; }
-    // if (obj.tables === undefined) { delete obj["tables"]; }
-    // if (obj.variables === undefined) { delete obj["variables"]; }
-
-    return this;
   }
 }
 
@@ -103,10 +111,6 @@ export class FeastInput {
 }
 
 export class TablesInput {
-  constructor() {}
-}
-
-export class VariablesInput {
   constructor() {}
 }
 

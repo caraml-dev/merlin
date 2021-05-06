@@ -193,7 +193,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
     {
       name: "Field Type",
       field: "fieldType",
-      width: "15%",
+      width: "20%",
       render: (value, item) => (
         <EuiComboBox
           fullWidth
@@ -218,7 +218,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
         </EuiToolTip>
       ),
       field: "field",
-      width: "35%",
+      width: "30%",
       render: (value, item) => (
         <EuiFieldText
           controlOnly
