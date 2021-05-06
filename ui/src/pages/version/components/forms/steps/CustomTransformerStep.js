@@ -1,13 +1,7 @@
 import React, { useContext } from "react";
-import {
-  EuiFieldText,
-  EuiFlexGroup,
-  EuiFlexItem,
-  EuiFormRow
-} from "@elastic/eui";
+import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import {
   FormContext,
-  FormLabelWithToolTip,
   FormValidationContext,
   get,
   useOnChangeHandler

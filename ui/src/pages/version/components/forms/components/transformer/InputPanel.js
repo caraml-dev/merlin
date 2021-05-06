@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import {
   EuiDragDropContext,
   euiDragDropReorder,
@@ -6,21 +6,19 @@ import {
   EuiDroppable,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiSpacer,
-  EuiText
+  EuiSpacer
 } from "@elastic/eui";
 import { useOnChangeHandler } from "@gojek/mlp-ui";
-import { Panel } from "../Panel";
 import { AddButton } from "./components/AddButton";
+import { TableInputCard } from "./components/TableInputCard";
 import { VariablesInputCard } from "./components/VariablesInputCard";
+import { FeastInputCard } from "../feast_config/components/FeastInputCard";
+import { Panel } from "../Panel";
 import {
   FeastInput,
-  TablesInput,
-  VariablesInput
+  TablesInput
 } from "../../../../../../services/transformer/TransformerConfig";
 import { FeastResourcesContextProvider } from "../../../../../../providers/feast/FeastResourcesContext";
-import { FeastInputCard } from "../feast_config/components/FeastInputCard";
-import { TablesInputCard } from "./components/TablesInputCard";
 
 export const InputPanel = ({
   inputs,
@@ -29,9 +27,9 @@ export const InputPanel = ({
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const onAddInput = useCallback((field, input) => {
+  const onAddInput = (field, input) => {
     onChangeHandler([...inputs, { [field]: input }]);
-  });
+  };
 
   const onDeleteInput = idx => () => {
     inputs.splice(idx, 1);
@@ -61,12 +59,12 @@ export const InputPanel = ({
                   <EuiFlexItem key={`input-${idx}`}>
                     {input.feast && (
                       <FeastResourcesContextProvider
-                        project={input.feast.project}>
+                        project={input.feast[0].project}>
                         <FeastInputCard
                           index={idx}
-                          table={input.feast}
+                          table={input.feast[0]}
                           tableNameEditable={true}
-                          onChangeHandler={onChange(`${idx}.feast`)}
+                          onChangeHandler={onChange(`${idx}.feast.0`)}
                           onDelete={
                             inputs.length > 1 ? onDeleteInput(idx) : undefined
                           }
@@ -76,10 +74,13 @@ export const InputPanel = ({
                     )}
 
                     {input.tables && (
-                      <TablesInputCard
+                      <TableInputCard
                         index={idx}
-                        variables={input.tables}
-                        onChangeHandler={onChange(`${idx}.tables`)}
+                        table={input.tables[0]}
+                        onChangeHandler={onChange(`${idx}.tables.0`)}
+                        onColumnChangeHandler={onChange(
+                          `${idx}.tables.0.columns`
+                        )}
                         onDelete={
                           inputs.length > 1 ? onDeleteInput(idx) : undefined
                         }
@@ -112,7 +113,7 @@ export const InputPanel = ({
                 <AddButton
                   title="+ Add Feast Features"
                   description="Use Feast features as input"
-                  onClick={() => onAddInput("feast", new FeastInput())}
+                  onClick={() => onAddInput("feast", [new FeastInput()])}
                 />
               </EuiFlexItem>
 
@@ -120,7 +121,7 @@ export const InputPanel = ({
                 <AddButton
                   title="+ Add Generic Table"
                   description="Create generic table from request body or other inputs (Feast features or variables)"
-                  onClick={() => onAddInput("tables", new TablesInput())}
+                  onClick={() => onAddInput("tables", [new TablesInput()])}
                 />
               </EuiFlexItem>
 

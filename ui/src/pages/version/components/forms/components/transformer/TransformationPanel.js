@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import {
   EuiDragDropContext,
   euiDragDropReorder,
@@ -6,8 +6,7 @@ import {
   EuiDroppable,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiSpacer,
-  EuiText
+  EuiSpacer
 } from "@elastic/eui";
 import { Panel } from "../Panel";
 import { AddButton } from "./components/AddButton";
@@ -26,9 +25,9 @@ export const TransformationPanel = ({
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const onAddInput = useCallback((field, transformation) => {
+  const onAddInput = (field, transformation) => {
     onChangeHandler([...transformations, { [field]: transformation }]);
-  });
+  };
 
   const onDeleteTransformation = idx => () => {
     transformations.splice(idx, 1);

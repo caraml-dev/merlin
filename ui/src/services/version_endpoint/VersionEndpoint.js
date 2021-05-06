@@ -44,6 +44,6 @@ export class VersionEndpoint {
 
   toJSON() {
     let obj = objectAssignDeep({}, this);
-    return this;
+    return obj;
   }
 }
