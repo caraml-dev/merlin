@@ -27,7 +27,7 @@ export const DeployModelVersionForm = ({
 }) => {
   const { data: modelVersion } = useContext(FormContext);
   useEffect(() => {
-    console.table(modelVersion.transformer.feast_enricher_config);
+    console.log(JSON.stringify(modelVersion.transformer.config));
   }, [modelVersion]);
 
   const [submissionResponse, submitForm] = useMerlinApi(
