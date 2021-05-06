@@ -29,19 +29,19 @@ transformerConfig:
       - jsonOutput:
           jsonTemplate:
             fields:
-              entity:
+              - fieldName: entity
                 fromJson:
                   jsonPath: "$.entity_1"
-              data:
+              - fieldName: data
                 fields:
-                  instances:
+                  - fieldName: instances
                     fromTable:
                       tableName: "entity_5_table"
                       format: "RECORD"
-                  path_1:
+                  - fieldName: path_1
                     fromJson:
                       jsonPath: "$.path_1"
-                  variable_1:
+                  - fieldName: variable_1
                     expression: "variable1"
   postprocess:
     inputs:
@@ -68,17 +68,17 @@ transformerConfig:
       - jsonOutput:
           jsonTemplate:
             fields:
-              entity:
+              - fieldName: entity
                 fromJson:
                   jsonPath: "$.entity_1"
-              data:
+              - fieldName: data
                 fields:
-                  instances:
+                  - fieldName: instances
                     fromTable:
                       tableName: "entity_4_table"
                       format: "RECORD"
-                  path_2:
+                  - fieldName: path_2
                     fromJson:
                       jsonPath: "$.path_2"
-                  variable_1:
+                  - fieldName: variable_1
                     expression: "variable1"

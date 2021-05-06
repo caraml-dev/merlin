@@ -57,7 +57,7 @@ transformerConfig:
       - jsonOutput:
           jsonTemplate:
             fields:
-              instances:
+              - fieldName: instances
                 fromTable:
                   tableName: result_table
                   format: "SPLIT"

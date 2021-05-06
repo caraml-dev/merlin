@@ -29,7 +29,7 @@ transformerConfig:
       - jsonOutput:
           jsonTemplate:
             fields:
-              instances:
+              - fieldName: instances
                 fromTable:
                   tableName: transformed_driver_table
                   format: "SPLIT"

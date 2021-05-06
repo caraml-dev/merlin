@@ -12,7 +12,7 @@ message JsonOutput {
 
 message JsonTemplate {
   BaseJson baseJson = 1;
-  map <string, Field>  fields = 2;
+  repeated Field fields = 2;
 }
 
 message BaseJson {
@@ -20,11 +20,12 @@ message BaseJson {
 }
 
 message Field {
-  map <string, Field>  fields = 1;
+  string fieldName = 1;
+  repeated Field fields = 2;
   oneof value {
-    FromJson fromJson = 2;
-    FromTable fromTable = 3;
-    string expression = 4;
+    FromJson fromJson = 3;
+    FromTable fromTable = 4;
+    string expression = 5;
   }
 }
 

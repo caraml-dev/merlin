@@ -29,9 +29,9 @@ func (j JsonOutputOp) Execute(ctx context.Context, env *Environment) error {
 		outputJson = baseJsonOutput
 	}
 
-	for fieldName, field := range template.Fields {
+	for _, field := range template.Fields {
 		var err error
-		outputJson, err = generateJsonOutput(field, fieldName, outputJson, env)
+		outputJson, err = generateJsonOutput(field, outputJson, env)
 		if err != nil {
 			return err
 		}
@@ -41,7 +41,8 @@ func (j JsonOutputOp) Execute(ctx context.Context, env *Environment) error {
 	return nil
 }
 
-func generateJsonOutput(field *spec.Field, fieldName string, output map[string]interface{}, env *Environment) (map[string]interface{}, error) {
+func generateJsonOutput(field *spec.Field, output map[string]interface{}, env *Environment) (map[string]interface{}, error) {
+	fieldName := field.FieldName
 	switch val := field.Value.(type) {
 	case *spec.Field_FromJson:
 		jsonObj, err := evalJSONPath(env, val.FromJson.JsonPath)
@@ -69,16 +70,16 @@ func generateJsonOutput(field *spec.Field, fieldName string, output map[string]i
 		output[fieldName] = exprVal
 	default:
 		// check whether field already set from basejson
-		jsonObj, ok := output[fieldName].(map[string]interface{})
+		jsonObj, ok := output[field.FieldName].(map[string]interface{})
 		if ok {
 			output[fieldName] = jsonObj
 		} else {
 			output[fieldName] = make(map[string]interface{})
 		}
 
-		for name, fieldVal := range field.Fields {
+		for _, fieldVal := range field.Fields {
 			var err error
-			output[fieldName], err = generateJsonOutput(fieldVal, name, output[fieldName].(map[string]interface{}), env)
+			output[fieldName], err = generateJsonOutput(fieldVal, output[fieldName].(map[string]interface{}), env)
 			if err != nil {
 				return nil, err
 			}

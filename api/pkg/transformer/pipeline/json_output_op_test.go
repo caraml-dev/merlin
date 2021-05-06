@@ -208,8 +208,9 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					BaseJson: &spec.BaseJson{
 						JsonPath: "$.merchant_info",
 					},
-					Fields: map[string]*spec.Field{
-						"order_number": &spec.Field{
+					Fields: []*spec.Field{
+						{
+							FieldName: "order_number",
 							Value: &spec.Field_FromJson{
 								FromJson: &spec.FromJson{
 									JsonPath: "$.order_id",
@@ -250,15 +251,17 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 			},
 			outputSpec: &spec.JsonOutput{
 				JsonTemplate: &spec.JsonTemplate{
-					Fields: map[string]*spec.Field{
-						"order_number": &spec.Field{
+					Fields: []*spec.Field{
+						{
+							FieldName: "order_number",
 							Value: &spec.Field_FromJson{
 								FromJson: &spec.FromJson{
 									JsonPath: "$.order_id",
 								},
 							},
 						},
-						"merchant_location": &spec.Field{
+						{
+							FieldName: "merchant_location",
 							Value: &spec.Field_FromJson{
 								FromJson: &spec.FromJson{
 									JsonPath: "$.merchant_info.last_location",
@@ -303,8 +306,9 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					BaseJson: &spec.BaseJson{
 						JsonPath: "$.merchant_info.last_location",
 					},
-					Fields: map[string]*spec.Field{
-						"latitude": &spec.Field{
+					Fields: []*spec.Field{
+						{
+							FieldName: "latitude",
 							Value: &spec.Field_Expression{
 								Expression: "default_latitude",
 							},
@@ -344,10 +348,12 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					BaseJson: &spec.BaseJson{
 						JsonPath: "$.merchant_info",
 					},
-					Fields: map[string]*spec.Field{
-						"last_location": &spec.Field{
-							Fields: map[string]*spec.Field{
-								"latitude": &spec.Field{
+					Fields: []*spec.Field{
+						{
+							FieldName: "last_location",
+							Fields: []*spec.Field{
+								{
+									FieldName: "latitude",
 									Value: &spec.Field_Expression{
 										Expression: "default_latitude",
 									},
@@ -415,19 +421,23 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 			outputSpec: &spec.JsonOutput{
 				JsonTemplate: &spec.JsonTemplate{
 
-					Fields: map[string]*spec.Field{
-						"data": &spec.Field{
-							Fields: map[string]*spec.Field{
-								"profile": &spec.Field{
-									Fields: map[string]*spec.Field{
-										"customers": &spec.Field{
+					Fields: []*spec.Field{
+						{
+							FieldName: "data",
+							Fields: []*spec.Field{
+								{
+									FieldName: "profile",
+									Fields: []*spec.Field{
+										{
+											FieldName: "customers",
 											Value: &spec.Field_FromJson{
 												FromJson: &spec.FromJson{
 													JsonPath: "$.customers",
 												},
 											},
 										},
-										"merchant": &spec.Field{
+										{
+											FieldName: "merchant",
 											Value: &spec.Field_FromJson{
 												FromJson: &spec.FromJson{
 													JsonPath: "$.merchant_info",
@@ -436,23 +446,28 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 										},
 									},
 								},
-								"location": &spec.Field{
-									Fields: map[string]*spec.Field{
-										"merchant": &spec.Field{
+								{
+									FieldName: "location",
+									Fields: []*spec.Field{
+										{
+											FieldName: "merchant",
 											Value: &spec.Field_FromJson{
 												FromJson: &spec.FromJson{
 													JsonPath: "$.merchant_info.last_location",
 												},
 											},
 										},
-										"default": &spec.Field{
-											Fields: map[string]*spec.Field{
-												"latitude": &spec.Field{
+										{
+											FieldName: "default",
+											Fields: []*spec.Field{
+												{
+													FieldName: "latitude",
 													Value: &spec.Field_Expression{
 														Expression: "default_latitude",
 													},
 												},
-												"longitude": &spec.Field{
+												{
+													FieldName: "longitude",
 													Value: &spec.Field_Expression{
 														Expression: "default_longitude",
 													},
@@ -461,7 +476,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 										},
 									},
 								},
-								"predictions": &spec.Field{
+								{
+									FieldName: "predictions",
 									Value: &spec.Field_FromTable{
 										FromTable: &spec.FromTable{
 											TableName: "prediction_table",
@@ -469,7 +485,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 										},
 									},
 								},
-								"distance": &spec.Field{
+								{
+									FieldName: "distance",
 									Value: &spec.Field_Expression{
 										Expression: `HaversineDistance(customer_location_table.Col("lat"), customer_location_table.Col("lon"), merchant_location_table.Col("lat"), merchant_location_table.Col("lon"))`,
 									},
@@ -563,8 +580,9 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					BaseJson: &spec.BaseJson{
 						JsonPath: "$.merchant_info.last_location",
 					},
-					Fields: map[string]*spec.Field{
-						"predictions": &spec.Field{
+					Fields: []*spec.Field{
+						{
+							FieldName: "predictions",
 							Value: &spec.Field_FromTable{
 								FromTable: &spec.FromTable{
 									TableName: "prediction_table",
@@ -639,8 +657,9 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 			},
 			outputSpec: &spec.JsonOutput{
 				JsonTemplate: &spec.JsonTemplate{
-					Fields: map[string]*spec.Field{
-						"instances": &spec.Field{
+					Fields: []*spec.Field{
+						{
+							FieldName: "instances",
 							Value: &spec.Field_FromTable{
 								FromTable: &spec.FromTable{
 									TableName: "prediction_table",
@@ -672,8 +691,9 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 			},
 			outputSpec: &spec.JsonOutput{
 				JsonTemplate: &spec.JsonTemplate{
-					Fields: map[string]*spec.Field{
-						"instances": &spec.Field{
+					Fields: []*spec.Field{
+						{
+							FieldName: "instances",
 							Value: &spec.Field_FromTable{
 								FromTable: &spec.FromTable{
 									TableName: "prediction_table",
@@ -706,8 +726,9 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 			},
 			outputSpec: &spec.JsonOutput{
 				JsonTemplate: &spec.JsonTemplate{
-					Fields: map[string]*spec.Field{
-						"instances": &spec.Field{
+					Fields: []*spec.Field{
+						{
+							FieldName: "instances",
 							Value: &spec.Field_FromTable{
 								FromTable: &spec.FromTable{
 									TableName: "prediction_table",
