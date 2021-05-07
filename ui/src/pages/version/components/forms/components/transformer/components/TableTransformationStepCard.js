@@ -65,16 +65,15 @@ export const TableTransformationStepCard = ({
           )}
 
           {step.operation === "renameColumns" && (
-            // TODO:
             <RenameColumns
-              columns={step.renameColumns || {}}
+              columns={step.renameColumns}
               onChangeHandler={onChangeHandler}
             />
           )}
 
           {step.operation === "selectColumns" && (
             <ColumnsComboBox
-              columns={step.selectColumns || []}
+              columns={step.selectColumns}
               onChange={onChange("selectColumns")}
               title="Columns to be selected"
               description={
@@ -88,7 +87,7 @@ export const TableTransformationStepCard = ({
 
           {step.operation === "sort" && (
             <SortColumns
-              columns={step.sort || []}
+              columns={step.sort}
               onChangeHandler={onChange("sort")}
               errors={get(errors, "sort")}
             />
@@ -96,7 +95,7 @@ export const TableTransformationStepCard = ({
 
           {step.operation === "updateColumns" && (
             <UpdateColumns
-              columns={step.updateColumns || []}
+              columns={step.updateColumns}
               onChangeHandler={onChange("updateColumns")}
               errors={get(errors, "updateColumns")}
             />

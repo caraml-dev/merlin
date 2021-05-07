@@ -1,22 +1,36 @@
-import React, { useEffect, useMemo } from "react";
-import { EuiButtonIcon, EuiFieldText, EuiFormRow, EuiText } from "@elastic/eui";
+import React, { useEffect, useState } from "react";
+import { EuiButtonIcon, EuiFieldText, EuiFormRow } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const items = [
+  const [items, setItems] = useState([
     ...Object.keys(columns).map((v, idx) => ({
       idx,
       before: v,
       after: columns[v]
     })),
     { idx: Object.keys(columns).length }
-  ];
+  ]);
 
-  const onDeleteColumn = idx => () => {
-    columns.splice(idx, 1);
-    onChangeHandler(columns);
+  useEffect(
+    () => {
+      let newColumns = {};
+      items
+        .filter(item => item.before && item.before !== "")
+        .forEach(item => {
+          newColumns[item.before] = item.after;
+        });
+      onChange("renameColumns")(newColumns);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [items]
+  );
+
+  const onDeleteItem = idx => () => {
+    items.splice(idx, 1);
+    setItems([...items.map((v, idx) => ({ ...v, idx }))]);
   };
 
   const getRowProps = item => {
@@ -28,13 +42,19 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
     };
   };
 
-  // useEffect(() => {
-  //   console.log("COL", columns);
-  // }, [columns]);
+  const onChangeRow = (idx, field) => {
+    return e => {
+      items[idx] = { ...items[idx], [field]: e.target.value };
 
-  // useEffect(() => {
-  //   console.log("ITEMS", items);
-  // }, [items]);
+      setItems(_ =>
+        field === "before" &&
+        items[items.length - 1].before &&
+        items[items.length - 1].before.trim()
+          ? [...items, { idx: items.length }]
+          : [...items]
+      );
+    };
+  };
 
   const tableColumns = [
     {
@@ -43,16 +63,9 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
       width: "45%",
       render: (before, item) => (
         <EuiFieldText
-          placeholder="Column Name Before"
+          placeholder="Column Name After"
           value={before || ""}
-          onChange={e => {
-            // if (!columns.hasOwnProperty(e.target.value)) {
-            let newColumns = columns;
-            newColumns[e.target.value] = item.after;
-            delete newColumns[before];
-            onChange(`renameColumns`)(newColumns);
-            // }
-          }}
+          onChange={onChangeRow(item.idx, "before")}
         />
       )
     },
@@ -64,12 +77,7 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
         <EuiFieldText
           placeholder="Column Name After"
           value={after || ""}
-          onChange={e => {
-            onChange(`renameColumns`)({
-              ...columns,
-              [item.before ? item.before : ""]: e.target.value
-            });
-          }}
+          onChange={onChangeRow(item.idx, "after")}
         />
       )
     },
@@ -83,7 +91,7 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
                 size="s"
                 color="danger"
                 iconType="trash"
-                onClick={onDeleteColumn(item.idx)}
+                onClick={onDeleteItem(item.idx)}
                 aria-label="Remove column"
               />
             ) : (
