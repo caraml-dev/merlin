@@ -54,31 +54,16 @@ export const DeployModelVersionForm = ({
   const onSubmit = () => submitForm({ body: JSON.stringify(modelVersion) });
 
   const mainSteps = [
-    // {
-    //   title: "Model",
-    //   children: <ModelStep />,
-    //   validationSchema: versionEndpointSchema
-    // },
-    // {
-    //   title: "Transformer",
-    //   children: <TransformerStep />,
-    //   validationSchema: transformerConfigSchema,
-    // },
-    // {
-    //   title: "Feast Enricher",
-    //   children: <FeastTransformerStep />
-    //   // validationSchema: schema[1], // TODO
-    // }
     {
-      title: "Preprocess",
-      children: <PreprocessStep />
-      // validationSchema: schema[1],
+      title: "Model",
+      children: <ModelStep />,
+      validationSchema: versionEndpointSchema
+    },
+    {
+      title: "Transformer",
+      children: <TransformerStep />,
+      validationSchema: transformerConfigSchema
     }
-    // {
-    //   title: "Postprocess",
-    //   children: <PostprocessStep />
-    //   // validationSchema: schema[1],
-    // }
   ];
 
   const standardTransformerSteps = [

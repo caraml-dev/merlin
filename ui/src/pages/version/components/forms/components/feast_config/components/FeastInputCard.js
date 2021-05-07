@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, Fragment } from "react";
+import React, { useContext, Fragment } from "react";
 import {
   EuiFieldText,
   EuiFlexGroup,
@@ -28,10 +28,6 @@ export const FeastInputCard = ({
 }) => {
   const projects = useContext(FeastProjectsContext);
   const { entities, featureTables } = useContext(FeastResourcesContext);
-
-  useEffect(() => {
-    console.log("feast table", table);
-  }, [table]);
 
   const onChange = (field, value) => {
     if (JSON.stringify(value) !== JSON.stringify(table[field])) {

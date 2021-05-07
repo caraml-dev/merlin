@@ -10,7 +10,6 @@ export const SelectTableOperation = ({
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const setValue = value => {
-    // onChange("operation")(value);
     let newOperation = {
       operation: value
     };

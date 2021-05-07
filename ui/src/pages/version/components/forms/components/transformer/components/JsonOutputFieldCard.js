@@ -1,6 +1,5 @@
 import React, { Fragment } from "react";
 import {
-  EuiCheckbox,
   EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
@@ -11,15 +10,34 @@ import {
   EuiText
 } from "@elastic/eui";
 import { DraggableHeader } from "../../DraggableHeader";
+import { SelectJsonFormat } from "./table_outpus/SelectJsonFormat";
 
 export const JsonOutputFieldCard = ({
   index = 0,
   field,
-  onChangeHandler,
+  onChange,
   onDelete,
   errors = {},
   ...props
 }) => {
+  const setSource = source => {
+    let newField = { fieldName: field.fieldName };
+    switch (source) {
+      case "fromJson":
+        newField[source] = {};
+        break;
+      case "fromTable":
+        newField[source] = {};
+        break;
+      case "expression":
+        newField[source] = "";
+        break;
+      default:
+        break;
+    }
+    onChange(index, newField);
+  };
+
   return (
     <EuiPanel>
       <DraggableHeader
@@ -32,23 +50,25 @@ export const JsonOutputFieldCard = ({
       <EuiFlexGroup direction="column" gutterSize="m">
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>#{index + 1} - JSON Field </h4>
+            <h4>#{index + 1} Field</h4>
           </EuiText>
         </EuiFlexItem>
 
         <EuiFlexItem>
           <EuiFormRow
-            label="Field"
-            isInvalid={!!errors.name}
-            error={errors.name}
+            label="Field Name"
+            isInvalid={!!errors.fieldName}
+            error={errors.fieldName}
             display="columnCompressed"
             fullWidth>
             <EuiFieldText
               placeholder="Field name"
-              value={field.fieldName}
-              // onChange={e => onChange("fieldName", e.target.value)}
-              // isInvalid={!!errors.name}
-              name={`table-name-${index}`}
+              value={field.fieldName || ""}
+              onChange={e =>
+                onChange(index, { ...field, fieldName: e.target.value })
+              }
+              isInvalid={!!errors.fieldName}
+              name={`field-name-${index}`}
               fullWidth
             />
           </EuiFormRow>
@@ -66,37 +86,31 @@ export const JsonOutputFieldCard = ({
                 <EuiRadio
                   id={`fromJson-${index}`}
                   label="From JSON"
-                  checked={(field.value && !!field.value.fromJson) || false}
-                  onChange={() => {
-                    // onChange("baseTable", { fromJson: new FromJson() });
-                  }}
+                  checked={!!field.fromJson || false}
+                  onChange={() => setSource("fromJson")}
                 />
               </EuiFlexItem>
-              <EuiFlexItem>
+              <EuiFlexItem grow={false}>
                 <EuiRadio
                   id={`fromTable-${index}`}
                   label="From Table"
-                  checked={(field.value && !!field.value.fromTable) || false}
-                  onChange={() => {
-                    // onChange("baseTable", { fromTable: new FromTable() });
-                  }}
+                  checked={!!field.fromTable || false}
+                  onChange={() => setSource("fromTable")}
                 />
               </EuiFlexItem>
               <EuiFlexItem>
                 <EuiRadio
-                  id={`fromExpression-${index}`}
+                  id={`expression-${index}`}
                   label="From Expression"
-                  checked={(field.value && !!field.value.expression) || false}
-                  onChange={() => {
-                    // onChange("baseTable", { fromTable: new FromTable() });
-                  }}
+                  checked={field.expression !== undefined || false}
+                  onChange={() => setSource("expression")}
                 />
               </EuiFlexItem>
             </EuiFlexGroup>
           </EuiFormRow>
         </EuiFlexItem>
 
-        {field.value && field.value.fromJson && (
+        {field.fromJson && (
           <EuiFlexItem>
             <EuiFormRow
               label="JSONPath *"
@@ -107,15 +121,13 @@ export const JsonOutputFieldCard = ({
               <Fragment>
                 <EuiFieldText
                   placeholder="JSONPath"
-                  value={field.value.fromJson.jsonPath}
-                  // onChange={e =>
-                  //   onChange("baseTable", {
-                  //     fromJson: {
-                  //       ...table.baseTable.fromJson,
-                  //       jsonPath: e.target.value
-                  //     }
-                  //   })
-                  // }
+                  value={field.fromJson.jsonPath || ""}
+                  onChange={e =>
+                    onChange(index, {
+                      ...field,
+                      fromJson: { jsonPath: e.target.value }
+                    })
+                  }
                   // isInvalid={!!errors.name}
                   name={`json-path-${index}`}
                   fullWidth
@@ -127,7 +139,7 @@ export const JsonOutputFieldCard = ({
           </EuiFlexItem>
         )}
 
-        {field.value && field.value.fromTable && (
+        {field.fromTable && (
           <EuiFlexItem>
             <EuiFormRow
               label="Source Table Name *"
@@ -138,15 +150,16 @@ export const JsonOutputFieldCard = ({
               <Fragment>
                 <EuiFieldText
                   placeholder="Table Name"
-                  value={field.value.fromTable.tableName}
-                  // onChange={e =>
-                  //   onChange("baseTable", {
-                  //     fromTable: {
-                  //       ...table.baseTable.fromTable,
-                  //       tableName: e.target.value
-                  //     }
-                  //   })
-                  // }
+                  value={field.fromTable.tableName || ""}
+                  onChange={e =>
+                    onChange(index, {
+                      ...field,
+                      fromTable: {
+                        ...field.fromTable,
+                        tableName: e.target.value
+                      }
+                    })
+                  }
                   // isInvalid={!!errors.name}
                   name={`field-from-table-${index}`}
                   fullWidth
@@ -154,17 +167,45 @@ export const JsonOutputFieldCard = ({
               </Fragment>
             </EuiFormRow>
 
-            {/* <EuiFormRow
-              label="Columns *"
+            <EuiSpacer size="m" />
+
+            <SelectJsonFormat
+              format={field.fromTable.format || ""}
+              onChange={value =>
+                onChange(index, {
+                  ...field,
+                  fromTable: {
+                    ...field.fromTable,
+                    format: value
+                  }
+                })
+              }
+              errors={errors}
+            />
+          </EuiFlexItem>
+        )}
+
+        {field.expression !== undefined && (
+          <EuiFlexItem>
+            <EuiFormRow
+              label="Expression *"
               // isInvalid={!!errors.name}
               // error={errors.name}
+              display="columnCompressed"
               fullWidth>
-              <VariablesInput
-                variables={table.columns || []}
-                onChangeHandler={onColumnChangeHandler}
-                errors={errors}
-              />
-            </EuiFormRow> */}
+              <Fragment>
+                <EuiFieldText
+                  placeholder="Expression"
+                  value={field.expression || ""}
+                  onChange={e =>
+                    onChange(index, { ...field, expression: e.target.value })
+                  }
+                  // isInvalid={!!errors.name}
+                  name={`field-expression-${index}`}
+                  fullWidth
+                />
+              </Fragment>
+            </EuiFormRow>
           </EuiFlexItem>
         )}
       </EuiFlexGroup>

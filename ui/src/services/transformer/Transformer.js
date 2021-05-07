@@ -84,7 +84,7 @@ export class Transformer {
     //
     // Delete config and feast_enricher_config, because we already set the config to env vars
     if (obj.config) {
-      // delete obj["config"];
+      delete obj["config"];
     }
     if (obj.feast_enricher_config) {
       delete obj["feast_enricher_config"];

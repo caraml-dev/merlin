@@ -1,24 +1,16 @@
-import React, { Fragment } from "react";
+import React from "react";
 import {
-  EuiCheckbox,
   EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
   EuiFormRow,
   EuiPanel,
-  EuiRadio,
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
 import { DraggableHeader } from "../../DraggableHeader";
-import {
-  FromJson,
-  FromTable
-} from "../../../../../../../services/transformer/TransformerConfig";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const BaseJsonOutputCard = ({
-  index = 0,
   baseJson,
   onChangeHandler,
   onColumnChangeHandler,
@@ -26,10 +18,6 @@ export const BaseJsonOutputCard = ({
   ...props
 }) => {
   const onChange = (field, value) => {
-    console.log("onChange to field " + field + " with value: " + value);
-    const xx = { ...baseJson, [field]: value };
-    console.log("xx ----- " + JSON.stringify(xx));
-    console.log("current base Json " + JSON.stringify(baseJson));
     if (JSON.stringify(value) !== JSON.stringify(baseJson[field])) {
       onChangeHandler({
         ...baseJson,
@@ -50,13 +38,13 @@ export const BaseJsonOutputCard = ({
       <EuiFlexGroup direction="column" gutterSize="m">
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>#{index + 1} - Base Json</h4>
+            <h4>Base JSON</h4>
           </EuiText>
         </EuiFlexItem>
 
         <EuiFlexItem>
           <EuiFormRow
-            label="Json Path"
+            label="JSONPath"
             // isInvalid={!!errors.name}
             // error={errors.name}
             display="columnCompressed"

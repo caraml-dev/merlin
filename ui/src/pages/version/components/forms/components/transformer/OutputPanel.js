@@ -6,8 +6,7 @@ import {
   EuiDroppable,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiSpacer,
-  EuiText
+  EuiSpacer
 } from "@elastic/eui";
 import { useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "../Panel";
@@ -16,15 +15,95 @@ import { JsonOutputFieldCard } from "./components/JsonOutputFieldCard";
 import { BaseJsonOutputCard } from "./components/BaseJsonOutputCard";
 import {
   BaseJson,
-  Field,
-  FieldFromExpression,
-  FieldFromJson,
-  FromJson,
-  FieldFromTable,
-  FromTable,
-  JsonOutput,
-  Output
+  JsonOutput
 } from "../../../../../../services/transformer/TransformerConfig";
+
+const expandFields = flattenField => {
+  let temp = [];
+
+  flattenField.forEach(f => {
+    if (f.fieldName === undefined) {
+      return;
+    }
+
+    const nameSegments = splitName(f.fieldName);
+    let newField = {
+      ...f,
+      fieldName: nameSegments[nameSegments.length - 1]
+    };
+
+    temp = setValue(temp, nameSegments, newField);
+  });
+
+  return temp;
+};
+
+const splitName = name => {
+  // https://stackoverflow.com/questions/171480/regex-grabbing-values-between-quotation-marks
+  // eslint-disable-next-line no-useless-escape
+  return name
+    .split(/\.(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/g)
+    .map(n => n.replace(/\"/g, ""));
+};
+
+const setValue = (fields, nameSegment, fieldValue) => {
+  if (nameSegment.length <= 1) {
+    fields.push({ ...fieldValue, fields: [] });
+    return fields;
+  }
+
+  let field = searchField(fields, nameSegment[0]);
+  if (field === undefined) {
+    field = {
+      fieldName: nameSegment[0],
+      fields: []
+    };
+    fields.push(field);
+  }
+
+  setValue(field.fields, nameSegment.slice(1), fieldValue);
+  return fields;
+};
+
+const searchField = (fields, fieldName) => {
+  return fields && fields.find(f => f.fieldName === fieldName);
+};
+
+const flattenField = fields => {
+  let all = [];
+  fields.forEach(f => {
+    const flattenedFields = flatten(f, [f.fieldName]);
+    all = all.concat(flattenedFields);
+  });
+  return all;
+};
+
+const flatten = (field, path) => {
+  if (field.fields === undefined || field.fields.length === 0) {
+    return [
+      {
+        ...field,
+        fieldName: mergePath(path)
+      }
+    ];
+  }
+
+  let fields = [];
+  field.fields.forEach(f => {
+    path.push(f.fieldName);
+    fields = fields.concat(flatten(f, path));
+    path.pop();
+  });
+  return fields;
+};
+
+const mergePath = path => {
+  if (path.length === 1) {
+    return path[0];
+  }
+
+  return '"' + path.join('"."') + '"';
+};
 
 export const OutputPanel = ({
   outputs,
@@ -33,141 +112,95 @@ export const OutputPanel = ({
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const [baseJson, setBaseJson] = useState(null);
+  const [flattenedFields, setFlattenedFields] = useState(
+    flattenField(
+      outputs.length > 0 ? outputs[0].jsonOutput.jsonTemplate.fields : []
+    )
+  );
 
-  var fields = [];
-  var firstField = new Field();
-  firstField.fieldName = "order_id";
-  var value = new FieldFromJson();
-  value.fromJson.jsonPath = "$.order_id";
-  firstField.value = value;
-  var secondField = new Field();
-  secondField.fieldName = "customer_ids";
-  var secondValue = new FieldFromTable();
-  secondValue.fromTable.tableName = "table_customer";
-  secondValue.fromTable.format = "RECORD";
-  secondField.value = secondValue;
-  var nestedField = new Field();
-  nestedField.fieldName = "nested";
-  var nestedFields = [];
-  var firstNestedField = new Field();
-  firstNestedField.fieldName = "expr";
-  var firstNestedFieldVal = new FieldFromExpression();
-  firstNestedFieldVal.expression = "table.Row(1)";
-  firstNestedField.value = firstNestedFieldVal;
-  nestedFields.push(firstNestedFieldVal);
-  nestedField.fields = nestedFields;
+  useEffect(
+    () => {
+      if (flattenedFields.length > 0) {
+        let fields = expandFields(flattenedFields);
+        onChange(`0.jsonOutput.jsonTemplate.fields`)(fields);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [flattenedFields]
+  );
 
-  fields.push(firstField, secondField, nestedField);
-  var output = new Output();
-  output.jsonOutput.jsonTemplate.fields = fields;
-  console.log("jsonOutput ", JSON.stringify(output.jsonOutput));
-
-  var bJson = new BaseJson();
-  bJson.jsonPath = "$.field_1";
-  output.jsonOutput.jsonTemplate.baseJson = bJson;
-  outputs[0] = output;
-
-  const onAddBaseJson = useCallback((field, input) => {
-    // var outJson = output
-    // console.log("outJson " + outJson)
-    // if (output == undefined) {
-    //   outJson = new Output()
-    //   console.log("assign " + JSON.stringify(outJson))
-    // }
-    // var bJson =
-    // bJson.jsonPath = input
-    // templateJson.baseJson = bJson
-    // setBaseJson(bJson)
-
-    // outJson.templateJson = templateJson
-    // setOutput(outJson)
-    // if (outputs.size == undefined) {
-    //   onChangeHandler([new Output()])
-    // }
-
-    // setBaseJson(input)
-    onChangeHandler([...outputs, { [field]: input }]);
-  });
-
-  const onAddOutput = useCallback((field, input) => {
-    onChangeHandler([...outputs, { [field]: input }]);
-  });
-
-  const onDeleteOutput = idx => () => {
-    outputs.splice(idx, 1);
-    onChangeHandler([...outputs]);
+  const onFieldChange = (idx, fieldObj) => {
+    flattenedFields[idx] = fieldObj;
+    setFlattenedFields([...flattenedFields]);
   };
+
+  const onAddBaseJson = useCallback(
+    (field, input) => {
+      onChangeHandler([{ [field]: input }]);
+    },
+    [onChangeHandler]
+  );
+
+  // TODO:
+  // const onAddOutput = useCallback((field, input) => {
+  //   onChangeHandler([...outputs, { [field]: input }]);
+  // });
+
+  // TODO:
+  // const onDeleteOutput = idx => () => {
+  //   outputs.splice(idx, 1);
+  //   onChangeHandler([...outputs]);
+  // };
 
   const onDragEnd = ({ source, destination }) => {
     if (source && destination) {
       const items = euiDragDropReorder(
-        outputs,
+        flattenedFields,
         source.index,
         destination.index
       );
-      onChangeHandler([...items]);
+      setFlattenedFields(items);
     }
   };
-
-  const buildJsonFieldConfigurationCard = (
-    parentPath,
-    index,
-    field,
-    fieldName,
-    result,
-    provided
-  ) => {
-    if (field.fields.size === 0) {
-      console.log("fallback");
-      result.push(
-        <JsonOutputFieldCard
-          index={index}
-          field={field}
-          onChangeHandler={onChange(parentPath)}
-          dragHandleProps={provided.dragHandleProps}
-        />
-      );
-      return result;
-    }
-    for (var i = 0; i < field.fields.size; i++) {
-      console.log("nested");
-      const fieldInIdx = field.fields[i];
-      result = buildJsonFieldConfigurationCard(
-        `${parentPath}.fields.${i}`,
-        fieldInIdx,
-        `${fieldName}.${fieldInIdx.fieldName}`,
-        result,
-        provided
-      );
-    }
-    return result;
-  };
-
-  const idx = 0;
 
   return (
     <Panel title="Output" contentWidth="75%">
+      {outputs.findIndex(
+        output =>
+          output.jsonOutput &&
+          output.jsonOutput.jsonTemplate &&
+          output.jsonOutput.jsonTemplate.baseJson
+      ) !== -1 && (
+        <EuiFlexGroup direction="column" gutterSize="s">
+          <EuiFlexItem>
+            <BaseJsonOutputCard
+              baseJson={outputs[0].jsonOutput.jsonTemplate.baseJson}
+              onChangeHandler={onChange(`0.jsonOutput.jsonTemplate.baseJson`)}
+            />
+            <EuiSpacer size="s" />
+          </EuiFlexItem>
+        </EuiFlexGroup>
+      )}
+
       <EuiDragDropContext onDragEnd={onDragEnd}>
         <EuiFlexGroup direction="column" gutterSize="s">
           <EuiDroppable droppableId="OUTPUTS_DROPPABLE_AREA" spacing="m">
-            {outputs.map((output, idx) => (
+            {flattenedFields.map((field, fieldIdx) => (
               <EuiDraggable
-                key="baseJson"
-                draggableId="baseJson"
+                key={`fields-${fieldIdx}`}
+                index={fieldIdx}
+                draggableId={`fields-${fieldIdx}`}
                 customDragHandle={true}
                 disableInteractiveElementBlocking>
                 {provided => (
-                  <EuiFlexItem key={`baseJson-${idx}`}>
-                    {output.jsonOutput.jsonTemplate.baseJson && (
-                      <BaseJsonOutputCard
-                        baseJson={output.jsonOutput.jsonTemplate.baseJson}
-                        onChangeHandler={onChange(
-                          `${idx}.jsonOutput.jsonTemplate.baseJson`
-                        )}
-                        dragHandleProps={provided.dragHandleProps}
-                      />
-                    )}
+                  <EuiFlexItem key={`fields-${fieldIdx}`}>
+                    <JsonOutputFieldCard
+                      index={fieldIdx}
+                      field={field}
+                      onChange={onFieldChange}
+                      dragHandleProps={provided.dragHandleProps}
+                    />
+                    <EuiSpacer size="s" />
                   </EuiFlexItem>
                 )}
               </EuiDraggable>
@@ -175,70 +208,44 @@ export const OutputPanel = ({
           </EuiDroppable>
 
           <EuiSpacer size="s" />
-          <EuiDroppable>
-            {outputs.map((output, idx) => (
-              <EuiDraggable
-                key={`${idx}`}
-                index={idx}
-                draggableId={`${idx}`}
-                customDragHandle={true}
-                disableInteractiveElementBlocking>
-                {provided =>
-                  output.jsonOutput.jsonTemplate.fields.map(
-                    (field, fieldIdx) => (
-                      <JsonOutputFieldCard
-                        index={fieldIdx}
-                        field={field}
-                        onChangeHandler={onChange(
-                          `0.jsonOutput.jsonTemplate.fields.${fieldIdx}`
-                        )}
-                        dragHandleProps={provided.dragHandleProps}
-                      />
-                    )
-                  )
-                }
-              </EuiDraggable>
-            ))}
-          </EuiDroppable>
 
           <EuiFlexGroup direction="row" gutterSize="s">
-            <EuiFlexItem>
-              <AddButton
-                title="+ Add Base JSON"
-                // TODO:
-                // description="Use Feast features as input"
-                onClick={() => {
-                  var jsonOutput = new JsonOutput();
-                  if (outputs.size > 0) {
-                    jsonOutput = outputs[0];
-                  }
-                  jsonOutput.jsonTemplate.baseJson = new BaseJson();
-                  onAddBaseJson("jsonOutput", jsonOutput);
-                }}
-              />
-            </EuiFlexItem>
+            {outputs.findIndex(
+              output =>
+                output.jsonOutput &&
+                output.jsonOutput.jsonTemplate &&
+                output.jsonOutput.jsonTemplate.baseJson
+            ) === -1 && (
+              <EuiFlexItem>
+                <AddButton
+                  title="+ Add Base JSON"
+                  // TODO:
+                  // description="Use Feast features as input"
+                  onClick={() => {
+                    var jsonOutput = new JsonOutput();
+                    if (outputs.length > 0) {
+                      jsonOutput = outputs[0].jsonOutput;
+                    }
+                    jsonOutput = {
+                      ...jsonOutput,
+                      jsonTemplate: {
+                        ...jsonOutput.jsonTemplate,
+                        baseJson: new BaseJson()
+                      }
+                    };
+                    onAddBaseJson("jsonOutput", jsonOutput);
+                  }}
+                />
+              </EuiFlexItem>
+            )}
+
             <EuiFlexItem>
               <AddButton
                 title="+ Add Field"
                 // TODO:
                 // description="Use Feast features as input"
                 onClick={() => {
-                  // var jsonOutput = new JsonOutput()
-                  // if (outputs.size > 0) {
-                  //   jsonOutput = outputs[0].jsonOutput
-                  //   console.log("jsonoutput there " + JSON.stringify(jsonOutput))
-                  // }
-                  // var fields = jsonOutput.jsonTemplate.fields
-                  // if (fields.size === 0) {
-                  //   fields = [new Field()]
-                  // } else {
-                  //   fields = [...fields, new Field()]
-                  // }
-                  // jsonOutput.jsonTemplate.fields = fields
-                  // console.log("outputs " + JSON.stringify(outputs))
-                  // outputs[0].jsonOutput = jsonOutput
-                  // console.log("outputs after " + JSON.stringify(outputs))
-                  // onChangeHandler([...outputs])
+                  setFlattenedFields([...flattenedFields, {}]);
                 }}
               />
             </EuiFlexItem>
