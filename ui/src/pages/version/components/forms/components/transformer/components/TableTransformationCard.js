@@ -38,6 +38,8 @@ export const TableTransformationCard = ({
           </EuiText>
         </EuiFlexItem>
 
+        <EuiSpacer size="s" />
+
         <EuiFlexItem>
           <EuiFormRow
             label={

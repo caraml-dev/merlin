@@ -168,10 +168,11 @@ export class TableTransformation {
 
 export class TableJoin {
   constructor() {
-    this.leftTable = "";
-    this.rightTable = "";
-    this.outputTable = "";
-    this.how = "";
+    this.leftTable = undefined;
+    this.rightTable = undefined;
+    this.outputTable = undefined;
+    this.how = undefined;
+    this.onColumn = undefined;
   }
 }
 
