@@ -34,6 +34,10 @@ const (
 			{"sepal_length":2.8, "sepal_width":1.0, "petal_length":6.8, "petal_width":0.4},
 			{"sepal_length":0.1, "sepal_width":0.5, "petal_length":1.8, "petal_width":2.4}
 		  ],
+		  "object_with_null": [
+			{"sepal_length":2.8, "petal_length":6.8, "petal_width":0.4},
+			{"sepal_length":0.1, "sepal_width":0.5, "petal_width":2.4}
+		  ],
           "array_int" : [1,2,3,4],
           "array_float": [1.1, 2.2, 3.3, 4.4],
           "array_float_2": [1.1, 2.2, 3.3, 4.4, 5.5],

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import json
 import os
 from time import sleep
@@ -31,7 +30,7 @@ from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer, StandardTransformer
 from merlin.logger import Logger, LoggerConfig, LoggerMode
 from test.utils import undeploy_all_version
-from test.feast_model import FeastModel
+from test.feast_model import EchoModel
 
 request_json = {
     "instances": [
@@ -39,6 +38,7 @@ request_json = {
         [3.1, 1.4, 4.5, 1.6]
     ]
 }
+
 
 @pytest.mark.integration
 @pytest.mark.dependency()
@@ -103,10 +103,6 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth):
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 @pytest.mark.integration
@@ -149,10 +145,6 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth):
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 @pytest.mark.integration
@@ -229,10 +221,6 @@ def test_tensorflow(integration_test_url, project_name, use_google_oauth):
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 @pytest.mark.integration
@@ -257,10 +245,6 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth):
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 @pytest.mark.integration
@@ -455,10 +439,6 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth):
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 @pytest.mark.integration
@@ -508,10 +488,6 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth):
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 @pytest.mark.integration
@@ -648,20 +624,22 @@ def test_transformer_pytorch(integration_test_url, project_name, use_google_oaut
     # Undeploy other running model version endpoints
     undeploy_all_version()
 
+
+@pytest.mark.feast
 @pytest.mark.integration
-def test_standard_transformer_feast_pyfunc(integration_test_url, project_name, use_google_oauth):
+def test_feast_enricher(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("standard-transformer", ModelType.PYFUNC)
+    merlin.set_model("feast-enricher", ModelType.PYFUNC)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
-        v.log_pyfunc_model(model_instance=FeastModel(),
+        v.log_pyfunc_model(model_instance=EchoModel(),
                            conda_env="test/pyfunc/env.yaml",
                            code_dir=["test"],
                            artifacts={})
 
-    transformer_config_path = os.path.join("test/transformer", "standard_transformer.yaml")
+    transformer_config_path = os.path.join("test/transformer", "feast_enricher.yaml")
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
 
     request_json = {"driver_id": "1000"}
@@ -675,7 +653,65 @@ def test_standard_transformer_feast_pyfunc(integration_test_url, project_name, u
     assert pd.DataFrame(feast_features) is not None
 
     merlin.undeploy(v)
-    sleep(5)
+
+
+@pytest.mark.integration
+def test_standard_transformer_without_feast(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("std-transformer", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        v.log_pyfunc_model(model_instance=EchoModel(),
+                           conda_env="test/pyfunc/env.yaml",
+                           code_dir=["test"],
+                           artifacts={})
+
+    transformer_config_path = os.path.join("test/transformer", "standard_transformer_no_feast.yaml")
+    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
+
+    endpoint = merlin.deploy(v, transformer=transformer)
+    request_json = {"drivers": [{"id": 1, "name": "driver-1"}, {"id": 2, "name": "driver-2"}],
+                    "customer": {"id": 1111}}
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
-    assert resp.status_code == 404
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    exp_resp = {"instances": {"columns": ["customer_id", "name", "rank"],
+                              "data": [[1111, "driver-2", 1], [1111, "driver-1", 0]]}}
+
+    assert resp.json()["instances"] == exp_resp["instances"]
+    merlin.undeploy(v)
+
+
+@pytest.mark.feast
+@pytest.mark.integration
+def test_standard_transformer_with_feast(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("std-transformer-feast", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        v.log_pyfunc_model(model_instance=EchoModel(),
+                           conda_env="test/pyfunc/env.yaml",
+                           code_dir=["test"],
+                           artifacts={})
+
+    transformer_config_path = os.path.join("test/transformer", "standard_transformer_with_feast.yaml")
+    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
+
+    endpoint = merlin.deploy(v, transformer=transformer)
+    request_json = {"drivers": [{"id": "1234", "name": "driver-1"}, {"id": "5678", "name": "driver-2"}],
+                    "customer": {"id": 1111}}
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    exp_resp = {"instances": {"columns": ["rank", "driver_id", "customer_id", "merlin_test_driver_features:test_int32",
+                                          "merlin_test_driver_features:test_float"],
+                              "data": [[0, "1234", 1111, -1, 0], [1, "5678", 1111, -1, 0]]}}
+
+    assert resp.json()["instances"] == exp_resp["instances"]
+    merlin.undeploy(v)

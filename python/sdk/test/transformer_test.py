@@ -19,7 +19,7 @@ from merlin.resource_request import ResourceRequest
 
 @pytest.mark.unit
 def test_standard_transformer():
-    transformer_config_path = os.path.join("test/transformer", "standard_transformer.yaml")
+    transformer_config_path = os.path.join("test/transformer", "feast_enricher.yaml")
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=False)
     assert transformer.env_vars == {'STANDARD_TRANSFORMER_CONFIG': '{"transformerConfig": {"feast": [{"project": "merlin", "entities": [{"name": "merlin_test_driver_id", "valueType": "STRING", "jsonPath": "$.driver_id"}], "features": [{"name": "merlin_test_driver_features:test_int32", "valueType": "INT32", "defaultValue": "0"}, {"name": "merlin_test_driver_features:test_float", "valueType": "FLOAT", "defaultValue": "0.0"}, {"name": "merlin_test_driver_features:test_double", "valueType": "DOUBLE", "defaultValue": "0.0"}, {"name": "merlin_test_driver_features:test_string", "valueType": "STRING", "defaultValue": ""}]}]}}'}
     assert not transformer.enabled
@@ -28,7 +28,7 @@ def test_standard_transformer():
     assert transformer.transformer_type == TransformerType.STANDARD_TRANSFORMER
 
 def test_standard_transformer_with_env_vars():
-    transformer_config_path = os.path.join("test/transformer", "standard_transformer.yaml")
+    transformer_config_path = os.path.join("test/transformer", "feast_enricher.yaml")
     resource = ResourceRequest(min_replica=1, max_replica=2, cpu_request="100m", memory_request="128Mi")
     transformer = StandardTransformer(config_file=transformer_config_path,
                                       enabled=True,
