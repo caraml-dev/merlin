@@ -6,7 +6,7 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { DraggableHeader } from "../../DraggableHeader";
+import { DraggableHeader } from "../../../DraggableHeader";
 import { VariablesInput } from "./VariablesInput";
 
 export const VariablesInputCard = ({

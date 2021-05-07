@@ -10,13 +10,12 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { DraggableHeader } from "../../DraggableHeader";
+import { DraggableHeader } from "../../../DraggableHeader";
 import {
   FromJson,
   FromTable
-} from "../../../../../../../services/transformer/TransformerConfig";
+} from "../../../../../../../../services/transformer/TransformerConfig";
 import { VariablesInput } from "./VariablesInput";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const TableInputCard = ({
   index = 0,

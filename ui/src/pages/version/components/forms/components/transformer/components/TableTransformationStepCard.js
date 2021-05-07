@@ -7,11 +7,13 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { DraggableHeader } from "../../DraggableHeader";
 import { SelectTableOperation } from "./table_operations/SelectTableOperation";
 import { ColumnsComboBox } from "./table_operations/ColumnsComboBox";
 import { RenameColumns } from "./table_operations/RenameColumns";
+import { SortColumns } from "./table_operations/SortColumns";
+import { UpdateColumns } from "./table_operations/UpdateColumns";
 
 export const TableTransformationStepCard = ({
   index = 0,
@@ -48,7 +50,7 @@ export const TableTransformationStepCard = ({
         </EuiFlexItem>
 
         <EuiFlexItem>
-          {step.operation === "drop" && (
+          {step.operation === "dropColumns" && (
             <ColumnsComboBox
               columns={step.dropColumns || []}
               onChange={onChange("dropColumns")}
@@ -62,14 +64,15 @@ export const TableTransformationStepCard = ({
             />
           )}
 
-          {step.operation === "rename" && (
+          {step.operation === "renameColumns" && (
+            // TODO:
             <RenameColumns
               columns={step.renameColumns || {}}
               onChangeHandler={onChangeHandler}
             />
           )}
 
-          {step.operation === "select" && (
+          {step.operation === "selectColumns" && (
             <ColumnsComboBox
               columns={step.selectColumns || []}
               onChange={onChange("selectColumns")}
@@ -83,9 +86,21 @@ export const TableTransformationStepCard = ({
             />
           )}
 
-          {step.operation === "sort" && <EuiText>sort</EuiText>}
+          {step.operation === "sort" && (
+            <SortColumns
+              columns={step.sort || []}
+              onChangeHandler={onChange("sort")}
+              errors={get(errors, "sort")}
+            />
+          )}
 
-          {step.operation === "update" && <EuiText>update</EuiText>}
+          {step.operation === "updateColumns" && (
+            <UpdateColumns
+              columns={step.updateColumns || []}
+              onChangeHandler={onChange("updateColumns")}
+              errors={get(errors, "updateColumns")}
+            />
+          )}
         </EuiFlexItem>
       </EuiFlexGroup>
     </EuiPanel>
