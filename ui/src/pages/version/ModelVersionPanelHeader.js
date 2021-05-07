@@ -57,14 +57,14 @@ export const ModelVersionPanelHeader = ({ model, version }) => {
     },
     {
       title: "Labels",
-      description:
-        version.labels &&
-        Object.entries(version.labels).map(([key, val]) => (
-          <EuiBadge key={key}>
-            <EllipsisText text={key} length={16} />:
-            <EllipsisText text={val} length={16} />
-          </EuiBadge>
-        ))
+      description: version.labels
+        ? Object.entries(version.labels).map(([key, val]) => (
+            <EuiBadge key={key}>
+              <EllipsisText text={key} length={16} />:
+              <EllipsisText text={val} length={16} />
+            </EuiBadge>
+          ))
+        : ""
     }
   ];
 
