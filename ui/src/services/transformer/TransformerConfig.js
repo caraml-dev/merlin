@@ -148,6 +148,7 @@ export class FromJson {
 export class FromTable {
   constructor() {
     this.tableName = "";
+    this.format = "";
   }
 }
 
@@ -176,15 +177,53 @@ export class TableJoin {
   }
 }
 
+export class Output {
+  constructor() {
+    this.jsonOutput = new JsonOutput();
+  }
+}
+
 export class JsonOutput {
   constructor() {
     this.jsonTemplate = new JsonTemplate();
   }
 }
 
+export class BaseJson {
+  constructor() {
+    this.jsonPath = "";
+  }
+}
+
 export class JsonTemplate {
   constructor() {
-    this.fields = undefined;
-    this.data = undefined;
+    this.baseJson = undefined;
+    this.fields = [];
+  }
+}
+
+export class Field {
+  constructor() {
+    this.fieldName = "";
+    this.fields = [];
+    this.value = undefined;
+  }
+}
+
+export class FieldFromJson {
+  constructor() {
+    this.fromJson = new FromJson();
+  }
+}
+
+export class FieldFromTable {
+  constructor() {
+    this.fromTable = new FromTable();
+  }
+}
+
+export class FieldFromExpression {
+  constructor() {
+    this.expression = undefined;
   }
 }
