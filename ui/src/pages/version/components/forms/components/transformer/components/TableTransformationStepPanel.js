@@ -20,7 +20,7 @@ export const TableTransformationStepPanel = ({
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const onAddInput = () => {
+  const onAddStep = () => {
     onChangeHandler([...steps, {}]);
   };
 
@@ -61,7 +61,6 @@ export const TableTransformationStepPanel = ({
                       }
                       dragHandleProps={provided.dragHandleProps}
                     />
-
                     <EuiSpacer size="s" />
                   </EuiFlexItem>
                 )}
@@ -73,7 +72,7 @@ export const TableTransformationStepPanel = ({
             <AddButton
               title="+ Add Step"
               description="Add another table transformation step"
-              onClick={() => onAddInput()}
+              onClick={() => onAddStep()}
             />
           </EuiFlexItem>
         </EuiFlexGroup>

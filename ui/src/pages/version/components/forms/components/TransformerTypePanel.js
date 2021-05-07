@@ -63,7 +63,7 @@ export const TransformerTypePanel = ({
             fullWidth
             label={
               <FormLabelWithToolTip
-                label="Transformer Type*"
+                label="Transformer Type *"
                 content="Select the type of transformer to be deployed alongside your model"
               />
             }

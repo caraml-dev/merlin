@@ -43,13 +43,7 @@ export class Transformer {
 
     // Update config to env vars
     //
-    // Find the index of env_var that contains transformer config
-    // If it's not exist, create new env var
-    // If it's exist, update it
-    let configJson = "";
-    if (obj.transformer_type === "standard") {
-      configJson = JSON.stringify(new Config(obj.config));
-    }
+    let configJson = JSON.stringify(new Config(obj.config));
 
     if (obj.transformer_type === "feast") {
       obj.feast_enricher_config.forEach(feastConfig => {
@@ -68,6 +62,9 @@ export class Transformer {
       );
     }
 
+    // Find the index of env_var that contains transformer config
+    // If it's not exist, create new env var
+    // If it's exist, update it
     const envVarIndex = obj.env_vars.findIndex(
       e => e.name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME
     );
@@ -87,7 +84,7 @@ export class Transformer {
     //
     // Delete config and feast_enricher_config, because we already set the config to env vars
     if (obj.config) {
-      delete obj["config"];
+      // delete obj["config"];
     }
     if (obj.feast_enricher_config) {
       delete obj["feast_enricher_config"];

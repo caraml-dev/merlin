@@ -75,7 +75,19 @@ export const TransformationPanel = ({
                       />
                     )}
 
-                    {transformation.tableJoin && <TableJoinCard index={idx} />}
+                    {transformation.tableJoin && (
+                      <TableJoinCard
+                        index={idx}
+                        data={transformation.tableJoin}
+                        onChangeHandler={onChange(`${idx}.tableJoin`)}
+                        onDelete={
+                          transformations.length > 1
+                            ? onDeleteTransformation(idx)
+                            : undefined
+                        }
+                        dragHandleProps={provided.dragHandleProps}
+                      />
+                    )}
 
                     <EuiSpacer size="s" />
                   </EuiFlexItem>
