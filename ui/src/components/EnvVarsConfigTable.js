@@ -17,8 +17,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { EuiInMemoryTable, EuiText } from "@elastic/eui";
+import { STANDARD_TRANSFORMER_CONFIG_ENV_NAME } from "../services/transformer/TransformerConfig";
 
-export const EnvVarsConfigTable = ({ variables }) => {
+export const EnvVarsConfigTable = ({ variables = [] }) => {
   const columns = [
     {
       field: "name",
@@ -34,16 +35,13 @@ export const EnvVarsConfigTable = ({ variables }) => {
     }
   ];
 
-  const sorting = {
-    enableAllColumns: true
-  };
-
   return variables.length ? (
     <EuiInMemoryTable
-      items={variables}
+      items={variables.filter(
+        v => v.name !== STANDARD_TRANSFORMER_CONFIG_ENV_NAME
+      )}
       columns={columns}
       itemId="name"
-      sorting={sorting}
     />
   ) : (
     <EuiText size="s" color="subdued">
