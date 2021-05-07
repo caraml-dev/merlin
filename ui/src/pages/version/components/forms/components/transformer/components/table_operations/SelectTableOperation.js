@@ -10,20 +10,45 @@ export const SelectTableOperation = ({
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const setValue = value => {
-    onChange("operation")(value);
+    // onChange("operation")(value);
+    let newOperation = {
+      operation: value
+    };
+
+    switch (value) {
+      case "dropColumns":
+        newOperation[value] = [];
+        break;
+      case "renameColumns":
+        newOperation[value] = {};
+        break;
+      case "selectColumns":
+        newOperation[value] = [];
+        break;
+      case "sort":
+        newOperation[value] = [];
+        break;
+      case "updateColumns":
+        newOperation[value] = [];
+        break;
+      default:
+        break;
+    }
+
+    onChange()(newOperation);
   };
 
   const options = [
     {
-      value: "drop",
+      value: "dropColumns",
       inputDisplay: "Drop Columns"
     },
     {
-      value: "rename",
+      value: "renameColumns",
       inputDisplay: "Rename Columns"
     },
     {
-      value: "select",
+      value: "selectColumns",
       inputDisplay: "Select Columns"
     },
     {
@@ -31,7 +56,7 @@ export const SelectTableOperation = ({
       inputDisplay: "Sort Columns"
     },
     {
-      value: "update",
+      value: "updateColumns",
       inputDisplay: "Update Columns"
     }
   ];
@@ -56,9 +81,7 @@ export const SelectTableOperation = ({
         <EuiSuperSelect
           fullWidth
           options={options}
-          valueOfSelected={
-            selectedOption ? selectedOption.value : "dropColumns"
-          }
+          valueOfSelected={selectedOption ? selectedOption.value : ""}
           onChange={value => setValue(value)}
           itemLayoutAlign="top"
           hasDividers

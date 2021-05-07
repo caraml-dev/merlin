@@ -10,8 +10,8 @@ import {
 } from "@elastic/eui";
 import { useOnChangeHandler } from "@gojek/mlp-ui";
 import { AddButton } from "./components/AddButton";
-import { TableInputCard } from "./components/TableInputCard";
-import { VariablesInputCard } from "./components/VariablesInputCard";
+import { TableInputCard } from "./components/table_inputs/TableInputCard";
+import { VariablesInputCard } from "./components/table_inputs/VariablesInputCard";
 import { FeastInputCard } from "../feast_config/components/FeastInputCard";
 import { Panel } from "../Panel";
 import {

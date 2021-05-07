@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import {
   FormContext,
@@ -24,10 +24,6 @@ export const PreprocessStep = () => {
   } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
-
-  useEffect(() => {
-    console.log("inputs", inputs[0]);
-  }, [inputs]);
 
   return (
     <EuiFlexGroup direction="column" gutterSize="m">
