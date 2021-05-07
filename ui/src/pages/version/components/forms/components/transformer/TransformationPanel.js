@@ -101,8 +101,7 @@ export const TransformationPanel = ({
               <EuiFlexItem>
                 <AddButton
                   title="+ Add Table Transformation"
-                  // TODO:
-                  // description="Use Feast features as input"
+                  description="Perform out-of-place transformation on a table"
                   onClick={() =>
                     onAddInput("tableTransformation", new TableTransformation())
                   }
@@ -112,8 +111,7 @@ export const TransformationPanel = ({
               <EuiFlexItem>
                 <AddButton
                   title="+ Add Table Join"
-                  // TODO:
-                  // description="Create generic table from request body or other inputs (Feast features or variables)"
+                  description="Perform join operations on two tables"
                   onClick={() => onAddInput("tableJoin", new TableJoin())}
                 />
               </EuiFlexItem>

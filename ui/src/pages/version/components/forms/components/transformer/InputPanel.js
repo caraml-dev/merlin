@@ -112,7 +112,7 @@ export const InputPanel = ({
               <EuiFlexItem>
                 <AddButton
                   title="+ Add Feast Features"
-                  description="Use Feast features as input"
+                  description="Create a table by using features retrieved from Feast"
                   onClick={() => onAddInput("feast", [new FeastInput()])}
                 />
               </EuiFlexItem>
@@ -120,7 +120,7 @@ export const InputPanel = ({
               <EuiFlexItem>
                 <AddButton
                   title="+ Add Generic Table"
-                  description="Create generic table from request body or other inputs (Feast features or variables)"
+                  description="Create a table from request/response json payload or other inputs"
                   onClick={() => onAddInput("tables", [new TablesInput()])}
                 />
               </EuiFlexItem>
@@ -128,7 +128,7 @@ export const InputPanel = ({
               <EuiFlexItem>
                 <AddButton
                   title="+ Add Variables"
-                  description="Declare literal variable"
+                  description="Declare a variable that can be used as input to expression"
                   onClick={() => onAddInput("variables", [])}
                 />
               </EuiFlexItem>

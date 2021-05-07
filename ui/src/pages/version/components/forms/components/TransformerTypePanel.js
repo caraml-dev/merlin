@@ -35,7 +35,7 @@ export const TransformerTypePanel = ({
       value: "standard",
       inputDisplay: "Standard Transformer",
       description:
-        "Standard Transformer enables you to specify the preprocess and postprocess steps."
+        "Standard Transformer enables you to specify the preprocess and postprocess steps, including feature retrieval."
     },
     {
       value: "custom",
