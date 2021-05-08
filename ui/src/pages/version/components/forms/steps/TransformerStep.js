@@ -10,28 +10,31 @@ import { appConfig } from "../../../../../config";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
-import { TransformerTypePanel } from "../components/TransformerTypePanel";
+import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
 
 export const TransformerStep = () => {
-  const { data, onChangeHandler } = useContext(FormContext);
+  const {
+    data: { transformer, logger },
+    onChangeHandler
+  } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
 
   return (
     <EuiFlexGroup direction="column" gutterSize="m">
       <EuiFlexItem grow={false}>
-        <TransformerTypePanel
-          type={get(data, "transformer.type_on_ui")}
+        <SelectTransformerPanel
+          transformer={transformer}
           onChangeHandler={onChange("transformer")}
           errors={get(errors, "transformer")}
         />
       </EuiFlexItem>
 
-      {data.transformer.enabled && (
+      {transformer.enabled && (
         <>
           <EuiFlexItem grow={false}>
             <ResourcesPanel
-              resourcesConfig={get(data, "transformer.resource_request")}
+              resourcesConfig={transformer.resource_request}
               onChangeHandler={onChange("transformer.resource_request")}
               maxAllowedReplica={appConfig.scaling.maxAllowedReplica}
               errors={get(errors, "transformer.resource_request")}
@@ -40,7 +43,7 @@ export const TransformerStep = () => {
 
           <EuiFlexItem grow={false}>
             <LoggerPanel
-              loggerConfig={get(data, "logger.transformer")}
+              loggerConfig={logger.transformer}
               onChangeHandler={onChange("logger.transformer")}
               errors={get(errors, "logger.transformer")}
             />
@@ -48,7 +51,7 @@ export const TransformerStep = () => {
 
           <EuiFlexItem grow={false}>
             <EnvVariablesPanel
-              variables={get(data, "transformer.env_vars")}
+              variables={transformer.env_vars}
               onChangeHandler={onChange("transformer.env_vars")}
               errors={get(errors, "transformer.env_vars")}
             />

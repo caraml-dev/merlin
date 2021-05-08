@@ -6,9 +6,13 @@ import {
   useOnChangeHandler
 } from "@gojek/mlp-ui";
 import { Panel } from "./Panel";
+import {
+  FeastInput,
+  TransformerConfig
+} from "../../../../../services/transformer/TransformerConfig";
 
-export const TransformerTypePanel = ({
-  type,
+export const SelectTransformerPanel = ({
+  transformer,
   onChangeHandler,
   errors = {}
 }) => {
@@ -23,6 +27,11 @@ export const TransformerTypePanel = ({
       onChange("enabled")(true);
       onChange("transformer_type")(value !== "feast" ? value : "standard");
       onChange("type_on_ui")(value);
+      onChange("config")(
+        value !== "feast"
+          ? new TransformerConfig()
+          : new TransformerConfig([new FeastInput()])
+      );
     }
   };
 
@@ -54,7 +63,9 @@ export const TransformerTypePanel = ({
   ];
 
   const selectedOption = options.find(option =>
-    type !== "" ? option.value === type : option.value === "disabled"
+    transformer.type_on_ui !== ""
+      ? option.value === transformer.type_on_ui
+      : option.value === "disabled"
   );
 
   return (

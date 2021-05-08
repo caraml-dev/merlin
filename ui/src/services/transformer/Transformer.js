@@ -1,7 +1,6 @@
 import {
   Config,
-  STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
-  TransformerConfig
+  STANDARD_TRANSFORMER_CONFIG_ENV_NAME
 } from "./TransformerConfig";
 
 const objectAssignDeep = require(`object-assign-deep`);
@@ -28,7 +27,7 @@ export class Transformer {
 
     this.env_vars = [];
 
-    this.config = new TransformerConfig();
+    this.config = undefined; // TransformerConfig
 
     this.created_at = undefined;
     this.updated_at = undefined;
@@ -41,24 +40,26 @@ export class Transformer {
 
     // Update config to env vars
     //
-    let configJson = JSON.stringify(new Config(obj.config));
+    if (obj.config) {
+      let configJson = JSON.stringify(new Config(obj.config));
 
-    // Find the index of env_var that contains transformer config
-    // If it's not exist, create new env var
-    // If it's exist, update it
-    const envVarIndex = obj.env_vars.findIndex(
-      e => e.name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME
-    );
-    if (envVarIndex === -1) {
-      obj.env_vars.push({
-        name: STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
-        value: configJson
-      });
-    } else {
-      obj.env_vars[envVarIndex] = {
-        ...obj.env_vars[envVarIndex],
-        value: configJson
-      };
+      // Find the index of env_var that contains transformer config
+      // If it's not exist, create new env var
+      // If it's exist, update it
+      const envVarIndex = obj.env_vars.findIndex(
+        e => e.name === STANDARD_TRANSFORMER_CONFIG_ENV_NAME
+      );
+      if (envVarIndex === -1) {
+        obj.env_vars.push({
+          name: STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
+          value: configJson
+        });
+      } else {
+        obj.env_vars[envVarIndex] = {
+          ...obj.env_vars[envVarIndex],
+          value: configJson
+        };
+      }
     }
 
     // Remove properties for optional fields, if not relevant

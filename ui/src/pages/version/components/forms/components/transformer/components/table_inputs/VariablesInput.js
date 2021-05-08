@@ -15,15 +15,6 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
     onChangeHandler(variables);
   };
 
-  const getRowProps = item => {
-    const { idx } = item;
-    const isInvalid = !!errors[idx];
-    return {
-      className: isInvalid ? "euiTableRow--isInvalid" : "",
-      "data-test-subj": `row-${idx}`
-    };
-  };
-
   const typeOptions = [
     { value: "jsonpath", inputDisplay: "JSONPath" },
     { value: "expression", inputDisplay: "Expression" },
@@ -142,6 +133,15 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
       ]
     }
   ];
+
+  const getRowProps = item => {
+    const { idx } = item;
+    const isInvalid = !!errors[idx];
+    return {
+      className: isInvalid ? "euiTableRow--isInvalid" : "",
+      "data-test-subj": `row-${idx}`
+    };
+  };
 
   return (
     <InMemoryTableForm

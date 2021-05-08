@@ -16,6 +16,7 @@ import {
   FromTable
 } from "../../../../../../../../services/transformer/TransformerConfig";
 import { VariablesInput } from "./VariablesInput";
+import { get } from "@gojek/mlp-ui";
 
 export const TableInputCard = ({
   index = 0,
@@ -106,14 +107,14 @@ export const TableInputCard = ({
         </EuiFlexItem>
 
         {table.baseTable && table.baseTable.fromJson && (
-          <EuiFlexItem>
-            <EuiFormRow
-              label="JSONPath *"
-              // isInvalid={!!errors.name}
-              // error={errors.name}
-              display="columnCompressed"
-              fullWidth>
-              <Fragment>
+          <Fragment>
+            <EuiFlexItem>
+              <EuiFormRow
+                label="JSONPath *"
+                isInvalid={!!get(errors, "baseTable.fromJson.jsonPath")}
+                error={get(errors, "baseTable.fromJson.jsonPath")}
+                display="columnCompressed"
+                fullWidth>
                 <EuiFieldText
                   placeholder="JSONPath"
                   value={table.baseTable.fromJson.jsonPath}
@@ -129,9 +130,14 @@ export const TableInputCard = ({
                   name={`table-name-${index}`}
                   fullWidth
                 />
+              </EuiFormRow>
+            </EuiFlexItem>
 
-                <EuiSpacer size="m" />
-
+            <EuiFlexItem>
+              <EuiFormRow
+                label="Row Number"
+                display="columnCompressed"
+                fullWidth>
                 <EuiCheckbox
                   id={`addRowNumber-${index}`}
                   label="Add row number"
@@ -145,17 +151,17 @@ export const TableInputCard = ({
                     })
                   }
                 />
-              </Fragment>
-            </EuiFormRow>
-          </EuiFlexItem>
+              </EuiFormRow>
+            </EuiFlexItem>
+          </Fragment>
         )}
 
         {table.baseTable && table.baseTable.fromTable && (
           <EuiFlexItem>
             <EuiFormRow
               label="Source Table Name *"
-              // isInvalid={!!errors.name}
-              // error={errors.name}
+              isInvalid={!!get(errors, "baseTable.fromTable.tableName")}
+              error={get(errors, "baseTable.fromTable.tableName")}
               display="columnCompressed"
               fullWidth>
               <Fragment>
@@ -177,15 +183,11 @@ export const TableInputCard = ({
               </Fragment>
             </EuiFormRow>
 
-            <EuiFormRow
-              label="Columns *"
-              // isInvalid={!!errors.name}
-              // error={errors.name}
-              fullWidth>
+            <EuiFormRow label="Columns *" fullWidth>
               <VariablesInput
                 variables={table.columns || []}
                 onChangeHandler={onColumnChangeHandler}
-                errors={errors}
+                errors={errors.columns}
               />
             </EuiFormRow>
           </EuiFlexItem>

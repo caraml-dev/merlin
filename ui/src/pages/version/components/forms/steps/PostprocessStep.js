@@ -32,7 +32,7 @@ export const PostprocessStep = () => {
           <InputPanel
             inputs={inputs}
             onChangeHandler={onChange("transformer.config.postprocess.inputs")}
-            errors={get(errors, "transformer.config.postprocess.inputs")}
+            errors={get(errors, "transformer.config.postprocess")}
           />
         </FeastProjectsContextProvider>
       </EuiFlexItem>

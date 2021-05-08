@@ -67,14 +67,6 @@ const dockerImageSchema = yup
     "Valid Docker Image value should be provided, e.g. kennethreitz/httpbin:latest"
   );
 
-export const customTransformerSchema = yup.object().shape({
-  transformer: yup.object().shape({
-    image: dockerImageSchema.required("Docker Image is required"),
-    command: yup.string(),
-    args: yup.string()
-  })
-});
-
 const feastEntitiesSchema = yup.object().shape({
   name: yup.string().required("Entity Name is required"),
   valueType: yup.string().required("Entity Value Type is required"),
@@ -86,7 +78,7 @@ const feastFeaturesSchema = yup.object().shape({
   name: yup.string().required("Feature Name is required")
 });
 
-const feastInputConfigSchema = yup.object().shape({
+const feastInputSchema = yup.object().shape({
   tableName: yup.string().when("isTableNameEditable", {
     is: true,
     then: yup.string().required("Table name is required")
@@ -96,8 +88,53 @@ const feastInputConfigSchema = yup.object().shape({
   features: yup.array(feastFeaturesSchema)
 });
 
+const variableInputSchema = yup.object().shape({
+  name: yup.string().required("Name is required"),
+  type: yup.string().required("Type is required"),
+  value: yup.string().required("Value is required")
+});
+
+const tablesInputSchema = yup.object().shape({
+  name: yup.string().required("Table Name is required"),
+  baseTable: yup.object().shape({
+    fromJson: yup
+      .object()
+      .nullable()
+      .default(undefined)
+      .shape({
+        jsonPath: yup.string().required("JSONPath is required")
+      }),
+    fromTable: yup
+      .object()
+      .nullable()
+      .default(undefined)
+      .shape({
+        tableName: yup.string().required("Table Name Source is required")
+      })
+  }),
+  source: yup.string().when("baseTable", (baseTable, schema) => {
+    console.log("BT", baseTable);
+    if (baseTable) {
+      if (baseTable.fromJson && baseTable.fromJson.jsonPath !== undefined) {
+        return schema;
+      }
+      if (baseTable.fromTable && baseTable.fromTable.tableName !== undefined) {
+        return schema;
+      }
+    }
+    return schema.required("Table Source is required");
+  }),
+  columns: yup
+    .array()
+    .when("baseTable.fromTable.tableName", (tableName, schema) => {
+      return tableName !== undefined ? yup.array(variableInputSchema) : schema;
+    })
+});
+
 const inputPipelineSchema = yup.object().shape({
-  feast: yup.array(feastInputConfigSchema)
+  feast: yup.array(feastInputSchema),
+  tables: yup.array(tablesInputSchema),
+  variables: yup.array(variableInputSchema)
 });
 
 const transformationPipelineSchema = yup.object().shape({
@@ -106,11 +143,34 @@ const transformationPipelineSchema = yup.object().shape({
   // outputs: yup.array(),
 });
 
-export const standardTransformerSchema = yup.object().shape({
+export const customTransformerSchema = yup.object().shape({
+  transformer: yup.object().shape({
+    image: dockerImageSchema.required("Docker Image is required"),
+    command: yup.string(),
+    args: yup.string()
+  })
+});
+
+export const feastEnricherTransformerSchema = yup.object().shape({
   transformer: yup.object().shape({
     config: yup.object().shape({
-      feast: yup.array(feastInputConfigSchema),
+      feast: yup.array(feastInputSchema)
+    })
+  })
+});
+
+export const preprocessTransformerSchema = yup.object().shape({
+  transformer: yup.object().shape({
+    config: yup.object().shape({
       preprocess: transformationPipelineSchema
+    })
+  })
+});
+
+export const postprocessTransformerSchema = yup.object().shape({
+  transformer: yup.object().shape({
+    config: yup.object().shape({
+      postprocess: transformationPipelineSchema
     })
   })
 });

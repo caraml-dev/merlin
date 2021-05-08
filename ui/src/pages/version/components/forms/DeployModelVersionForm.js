@@ -7,18 +7,20 @@ import {
 } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../../../../hooks/useMerlinApi";
 import { DeploymentSummary } from "./components/DeploymentSummary";
+import { CustomTransformerStep } from "./steps/CustomTransformerStep";
+import { FeastTransformerStep } from "./steps/FeastTransformerStep";
 import { ModelStep } from "./steps/ModelStep";
 import { PostprocessStep } from "./steps/PostprocessStep";
 import { PreprocessStep } from "./steps/PreprocessStep";
 import { TransformerStep } from "./steps/TransformerStep";
 import {
   customTransformerSchema,
-  standardTransformerSchema,
+  feastEnricherTransformerSchema,
+  postprocessTransformerSchema,
+  preprocessTransformerSchema,
   transformerConfigSchema,
   versionEndpointSchema
 } from "./validation/schema";
-import { CustomTransformerStep } from "./steps/CustomTransformerStep";
-import { FeastTransformerStep } from "./steps/FeastTransformerStep";
 
 export const DeployModelVersionForm = ({
   model,
@@ -61,20 +63,10 @@ export const DeployModelVersionForm = ({
     //   children: <ModelStep />,
     //   validationSchema: versionEndpointSchema
     // },
-    // {
-    //   title: "Transformer",
-    //   children: <TransformerStep />,
-    //   validationSchema: transformerConfigSchema
-    // },
     {
-      title: "Feast Enricher",
-      children: <FeastTransformerStep />,
-      validationSchema: standardTransformerSchema
-    },
-    {
-      title: "Preprocess",
-      children: <PreprocessStep />,
-      validationSchema: standardTransformerSchema
+      title: "Transformer",
+      children: <TransformerStep />,
+      validationSchema: transformerConfigSchema
     }
   ];
 
@@ -82,12 +74,12 @@ export const DeployModelVersionForm = ({
     {
       title: "Preprocess",
       children: <PreprocessStep />,
-      validationSchema: standardTransformerSchema
+      validationSchema: preprocessTransformerSchema
     },
     {
       title: "Postprocess",
-      children: <PostprocessStep />
-      // validationSchema: schema[1],
+      children: <PostprocessStep />,
+      validationSchema: postprocessTransformerSchema
     }
   ];
 
@@ -100,7 +92,7 @@ export const DeployModelVersionForm = ({
   const feastTransformerStep = {
     title: "Feast Enricher",
     children: <FeastTransformerStep />,
-    validationSchema: standardTransformerSchema
+    validationSchema: feastEnricherTransformerSchema
   };
 
   const [steps, setSteps] = useState(mainSteps);

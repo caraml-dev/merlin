@@ -86,6 +86,7 @@ export const InputPanel = ({
                           inputs.length > 1 ? onDeleteInput(idx) : undefined
                         }
                         dragHandleProps={provided.dragHandleProps}
+                        errors={get(errors, `inputs.${idx}.tables.0`)}
                       />
                     )}
 
@@ -98,6 +99,7 @@ export const InputPanel = ({
                           inputs.length > 1 ? onDeleteInput(idx) : undefined
                         }
                         dragHandleProps={provided.dragHandleProps}
+                        errors={get(errors, `inputs.${idx}.variables`)}
                       />
                     )}
 

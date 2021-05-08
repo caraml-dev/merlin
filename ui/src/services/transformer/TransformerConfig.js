@@ -26,9 +26,8 @@ export class Config {
 }
 
 export class TransformerConfig {
-  constructor() {
-    this.feast = [new FeastInput()];
-
+  constructor(feast) {
+    this.feast = feast;
     this.preprocess = new Pipeline();
     this.postprocess = new Pipeline();
   }
