@@ -18,9 +18,11 @@ export const TransformerTypePanel = ({
     if (value === "disabled") {
       onChange("enabled")(false);
       onChange("transformer_type")("");
+      onChange("type_on_ui")("");
     } else {
       onChange("enabled")(true);
-      onChange("transformer_type")(value);
+      onChange("transformer_type")(value !== "feast" ? value : "standard");
+      onChange("type_on_ui")(value);
     }
   };
 

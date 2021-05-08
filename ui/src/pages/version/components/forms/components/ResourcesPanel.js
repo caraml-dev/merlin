@@ -32,7 +32,7 @@ export const ResourcesPanel = ({
             <EuiFormRow
               label={
                 <FormLabelWithToolTip
-                  label="CPU*"
+                  label="CPU *"
                   content="Specify the total amount of CPU available for the component"
                 />
               }
@@ -53,7 +53,7 @@ export const ResourcesPanel = ({
             <EuiFormRow
               label={
                 <FormLabelWithToolTip
-                  label="Memory*"
+                  label="Memory *"
                   content="Specify the total amount of RAM available for the component"
                 />
               }
@@ -76,7 +76,7 @@ export const ResourcesPanel = ({
         <EuiFormRow
           label={
             <FormLabelWithToolTip
-              label="Min/Max Replicas*"
+              label="Min/Max Replicas *"
               content="Specify the min/max number of replicas for your deployment. We will take care about auto-scaling for you"
             />
           }

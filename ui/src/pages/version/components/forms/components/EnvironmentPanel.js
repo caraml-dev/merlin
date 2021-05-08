@@ -26,7 +26,8 @@ export const EnvironmentPanel = ({ environment, onChange, errors = {} }) => {
           label={
             <EuiToolTip content="Specify the target environment your model version will be deployed to.">
               <span>
-                Environment* <EuiIcon type="questionInCircle" color="subdued" />
+                Environment *{" "}
+                <EuiIcon type="questionInCircle" color="subdued" />
               </span>
             </EuiToolTip>
           }

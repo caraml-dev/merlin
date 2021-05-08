@@ -16,13 +16,13 @@ const resourceRequestSchema = yup.object().shape({
   min_replica: yup
     .number()
     .typeError("Min Replicas value is required")
-    .min(0, "Min Replicas can not be less than 0"),
+    .min(0, "Min Replicas cannot be less than 0"),
   max_replica: yup
     .number()
     .typeError("Max Replicas value is required")
     .min(
       yup.ref(`min_replica`),
-      "Max Replicas can not be less than Min Replicas"
+      "Max Replicas cannot be less than Min Replicas"
     )
     .max(
       appConfig.scaling.maxAllowedReplica,
@@ -39,7 +39,7 @@ const resourceRequestSchema = yup.object().shape({
 const environmentVariableSchema = yup.object().shape({
   name: yup
     .string()
-    .required("Variable name can not be empty")
+    .required("Variable name is required")
     .matches(
       envVariableNameRegex,
       "The name of a variable can contain only alphanumeric character or the underscore"
@@ -69,6 +69,48 @@ const dockerImageSchema = yup
 
 export const customTransformerSchema = yup.object().shape({
   transformer: yup.object().shape({
-    image: dockerImageSchema.required("Docker Image is required")
+    image: dockerImageSchema.required("Docker Image is required"),
+    command: yup.string(),
+    args: yup.string()
+  })
+});
+
+const feastEntitiesSchema = yup.object().shape({
+  name: yup.string().required("Entity Name is required"),
+  valueType: yup.string().required("Entity Value Type is required"),
+  fieldType: yup.string().required("Input Type is required"),
+  field: yup.string().required("Input Value is required")
+});
+
+const feastFeaturesSchema = yup.object().shape({
+  name: yup.string().required("Feature Name is required")
+});
+
+const feastInputConfigSchema = yup.object().shape({
+  tableName: yup.string().when("isTableNameEditable", {
+    is: true,
+    then: yup.string().required("Table name is required")
+  }),
+  project: yup.string().required("Project name is required"),
+  entities: yup.array(feastEntitiesSchema),
+  features: yup.array(feastFeaturesSchema)
+});
+
+const inputPipelineSchema = yup.object().shape({
+  feast: yup.array(feastInputConfigSchema)
+});
+
+const transformationPipelineSchema = yup.object().shape({
+  inputs: yup.array(inputPipelineSchema)
+  // transformations: yup.array(),
+  // outputs: yup.array(),
+});
+
+export const standardTransformerSchema = yup.object().shape({
+  transformer: yup.object().shape({
+    config: yup.object().shape({
+      feast: yup.array(feastInputConfigSchema),
+      preprocess: transformationPipelineSchema
+    })
   })
 });

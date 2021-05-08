@@ -12,8 +12,8 @@ import { get } from "@gojek/mlp-ui";
 import "./FeastInputCard.scss";
 import { FeastProjectComboBox } from "./FeastProjectComboBox";
 import { DraggableHeader } from "../../DraggableHeader";
-import { FeastEntities } from "../../../../../../../version/deployment/components/FeastEntities";
-import { FeastFeatures } from "../../../../../../../version/deployment/components/FeastFeatures";
+import { FeastEntities } from "./FeastEntities";
+import { FeastFeatures } from "./FeastFeatures";
 import FeastProjectsContext from "../../../../../../../providers/feast/FeastProjectsContext";
 import FeastResourcesContext from "../../../../../../../providers/feast/FeastResourcesContext";
 
@@ -82,7 +82,7 @@ export const FeastInputCard = ({
             error={get(errors, "project")}
             fullWidth>
             <FeastProjectComboBox
-              project={table.project || ""}
+              project={table.project}
               feastProjects={projects}
               onChange={value => onChange("project", value)}
             />
@@ -92,29 +92,25 @@ export const FeastInputCard = ({
         {table.project !== "" && (
           <Fragment>
             <EuiFlexItem>
-              <EuiFormRow
-                fullWidth
-                label="Entities"
-                isInvalid={!!get(errors, "entities")}
-                error={get(errors, "entities")}>
+              <EuiFormRow fullWidth label="Entities *">
                 <FeastEntities
                   entities={table.entities}
                   feastEntities={entities}
                   onChange={value => onChange("entities", value)}
+                  errors={get(errors, "entities")}
                 />
               </EuiFormRow>
             </EuiFlexItem>
 
+            <EuiSpacer size="s" />
+
             <EuiFlexItem>
-              <EuiFormRow
-                fullWidth
-                label="Features"
-                isInvalid={!!get(errors, "features")}
-                error={get(errors, "features")}>
+              <EuiFormRow fullWidth label="Features *">
                 <FeastFeatures
                   features={table.features}
                   feastFeatureTables={featureTables}
                   onChange={value => onChange("features", value)}
+                  errors={get(errors, "features")}
                 />
               </EuiFormRow>
             </EuiFlexItem>

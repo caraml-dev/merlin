@@ -12,7 +12,9 @@ import { FeastProjectsContextProvider } from "../../../../../providers/feast/Fea
 export const FeastTransformerStep = () => {
   const {
     data: {
-      transformer: { feast_enricher_config }
+      transformer: {
+        config: { feast }
+      }
     },
     onChangeHandler
   } = useContext(FormContext);
@@ -24,9 +26,9 @@ export const FeastTransformerStep = () => {
       <EuiFlexItem grow={false}>
         <FeastProjectsContextProvider>
           <FeastEnricherPanel
-            feastConfig={feast_enricher_config}
-            onChangeHandler={onChange("transformer.feast_enricher_config")}
-            errors={get(errors, "transformer.feast_enricher_config")}
+            feastConfig={feast}
+            onChangeHandler={onChange("transformer.config.feast")}
+            errors={get(errors, "transformer.config.feast")}
           />
         </FeastProjectsContextProvider>
       </EuiFlexItem>

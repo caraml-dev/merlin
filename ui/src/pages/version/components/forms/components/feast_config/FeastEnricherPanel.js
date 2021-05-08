@@ -14,17 +14,17 @@ import { useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "../Panel";
 import { FeastInputCard } from "./components/FeastInputCard";
 import { FeastResourcesContextProvider } from "../../../../../../providers/feast/FeastResourcesContext";
-import { FeastConfig } from "../../../../../../services/transformer/TransformerConfig";
+import { FeastInput } from "../../../../../../services/transformer/TransformerConfig";
 
 export const FeastEnricherPanel = ({
   feastConfig,
   onChangeHandler,
-  errors = {} // TODO
+  errors = {}
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const onAddTable = () => {
-    onChangeHandler([...feastConfig, new FeastConfig("", [], [])]);
+    onChangeHandler([...feastConfig, new FeastInput()]);
   };
 
   const onDeleteTable = idx => () => {
@@ -44,7 +44,9 @@ export const FeastEnricherPanel = ({
   };
 
   return (
-    <Panel title="Feast Enricher" contentWidth="75%">
+    <Panel title="Feast Enricher" contentWidth="80%">
+      <EuiSpacer size="m" />
+
       <EuiDragDropContext onDragEnd={onDragEnd}>
         <EuiFlexGroup direction="column" gutterSize="s">
           <EuiDroppable droppableId="FEAST_INPUT_DROPPABLE_AREA" spacing="m">
@@ -68,6 +70,7 @@ export const FeastEnricherPanel = ({
                             : undefined
                         }
                         dragHandleProps={provided.dragHandleProps}
+                        errors={errors[idx]}
                       />
                     </FeastResourcesContextProvider>
                     <EuiSpacer size="s" />

@@ -1,33 +1,21 @@
-/**
- * Copyright 2020 The Merlin Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
 import {
   EuiButtonIcon,
   EuiComboBox,
   EuiFieldText,
   EuiIcon,
-  EuiInMemoryTable,
   EuiToolTip
 } from "@elastic/eui";
+import { InMemoryTableForm } from "@gojek/mlp-ui";
 
 const getSelectedOption = value => (value ? [{ label: value }] : []);
 
-export const FeastEntities = ({ entities, feastEntities, onChange }) => {
+export const FeastEntities = ({
+  entities,
+  feastEntities,
+  onChange,
+  errors = {}
+}) => {
   const [allEntities, setAllEntities] = useState([]);
   const [allValueTypes, setAllValueTypes] = useState([]);
   useEffect(() => {
@@ -110,9 +98,9 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
 
   const updateItems = items => {
     setItems(_ =>
-      items[items.length - 1].name &&
-      items[items.length - 1].valueType &&
-      items[items.length - 1].field &&
+      items[items.length - 1].name ||
+      items[items.length - 1].valueType ||
+      items[items.length - 1].field ||
       items[items.length - 1].fieldType
         ? [...items, { idx: items.length }]
         : [...items]
@@ -172,7 +160,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
       )
     },
     {
-      name: "Value Type",
+      name: "Entity Value Type",
       field: "valueType",
       width: "20%",
       render: (value, item) => (
@@ -191,7 +179,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
       )
     },
     {
-      name: "Field Type",
+      name: "Input Type",
       field: "fieldType",
       width: "20%",
       render: (value, item) => (
@@ -211,9 +199,9 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
     },
     {
       name: (
-        <EuiToolTip content="Specify the JSONPath/UDF syntax to extract entity value from the request payload.">
+        <EuiToolTip content="Specify the JSONPath/UDF syntax to extract entity value from the request payload">
           <span>
-            Field <EuiIcon type="questionInCircle" color="subdued" />
+            Input Value <EuiIcon type="questionInCircle" color="subdued" />
           </span>
         </EuiToolTip>
       ),
@@ -223,7 +211,7 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
         <EuiFieldText
           controlOnly
           fullWidth
-          placeholder="Field"
+          placeholder="Value"
           value={value || ""}
           onChange={onChangeRow(item.idx, "field")}
         />
@@ -251,11 +239,23 @@ export const FeastEntities = ({ entities, feastEntities, onChange }) => {
     }
   ];
 
-  return <EuiInMemoryTable columns={columns} items={items} hasActions={true} />;
-};
+  const getRowProps = item => {
+    const { idx } = item;
+    const isInvalid = !!errors[idx];
+    return {
+      className: isInvalid ? "euiTableRow--isInvalid" : "",
+      "data-test-subj": `row-${idx}`
+    };
+  };
 
-FeastEntities.propTypes = {
-  entities: PropTypes.array,
-  feastEntities: PropTypes.object,
-  onChange: PropTypes.func
+  return (
+    <InMemoryTableForm
+      columns={columns}
+      rowProps={getRowProps}
+      items={items}
+      hasActions={true}
+      errors={errors}
+      renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
+    />
+  );
 };

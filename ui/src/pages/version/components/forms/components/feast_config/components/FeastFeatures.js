@@ -1,31 +1,15 @@
-/**
- * Copyright 2020 The Merlin Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
-import {
-  EuiButtonIcon,
-  EuiComboBox,
-  EuiFieldText,
-  EuiInMemoryTable
-} from "@elastic/eui";
+import { EuiButtonIcon, EuiComboBox, EuiFieldText } from "@elastic/eui";
+import { InMemoryTableForm } from "@gojek/mlp-ui";
 
 const getSelectedOption = value => (value ? [{ label: value }] : []);
 
-export const FeastFeatures = ({ features, feastFeatureTables, onChange }) => {
+export const FeastFeatures = ({
+  features,
+  feastFeatureTables,
+  onChange,
+  errors = {}
+}) => {
   const [allOptions, setAllOptions] = useState([]);
   useEffect(
     () => {
@@ -103,7 +87,7 @@ export const FeastFeatures = ({ features, feastFeatureTables, onChange }) => {
 
   const updateItems = items => {
     setItems(_ =>
-      items[items.length - 1].name && items[items.length - 1].defaultValue
+      items[items.length - 1].name || items[items.length - 1].defaultValue
         ? [...items, { idx: items.length }]
         : [...items]
     );
@@ -192,11 +176,23 @@ export const FeastFeatures = ({ features, feastFeatureTables, onChange }) => {
     }
   ];
 
-  return <EuiInMemoryTable columns={columns} items={items} hasActions={true} />;
-};
+  const getRowProps = item => {
+    const { idx } = item;
+    const isInvalid = !!errors[idx];
+    return {
+      className: isInvalid ? "euiTableRow--isInvalid" : "",
+      "data-test-subj": `row-${idx}`
+    };
+  };
 
-FeastFeatures.propTypes = {
-  features: PropTypes.array,
-  feastFeatureTables: PropTypes.object,
-  onChange: PropTypes.func
+  return (
+    <InMemoryTableForm
+      columns={columns}
+      rowProps={getRowProps}
+      items={items}
+      hasActions={true}
+      errors={errors}
+      renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
+    />
+  );
 };

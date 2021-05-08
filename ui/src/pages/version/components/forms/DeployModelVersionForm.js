@@ -13,6 +13,7 @@ import { PreprocessStep } from "./steps/PreprocessStep";
 import { TransformerStep } from "./steps/TransformerStep";
 import {
   customTransformerSchema,
+  standardTransformerSchema,
   transformerConfigSchema,
   versionEndpointSchema
 } from "./validation/schema";
@@ -26,12 +27,13 @@ export const DeployModelVersionForm = ({
   onSuccess
 }) => {
   const { data: modelVersion } = useContext(FormContext);
+
   useEffect(() => {
     console.log(JSON.stringify(modelVersion, null, 2));
   }, [modelVersion]);
 
   const [submissionResponse, submitForm] = useMerlinApi(
-    `/models/${model.id}/versions/${version.id}/endpointasd`,
+    `/models/${model.id}/versions/${version.id}/endpointasd`, // TODO: Use the correct endpoint once ready
     { method: "POST" },
     {},
     false
@@ -54,23 +56,33 @@ export const DeployModelVersionForm = ({
   const onSubmit = () => submitForm({ body: JSON.stringify(modelVersion) });
 
   const mainSteps = [
+    // {
+    //   title: "Model",
+    //   children: <ModelStep />,
+    //   validationSchema: versionEndpointSchema
+    // },
+    // {
+    //   title: "Transformer",
+    //   children: <TransformerStep />,
+    //   validationSchema: transformerConfigSchema
+    // },
     {
-      title: "Model",
-      children: <ModelStep />,
-      validationSchema: versionEndpointSchema
+      title: "Feast Enricher",
+      children: <FeastTransformerStep />,
+      validationSchema: standardTransformerSchema
     },
     {
-      title: "Transformer",
-      children: <TransformerStep />,
-      validationSchema: transformerConfigSchema
+      title: "Preprocess",
+      children: <PreprocessStep />,
+      validationSchema: standardTransformerSchema
     }
   ];
 
   const standardTransformerSteps = [
     {
       title: "Preprocess",
-      children: <PreprocessStep />
-      // validationSchema: schema[1],
+      children: <PreprocessStep />,
+      validationSchema: standardTransformerSchema
     },
     {
       title: "Postprocess",
@@ -87,15 +99,15 @@ export const DeployModelVersionForm = ({
 
   const feastTransformerStep = {
     title: "Feast Enricher",
-    children: <FeastTransformerStep />
-    // validationSchema: schema[1], // TODO
+    children: <FeastTransformerStep />,
+    validationSchema: standardTransformerSchema
   };
 
   const [steps, setSteps] = useState(mainSteps);
   useEffect(
     () => {
       if (modelVersion.transformer) {
-        switch (modelVersion.transformer.transformer_type) {
+        switch (modelVersion.transformer.type_on_ui) {
           case "standard":
             setSteps([...mainSteps, ...standardTransformerSteps]);
             break;

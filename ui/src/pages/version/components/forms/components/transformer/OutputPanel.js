@@ -40,10 +40,13 @@ const expandFields = flattenField => {
 
 const splitName = name => {
   // https://stackoverflow.com/questions/171480/regex-grabbing-values-between-quotation-marks
-  // eslint-disable-next-line no-useless-escape
-  return name
-    .split(/\.(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/g)
-    .map(n => n.replace(/\"/g, ""));
+  return (
+    name
+      // eslint-disable-next-line no-useless-escape
+      .split(/\.(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/g)
+      // eslint-disable-next-line no-useless-escape
+      .map(n => n.replace(/\"/g, ""))
+  );
 };
 
 const setValue = (fields, nameSegment, fieldValue) => {

@@ -1,6 +1,5 @@
 import {
   Config,
-  FeastConfig,
   STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
   TransformerConfig
 } from "./TransformerConfig";
@@ -13,6 +12,7 @@ export class Transformer {
     this.enabled = undefined;
     this.version_endpoint_id = undefined;
     this.transformer_type = "";
+    this.type_on_ui = ""; // Only used on UI side
 
     // Custom transformer's properties.
     this.image = undefined;
@@ -30,8 +30,6 @@ export class Transformer {
 
     this.config = new TransformerConfig();
 
-    this.feast_enricher_config = [new FeastConfig("", [], [])];
-
     this.created_at = undefined;
     this.updated_at = undefined;
 
@@ -44,23 +42,6 @@ export class Transformer {
     // Update config to env vars
     //
     let configJson = JSON.stringify(new Config(obj.config));
-
-    if (obj.transformer_type === "feast") {
-      obj.feast_enricher_config.forEach(feastConfig => {
-        feastConfig.entities.forEach(entity => {
-          if (entity.fieldType === "UDF") {
-            entity["udf"] = entity.field;
-          } else {
-            entity["jsonPath"] = entity.field;
-          }
-          delete entity["field"];
-          delete entity["fieldType"];
-        });
-      });
-      configJson = JSON.stringify(
-        new Config(new TransformerConfig(obj.feast_enricher_config))
-      );
-    }
 
     // Find the index of env_var that contains transformer config
     // If it's not exist, create new env var
@@ -83,11 +64,14 @@ export class Transformer {
     // Remove properties for optional fields, if not relevant
     //
     // Delete config and feast_enricher_config, because we already set the config to env vars
+    if (obj.type_on_ui) {
+      // delete obj["type_on_ui"];
+    }
     if (obj.config) {
-      delete obj["config"];
+      // delete obj["config"];
     }
     if (obj.feast_enricher_config) {
-      delete obj["feast_enricher_config"];
+      // delete obj["feast_enricher_config"];
     }
 
     return obj;

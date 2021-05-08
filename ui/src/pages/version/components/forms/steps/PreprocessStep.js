@@ -32,7 +32,7 @@ export const PreprocessStep = () => {
           <InputPanel
             inputs={inputs}
             onChangeHandler={onChange("transformer.config.preprocess.inputs")}
-            errors={get(errors, "transformer.config.preprocess.inputs")}
+            errors={get(errors, "transformer.config.preprocess")}
           />
         </FeastProjectsContextProvider>
       </EuiFlexItem>

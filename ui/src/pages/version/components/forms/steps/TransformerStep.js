@@ -21,7 +21,7 @@ export const TransformerStep = () => {
     <EuiFlexGroup direction="column" gutterSize="m">
       <EuiFlexItem grow={false}>
         <TransformerTypePanel
-          type={get(data, "transformer.transformer_type")}
+          type={get(data, "transformer.type_on_ui")}
           onChangeHandler={onChange("transformer")}
           errors={get(errors, "transformer")}
         />

@@ -67,9 +67,10 @@ export const LoggerPanel = ({ loggerConfig, onChangeHandler, errors = {} }) => {
         <EuiFormRow
           fullWidth
           label={
-            <EuiToolTip content="Specify the logger mode.">
+            <EuiToolTip content="Specify the logger mode for your deployment">
               <span>
-                Logger mode* <EuiIcon type="questionInCircle" color="subdued" />
+                Logger Mode *{" "}
+                <EuiIcon type="questionInCircle" color="subdued" />
               </span>
             </EuiToolTip>
           }

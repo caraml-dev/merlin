@@ -111,7 +111,7 @@ export const TransformationPanel = ({
               <EuiFlexItem>
                 <AddButton
                   title="+ Add Table Join"
-                  description="Perform join operations on two tables"
+                  description="Perform join operation on two tables"
                   onClick={() => onAddInput("tableJoin", new TableJoin())}
                 />
               </EuiFlexItem>

@@ -8,7 +8,7 @@ import {
   EuiFlexItem,
   EuiSpacer
 } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { AddButton } from "./components/AddButton";
 import { TableInputCard } from "./components/table_inputs/TableInputCard";
 import { VariablesInputCard } from "./components/table_inputs/VariablesInputCard";
@@ -69,6 +69,7 @@ export const InputPanel = ({
                             inputs.length > 1 ? onDeleteInput(idx) : undefined
                           }
                           dragHandleProps={provided.dragHandleProps}
+                          errors={get(errors, `inputs.${idx}.feast.0`)}
                         />
                       </FeastResourcesContextProvider>
                     )}
@@ -113,7 +114,7 @@ export const InputPanel = ({
                 <AddButton
                   title="+ Add Feast Features"
                   description="Create a table by using features retrieved from Feast"
-                  onClick={() => onAddInput("feast", [new FeastInput()])}
+                  onClick={() => onAddInput("feast", [new FeastInput(true)])}
                 />
               </EuiFlexItem>
 

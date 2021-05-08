@@ -17,6 +17,10 @@ export const FeastProjectComboBox = ({ project, feastProjects, onChange }) => {
 
   const [selectedProjects, setSelectedProjects] = useState([]);
   useEffect(() => {
+    if (project === "") {
+      setSelectedProjects([]);
+    }
+
     if (project !== "") {
       setSelectedProjects([{ label: project }]);
     }

@@ -19,53 +19,20 @@ const objectAssignDeep = require(`object-assign-deep`);
 export const STANDARD_TRANSFORMER_CONFIG_ENV_NAME =
   "STANDARD_TRANSFORMER_CONFIG";
 
-export class Entity {
-  constructor(name, valueType, jsonPath, udf) {
-    this.name = name;
-    this.valueType = valueType;
-    this.jsonPath = jsonPath;
-    this.udf = udf;
-  }
-}
-
-export class Feature {
-  constructor(name, valueType, defaultValue) {
-    this.name = name;
-    this.valueType = valueType;
-    this.defaultValue = defaultValue;
-  }
-}
-
-export class FeastConfig {
-  constructor(project, entities, features) {
-    this.project = project;
-    this.entities = entities; // Array of Entity
-    this.features = features; // Array of Features
+export class Config {
+  constructor(transformerConfig) {
+    this.transformerConfig = transformerConfig;
   }
 }
 
 export class TransformerConfig {
-  constructor(feast) {
-    this.feast = feast; // Array of FeastConfig
+  constructor() {
+    this.feast = [new FeastInput()];
 
     this.preprocess = new Pipeline();
     this.postprocess = new Pipeline();
   }
 }
-
-// TODO: Delete it
-export class Config {
-  constructor(transformerConfig) {
-    this.transformerConfig = transformerConfig;
-  }
-
-  static from(jsonObject) {
-    return objectAssignDeep(new Config(), jsonObject);
-  }
-}
-
-export const newConfig = () =>
-  new Config(new TransformerConfig([new FeastConfig("", [], [])]));
 
 export class Pipeline {
   constructor() {
@@ -83,6 +50,11 @@ export class Pipeline {
       delete obj["inputs"];
     } else {
       obj.inputs.forEach(input => {
+        input.feast &&
+          input.feast.forEach(feast => {
+            delete feast["isTableNameEditable"];
+          });
+
         input.tables &&
           input.tables.forEach(table => {
             table.columns &&
@@ -122,8 +94,13 @@ export class Input {
 }
 
 export class FeastInput {
-  constructor() {
-    this.tableName = "";
+  constructor(isTableNameEditable) {
+    this.tableName = undefined;
+    if (isTableNameEditable) {
+      this.isTableNameEditable = isTableNameEditable;
+      this.tableName = "";
+    }
+
     this.project = "";
     this.entities = [];
     this.features = [];
@@ -135,20 +112,6 @@ export class TablesInput {
     this.name = "";
     this.baseTable = undefined;
     this.columns = [];
-  }
-}
-
-export class FromJson {
-  constructor() {
-    this.jsonPath = "";
-    this.addRowNumber = false;
-  }
-}
-
-export class FromTable {
-  constructor() {
-    this.tableName = "";
-    this.format = "";
   }
 }
 
@@ -225,5 +188,19 @@ export class FieldFromTable {
 export class FieldFromExpression {
   constructor() {
     this.expression = undefined;
+  }
+}
+
+export class FromJson {
+  constructor() {
+    this.jsonPath = "";
+    this.addRowNumber = false;
+  }
+}
+
+export class FromTable {
+  constructor() {
+    this.tableName = "";
+    this.format = "";
   }
 }
