@@ -8,7 +8,7 @@ import {
   EuiFlexItem,
   EuiSpacer
 } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { AddButton } from "./AddButton";
 import { TableTransformationStepCard } from "./TableTransformationStepCard";
 import { Panel } from "../../Panel";
@@ -16,7 +16,7 @@ import { Panel } from "../../Panel";
 export const TableTransformationStepPanel = ({
   steps,
   onChangeHandler,
-  errors = {} // TODO
+  errors = {}
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
@@ -60,6 +60,7 @@ export const TableTransformationStepPanel = ({
                         steps.length > 1 ? onDeleteStep(idx) : undefined
                       }
                       dragHandleProps={provided.dragHandleProps}
+                      errors={get(errors, `${idx}`)}
                     />
                     <EuiSpacer size="s" />
                   </EuiFlexItem>

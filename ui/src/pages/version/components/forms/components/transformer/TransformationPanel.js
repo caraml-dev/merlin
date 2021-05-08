@@ -16,7 +16,7 @@ import {
 } from "../../../../../../services/transformer/TransformerConfig";
 import { TableJoinCard } from "./components/TableJoinCard";
 import { TableTransformationCard } from "./components/TableTransformationCard";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const TransformationPanel = ({
   transformations,
@@ -74,6 +74,7 @@ export const TransformationPanel = ({
                             : undefined
                         }
                         dragHandleProps={provided.dragHandleProps}
+                        errors={get(errors, `${idx}.tableTransformation`)}
                       />
                     )}
 
@@ -88,6 +89,7 @@ export const TransformationPanel = ({
                             : undefined
                         }
                         dragHandleProps={provided.dragHandleProps}
+                        errors={get(errors, `${idx}.tableJoin`)}
                       />
                     )}
 

@@ -58,9 +58,11 @@ export const TableTransformationStepCard = ({
               description={
                 <p>
                   This operation will drop one or more columns. Use{" "}
+                  <EuiCode>↩</EuiCode> to enter new entry, use{" "}
                   <EuiCode>,</EuiCode> as delimiter.
                 </p>
               }
+              errors={get(errors, "dropColumns")}
             />
           )}
 
@@ -79,9 +81,11 @@ export const TableTransformationStepCard = ({
               description={
                 <p>
                   This operation will reorder and drop unselected columns. Use{" "}
+                  <EuiCode>↩</EuiCode> to enter new entry, use{" "}
                   <EuiCode>,</EuiCode> as delimiter.
                 </p>
               }
+              errors={get(errors, "selectColumns")}
             />
           )}
 

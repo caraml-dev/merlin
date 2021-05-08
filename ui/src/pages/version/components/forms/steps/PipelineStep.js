@@ -32,7 +32,7 @@ export const PipelineStep = ({ stage }) => {
           <InputPanel
             inputs={inputs}
             onChangeHandler={onChange(`transformer.config.${stage}.inputs`)}
-            errors={get(errors, `transformer.config.${stage}`)}
+            errors={get(errors, `transformer.config.${stage}.inputs`)}
           />
         </FeastProjectsContextProvider>
       </EuiFlexItem>

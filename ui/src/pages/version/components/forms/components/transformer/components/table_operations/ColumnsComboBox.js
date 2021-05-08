@@ -1,12 +1,14 @@
 import React, { useMemo } from "react";
 import { EuiComboBox, EuiFormRow } from "@elastic/eui";
+import { get } from "@gojek/mlp-ui";
 
 export const ColumnsComboBox = ({
   columns,
   onChange,
   title,
   description,
-  delimiter = ","
+  delimiter = ",",
+  errors
 }) => {
   const selectedOptions = useMemo(() => {
     return columns.map(column => ({ label: column }));
@@ -21,7 +23,12 @@ export const ColumnsComboBox = ({
   };
 
   return (
-    <EuiFormRow fullWidth label={title} helpText={description}>
+    <EuiFormRow
+      fullWidth
+      label={title}
+      helpText={description}
+      isInvalid={!!errors}
+      error={get(errors, "0")}>
       <EuiComboBox
         fullWidth
         noSuggestions

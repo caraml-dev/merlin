@@ -136,11 +136,57 @@ const inputPipelineSchema = yup.object().shape({
   variables: yup.array(variableInputSchema)
 });
 
+const tableTransformationStep = yup.object().shape({
+  operation: yup.string().required("Operation is required"),
+  dropColumns: yup
+    .array()
+    .of(yup.string())
+    .when("operation", {
+      is: v => v !== undefined && v === "dropColumns",
+      then: yup.array().required("List of columns to be deleted is required")
+    }),
+  selectColumns: yup
+    .array()
+    .of(yup.string())
+    .when("operation", {
+      is: v => v !== undefined && v === "selectColumns",
+      then: yup.array().required("List of columns to be selected is required")
+    })
+});
+
 const transformationPipelineSchema = yup.object().shape({
+  tableTransformation: yup
+    .object()
+    .nullable()
+    .default(undefined)
+    .shape({
+      inputTable: yup.string().required("Input Table Name is required"),
+      outputTable: yup.string().required("Output Table Name is required"),
+      steps: yup.array(tableTransformationStep)
+    }),
+  tableJoin: yup
+    .object()
+    .nullable()
+    .default(undefined)
+    .shape({
+      leftTable: yup.string().required("Left Table is required"),
+      rightTable: yup.string().required("Right Table is required"),
+      outputTable: yup.string().required("Output Table is required"),
+      how: yup.string().required("Join Method is required"),
+      onColumn: yup.string().when("how", {
+        is: v => v !== undefined && v !== "" && v !== "CROSS" && v !== "CONCAT",
+        then: yup.string().required("On Column is required")
+      })
+    })
+});
+
+const pipelineSchema = yup.object().shape({
   inputs: yup
     .array(inputPipelineSchema)
-    .required("One of inputs should be specified")
-  // transformations: yup.array(),
+    .required("One of inputs should be specified"),
+  transformations: yup
+    .array(transformationPipelineSchema)
+    .required("One of transformations should be specified")
   // outputs: yup.array(),
 });
 
@@ -163,7 +209,7 @@ export const feastEnricherTransformerSchema = yup.object().shape({
 export const preprocessTransformerSchema = yup.object().shape({
   transformer: yup.object().shape({
     config: yup.object().shape({
-      preprocess: transformationPipelineSchema
+      preprocess: pipelineSchema
     })
   })
 });
@@ -171,7 +217,7 @@ export const preprocessTransformerSchema = yup.object().shape({
 export const postprocessTransformerSchema = yup.object().shape({
   transformer: yup.object().shape({
     config: yup.object().shape({
-      postprocess: transformationPipelineSchema
+      postprocess: pipelineSchema
     })
   })
 });

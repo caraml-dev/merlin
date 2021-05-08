@@ -44,7 +44,7 @@ export const TableJoinCard = ({
           <EuiFlexGroup direction="row">
             <EuiFlexItem>
               <EuiFormRow
-                label="Left Table"
+                label="Left Table *"
                 isInvalid={!!errors.leftTable}
                 error={errors.leftTable}
                 fullWidth>
@@ -60,7 +60,7 @@ export const TableJoinCard = ({
 
             <EuiFlexItem>
               <EuiFormRow
-                label="Right Table"
+                label="Right Table *"
                 isInvalid={!!errors.rightTable}
                 error={errors.rightTable}
                 fullWidth>
@@ -80,7 +80,7 @@ export const TableJoinCard = ({
           <EuiFlexGroup direction="row">
             <EuiFlexItem>
               <EuiFormRow
-                label="Output Table"
+                label="Output Table *"
                 isInvalid={!!errors.outputTable}
                 error={errors.outputTable}
                 fullWidth>
@@ -110,7 +110,7 @@ export const TableJoinCard = ({
               <EuiFlexGroup direction="row">
                 <EuiFlexItem>
                   <EuiFormRow
-                    label="On Column"
+                    label="On Column *"
                     isInvalid={!!errors.onColumn}
                     error={errors.onColumn}
                     fullWidth>

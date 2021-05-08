@@ -67,7 +67,7 @@ export const InputPanel = ({ inputs, onChangeHandler, errors = {} }) => {
                             inputs.length > 1 ? onDeleteInput(idx) : undefined
                           }
                           dragHandleProps={provided.dragHandleProps}
-                          errors={get(errors, `inputs.${idx}.feast.0`)}
+                          errors={get(errors, `${idx}.feast.0`)}
                         />
                       </FeastResourcesContextProvider>
                     )}
@@ -84,7 +84,7 @@ export const InputPanel = ({ inputs, onChangeHandler, errors = {} }) => {
                           inputs.length > 1 ? onDeleteInput(idx) : undefined
                         }
                         dragHandleProps={provided.dragHandleProps}
-                        errors={get(errors, `inputs.${idx}.tables.0`)}
+                        errors={get(errors, `${idx}.tables.0`)}
                       />
                     )}
 
@@ -97,7 +97,7 @@ export const InputPanel = ({ inputs, onChangeHandler, errors = {} }) => {
                           inputs.length > 1 ? onDeleteInput(idx) : undefined
                         }
                         dragHandleProps={provided.dragHandleProps}
-                        errors={get(errors, `inputs.${idx}.variables`)}
+                        errors={get(errors, `${idx}.variables`)}
                       />
                     )}
 
