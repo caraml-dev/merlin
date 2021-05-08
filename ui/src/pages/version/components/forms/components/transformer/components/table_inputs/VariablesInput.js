@@ -1,6 +1,6 @@
 import React from "react";
 import { EuiButtonIcon, EuiFieldText, EuiSuperSelect } from "@elastic/eui";
-import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
@@ -85,6 +85,7 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
           placeholder="Name"
           value={name || ""}
           onChange={e => onChange(`${item.idx}.name`)(e.target.value)}
+          isInvalid={!!get(errors, `${item.idx}.name`)}
         />
       )
     },
@@ -97,6 +98,7 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
           options={typeOptions}
           valueOfSelected={type || ""}
           onChange={value => onVariableChange(item.idx, "type", value)}
+          isInvalid={!!get(errors, `${item.idx}.type`)}
           hasDividers
         />
       )
@@ -110,6 +112,7 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
           placeholder="Value"
           value={value || ""}
           onChange={e => onVariableChange(item.idx, "value", e.target.value)}
+          isInvalid={!!get(errors, `${item.idx}.value`)}
         />
       )
     },

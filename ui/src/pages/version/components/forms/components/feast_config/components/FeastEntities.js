@@ -6,7 +6,7 @@ import {
   EuiIcon,
   EuiToolTip
 } from "@elastic/eui";
-import { InMemoryTableForm } from "@gojek/mlp-ui";
+import { get, InMemoryTableForm } from "@gojek/mlp-ui";
 
 const getSelectedOption = value => (value ? [{ label: value }] : []);
 
@@ -156,6 +156,7 @@ export const FeastEntities = ({
             onEntityCreate(searchValue, item.idx, "name")
           }
           selectedOptions={getSelectedOption(value)}
+          isInvalid={!!get(errors, `${item.idx}.name`)}
         />
       )
     },
@@ -175,6 +176,7 @@ export const FeastEntities = ({
             onEntityCreate(searchValue, item.idx, "valueType")
           }
           selectedOptions={getSelectedOption(value)}
+          isInvalid={!!get(errors, `${item.idx}.valueType`)}
         />
       )
     },
@@ -194,6 +196,7 @@ export const FeastEntities = ({
             onEntityCreate(searchValue, item.idx, "fieldType")
           }
           selectedOptions={getSelectedOption(value)}
+          isInvalid={!!get(errors, `${item.idx}.fieldType`)}
         />
       )
     },
@@ -214,6 +217,7 @@ export const FeastEntities = ({
           placeholder="Value"
           value={value || ""}
           onChange={onChangeRow(item.idx, "field")}
+          isInvalid={!!get(errors, `${item.idx}.field`)}
         />
       )
     },

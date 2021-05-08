@@ -8,7 +8,7 @@ import {
   EuiFlexItem,
   EuiSpacer
 } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "../Panel";
 import { AddButton } from "./components/AddButton";
 import { JsonOutputFieldCard } from "./components/JsonOutputFieldCard";
@@ -108,11 +108,7 @@ const mergePath = path => {
   return '"' + path.join('"."') + '"';
 };
 
-export const OutputPanel = ({
-  outputs,
-  onChangeHandler,
-  errors = {} // TODO
-}) => {
+export const OutputPanel = ({ outputs, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const [flattenedFields, setFlattenedFields] = useState(
@@ -181,6 +177,7 @@ export const OutputPanel = ({
             <BaseJsonOutputCard
               baseJson={outputs[0].jsonOutput.jsonTemplate.baseJson}
               onChangeHandler={onChange(`0.jsonOutput.jsonTemplate.baseJson`)}
+              errors={get(errors, `0.jsonOutput.jsonTemplate.baseJson`)}
             />
             <EuiSpacer size="s" />
           </EuiFlexItem>

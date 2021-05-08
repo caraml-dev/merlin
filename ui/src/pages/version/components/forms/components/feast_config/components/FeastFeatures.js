@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { EuiButtonIcon, EuiComboBox, EuiFieldText } from "@elastic/eui";
-import { InMemoryTableForm } from "@gojek/mlp-ui";
+import { get, InMemoryTableForm } from "@gojek/mlp-ui";
 
 const getSelectedOption = value => (value ? [{ label: value }] : []);
 
@@ -137,6 +137,7 @@ export const FeastFeatures = ({
             onFeatureCreate(searchValue, item.idx, "name")
           }
           selectedOptions={getSelectedOption(value)}
+          isInvalid={!!get(errors, `${item.idx}.name`)}
         />
       )
     },

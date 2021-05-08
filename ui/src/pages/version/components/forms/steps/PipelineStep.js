@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import {
   FormContext,
@@ -24,6 +24,10 @@ export const PipelineStep = ({ stage }) => {
   } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
+
+  useEffect(() => {
+    console.log("errors", JSON.stringify(errors, null, 2));
+  }, [errors]);
 
   return (
     <EuiFlexGroup direction="column" gutterSize="m">

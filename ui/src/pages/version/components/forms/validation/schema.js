@@ -180,14 +180,30 @@ const transformationPipelineSchema = yup.object().shape({
     })
 });
 
+const outputPipelineSchema = yup.object().shape({
+  jsonOutput: yup.object().shape({
+    jsonTemplate: yup.object().shape({
+      baseJson: yup
+        .object()
+        .nullable()
+        .default(undefined)
+        .shape({
+          jsonPath: yup.string().required("JSONPath is required")
+        })
+    })
+  })
+});
+
 const pipelineSchema = yup.object().shape({
   inputs: yup
     .array(inputPipelineSchema)
     .required("One of inputs should be specified"),
   transformations: yup
     .array(transformationPipelineSchema)
-    .required("One of transformations should be specified")
-  // outputs: yup.array(),
+    .required("One of transformations should be specified"),
+  outputs: yup
+    .array(outputPipelineSchema)
+    .required("One of outputs should be specified")
 });
 
 export const customTransformerSchema = yup.object().shape({

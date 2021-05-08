@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { EuiComboBox } from "@elastic/eui";
 
-export const FeastProjectComboBox = ({ project, feastProjects, onChange }) => {
+export const FeastProjectComboBox = ({
+  project,
+  feastProjects,
+  onChange,
+  isInvalid
+}) => {
   const [allOptions, setAllOptions] = useState([]);
   useEffect(() => {
     if (allOptions.length === 0 && feastProjects && feastProjects.projects) {
@@ -49,6 +54,7 @@ export const FeastProjectComboBox = ({ project, feastProjects, onChange }) => {
       onChange={onProjectChange}
       onCreateOption={onProjectCreate}
       selectedOptions={selectedProjects}
+      isInvalid={isInvalid}
     />
   );
 };

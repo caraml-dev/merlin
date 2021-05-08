@@ -57,11 +57,11 @@ export const DeployModelVersionForm = ({
   const onSubmit = () => submitForm({ body: JSON.stringify(modelVersion) });
 
   const mainSteps = [
-    // {
-    //   title: "Model",
-    //   children: <ModelStep />,
-    //   validationSchema: versionEndpointSchema
-    // },
+    {
+      title: "Model",
+      children: <ModelStep />,
+      validationSchema: versionEndpointSchema
+    },
     {
       title: "Transformer",
       children: <TransformerStep />,

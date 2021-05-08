@@ -15,6 +15,7 @@ export const BaseJsonOutputCard = ({
   onChangeHandler,
   onColumnChangeHandler,
   onDelete,
+  errors = {},
   ...props
 }) => {
   const onChange = (field, value) => {
@@ -45,8 +46,8 @@ export const BaseJsonOutputCard = ({
         <EuiFlexItem>
           <EuiFormRow
             label="JSONPath"
-            // isInvalid={!!errors.name}
-            // error={errors.name}
+            isInvalid={!!errors.jsonPath}
+            error={errors.jsonPath}
             display="columnCompressed"
             fullWidth>
             <EuiFieldText
@@ -54,6 +55,7 @@ export const BaseJsonOutputCard = ({
               value={baseJson.jsonPath}
               onChange={e => onChange("jsonPath", e.target.value)}
               name={`jsonPath`}
+              isInvalid={!!errors.jsonPath}
               fullWidth
             />
           </EuiFormRow>

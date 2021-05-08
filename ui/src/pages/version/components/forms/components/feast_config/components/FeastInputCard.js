@@ -85,6 +85,7 @@ export const FeastInputCard = ({
               project={table.project}
               feastProjects={projects}
               onChange={value => onChange("project", value)}
+              isInvalid={!!get(errors, "project")}
             />
           </EuiFormRow>
         </EuiFlexItem>
@@ -92,7 +93,10 @@ export const FeastInputCard = ({
         {table.project !== "" && (
           <Fragment>
             <EuiFlexItem>
-              <EuiFormRow fullWidth label="Entities *">
+              <EuiFormRow
+                fullWidth
+                label="Entities *"
+                isInvalid={!!get(errors, "entities")}>
                 <FeastEntities
                   entities={table.entities}
                   feastEntities={entities}
@@ -105,7 +109,10 @@ export const FeastInputCard = ({
             <EuiSpacer size="s" />
 
             <EuiFlexItem>
-              <EuiFormRow fullWidth label="Features *">
+              <EuiFormRow
+                fullWidth
+                label="Features *"
+                isInvalid={!!get(errors, "features")}>
                 <FeastFeatures
                   features={table.features}
                   feastFeatureTables={featureTables}

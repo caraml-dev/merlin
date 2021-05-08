@@ -67,8 +67,8 @@ export const JsonOutputFieldCard = ({
               onChange={e =>
                 onChange(index, { ...field, fieldName: e.target.value })
               }
-              isInvalid={!!errors.fieldName}
               name={`field-name-${index}`}
+              isInvalid={!!errors.fieldName}
               fullWidth
             />
           </EuiFormRow>
@@ -77,7 +77,7 @@ export const JsonOutputFieldCard = ({
         <EuiFlexItem>
           <EuiFormRow
             label="Field Value *"
-            // isInvalid={!!errors.source}
+            isInvalid={!!errors.source}
             error={errors.source}
             display="columnCompressed"
             fullWidth>

@@ -37,6 +37,7 @@ export const ColumnsComboBox = ({
         selectedOptions={selectedOptions}
         onCreateOption={onAddValue}
         onChange={selected => onColumnChange(selected.map(l => l.label))}
+        isInvalid={!!errors}
       />
     </EuiFormRow>
   );
