@@ -10,8 +10,7 @@ import { DeploymentSummary } from "./components/DeploymentSummary";
 import { CustomTransformerStep } from "./steps/CustomTransformerStep";
 import { FeastTransformerStep } from "./steps/FeastTransformerStep";
 import { ModelStep } from "./steps/ModelStep";
-import { PostprocessStep } from "./steps/PostprocessStep";
-import { PreprocessStep } from "./steps/PreprocessStep";
+import { PipelineStep } from "./steps/PipelineStep";
 import { TransformerStep } from "./steps/TransformerStep";
 import {
   customTransformerSchema,
@@ -73,12 +72,12 @@ export const DeployModelVersionForm = ({
   const standardTransformerSteps = [
     {
       title: "Preprocess",
-      children: <PreprocessStep />,
+      children: <PipelineStep stage="preprocess" />,
       validationSchema: preprocessTransformerSchema
     },
     {
       title: "Postprocess",
-      children: <PostprocessStep />,
+      children: <PipelineStep stage="postprocess" />,
       validationSchema: postprocessTransformerSchema
     }
   ];

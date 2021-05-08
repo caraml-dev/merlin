@@ -11,12 +11,12 @@ import { OutputPanel } from "../components/transformer/OutputPanel";
 import { TransformationPanel } from "../components/transformer/TransformationPanel";
 import { FeastProjectsContextProvider } from "../../../../../providers/feast/FeastProjectsContext";
 
-export const PreprocessStep = () => {
+export const PipelineStep = ({ stage }) => {
   const {
     data: {
       transformer: {
         config: {
-          preprocess: { inputs, transformations, outputs }
+          [stage]: { inputs, transformations, outputs }
         }
       }
     },
@@ -31,8 +31,8 @@ export const PreprocessStep = () => {
         <FeastProjectsContextProvider>
           <InputPanel
             inputs={inputs}
-            onChangeHandler={onChange("transformer.config.preprocess.inputs")}
-            errors={get(errors, "transformer.config.preprocess")}
+            onChangeHandler={onChange(`transformer.config.${stage}.inputs`)}
+            errors={get(errors, `transformer.config.${stage}`)}
           />
         </FeastProjectsContextProvider>
       </EuiFlexItem>
@@ -41,9 +41,9 @@ export const PreprocessStep = () => {
         <TransformationPanel
           transformations={transformations}
           onChangeHandler={onChange(
-            "transformer.config.preprocess.transformations"
+            `transformer.config.${stage}.transformations`
           )}
-          errors={get(errors, "transformer.config.preprocess.transformations")}
+          errors={get(errors, `transformer.config.${stage}.transformations`)}
         />
       </EuiFlexItem>
 
@@ -70,8 +70,8 @@ export const PreprocessStep = () => {
           //     ],
           //   },
           // ]}}}]}
-          onChangeHandler={onChange("transformer.config.preprocess.outputs")}
-          errors={get(errors, "transformer.config.preprocess.outputs")}
+          onChangeHandler={onChange(`transformer.config.${stage}.outputs`)}
+          errors={get(errors, `transformer.config.${stage}.outputs`)}
         />
       </EuiFlexItem>
     </EuiFlexGroup>

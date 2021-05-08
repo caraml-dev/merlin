@@ -20,11 +20,7 @@ import {
 } from "../../../../../../services/transformer/TransformerConfig";
 import { FeastResourcesContextProvider } from "../../../../../../providers/feast/FeastResourcesContext";
 
-export const InputPanel = ({
-  inputs,
-  onChangeHandler,
-  errors = {} // TODO
-}) => {
+export const InputPanel = ({ inputs, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const onAddInput = (field, input) => {
@@ -44,9 +40,11 @@ export const InputPanel = ({
   };
 
   return (
-    <Panel title="Input" contentWidth="75%">
-      <EuiDragDropContext onDragEnd={onDragEnd}>
-        <EuiFlexGroup direction="column" gutterSize="s">
+    <Panel title="Input" contentWidth="80%">
+      <EuiSpacer size="xs" />
+
+      <EuiFlexGroup direction="column" gutterSize="s">
+        <EuiDragDropContext onDragEnd={onDragEnd}>
           <EuiDroppable droppableId="INPUTS_DROPPABLE_AREA" spacing="m">
             {inputs.map((input, idx) => (
               <EuiDraggable
@@ -109,36 +107,36 @@ export const InputPanel = ({
               </EuiDraggable>
             ))}
           </EuiDroppable>
+        </EuiDragDropContext>
 
-          <EuiFlexItem>
-            <EuiFlexGroup>
-              <EuiFlexItem>
-                <AddButton
-                  title="+ Add Feast Features"
-                  description="Create a table by using features retrieved from Feast"
-                  onClick={() => onAddInput("feast", [new FeastInput(true)])}
-                />
-              </EuiFlexItem>
+        <EuiFlexItem>
+          <EuiFlexGroup>
+            <EuiFlexItem>
+              <AddButton
+                title="+ Add Feast Features"
+                description="Create a table by using features retrieved from Feast"
+                onClick={() => onAddInput("feast", [new FeastInput(true)])}
+              />
+            </EuiFlexItem>
 
-              <EuiFlexItem>
-                <AddButton
-                  title="+ Add Generic Table"
-                  description="Create a table from request/response json payload or other inputs"
-                  onClick={() => onAddInput("tables", [new TablesInput()])}
-                />
-              </EuiFlexItem>
+            <EuiFlexItem>
+              <AddButton
+                title="+ Add Generic Table"
+                description="Create a table from request/response json payload or other inputs"
+                onClick={() => onAddInput("tables", [new TablesInput()])}
+              />
+            </EuiFlexItem>
 
-              <EuiFlexItem>
-                <AddButton
-                  title="+ Add Variables"
-                  description="Declare a variable that can be used as input to expression"
-                  onClick={() => onAddInput("variables", [])}
-                />
-              </EuiFlexItem>
-            </EuiFlexGroup>
-          </EuiFlexItem>
-        </EuiFlexGroup>
-      </EuiDragDropContext>
+            <EuiFlexItem>
+              <AddButton
+                title="+ Add Variables"
+                description="Declare a variable that can be used as input to expression"
+                onClick={() => onAddInput("variables", [{}])}
+              />
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        </EuiFlexItem>
+      </EuiFlexGroup>
     </Panel>
   );
 };

@@ -167,7 +167,9 @@ export const OutputPanel = ({
   };
 
   return (
-    <Panel title="Output" contentWidth="75%">
+    <Panel title="Output" contentWidth="80%">
+      <EuiSpacer size="xs" />
+
       {outputs.findIndex(
         output =>
           output.jsonOutput &&

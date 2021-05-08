@@ -113,7 +113,6 @@ const tablesInputSchema = yup.object().shape({
       })
   }),
   source: yup.string().when("baseTable", (baseTable, schema) => {
-    console.log("BT", baseTable);
     if (baseTable) {
       if (baseTable.fromJson && baseTable.fromJson.jsonPath !== undefined) {
         return schema;
@@ -138,7 +137,9 @@ const inputPipelineSchema = yup.object().shape({
 });
 
 const transformationPipelineSchema = yup.object().shape({
-  inputs: yup.array(inputPipelineSchema)
+  inputs: yup
+    .array(inputPipelineSchema)
+    .required("One of inputs should be specified")
   // transformations: yup.array(),
   // outputs: yup.array(),
 });
