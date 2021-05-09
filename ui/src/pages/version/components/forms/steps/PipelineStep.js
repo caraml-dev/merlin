@@ -6,9 +6,9 @@ import {
   get,
   useOnChangeHandler
 } from "@gojek/mlp-ui";
-import { GraphPanel } from "../components/transformer/components/GraphPanel";
 import { InputPanel } from "../components/transformer/InputPanel";
 import { OutputPanel } from "../components/transformer/OutputPanel";
+import { PipelineSidebarPanel } from "../components/transformer/PipelineSidebarPanel";
 import { TransformationPanel } from "../components/transformer/TransformationPanel";
 import { FeastProjectsContextProvider } from "../../../../../providers/feast/FeastProjectsContext";
 
@@ -29,7 +29,7 @@ export const PipelineStep = ({ stage }) => {
   const { errors } = useContext(FormValidationContext);
 
   return (
-    <EuiFlexGroup className="KELAS">
+    <EuiFlexGroup>
       <EuiFlexItem grow={7}>
         <EuiFlexGroup direction="column" gutterSize="m">
           <EuiFlexItem grow={false}>
@@ -76,7 +76,7 @@ export const PipelineStep = ({ stage }) => {
       </EuiFlexItem>
 
       <EuiFlexItem grow={3}>
-        <GraphPanel />
+        <PipelineSidebarPanel />
       </EuiFlexItem>
     </EuiFlexGroup>
   );

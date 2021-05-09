@@ -94,7 +94,8 @@ export const DeployModelVersionForm = ({
   const feastTransformerStep = {
     title: "Feast Enricher",
     children: <FeastTransformerStep />,
-    validationSchema: feastEnricherTransformerSchema
+    validationSchema: feastEnricherTransformerSchema,
+    width: "100%"
   };
 
   const [steps, setSteps] = useState(mainSteps);

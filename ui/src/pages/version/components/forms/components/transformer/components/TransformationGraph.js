@@ -1,9 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import DagreGraph from "dagre-d3-react";
-import { EuiSpacer } from "@elastic/eui";
 import { FormContext, get } from "@gojek/mlp-ui";
-import { Panel } from "../../Panel";
-import "./GraphPanel.scss";
+import "./TransformationGraph.scss";
 
 const MODEL_RESPONSE_PREFIX = "$.model_response";
 
@@ -310,7 +308,7 @@ const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
   });
 };
 
-export const GraphPanel = () => {
+export const TransformationGraph = () => {
   const { data } = useContext(FormContext);
 
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
@@ -336,19 +334,16 @@ export const GraphPanel = () => {
   }, [data, setGraphData]);
 
   return (
-    <Panel title="Transformation Graph" contentWidth="100%">
-      <EuiSpacer size="xs" />
-      <DagreGraph
-        nodes={graphData.nodes}
-        links={graphData.links}
-        config={{
-          rankdir: "TB"
-        }}
-        width="100%"
-        height="640px"
-        className="transformationGraph"
-        zoomable
-      />
-    </Panel>
+    <DagreGraph
+      nodes={graphData.nodes}
+      links={graphData.links}
+      config={{
+        rankdir: "TB"
+      }}
+      width="100%"
+      height="640px"
+      className="transformationGraph"
+      zoomable
+    />
   );
 };

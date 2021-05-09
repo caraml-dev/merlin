@@ -24,6 +24,11 @@ export class Config {
     this.transformerConfig = transformerConfig;
   }
 
+  // Deprecated.
+  static from(jsonObject) {
+    return objectAssignDeep(new Config(), jsonObject);
+  }
+
   static fromJson(json) {
     const config = objectAssignDeep(new Config(), json);
     config.transformerConfig = TransformerConfig.fromJson(
@@ -34,10 +39,10 @@ export class Config {
 }
 
 export class TransformerConfig {
-  constructor(feast) {
+  constructor(feast, preprocess, postprocess) {
     this.feast = feast;
-    this.preprocess = new Pipeline();
-    this.postprocess = new Pipeline();
+    this.preprocess = preprocess;
+    this.postprocess = postprocess;
 
     this.toJSON = this.toJSON.bind(this);
   }

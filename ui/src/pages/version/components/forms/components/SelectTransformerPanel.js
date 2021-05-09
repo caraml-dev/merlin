@@ -9,6 +9,7 @@ import { Panel } from "./Panel";
 import {
   Config,
   FeastInput,
+  Pipeline,
   TransformerConfig
 } from "../../../../../services/transformer/TransformerConfig";
 
@@ -30,7 +31,9 @@ export const SelectTransformerPanel = ({
       onChange("type_on_ui")(value);
       onChange("config")(
         value !== "feast"
-          ? new Config(new TransformerConfig())
+          ? new Config(
+              new TransformerConfig(undefined, new Pipeline(), new Pipeline())
+            )
           : new Config(new TransformerConfig([new FeastInput()]))
       );
     }

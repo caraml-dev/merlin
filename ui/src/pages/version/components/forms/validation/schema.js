@@ -217,7 +217,9 @@ export const customTransformerSchema = yup.object().shape({
 export const feastEnricherTransformerSchema = yup.object().shape({
   transformer: yup.object().shape({
     config: yup.object().shape({
-      feast: yup.array(feastInputSchema)
+      transformerConfig: yup.object().shape({
+        feast: yup.array(feastInputSchema)
+      })
     })
   })
 });
@@ -225,7 +227,9 @@ export const feastEnricherTransformerSchema = yup.object().shape({
 export const preprocessTransformerSchema = yup.object().shape({
   transformer: yup.object().shape({
     config: yup.object().shape({
-      preprocess: pipelineSchema
+      transformerConfig: yup.object().shape({
+        preprocess: pipelineSchema
+      })
     })
   })
 });
@@ -233,7 +237,9 @@ export const preprocessTransformerSchema = yup.object().shape({
 export const postprocessTransformerSchema = yup.object().shape({
   transformer: yup.object().shape({
     config: yup.object().shape({
-      postprocess: pipelineSchema
+      transformerConfig: yup.object().shape({
+        postprocess: pipelineSchema
+      })
     })
   })
 });
