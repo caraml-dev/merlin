@@ -80,7 +80,7 @@ export const TableInputCard = ({
             <EuiFlexGroup>
               <EuiFlexItem grow={false}>
                 <EuiRadio
-                  id={`fromJson-${index}`}
+                  id={`table-input-fromJson-${index}`}
                   label="From JSON"
                   checked={
                     (table.baseTable && !!table.baseTable.fromJson) || false
@@ -92,7 +92,7 @@ export const TableInputCard = ({
               </EuiFlexItem>
               <EuiFlexItem>
                 <EuiRadio
-                  id={`fromTable-${index}`}
+                  id={`table-input-fromTable-${index}`}
                   label="From Table"
                   checked={
                     (table.baseTable && !!table.baseTable.fromTable) || false

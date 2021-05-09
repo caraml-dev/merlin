@@ -84,7 +84,7 @@ export const JsonOutputFieldCard = ({
             <EuiFlexGroup>
               <EuiFlexItem grow={false}>
                 <EuiRadio
-                  id={`fromJson-${index}`}
+                  id={`table-output-fromJson-${index}`}
                   label="From JSON"
                   checked={!!field.fromJson || false}
                   onChange={() => setSource("fromJson")}
@@ -92,7 +92,7 @@ export const JsonOutputFieldCard = ({
               </EuiFlexItem>
               <EuiFlexItem grow={false}>
                 <EuiRadio
-                  id={`fromTable-${index}`}
+                  id={`table-output-fromTable-${index}`}
                   label="From Table"
                   checked={!!field.fromTable || false}
                   onChange={() => setSource("fromTable")}
@@ -100,7 +100,7 @@ export const JsonOutputFieldCard = ({
               </EuiFlexItem>
               <EuiFlexItem>
                 <EuiRadio
-                  id={`expression-${index}`}
+                  id={`table-output-expression-${index}`}
                   label="From Expression"
                   checked={field.expression !== undefined || false}
                   onChange={() => setSource("expression")}
