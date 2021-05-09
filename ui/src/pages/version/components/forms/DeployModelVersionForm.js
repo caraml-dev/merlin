@@ -34,7 +34,7 @@ export const DeployModelVersionForm = ({
   }, [modelVersion]);
 
   const [submissionResponse, submitForm] = useMerlinApi(
-    `/models/${model.id}/versions/${version.id}/endpointasd`, // TODO: Use the correct endpoint once ready
+    `/models/${model.id}/versions/${version.id}/endpoint`,
     { method: "POST" },
     {},
     false

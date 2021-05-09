@@ -56,26 +56,6 @@ export const PipelineStep = ({ stage }) => {
           <EuiFlexItem grow={false}>
             <OutputPanel
               outputs={outputs}
-              // outputs={[{jsonOutput: {jsonTemplate: {fields: [
-              //   {
-              //     "fieldName": "table1",
-              //     "fromTable": {
-              //       "tableName": "table1",
-              //       "format": "RECORD"
-              //     },
-              //   },
-              //   {
-              //     "fieldName": "json1",
-              //     "fields": [
-              //       {
-              //         "fieldName": "child1",
-              //         fromJson: {
-              //           jsonPath: "$.child1"
-              //         }
-              //       }
-              //     ],
-              //   },
-              // ]}}}]}
               onChangeHandler={onChange(`transformer.config.${stage}.outputs`)}
               errors={get(errors, `transformer.config.${stage}.outputs`)}
             />

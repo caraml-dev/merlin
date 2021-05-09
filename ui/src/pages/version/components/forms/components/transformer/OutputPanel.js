@@ -143,16 +143,10 @@ export const OutputPanel = ({ outputs, onChangeHandler, errors = {} }) => {
     [onChangeHandler]
   );
 
-  // TODO:
-  // const onAddOutput = useCallback((field, input) => {
-  //   onChangeHandler([...outputs, { [field]: input }]);
-  // });
-
-  // TODO:
-  // const onDeleteOutput = idx => () => {
-  //   outputs.splice(idx, 1);
-  //   onChangeHandler([...outputs]);
-  // };
+  const onDeleteJsonOutputField = idx => () => {
+    flattenedFields.splice(idx, 1);
+    setFlattenedFields([...flattenedFields]);
+  };
 
   const onDragEnd = ({ source, destination }) => {
     if (source && destination) {
@@ -181,6 +175,9 @@ export const OutputPanel = ({ outputs, onChangeHandler, errors = {} }) => {
               baseJson={outputs[0].jsonOutput.jsonTemplate.baseJson}
               onChangeHandler={onChange(`0.jsonOutput.jsonTemplate.baseJson`)}
               errors={get(errors, `0.jsonOutput.jsonTemplate.baseJson`)}
+              onDelete={() => {
+                onChange(`0.jsonOutput.jsonTemplate.baseJson`)(undefined);
+              }}
             />
             <EuiSpacer size="s" />
           </EuiFlexItem>
@@ -203,6 +200,11 @@ export const OutputPanel = ({ outputs, onChangeHandler, errors = {} }) => {
                       index={fieldIdx}
                       field={field}
                       onChange={onFieldChange}
+                      onDelete={
+                        flattenedFields.length > 1
+                          ? onDeleteJsonOutputField(fieldIdx)
+                          : undefined
+                      }
                       dragHandleProps={provided.dragHandleProps}
                     />
                     <EuiSpacer size="s" />
@@ -224,8 +226,7 @@ export const OutputPanel = ({ outputs, onChangeHandler, errors = {} }) => {
               <EuiFlexItem>
                 <AddButton
                   title="+ Add Base JSON"
-                  // TODO:
-                  // description="Use Feast features as input"
+                  description="Copy the structure and value from another JSON object or array using JSONPath."
                   onClick={() => {
                     var jsonOutput = new JsonOutput();
                     if (outputs.length > 0) {
@@ -247,8 +248,7 @@ export const OutputPanel = ({ outputs, onChangeHandler, errors = {} }) => {
             <EuiFlexItem>
               <AddButton
                 title="+ Add Field"
-                // TODO:
-                // description="Use Feast features as input"
+                description="Create a field from JSONPath, table, or expression."
                 onClick={() => {
                   setFlattenedFields([...flattenedFields, {}]);
                 }}

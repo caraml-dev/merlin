@@ -29,10 +29,7 @@ export const BaseJsonOutputCard = ({
 
   return (
     <EuiPanel>
-      <DraggableHeader
-        onDelete={onDelete}
-        dragHandleProps={props.dragHandleProps}
-      />
+      <DraggableHeader onDelete={onDelete} />
 
       <EuiSpacer size="s" />
 
