@@ -13,7 +13,9 @@ export const FeastTransformerStep = () => {
   const {
     data: {
       transformer: {
-        config: { feast }
+        config: {
+          transformerConfig: { feast }
+        }
       }
     },
     onChangeHandler
@@ -27,8 +29,10 @@ export const FeastTransformerStep = () => {
         <FeastProjectsContextProvider>
           <FeastEnricherPanel
             feastConfig={feast}
-            onChangeHandler={onChange("transformer.config.feast")}
-            errors={get(errors, "transformer.config.feast")}
+            onChangeHandler={onChange(
+              "transformer.config.transformerConfig.feast"
+            )}
+            errors={get(errors, "transformer.config.transformerConfig.feast")}
           />
         </FeastProjectsContextProvider>
       </EuiFlexItem>

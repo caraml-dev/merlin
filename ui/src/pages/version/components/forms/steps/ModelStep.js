@@ -12,7 +12,7 @@ import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 
-export const ModelStep = () => {
+export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
   const { data, onChangeHandler } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
@@ -22,8 +22,10 @@ export const ModelStep = () => {
       <EuiFlexItem grow={false}>
         <EnvironmentPanel
           environment={data.environment_name}
+          version={version}
           onChange={onChange}
           errors={errors}
+          isEnvironmentDisabled={isEnvironmentDisabled}
         />
       </EuiFlexItem>
 

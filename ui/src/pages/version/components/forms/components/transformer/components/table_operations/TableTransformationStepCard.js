@@ -24,6 +24,7 @@ export const TableTransformationStepCard = ({
   ...props
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
+
   return (
     <EuiPanel>
       <DraggableHeader

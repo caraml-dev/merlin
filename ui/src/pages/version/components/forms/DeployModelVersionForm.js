@@ -5,7 +5,6 @@ import {
   FormContext,
   StepsWizardHorizontal
 } from "@gojek/mlp-ui";
-import { useMerlinApi } from "../../../../hooks/useMerlinApi";
 import { DeploymentSummary } from "./components/DeploymentSummary";
 import { CustomTransformerStep } from "./steps/CustomTransformerStep";
 import { FeastTransformerStep } from "./steps/FeastTransformerStep";
@@ -25,20 +24,17 @@ export const DeployModelVersionForm = ({
   model,
   version,
   onCancel,
-  onSuccess
+  onSuccess,
+  submissionResponse,
+  submitForm,
+  actionTitle = "Deploy",
+  isEnvironmentDisabled = false
 }) => {
-  const { data: modelVersion } = useContext(FormContext);
+  const { data: versionEndpoint } = useContext(FormContext);
 
   useEffect(() => {
-    console.log(JSON.stringify(modelVersion, null, 2));
-  }, [modelVersion]);
-
-  const [submissionResponse, submitForm] = useMerlinApi(
-    `/models/${model.id}/versions/${version.id}/endpoint`,
-    { method: "POST" },
-    {},
-    false
-  );
+    console.log(JSON.stringify(versionEndpoint, null, 2));
+  }, [versionEndpoint]);
 
   useEffect(() => {
     if (submissionResponse.isLoaded && !submissionResponse.error) {
@@ -54,12 +50,17 @@ export const DeployModelVersionForm = ({
     }
   }, [submissionResponse, onSuccess, model, version]);
 
-  const onSubmit = () => submitForm({ body: JSON.stringify(modelVersion) });
+  const onSubmit = () => submitForm({ body: JSON.stringify(versionEndpoint) });
 
   const mainSteps = [
     {
       title: "Model",
-      children: <ModelStep />,
+      children: (
+        <ModelStep
+          version={version}
+          isEnvironmentDisabled={isEnvironmentDisabled}
+        />
+      ),
       validationSchema: versionEndpointSchema
     },
     {
@@ -99,8 +100,8 @@ export const DeployModelVersionForm = ({
   const [steps, setSteps] = useState(mainSteps);
   useEffect(
     () => {
-      if (modelVersion.transformer) {
-        switch (modelVersion.transformer.type_on_ui) {
+      if (versionEndpoint.transformer) {
+        switch (versionEndpoint.transformer.type_on_ui) {
           case "standard":
             setSteps([...mainSteps, ...standardTransformerSteps]);
             break;
@@ -117,25 +118,29 @@ export const DeployModelVersionForm = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [modelVersion]
+    [versionEndpoint]
   );
 
   return (
     <ConfirmationModal
-      title="Deploy Model Version"
+      title={`${actionTitle} Model Version`}
       content={
-        <DeploymentSummary modelName={model.name} versionId={version.id} />
+        <DeploymentSummary
+          actionTitle={actionTitle}
+          modelName={model.name}
+          versionId={version.id}
+        />
       }
       isLoading={submissionResponse.isLoading}
       onConfirm={onSubmit}
-      confirmButtonText="Deploy"
+      confirmButtonText={actionTitle}
       confirmButtonColor="primary">
       {onSubmit => (
         <StepsWizardHorizontal
           steps={steps}
           onCancel={onCancel}
           onSubmit={onSubmit}
-          submitLabel="Deploy"
+          submitLabel={actionTitle}
         />
       )}
     </ConfirmationModal>

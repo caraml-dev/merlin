@@ -316,8 +316,12 @@ export const GraphPanel = () => {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
 
   useEffect(() => {
-    if (data.transformer && data.transformer.config) {
-      const config = data.transformer.config;
+    if (
+      data.transformer &&
+      data.transformer.config &&
+      data.transformer.config.transformerConfig
+    ) {
+      const config = data.transformer.config.transformerConfig;
 
       let nodes = [],
         links = [];

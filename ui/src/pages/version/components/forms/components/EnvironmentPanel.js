@@ -7,16 +7,35 @@ import {
   EuiToolTip
 } from "@elastic/eui";
 import sortBy from "lodash/sortBy";
-import EnvironmentsContext from "../../../../../providers/environments/context";
 import { Panel } from "./Panel";
+import EnvironmentsContext from "../../../../../providers/environments/context";
 
-export const EnvironmentPanel = ({ environment, onChange, errors = {} }) => {
+export const EnvironmentPanel = ({
+  environment,
+  version,
+  onChange,
+  errors = {},
+  isEnvironmentDisabled = false
+}) => {
   const environments = useContext(EnvironmentsContext);
 
   const environmentOptions = sortBy(environments, "name").map(environment => ({
     value: environment.name,
     inputDisplay: environment.name
   }));
+
+  const onEnvironmentChange = value => {
+    onChange("environment_name")(value);
+
+    const existingEndpoint = version.endpoints.find(
+      e => e.environment_name === value
+    );
+    if (existingEndpoint) {
+      Object.keys(existingEndpoint).forEach(key => {
+        onChange(key)(existingEndpoint[key]);
+      });
+    }
+  };
 
   return (
     <Panel title="Environment">
@@ -38,10 +57,11 @@ export const EnvironmentPanel = ({ environment, onChange, errors = {} }) => {
             fullWidth
             options={environmentOptions}
             valueOfSelected={environment}
-            onChange={onChange("environment_name")}
+            onChange={onEnvironmentChange}
             isInvalid={!!errors.environment_name}
             itemLayoutAlign="top"
             hasDividers
+            disabled={isEnvironmentDisabled}
           />
         </EuiFormRow>
       </EuiForm>

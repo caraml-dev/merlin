@@ -2,6 +2,7 @@ import React from "react";
 import { EuiButtonIcon, EuiFieldText, EuiSpacer } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "./Panel";
+import { STANDARD_TRANSFORMER_CONFIG_ENV_NAME } from "../../../../../services/transformer/TransformerConfig";
 
 export const EnvVariablesPanel = ({
   variables,
@@ -85,7 +86,12 @@ export const EnvVariablesPanel = ({
       <InMemoryTableForm
         columns={columns}
         rowProps={getRowProps}
-        items={items}
+        items={items.filter(
+          v =>
+            v.name !== "MODEL_NAME" &&
+            v.name !== "MODEL_DIR" &&
+            v.name !== STANDARD_TRANSFORMER_CONFIG_ENV_NAME
+        )}
         hasActions={true}
         errors={errors}
         renderErrorHeader={key => `Row ${parseInt(key) + 1}`}

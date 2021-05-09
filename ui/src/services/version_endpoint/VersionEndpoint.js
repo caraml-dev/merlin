@@ -42,8 +42,30 @@ export class VersionEndpoint {
     this.updated_at = undefined;
   }
 
+  static fromJson(json) {
+    const versionEndpoint = objectAssignDeep(new VersionEndpoint(), json);
+
+    if (!versionEndpoint.env_vars) {
+      versionEndpoint.env_vars = [];
+    } else {
+      versionEndpoint.env_vars = versionEndpoint.env_vars.filter(
+        e => e.name !== "MODEL_NAME" && e.name !== "MODEL_DIR"
+      );
+    }
+
+    versionEndpoint.transformer = Transformer.fromJson(json.transformer);
+    return versionEndpoint;
+  }
+
   toJSON() {
     let obj = objectAssignDeep({}, this);
+
+    if (obj.env_vars && obj.env_vars.length > 0) {
+      obj["env_vars"] = obj.env_vars.filter(
+        e => e.name !== "MODEL_NAME" && e.name !== "MODEL_DIR"
+      );
+    }
+
     return obj;
   }
 }

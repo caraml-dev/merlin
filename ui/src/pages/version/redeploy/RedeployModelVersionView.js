@@ -16,10 +16,11 @@ import { VersionEndpoint } from "../../../services/version_endpoint/VersionEndpo
 
 import { DeployModelVersionForm } from "../components/forms/DeployModelVersionForm";
 
-const DeployModelVersionView = ({
+const RedeployModelVersionView = ({
   projectId,
   modelId,
   versionId,
+  endpointId,
   ...props
 }) => {
   const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
@@ -46,14 +47,14 @@ const DeployModelVersionView = ({
           text: `Version ${version.id}`,
           href: `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}`
         },
-        { text: `Deploy` }
+        { text: `Redeploy` }
       ]);
     }
   }, [model, version]);
 
   const [submissionResponse, submitForm] = useMerlinApi(
-    `/models/${model.id}/versions/${version.id}/endpoint`,
-    { method: "POST" },
+    `/models/${model.id}/versions/${version.id}/endpoint/${endpointId}`,
+    { method: "PUT" },
     {},
     false
   );
@@ -66,7 +67,7 @@ const DeployModelVersionView = ({
             <PageTitle
               title={
                 <>
-                  {"Deploy "}
+                  {"Redeploy "}
                   {model.name}
                   {" version "}
                   <strong>{version.id}</strong>
@@ -78,7 +79,10 @@ const DeployModelVersionView = ({
 
         <EuiPageContentBody>
           {modelLoaded && versionLoaded ? (
-            <FormContextProvider data={new VersionEndpoint()}>
+            <FormContextProvider
+              data={VersionEndpoint.fromJson(
+                version.endpoints.find(e => e.id === endpointId)
+              )}>
               <DeployModelVersionForm
                 model={model}
                 version={Version.fromJson(version)}
@@ -86,7 +90,8 @@ const DeployModelVersionView = ({
                 onSuccess={redirectUrl => props.navigate(redirectUrl)}
                 submissionResponse={submissionResponse}
                 submitForm={submitForm}
-                actionTitle="Deploy"
+                actionTitle="Redeploy"
+                isEnvironmentDisabled={true}
               />
             </FormContextProvider>
           ) : (
@@ -98,4 +103,4 @@ const DeployModelVersionView = ({
   );
 };
 
-export default DeployModelVersionView;
+export default RedeployModelVersionView;

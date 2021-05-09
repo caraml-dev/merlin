@@ -17,7 +17,9 @@ export const PipelineStep = ({ stage }) => {
     data: {
       transformer: {
         config: {
-          [stage]: { inputs, transformations, outputs }
+          transformerConfig: {
+            [stage]: { inputs, transformations, outputs }
+          }
         }
       }
     },
@@ -34,8 +36,13 @@ export const PipelineStep = ({ stage }) => {
             <FeastProjectsContextProvider>
               <InputPanel
                 inputs={inputs}
-                onChangeHandler={onChange(`transformer.config.${stage}.inputs`)}
-                errors={get(errors, `transformer.config.${stage}.inputs`)}
+                onChangeHandler={onChange(
+                  `transformer.config.transformerConfig.${stage}.inputs`
+                )}
+                errors={get(
+                  errors,
+                  `transformer.config.transformerConfig.${stage}.inputs`
+                )}
               />
             </FeastProjectsContextProvider>
           </EuiFlexItem>
@@ -44,11 +51,11 @@ export const PipelineStep = ({ stage }) => {
             <TransformationPanel
               transformations={transformations}
               onChangeHandler={onChange(
-                `transformer.config.${stage}.transformations`
+                `transformer.config.transformerConfig.${stage}.transformations`
               )}
               errors={get(
                 errors,
-                `transformer.config.${stage}.transformations`
+                `transformer.config.transformerConfig.${stage}.transformations`
               )}
             />
           </EuiFlexItem>
@@ -56,8 +63,13 @@ export const PipelineStep = ({ stage }) => {
           <EuiFlexItem grow={false}>
             <OutputPanel
               outputs={outputs}
-              onChangeHandler={onChange(`transformer.config.${stage}.outputs`)}
-              errors={get(errors, `transformer.config.${stage}.outputs`)}
+              onChangeHandler={onChange(
+                `transformer.config.transformerConfig.${stage}.outputs`
+              )}
+              errors={get(
+                errors,
+                `transformer.config.transformerConfig.${stage}.outputs`
+              )}
             />
           </EuiFlexItem>
         </EuiFlexGroup>

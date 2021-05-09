@@ -15,7 +15,9 @@
  */
 
 import DeployModelVersionView from "./version/deploy/DeployModelVersionView";
+import RedeployModelVersionView from "./version/redeploy/RedeployModelVersionView";
 import Version from "./version/Version";
 
 export { DeployModelVersionView };
+export { RedeployModelVersionView };
 export { Version };

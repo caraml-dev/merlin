@@ -23,6 +23,14 @@ export class Config {
   constructor(transformerConfig) {
     this.transformerConfig = transformerConfig;
   }
+
+  static fromJson(json) {
+    const config = objectAssignDeep(new Config(), json);
+    config.transformerConfig = TransformerConfig.fromJson(
+      json.transformerConfig
+    );
+    return config;
+  }
 }
 
 export class TransformerConfig {
@@ -30,6 +38,48 @@ export class TransformerConfig {
     this.feast = feast;
     this.preprocess = new Pipeline();
     this.postprocess = new Pipeline();
+
+    this.toJSON = this.toJSON.bind(this);
+  }
+
+  static fromJson(json) {
+    const transformerConfig = objectAssignDeep(new TransformerConfig(), json);
+
+    transformerConfig.feast &&
+      transformerConfig.feast.forEach(feast => {
+        feast.entities &&
+          feast.entities.forEach(entity => {
+            if (entity.udf) {
+              entity["fieldType"] = "UDF";
+              entity["field"] = entity.udf;
+            } else {
+              entity["fieldType"] = "JSONPath";
+              entity["field"] = entity.jsonPath;
+            }
+          });
+      });
+
+    return transformerConfig;
+  }
+
+  toJSON() {
+    let obj = objectAssignDeep({}, this);
+
+    obj.feast &&
+      obj.feast.forEach(feast => {
+        feast.entities &&
+          feast.entities.forEach(entity => {
+            if (entity.fieldType === "UDF") {
+              entity["udf"] = entity.field;
+            } else {
+              entity["jsonPath"] = entity.field;
+            }
+            delete entity["fieldType"];
+            delete entity["field"];
+          });
+      });
+
+    return obj;
   }
 }
 
@@ -52,6 +102,12 @@ export class Pipeline {
         input.feast &&
           input.feast.forEach(feast => {
             delete feast["isTableNameEditable"];
+
+            input.feast.entities &&
+              input.feast.entities.forEach(entity => {
+                delete entity["fieldType"];
+                delete entity["field"];
+              });
           });
 
         input.tables &&
