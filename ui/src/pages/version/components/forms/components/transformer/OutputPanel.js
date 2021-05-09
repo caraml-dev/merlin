@@ -111,11 +111,14 @@ const mergePath = path => {
 export const OutputPanel = ({ outputs, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const [flattenedFields, setFlattenedFields] = useState(
-    flattenField(
-      outputs.length > 0 ? outputs[0].jsonOutput.jsonTemplate.fields : []
-    )
-  );
+  const [flattenedFields, setFlattenedFields] = useState([]);
+  useEffect(() => {
+    setFlattenedFields(
+      flattenField(
+        outputs.length > 0 ? outputs[0].jsonOutput.jsonTemplate.fields : []
+      )
+    );
+  }, [outputs]);
 
   useEffect(
     () => {

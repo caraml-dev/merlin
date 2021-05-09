@@ -29,9 +29,9 @@ export const DeployModelVersionForm = ({
 }) => {
   const { data: modelVersion } = useContext(FormContext);
 
-  // useEffect(() => {
-  //   console.log(JSON.stringify(modelVersion, null, 2));
-  // }, [modelVersion]);
+  useEffect(() => {
+    console.log(JSON.stringify(modelVersion, null, 2));
+  }, [modelVersion]);
 
   const [submissionResponse, submitForm] = useMerlinApi(
     `/models/${model.id}/versions/${version.id}/endpointasd`, // TODO: Use the correct endpoint once ready
@@ -57,21 +57,15 @@ export const DeployModelVersionForm = ({
   const onSubmit = () => submitForm({ body: JSON.stringify(modelVersion) });
 
   const mainSteps = [
-    // {
-    //   title: "Model",
-    //   children: <ModelStep />,
-    //   validationSchema: versionEndpointSchema
-    // },
-    // {
-    //   title: "Transformer",
-    //   children: <TransformerStep />,
-    //   validationSchema: transformerConfigSchema
-    // },
     {
-      title: "Preprocess",
-      children: <PipelineStep stage="preprocess" />,
-      validationSchema: preprocessTransformerSchema,
-      width: "100%"
+      title: "Model",
+      children: <ModelStep />,
+      validationSchema: versionEndpointSchema
+    },
+    {
+      title: "Transformer",
+      children: <TransformerStep />,
+      validationSchema: transformerConfigSchema
     }
   ];
 

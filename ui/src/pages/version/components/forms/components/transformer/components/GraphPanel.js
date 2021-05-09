@@ -1,51 +1,116 @@
 import React, { useContext, useEffect, useState } from "react";
 import DagreGraph from "dagre-d3-react";
 import { EuiSpacer } from "@elastic/eui";
-import { FormContext } from "@gojek/mlp-ui";
+import { FormContext, get } from "@gojek/mlp-ui";
 import { Panel } from "../../Panel";
 import "./GraphPanel.scss";
 
-const modelNodeId = "model";
+const MODEL_RESPONSE_PREFIX = "$.model_response";
 
 const modelServiceNode = {
-  id: modelNodeId,
+  id: "model-node",
   label: "Model Service",
   class: "modelServiceNode"
 };
 
-const addFeastInputNodes = (nodes, nodeMap, idx, feast, stage) => {
+const endNode = {
+  id: "end-node",
+  label: "End",
+  config: { shape: "circle" }
+};
+
+const addFeastInputNodesLinks = (nodes, links, nodeMap, idx, feast, stage) => {
   feast.forEach(feast => {
-    const id = `feast-input-${idx}`;
+    const id = `${stage}-feast-input-${idx}`;
     const tableName = feast.tableName;
+
     nodes.push({
       id: id,
       label: `#${idx + 1} - Feast Table\nOutput: ${tableName}`
     });
     nodeMap[tableName] = id;
+
+    if (stage === "postprocess") {
+      feast.entities.forEach(entity => {
+        if (
+          entity.fieldType === "JSONPath" &&
+          entity.field &&
+          entity.field.startsWith(MODEL_RESPONSE_PREFIX)
+        ) {
+          links.push({ source: modelServiceNode.id, target: id });
+        }
+      });
+    }
   });
 };
 
-const addGenericTableInputNodes = (nodes, nodeMap, idx, tables, stage) => {
+const addGenericTableInputNodesLinks = (
+  nodes,
+  links,
+  nodeMap,
+  idx,
+  tables,
+  stage
+) => {
   tables.forEach(table => {
-    const id = `table-input-${idx}`;
+    const id = `${stage}-table-input-${idx}`;
     const tableName = table.name;
+
     nodes.push({
       id: id,
       label: `#${idx + 1} - Generic Table\nOutput: ${tableName}`
     });
     nodeMap[tableName] = id;
+
+    if (stage === "postprocess") {
+      const jsonPath = get(table, "baseTable.fromJson.jsonPath");
+      if (
+        jsonPath !== undefined &&
+        jsonPath.startsWith(MODEL_RESPONSE_PREFIX)
+      ) {
+        links.push({ source: modelServiceNode.id, target: id });
+      }
+
+      get(table, "baseTable.fromTable") &&
+        table.columns &&
+        table.columns.forEach(column => {
+          if (
+            column.jsonPath !== undefined &&
+            column.jsonPath.startsWith(MODEL_RESPONSE_PREFIX)
+          ) {
+            links.push({ source: modelServiceNode.id, target: id });
+          }
+        });
+    }
   });
 };
 
-const addVariablesInputNodes = (nodes, nodeMap, idx, variables, stage) => {
-  const id = `variables-input-${idx}`;
+const addVariablesInputNodesLinks = (
+  nodes,
+  links,
+  nodeMap,
+  idx,
+  variables,
+  stage
+) => {
+  const id = `${stage}-variables-input-${idx}`;
   let vars = [];
+
   variables.forEach(variable => {
     if (variable.name !== undefined && variable.name !== "") {
       vars.push(variable.name);
       nodeMap[variable.name] = id;
     }
+
+    if (
+      stage === "postprocess" &&
+      variable.jsonPath !== undefined &&
+      variable.jsonPath.startsWith(MODEL_RESPONSE_PREFIX)
+    ) {
+      links.push({ source: modelServiceNode.id, target: id });
+    }
   });
+
   nodes.push({
     id: id,
     label: `#${idx + 1} - Variables\nOutput: ${vars.join(", ")}`
@@ -54,13 +119,13 @@ const addVariablesInputNodes = (nodes, nodeMap, idx, variables, stage) => {
 
 const addTableTransformationNodesLinks = (
   nodes,
-  nodeMap,
   links,
+  nodeMap,
   idx,
   tableTransformation,
   stage
 ) => {
-  const id = `table-transformation-${idx}`;
+  const id = `${stage}-table-transformation-${idx}`;
   const outputTable = tableTransformation.outputTable;
   const label = `#${idx + 1} - Table Transformation\nOutput: ${outputTable}`;
 
@@ -69,7 +134,6 @@ const addTableTransformationNodesLinks = (
     links.push({ source: nodeMap[sourceTable], target: id });
   }
 
-  // Link to variables
   tableTransformation.steps &&
     tableTransformation.steps.forEach(step => {
       step.updateColumns &&
@@ -94,13 +158,13 @@ const addTableTransformationNodesLinks = (
 
 const addTableJoinNodesLinks = (
   nodes,
-  nodeMap,
   links,
+  nodeMap,
   idx,
   tableJoin,
   stage
 ) => {
-  const id = `table-join-${idx}`;
+  const id = `${stage}-table-join-${idx}`;
   const outputTable = tableJoin.outputTable ? tableJoin.outputTable : "";
   const label = `#${idx + 1} - Table Join\nOutput: ${outputTable}`;
 
@@ -118,9 +182,11 @@ const addTableJoinNodesLinks = (
   nodeMap[outputTable] = id;
 };
 
-const addFieldLinks = (nodeMap, links, id, field, stage) => {
+const addFieldLinks = (links, nodeMap, id, field, stage) => {
   if (field.fields && field.fields.length > 0) {
-    field.fields.forEach(f => addFieldLinks(id, f));
+    field.fields.forEach(f => {
+      addFieldLinks(links, nodeMap, id, f, stage);
+    });
   }
 
   if (field.fromTable) {
@@ -139,17 +205,40 @@ const addFieldLinks = (nodeMap, links, id, field, stage) => {
     }
   }
 
-  links.push({ source: id, target: modelNodeId });
+  if (stage === "preprocess") {
+    links.push({ source: id, target: modelServiceNode.id });
+  } else if (stage === "postprocess") {
+    links.push({ source: id, target: endNode.id });
+
+    const jsonPath = get(field, "fromJson.jsonPath");
+    if (jsonPath !== undefined && jsonPath.startsWith(MODEL_RESPONSE_PREFIX)) {
+      links.push({ source: modelServiceNode.id, target: id });
+    }
+  }
 };
 
-const addPipelineNodesLinks = (nodes, nodeMap, links, config, stage) => {
+const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
   config[stage].inputs.forEach((input, idx) => {
     if (input.feast) {
-      addFeastInputNodes(nodes, nodeMap, idx, input.feast);
+      addFeastInputNodesLinks(nodes, links, nodeMap, idx, input.feast, stage);
     } else if (input.tables) {
-      addGenericTableInputNodes(nodes, nodeMap, idx, input.tables);
+      addGenericTableInputNodesLinks(
+        nodes,
+        links,
+        nodeMap,
+        idx,
+        input.tables,
+        stage
+      );
     } else if (input.variables) {
-      addVariablesInputNodes(nodes, nodeMap, idx, input.variables);
+      addVariablesInputNodesLinks(
+        nodes,
+        links,
+        nodeMap,
+        idx,
+        input.variables,
+        stage
+      );
     }
   });
 
@@ -157,44 +246,64 @@ const addPipelineNodesLinks = (nodes, nodeMap, links, config, stage) => {
     if (transformation.tableTransformation) {
       addTableTransformationNodesLinks(
         nodes,
-        nodeMap,
         links,
+        nodeMap,
         idx,
-        transformation.tableTransformation
+        transformation.tableTransformation,
+        stage
       );
     } else if (transformation.tableJoin) {
       addTableJoinNodesLinks(
         nodes,
-        nodeMap,
         links,
+        nodeMap,
         idx,
-        transformation.tableJoin
+        transformation.tableJoin,
+        stage
       );
     }
   });
 
-  config[stage].outputs.forEach((output, idx) => {
+  config[stage].outputs.forEach(output => {
     if (output.jsonOutput && output.jsonOutput.jsonTemplate) {
       const jsonTemplate = output.jsonOutput.jsonTemplate;
       if (jsonTemplate.baseJson) {
+        const id = `${stage}-output-base-json`;
         nodes.push({
-          id: "preprocess-output-base-json",
-          label: `Output Base JSON: ${jsonTemplate.baseJson.jsonPath}`
+          id: id,
+          label: `Output Base JSON:\n${jsonTemplate.baseJson.jsonPath}`
         });
-        links.push({
-          source: "preprocess-output-base-json",
-          target: modelNodeId
-        });
+
+        if (stage === "preprocess") {
+          links.push({
+            source: id,
+            target: modelServiceNode.id
+          });
+        } else if (stage === "postprocess") {
+          if (
+            jsonTemplate.baseJson.jsonPath !== undefined &&
+            jsonTemplate.baseJson.jsonPath.startsWith(MODEL_RESPONSE_PREFIX)
+          ) {
+            links.push({ source: modelServiceNode.id, target: id });
+            nodes.push(endNode);
+            links.push({ source: id, target: endNode.id });
+          }
+        }
       }
 
       if (jsonTemplate.fields) {
         jsonTemplate.fields.forEach((field, idx) => {
-          const id = `preprocess-output-field-${idx}`;
-          nodes.push({
-            id: id,
-            label: `Output Field: ${field.fieldName}`
-          });
-          addFieldLinks(nodeMap, links, id, field);
+          if (field && field.fieldName) {
+            const id = `${stage}-output-field-${idx}`;
+            nodes.push({
+              id: id,
+              label: `Output Field: ${field.fieldName}`
+            });
+            addFieldLinks(links, nodeMap, id, field, stage);
+            if (stage === "postprocess") {
+              nodes.push(endNode);
+            }
+          }
         });
       }
     }
@@ -214,11 +323,9 @@ export const GraphPanel = () => {
         links = [];
       let nodeMap = {};
 
-      // Preprocess
-      addPipelineNodesLinks(nodes, nodeMap, links, config, "preprocess");
-
-      // Model service node
+      addPipelineNodesLinks(nodes, links, nodeMap, config, "preprocess");
       nodes.push(modelServiceNode);
+      addPipelineNodesLinks(nodes, links, nodeMap, config, "postprocess");
 
       setGraphData({ nodes, links });
     }

@@ -1,5 +1,5 @@
-import React, { useContext, useEffect } from "react";
-import { EuiFlexGroup, EuiFlexItem, EuiText } from "@elastic/eui";
+import React, { useContext } from "react";
+import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import {
   FormContext,
   FormValidationContext,
@@ -25,10 +25,6 @@ export const PipelineStep = ({ stage }) => {
   } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
-
-  // useEffect(() => {
-  //   console.log("errors", JSON.stringify(errors, null, 2));
-  // }, [errors]);
 
   return (
     <EuiFlexGroup className="KELAS">
