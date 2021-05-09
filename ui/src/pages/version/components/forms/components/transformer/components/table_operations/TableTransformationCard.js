@@ -8,8 +8,8 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { DraggableHeader } from "../../DraggableHeader";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
+import { DraggableHeader } from "../../../DraggableHeader";
 import { TableTransformationStepPanel } from "./TableTransformationStepPanel";
 
 export const TableTransformationCard = ({

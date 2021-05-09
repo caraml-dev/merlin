@@ -9,8 +9,8 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { DraggableHeader } from "../../DraggableHeader";
-import { SelectJsonFormat } from "./table_outpus/SelectJsonFormat";
+import { DraggableHeader } from "../../../DraggableHeader";
+import { SelectJsonFormat } from "./SelectJsonFormat";
 
 export const JsonOutputFieldCard = ({
   index = 0,

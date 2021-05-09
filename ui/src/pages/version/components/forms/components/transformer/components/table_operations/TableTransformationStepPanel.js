@@ -9,9 +9,9 @@ import {
   EuiSpacer
 } from "@elastic/eui";
 import { get, useOnChangeHandler } from "@gojek/mlp-ui";
-import { AddButton } from "./AddButton";
+import { AddButton } from "../AddButton";
 import { TableTransformationStepCard } from "./TableTransformationStepCard";
-import { Panel } from "../../Panel";
+import { Panel } from "../../../Panel";
 
 export const TableTransformationStepPanel = ({
   steps,

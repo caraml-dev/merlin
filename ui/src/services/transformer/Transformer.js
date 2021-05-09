@@ -1,6 +1,7 @@
 import {
   Config,
-  STANDARD_TRANSFORMER_CONFIG_ENV_NAME
+  STANDARD_TRANSFORMER_CONFIG_ENV_NAME,
+  TransformerConfig
 } from "./TransformerConfig";
 
 const objectAssignDeep = require(`object-assign-deep`);
@@ -27,7 +28,8 @@ export class Transformer {
 
     this.env_vars = [];
 
-    this.config = undefined; // TransformerConfig
+    // this.config = undefined; // TransformerConfig
+    this.config = new TransformerConfig(); // TODO: Use above. Not this one.
 
     this.created_at = undefined;
     this.updated_at = undefined;

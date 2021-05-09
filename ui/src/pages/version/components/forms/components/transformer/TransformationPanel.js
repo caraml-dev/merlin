@@ -8,15 +8,15 @@ import {
   EuiFlexItem,
   EuiSpacer
 } from "@elastic/eui";
+import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "../Panel";
 import { AddButton } from "./components/AddButton";
+import { TableJoinCard } from "./components/table_operations/TableJoinCard";
+import { TableTransformationCard } from "./components/table_operations/TableTransformationCard";
 import {
   TableJoin,
   TableTransformation
 } from "../../../../../../services/transformer/TransformerConfig";
-import { TableJoinCard } from "./components/TableJoinCard";
-import { TableTransformationCard } from "./components/TableTransformationCard";
-import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const TransformationPanel = ({
   transformations,

@@ -8,12 +8,12 @@ import {
   EuiText
 } from "@elastic/eui";
 import { get, useOnChangeHandler } from "@gojek/mlp-ui";
-import { DraggableHeader } from "../../DraggableHeader";
-import { SelectTableOperation } from "./table_operations/SelectTableOperation";
-import { ColumnsComboBox } from "./table_operations/ColumnsComboBox";
-import { RenameColumns } from "./table_operations/RenameColumns";
-import { SortColumns } from "./table_operations/SortColumns";
-import { UpdateColumns } from "./table_operations/UpdateColumns";
+import { DraggableHeader } from "../../../DraggableHeader";
+import { ColumnsComboBox } from "./ColumnsComboBox";
+import { RenameColumns } from "./RenameColumns";
+import { SelectTableOperation } from "./SelectTableOperation";
+import { SortColumns } from "./SortColumns";
+import { UpdateColumns } from "./UpdateColumns";
 
 export const TableTransformationStepCard = ({
   index = 0,
@@ -24,7 +24,6 @@ export const TableTransformationStepCard = ({
   ...props
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
-
   return (
     <EuiPanel>
       <DraggableHeader

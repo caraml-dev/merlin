@@ -9,8 +9,8 @@ import {
   EuiText
 } from "@elastic/eui";
 import { useOnChangeHandler } from "@gojek/mlp-ui";
-import { DraggableHeader } from "../../DraggableHeader";
-import { SelectTableJoin } from "./table_operations/SelectTableJoin";
+import { DraggableHeader } from "../../../DraggableHeader";
+import { SelectTableJoin } from "./SelectTableJoin";
 
 export const TableJoinCard = ({
   index = 0,
