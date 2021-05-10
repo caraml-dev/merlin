@@ -216,96 +216,103 @@ const addFieldLinks = (links, nodeMap, id, field, stage) => {
 };
 
 const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
-  config[stage].inputs.forEach((input, idx) => {
-    if (input.feast) {
-      addFeastInputNodesLinks(nodes, links, nodeMap, idx, input.feast, stage);
-    } else if (input.tables) {
-      addGenericTableInputNodesLinks(
-        nodes,
-        links,
-        nodeMap,
-        idx,
-        input.tables,
-        stage
-      );
-    } else if (input.variables) {
-      addVariablesInputNodesLinks(
-        nodes,
-        links,
-        nodeMap,
-        idx,
-        input.variables,
-        stage
-      );
-    }
-  });
+  if (!config[stage]) {
+    return;
+  }
 
-  config[stage].transformations.forEach((transformation, idx) => {
-    if (transformation.tableTransformation) {
-      addTableTransformationNodesLinks(
-        nodes,
-        links,
-        nodeMap,
-        idx,
-        transformation.tableTransformation,
-        stage
-      );
-    } else if (transformation.tableJoin) {
-      addTableJoinNodesLinks(
-        nodes,
-        links,
-        nodeMap,
-        idx,
-        transformation.tableJoin,
-        stage
-      );
-    }
-  });
-
-  config[stage].outputs.forEach(output => {
-    if (output.jsonOutput && output.jsonOutput.jsonTemplate) {
-      const jsonTemplate = output.jsonOutput.jsonTemplate;
-      if (jsonTemplate.baseJson) {
-        const id = `${stage}-output-base-json`;
-        nodes.push({
-          id: id,
-          label: `Output Base JSON:\n${jsonTemplate.baseJson.jsonPath}`
-        });
-
-        if (stage === "preprocess") {
-          links.push({
-            source: id,
-            target: modelServiceNode.id
-          });
-        } else if (stage === "postprocess") {
-          if (
-            jsonTemplate.baseJson.jsonPath !== undefined &&
-            jsonTemplate.baseJson.jsonPath.startsWith(MODEL_RESPONSE_PREFIX)
-          ) {
-            links.push({ source: modelServiceNode.id, target: id });
-            nodes.push(endNode);
-            links.push({ source: id, target: endNode.id });
-          }
-        }
+  config[stage].inputs &&
+    config[stage].inputs.forEach((input, idx) => {
+      if (input.feast) {
+        addFeastInputNodesLinks(nodes, links, nodeMap, idx, input.feast, stage);
+      } else if (input.tables) {
+        addGenericTableInputNodesLinks(
+          nodes,
+          links,
+          nodeMap,
+          idx,
+          input.tables,
+          stage
+        );
+      } else if (input.variables) {
+        addVariablesInputNodesLinks(
+          nodes,
+          links,
+          nodeMap,
+          idx,
+          input.variables,
+          stage
+        );
       }
+    });
 
-      if (jsonTemplate.fields) {
-        jsonTemplate.fields.forEach((field, idx) => {
-          if (field && field.fieldName) {
-            const id = `${stage}-output-field-${idx}`;
-            nodes.push({
-              id: id,
-              label: `Output Field: ${field.fieldName}`
+  config[stage].transformations &&
+    config[stage].transformations.forEach((transformation, idx) => {
+      if (transformation.tableTransformation) {
+        addTableTransformationNodesLinks(
+          nodes,
+          links,
+          nodeMap,
+          idx,
+          transformation.tableTransformation,
+          stage
+        );
+      } else if (transformation.tableJoin) {
+        addTableJoinNodesLinks(
+          nodes,
+          links,
+          nodeMap,
+          idx,
+          transformation.tableJoin,
+          stage
+        );
+      }
+    });
+
+  config[stage].outputs &&
+    config[stage].outputs.forEach(output => {
+      if (output.jsonOutput && output.jsonOutput.jsonTemplate) {
+        const jsonTemplate = output.jsonOutput.jsonTemplate;
+        if (jsonTemplate.baseJson) {
+          const id = `${stage}-output-base-json`;
+          nodes.push({
+            id: id,
+            label: `Output Base JSON:\n${jsonTemplate.baseJson.jsonPath}`
+          });
+
+          if (stage === "preprocess") {
+            links.push({
+              source: id,
+              target: modelServiceNode.id
             });
-            addFieldLinks(links, nodeMap, id, field, stage);
-            if (stage === "postprocess") {
+          } else if (stage === "postprocess") {
+            if (
+              jsonTemplate.baseJson.jsonPath !== undefined &&
+              jsonTemplate.baseJson.jsonPath.startsWith(MODEL_RESPONSE_PREFIX)
+            ) {
+              links.push({ source: modelServiceNode.id, target: id });
               nodes.push(endNode);
+              links.push({ source: id, target: endNode.id });
             }
           }
-        });
+        }
+
+        if (jsonTemplate.fields) {
+          jsonTemplate.fields.forEach((field, idx) => {
+            if (field && field.fieldName) {
+              const id = `${stage}-output-field-${idx}`;
+              nodes.push({
+                id: id,
+                label: `Output Field: ${field.fieldName}`
+              });
+              addFieldLinks(links, nodeMap, id, field, stage);
+              if (stage === "postprocess") {
+                nodes.push(endNode);
+              }
+            }
+          });
+        }
       }
-    }
-  });
+    });
 };
 
 export const TransformationGraph = () => {

@@ -6,14 +6,14 @@ import { TransformationSpec } from "./components/TransformationSpec";
 export const PipelineSidebarPanel = () => {
   const tabs = [
     {
-      id: "graph-panel",
-      name: "Transformation Graph",
-      content: <TransformationGraph />
-    },
-    {
       id: "spec-panel",
       name: "YAML Specification",
       content: <TransformationSpec />
+    },
+    {
+      id: "graph-panel",
+      name: "Transformation Graph",
+      content: <TransformationGraph />
     }
   ];
 

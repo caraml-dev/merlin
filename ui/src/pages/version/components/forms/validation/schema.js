@@ -78,7 +78,7 @@ const feastFeaturesSchema = yup.object().shape({
   name: yup.string().required("Feature Name is required")
 });
 
-const feastInputSchema = yup.object().shape({
+export const feastInputSchema = yup.object().shape({
   tableName: yup.string().when("isTableNameEditable", {
     is: true,
     then: yup.string().required("Table name is required")
@@ -194,16 +194,13 @@ const outputPipelineSchema = yup.object().shape({
   })
 });
 
-const pipelineSchema = yup.object().shape({
-  inputs: yup
-    .array(inputPipelineSchema)
-    .required("One of inputs should be specified"),
-  transformations: yup
-    .array(transformationPipelineSchema)
-    .required("One of transformations should be specified"),
-  outputs: yup
-    .array(outputPipelineSchema)
-    .required("One of outputs should be specified")
+export const pipelineSchema = yup.object().shape({
+  inputs: yup.array(inputPipelineSchema),
+  // .required("One of inputs should be specified"),
+  transformations: yup.array(transformationPipelineSchema),
+  // .required("One of transformations should be specified"),
+  outputs: yup.array(outputPipelineSchema)
+  // .required("One of outputs should be specified")
 });
 
 export const customTransformerSchema = yup.object().shape({

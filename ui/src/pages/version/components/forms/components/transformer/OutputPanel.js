@@ -108,17 +108,26 @@ const mergePath = path => {
   return '"' + path.join('"."') + '"';
 };
 
-export const OutputPanel = ({ outputs, onChangeHandler, errors = {} }) => {
+export const OutputPanel = ({ outputs = [], onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const [flattenedFields, setFlattenedFields] = useState([]);
-  useEffect(() => {
-    setFlattenedFields(
-      flattenField(
-        outputs.length > 0 ? outputs[0].jsonOutput.jsonTemplate.fields : []
-      )
-    );
-  }, [outputs]);
+  useEffect(
+    () => {
+      if (outputs.length > 0) {
+        const newFlattenedFields = flattenField(
+          outputs[0].jsonOutput.jsonTemplate.fields
+        );
+        if (
+          JSON.stringify(flattenedFields) !== JSON.stringify(newFlattenedFields)
+        ) {
+          setFlattenedFields(newFlattenedFields);
+        }
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [outputs]
+  );
 
   useEffect(
     () => {

@@ -19,7 +19,7 @@ import {
 } from "../../../../../../services/transformer/TransformerConfig";
 
 export const TransformationPanel = ({
-  transformations,
+  transformations = [],
   onChangeHandler,
   errors = {}
 }) => {

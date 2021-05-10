@@ -20,7 +20,7 @@ import {
 } from "../../../../../../services/transformer/TransformerConfig";
 import { FeastResourcesContextProvider } from "../../../../../../providers/feast/FeastResourcesContext";
 
-export const InputPanel = ({ inputs, onChangeHandler, errors = {} }) => {
+export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const onAddInput = (field, input) => {

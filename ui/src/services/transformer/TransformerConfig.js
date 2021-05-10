@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+import * as yup from "yup";
+import {
+  feastInputSchema,
+  pipelineSchema
+} from "../../pages/version/components/forms/validation/schema";
+
 const objectAssignDeep = require(`object-assign-deep`);
 
 export const STANDARD_TRANSFORMER_CONFIG_ENV_NAME =
@@ -34,7 +40,35 @@ export class Config {
     config.transformerConfig = TransformerConfig.fromJson(
       json.transformerConfig
     );
+
+    if (!config.transformerConfig.preprocess) {
+      config.transformerConfig.preprocess = new Pipeline();
+    }
+    if (!config.transformerConfig.postprocess) {
+      config.transformerConfig.postprocess = new Pipeline();
+    }
+
     return config;
+  }
+
+  validate() {
+    let obj = objectAssignDeep({}, this);
+    if (obj.feast) {
+      if (!yup.array(feastInputSchema).isValidSync(obj.feast)) {
+        return false;
+      }
+    }
+    if (obj.preprocess) {
+      if (!pipelineSchema.isValidSync(obj.preprocess)) {
+        return false;
+      }
+    }
+    if (obj.postprocess) {
+      if (!pipelineSchema.isValidSync(obj.postprocess)) {
+        return false;
+      }
+    }
+    return true;
   }
 }
 
@@ -63,6 +97,18 @@ export class TransformerConfig {
             }
           });
       });
+
+    if (transformerConfig.preprocess) {
+      transformerConfig.preprocess = Pipeline.fromJson(
+        transformerConfig.preprocess
+      );
+    }
+
+    if (transformerConfig.postprocess) {
+      transformerConfig.postprocess = Pipeline.fromJson(
+        transformerConfig.postprocess
+      );
+    }
 
     return transformerConfig;
   }
@@ -95,6 +141,69 @@ export class Pipeline {
     this.outputs = [];
 
     this.toJSON = this.toJSON.bind(this);
+  }
+
+  static fromJson(json) {
+    const pipeline = objectAssignDeep(new Pipeline(), json);
+
+    pipeline.inputs.forEach(input => {
+      input.variables &&
+        input.variables.forEach(variable => {
+          if (variable.jsonPath !== undefined && variable.jsonPath !== "") {
+            variable["type"] = "jsonpath";
+            variable["value"] = variable.jsonPath;
+          } else if (
+            variable.expression !== undefined &&
+            variable.expression !== ""
+          ) {
+            variable["type"] = "expression";
+            variable["value"] = variable.expression;
+          } else if (variable.literal) {
+            if (
+              variable.literal.stringValue !== undefined &&
+              variable.literal.stringValue !== ""
+            ) {
+              variable["type"] = "string";
+              variable["value"] = variable.literal.stringValue;
+            } else if (
+              variable.literal.intValue !== undefined &&
+              variable.literal.intValue !== 0
+            ) {
+              variable["type"] = "int";
+              variable["value"] = variable.literal.intValue;
+            } else if (
+              variable.literal.floatValue !== undefined &&
+              variable.literal.floatValue !== 0
+            ) {
+              variable["type"] = "float";
+              variable["value"] = variable.literal.floatValue;
+            } else if (variable.literal.boolValue !== undefined) {
+              variable["type"] = "bool";
+              variable["value"] = variable.literal.boolValue;
+            }
+          }
+        });
+    });
+
+    pipeline.transformations.forEach(transformation => {
+      transformation.tableTransformation &&
+        transformation.tableTransformation.steps &&
+        transformation.tableTransformation.steps.forEach(step => {
+          if (step.dropColumns !== undefined) {
+            step["operation"] = "dropColumns";
+          } else if (step.renameColumns !== undefined) {
+            step["operation"] = "renameColumns";
+          } else if (step.selectColumns !== undefined) {
+            step["operation"] = "selectColumns";
+          } else if (step.sort !== undefined) {
+            step["operation"] = "sort";
+          } else if (step.updateColumns !== undefined) {
+            step["operation"] = "updateColumns";
+          }
+        });
+    });
+
+    return pipeline;
   }
 
   toJSON() {
@@ -136,7 +245,16 @@ export class Pipeline {
 
     if (obj.transformations.length === 0) {
       delete obj["transformations"];
+    } else {
+      obj.transformations.forEach(transformation => {
+        transformation.tableTransformation &&
+          transformation.tableTransformation.steps &&
+          transformation.tableTransformation.steps.forEach(step => {
+            delete step["operation"];
+          });
+      });
     }
+
     if (obj.outputs.length === 0) {
       delete obj["outputs"];
     }
