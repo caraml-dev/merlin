@@ -187,12 +187,14 @@ const addFieldLinks = (links, nodeMap, id, field, stage) => {
     });
   }
 
-  if (field.fromTable) {
-    if (field.fromTable.tableName && field.fromTable.tableName !== "") {
-      let tableName = field.fromTable.tableName;
-      if (nodeMap.hasOwnProperty(tableName)) {
-        links.push({ source: nodeMap[tableName], target: id });
-      }
+  if (
+    field.fromTable &&
+    field.fromTable.tableName &&
+    field.fromTable.tableName !== ""
+  ) {
+    let tableName = field.fromTable.tableName;
+    if (nodeMap.hasOwnProperty(tableName)) {
+      links.push({ source: nodeMap[tableName], target: id });
     }
   }
 

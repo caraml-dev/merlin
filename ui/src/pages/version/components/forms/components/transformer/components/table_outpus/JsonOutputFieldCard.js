@@ -112,12 +112,7 @@ export const JsonOutputFieldCard = ({
 
         {field.fromJson && (
           <EuiFlexItem>
-            <EuiFormRow
-              label="JSONPath *"
-              // isInvalid={!!errors.name}
-              // error={errors.name}
-              display="columnCompressed"
-              fullWidth>
+            <EuiFormRow label="JSONPath *" display="columnCompressed" fullWidth>
               <Fragment>
                 <EuiFieldText
                   placeholder="JSONPath"
@@ -128,7 +123,6 @@ export const JsonOutputFieldCard = ({
                       fromJson: { jsonPath: e.target.value }
                     })
                   }
-                  // isInvalid={!!errors.name}
                   name={`json-path-${index}`}
                   fullWidth
                 />
@@ -143,8 +137,6 @@ export const JsonOutputFieldCard = ({
           <EuiFlexItem>
             <EuiFormRow
               label="Source Table Name *"
-              // isInvalid={!!errors.name}
-              // error={errors.name}
               display="columnCompressed"
               fullWidth>
               <Fragment>
@@ -160,7 +152,6 @@ export const JsonOutputFieldCard = ({
                       }
                     })
                   }
-                  // isInvalid={!!errors.name}
                   name={`field-from-table-${index}`}
                   fullWidth
                 />
@@ -189,8 +180,6 @@ export const JsonOutputFieldCard = ({
           <EuiFlexItem>
             <EuiFormRow
               label="Expression *"
-              // isInvalid={!!errors.name}
-              // error={errors.name}
               display="columnCompressed"
               fullWidth>
               <Fragment>
@@ -200,7 +189,6 @@ export const JsonOutputFieldCard = ({
                   onChange={e =>
                     onChange(index, { ...field, expression: e.target.value })
                   }
-                  // isInvalid={!!errors.name}
                   name={`field-expression-${index}`}
                   fullWidth
                 />

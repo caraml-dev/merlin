@@ -66,6 +66,12 @@ const isOptionDisabled = endpoint => {
   );
 };
 
+const getEndpointByEnvironment = (version, environmentName) => {
+  return version.endpoints.find(ve => {
+    return ve.environment_name === environmentName;
+  });
+};
+
 export const EnvironmentPanel = ({
   environment,
   version,
@@ -76,11 +82,9 @@ export const EnvironmentPanel = ({
   const environments = useContext(EnvironmentsContext);
 
   const environmentOptions = sortBy(environments, "name").map(environment => {
-    const versionEndpoint = version.endpoints.find(ve => {
-      return ve.environment_name === environment.name;
-    });
-
+    const versionEndpoint = getEndpointByEnvironment(version, environment.name);
     const isDisabled = isOptionDisabled(versionEndpoint);
+
     return {
       value: environment.name,
       disabled: isDisabled,
@@ -99,12 +103,10 @@ export const EnvironmentPanel = ({
   const onEnvironmentChange = value => {
     onChange("environment_name")(value);
 
-    const existingEndpoint = version.endpoints.find(
-      e => e.environment_name === value
-    );
-    if (existingEndpoint) {
-      Object.keys(existingEndpoint).forEach(key => {
-        onChange(key)(existingEndpoint[key]);
+    const versionEndpoint = getEndpointByEnvironment(version, value);
+    if (versionEndpoint) {
+      Object.keys(versionEndpoint).forEach(key => {
+        onChange(key)(versionEndpoint[key]);
       });
     }
   };

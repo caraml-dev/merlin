@@ -51,7 +51,7 @@ export const DockerDeploymentPanel = ({
         <EuiSpacer size="m" />
 
         <EuiFlexGroup direction="column" gutterSize="m">
-          <EuiFlexItem grow={1}>
+          <EuiFlexItem>
             <EuiFormRow
               label={
                 <FormLabelWithToolTip
@@ -72,7 +72,7 @@ export const DockerDeploymentPanel = ({
             </EuiFormRow>
           </EuiFlexItem>
 
-          <EuiFlexItem grow={1}>
+          <EuiFlexItem>
             <EuiFormRow
               label={
                 <FormLabelWithToolTip

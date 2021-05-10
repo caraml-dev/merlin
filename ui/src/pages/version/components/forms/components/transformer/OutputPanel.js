@@ -19,7 +19,7 @@ import {
 } from "../../../../../../services/transformer/TransformerConfig";
 
 const expandFields = flattenField => {
-  let temp = [];
+  let fields = [];
 
   flattenField.forEach(f => {
     if (f.fieldName === undefined) {
@@ -32,10 +32,10 @@ const expandFields = flattenField => {
       fieldName: nameSegments[nameSegments.length - 1]
     };
 
-    temp = setValue(temp, nameSegments, newField);
+    fields = generateOutputFields(fields, nameSegments, newField);
   });
 
-  return temp;
+  return fields;
 };
 
 const splitName = name => {
@@ -49,7 +49,7 @@ const splitName = name => {
   );
 };
 
-const setValue = (fields, nameSegment, fieldValue) => {
+const generateOutputFields = (fields, nameSegment, fieldValue) => {
   if (nameSegment.length <= 1) {
     fields.push({ ...fieldValue, fields: [] });
     return fields;
@@ -64,7 +64,7 @@ const setValue = (fields, nameSegment, fieldValue) => {
     fields.push(field);
   }
 
-  setValue(field.fields, nameSegment.slice(1), fieldValue);
+  generateOutputFields(field.fields, nameSegment.slice(1), fieldValue);
   return fields;
 };
 
