@@ -53,8 +53,13 @@ export class VersionEndpoint {
       );
     }
 
-    versionEndpoint.transformer = Transformer.fromJson(json.transformer);
-    versionEndpoint.logger = Logger.fromJson(json.logger);
+    if (json.transformer) {
+      versionEndpoint.transformer = Transformer.fromJson(json.transformer);
+    }
+
+    if (json.logger) {
+      versionEndpoint.logger = Logger.fromJson(json.logger);
+    }
 
     return versionEndpoint;
   }

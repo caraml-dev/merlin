@@ -33,10 +33,6 @@ export const DeployModelVersionForm = ({
   const { data: versionEndpoint } = useContext(FormContext);
 
   useEffect(() => {
-    console.log(JSON.stringify(versionEndpoint, null, 2));
-  }, [versionEndpoint]);
-
-  useEffect(() => {
     if (submissionResponse.isLoaded && !submissionResponse.error) {
       addToast({
         id: "submit-success-deploy",
