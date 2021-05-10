@@ -9,12 +9,11 @@ import {
   EuiToolTip
 } from "@elastic/eui";
 import { FormContext, useOnChangeHandler } from "@gojek/mlp-ui";
-import "./TransformationSpec.scss";
 import { Config } from "../../../../../../../services/transformer/TransformerConfig";
 
 const yaml = require("js-yaml");
 
-export const TransformationSpec = () => {
+export const TransformationSpec = ({ importEnabled = true }) => {
   const {
     data: {
       transformer: { config }
@@ -49,32 +48,35 @@ export const TransformationSpec = () => {
           fontSize="s"
           paddingSize="s"
           overflowHeight={640}
+          style={{ maxWidth: 480 }}
           isCopyable>
           {config && yaml.dump(JSON.parse(JSON.stringify(config)))}
         </EuiCodeBlock>
       </EuiFlexItem>
 
-      <EuiFlexItem>
-        <EuiFormRow
-          label={
-            <EuiToolTip content="This is beta feature. Proceed with caution 😉">
-              <span>
-                Import <EuiIcon type="questionInCircle" color="subdued" />
-              </span>
-            </EuiToolTip>
-          }
-          display="row"
-          fullWidth>
-          <EuiFilePicker
-            initialPromptText="Import Transformer YAML Specification"
-            onChange={files => {
-              onFilePickerChange(files);
-            }}
-            compressed
-            fullWidth
-          />
-        </EuiFormRow>
-      </EuiFlexItem>
+      {importEnabled && (
+        <EuiFlexItem>
+          <EuiFormRow
+            label={
+              <EuiToolTip content="This is beta feature. Proceed with caution 😉">
+                <span>
+                  Import <EuiIcon type="questionInCircle" color="subdued" />
+                </span>
+              </EuiToolTip>
+            }
+            display="row"
+            fullWidth>
+            <EuiFilePicker
+              initialPromptText="Import Transformer YAML Specification"
+              onChange={files => {
+                onFilePickerChange(files);
+              }}
+              compressed
+              fullWidth
+            />
+          </EuiFormRow>
+        </EuiFlexItem>
+      )}
     </EuiFlexGroup>
   );
 };

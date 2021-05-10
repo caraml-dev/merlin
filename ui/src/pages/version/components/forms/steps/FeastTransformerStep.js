@@ -32,7 +32,7 @@ export const FeastTransformerStep = () => {
           <EuiFlexItem grow={false}>
             <FeastProjectsContextProvider>
               <FeastEnricherPanel
-                feastConfig={feast}
+                feastConfig={feast || []}
                 onChangeHandler={onChange(
                   "transformer.config.transformerConfig.feast"
                 )}

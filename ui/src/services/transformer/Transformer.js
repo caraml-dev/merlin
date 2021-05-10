@@ -85,9 +85,9 @@ export class Transformer {
     }
 
     // Remove properties for optional fields, if not relevant
-    // delete obj["type_on_ui"];
+    delete obj["type_on_ui"];
     if (obj.config) {
-      // delete obj["config"];
+      delete obj["config"];
     }
 
     return obj;

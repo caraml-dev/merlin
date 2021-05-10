@@ -114,15 +114,13 @@ export const OutputPanel = ({ outputs = [], onChangeHandler, errors = {} }) => {
   const [flattenedFields, setFlattenedFields] = useState([]);
   useEffect(
     () => {
-      if (outputs.length > 0) {
-        const newFlattenedFields = flattenField(
-          outputs[0].jsonOutput.jsonTemplate.fields
-        );
-        if (
-          JSON.stringify(flattenedFields) !== JSON.stringify(newFlattenedFields)
-        ) {
-          setFlattenedFields(newFlattenedFields);
-        }
+      const newFlattenedFields = flattenField(
+        outputs.length > 0 ? outputs[0].jsonOutput.jsonTemplate.fields : []
+      );
+      if (
+        JSON.stringify(flattenedFields) !== JSON.stringify(newFlattenedFields)
+      ) {
+        setFlattenedFields(newFlattenedFields);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

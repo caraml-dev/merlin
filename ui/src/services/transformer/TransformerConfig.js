@@ -91,7 +91,7 @@ export class TransformerConfig {
             if (entity.udf) {
               entity["fieldType"] = "UDF";
               entity["field"] = entity.udf;
-            } else {
+            } else if (entity.jsonPath) {
               entity["fieldType"] = "JSONPath";
               entity["field"] = entity.jsonPath;
             }
@@ -147,6 +147,20 @@ export class Pipeline {
     const pipeline = objectAssignDeep(new Pipeline(), json);
 
     pipeline.inputs.forEach(input => {
+      input.feast &&
+        input.feast.forEach(feast => {
+          feast.entities &&
+            feast.entities.forEach(entity => {
+              if (entity.udf) {
+                entity["fieldType"] = "UDF";
+                entity["field"] = entity.udf;
+              } else if (entity.jsonPath) {
+                entity["fieldType"] = "JSONPath";
+                entity["field"] = entity.jsonPath;
+              }
+            });
+        });
+
       input.variables &&
         input.variables.forEach(variable => {
           if (variable.jsonPath !== undefined && variable.jsonPath !== "") {
@@ -217,8 +231,13 @@ export class Pipeline {
           input.feast.forEach(feast => {
             delete feast["isTableNameEditable"];
 
-            input.feast.entities &&
-              input.feast.entities.forEach(entity => {
+            feast.entities &&
+              feast.entities.forEach(entity => {
+                if (entity.fieldType === "UDF") {
+                  entity["udf"] = entity.field;
+                } else {
+                  entity["jsonPath"] = entity.field;
+                }
                 delete entity["fieldType"];
                 delete entity["field"];
               });

@@ -16,7 +16,7 @@
 
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { EuiCodeBlock, EuiFlexGroup, EuiFlexItem, EuiText } from "@elastic/eui";
+import { EuiFlexGroup, EuiFlexItem, EuiText, EuiSpacer } from "@elastic/eui";
 import {
   ConfigSection,
   ConfigSectionPanel,
@@ -29,8 +29,9 @@ import {
   Config,
   STANDARD_TRANSFORMER_CONFIG_ENV_NAME
 } from "../../services/transformer/TransformerConfig";
-
-const yaml = require("js-yaml");
+import { FormContextProvider } from "@gojek/mlp-ui";
+import { PipelineSidebarPanel } from "./components/forms/components/transformer/PipelineSidebarPanel";
+import { VersionEndpoint } from "../../services/version_endpoint/VersionEndpoint";
 
 const isCustomTransformer = transformer => {
   return (
@@ -72,20 +73,6 @@ export const TransformerServicePanel = ({ endpoint }) => {
                 <ContainerConfigTable config={endpoint.transformer} />
               </EuiFlexItem>
 
-              {!isCustomTransformer(endpoint.transformer) &&
-                standardTransformerConfig && (
-                  <EuiFlexItem>
-                    <ConfigSectionPanelTitle title="Standard Transformer Configuration" />
-                    <EuiCodeBlock
-                      language="yaml"
-                      fontSize="m"
-                      paddingSize="m"
-                      isCopyable>
-                      {yaml.dump(standardTransformerConfig)}
-                    </EuiCodeBlock>
-                  </EuiFlexItem>
-                )}
-
               {endpoint.transformer.env_vars && (
                 <EuiFlexItem>
                   <ConfigSectionPanelTitle title="Environment Variables" />
@@ -109,6 +96,20 @@ export const TransformerServicePanel = ({ endpoint }) => {
             )}
           </ConfigSectionPanel>
         </EuiFlexItem>
+      </EuiFlexGroup>
+
+      <EuiSpacer size="l" />
+
+      <EuiFlexGroup>
+        <EuiFlexItem grow={3}>
+          {!isCustomTransformer(endpoint.transformer) &&
+            standardTransformerConfig && (
+              <FormContextProvider data={VersionEndpoint.fromJson(endpoint)}>
+                <PipelineSidebarPanel importEnabled={false} />
+              </FormContextProvider>
+            )}
+        </EuiFlexItem>
+        <EuiFlexItem grow={1}></EuiFlexItem>
       </EuiFlexGroup>
     </ConfigSection>
   );

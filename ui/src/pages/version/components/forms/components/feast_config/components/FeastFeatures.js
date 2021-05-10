@@ -127,7 +127,6 @@ export const FeastFeatures = ({
       width: "60%",
       render: (value, item) => (
         <EuiComboBox
-          fullWidth
           singleSelection={{ asPlainText: true }}
           isClearable={false}
           placeholder="Feature Name"
@@ -148,7 +147,6 @@ export const FeastFeatures = ({
       render: (value, item) => (
         <EuiFieldText
           controlOnly
-          fullWidth
           placeholder="Default Value"
           value={value || ""}
           onChange={onChangeRow(item.idx, "defaultValue")}
@@ -194,6 +192,7 @@ export const FeastFeatures = ({
       hasActions={true}
       errors={errors}
       renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
+      className={""}
     />
   );
 };

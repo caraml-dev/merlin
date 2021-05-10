@@ -260,6 +260,7 @@ export const FeastEntities = ({
       hasActions={true}
       errors={errors}
       renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
+      className={""}
     />
   );
 };

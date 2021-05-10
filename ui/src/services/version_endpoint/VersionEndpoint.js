@@ -54,6 +54,8 @@ export class VersionEndpoint {
     }
 
     versionEndpoint.transformer = Transformer.fromJson(json.transformer);
+    versionEndpoint.logger = Logger.fromJson(json.logger);
+
     return versionEndpoint;
   }
 

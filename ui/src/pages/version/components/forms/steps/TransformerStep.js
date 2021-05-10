@@ -43,7 +43,7 @@ export const TransformerStep = () => {
 
           <EuiFlexItem grow={false}>
             <LoggerPanel
-              loggerConfig={logger.transformer}
+              loggerConfig={logger.transformer || {}}
               onChangeHandler={onChange("logger.transformer")}
               errors={get(errors, "logger.transformer")}
             />
