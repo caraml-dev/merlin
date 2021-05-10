@@ -115,7 +115,11 @@ export const OutputPanel = ({ outputs = [], onChangeHandler, errors = {} }) => {
   useEffect(
     () => {
       const newFlattenedFields = flattenField(
-        outputs.length > 0 ? outputs[0].jsonOutput.jsonTemplate.fields : []
+        outputs.length > 0
+          ? Array.isArray(outputs[0].jsonOutput.jsonTemplate.fields)
+            ? outputs[0].jsonOutput.jsonTemplate.fields
+            : []
+          : []
       );
       if (
         JSON.stringify(flattenedFields) !== JSON.stringify(newFlattenedFields)
