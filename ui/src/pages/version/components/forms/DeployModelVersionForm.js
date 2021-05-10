@@ -20,6 +20,10 @@ import {
   versionEndpointSchema
 } from "./validation/schema";
 
+const targetRequestStatus = currentStatus => {
+  return currentStatus === "serving" ? "serving" : "running";
+};
+
 export const DeployModelVersionForm = ({
   model,
   version,
@@ -46,7 +50,13 @@ export const DeployModelVersionForm = ({
     }
   }, [submissionResponse, onSuccess, model, version]);
 
-  const onSubmit = () => submitForm({ body: JSON.stringify(versionEndpoint) });
+  const onSubmit = () =>
+    submitForm({
+      body: JSON.stringify({
+        ...versionEndpoint,
+        status: targetRequestStatus(versionEndpoint.status)
+      })
+    });
 
   const mainSteps = [
     {

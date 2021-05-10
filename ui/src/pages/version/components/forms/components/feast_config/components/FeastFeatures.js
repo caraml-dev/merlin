@@ -127,6 +127,7 @@ export const FeastFeatures = ({
       width: "60%",
       render: (value, item) => (
         <EuiComboBox
+          fullWidth
           singleSelection={{ asPlainText: true }}
           isClearable={false}
           placeholder="Feature Name"
@@ -146,6 +147,7 @@ export const FeastFeatures = ({
       width: "30%",
       render: (value, item) => (
         <EuiFieldText
+          fullWidth
           controlOnly
           placeholder="Default Value"
           value={value || ""}
