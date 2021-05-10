@@ -6,7 +6,8 @@ import {
   EuiFlexItem,
   EuiFormRow,
   EuiIcon,
-  EuiToolTip
+  EuiToolTip,
+  EuiSpacer
 } from "@elastic/eui";
 import { FormContext, useOnChangeHandler } from "@gojek/mlp-ui";
 import { Config } from "../../../../../../../services/transformer/TransformerConfig";
@@ -42,20 +43,9 @@ export const TransformationSpec = ({ importEnabled = true }) => {
 
   return (
     <EuiFlexGroup direction="column" gutterSize="s">
-      <EuiFlexItem>
-        <EuiCodeBlock
-          language="yaml"
-          fontSize="s"
-          paddingSize="s"
-          overflowHeight={640}
-          style={{ maxWidth: 480 }}
-          isCopyable>
-          {config && yaml.dump(JSON.parse(JSON.stringify(config)))}
-        </EuiCodeBlock>
-      </EuiFlexItem>
-
       {importEnabled && (
         <EuiFlexItem>
+          <EuiSpacer size="m" />
           <EuiFormRow
             label={
               <EuiToolTip content="This is beta feature. Proceed with caution 😉">
@@ -75,6 +65,21 @@ export const TransformationSpec = ({ importEnabled = true }) => {
               fullWidth
             />
           </EuiFormRow>
+        </EuiFlexItem>
+      )}
+
+      {config && (
+        <EuiFlexItem>
+          <EuiSpacer size="m" />
+          <EuiCodeBlock
+            language="yaml"
+            fontSize="s"
+            paddingSize="s"
+            overflowHeight={640}
+            style={{ maxWidth: 480 }}
+            isCopyable>
+            {yaml.dump(JSON.parse(JSON.stringify(config)))}
+          </EuiCodeBlock>
         </EuiFlexItem>
       )}
     </EuiFlexGroup>

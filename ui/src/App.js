@@ -39,7 +39,8 @@ import { PrivateLayout } from "./PrivateLayout";
 import {
   DeployModelVersionView,
   RedeployModelVersionView,
-  Version
+  Version,
+  TransformerTools
 } from "./pages";
 
 export default () => (
@@ -141,6 +142,9 @@ export default () => (
             path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/create-job`}
             render={PrivateLayout(CreateJobView)}
           />
+
+          {/* Tools */}
+          <TransformerTools path={`${config.HOMEPAGE}/-/tools/transformer`} />
 
           {/* DEFAULT */}
           <Empty default />

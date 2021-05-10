@@ -111,7 +111,7 @@ const addVariablesInputNodesLinks = (
 
   nodes.push({
     id: id,
-    label: `#${idx + 1} - Variables\nOutput: ${vars.join(", ")}`
+    label: `#${idx + 1} - Variables\nOutput:\n- ${vars.join("\n- ")}`
   });
 };
 

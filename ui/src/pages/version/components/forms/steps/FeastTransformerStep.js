@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { EuiFlexGroup, EuiFlexItem, EuiSpacer } from "@elastic/eui";
+import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import {
   FormContext,
   FormValidationContext,
@@ -48,7 +48,6 @@ export const FeastTransformerStep = () => {
 
       <EuiFlexItem grow={3}>
         <Panel title="YAML Specification" contentWidth="100%">
-          <EuiSpacer size="m" />
           <TransformationSpec />
         </Panel>
       </EuiFlexItem>
