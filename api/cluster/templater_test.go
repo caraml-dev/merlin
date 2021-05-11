@@ -633,6 +633,12 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				Transformer: &models.Transformer{
 					Enabled:         true,
 					TransformerType: models.StandardTransformerType,
+					EnvVars: models.EnvVars{
+						{
+							Name:  transformer.StandardTransformerConfigEnvName,
+							Value: `  { "standard_transformer": null}`,
+						},
+					},
 				},
 				Logger: &models.Logger{
 					DestinationURL: loggerDestinationURL,
@@ -676,6 +682,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
 									Env: []v1.EnvVar{
+										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 										{Name: transformer.FeastServingURLEnvName, Value: standardTransformerConfig.FeastServingURL},
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},

@@ -34,20 +34,29 @@ export const appConfig = {
   ],
   dockerRegistries: getEnv("REACT_APP_DOCKER_REGISTRIES")
     ? getEnv("REACT_APP_DOCKER_REGISTRIES").split(",")
-    : []
+    : [],
+  defaultDockerRegistry:
+    process.env.REACT_APP_DEFAULT_DOCKER_REGISTRY || "docker.io", // User Docker Hub as the default
+  scaling: {
+    maxAllowedReplica: 10
+  }
 };
 
 export const featureToggleConfig = {
-  alertEnabled: !(
-    getEnv("REACT_APP_ALERT_ENABLED")
-      .toString()
-      .toLowerCase() === "false"
-  ),
-  monitoringEnabled: !(
-    getEnv("REACT_APP_MONITORING_DASHBOARD_ENABLED")
-      .toString()
-      .toLowerCase() === "false"
-  ),
+  alertEnabled: getEnv("REACT_APP_ALERT_ENABLED")
+    ? !(
+        getEnv("REACT_APP_ALERT_ENABLED")
+          .toString()
+          .toLowerCase() === "false"
+      )
+    : false,
+  monitoringEnabled: getEnv("REACT_APP_MONITORING_DASHBOARD_ENABLED")
+    ? !(
+        getEnv("REACT_APP_MONITORING_DASHBOARD_ENABLED")
+          .toString()
+          .toLowerCase() === "false"
+      )
+    : false,
   monitoringDashboardJobBaseURL: getEnv(
     "REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"
   )

@@ -1,0 +1,18 @@
+transformerConfig:
+  postprocess:
+    inputs:
+      - tables:
+          - name: entity_table
+            baseTable:
+              fromJson:
+                jsonPath: $.model_response.entities[*]
+                addRowNumber: false
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: "entity_table"
+                  format: "SPLIT"
+                

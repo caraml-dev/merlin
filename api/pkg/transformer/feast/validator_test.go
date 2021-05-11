@@ -2,6 +2,7 @@ package feast
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
@@ -9,80 +10,66 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 func TestValidateTransformerConfig(t *testing.T) {
 	tests := []struct {
 		name                  string
-		trfConfig             *transformer.StandardTransformerConfig
+		trfConfig             *spec.StandardTransformerConfig
 		listEntitiesResponse  *core.ListEntitiesResponse
 		listFeaturesResponses []*core.ListFeaturesResponse
 		wantError             error
 	}{
 		{
-			"empty config",
-			&transformer.StandardTransformerConfig{},
-			nil,
-			nil,
-			NewValidationError("transformerConfig is empty"),
-		},
-		{
-			"empty feature table",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{}},
-			nil,
-			nil,
-			NewValidationError("feature retrieval config is empty"),
-		},
-		{
 			"no entity in config",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project:  "default",
-						Entities: []*transformer.Entity{},
-						Features: []*transformer.Feature{},
+						Entities: []*spec.Entity{},
+						Features: []*spec.Feature{},
 					},
 				},
 			},
 			},
 			&core.ListEntitiesResponse{},
 			nil,
-			NewValidationError("no entity"),
+			errors.New("no entity"),
 		},
 		{
 			"no feature in config",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
 							},
 						},
-						Features: []*transformer.Feature{},
+						Features: []*spec.Feature{},
 					},
 				},
 			},
 			},
 			&core.ListEntitiesResponse{},
 			nil,
-			NewValidationError("no feature"),
+			errors.New("no feature"),
 		},
 		{
 			"entity not registered in feast",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -93,21 +80,21 @@ func TestValidateTransformerConfig(t *testing.T) {
 			},
 			&core.ListEntitiesResponse{},
 			nil,
-			NewValidationError("entity customer_id is not found in project default"),
+			errors.New("entity customer_id is not found in project default"),
 		},
 		{
 			"extractor not specified",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name:      "customer_id",
 								ValueType: "STRING",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -127,22 +114,22 @@ func TestValidateTransformerConfig(t *testing.T) {
 				},
 			},
 			nil,
-			NewValidationError("one of json_path, udf must be specified"),
+			errors.New("one of json_path, udf must be specified"),
 		},
 		{
 			"json path not specified",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name:      "customer_id",
 								ValueType: "STRING",
-								Extractor: &transformer.Entity_JsonPath{},
+								Extractor: &spec.Entity_JsonPath{},
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -162,23 +149,23 @@ func TestValidateTransformerConfig(t *testing.T) {
 				},
 			},
 			nil,
-			NewValidationError("json path for customer_id is not specified"),
+			errors.New("json path for customer_id is not specified"),
 		},
 		{
 			"invalid json path",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "customer_id",
 								},
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -198,24 +185,24 @@ func TestValidateTransformerConfig(t *testing.T) {
 				},
 			},
 			nil,
-			NewValidationError("jsonpath compilation failed: should start with '$'"),
+			errors.New("jsonpath compilation failed: should start with '$'"),
 		},
 		{
 			"mismatched entity value type",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "INTEGER",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -235,31 +222,31 @@ func TestValidateTransformerConfig(t *testing.T) {
 				},
 			},
 			nil,
-			NewValidationError("mismatched value type for customer_id, expect: STRING, got: INTEGER"),
+			errors.New("mismatched value type for customer_id, expect: STRING, got: INTEGER"),
 		},
 		{
 			"feature not registered",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name: "total_booking",
 							},
@@ -289,31 +276,31 @@ func TestValidateTransformerConfig(t *testing.T) {
 					Features: map[string]*core.FeatureSpecV2{},
 				},
 			},
-			NewValidationError("feature not found for entities [customer_id hour_of_day] in project default: total_booking"),
+			errors.New("feature not found for entities [customer_id hour_of_day] in project default: total_booking"),
 		},
 		{
 			"mismatch feature value type",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "total_booking",
 								ValueType: "INT32",
@@ -349,31 +336,31 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 			},
-			NewValidationError("mismatched value type for total_booking, expect: INT64, got: INT32"),
+			errors.New("mismatched value type for total_booking, expect: INT64, got: INT32"),
 		},
 		{
 			"mismatch feature value type using fq name",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "customer_feature_table:total_booking",
 								ValueType: "INT32",
@@ -409,31 +396,31 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 			},
-			NewValidationError("mismatched value type for customer_feature_table:total_booking, expect: INT64, got: INT32"),
+			errors.New("mismatched value type for customer_feature_table:total_booking, expect: INT64, got: INT32"),
 		},
 		{
 			"success case with shorthand name",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "total_booking",
 								ValueType: "INT32",
@@ -473,27 +460,27 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			"success case with fully qualified feature name",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "default",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 							{
 								Name: "hour_of_day",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.hour_of_day",
 								},
 								ValueType: "INT32",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "customer_feature_table:total_booking",
 								ValueType: "INT32",
@@ -533,21 +520,21 @@ func TestValidateTransformerConfig(t *testing.T) {
 		},
 		{
 			name: "invalid udf expression",
-			trfConfig: &transformer.StandardTransformerConfig{
-				TransformerConfig: &transformer.TransformerConfig{
-					Feast: []*transformer.FeatureTable{
+			trfConfig: &spec.StandardTransformerConfig{
+				TransformerConfig: &spec.TransformerConfig{
+					Feast: []*spec.FeatureTable{
 						{
 							Project: "default",
-							Entities: []*transformer.Entity{
+							Entities: []*spec.Entity{
 								{
 									Name:      "geohash",
-									ValueType: "String",
-									Extractor: &transformer.Entity_Udf{
+									ValueType: "STRING",
+									Extractor: &spec.Entity_Udf{
 										Udf: "unknown()",
 									},
 								},
 							},
-							Features: []*transformer.Feature{
+							Features: []*spec.Feature{
 								{
 									Name:      "average_daily_rides",
 									ValueType: "DOUBLE",
@@ -567,24 +554,24 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 			},
-			wantError: NewValidationError("udf compilation failed: unknown func unknown (1:1)\n | unknown()\n | ^"),
+			wantError: errors.New("udf compilation failed: unknown func unknown (1:1)\n | unknown()\n | ^"),
 		},
 		{
 			"success case with fully qualified feature name from non-default project name",
-			&transformer.StandardTransformerConfig{TransformerConfig: &transformer.TransformerConfig{
-				Feast: []*transformer.FeatureTable{
+			&spec.StandardTransformerConfig{TransformerConfig: &spec.TransformerConfig{
+				Feast: []*spec.FeatureTable{
 					{
 						Project: "merlin",
-						Entities: []*transformer.Entity{
+						Entities: []*spec.Entity{
 							{
 								Name: "customer_id",
-								Extractor: &transformer.Entity_JsonPath{
+								Extractor: &spec.Entity_JsonPath{
 									JsonPath: "$.customer_id",
 								},
 								ValueType: "STRING",
 							},
 						},
-						Features: []*transformer.Feature{
+						Features: []*spec.Feature{
 							{
 								Name:      "customer_feature_table:total_booking",
 								ValueType: "INT32",
@@ -635,7 +622,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 				mockClient.On("ListFeatures", mock.Anything, mock.Anything).Return(fr, nil)
 			}
 
-			err := ValidateTransformerConfig(context.Background(), mockClient, test.trfConfig)
+			err := ValidateTransformerConfig(context.Background(), mockClient, test.trfConfig.TransformerConfig.Feast)
 			if test.wantError != nil {
 				assert.EqualError(t, err, test.wantError.Error())
 				return

@@ -1,0 +1,65 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - variables:
+          - name: customer_id
+            jsonPath: $.customer.id
+      - tables:
+          - name: driver_table
+            baseTable:
+              fromJson:
+                jsonPath: $.drivers[*]
+                addRowNumber: true
+      - feast:
+          - tableName: driver_feature_table
+            project: merlin
+            entities:
+              - name: merlin_test_driver_id
+                valueType: STRING
+                jsonPath: $.drivers[*].id
+            features:
+              - name: merlin_test_driver_features:test_int32
+                valueType: INT32
+                defaultValue: '-1'
+              - name: merlin_test_driver_features:test_float
+                valueType: FLOAT
+                defaultValue: '0'
+    transformations:
+      - tableTransformation:
+          inputTable: driver_table
+          outputTable: driver_table
+          steps:
+            - sort:
+                - column: "row_number"
+                  order: DESC
+            - renameColumns:
+                row_number: rank
+                id: merlin_test_driver_id
+            - updateColumns:
+                - column: customer_id
+                  expression: customer_id
+            - selectColumns: ["customer_id", "merlin_test_driver_id", "rank"]
+      - tableJoin:
+          leftTable: driver_table
+          rightTable: driver_feature_table
+          outputTable: result_table
+          how: LEFT
+          onColumn: merlin_test_driver_id
+      - tableTransformation:
+          inputTable: result_table
+          outputTable: result_table
+          steps:
+            - sort:
+                - column: "rank"
+                  order: ASC
+            - renameColumns:
+                merlin_test_driver_id: driver_id
+            - selectColumns: [ "rank", "driver_id", "customer_id", "merlin_test_driver_features:test_int32", "merlin_test_driver_features:test_float" ]
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: result_table
+                  format: "SPLIT"

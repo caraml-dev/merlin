@@ -14,6 +14,10 @@ test: type_check
 integration-test: type_check
 	@pipenv run pytest -n 8 -m integration -W ignore
 
+.PHONY: integration-test-no-feast
+integration-test-no-feast: type_check
+	@pipenv run pytest -n 8 -m "not feast" -W ignore
+
 .PHONY: local-server-test
 local-server-test: type_check
 	@pipenv run pytest -n 8 -m local_server_test -W ignore

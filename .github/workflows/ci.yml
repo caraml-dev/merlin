@@ -49,6 +49,29 @@ jobs:
       - name: Lint API files
         run: make lint-api
 
+  test-ui:
+    if: >-
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.full_name != github.repository
+      ) || (
+        github.event_name == 'push'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout to the target branch
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Test UI files
+        run: make test-ui
+
   build-ui:
     if: >-
       (

@@ -35,8 +35,6 @@ import { useMerlinApi } from "../../hooks/useMerlinApi";
 import Log from "../../log/Log";
 import mocks from "../../mocks";
 import { PageTitle } from "../../components/PageTitle";
-import VersionDeploy from "../../version/deployment/VersionDeploy";
-import VersionRedeploy from "../../version/deployment/VersionRedeploy";
 import { DeploymentPanelHeader } from "./DeploymentPanelHeader";
 import { ModelVersionPanelHeader } from "./ModelVersionPanelHeader";
 import { VersionConfig } from "./VersionConfig";
@@ -214,18 +212,6 @@ const Version = ({ projectId, modelId, versionId, endpointId, ...props }) => {
                 versionId={versionId}
                 fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
               />
-
-              {model && modelLoaded && version && versionLoaded && (
-                <VersionDeploy path="deploy" model={model} version={version} />
-              )}
-
-              {model && modelLoaded && version && versionLoaded && (
-                <VersionRedeploy
-                  path="redeploy"
-                  model={model}
-                  version={version}
-                />
-              )}
             </Router>
           </Fragment>
         )}

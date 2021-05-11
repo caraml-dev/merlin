@@ -5,17 +5,20 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/antonmedv/expr/vm"
+	"github.com/antonmedv/expr"
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/mmcloughlin/geohash"
-	"github.com/oliveagle/jsonpath"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
+	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
-func TestGetValuesFromJSONPayload(t *testing.T) {
+func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 	testData := []byte(`{
 		"integer" : 1234,
 		"float" : 1234.111,
@@ -59,16 +62,16 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		entityConfig *transformer.Entity
+		entityConfig *spec.Entity
 		expValues    []*feastType.Value
 		expError     error
 	}{
 		{
 			"integer to int64",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT64",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
@@ -79,10 +82,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"integer to float",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "FLOAT",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
@@ -93,10 +96,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"integer to double",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "DOUBLE",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
@@ -107,10 +110,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"integer to string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
@@ -121,10 +124,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"long integer to string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.longInteger",
 				},
 			},
@@ -135,10 +138,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to int32",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -149,10 +152,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to int64",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT64",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -163,10 +166,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to float",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "FLOAT",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -177,10 +180,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to double",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "DOUBLE",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -191,10 +194,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"float to string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
@@ -205,10 +208,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to int32",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -219,10 +222,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to int64",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT64",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -233,10 +236,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to float",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "FLOAT",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -247,10 +250,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to double",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "DOUBLE",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -261,10 +264,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
@@ -275,10 +278,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"boolean to boolean",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "BOOL",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.boolean",
 				},
 			},
@@ -289,10 +292,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"string to boolean",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "BOOL",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.booleanString",
 				},
 			},
@@ -303,10 +306,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"array of integer",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.array[*].integer",
 				},
 			},
@@ -318,10 +321,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"array of string",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.array[*].string",
 				},
 			},
@@ -333,10 +336,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"struct integer",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.struct.integer",
 				},
 			},
@@ -347,10 +350,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"Geohash udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_geohash",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "Geohash(\"$.latitude\", \"$.longitude\", 12)",
 				},
 			},
@@ -361,10 +364,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"Array of Geohash udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_geohash",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "Geohash(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
 				},
 			},
@@ -376,10 +379,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"JsonExtract udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "jsonextract",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
 				},
 			},
@@ -390,10 +393,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"S2ID udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
 				},
 			},
@@ -404,10 +407,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"Array of S2ID udf",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Udf{
+				Extractor: &spec.Entity_Udf{
 					Udf: "S2ID(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
 				},
 			},
@@ -419,10 +422,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"unsupported feast type",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "my_entity",
 				ValueType: "BYTES",
-				Extractor: &transformer.Entity_JsonPath{
+				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.booleanString",
 				},
 			},
@@ -431,10 +434,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"S2ID expression",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Expression{
+				Extractor: &spec.Entity_Expression{
 					Expression: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
 				},
 			},
@@ -445,10 +448,10 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 		},
 		{
 			"Array of S2ID expression",
-			&transformer.Entity{
+			&spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
-				Extractor: &transformer.Entity_Expression{
+				Extractor: &spec.Entity_Expression{
 					Expression: "S2ID(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
 				},
 			},
@@ -461,19 +464,33 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var compiledJsonPath *jsonpath.Compiled = nil
-			var compiledUdf *vm.Program = nil
-			switch test.entityConfig.Extractor.(type) {
-			case *transformer.Entity_JsonPath:
-				compiledJsonPath, _ = jsonpath.Compile(test.entityConfig.GetJsonPath())
-			case *transformer.Entity_Udf, *transformer.Entity_Expression:
-				compiledUdf = mustCompileUdf(getExpressionExtractor(test.entityConfig))
+			compiledJsonPaths := jsonpath.NewStorage()
+			compiledExpressions := expression.NewStorage()
+
+			var nodesBody transTypes.JSONObject
+			err := json.Unmarshal(testData, &nodesBody)
+			if err != nil {
+				panic(err)
 			}
 
-			var nodesBody interface{}
-			json.Unmarshal(testData, &nodesBody)
+			sr := symbol.NewRegistryWithCompiledJSONPath(compiledJsonPaths)
+			sr.SetRawRequestJSON(nodesBody)
 
-			actual, err := getValuesFromJSONPayload(nodesBody, test.entityConfig, compiledJsonPath, compiledUdf)
+			switch test.entityConfig.Extractor.(type) {
+			case *spec.Entity_JsonPath:
+				compiledJsonPath, _ := jsonpath.Compile(test.entityConfig.GetJsonPath())
+				compiledJsonPaths.Set(test.entityConfig.GetJsonPath(), compiledJsonPath)
+			case *spec.Entity_Udf:
+				compiledUdf, _ := expr.Compile(test.entityConfig.GetUdf(), expr.Env(sr), expr.AllowUndefinedVariables())
+				compiledExpressions.Set(test.entityConfig.GetUdf(), compiledUdf)
+			case *spec.Entity_Expression:
+				compiledExpression, _ := expr.Compile(test.entityConfig.GetExpression(), expr.Env(sr), expr.AllowUndefinedVariables())
+				compiledExpressions.Set(test.entityConfig.GetExpression(), compiledExpression)
+			}
+
+			er := NewEntityExtractor(compiledJsonPaths, compiledExpressions)
+
+			actual, err := er.ExtractValuesFromSymbolRegistry(sr, test.entityConfig)
 			if err != nil {
 				if test.expError != nil {
 					assert.EqualError(t, err, test.expError.Error())
@@ -487,405 +504,645 @@ func TestGetValuesFromJSONPayload(t *testing.T) {
 	}
 }
 
-func BenchmarkGetValuesFromJSONPayload100Entity(b *testing.B) {
-	entityConfig := &transformer.Entity{
+func BenchmarkEntityExtractor_ExtractValuesFromSymbolRegistry_100Entity(b *testing.B) {
+	entityConfig := &spec.Entity{
 		Name:      "",
 		ValueType: "INT32",
-		Extractor: &transformer.Entity_JsonPath{
+		Extractor: &spec.Entity_JsonPath{
 			JsonPath: "$.array[*].id",
 		},
 	}
-	c, _ := jsonpath.Compile(entityConfig.GetJsonPath())
-	var nodesBody interface{}
-	json.Unmarshal(benchData, &nodesBody)
 
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c, nil)
-	}
+	doRunBenchmark(b, entityConfig)
 }
 
-func BenchmarkGetValuesFromJSONPayload1StringEntity(b *testing.B) {
-	b.ReportAllocs()
-	entityConfig := &transformer.Entity{
+func BenchmarkEntityExtractor_ExtractValuesFromSymbolRegistry_1StringEntity(b *testing.B) {
+	entityConfig := &spec.Entity{
 		Name:      "",
 		ValueType: "STRING",
-		Extractor: &transformer.Entity_JsonPath{
+		Extractor: &spec.Entity_JsonPath{
 			JsonPath: "$.string",
 		},
 	}
-	c, _ := jsonpath.Compile(entityConfig.GetJsonPath())
-	var nodesBody interface{}
-	json.Unmarshal(benchData, &nodesBody)
-
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c, nil)
-	}
+	doRunBenchmark(b, entityConfig)
 }
 
-func BenchmarkGetValuesFromJSONPayload1IntegerEntity(b *testing.B) {
-	b.ReportAllocs()
-	entityConfig := &transformer.Entity{
+func BenchmarkEntityExtractor_ExtractValuesFromSymbolRegistry_1IntegerEntity(b *testing.B) {
+	entityConfig := &spec.Entity{
 		Name:      "",
 		ValueType: "INT32",
-		Extractor: &transformer.Entity_JsonPath{
+		Extractor: &spec.Entity_JsonPath{
 			JsonPath: "$.integer",
 		},
 	}
-	c, _ := jsonpath.Compile(entityConfig.GetJsonPath())
-	var nodesBody interface{}
-	json.Unmarshal(benchData, &nodesBody)
-
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c, nil)
-	}
+	doRunBenchmark(b, entityConfig)
 }
 
-func BenchmarkGetValuesFromJSONPayload1FloatEntity(b *testing.B) {
-	b.ReportAllocs()
-	entityConfig := &transformer.Entity{
+func BenchmarkEntityExtractor_ExtractValuesFromSymbolRegistry_1FloatEntity(b *testing.B) {
+	entityConfig := &spec.Entity{
 		Name:      "",
 		ValueType: "DOUBLE",
-		Extractor: &transformer.Entity_JsonPath{
+		Extractor: &spec.Entity_JsonPath{
 			JsonPath: "$.float",
 		},
 	}
-	c, _ := jsonpath.Compile(entityConfig.GetJsonPath())
-	var nodesBody interface{}
-	json.Unmarshal(benchData, &nodesBody)
 
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(nodesBody, entityConfig, c, nil)
-	}
+	doRunBenchmark(b, entityConfig)
 }
 
-func BenchmarkGetValuesFromJSONPayloadGeohashUdf(b *testing.B) {
-	b.ReportAllocs()
-	udfString := "Geohash(\"$.latitude\", \"$.longitude\")"
-	compiledUdf := mustCompileUdf(udfString)
-	for i := 0; i < b.N; i++ {
-		Result, _ = getValuesFromJSONPayload(benchData, &transformer.Entity{
-			Name:      "my_geohash",
-			ValueType: "STRING",
-			Extractor: &transformer.Entity_Udf{
-				Udf: udfString,
-			},
+func BenchmarkEntityExtractor_ExtractValuesFromSymbolRegistry_1GeohashUdf(b *testing.B) {
+	entityConfig := &spec.Entity{
+		Name:      "my_geohash",
+		ValueType: "STRING",
+		Extractor: &spec.Entity_Udf{
+			Udf: "Geohash(\"$.latitude\", \"$.longitude\", 7)",
 		},
-			nil,
-			compiledUdf)
+	}
+
+	doRunBenchmark(b, entityConfig)
+}
+
+func BenchmarkEntityExtractor_ExtractValuesFromSymbolRegistry_100GeohashUdf(b *testing.B) {
+	entityConfig := &spec.Entity{
+		Name:      "my_geohash",
+		ValueType: "STRING",
+		Extractor: &spec.Entity_Udf{
+			Udf: "Geohash(\"$.array[*].latitude\", \"$.array[*].longitude\", 7)",
+		},
+	}
+
+	doRunBenchmark(b, entityConfig)
+}
+
+func BenchmarkEntityExtractor_ExtractValuesFromSymbolRegistry_1S2IDUdf(b *testing.B) {
+	entityConfig := &spec.Entity{
+		Name:      "my_geohash",
+		ValueType: "STRING",
+		Extractor: &spec.Entity_Udf{
+			Udf: "S2ID(\"$.latitude\", \"$.longitude\", 11)",
+		},
+	}
+
+	doRunBenchmark(b, entityConfig)
+}
+
+func BenchmarkEntityExtractor_ExtractValuesFromSymbolRegistry_100S2IDUdf(b *testing.B) {
+	entityConfig := &spec.Entity{
+		Name:      "my_geohash",
+		ValueType: "STRING",
+		Extractor: &spec.Entity_Udf{
+			Udf: "S2ID(\"$.array[*].latitude\", \"$.array[*].longitude\", 11)",
+		},
+	}
+
+	doRunBenchmark(b, entityConfig)
+}
+
+func doRunBenchmark(b *testing.B, entityConfig *spec.Entity) {
+	b.StopTimer()
+	compiledJsonPaths := jsonpath.NewStorage()
+	compiledExpressions := expression.NewStorage()
+
+	switch entityConfig.Extractor.(type) {
+	case *spec.Entity_JsonPath:
+		c, err := jsonpath.Compile(entityConfig.GetJsonPath())
+		if err != nil {
+			panic(err)
+		}
+		compiledJsonPaths.Set(entityConfig.GetJsonPath(), c)
+	case *spec.Entity_Expression, *spec.Entity_Udf:
+		exp := getExpressionExtractor(entityConfig)
+		p, err := expr.Compile(exp, expr.Env(symbol.NewRegistry()), expr.AllowUndefinedVariables())
+		if err != nil {
+			panic(err)
+		}
+		compiledExpressions.Set(exp, p)
+	}
+
+	var nodesBody transTypes.JSONObject
+	err := json.Unmarshal(benchData, &nodesBody)
+	if err != nil {
+		panic(err)
+	}
+
+	sr := symbol.NewRegistryWithCompiledJSONPath(compiledJsonPaths)
+	sr.SetRawRequestJSON(nodesBody)
+	er := NewEntityExtractor(compiledJsonPaths, compiledExpressions)
+
+	b.ReportAllocs()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		Result, _ = er.ExtractValuesFromSymbolRegistry(sr, entityConfig)
 	}
 }
 
 var Result []*feastType.Value
 var benchData = []byte(`{
- "string": "string_value",
- "integer" : 1234,
- "float" : 1234.111,
- "latitude": 1.0,
- "longitude": 2.0,
- "array": [
-   {
-     "id": 0
-   },
-   {
-     "id": 1
-   },
-   {
-     "id": 2
-   },
-   {
-     "id": 3
-   },
-   {
-     "id": 4
-   },
-   {
-     "id": 5
-   },
-   {
-     "id": 6
-   },
-   {
-     "id": 7
-   },
-   {
-     "id": 8
-   },
-   {
-     "id": 9
-   },
-   {
-     "id": 10
-   },
-   {
-     "id": 11
-   },
-   {
-     "id": 12
-   },
-   {
-     "id": 13
-   },
-   {
-     "id": 14
-   },
-   {
-     "id": 15
-   },
-   {
-     "id": 16
-   },
-   {
-     "id": 17
-   },
-   {
-     "id": 18
-   },
-   {
-     "id": 19
-   },
-   {
-     "id": 20
-   },
-   {
-     "id": 21
-   },
-   {
-     "id": 22
-   },
-   {
-     "id": 23
-   },
-   {
-     "id": 24
-   },
-   {
-     "id": 25
-   },
-   {
-     "id": 26
-   },
-   {
-     "id": 27
-   },
-   {
-     "id": 28
-   },
-   {
-     "id": 29
-   },
-   {
-     "id": 30
-   },
-   {
-     "id": 31
-   },
-   {
-     "id": 32
-   },
-   {
-     "id": 33
-   },
-   {
-     "id": 34
-   },
-   {
-     "id": 35
-   },
-   {
-     "id": 36
-   },
-   {
-     "id": 37
-   },
-   {
-     "id": 38
-   },
-   {
-     "id": 39
-   },
-   {
-     "id": 40
-   },
-   {
-     "id": 41
-   },
-   {
-     "id": 42
-   },
-   {
-     "id": 43
-   },
-   {
-     "id": 44
-   },
-   {
-     "id": 45
-   },
-   {
-     "id": 46
-   },
-   {
-     "id": 47
-   },
-   {
-     "id": 48
-   },
-   {
-     "id": 49
-   },
-   {
-     "id": 50
-   },
-   {
-     "id": 51
-   },
-   {
-     "id": 52
-   },
-   {
-     "id": 53
-   },
-   {
-     "id": 54
-   },
-   {
-     "id": 55
-   },
-   {
-     "id": 56
-   },
-   {
-     "id": 57
-   },
-   {
-     "id": 58
-   },
-   {
-     "id": 59
-   },
-   {
-     "id": 60
-   },
-   {
-     "id": 61
-   },
-   {
-     "id": 62
-   },
-   {
-     "id": 63
-   },
-   {
-     "id": 64
-   },
-   {
-     "id": 65
-   },
-   {
-     "id": 66
-   },
-   {
-     "id": 67
-   },
-   {
-     "id": 68
-   },
-   {
-     "id": 69
-   },
-   {
-     "id": 70
-   },
-   {
-     "id": 71
-   },
-   {
-     "id": 72
-   },
-   {
-     "id": 73
-   },
-   {
-     "id": 74
-   },
-   {
-     "id": 75
-   },
-   {
-     "id": 76
-   },
-   {
-     "id": 77
-   },
-   {
-     "id": 78
-   },
-   {
-     "id": 79
-   },
-   {
-     "id": 80
-   },
-   {
-     "id": 81
-   },
-   {
-     "id": 82
-   },
-   {
-     "id": 83
-   },
-   {
-     "id": 84
-   },
-   {
-     "id": 85
-   },
-   {
-     "id": 86
-   },
-   {
-     "id": 87
-   },
-   {
-     "id": 88
-   },
-   {
-     "id": 89
-   },
-   {
-     "id": 90
-   },
-   {
-     "id": 91
-   },
-   {
-     "id": 92
-   },
-   {
-     "id": 93
-   },
-   {
-     "id": 94
-   },
-   {
-     "id": 95
-   },
-   {
-     "id": 96
-   },
-   {
-     "id": 97
-   },
-   {
-     "id": 98
-   },
-   {
-     "id": 99
-   }
- ]
+"string": "string_value",
+"integer" : 1234,
+"float" : 1234.111,
+"latitude": 103.3,
+"longitude": 1.0,
+"array": [
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 0
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 1
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 2
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 3
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 4
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 5
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 6
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 7
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 8
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 9
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 10
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 11
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 12
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 13
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 14
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 15
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 16
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 17
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 18
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 19
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 20
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 21
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 22
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 23
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 24
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 25
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 26
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 27
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 28
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 29
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 30
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 31
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 32
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 33
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 34
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 35
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 36
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 37
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 38
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 39
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 40
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 41
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 42
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 43
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 44
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 45
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 46
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 47
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 48
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 49
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 50
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 51
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 52
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 53
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 54
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 55
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 56
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 57
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 58
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 59
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 60
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 61
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 62
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 63
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 64
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 65
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 66
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 67
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 68
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 69
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 70
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 71
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 72
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 73
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 74
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 75
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 76
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 77
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 78
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 79
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 80
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 81
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 82
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 83
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 84
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 85
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 86
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 87
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 88
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 89
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 90
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 91
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 92
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 93
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 94
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 95
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 96
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 97
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 98
+  },
+  {
+    "latitude" : 103.2,
+    "longitude" : 1.0,
+    "id": 99
+  }
+]
 }`)
