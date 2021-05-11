@@ -53,6 +53,11 @@ lint-api:
 .PHONY: test
 test: test-api
 
+.PHONY: test-ui
+test-ui:
+	@echo "> UI unit testing ..."
+	@cd ${UI_PATH} && yarn test-ci
+
 .PHONY: test-api
 test-api: init-dep-api
 	@echo "> API unit testing ..."

@@ -43,7 +43,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "lint": "lint-staged",
-    "test": "react-scripts tests",
+    "test": "react-scripts test",
+    "test-ci": "react-scripts test --watchAll=false",
     "eject": "react-scripts eject",
     "version-from-git": "../scripts/vertagen/vertagen.sh"
   },
