@@ -10,6 +10,7 @@ import (
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
+	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
