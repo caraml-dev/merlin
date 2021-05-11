@@ -29,7 +29,7 @@ export const VariablesInputCard = ({
       <EuiFlexGroup direction="column" gutterSize="s">
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>#{index + 1} - Variables</h4>
+            <h4>Variables</h4>
           </EuiText>
         </EuiFlexItem>
 

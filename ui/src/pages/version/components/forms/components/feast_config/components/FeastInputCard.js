@@ -50,7 +50,7 @@ export const FeastInputCard = ({
       <EuiFlexGroup direction="column" gutterSize="s">
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>#{index + 1} - Feast Table</h4>
+            <h4>Feast Table</h4>
           </EuiText>
         </EuiFlexItem>
 

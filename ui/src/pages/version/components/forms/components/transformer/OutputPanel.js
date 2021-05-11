@@ -116,8 +116,10 @@ export const OutputPanel = ({ outputs = [], onChangeHandler, errors = {} }) => {
     () => {
       const newFlattenedFields = flattenField(
         outputs.length > 0
-          ? Array.isArray(outputs[0].jsonOutput.jsonTemplate.fields)
-            ? outputs[0].jsonOutput.jsonTemplate.fields
+          ? Array.isArray(
+              outputs[outputs.length - 1].jsonOutput.jsonTemplate.fields
+            )
+            ? outputs[outputs.length - 1].jsonOutput.jsonTemplate.fields
             : []
           : []
       );
@@ -211,11 +213,7 @@ export const OutputPanel = ({ outputs = [], onChangeHandler, errors = {} }) => {
                       index={fieldIdx}
                       field={field}
                       onChange={onFieldChange}
-                      onDelete={
-                        flattenedFields.length > 1
-                          ? onDeleteJsonOutputField(fieldIdx)
-                          : undefined
-                      }
+                      onDelete={onDeleteJsonOutputField(fieldIdx)}
                       dragHandleProps={provided.dragHandleProps}
                     />
                     <EuiSpacer size="s" />

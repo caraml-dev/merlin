@@ -50,7 +50,7 @@ export const JsonOutputFieldCard = ({
       <EuiFlexGroup direction="column" gutterSize="m">
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>#{index + 1} Field</h4>
+            <h4>Field</h4>
           </EuiText>
         </EuiFlexItem>
 

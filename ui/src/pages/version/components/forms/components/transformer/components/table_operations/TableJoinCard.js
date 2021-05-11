@@ -34,7 +34,7 @@ export const TableJoinCard = ({
       <EuiFlexGroup direction="column" gutterSize="s">
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>#{index + 1} - Table Join</h4>
+            <h4>Table Join</h4>
           </EuiText>
         </EuiFlexItem>
 

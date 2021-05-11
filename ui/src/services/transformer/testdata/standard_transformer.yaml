@@ -83,8 +83,14 @@ transformerConfig:
     outputs:
       - jsonOutput:
           jsonTemplate:
+            baseJson:
+              jsonPath: $.customer
             fields:
               - fieldName: instances
                 fromTable:
                   tableName: result_table
                   format: "SPLIT"
+              - fieldName: order
+                fromTable:
+                  tableName: order_table
+                  format: "RECORD"

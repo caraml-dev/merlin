@@ -34,7 +34,7 @@ export const TableTransformationCard = ({
       <EuiFlexGroup direction="column" gutterSize="s">
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>#{index + 1} - Table Transformation</h4>
+            <h4>Table Transformation</h4>
           </EuiText>
         </EuiFlexItem>
 

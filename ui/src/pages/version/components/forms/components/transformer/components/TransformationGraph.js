@@ -18,13 +18,13 @@ const endNode = {
 };
 
 const addFeastInputNodesLinks = (nodes, links, nodeMap, idx, feast, stage) => {
-  feast.forEach(feast => {
-    const id = `${stage}-feast-input-${idx}`;
+  feast.forEach((feast, feastIdx) => {
+    const id = `${stage}-input-${idx}-feast-${feastIdx}`;
     const tableName = feast.tableName;
 
     nodes.push({
       id: id,
-      label: `#${idx + 1} - Feast Table\nOutput: ${tableName}`
+      label: `Feast Table\nOutput: ${tableName}`
     });
     nodeMap[tableName] = id;
 
@@ -50,13 +50,13 @@ const addGenericTableInputNodesLinks = (
   tables,
   stage
 ) => {
-  tables.forEach(table => {
-    const id = `${stage}-table-input-${idx}`;
+  tables.forEach((table, tableIdx) => {
+    const id = `${stage}-input-${idx}-table-${tableIdx}`;
     const tableName = table.name;
 
     nodes.push({
       id: id,
-      label: `#${idx + 1} - Generic Table\nOutput: ${tableName}`
+      label: `Generic Table\nOutput: ${tableName}`
     });
     nodeMap[tableName] = id;
 
@@ -111,7 +111,7 @@ const addVariablesInputNodesLinks = (
 
   nodes.push({
     id: id,
-    label: `#${idx + 1} - Variables\nOutput:\n- ${vars.join("\n- ")}`
+    label: `Variables\nOutput:\n- ${vars.join("\n- ")}`
   });
 };
 
@@ -125,7 +125,7 @@ const addTableTransformationNodesLinks = (
 ) => {
   const id = `${stage}-table-transformation-${idx}`;
   const outputTable = tableTransformation.outputTable;
-  const label = `#${idx + 1} - Table Transformation\nOutput: ${outputTable}`;
+  const label = `Table Transformation\nOutput: ${outputTable}`;
 
   const sourceTable = tableTransformation.inputTable;
   if (nodeMap.hasOwnProperty(sourceTable)) {
@@ -164,7 +164,7 @@ const addTableJoinNodesLinks = (
 ) => {
   const id = `${stage}-table-join-${idx}`;
   const outputTable = tableJoin.outputTable ? tableJoin.outputTable : "";
-  const label = `#${idx + 1} - Table Join\nOutput: ${outputTable}`;
+  const label = `Table Join\nOutput: ${outputTable}`;
 
   const leftTable = tableJoin.leftTable;
   if (nodeMap.hasOwnProperty(leftTable)) {
@@ -273,13 +273,21 @@ const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
   config[stage].outputs &&
     config[stage].outputs.forEach(output => {
       if (output.jsonOutput && output.jsonOutput.jsonTemplate) {
+        let outputNodeExists = false;
+        let id = `${stage}-output-base-json`;
+        let labels = ["Output"];
+        let fields = [];
+
         const jsonTemplate = output.jsonOutput.jsonTemplate;
+
         if (jsonTemplate.baseJson) {
-          const id = `${stage}-output-base-json`;
+          outputNodeExists = true;
+
           nodes.push({
             id: id,
-            label: `Output Base JSON:\n${jsonTemplate.baseJson.jsonPath}`
+            label: `Base JSON:\n${jsonTemplate.baseJson.jsonPath}`
           });
+          labels.push(`Base JSON: ${jsonTemplate.baseJson.jsonPath}`);
 
           if (stage === "preprocess") {
             links.push({
@@ -301,16 +309,33 @@ const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
         if (jsonTemplate.fields) {
           jsonTemplate.fields.forEach((field, idx) => {
             if (field && field.fieldName) {
-              const id = `${stage}-output-field-${idx}`;
+              outputNodeExists = true;
+
               nodes.push({
                 id: id,
                 label: `Output Field: ${field.fieldName}`
               });
+
+              fields.push(`- ${field.fieldName}`);
+
               addFieldLinks(links, nodeMap, id, field, stage);
               if (stage === "postprocess") {
                 nodes.push(endNode);
               }
             }
+          });
+        }
+
+        if (outputNodeExists) {
+          if (fields.length > 0) {
+            labels.push("Fields:");
+            labels = labels.concat(fields);
+          }
+
+          // Overwrite with new label
+          nodes.push({
+            id: id,
+            label: labels.join("\n")
           });
         }
       }

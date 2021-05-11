@@ -48,7 +48,7 @@ export const TableInputCard = ({
       <EuiFlexGroup direction="column" gutterSize="m">
         <EuiFlexItem>
           <EuiText size="s">
-            <h4>#{index + 1} - Generic Table</h4>
+            <h4>Generic Table</h4>
           </EuiText>
         </EuiFlexItem>
 

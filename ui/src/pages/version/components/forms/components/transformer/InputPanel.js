@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import {
   EuiDragDropContext,
   euiDragDropReorder,
@@ -32,6 +32,11 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
     onChangeHandler([...inputs]);
   };
 
+  const onDeleteInputChild = (idx, field, childIdx) => () => {
+    inputs[idx][field].splice(childIdx, 1);
+    onChangeHandler([...inputs]);
+  };
+
   const onDragEnd = ({ source, destination }) => {
     if (source && destination) {
       const items = euiDragDropReorder(inputs, source.index, destination.index);
@@ -48,54 +53,72 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
           <EuiDroppable droppableId="INPUTS_DROPPABLE_AREA" spacing="m">
             {inputs.map((input, idx) => (
               <EuiDraggable
-                key={`${idx}`}
+                key={`input-${idx}`}
                 index={idx}
                 draggableId={`${idx}`}
                 customDragHandle={true}
                 disableInteractiveElementBlocking>
                 {provided => (
-                  <EuiFlexItem key={`input-${idx}`}>
-                    {input.feast && (
-                      <FeastResourcesContextProvider
-                        project={input.feast[0].project}>
-                        <FeastInputCard
-                          index={idx}
-                          table={input.feast[0]}
-                          tableNameEditable={true}
-                          onChangeHandler={onChange(`${idx}.feast.0`)}
-                          onDelete={
-                            inputs.length > 1 ? onDeleteInput(idx) : undefined
-                          }
-                          dragHandleProps={provided.dragHandleProps}
-                          errors={get(errors, `${idx}.feast.0`)}
-                        />
-                      </FeastResourcesContextProvider>
-                    )}
+                  <EuiFlexItem>
+                    {input.feast &&
+                      input.feast.map((feast, feastIdx) => (
+                        <Fragment key={`input-${idx}-feast-${feastIdx}`}>
+                          <FeastResourcesContextProvider
+                            project={feast.project}>
+                            <FeastInputCard
+                              index={idx}
+                              table={feast}
+                              tableNameEditable={true}
+                              onChangeHandler={onChange(
+                                `${idx}.feast.${feastIdx}`
+                              )}
+                              onDelete={
+                                input.feast.length > 1
+                                  ? onDeleteInputChild(idx, "feast", feastIdx)
+                                  : onDeleteInput(idx)
+                              }
+                              dragHandleProps={provided.dragHandleProps}
+                              errors={get(errors, `${idx}.feast.${feastIdx}`)}
+                            />
+                          </FeastResourcesContextProvider>
+                          {feastIdx < input.feast.length - 1 && (
+                            <EuiSpacer size="s" />
+                          )}
+                        </Fragment>
+                      ))}
 
-                    {input.tables && (
-                      <TableInputCard
-                        index={idx}
-                        table={input.tables[0]}
-                        onChangeHandler={onChange(`${idx}.tables.0`)}
-                        onColumnChangeHandler={onChange(
-                          `${idx}.tables.0.columns`
-                        )}
-                        onDelete={
-                          inputs.length > 1 ? onDeleteInput(idx) : undefined
-                        }
-                        dragHandleProps={provided.dragHandleProps}
-                        errors={get(errors, `${idx}.tables.0`)}
-                      />
-                    )}
+                    {input.tables &&
+                      input.tables.map((table, tableIdx) => (
+                        <Fragment key={`input-${idx}-table-${tableIdx}`}>
+                          <TableInputCard
+                            index={idx}
+                            table={table}
+                            onChangeHandler={onChange(
+                              `${idx}.tables.${tableIdx}`
+                            )}
+                            onColumnChangeHandler={onChange(
+                              `${idx}.tables.${tableIdx}.columns`
+                            )}
+                            onDelete={
+                              input.tables.length > 1
+                                ? onDeleteInputChild(idx, "tables", tableIdx)
+                                : onDeleteInput(idx)
+                            }
+                            dragHandleProps={provided.dragHandleProps}
+                            errors={get(errors, `${idx}.tables.${tableIdx}`)}
+                          />
+                          {tableIdx < input.tables.length - 1 && (
+                            <EuiSpacer size="s" />
+                          )}
+                        </Fragment>
+                      ))}
 
                     {input.variables && (
                       <VariablesInputCard
                         index={idx}
                         variables={input.variables}
                         onChangeHandler={onChange(`${idx}.variables`)}
-                        onDelete={
-                          inputs.length > 1 ? onDeleteInput(idx) : undefined
-                        }
+                        onDelete={onDeleteInput(idx)}
                         dragHandleProps={provided.dragHandleProps}
                         errors={get(errors, `${idx}.variables`)}
                       />

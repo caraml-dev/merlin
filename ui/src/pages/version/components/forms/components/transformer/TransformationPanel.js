@@ -68,11 +68,7 @@ export const TransformationPanel = ({
                         index={idx}
                         data={transformation.tableTransformation}
                         onChangeHandler={onChange(`${idx}.tableTransformation`)}
-                        onDelete={
-                          transformations.length > 1
-                            ? onDeleteTransformation(idx)
-                            : undefined
-                        }
+                        onDelete={onDeleteTransformation(idx)}
                         dragHandleProps={provided.dragHandleProps}
                         errors={get(errors, `${idx}.tableTransformation`)}
                       />
@@ -83,11 +79,7 @@ export const TransformationPanel = ({
                         index={idx}
                         data={transformation.tableJoin}
                         onChangeHandler={onChange(`${idx}.tableJoin`)}
-                        onDelete={
-                          transformations.length > 1
-                            ? onDeleteTransformation(idx)
-                            : undefined
-                        }
+                        onDelete={onDeleteTransformation(idx)}
                         dragHandleProps={provided.dragHandleProps}
                         errors={get(errors, `${idx}.tableJoin`)}
                       />
