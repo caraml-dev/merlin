@@ -30,7 +30,7 @@ const (
 
 const (
 	throughputSliExprFormat = "round(sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])), 0.001)\n"
-	latencySliExprFormat    = "avg(histogram_quantile(%f, sum(rate(revision_request_latencies_bucket{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])) by (le)))\n"
+	latencySliExprFormat    = "histogram_quantile(%f, sum(rate(revision_request_latencies_bucket{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])) by (le, revision_name))\n"
 	errorRateSliExprFormat  = "sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\", response_code_class != \"2xx\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m]))\n"
 	cpuSliExprFormat        = "sum(rate(container_cpu_usage_seconds_total{cluster_name=\"%s\", namespace=\"%s\", pod_name=~\".*%s.*\"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name=\"%s\", namespace=\"%s\", pod=~\".*%s.*\"})\n"
 	memorySliExprFormat     = "sum(container_memory_usage_bytes{cluster_name=\"%s\",namespace=\"%s\",pod_name=~\".*%s.*\"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\"})\n"
@@ -38,7 +38,7 @@ const (
 
 const (
 	throughputSummary = "Throughput (RPM) of %s model in %s is less than %.2f. Current value is {{ $value }}."
-	latencySummary    = "%.2fp latency of %s model in %s is higher than %.2f %s. Current value is {{ $value }} %s."
+	latencySummary    = "%.2fp latency of %s model and revision {{ $revision_name }} in %s is higher than %.2f %s. Current value is {{ $value }} %s."
 	errorRateSummary  = "Error rate of %s model in %s is higher than %.2f%%. Current value is {{ $value }}%%."
 	cpuSummary        = "CPU usage of %s model in %s is higher than %.2f%%. Current value is {{ $value }}%%."
 	memorySummary     = "Memory usage of %s model in %s is higher than %.2f%%. Current value is {{ $value }}%%."
