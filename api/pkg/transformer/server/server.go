@@ -75,19 +75,18 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
 	defer span.Finish()
 
-	requestBody, err := ioutil.ReadAll(r.Body)
+	preprocessedRequestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		s.logger.Error("read requestBody body", zap.Error(err))
+		s.logger.Error("read preprocessedRequestBody body", zap.Error(err))
 		response.NewError(http.StatusInternalServerError, err).Write(w)
 		return
 	}
 	defer r.Body.Close()
-	s.logger.Debug("raw requestBody", zap.ByteString("requestBody", requestBody))
+	s.logger.Debug("raw request_body", zap.ByteString("request_body", preprocessedRequestBody))
 
-	preprocessedRequestBody := requestBody
 	if s.PreprocessHandler != nil {
 		preprocessStartTime := time.Now()
-		preprocessedRequestBody, err = s.preprocess(ctx, requestBody, r.Header)
+		preprocessedRequestBody, err = s.preprocess(ctx, preprocessedRequestBody, r.Header)
 		durationMs := time.Since(preprocessStartTime).Milliseconds()
 		if err != nil {
 			pipelineLatency.WithLabelValues(errorResult, preprocessStep).Observe(float64(durationMs))
@@ -111,16 +110,16 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	pipelineLatency.WithLabelValues(successResult, predictStep).Observe(float64(predictionDurationMs))
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	postprocessedRequestBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		response.NewError(http.StatusInternalServerError, err).Write(w)
 		return
 	}
+	s.logger.Debug("predict response", zap.ByteString("predict_response", postprocessedRequestBody))
 
-	postprocessedRequestBody := respBody
 	if s.PostprocessHandler != nil {
 		postprocessStartTime := time.Now()
-		postprocessedRequestBody, err = s.postprocess(ctx, respBody, resp.Header)
+		postprocessedRequestBody, err = s.postprocess(ctx, postprocessedRequestBody, resp.Header)
 		postprocessDurationMs := time.Since(postprocessStartTime).Milliseconds()
 		if err != nil {
 			pipelineLatency.WithLabelValues(errorResult, postprocessStep).Observe(float64(postprocessDurationMs))
@@ -130,6 +129,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		pipelineLatency.WithLabelValues(successResult, postprocessStep).Observe(float64(postprocessDurationMs))
 	}
+	s.logger.Debug("postprocess response", zap.ByteString("postprocess_response", postprocessedRequestBody))
 
 	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
@@ -238,6 +238,12 @@ func setupSignalHandler() (stopCh <-chan struct{}) {
 
 func copyHeader(dst, src http.Header) {
 	for k, vv := range src {
+		// Do not copy/modify Content-Length.
+		// Let the HTTP client set the Content-Length by it self
+		if strings.ToLower(k) == "content-length" {
+			continue
+		}
+
 		for _, v := range vv {
 			dst.Set(k, v)
 		}
