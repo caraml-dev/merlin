@@ -1,0 +1,9 @@
+transformerConfig:
+  postprocess:
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromJson:
+                  jsonPath: $.model_response.instances

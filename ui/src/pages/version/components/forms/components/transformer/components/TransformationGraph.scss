@@ -1,0 +1,32 @@
+.transformationGraph {
+  padding: 10px;
+  // border: 1px solid #EEEEEE;
+
+  text {
+    font-family: "Roboto Mono", Consolas, Menlo, Courier, monospace;
+    font-size: 11px;
+  }
+
+  .nodes {
+    fill: #ffffff;
+  }
+
+  .label-container {
+    stroke: #333333;
+  }
+
+  .label {
+    fill: #333333;
+  }
+
+  .edgePath {
+    stroke: black;
+  }
+}
+
+.modelServiceNode {
+  fill: #006bb4;
+  .label {
+    fill: #ffffff;
+  }
+}

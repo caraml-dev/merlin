@@ -165,6 +165,37 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		expTransformedResponse response
 	}{
 		{
+			name:         "postprocess output only",
+			specYamlPath: "../pipeline/testdata/postprocess_output_only.yaml",
+			mockFeasts:   []mockFeast{},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"customer_id": 1, "customer_name": "neo", "drivers": [{"id": "D1"}, {"id": "D2"}]}`),
+			},
+			expTransformedRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"customer_id": 1, "customer_name": "neo", "drivers": [{"id": "D1"}, {"id": "D2"}]}`),
+			},
+			modelResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"instances":{"columns":["rank","driver_id","customer_id","merlin_test_driver_features:test_int32","merlin_test_driver_features:test_float"],"data":[[0,"D1",1,-1,0],[1,"D2",1,-1,0]]}}`),
+				statusCode: 200,
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"instances":{"columns":["rank","driver_id","customer_id","merlin_test_driver_features:test_int32","merlin_test_driver_features:test_float"],"data":[[0,"D1",1,-1,0],[1,"D2",1,-1,0]]}}`),
+				statusCode: 200,
+			},
+		},
+		{
 			name:         "simple preprocess",
 			specYamlPath: "../pipeline/testdata/valid_simple_preprocess.yaml",
 			mockFeasts:   []mockFeast{},

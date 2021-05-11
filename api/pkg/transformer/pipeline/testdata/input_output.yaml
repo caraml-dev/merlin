@@ -25,6 +25,15 @@ transformerConfig:
           - name: variable3
             literal:
               stringValue: variable1
+          - name: variable4
+            literal:
+              intValue: 23
+          - name: variable5
+            literal:
+              floatValue: 3.14
+          - name: variable6
+            literal:
+              boolValue: true
     outputs:
       - jsonOutput:
           jsonTemplate:
