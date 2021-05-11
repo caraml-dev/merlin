@@ -23,7 +23,7 @@ export const SelectTransformerPanel = ({
   const setValue = value => {
     if (value === "disabled") {
       onChange("enabled")(false);
-      onChange("transformer_type")("");
+      onChange("transformer_type")(undefined);
       onChange("type_on_ui")("");
     } else {
       onChange("enabled")(true);
@@ -67,8 +67,10 @@ export const SelectTransformerPanel = ({
   ];
 
   const selectedOption = options.find(option =>
-    transformer.type_on_ui !== ""
-      ? option.value === transformer.type_on_ui
+    transformer.enabled
+      ? transformer.type_on_ui !== ""
+        ? option.value === transformer.type_on_ui
+        : option.value === "disabled"
       : option.value === "disabled"
   );
 

@@ -38,7 +38,7 @@ transformerConfig:
             - updateColumns:
                 - column: customer_id
                   expression: customer_id
-            - selectColumns: ["customer_id", "merlin_test_driver_id" ,"name", "rank"]
+            - selectColumns: ["customer_id", "merlin_test_driver_id", "rank"]
       - tableJoin:
           leftTable: driver_table
           rightTable: driver_feature_table

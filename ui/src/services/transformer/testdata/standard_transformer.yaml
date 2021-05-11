@@ -4,39 +4,14 @@ transformerConfig:
       - variables:
           - name: customer_id
             jsonPath: $.customer.id
-          - name: customer_name
-            jsonPath: $.customer.name
-      - variables:
-          - name: merchant_id
-            jsonPath: $.merchant.id
-          - name: merchant_name
-            jsonPath: $.merchant.name
       - tables:
           - name: driver_table
             baseTable:
               fromJson:
                 jsonPath: $.drivers[*]
                 addRowNumber: true
-          - name: order_table
-            baseTable:
-              fromJson:
-                jsonPath: $.orders[*]
-                addRowNumber: true
       - feast:
           - tableName: driver_feature_table
-            project: merlin
-            entities:
-              - name: merlin_test_driver_id
-                valueType: STRING
-                jsonPath: $.drivers[*].id
-            features:
-              - name: merlin_test_driver_features:test_int32
-                valueType: INT32
-                defaultValue: '-1'
-              - name: merlin_test_driver_features:test_float
-                valueType: FLOAT
-                defaultValue: '0'
-          - tableName: driver_feature_table_2
             project: merlin
             entities:
               - name: merlin_test_driver_id
@@ -63,7 +38,7 @@ transformerConfig:
             - updateColumns:
                 - column: customer_id
                   expression: customer_id
-            - selectColumns: ["customer_id", "merlin_test_driver_id" ,"name", "rank"]
+            - selectColumns: ["customer_id", "merlin_test_driver_id", "rank"]
       - tableJoin:
           leftTable: driver_table
           rightTable: driver_feature_table
@@ -83,14 +58,8 @@ transformerConfig:
     outputs:
       - jsonOutput:
           jsonTemplate:
-            baseJson:
-              jsonPath: $.customer
             fields:
               - fieldName: instances
                 fromTable:
                   tableName: result_table
                   format: "SPLIT"
-              - fieldName: order
-                fromTable:
-                  tableName: order_table
-                  format: "RECORD"

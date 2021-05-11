@@ -107,7 +107,7 @@ export const DeployModelVersionForm = ({
   const [steps, setSteps] = useState(mainSteps);
   useEffect(
     () => {
-      if (versionEndpoint.transformer) {
+      if (versionEndpoint.transformer && versionEndpoint.transformer.enabled) {
         switch (versionEndpoint.transformer.type_on_ui) {
           case "standard":
             setSteps([...mainSteps, ...standardTransformerSteps]);

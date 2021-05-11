@@ -11,12 +11,6 @@ const modelServiceNode = {
   class: "modelServiceNode"
 };
 
-const endNode = {
-  id: "end-node",
-  label: "End",
-  config: { shape: "circle" }
-};
-
 const addFeastInputNodesLinks = (nodes, links, nodeMap, idx, feast, stage) => {
   feast.forEach((feast, feastIdx) => {
     const id = `${stage}-input-${idx}-feast-${feastIdx}`;
@@ -208,8 +202,6 @@ const addFieldLinks = (links, nodeMap, id, field, stage) => {
   if (stage === "preprocess") {
     links.push({ source: id, target: modelServiceNode.id });
   } else if (stage === "postprocess") {
-    links.push({ source: id, target: endNode.id });
-
     const jsonPath = get(field, "fromJson.jsonPath");
     if (jsonPath !== undefined && jsonPath.startsWith(MODEL_RESPONSE_PREFIX)) {
       links.push({ source: modelServiceNode.id, target: id });
@@ -300,8 +292,6 @@ const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
               jsonTemplate.baseJson.jsonPath.startsWith(MODEL_RESPONSE_PREFIX)
             ) {
               links.push({ source: modelServiceNode.id, target: id });
-              nodes.push(endNode);
-              links.push({ source: id, target: endNode.id });
             }
           }
         }
@@ -319,9 +309,6 @@ const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
               fields.push(`- ${field.fieldName}`);
 
               addFieldLinks(links, nodeMap, id, field, stage);
-              if (stage === "postprocess") {
-                nodes.push(endNode);
-              }
             }
           });
         }

@@ -13,14 +13,6 @@ export class VersionEndpoint {
     this.service_name = undefined;
     this.monitoring_url = undefined;
 
-    this.environment = {
-      id: undefined,
-      name: undefined,
-      cluster: undefined,
-      is_default: false,
-      created_at: undefined,
-      updated_at: undefined
-    };
     this.environment_name = "";
 
     this.message = undefined;

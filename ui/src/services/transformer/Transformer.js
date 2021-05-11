@@ -10,7 +10,7 @@ export class Transformer {
     this.id = undefined;
     this.enabled = false;
     this.version_endpoint_id = undefined;
-    this.transformer_type = "";
+    this.transformer_type = undefined;
     this.type_on_ui = ""; // Only used on UI side
 
     // Custom transformer's properties.
