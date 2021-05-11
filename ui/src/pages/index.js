@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+import TransformerTools from "./tools/TransformerTools";
+import DeployModelVersionView from "./version/deploy/DeployModelVersionView";
+import RedeployModelVersionView from "./version/redeploy/RedeployModelVersionView";
 import Version from "./version/Version";
 
+export { TransformerTools };
+
+export { DeployModelVersionView };
+export { RedeployModelVersionView };
 export { Version };

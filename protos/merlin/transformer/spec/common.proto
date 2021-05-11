@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
+
+
+message FromTable {
+  enum JsonFormat {
+    INVALID = 0;
+    RECORD = 1;
+    VALUES = 2;
+    SPLIT = 3;
+  }
+  string tableName = 1;
+  JsonFormat format = 2;
+}
+
+message FromJson {
+  string jsonPath = 1;
+  bool addRowNumber = 2;
+}

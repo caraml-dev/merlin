@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	_ "net/http/pprof"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"strings"
@@ -46,9 +46,9 @@ type Server struct {
 	router     *mux.Router
 	logger     *zap.Logger
 
-	PreprocessHandler  func(ctx context.Context, request []byte) ([]byte, error)
-	PostprocessHandler func(ctx context.Context, request []byte) ([]byte, error)
-	LivenessHandler    func(w http.ResponseWriter, r *http.Request)
+	ContextModifier    func(ctx context.Context) context.Context
+	PreprocessHandler  func(ctx context.Context, request []byte, requestHeaders map[string]string) ([]byte, error)
+	PostprocessHandler func(ctx context.Context, response []byte, responseHeaders map[string]string) ([]byte, error)
 }
 
 // New initializes a new Server.
@@ -68,6 +68,10 @@ func New(o *Options, logger *zap.Logger) *Server {
 // PredictHandler handles prediction request to the transformer and model.
 func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	if s.ContextModifier != nil {
+		ctx = s.ContextModifier(ctx)
+	}
+
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
 	defer span.Finish()
 
@@ -82,20 +86,28 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	preprocessedRequestBody := requestBody
 	if s.PreprocessHandler != nil {
-		preprocessedRequestBody, err = s.preprocess(ctx, requestBody)
+		preprocessStartTime := time.Now()
+		preprocessedRequestBody, err = s.preprocess(ctx, requestBody, r.Header)
+		durationMs := time.Since(preprocessStartTime).Milliseconds()
 		if err != nil {
+			pipelineLatency.WithLabelValues(errorResult, preprocessStep).Observe(float64(durationMs))
 			s.logger.Error("preprocess error", zap.Error(err))
 			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
 			return
 		}
+		pipelineLatency.WithLabelValues(successResult, preprocessStep).Observe(float64(durationMs))
 		s.logger.Debug("preprocess response", zap.ByteString("preprocess_response", preprocessedRequestBody))
 	}
 
+	predictStartTime := time.Now()
 	resp, err := s.predict(ctx, r, preprocessedRequestBody)
+	predictionDurationMs := time.Since(predictStartTime).Milliseconds()
 	if err != nil {
+		pipelineLatency.WithLabelValues(errorResult, predictStep).Observe(float64(predictionDurationMs))
 		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
 		return
 	}
+	pipelineLatency.WithLabelValues(successResult, predictStep).Observe(float64(predictionDurationMs))
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -103,16 +115,37 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	postprocessedRequestBody := respBody
+	if s.PostprocessHandler != nil {
+		postprocessStartTime := time.Now()
+		postprocessedRequestBody, err = s.postprocess(ctx, respBody, resp.Header)
+		postprocessDurationMs := time.Since(postprocessStartTime).Milliseconds()
+		if err != nil {
+			pipelineLatency.WithLabelValues(errorResult, postprocessStep).Observe(float64(postprocessDurationMs))
+			s.logger.Error("postprocess error", zap.Error(err))
+			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "postprocessing error")).Write(w)
+			return
+		}
+		pipelineLatency.WithLabelValues(successResult, postprocessStep).Observe(float64(postprocessDurationMs))
+	}
+
 	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
-	w.Write(respBody)
+	w.Write(postprocessedRequestBody)
 }
 
-func (s *Server) preprocess(ctx context.Context, request []byte) ([]byte, error) {
+func (s *Server) preprocess(ctx context.Context, request []byte, requestHeader http.Header) ([]byte, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "preprocess")
 	defer span.Finish()
 
-	return s.PreprocessHandler(ctx, request)
+	return s.PreprocessHandler(ctx, request, getHeaders(requestHeader))
+}
+
+func (s *Server) postprocess(ctx context.Context, response []byte, responseHeader http.Header) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postprocess")
+	defer span.Finish()
+
+	return s.PostprocessHandler(ctx, response, getHeaders(responseHeader))
 }
 
 func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (*http.Response, error) {
@@ -140,6 +173,11 @@ func (s *Server) Run() {
 	health := healthcheck.NewHandler()
 	s.router.Handle("/", health)
 	s.router.Handle("/metrics", promhttp.Handler())
+	s.router.HandleFunc("/debug/pprof/", pprof.Index)
+	s.router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	s.router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	s.router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	s.router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	s.router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelName), s.PredictHandler).Methods("POST")
 
@@ -206,4 +244,12 @@ func copyHeader(dst, src http.Header) {
 			dst.Set(k, v)
 		}
 	}
+}
+
+func getHeaders(headers http.Header) map[string]string {
+	resultHeaders := make(map[string]string, len(headers))
+	for k, v := range headers {
+		resultHeaders[k] = strings.Join(v, ",")
+	}
+	return resultHeaders
 }

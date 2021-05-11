@@ -1,0 +1,93 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - tables:
+          - name: entity_3_table
+            baseTable:
+              fromJson:
+                jsonPath: $.entity_3
+                addRowNumber: true
+          - name: entity_4_table
+            baseTable:
+              fromTable:
+                tableName: entity_3_table
+            columns:
+              - name: column_1
+                expression: Now()
+              - name: column_2
+                fromJson:
+                  jsonPath: $.entity_2
+      - variables:
+          - name: variable1
+            jsonPath: $.entity_2.id
+          - name: variable2
+            expression: variable1
+          - name: variable3
+            literal:
+              stringValue: variable1
+          - name: variable4
+            literal:
+              intValue: 23
+          - name: variable5
+            literal:
+              floatValue: 3.14
+          - name: variable6
+            literal:
+              boolValue: true
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: entity
+                fromJson:
+                  jsonPath: "$.entity_1"
+              - fieldName: data
+                fields:
+                  - fieldName: instances
+                    fromTable:
+                      tableName: "entity_3_table"
+                      format: "RECORD"
+                  - fieldName: path_1
+                    fromJson:
+                      jsonPath: "$.path_1"
+                  - fieldName: variable_1
+                    expression: "variable1"
+  postprocess:
+    inputs:
+      - tables:
+          - name: entity_3_table
+            baseTable:
+              fromJson:
+                jsonPath: $.entity_3
+                addRowNumber: true
+          - name: entity_4_table
+            baseTable:
+              fromTable:
+                tableName: entity_3_table
+            columns:
+              - name: column_1
+                expression: Now()
+              - name: column_2
+                fromJson:
+                  jsonPath: $.entity_2
+      - variables:
+          - name: variable1
+            jsonPath: $.entity_2.id
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: entity
+                fromJson:
+                  jsonPath: "$.entity_1"
+              - fieldName: data
+                fields:
+                  - fieldName: instances
+                    fromTable:
+                      tableName: "entity_4_table"
+                      format: "RECORD"
+                  - fieldName: path_2
+                    fromJson:
+                      jsonPath: "$.path_2"
+                  - fieldName: variable_1
+                    expression: "variable1"

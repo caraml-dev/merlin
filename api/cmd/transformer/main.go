@@ -17,39 +17,44 @@ import (
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
+	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/server"
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 func init() {
 	prometheus.MustRegister(version.NewCollector("feast_transformer"))
 }
 
+type AppConfig struct {
+	Server server.Options
+	Feast  feast.Options
+	Cache  cache.Options
+
+	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
+	LogLevel                      string `envconfig:"LOG_LEVEL"`
+}
+
 func main() {
-	cfg := struct {
-		Server server.Options
-		Feast  feast.Options
-		Cache  cache.Options
-
-		StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
-		LogLevel                      string `envconfig:"LOG_LEVEL"`
-	}{}
-
-	if err := envconfig.Process("", &cfg); err != nil {
+	appConfig := AppConfig{}
+	if err := envconfig.Process("", &appConfig); err != nil {
 		log.Fatal(errors.Wrap(err, "Error processing environment variables"))
 	}
 
 	logger, _ := zap.NewProduction()
-	if cfg.LogLevel == "DEBUG" {
+	if appConfig.LogLevel == "DEBUG" {
 		logger, _ = zap.NewDevelopment()
 	}
 	defer logger.Sync()
 
-	logger.Info("configuration loaded", zap.Any("cfg", cfg))
+	logger.Info("configuration loaded", zap.Any("appConfig", appConfig))
 
-	closer, err := initTracing(cfg.Server.ModelName + "-transformer")
+	closer, err := initTracing(appConfig.Server.ModelName + "-transformer")
 	if err != nil {
 		logger.Error("Unable to initialize tracing", zap.Error(err))
 	}
@@ -57,14 +62,14 @@ func main() {
 		defer closer.Close()
 	}
 
-	config := &transformer.StandardTransformerConfig{}
-	if err := jsonpb.UnmarshalString(cfg.StandardTransformerConfigJSON, config); err != nil {
-		logger.Fatal("Unable to parse standard transformer config", zap.Error(err))
+	transformerConfig := &spec.StandardTransformerConfig{}
+	if err := jsonpb.UnmarshalString(appConfig.StandardTransformerConfigJSON, transformerConfig); err != nil {
+		logger.Fatal("Unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
-	feastHost, feastPort, err := net.SplitHostPort(cfg.Feast.ServingURL)
+	feastHost, feastPort, err := net.SplitHostPort(appConfig.Feast.ServingURL)
 	if err != nil {
-		logger.Fatal("Unable to parse Feast Serving URL", zap.String("feast-serving-url", cfg.Feast.ServingURL), zap.Error(err))
+		logger.Fatal("Unable to parse Feast Serving URL", zap.String("feast-serving-url", appConfig.Feast.ServingURL), zap.Error(err))
 	}
 	feastPortInt, err := strconv.Atoi(feastPort)
 	if err != nil {
@@ -76,20 +81,66 @@ func main() {
 		logger.Fatal("Unable to initialize Feast client", zap.Error(err))
 	}
 
-	var memoryCache *cache.Cache
-	if cfg.Feast.CacheEnabled {
-		memoryCache = cache.NewCache(cfg.Cache)
-	}
+	s := server.New(&appConfig.Server, logger)
 
-	f, err := feast.NewTransformer(feastClient, config, &cfg.Feast, logger, memoryCache)
-	if err != nil {
-		logger.Fatal("Unable to initialize transformer", zap.Error(err))
-	}
+	if transformerConfig.TransformerConfig.Feast != nil {
+		// Feast Enricher
+		feastTransformer, err := initFeastTransformer(appConfig, feastClient, transformerConfig, logger)
+		if err != nil {
+			logger.Fatal("Unable to initialize transformer", zap.Error(err))
+		}
+		s.PreprocessHandler = feastTransformer.Enrich
+	} else {
+		// Standard Enricher
+		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClient, &appConfig.Feast, &appConfig.Cache, logger)
+		compiledPipeline, err := compiler.Compile(transformerConfig)
+		if err != nil {
+			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
+		}
 
-	s := server.New(&cfg.Server, logger)
-	s.PreprocessHandler = f.Transform
+		handler := pipeline.NewHandler(compiledPipeline, logger)
+		s.PreprocessHandler = handler.Preprocess
+		s.PostprocessHandler = handler.Postprocess
+		s.ContextModifier = handler.EmbedEnvironment
+	}
 
 	s.Run()
+}
+
+func initFeastTransformer(appCfg AppConfig,
+	feastClient *feastSdk.GrpcClient,
+	transformerConfig *spec.StandardTransformerConfig,
+	logger *zap.Logger) (*feast.Enricher, error) {
+
+	var memoryCache cache.Cache
+	if appCfg.Feast.CacheEnabled {
+		memoryCache = cache.NewInMemoryCache(&appCfg.Cache)
+	}
+
+	compiledJSONPaths, err := feast.CompileJSONPaths(transformerConfig.TransformerConfig.Feast)
+	if err != nil {
+		return nil, err
+	}
+
+	compiledExpressions, err := feast.CompileExpressions(transformerConfig.TransformerConfig.Feast)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonPathStorage := jsonpath.NewStorage()
+	jsonPathStorage.AddAll(compiledJSONPaths)
+	expressionStorage := expression.NewStorage()
+	expressionStorage.AddAll(compiledExpressions)
+	entityExtractor := feast.NewEntityExtractor(jsonPathStorage, expressionStorage)
+	featureRetriever := feast.NewFeastRetriever(feastClient,
+		entityExtractor,
+		transformerConfig.TransformerConfig.Feast,
+		&appCfg.Feast,
+		memoryCache,
+		logger,
+	)
+
+	return feast.NewEnricher(featureRetriever, logger)
 }
 
 func initTracing(serviceName string) (io.Closer, error) {

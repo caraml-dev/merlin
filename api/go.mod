@@ -12,6 +12,7 @@ require (
 	github.com/coocood/freecache v1.1.1
 	github.com/feast-dev/feast/sdk/go v0.9.2
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-gota/gota v0.10.1
 	github.com/go-openapi/spec v0.19.9 // indirect
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
@@ -60,6 +61,7 @@ require (
 	k8s.io/client-go v0.18.3
 	knative.dev/pkg v0.0.0-20191217184203-cf220a867b3d
 	sigs.k8s.io/controller-runtime v0.4.0
+	sigs.k8s.io/yaml v1.2.0
 )
 
 replace (

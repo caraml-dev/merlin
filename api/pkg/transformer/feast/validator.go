@@ -10,27 +10,20 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/pkg/errors"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
 
 // ValidateTransformerConfig validate transformer config by checking the presence of entity and features in feast core
-func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, trfCfg *transformer.StandardTransformerConfig) error {
-	if trfCfg.TransformerConfig == nil {
-		return NewValidationError("transformerConfig is empty")
-	}
-
-	if len(trfCfg.TransformerConfig.Feast) == 0 {
-		return NewValidationError("feature retrieval config is empty")
-	}
-
+func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, featureTableConfigs []*spec.FeatureTable) error {
 	// for each feature retrieval table
-	for _, config := range trfCfg.TransformerConfig.Feast {
+	for _, config := range featureTableConfigs {
 		if len(config.Entities) == 0 {
-			return NewValidationError("no entity")
+			return errors.New("no entity")
 		}
 
 		if len(config.Features) == 0 {
-			return NewValidationError("no feature")
+			return errors.New("no feature")
 		}
 
 		entitiesReq := &core.ListEntitiesRequest{
@@ -55,32 +48,32 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 		// check all entity given in config are all registered ones
 		entities := make([]string, 0)
 		for _, entity := range config.Entities {
-			spec, found := allEntities[entity.Name]
+			entitySpec, found := allEntities[entity.Name]
 			if !found {
-				return NewValidationError(fmt.Sprintf("entity %s is not found in project %s", entity.Name, config.Project))
+				return fmt.Errorf("entity %s is not found in project %s", entity.Name, config.Project)
 			}
 
 			switch entity.Extractor.(type) {
-			case *transformer.Entity_JsonPath:
+			case *spec.Entity_JsonPath:
 				if len(entity.GetJsonPath()) == 0 {
-					return NewValidationError(fmt.Sprintf("json path for %s is not specified", entity.Name))
+					return fmt.Errorf("json path for %s is not specified", entity.Name)
 				}
 				_, err = jsonpath.Compile(entity.GetJsonPath())
 				if err != nil {
-					return NewValidationError(fmt.Sprintf("jsonpath compilation failed: %v", err))
+					return fmt.Errorf("jsonpath compilation failed: %v", err)
 				}
-			case *transformer.Entity_Udf, *transformer.Entity_Expression:
+			case *spec.Entity_Udf, *spec.Entity_Expression:
 				expressionExtractor := getExpressionExtractor(entity)
-				_, err = expr.Compile(expressionExtractor, expr.Env(UdfEnv{}))
+				_, err = expr.Compile(expressionExtractor, expr.Env(symbol.NewRegistryWithCompiledJSONPath(nil)))
 				if err != nil {
-					return NewValidationError(fmt.Sprintf("udf compilation failed: %v", err))
+					return fmt.Errorf("udf compilation failed: %v", err)
 				}
 			default:
-				return NewValidationError(fmt.Sprintf("one of json_path, udf must be specified"))
+				return fmt.Errorf("one of json_path, udf must be specified")
 			}
 
-			if spec.ValueType.String() != entity.ValueType {
-				return NewValidationError(fmt.Sprintf("mismatched value type for %s, expect: %s, got: %s", entity.Name, spec.ValueType.String(), entity.ValueType))
+			if entitySpec.ValueType.String() != entity.ValueType {
+				return fmt.Errorf("mismatched value type for %s, expect: %s, got: %s", entity.Name, entitySpec.ValueType.String(), entity.ValueType)
 			}
 
 			entities = append(entities, entity.Name)
@@ -108,7 +101,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 			fs, fqNameFound := featuresRes.Features[feature.Name]
 			fs2, shortNameFound := featureShortNames[feature.Name]
 			if !fqNameFound && !shortNameFound {
-				return NewValidationError(fmt.Sprintf("feature not found for entities %s in project %s: %s", entities, config.Project, feature.Name))
+				return fmt.Errorf("feature not found for entities %s in project %s: %s", entities, config.Project, feature.Name)
 			}
 
 			featureSpec := fs
@@ -117,7 +110,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 			}
 
 			if featureSpec.ValueType.String() != feature.ValueType {
-				return NewValidationError(fmt.Sprintf("mismatched value type for %s, expect: %s, got: %s", feature.Name, featureSpec.ValueType.String(), feature.ValueType))
+				return fmt.Errorf("mismatched value type for %s, expect: %s, got: %s", feature.Name, featureSpec.ValueType.String(), feature.ValueType)
 			}
 		}
 	}

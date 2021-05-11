@@ -36,7 +36,12 @@ import { CreateJobView } from "./job/CreateJobView";
 import { PrivateLayout } from "./PrivateLayout";
 
 // The new UI architecture will have all UI pages inside of `pages` folder
-import { Version } from "./pages";
+import {
+  DeployModelVersionView,
+  RedeployModelVersionView,
+  Version,
+  TransformerTools
+} from "./pages";
 
 export default () => (
   <ErrorBoundary>
@@ -79,6 +84,18 @@ export default () => (
           <PrivateRoute
             path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions`}
             render={PrivateLayout(Versions)}
+          />
+
+          {/* Deploy model version */}
+          <PrivateRoute
+            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/deploy`}
+            render={PrivateLayout(DeployModelVersionView)}
+          />
+
+          {/* Redeploy model version */}
+          <PrivateRoute
+            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/redeploy`}
+            render={PrivateLayout(RedeployModelVersionView)}
           />
 
           {/* Version pages (and its sub-routers) */}
@@ -125,6 +142,9 @@ export default () => (
             path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/create-job`}
             render={PrivateLayout(CreateJobView)}
           />
+
+          {/* Tools */}
+          <TransformerTools path={`${config.HOMEPAGE}/-/tools/transformer`} />
 
           {/* DEFAULT */}
           <Empty default />

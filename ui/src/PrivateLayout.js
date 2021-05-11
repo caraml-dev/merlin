@@ -24,6 +24,8 @@ import {
   ProjectsContextProvider
 } from "@gojek/mlp-ui";
 import config, { appConfig } from "./config";
+import { EnvironmentsContextProvider } from "./providers/environments/context";
+
 import "./PrivateLayout.scss";
 
 export const PrivateLayout = Component => {
@@ -40,7 +42,9 @@ export const PrivateLayout = Component => {
             }
           />
           <div className="main-component-layout">
-            <Component {...props} />
+            <EnvironmentsContextProvider>
+              <Component {...props} />
+            </EnvironmentsContextProvider>
           </div>
         </CurrentProjectContextProvider>
       </ProjectsContextProvider>

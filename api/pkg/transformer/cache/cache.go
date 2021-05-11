@@ -6,27 +6,32 @@ import (
 	"github.com/coocood/freecache"
 )
 
+type Cache interface {
+	Insert(key []byte, value []byte, ttl time.Duration) error
+	Fetch(key []byte) ([]byte, error)
+}
+
 type Options struct {
 	SizeInMB int `envconfig:"CACHE_SIZE_IN_MB" default:"100"`
 }
 
-type Cache struct {
-	cacheExecutor *freecache.Cache
+type inMemoryCache struct {
+	cache *freecache.Cache
 }
 
 const (
 	MB = 1024 * 1024
 )
 
-func NewCache(options Options) *Cache {
+func NewInMemoryCache(options *Options) *inMemoryCache {
 	executor := freecache.NewCache(options.SizeInMB * MB)
-	return &Cache{cacheExecutor: executor}
+	return &inMemoryCache{cache: executor}
 }
 
-func (c *Cache) Insert(key []byte, value []byte, ttl time.Duration) error {
-	return c.cacheExecutor.Set(key, value, int(ttl/time.Second))
+func (c *inMemoryCache) Insert(key []byte, value []byte, ttl time.Duration) error {
+	return c.cache.Set(key, value, int(ttl/time.Second))
 }
 
-func (c *Cache) Fetch(key []byte) ([]byte, error) {
-	return c.cacheExecutor.Get(key)
+func (c *inMemoryCache) Fetch(key []byte) ([]byte, error) {
+	return c.cache.Get(key)
 }
