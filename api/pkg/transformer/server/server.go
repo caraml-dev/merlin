@@ -107,6 +107,8 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
 		return
 	}
+	defer resp.Body.Close()
+
 	pipelineLatency.WithLabelValues(successResult, predictStep).Observe(float64(predictionDurationMs))
 
 	respBody, err := ioutil.ReadAll(resp.Body)
