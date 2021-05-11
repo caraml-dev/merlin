@@ -129,7 +129,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 						Rules: []PromAlertRule{
 							PromAlertRule{
 								Alert: "[merlin] model-1: 99.00p Latency warning",
-								Expr:  "avg(histogram_quantile(0.990000, sum(rate(revision_request_latencies_bucket{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m])) by (le)))\n > 100",
+								Expr:  "histogram_quantile(0.990000, sum(rate(revision_request_latencies_bucket{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m])) by (le, revision_name))\n > 100",
 								For:   "5m",
 								Labels: PromAlertRuleLabels{
 									Owner:       "team-1",
@@ -137,7 +137,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 									Severity:    "warning",
 								},
 								Annotations: PromAlertRuleAnnotations{
-									Summary:   "99.00p latency of model-1 model in env-1 is higher than 100.00 ms. Current value is {{ $value }} ms.",
+									Summary:   "99.00p latency of model-1 model and revision {{ $revision_name }} in env-1 is higher than 100.00 ms. Current value is {{ $value }} ms.",
 									Dashboard: "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=cluster-1&var-project=project-1&var-model=model-1",
 									Playbook:  "TODO",
 								},
