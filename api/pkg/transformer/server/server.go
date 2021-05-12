@@ -133,6 +133,8 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	copyHeader(w.Header(), resp.Header)
+	w.Header().Set("Content-Length", fmt.Sprint(len(postprocessedRequestBody)))
+
 	w.WriteHeader(resp.StatusCode)
 	w.Write(postprocessedRequestBody)
 }
@@ -167,6 +169,8 @@ func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (
 
 	// propagate headers
 	copyHeader(req.Header, r.Header)
+	r.Header.Set("Content-Length", fmt.Sprint(len(request)))
+
 	return s.httpClient.Do(req)
 }
 
@@ -239,12 +243,6 @@ func setupSignalHandler() (stopCh <-chan struct{}) {
 
 func copyHeader(dst, src http.Header) {
 	for k, vv := range src {
-		// Do not copy/modify Content-Length.
-		// Let the HTTP client set the Content-Length by it self
-		if strings.ToLower(k) == "content-length" {
-			continue
-		}
-
 		for _, v := range vv {
 			dst.Set(k, v)
 		}
