@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -28,7 +29,7 @@ import (
 func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 	mockPredictResponse := []byte(`{"predictions": [2, 2]}`)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(mockPredictResponse)
 	}))
 	defer ts.Close()
@@ -53,6 +54,7 @@ func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, mockPredictResponse, response)
 	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
+	assert.Equal(t, fmt.Sprint(len(mockPredictResponse)), rr.Header().Get("Content-Length"))
 }
 
 func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
@@ -132,6 +134,7 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 			assert.Equal(t, test.modelResponse, response)
 			assert.Equal(t, test.modelStatusCode, rr.Code)
 			assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
+			assert.Equal(t, fmt.Sprint(len(test.modelResponse)), rr.Header().Get("Content-Length"))
 		})
 	}
 }
@@ -189,7 +192,8 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			},
 			expTransformedResponse: response{
 				headers: map[string]string{
-					"Content-Type": "application/json",
+					"Content-Type":   "application/json",
+					"Content-Length": "183",
 				},
 				body:       []byte(`{"instances":{"columns":["rank","driver_id","customer_id","merlin_test_driver_features:test_int32","merlin_test_driver_features:test_float"],"data":[[0,"D1",1,-1,0],[1,"D2",1,-1,0]]}}`),
 				statusCode: 200,
@@ -220,9 +224,10 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			},
 			expTransformedResponse: response{
 				headers: map[string]string{
-					"Content-Type": "application/json",
+					"Content-Type":   "application/json",
+					"Content-Length": "15",
 				},
-				body:       []byte(`{"status": "ok"}`),
+				body:       []byte(`{"status":"ok"}`),
 				statusCode: 200,
 			},
 		},
@@ -251,9 +256,10 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			},
 			expTransformedResponse: response{
 				headers: map[string]string{
-					"Content-Type": "application/json",
+					"Content-Type":   "application/json",
+					"Content-Length": "78",
 				},
-				body:       []byte(`{"instances": {"columns": ["id", "name"], "data":[[1, "entity-1"],[2, "entity-2"]]}}`),
+				body:       []byte(`{"instances":{"columns":["id","name"],"data":[[1,"entity-1"],[2,"entity-2"]]}}`),
 				statusCode: 200,
 			},
 		},
@@ -282,9 +288,10 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			},
 			expTransformedResponse: response{
 				headers: map[string]string{
-					"Content-Type": "application/json",
+					"Content-Type":   "application/json",
+					"Content-Length": "15",
 				},
-				body:       []byte(`{"status": "ok"}`),
+				body:       []byte(`{"status":"ok"}`),
 				statusCode: 200,
 			},
 		},
