@@ -77,12 +77,12 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		s.logger.Error("read requestBody body", zap.Error(err))
+		s.logger.Error("read request_body", zap.Error(err))
 		response.NewError(http.StatusInternalServerError, err).Write(w)
 		return
 	}
 	defer r.Body.Close()
-	s.logger.Debug("raw requestBody", zap.ByteString("requestBody", requestBody))
+	s.logger.Debug("raw request_body", zap.ByteString("request_body", requestBody))
 
 	preprocessedRequestBody := requestBody
 	if s.PreprocessHandler != nil {
@@ -111,16 +111,16 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	pipelineLatency.WithLabelValues(successResult, predictStep).Observe(float64(predictionDurationMs))
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	postprocessedRequestBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		response.NewError(http.StatusInternalServerError, err).Write(w)
 		return
 	}
+	s.logger.Debug("predict response", zap.ByteString("predict_response", postprocessedRequestBody))
 
-	postprocessedRequestBody := respBody
 	if s.PostprocessHandler != nil {
 		postprocessStartTime := time.Now()
-		postprocessedRequestBody, err = s.postprocess(ctx, respBody, resp.Header)
+		postprocessedRequestBody, err = s.postprocess(ctx, postprocessedRequestBody, resp.Header)
 		postprocessDurationMs := time.Since(postprocessStartTime).Milliseconds()
 		if err != nil {
 			pipelineLatency.WithLabelValues(errorResult, postprocessStep).Observe(float64(postprocessDurationMs))
@@ -129,9 +129,12 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		pipelineLatency.WithLabelValues(successResult, postprocessStep).Observe(float64(postprocessDurationMs))
+		s.logger.Debug("postprocess response", zap.ByteString("postprocess_response", postprocessedRequestBody))
 	}
 
 	copyHeader(w.Header(), resp.Header)
+	w.Header().Set("Content-Length", fmt.Sprint(len(postprocessedRequestBody)))
+
 	w.WriteHeader(resp.StatusCode)
 	w.Write(postprocessedRequestBody)
 }
@@ -166,6 +169,8 @@ func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (
 
 	// propagate headers
 	copyHeader(req.Header, r.Header)
+	r.Header.Set("Content-Length", fmt.Sprint(len(request)))
+
 	return s.httpClient.Do(req)
 }
 
