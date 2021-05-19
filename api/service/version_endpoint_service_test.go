@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build unit
+
 package service
 
 import (
@@ -203,7 +205,7 @@ func TestDeployEndpoint(t *testing.T) {
 							Mode:    models.LoggerMode(""),
 						},
 						Transformer: &models.LoggerConfig{
-							Enabled: true,
+							Enabled: false,
 							Mode:    models.LoggerMode("randomString"),
 						},
 					},
@@ -222,8 +224,130 @@ func TestDeployEndpoint(t *testing.T) {
 							Mode:    models.LogAll,
 						},
 						Transformer: &models.LoggerConfig{
-							Enabled: true,
+							Enabled: false,
 							Mode:    models.LogAll,
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"success: new endpoint - only model logger",
+			args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+					},
+				},
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						DestinationURL: loggerDestinationURL,
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"success: new endpoint - only transformer logger",
+			args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
+					},
+				},
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						DestinationURL: loggerDestinationURL,
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"success: new endpoint - both model and transformer specified with valid value",
+			args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
+					},
+				},
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						DestinationURL: loggerDestinationURL,
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
 						},
 					},
 				},
