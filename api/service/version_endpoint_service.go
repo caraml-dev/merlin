@@ -119,6 +119,14 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 	if newEndpoint.Logger != nil {
 		endpoint.Logger = newEndpoint.Logger
 		endpoint.Logger.DestinationURL = k.loggerDestinationURL
+		modelLogger := endpoint.Logger.Model
+		if modelLogger != nil {
+			endpoint.Logger.Model = modelLogger.ToValidConfig()
+		}
+		transformerLogger := endpoint.Logger.Transformer
+		if transformerLogger != nil {
+			endpoint.Logger.Transformer = transformerLogger.ToValidConfig()
+		}
 	}
 
 	// Configure environment variables for Pyfunc model

@@ -36,6 +36,15 @@ const (
 	LogResponse LoggerMode = "response"
 )
 
+func (l LoggerMode) isValid() bool {
+	switch l {
+	case LogAll, LogRequest, LogResponse:
+		return true
+	default:
+		return false
+	}
+}
+
 type Logger struct {
 	DestinationURL string        `json:"-"`
 	Model          *LoggerConfig `json:"model"`
@@ -45,6 +54,13 @@ type Logger struct {
 type LoggerConfig struct {
 	Enabled bool       `json:"enabled"`
 	Mode    LoggerMode `json:"mode"`
+}
+
+func (lc *LoggerConfig) ToValidConfig() *LoggerConfig {
+	if !lc.Mode.isValid() {
+		lc.Mode = LogAll
+	}
+	return lc
 }
 
 func ToKFServingLoggerMode(mode LoggerMode) kfsv1alpha2.LoggerMode {
