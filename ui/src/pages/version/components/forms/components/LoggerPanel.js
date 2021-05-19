@@ -80,7 +80,11 @@ export const LoggerPanel = ({ loggerConfig, onChangeHandler, errors = {} }) => {
           <EuiSuperSelect
             fullWidth
             options={loggerModeOptions}
-            valueOfSelected={loggerConfig.mode || "disabled"}
+            valueOfSelected={
+              loggerConfig.enabled
+                ? loggerConfig.mode || "disabled"
+                : "disabled"
+            }
             onChange={value => setValue(value)}
             isInvalid={!!errors.logger}
             itemLayoutAlign="top"
