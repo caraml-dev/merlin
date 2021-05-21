@@ -121,11 +121,13 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 		endpoint.Logger.DestinationURL = k.loggerDestinationURL
 		modelLogger := endpoint.Logger.Model
 		if modelLogger != nil {
-			endpoint.Logger.Model = modelLogger.ToValidConfig()
+			modelLogger.SanitizeMode()
+			endpoint.Logger.Model = modelLogger
 		}
 		transformerLogger := endpoint.Logger.Transformer
 		if transformerLogger != nil {
-			endpoint.Logger.Transformer = transformerLogger.ToValidConfig()
+			transformerLogger.SanitizeMode()
+			endpoint.Logger.Transformer = transformerLogger
 		}
 	}
 

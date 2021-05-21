@@ -56,11 +56,10 @@ type LoggerConfig struct {
 	Mode    LoggerMode `json:"mode"`
 }
 
-func (lc *LoggerConfig) ToValidConfig() *LoggerConfig {
+func (lc *LoggerConfig) SanitizeMode() {
 	if !lc.Mode.isValid() {
 		lc.Mode = LogAll
 	}
-	return lc
 }
 
 func ToKFServingLoggerMode(mode LoggerMode) kfsv1alpha2.LoggerMode {
