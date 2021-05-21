@@ -41,10 +41,11 @@ var loggerDestinationURL = "http://logger.default"
 
 func TestDeployEndpoint(t *testing.T) {
 	type args struct {
-		environment *models.Environment
-		model       *models.Model
-		version     *models.Version
-		endpoint    *models.VersionEndpoint
+		environment      *models.Environment
+		model            *models.Model
+		version          *models.Version
+		endpoint         *models.VersionEndpoint
+		expectedEndpoint *models.VersionEndpoint
 	}
 
 	env := &models.Environment{Name: "env1",
@@ -77,6 +78,7 @@ func TestDeployEndpoint(t *testing.T) {
 				model,
 				version,
 				&models.VersionEndpoint{},
+				&models.VersionEndpoint{},
 			},
 			false,
 		},
@@ -86,6 +88,14 @@ func TestDeployEndpoint(t *testing.T) {
 				env,
 				model,
 				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+				},
 				&models.VersionEndpoint{
 					ResourceRequest: &models.ResourceRequest{
 						MinReplica:    2,
@@ -106,6 +116,7 @@ func TestDeployEndpoint(t *testing.T) {
 					models.PropertyPyTorchClassName: "MyModel",
 				}},
 				&models.VersionEndpoint{},
+				&models.VersionEndpoint{},
 			},
 			false,
 		},
@@ -115,6 +126,9 @@ func TestDeployEndpoint(t *testing.T) {
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
 				&models.Version{ID: 1},
+				&models.VersionEndpoint{
+					ResourceRequest: env.DefaultResourceRequest,
+				},
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
 				},
@@ -130,6 +144,9 @@ func TestDeployEndpoint(t *testing.T) {
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
 				},
+				&models.VersionEndpoint{
+					ResourceRequest: env.DefaultResourceRequest,
+				},
 			},
 			false,
 		},
@@ -139,6 +156,7 @@ func TestDeployEndpoint(t *testing.T) {
 				env,
 				model,
 				version,
+				&models.VersionEndpoint{},
 				&models.VersionEndpoint{},
 			},
 			true,
@@ -156,6 +174,181 @@ func TestDeployEndpoint(t *testing.T) {
 						Enabled:         true,
 						Image:           "ghcr.io/gojek/merlin-transformer-test",
 						ResourceRequest: env.DefaultResourceRequest,
+					},
+				},
+				&models.VersionEndpoint{
+					Transformer: &models.Transformer{
+						Enabled:         true,
+						Image:           "ghcr.io/gojek/merlin-transformer-test",
+						ResourceRequest: env.DefaultResourceRequest,
+					},
+				},
+			},
+			false,
+		},
+		{
+			"success: new endpoint - overwrite logger mode if invalid",
+			args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LoggerMode(""),
+						},
+						Transformer: &models.LoggerConfig{
+							Enabled: false,
+							Mode:    models.LoggerMode("randomString"),
+						},
+					},
+				},
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						DestinationURL: loggerDestinationURL,
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogAll,
+						},
+						Transformer: &models.LoggerConfig{
+							Enabled: false,
+							Mode:    models.LogAll,
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"success: new endpoint - only model logger",
+			args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+					},
+				},
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						DestinationURL: loggerDestinationURL,
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"success: new endpoint - only transformer logger",
+			args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
+					},
+				},
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						DestinationURL: loggerDestinationURL,
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"success: new endpoint - both model and transformer specified with valid value",
+			args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
+					},
+				},
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						DestinationURL: loggerDestinationURL,
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
 					},
 				},
 			},
@@ -214,10 +407,12 @@ func TestDeployEndpoint(t *testing.T) {
 				assert.Equal(t, iSvcName, errRaised.InferenceServiceName)
 
 				if tt.args.endpoint.ResourceRequest != nil {
-					assert.Equal(t, errRaised.ResourceRequest, tt.args.endpoint.ResourceRequest)
+					assert.Equal(t, errRaised.ResourceRequest, tt.args.expectedEndpoint.ResourceRequest)
 				} else {
 					assert.Equal(t, errRaised.ResourceRequest, tt.args.environment.DefaultResourceRequest)
 				}
+
+				assert.Equal(t, tt.args.expectedEndpoint.Logger, errRaised.Logger)
 				mockStorage.AssertNumberOfCalls(t, "Save", 1)
 			}
 

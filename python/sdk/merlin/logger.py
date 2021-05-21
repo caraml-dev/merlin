@@ -61,13 +61,20 @@ class Logger:
             return Logger()
         model_config = None
         if response.model is not None:
-            model_config = LoggerConfig(enabled=response.model.enabled, mode=cls.logger_mode_mapping_rev[response.model.mode])
+            model_config = LoggerConfig(enabled=response.model.enabled, mode=cls._get_logger_mode_from_api_response(response.model.mode))
         transformer_config = None
         if response.transformer is not None:
             transformer_config = LoggerConfig(enabled=response.transformer.enabled,
-                                              mode=cls.logger_mode_mapping_rev[response.transformer.mode])
+                                              mode=cls._get_logger_mode_from_api_response(response.transformer.mode))
 
         return Logger(model=model_config, transformer=transformer_config)
+
+    @classmethod
+    def _get_logger_mode_from_api_response(cls, mode_from_api_response):
+        mode = cls.logger_mode_mapping_rev.get(mode_from_api_response)
+        if mode is None:
+            mode = LoggerMode.ALL
+        return mode
 
 
     def to_logger_spec(self) -> Optional[client.Logger]:

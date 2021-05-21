@@ -26,6 +26,14 @@ def test_from_logger_response():
     assert result.model.mode == expected_result.model.mode
     assert result.transformer is None
 
+    logger_response = client.Logger(model=client.LoggerConfig(enabled=False, mode=""))
+    result = Logger.from_logger_response(logger_response)
+    expected_result = Logger(model=LoggerConfig(enabled=False, mode=LoggerMode.ALL))
+    assert result.model is not None
+    assert result.model.enabled == expected_result.model.enabled
+    assert result.model.mode == expected_result.model.mode
+    assert result.transformer is None
+
     logger_response = client.Logger(transformer=client.LoggerConfig(enabled=True, mode=client.LoggerMode.REQUEST))
     result = Logger.from_logger_response(logger_response)
     expected_result = Logger(transformer=LoggerConfig(enabled=True, mode=LoggerMode.REQUEST))
