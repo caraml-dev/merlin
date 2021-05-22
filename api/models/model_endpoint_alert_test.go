@@ -137,7 +137,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 									Severity:    "warning",
 								},
 								Annotations: PromAlertRuleAnnotations{
-									Summary:   "99.00p latency of model-1 model and revision {{ $revision_name }} in env-1 is higher than 100.00 ms. Current value is {{ $value }} ms.",
+									Summary:   "99.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 100.00 ms. Current value is {{ $value }} ms.",
 									Dashboard: "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=cluster-1&var-project=project-1&var-model=model-1",
 									Playbook:  "TODO",
 								},
