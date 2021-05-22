@@ -38,7 +38,7 @@ const (
 
 const (
 	throughputSummary = "Throughput (RPM) of %s model in %s is less than %.2f. Current value is {{ $value }}."
-	latencySummary    = "%.2fp latency of %s model ({{ $labels.revision_name }}) in %s is higher than %.2f %s. Current value is {{ $value }}%s."
+	latencySummary    = "%.2fp latency of %s model ({{ $labels.revision_name }}) in %s is higher than %.2f %s. Current value is {{ $value }} %s."
 	errorRateSummary  = "Error rate of %s model in %s is higher than %.2f%%. Current value is {{ $value }}%%."
 	cpuSummary        = "CPU usage of %s model in %s is higher than %.2f%%. Current value is {{ $value }}%%."
 	memorySummary     = "Memory usage of %s model in %s is higher than %.2f%%. Current value is {{ $value }}%%."
