@@ -112,17 +112,6 @@ const tablesInputSchema = yup.object().shape({
         tableName: yup.string().required("Table Name Source is required")
       })
   }),
-  source: yup.string().when("baseTable", (baseTable, schema) => {
-    if (baseTable) {
-      if (baseTable.fromJson && baseTable.fromJson.jsonPath !== undefined) {
-        return schema;
-      }
-      if (baseTable.fromTable && baseTable.fromTable.tableName !== undefined) {
-        return schema;
-      }
-    }
-    return schema.required("Table Source is required");
-  }),
   columns: yup
     .array()
     .when("baseTable.fromTable.tableName", (tableName, schema) => {
