@@ -1004,6 +1004,8 @@ class ModelVersion:
         bar.stop()
 
         if endpoint.status != "running":
+            print("Model deployment failed. Reason:")
+            print(endpoint.message)
             raise ValueError(
                 f"Failed deploying model {model.name} version {self.id}")
 
