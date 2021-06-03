@@ -5,12 +5,13 @@ export const AddButton = ({
   title,
   description,
   onClick,
-  fullWidth = true
+  fullWidth = true,
+  titleSize = "s"
 }) => {
   return (
     <EuiToolTip position="bottom" content={description}>
       <EuiButton onClick={onClick} size="s" fullWidth={fullWidth}>
-        <EuiText size="s">{title}</EuiText>
+        <EuiText size={titleSize}>{title}</EuiText>
       </EuiButton>
     </EuiToolTip>
   );

@@ -82,7 +82,7 @@ export const FeastEnricherPanel = ({
 
           <EuiFlexItem>
             <EuiButton onClick={onAddTable} size="s">
-              <EuiText size="s">+ Add Retrieval Table</EuiText>
+              <EuiText size="s">+ Add Feast Input</EuiText>
             </EuiButton>
           </EuiFlexItem>
         </EuiFlexGroup>

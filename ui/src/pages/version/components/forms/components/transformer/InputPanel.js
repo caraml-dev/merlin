@@ -12,13 +12,12 @@ import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { AddButton } from "./components/AddButton";
 import { TableInputCard } from "./components/table_inputs/TableInputCard";
 import { VariablesInputCard } from "./components/table_inputs/VariablesInputCard";
-import { FeastInputCard } from "../feast_config/components/FeastInputCard";
+import { FeastInputGroup } from "../feast_config/components/FeastInputGroup";
 import { Panel } from "../Panel";
 import {
   FeastInput,
   TablesInput
 } from "../../../../../../services/transformer/TransformerConfig";
-import { FeastResourcesContextProvider } from "../../../../../../providers/feast/FeastResourcesContext";
 
 export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
@@ -45,8 +44,8 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
   };
 
   return (
-    <Panel title="Input" contentWidth="80%">
-      <EuiSpacer size="xs" />
+    <Panel title="Input" contentWidth="92%">
+      <EuiSpacer size="s" />
 
       <EuiFlexGroup direction="column" gutterSize="s">
         <EuiDragDropContext onDragEnd={onDragEnd}>
@@ -60,32 +59,16 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
                 disableInteractiveElementBlocking>
                 {provided => (
                   <EuiFlexItem>
-                    {input.feast &&
-                      input.feast.map((feast, feastIdx) => (
-                        <Fragment key={`input-${idx}-feast-${feastIdx}`}>
-                          <FeastResourcesContextProvider
-                            project={feast.project}>
-                            <FeastInputCard
-                              index={idx}
-                              table={feast}
-                              tableNameEditable={true}
-                              onChangeHandler={onChange(
-                                `${idx}.feast.${feastIdx}`
-                              )}
-                              onDelete={
-                                input.feast.length > 1
-                                  ? onDeleteInputChild(idx, "feast", feastIdx)
-                                  : onDeleteInput(idx)
-                              }
-                              dragHandleProps={provided.dragHandleProps}
-                              errors={get(errors, `${idx}.feast.${feastIdx}`)}
-                            />
-                          </FeastResourcesContextProvider>
-                          {feastIdx < input.feast.length - 1 && (
-                            <EuiSpacer size="s" />
-                          )}
-                        </Fragment>
-                      ))}
+                    {input.feast && (
+                      <FeastInputGroup
+                        groupIndex={idx}
+                        tables={input.feast}
+                        onChangeHandler={onChangeHandler}
+                        onDelete={onDeleteInput(idx)}
+                        dragHandleProps={provided.dragHandleProps}
+                        errors={errors}
+                      />
+                    )}
 
                     {input.tables &&
                       input.tables.map((table, tableIdx) => (
@@ -136,7 +119,7 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
           <EuiFlexGroup>
             <EuiFlexItem>
               <AddButton
-                title="+ Add Feast Features"
+                title="+ Add Feast Input"
                 description="Create a table by using features retrieved from Feast"
                 onClick={() => onAddInput("feast", [new FeastInput(true)])}
               />
@@ -144,7 +127,7 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
 
             <EuiFlexItem>
               <AddButton
-                title="+ Add Generic Table"
+                title="+ Add Table Input"
                 description="Create a table from request/response json payload or other inputs"
                 onClick={() => onAddInput("tables", [new TablesInput()])}
               />
