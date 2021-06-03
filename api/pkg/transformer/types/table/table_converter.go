@@ -33,9 +33,9 @@ func tableToJsonRecordFormat(tbl *Table) (interface{}, error) {
 	dataFrame := tbl.DataFrame()
 	columns := dataFrame.Names()
 
-	var records []interface{}
+	records := make([]interface{}, 0, dataFrame.Nrow())
 	for i := 0; i < dataFrame.Nrow(); i++ {
-		rowJson := make(map[string]interface{})
+		rowJson := make(map[string]interface{}, len(columns))
 		for _, col := range columns {
 			values := columnsValues[col]
 			rowJson[col] = values[i]
