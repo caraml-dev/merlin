@@ -46,8 +46,8 @@ export const TransformationPanel = ({
   };
 
   return (
-    <Panel title="Transformation" contentWidth="80%">
-      <EuiSpacer size="xs" />
+    <Panel title="Transformation" contentWidth="92%">
+      <EuiSpacer size="s" />
 
       <EuiDragDropContext onDragEnd={onDragEnd}>
         <EuiFlexGroup direction="column" gutterSize="s">

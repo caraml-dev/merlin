@@ -72,7 +72,7 @@ export const TableInputCard = ({
 
         <EuiFlexItem>
           <EuiFormRow
-            label="Table Source *"
+            label="Base Table *"
             isInvalid={!!errors.source}
             error={errors.source}
             display="columnCompressed"
@@ -80,17 +80,15 @@ export const TableInputCard = ({
             <EuiFlexGroup>
               <EuiFlexItem grow={false}>
                 <EuiRadio
-                  id={`table-input-fromJson-${index}`}
-                  label="From JSON"
-                  checked={
-                    (table.baseTable && !!table.baseTable.fromJson) || false
-                  }
+                  id={`table-input-none-${index}`}
+                  label="None"
+                  checked={table.baseTable === undefined}
                   onChange={() => {
-                    onChange("baseTable", { fromJson: new FromJson() });
+                    onChangeHandler({ ...table, baseTable: undefined });
                   }}
                 />
               </EuiFlexItem>
-              <EuiFlexItem>
+              <EuiFlexItem grow={false}>
                 <EuiRadio
                   id={`table-input-fromTable-${index}`}
                   label="From Table"
@@ -102,9 +100,70 @@ export const TableInputCard = ({
                   }}
                 />
               </EuiFlexItem>
+              <EuiFlexItem>
+                <EuiRadio
+                  id={`table-input-fromJson-${index}`}
+                  label="From JSON"
+                  checked={
+                    (table.baseTable && !!table.baseTable.fromJson) || false
+                  }
+                  onChange={() => {
+                    onChange("baseTable", { fromJson: new FromJson() });
+                  }}
+                />
+              </EuiFlexItem>
             </EuiFlexGroup>
           </EuiFormRow>
         </EuiFlexItem>
+
+        {table.baseTable === undefined && (
+          <EuiFlexItem>
+            <EuiFormRow label="Columns *" fullWidth>
+              <VariablesInput
+                variables={table.columns || []}
+                onChangeHandler={onColumnChangeHandler}
+                errors={errors.columns}
+              />
+            </EuiFormRow>
+          </EuiFlexItem>
+        )}
+
+        {table.baseTable && table.baseTable.fromTable && (
+          <EuiFlexItem>
+            <EuiFormRow
+              label="Base Table Name *"
+              isInvalid={!!get(errors, "baseTable.fromTable.tableName")}
+              error={get(errors, "baseTable.fromTable.tableName")}
+              display="columnCompressed"
+              fullWidth>
+              <Fragment>
+                <EuiFieldText
+                  placeholder="Base Table Name"
+                  value={table.baseTable.fromTable.tableName}
+                  onChange={e =>
+                    onChange("baseTable", {
+                      fromTable: {
+                        ...table.baseTable.fromTable,
+                        tableName: e.target.value
+                      }
+                    })
+                  }
+                  isInvalid={!!errors.name}
+                  name={`base-table-name-${index}`}
+                  fullWidth
+                />
+              </Fragment>
+            </EuiFormRow>
+
+            <EuiFormRow label="Columns *" fullWidth>
+              <VariablesInput
+                variables={table.columns || []}
+                onChangeHandler={onColumnChangeHandler}
+                errors={errors.columns}
+              />
+            </EuiFormRow>
+          </EuiFlexItem>
+        )}
 
         {table.baseTable && table.baseTable.fromJson && (
           <Fragment>
@@ -154,43 +213,6 @@ export const TableInputCard = ({
               </EuiFormRow>
             </EuiFlexItem>
           </Fragment>
-        )}
-
-        {table.baseTable && table.baseTable.fromTable && (
-          <EuiFlexItem>
-            <EuiFormRow
-              label="Source Table Name *"
-              isInvalid={!!get(errors, "baseTable.fromTable.tableName")}
-              error={get(errors, "baseTable.fromTable.tableName")}
-              display="columnCompressed"
-              fullWidth>
-              <Fragment>
-                <EuiFieldText
-                  placeholder="Source Table Name"
-                  value={table.baseTable.fromTable.tableName}
-                  onChange={e =>
-                    onChange("baseTable", {
-                      fromTable: {
-                        ...table.baseTable.fromTable,
-                        tableName: e.target.value
-                      }
-                    })
-                  }
-                  isInvalid={!!errors.name}
-                  name={`source-table-name-${index}`}
-                  fullWidth
-                />
-              </Fragment>
-            </EuiFormRow>
-
-            <EuiFormRow label="Columns *" fullWidth>
-              <VariablesInput
-                variables={table.columns || []}
-                onChangeHandler={onColumnChangeHandler}
-                errors={errors.columns}
-              />
-            </EuiFormRow>
-          </EuiFlexItem>
         )}
       </EuiFlexGroup>
     </EuiPanel>

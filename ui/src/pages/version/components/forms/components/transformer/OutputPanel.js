@@ -173,8 +173,8 @@ export const OutputPanel = ({ outputs = [], onChangeHandler, errors = {} }) => {
   };
 
   return (
-    <Panel title="Output" contentWidth="80%">
-      <EuiSpacer size="xs" />
+    <Panel title="Output" contentWidth="92%">
+      <EuiSpacer size="s" />
 
       {outputs.findIndex(
         output =>
