@@ -98,15 +98,6 @@ export const FeastInputGroup = ({
             titleSize="xs"
             onClick={() => onAddTable()}
           />
-          {/* <div>
-            <EuiToolTip
-              position="bottom"
-              content="Add another Feast table that will be created asynchronously with other tables in this group.">
-              <EuiButtonEmpty size="s">
-                <EuiText size="xs">+ Add Feast Table</EuiText>
-              </EuiButtonEmpty>
-            </EuiToolTip>
-          </div> */}
         </EuiFlexItem>
       </EuiFlexGroup>
     </EuiPanel>
