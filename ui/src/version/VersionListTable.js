@@ -214,7 +214,7 @@ const VersionListTable = ({
                               size={defaultIconSize}
                               color="danger"
                             />
-                            {versionEndpoint.message}
+                            Model deployment failed
                           </EuiText>
                         ) : versionEndpoint.url ? (
                           <EuiCopy
