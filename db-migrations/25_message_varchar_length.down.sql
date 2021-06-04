@@ -1,2 +1,1 @@
-ALTER TABLE version_endpoints DROP COLUMN message;
-ALTER TABLE version_endpoints ADD COLUMN message varchar(64);
+ALTER TABLE version_endpoints ALTER COLUMN message varchar(64) USING SUBSTR(message, 1, 64);
