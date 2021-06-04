@@ -59,6 +59,26 @@ V1 = "v1"
 PREDICTION_JOB = "PredictionJob"
 
 
+class ModelEndpointDeploymentError(Exception):
+
+    def __init__(self, model_name: str, version: int, details: str):
+        self._model_name = model_name
+        self._version = version
+        self._details = details
+
+    @property
+    def model_name(self):
+        return self._model_name
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def details(self):
+        return self._details
+
+
 @autostr
 class Project:
     def __init__(self, project: client.Project, mlp_url: str,
@@ -1004,10 +1024,7 @@ class ModelVersion:
         bar.stop()
 
         if endpoint.status != "running":
-            print("Model deployment failed. Reason:")
-            print(endpoint.message)
-            raise ValueError(
-                f"Failed deploying model {model.name} version {self.id}")
+            raise ModelEndpointDeploymentError(model.name, self.id, endpoint.message)
 
         log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
         print(f"Model {model.name} version {self.id} is deployed."
