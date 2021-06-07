@@ -762,6 +762,92 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 			},
 			err: errors.New("compiled jsonpath  not found"),
 		},
+		{
+			desc: "specifiying multiple fields using expressions which value is kind of table or series",
+			envFunc: func() *Environment {
+				compiledExpression := expression.NewStorage()
+				compiledExpression.AddAll(map[string]*vm.Program{
+					"prediction_table.Col('string_col')": mustCompileExpression("prediction_table.Col('string_col')"),
+					"prediction_table.Row(0)":            mustCompileExpression("prediction_table.Row(0)"),
+				})
+				compiledJsonPath := jsonpath.NewStorage()
+				compiledJsonPath.AddAll(map[string]*jsonpath.Compiled{
+					"$.merchant_info.last_location": jsonpath.MustCompileJsonPath("$.merchant_info.last_location"),
+					"$.order_id":                    jsonpath.MustCompileJsonPath("$.order_id"),
+				})
+
+				env := NewEnvironment(&CompiledPipeline{
+					compiledJsonpath:   compiledJsonPath,
+					compiledExpression: compiledExpression,
+				}, logger)
+
+				requestJsonObject, responseJsonObject := getTestJSONObjects()
+				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
+				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.SetSymbol("prediction_table", table.New(
+					series.New([]interface{}{"1111", nil}, series.String, "string_col"),
+					series.New([]int{4, 5}, series.Int, "int_col"),
+					series.New([]int{9223372036854775807, 9223372036854775806}, series.Int, "int64_col"),
+					series.New([]float64{1111, 2222}, series.Float, "float32_col"),
+					series.New([]float64{11111111111.1111, 22222222222.2222}, series.Float, "float64_col"),
+					series.New([]bool{true, false}, series.Bool, "bool_col"),
+				))
+				return env
+			},
+			outputSpec: &spec.JsonOutput{
+				JsonTemplate: &spec.JsonTemplate{
+					Fields: []*spec.Field{
+						{
+							FieldName: "order_number",
+							Value: &spec.Field_FromJson{
+								FromJson: &spec.FromJson{
+									JsonPath: "$.order_id",
+								},
+							},
+						},
+						{
+							FieldName: "merchant_location",
+							Value: &spec.Field_FromJson{
+								FromJson: &spec.FromJson{
+									JsonPath: "$.merchant_info.last_location",
+								},
+							},
+						},
+						{
+							FieldName: "prediction_string_col",
+							Value: &spec.Field_Expression{
+								Expression: "prediction_table.Col('string_col')",
+							},
+						},
+						{
+							FieldName: "prediction_first_row",
+							Value: &spec.Field_Expression{
+								Expression: "prediction_table.Row(0)",
+							},
+						},
+					},
+				},
+			},
+			want: types.JSONObject{
+				"order_number": "XX-1234",
+				"merchant_location": map[string]interface{}{
+					"latitude":  -6.2323,
+					"longitude": 110.12121,
+				},
+				"prediction_string_col": []interface{}{
+					"1111",
+					nil,
+				},
+				"prediction_first_row": map[string]interface{}{
+					"columns": []string{"string_col", "int_col", "int64_col", "float32_col", "float64_col", "bool_col"},
+					"data": []interface{}{
+						[]interface{}{
+							"1111", 4, 9223372036854775807, float64(1111), float64(11111111111.1111), true,
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
