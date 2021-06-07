@@ -7,6 +7,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
@@ -67,7 +68,26 @@ func generateJsonOutput(field *spec.Field, output map[string]interface{}, env *E
 		if err != nil {
 			return nil, err
 		}
-		output[fieldName] = exprVal
+
+		var fieldVal interface{}
+		switch valPerType := exprVal.(type) {
+		case *series.Series:
+			seriesVal, err := valPerType.GetRecords()
+			if err != nil {
+				return nil, err
+			}
+			fieldVal = seriesVal
+		case *table.Table:
+			tableJsonOutput, err := table.TableToJson(valPerType, spec.FromTable_SPLIT)
+			if err != nil {
+				return nil, err
+			}
+			fieldVal = tableJsonOutput
+		default:
+			fieldVal = valPerType
+		}
+
+		output[fieldName] = fieldVal
 	default:
 		// check whether field already set from basejson
 		jsonObj, ok := output[field.FieldName].(map[string]interface{})
