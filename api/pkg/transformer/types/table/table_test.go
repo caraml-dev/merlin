@@ -482,3 +482,114 @@ func TestTable_Sort(t *testing.T) {
 		})
 	}
 }
+
+func TestTable_NewRaw(t *testing.T) {
+	tests := []struct {
+		name         string
+		columnValues map[string]interface{}
+		want         *Table
+		wantErr      bool
+	}{
+		{
+			name: "basic test",
+			columnValues: map[string]interface{}{
+				"string_col":  []string{"1111", "2222"},
+				"int32_col":   []int{1111, 2222},
+				"int64_col":   []int{1111111111, 2222222222},
+				"float32_col": []float64{1111, 2222},
+				"float64_col": []float64{11111111111.1111, 22222222222.2222},
+				"bool_col":    []bool{true, false},
+			},
+			want: New(
+				series.New([]bool{true, false}, series.Bool, "bool_col"),
+				series.New([]float64{1111, 2222}, series.Float, "float32_col"),
+				series.New([]float64{11111111111.1111, 22222222222.2222}, series.Float, "float64_col"),
+				series.New([]int{1111, 2222}, series.Int, "int32_col"),
+				series.New([]int{1111111111, 2222222222}, series.Int, "int64_col"),
+				series.New([]string{"1111", "2222"}, series.String, "string_col"),
+			),
+		},
+		{
+			name: "table from series",
+			columnValues: map[string]interface{}{
+				"string_col":  series.New([]string{"1111", "2222"}, series.String, "string_col"),
+				"int32_col":   series.New([]int{1111, 2222}, series.Int, "int32_col"),
+				"int64_col":   series.New([]int{1111111111, 2222222222}, series.Int, "int64_col"),
+				"float32_col": series.New([]float64{1111, 2222}, series.Float, "float32_col"),
+				"float64_col": series.New([]float64{11111111111.1111, 22222222222.2222}, series.Float, "float64_col"),
+				"bool_col":    series.New([]bool{true, false}, series.Bool, "bool_col"),
+			},
+			want: New(
+				series.New([]bool{true, false}, series.Bool, "bool_col"),
+				series.New([]float64{1111, 2222}, series.Float, "float32_col"),
+				series.New([]float64{11111111111.1111, 22222222222.2222}, series.Float, "float64_col"),
+				series.New([]int{1111, 2222}, series.Int, "int32_col"),
+				series.New([]int{1111111111, 2222222222}, series.Int, "int64_col"),
+				series.New([]string{"1111", "2222"}, series.String, "string_col"),
+			),
+		},
+		{
+			name: "test with null values",
+			columnValues: map[string]interface{}{
+				"string_col": []interface{}{"1111", nil},
+				"int32_col":  []interface{}{nil, 2222},
+				"int64_col":  []interface{}{nil, 2222222222},
+			},
+			want: New(
+				series.New([]interface{}{nil, 2222}, series.Int, "int32_col"),
+				series.New([]interface{}{nil, 2222222222}, series.Int, "int64_col"),
+				series.New([]interface{}{"1111", nil}, series.String, "string_col"),
+			),
+		},
+		{
+			name: "test broadcast array",
+			columnValues: map[string]interface{}{
+				"string_col": []interface{}{"1111"},
+				"int32_col":  []interface{}{nil, 2222},
+				"int64_col":  []interface{}{nil, 2222222222},
+			},
+			want: New(
+				series.New([]interface{}{nil, 2222}, series.Int, "int32_col"),
+				series.New([]interface{}{nil, 2222222222}, series.Int, "int64_col"),
+				series.New([]interface{}{"1111", "1111"}, series.String, "string_col"),
+			),
+		},
+		{
+			name: "test broadcast scalar",
+			columnValues: map[string]interface{}{
+				"string_col": "1111",
+				"int32_col":  []interface{}{nil, 2222},
+				"int64_col":  []interface{}{nil, 2222222222},
+			},
+			want: New(
+				series.New([]interface{}{nil, 2222}, series.Int, "int32_col"),
+				series.New([]interface{}{nil, 2222222222}, series.Int, "int64_col"),
+				series.New([]interface{}{"1111", "1111"}, series.String, "string_col"),
+			),
+		},
+		{
+			name: "test broadcast series",
+			columnValues: map[string]interface{}{
+				"string_col": series.New([]interface{}{"1111"}, series.String, "string_col"),
+				"int32_col":  []interface{}{nil, 2222},
+				"int64_col":  []interface{}{nil, 2222222222},
+			},
+			want: New(
+				series.New([]interface{}{nil, 2222}, series.Int, "int32_col"),
+				series.New([]interface{}{nil, 2222222222}, series.Int, "int64_col"),
+				series.New([]interface{}{"1111", "1111"}, series.String, "string_col"),
+			),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewRaw(tt.columnValues)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewRaw() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			assert.Equal(t, tt.want.DataFrame(), got.DataFrame())
+		})
+	}
+}

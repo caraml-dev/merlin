@@ -317,15 +317,35 @@ func getLength(value interface{}) int {
 }
 
 func broadcastScalar(colMap map[string]interface{}, length int) map[string]interface{} {
+	// we don't need to broadcast if all column has length = 1
+	if length == 1 {
+		return colMap
+	}
+
 	for k, v := range colMap {
-		valueLength := getLength(v)
-		if valueLength > 1 {
-			continue
+		val := v
+		colValueVal := reflect.ValueOf(v)
+		switch colValueVal.Kind() {
+		case reflect.Slice:
+			if colValueVal.Len() > 1 {
+				continue
+			}
+
+			val = colValueVal.Index(0)
+		default:
+			s, ok := v.(*series.Series)
+			if ok {
+				if s.Series().Len() > 1 {
+					continue
+				}
+
+				val = s.Get(0)
+			}
 		}
 
 		values := make([]interface{}, length)
 		for i := range values {
-			values[i] = v
+			values[i] = val
 		}
 		colMap[k] = values
 	}
