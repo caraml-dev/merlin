@@ -9,16 +9,25 @@ import (
 	"strings"
 	"time"
 
+	"github.com/afex/hystrix-go/hystrix"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
+	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+)
+
+const (
+	hystrixCommandName = "feast-hystrix"
+
+	maxUint = ^uint(0)
+	maxInt  = int(maxUint >> 1)
 )
 
 type FeatureRetriever interface {
@@ -35,6 +44,7 @@ type FeastRetriever struct {
 	options       *Options
 	cache         cache.Cache
 	logger        *zap.Logger
+	retrier       heimdall.Retriable
 }
 
 func NewFeastRetriever(
@@ -47,6 +57,22 @@ func NewFeastRetriever(
 
 	defaultValues := compileDefaultValues(featureTableSpecs)
 
+	retrier := heimdall.NewNoRetrier()
+	if options.FeastHystrixRetryCount > 0 {
+		backoffInterval := options.FeastHystrixRetryMaxJitterInterval
+		maximumJitterInterval := options.FeastHystrixRetryBackoffInterval
+		backoff := heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval)
+		retrier = heimdall.NewRetrier(backoff)
+	}
+
+	hystrix.ConfigureCommand("feast-hystrix", hystrix.CommandConfig{
+		Timeout:                durationToInt(options.FeastHystrixTimeout, time.Millisecond),
+		MaxConcurrentRequests:  options.FeastHystrixMaxConcurrentRequests,
+		RequestVolumeThreshold: options.FeastHystrixRequestVolumeThreshold,
+		SleepWindow:            options.FeastHystrixSleepWindow,
+		ErrorPercentThreshold:  options.FeastHystrixErrorPercentThreshold,
+	})
+
 	return &FeastRetriever{
 		feastClient:       feastClient,
 		entityExtractor:   entityExtractor,
@@ -55,6 +81,7 @@ func NewFeastRetriever(
 		options:           options,
 		cache:             cache,
 		logger:            logger,
+		retrier:           retrier,
 	}
 }
 
@@ -66,6 +93,15 @@ type Options struct {
 	BatchSize               int           `envconfig:"FEAST_BATCH_SIZE" default:"50"`
 	CacheEnabled            bool          `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
 	CacheTTL                time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
+
+	FeastHystrixTimeout                time.Duration `envconfig:"FEAST_HYSTRIX_TIMEOUT" default:"1s"`
+	FeastHystrixMaxConcurrentRequests  int           `envconfig:"FEAST_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
+	FeastHystrixRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
+	FeastHystrixSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"10"`
+	FeastHystrixErrorPercentThreshold  int           `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
+	FeastHystrixRetryCount             int           `envconfig:"FEAST_HYSTRIX_RETRY_COUNT" default:"0"`
+	FeastHystrixRetryBackoffInterval   time.Duration `envconfig:"FEAST_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
+	FeastHystrixRetryMaxJitterInterval time.Duration `envconfig:"FEAST_HYSTRIX_RETRY_MAX_JITTER_INTERVAL" default:"5ms"`
 }
 
 const defaultProjectName = "default"
@@ -241,17 +277,35 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 				Entities: entityList,
 				Features: features,
 			}
-			startTime := time.Now()
-			feastResponse, err := fr.feastClient.GetOnlineFeatures(ctx, &feastRequest)
-			durationMs := time.Now().Sub(startTime).Milliseconds()
-			if err != nil {
-				feastLatency.WithLabelValues("error").Observe(float64(durationMs))
-				feastError.Inc()
 
-				batchResultChan <- batchResult{featuresData: nil, err: err}
-				return
+			var feastResponse *feast.OnlineFeaturesResponse
+			var err error
+
+			for i := 0; i <= fr.options.FeastHystrixRetryCount; i++ {
+				err = hystrix.Do(hystrixCommandName, func() error {
+					startTime := time.Now()
+					feastResponse, err = fr.feastClient.GetOnlineFeatures(ctx, &feastRequest)
+					durationMs := time.Now().Sub(startTime).Milliseconds()
+					if err != nil {
+						feastLatency.WithLabelValues("error", fmt.Sprint(i)).Observe(float64(durationMs))
+						feastError.Inc()
+
+						batchResultChan <- batchResult{featuresData: nil, err: err}
+						return err
+					}
+
+					feastLatency.WithLabelValues("success", fmt.Sprint(i)).Observe(float64(durationMs))
+					return nil
+				}, nil)
+
+				if err != nil {
+					backoffTime := fr.retrier.NextInterval(i)
+					time.Sleep(backoffTime)
+					continue
+				}
+
+				break
 			}
-			feastLatency.WithLabelValues("success").Observe(float64(durationMs))
 
 			fr.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
 
@@ -474,4 +528,16 @@ func mergeColumnTypes(dst []types.ValueType_Enum, src []types.ValueType_Enum) []
 		}
 	}
 	return dst
+}
+
+func durationToInt(duration, unit time.Duration) int {
+	durationAsNumber := duration / unit
+
+	if int64(durationAsNumber) > int64(maxInt) {
+		// Returning max possible value seems like best possible solution here
+		// the alternative is to panic as there is no way of returning an error
+		// without changing the NewClient API
+		return maxInt
+	}
+	return int(durationAsNumber)
 }

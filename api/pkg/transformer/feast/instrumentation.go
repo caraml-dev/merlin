@@ -19,7 +19,7 @@ var (
 		Name:      "feast_serving_request_duration_ms",
 		Help:      "Feast serving latency histogram",
 		Buckets:   prometheus.ExponentialBuckets(1, 2, 10), // 1,2,4,8,16,32,64,128,256,512,+Inf
-	}, []string{"result"})
+	}, []string{"result", "retry"})
 
 	feastFeatureStatus = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: transformer.PromNamespace,

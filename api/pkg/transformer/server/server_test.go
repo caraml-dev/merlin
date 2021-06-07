@@ -8,22 +8,22 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"go.uber.org/zap"
-	"google.golang.org/protobuf/encoding/protojson"
-	"sigs.k8s.io/yaml"
-
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"go.uber.org/zap"
+	"google.golang.org/protobuf/encoding/protojson"
+	"sigs.k8s.io/yaml"
 )
 
 func TestServer_PredictHandler_NoTransformation(t *testing.T) {
@@ -460,4 +460,141 @@ func assertHasHeaders(t *testing.T, expected map[string]string, actual http.Head
 		assert.Equal(t, v, actual.Get(k))
 	}
 	return true
+}
+
+func Test_newHystrixClient(t *testing.T) {
+	defaultRequestBodyString := `{ "name": "merlin" }`
+	defaultResponseBodyString := `{ "response": "ok" }`
+
+	type args struct {
+		o *Options
+	}
+	tests := []struct {
+		name              string
+		args              args
+		handler           func(w http.ResponseWriter, r *http.Request)
+		requestMethod     string
+		requestBodyString string
+		response          string
+	}{
+		{
+			name: "get success",
+			args: args{
+				o: &Options{},
+			},
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, http.MethodGet, r.Method)
+				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(defaultResponseBodyString))
+			},
+			requestMethod: http.MethodGet,
+			response:      defaultResponseBodyString,
+		},
+		{
+			name: "post success",
+			args: args{
+				o: &Options{},
+			},
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, http.MethodPost, r.Method)
+				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+				rBody, err := ioutil.ReadAll(r.Body)
+				assert.NoError(t, err, "should not have failed to extract request body")
+
+				assert.Equal(t, defaultRequestBodyString, string(rBody))
+
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(defaultResponseBodyString))
+			},
+			requestMethod:     http.MethodPost,
+			requestBodyString: defaultRequestBodyString,
+			response:          defaultResponseBodyString,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := newHystrixClient(tt.args.o)
+			assert.NotNil(t, client)
+
+			if tt.handler != nil {
+				server := httptest.NewServer(http.HandlerFunc(tt.handler))
+				defer server.Close()
+
+				var requestBody = bytes.NewReader([]byte(nil))
+				if tt.requestBodyString != "" {
+					requestBody = bytes.NewReader([]byte(tt.requestBodyString))
+				}
+
+				headers := http.Header{}
+				headers.Set("Content-Type", "application/json")
+
+				req, err := http.NewRequest(tt.requestMethod, server.URL, requestBody)
+				assert.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+
+				response, err := client.Do(req)
+				assert.NoError(t, err)
+				assert.Equal(t, http.StatusOK, response.StatusCode)
+
+				body, err := ioutil.ReadAll(response.Body)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.response, string(body))
+			}
+		})
+	}
+}
+
+func Test_newHystrixClient_RetriesOnTimeout(t *testing.T) {
+	count := 0
+
+	client := newHystrixClient(&Options{
+		ModelHystrixTimeout:    1 * time.Millisecond,
+		ModelHystrixRetryCount: 5,
+	})
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(3 * time.Millisecond)
+		count = count + 1
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	_, err := client.Get(server.URL, http.Header{})
+	assert.Error(t, err)
+
+	time.Sleep(15 * time.Millisecond)
+
+	assert.Equal(t, 6, count)
+}
+
+func Test_newHystrixClient_RetriesGetOnFailure5xx(t *testing.T) {
+	count := 0
+
+	client := newHystrixClient(&Options{
+		ModelHystrixRetryCount: 5,
+	})
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{ "response": "something went wrong" }`))
+		count = count + 1
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	response, err := client.Get(server.URL, http.Header{})
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+
+	body, err := ioutil.ReadAll(response.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "{ \"response\": \"something went wrong\" }", string(body))
+
+	assert.Equal(t, 6, count)
 }
