@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -2653,4 +2654,147 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 		request, _ := fr.buildEntityRows(context.Background(), sr, featureTableSpecs[0].Entities, "default")
 		_ = request
 	}
+}
+
+var (
+	defaultMockFeastResponse = &feast.OnlineFeaturesResponse{
+		RawResponse: &serving.GetOnlineFeaturesResponse{
+			FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				{
+					Fields: map[string]*feastTypes.Value{
+						"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+						"driver_id":                        feast.StrVal("1001"),
+					},
+					Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+						"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+						"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+					},
+				},
+			},
+		},
+	}
+
+	defaultFeatureTableSpecs = []*spec.FeatureTable{
+		{
+			Project: "default",
+			Entities: []*spec.Entity{
+
+				{
+					Name:      "driver_id",
+					ValueType: "STRING",
+					Extractor: &spec.Entity_JsonPath{
+						JsonPath: "$.driver_id",
+					},
+				},
+			},
+			Features: []*spec.Feature{
+				{
+					Name:         "driver_trips:average_daily_rides",
+					DefaultValue: "0.0",
+					ValueType:    "DOUBLE",
+				},
+			},
+		},
+	}
+)
+
+func TestFeatureRetriever_RetriesRetrieveFeatures_OnTimeout(t *testing.T) {
+	count := 0
+
+	mockFeast := &mocks.Client{}
+	mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
+		Return(defaultMockFeastResponse, nil).
+		Run(func(arg mock.Arguments) {
+			time.Sleep(2 * time.Millisecond)
+			count = count + 1
+		})
+
+	compiledJSONPaths, err := CompileJSONPaths(defaultFeatureTableSpecs)
+	assert.NoError(t, err)
+
+	compiledExpressions, err := CompileExpressions(defaultFeatureTableSpecs)
+	assert.NoError(t, err)
+
+	jsonPathStorage := jsonpath.NewStorage()
+	jsonPathStorage.AddAll(compiledJSONPaths)
+	expressionStorage := expression.NewStorage()
+	expressionStorage.AddAll(compiledExpressions)
+	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
+
+	options := &Options{
+		StatusMonitoringEnabled: true,
+		ValueMonitoringEnabled:  true,
+		BatchSize:               100,
+
+		FeastHystrixTimeout:    1 * time.Millisecond,
+		FeastHystrixRetryCount: 5,
+	}
+
+	logger, _ := zap.NewDevelopment()
+
+	fr := NewFeastRetriever(mockFeast, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
+
+	var requestJson transTypes.JSONObject
+	err = json.Unmarshal([]byte(`{"driver_id":"1001"}`), &requestJson)
+	if err != nil {
+		panic(err)
+	}
+
+	got, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
+	assert.Error(t, err)
+	assert.Nil(t, got)
+
+	time.Sleep(15 * time.Millisecond)
+
+	assert.Equal(t, 6, count)
+}
+
+func TestFeatureRetriever_RetriesRetrieveFeatures_OnError(t *testing.T) {
+	count := 0
+
+	mockFeast := &mocks.Client{}
+	mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
+		Return(nil, errors.New("5xx")).
+		Run(func(arg mock.Arguments) {
+			time.Sleep(2 * time.Millisecond)
+			count = count + 1
+		})
+
+	compiledJSONPaths, err := CompileJSONPaths(defaultFeatureTableSpecs)
+	assert.NoError(t, err)
+
+	compiledExpressions, err := CompileExpressions(defaultFeatureTableSpecs)
+	assert.NoError(t, err)
+
+	jsonPathStorage := jsonpath.NewStorage()
+	jsonPathStorage.AddAll(compiledJSONPaths)
+	expressionStorage := expression.NewStorage()
+	expressionStorage.AddAll(compiledExpressions)
+	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
+
+	options := &Options{
+		StatusMonitoringEnabled: true,
+		ValueMonitoringEnabled:  true,
+		BatchSize:               100,
+
+		FeastHystrixRetryCount: 3,
+	}
+
+	logger, _ := zap.NewDevelopment()
+
+	fr := NewFeastRetriever(mockFeast, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
+
+	var requestJson transTypes.JSONObject
+	err = json.Unmarshal([]byte(`{"driver_id":"1001"}`), &requestJson)
+	if err != nil {
+		panic(err)
+	}
+
+	got, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
+	assert.Error(t, err)
+	assert.Nil(t, got)
+
+	time.Sleep(15 * time.Millisecond)
+
+	assert.Equal(t, 4, count)
 }

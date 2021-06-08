@@ -13,6 +13,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gojek/heimdall/v7"
+	"github.com/gojek/heimdall/v7/httpclient"
+	"github.com/gojek/heimdall/v7/hystrix"
+	"github.com/gojek/merlin/pkg/transformer/server/response"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -20,16 +24,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
-
-	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/heimdall/v7/hystrix"
-	"github.com/gojek/merlin/pkg/transformer/server/response"
 )
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"
 
 var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
 var onlyOneSignalHandler = make(chan struct{})
+
+var hystrixCommandName = "model_hystrix"
 
 // Options for the server.
 type Options struct {
@@ -40,7 +42,7 @@ type Options struct {
 	HTTPServerTimeout time.Duration `envconfig:"HTTP_SERVER_TIMEOUT" default:"30s"`
 	HTTPClientTimeout time.Duration `envconfig:"HTTP_CLIENT_TIMEOUT" default:"1s"`
 
-	ModelHystrixTimeout                time.Duration `envconfig:"MODEL_HYSTRIX_TIMEOUT" default:"1s"`
+	ModelTimeout                       time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
 	ModelHystrixMaxConcurrentRequests  int           `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
 	ModelHystrixRetryCount             int           `envconfig:"MODEL_HYSTRIX_RETRY_COUNT" default:"0"`
 	ModelHystrixRetryBackoffInterval   time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
@@ -63,16 +65,18 @@ type Server struct {
 func New(o *Options, logger *zap.Logger) *Server {
 	return &Server{
 		options:    o,
-		httpClient: newHystrixClient(o),
+		httpClient: newHystrixClient(hystrixCommandName, o),
 		router:     mux.NewRouter(),
 		logger:     logger,
 	}
 }
 
-func newHystrixClient(o *Options) *hystrix.Client {
+func newHystrixClient(commandName string, o *Options) *hystrix.Client {
 	hystrixOptions := []hystrix.Option{
-		hystrix.WithCommandName("model-hystrix"),
-		hystrix.WithHystrixTimeout(o.ModelHystrixTimeout),
+		hystrix.WithCommandName(commandName),
+		hystrix.WithHTTPClient(httpclient.NewClient(httpclient.WithHTTPTimeout(o.ModelTimeout))),
+		hystrix.WithHTTPTimeout(o.ModelTimeout),
+		hystrix.WithHystrixTimeout(o.ModelTimeout),
 		hystrix.WithMaxConcurrentRequests(o.ModelHystrixMaxConcurrentRequests),
 	}
 

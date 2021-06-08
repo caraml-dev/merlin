@@ -13,14 +13,13 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/opentracing/opentracing-go"
-	"go.uber.org/zap"
-
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 )
 
 const (
@@ -287,14 +286,12 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 					feastResponse, err = fr.feastClient.GetOnlineFeatures(ctx, &feastRequest)
 					durationMs := time.Now().Sub(startTime).Milliseconds()
 					if err != nil {
-						feastLatency.WithLabelValues("error", fmt.Sprint(i)).Observe(float64(durationMs))
+						feastLatency.WithLabelValues("error").Observe(float64(durationMs))
 						feastError.Inc()
-
-						batchResultChan <- batchResult{featuresData: nil, err: err}
 						return err
 					}
 
-					feastLatency.WithLabelValues("success", fmt.Sprint(i)).Observe(float64(durationMs))
+					feastLatency.WithLabelValues("success").Observe(float64(durationMs))
 					return nil
 				}, nil)
 
@@ -305,6 +302,11 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 				}
 
 				break
+			}
+
+			if err != nil {
+				batchResultChan <- batchResult{featuresData: nil, err: err}
+				return
 			}
 
 			fr.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))

@@ -516,7 +516,7 @@ func Test_newHystrixClient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := newHystrixClient(tt.args.o)
+			client := newHystrixClient(tt.name, tt.args.o)
 			assert.NotNil(t, client)
 
 			if tt.handler != nil {
@@ -547,35 +547,15 @@ func Test_newHystrixClient(t *testing.T) {
 	}
 }
 
-func Test_newHystrixClient_RetriesOnTimeout(t *testing.T) {
-	count := 0
-
-	client := newHystrixClient(&Options{
-		ModelHystrixTimeout:    1 * time.Millisecond,
-		ModelHystrixRetryCount: 5,
-	})
-
-	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(3 * time.Millisecond)
-		count = count + 1
-	}
-
-	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
-	defer server.Close()
-
-	_, err := client.Get(server.URL, http.Header{})
-	assert.Error(t, err)
-
-	time.Sleep(15 * time.Millisecond)
-
-	assert.Equal(t, 6, count)
-}
-
 func Test_newHystrixClient_RetriesGetOnFailure5xx(t *testing.T) {
 	count := 0
 
-	client := newHystrixClient(&Options{
-		ModelHystrixRetryCount: 5,
+	client := newHystrixClient("retries-on-5xx", &Options{
+		ModelTimeout:                       1 * time.Millisecond,
+		ModelHystrixMaxConcurrentRequests:  100,
+		ModelHystrixRetryMaxJitterInterval: 1 * time.Millisecond,
+		ModelHystrixRetryBackoffInterval:   1 * time.Millisecond,
+		ModelHystrixRetryCount:             5,
 	})
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -591,10 +571,20 @@ func Test_newHystrixClient_RetriesGetOnFailure5xx(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
-
-	body, err := ioutil.ReadAll(response.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, "{ \"response\": \"something went wrong\" }", string(body))
+	assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
 
 	assert.Equal(t, 6, count)
+}
+
+func respBody(t *testing.T, response *http.Response) string {
+	if response.Body != nil {
+		defer func() {
+			_ = response.Body.Close()
+		}()
+	}
+
+	respBody, err := ioutil.ReadAll(response.Body)
+	assert.NoError(t, err, "should not have failed to read response body")
+
+	return string(respBody)
 }
