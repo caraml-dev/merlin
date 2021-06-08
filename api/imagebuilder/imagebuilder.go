@@ -261,7 +261,7 @@ func (c *imageBuilder) waitJobCompleted(job *batchv1.Job) error {
 				return nil
 			} else if j.Status.Failed == 1 {
 				podList, err := podClient.List(metav1.ListOptions{
-					LabelSelector:       fmt.Sprintf("job-name=%s", j.Name),
+					LabelSelector: fmt.Sprintf("job-name=%s", j.Name),
 				})
 				pods := podList.Items
 				errMessage := ""
@@ -357,7 +357,6 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 							},
 						},
 					},
-
 				},
 			},
 		},
