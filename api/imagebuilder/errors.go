@@ -14,12 +14,22 @@
 
 package imagebuilder
 
-import "github.com/pkg/errors"
+import (
+	"fmt"
+	"github.com/pkg/errors"
+)
 
 var (
 	ErrUnableToGetImageRef  = errors.New("error checking previous image")
 	ErrUnableToGetJobStatus = errors.New("unknown pyfunc builder status")
 	ErrDeleteFailedJob      = errors.New("error deleting pyfunc builder")
-	ErrUnableToBuildImage   = errors.New("error building pyfunc image")
 	ErrTimeoutBuilImage     = errors.New("timeout building pyfunc image")
 )
+
+type ErrUnableToBuildImage struct {
+	Message string
+}
+
+func (e ErrUnableToBuildImage) Error() string {
+	return fmt.Sprintf("error building pyfunc image: %s", e)
+}

@@ -17,6 +17,7 @@ package imagebuilder
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -123,7 +124,9 @@ func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, vers
 		job, err = jobClient.Create(jobSpec)
 		if err != nil {
 			log.Errorf("unable to build image %s, error: %v", imageRef, err)
-			return "", ErrUnableToBuildImage
+			return "", ErrUnableToBuildImage{
+				Message: err.Error(),
+			}
 		}
 	} else {
 		if job.Status.Failed != 0 {
@@ -138,7 +141,9 @@ func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, vers
 			job, err = jobClient.Create(jobSpec)
 			if err != nil {
 				log.Errorf("unable to build image %s, error: %v", imageRef, err)
-				return "", ErrUnableToBuildImage
+				return "", ErrUnableToBuildImage{
+					Message: err.Error(),
+				}
 			}
 		}
 	}
@@ -235,6 +240,7 @@ func (c *imageBuilder) waitJobCompleted(job *batchv1.Job) error {
 	timeout := time.After(c.config.BuildTimeoutDuration)
 	ticker := time.Tick(time.Second * tickDurationSecond)
 	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
+	podClient := c.kubeClient.CoreV1().Pods(c.config.BuildNamespace)
 
 	for {
 		select {
@@ -245,15 +251,30 @@ func (c *imageBuilder) waitJobCompleted(job *batchv1.Job) error {
 			j, err := jobClient.Get(job.Name, metav1.GetOptions{})
 			if err != nil {
 				log.Errorf("unable to get job status for job %s: %v", job.Name, err)
-				return ErrUnableToBuildImage
+				return ErrUnableToBuildImage{
+					Message: err.Error(),
+				}
 			}
 
 			if j.Status.Succeeded == 1 {
 				// successfully created pod
 				return nil
 			} else if j.Status.Failed == 1 {
+				podList, err := podClient.List(metav1.ListOptions{
+					LabelSelector: fmt.Sprintf("job-name=%s", j.Name),
+				})
+				pods := podList.Items
+				errMessage := ""
+				if err == nil && len(pods) > 0 {
+					sort.Slice(pods, func(i, j int) bool {
+						return pods[j].CreationTimestamp.Unix() > pods[i].CreationTimestamp.Unix()
+					})
+					errMessage = pods[0].Status.ContainerStatuses[0].State.Terminated.Message
+				}
 				log.Errorf("failed building pyfunc image %s: %v", job.Name, j.Status)
-				return ErrUnableToBuildImage
+				return ErrUnableToBuildImage{
+					Message: errMessage,
+				}
 			}
 		}
 	}
@@ -323,6 +344,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 							Resources: v1.ResourceRequirements{
 								Requests: defaultResourceRequests,
 							},
+							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 						},
 					},
 					Volumes: []v1.Volume{
