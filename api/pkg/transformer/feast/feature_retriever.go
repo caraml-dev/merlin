@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	hystrixCommandName = "feast-hystrix"
+	hystrixCommandName = "feast_retrieval"
 
 	maxUint = ^uint(0)
 	maxInt  = int(maxUint >> 1)
@@ -55,7 +55,7 @@ func NewFeastRetriever(
 
 	defaultValues := compileDefaultValues(featureTableSpecs)
 
-	hystrix.ConfigureCommand("feast_hystrix", hystrix.CommandConfig{
+	hystrix.ConfigureCommand(hystrixCommandName, hystrix.CommandConfig{
 		Timeout:                durationToInt(options.FeastTimeout, time.Millisecond),
 		MaxConcurrentRequests:  options.FeastClientMaxConcurrentRequests,
 		RequestVolumeThreshold: options.FeastClientRequestVolumeThreshold,
@@ -415,7 +415,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		batchedEntities := entityNotInCache[startIndex:endIndex]
 
 		f := fr.newFeastCall(featureTableSpec, batchedEntities)
-		errors := hystrix.GoC(ctx, "feast_hystrix", func(ctx context.Context) error {
+		errors := hystrix.GoC(ctx, hystrixCommandName, func(ctx context.Context) error {
 			batchResultChan <- f.do(ctx, features, columns, entityIndices)
 			return nil
 		}, nil)

@@ -31,7 +31,7 @@ const MerlinLogIdHeader = "X-Merlin-Log-Id"
 var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
 var onlyOneSignalHandler = make(chan struct{})
 
-var hystrixCommandName = "model_hystrix"
+var hystrixCommandName = "model_predict"
 
 // Options for the server.
 type Options struct {
