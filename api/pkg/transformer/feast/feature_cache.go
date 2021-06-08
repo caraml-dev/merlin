@@ -3,7 +3,6 @@ package feast
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -90,7 +89,6 @@ func insertFeaturesToCache(cache cache.Cache, data entityFeaturePair, project st
 	if err != nil {
 		return err
 	}
-	log.Println("ins", "-", string(keyByte), "-", string(dataByte), "-", project, "-", ttl)
 	return cache.Insert(keyByte, dataByte, ttl)
 }
 

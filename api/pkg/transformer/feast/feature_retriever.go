@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 	"time"
@@ -304,7 +303,6 @@ func (fc *feastCall) do(
 	}
 
 	if fc.cacheEnabled {
-		log.Println("entityFeaturePairs", entityFeaturePairs)
 		if err := insertMultipleFeaturesToCache(fc.cache, entityFeaturePairs, fc.featureTableSpec.Project, fc.cacheTTL); err != nil {
 			fc.logger.Error("insert_to_cache", zap.Any("error", err))
 		}
