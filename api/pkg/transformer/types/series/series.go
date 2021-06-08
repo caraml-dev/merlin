@@ -72,6 +72,10 @@ func (s *Series) GetRecords() ([]interface{}, error) {
 	return genericArr, nil
 }
 
+func (s *Series) Get(index int) interface{} {
+	return s.series.Elem(index).Val()
+}
+
 func detectType(values interface{}) Type {
 	contentType := &contentType{}
 	v := reflect.ValueOf(values)
