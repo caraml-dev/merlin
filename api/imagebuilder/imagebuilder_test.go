@@ -159,6 +159,7 @@ func TestBuildImage(t *testing.T) {
 									Resources: v1.ResourceRequirements{
 										Requests: defaultResourceRequests,
 									},
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
 							Volumes: []v1.Volume{
@@ -236,6 +237,7 @@ func TestBuildImage(t *testing.T) {
 									Resources: v1.ResourceRequirements{
 										Requests: defaultResourceRequests,
 									},
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
 							Volumes: []v1.Volume{
@@ -323,6 +325,7 @@ func TestBuildImage(t *testing.T) {
 									Resources: v1.ResourceRequirements{
 										Requests: defaultResourceRequests,
 									},
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
 							Volumes: []v1.Volume{
@@ -400,6 +403,7 @@ func TestBuildImage(t *testing.T) {
 									Resources: v1.ResourceRequirements{
 										Requests: defaultResourceRequests,
 									},
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
 							Volumes: []v1.Volume{
@@ -480,6 +484,7 @@ func TestBuildImage(t *testing.T) {
 									Resources: v1.ResourceRequirements{
 										Requests: defaultResourceRequests,
 									},
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
 							Volumes: []v1.Volume{
@@ -548,6 +553,7 @@ func TestBuildImage(t *testing.T) {
 									Resources: v1.ResourceRequirements{
 										Requests: defaultResourceRequests,
 									},
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
 							Volumes: []v1.Volume{
