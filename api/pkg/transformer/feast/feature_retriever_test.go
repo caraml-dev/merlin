@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -2698,16 +2697,16 @@ var (
 	}
 )
 
-func TestFeatureRetriever_RetriesRetrieveFeatures_OnTimeout(t *testing.T) {
-	count := 0
-
+func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	mockFeast := &mocks.Client{}
-	mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
-		Return(defaultMockFeastResponse, nil).
-		Run(func(arg mock.Arguments) {
-			time.Sleep(2 * time.Millisecond)
-			count = count + 1
-		})
+
+	for i := 0; i < 3; i++ {
+		mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
+			Return(defaultMockFeastResponse, nil).
+			Run(func(arg mock.Arguments) {
+				time.Sleep(2 * time.Millisecond)
+			})
+	}
 
 	compiledJSONPaths, err := CompileJSONPaths(defaultFeatureTableSpecs)
 	assert.NoError(t, err)
@@ -2726,8 +2725,8 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_OnTimeout(t *testing.T) {
 		ValueMonitoringEnabled:  true,
 		BatchSize:               100,
 
-		FeastHystrixTimeout:    1 * time.Millisecond,
-		FeastHystrixRetryCount: 5,
+		FeastTimeout:                     1 * time.Millisecond,
+		FeastClientMaxConcurrentRequests: 1,
 	}
 
 	logger, _ := zap.NewDevelopment()
@@ -2745,56 +2744,4 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_OnTimeout(t *testing.T) {
 	assert.Nil(t, got)
 
 	time.Sleep(15 * time.Millisecond)
-
-	assert.Equal(t, 6, count)
-}
-
-func TestFeatureRetriever_RetriesRetrieveFeatures_OnError(t *testing.T) {
-	count := 0
-
-	mockFeast := &mocks.Client{}
-	mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
-		Return(nil, errors.New("5xx")).
-		Run(func(arg mock.Arguments) {
-			time.Sleep(2 * time.Millisecond)
-			count = count + 1
-		})
-
-	compiledJSONPaths, err := CompileJSONPaths(defaultFeatureTableSpecs)
-	assert.NoError(t, err)
-
-	compiledExpressions, err := CompileExpressions(defaultFeatureTableSpecs)
-	assert.NoError(t, err)
-
-	jsonPathStorage := jsonpath.NewStorage()
-	jsonPathStorage.AddAll(compiledJSONPaths)
-	expressionStorage := expression.NewStorage()
-	expressionStorage.AddAll(compiledExpressions)
-	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
-
-	options := &Options{
-		StatusMonitoringEnabled: true,
-		ValueMonitoringEnabled:  true,
-		BatchSize:               100,
-
-		FeastHystrixRetryCount: 3,
-	}
-
-	logger, _ := zap.NewDevelopment()
-
-	fr := NewFeastRetriever(mockFeast, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
-
-	var requestJson transTypes.JSONObject
-	err = json.Unmarshal([]byte(`{"driver_id":"1001"}`), &requestJson)
-	if err != nil {
-		panic(err)
-	}
-
-	got, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
-	assert.Error(t, err)
-	assert.Nil(t, got)
-
-	time.Sleep(15 * time.Millisecond)
-
-	assert.Equal(t, 4, count)
 }

@@ -13,7 +13,6 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
@@ -43,7 +42,6 @@ type FeastRetriever struct {
 	options       *Options
 	cache         cache.Cache
 	logger        *zap.Logger
-	retrier       heimdall.Retriable
 }
 
 func NewFeastRetriever(
@@ -56,20 +54,12 @@ func NewFeastRetriever(
 
 	defaultValues := compileDefaultValues(featureTableSpecs)
 
-	retrier := heimdall.NewNoRetrier()
-	if options.FeastHystrixRetryCount > 0 {
-		backoffInterval := options.FeastHystrixRetryMaxJitterInterval
-		maximumJitterInterval := options.FeastHystrixRetryBackoffInterval
-		backoff := heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval)
-		retrier = heimdall.NewRetrier(backoff)
-	}
-
-	hystrix.ConfigureCommand("feast-hystrix", hystrix.CommandConfig{
-		Timeout:                durationToInt(options.FeastHystrixTimeout, time.Millisecond),
-		MaxConcurrentRequests:  options.FeastHystrixMaxConcurrentRequests,
-		RequestVolumeThreshold: options.FeastHystrixRequestVolumeThreshold,
-		SleepWindow:            options.FeastHystrixSleepWindow,
-		ErrorPercentThreshold:  options.FeastHystrixErrorPercentThreshold,
+	hystrix.ConfigureCommand("feast_hystrix", hystrix.CommandConfig{
+		Timeout:                durationToInt(options.FeastTimeout, time.Millisecond),
+		MaxConcurrentRequests:  options.FeastClientMaxConcurrentRequests,
+		RequestVolumeThreshold: options.FeastClientRequestVolumeThreshold,
+		SleepWindow:            options.FeastClientSleepWindow,
+		ErrorPercentThreshold:  options.FeastClientErrorPercentThreshold,
 	})
 
 	return &FeastRetriever{
@@ -80,7 +70,6 @@ func NewFeastRetriever(
 		options:           options,
 		cache:             cache,
 		logger:            logger,
-		retrier:           retrier,
 	}
 }
 
@@ -93,14 +82,11 @@ type Options struct {
 	CacheEnabled            bool          `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
 	CacheTTL                time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
 
-	FeastHystrixTimeout                time.Duration `envconfig:"FEAST_HYSTRIX_TIMEOUT" default:"1s"`
-	FeastHystrixMaxConcurrentRequests  int           `envconfig:"FEAST_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
-	FeastHystrixRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
-	FeastHystrixSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"10"`
-	FeastHystrixErrorPercentThreshold  int           `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
-	FeastHystrixRetryCount             int           `envconfig:"FEAST_HYSTRIX_RETRY_COUNT" default:"0"`
-	FeastHystrixRetryBackoffInterval   time.Duration `envconfig:"FEAST_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
-	FeastHystrixRetryMaxJitterInterval time.Duration `envconfig:"FEAST_HYSTRIX_RETRY_MAX_JITTER_INTERVAL" default:"5ms"`
+	FeastTimeout                      time.Duration `envconfig:"FEAST_TIMEOUT" default:"1s"`
+	FeastClientMaxConcurrentRequests  int           `envconfig:"FEAST_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
+	FeastClientRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
+	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"10"`
+	FeastClientErrorPercentThreshold  int           `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
 }
 
 const defaultProjectName = "default"
@@ -152,6 +138,7 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Co
 	for i := 0; i < cap(resChan); i++ {
 		res := <-resChan
 		if res.err != nil {
+			ctx.Done()
 			return nil, res.err
 		}
 		feastFeatures = append(feastFeatures, res.featureTable)
@@ -241,116 +228,88 @@ func addSeries(entityName string, series []*types.Value, entities []feast.Row) [
 	return entities
 }
 
-func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.Row, featureTableSpec *spec.FeatureTable) (*transTypes.FeatureTable, error) {
+type feastCall struct {
+	featureTableSpec *spec.FeatureTable
+	entityList       []feast.Row
+	defaultValues    defaultValues
 
-	var cachedValues transTypes.ValueRows
-	entityNotInCache := entities
-	var columnTypes []types.ValueType_Enum
+	feastClient feast.Client
 
-	if fr.options.CacheEnabled {
-		cachedValues, columnTypes, entityNotInCache = fetchFeaturesFromCache(fr.cache, entities, featureTableSpec.Project)
-	}
+	cache        cache.Cache
+	cacheEnabled bool
+	cacheTTL     time.Duration
+	logger       *zap.Logger
 
-	var features []string
-	for _, feature := range featureTableSpec.Features {
-		features = append(features, feature.Name)
-	}
-
-	numOfBatchBeforeCeil := float64(len(entityNotInCache)) / float64(fr.options.BatchSize)
-	numOfBatch := int(math.Ceil(numOfBatchBeforeCeil))
-
-	batchResultChan := make(chan batchResult, numOfBatch)
-	columns := getColumnNames(featureTableSpec)
-	entityIndices := getEntityIndicesFromColumns(columns, featureTableSpec.Entities)
-	for i := 0; i < numOfBatch; i++ {
-		startIndex := i * fr.options.BatchSize
-		endIndex := len(entityNotInCache)
-		if endIndex > startIndex+fr.options.BatchSize {
-			endIndex = startIndex + fr.options.BatchSize
-		}
-		batchedEntities := entityNotInCache[startIndex:endIndex]
-
-		go func(project string, entityList []feast.Row, columns []string) {
-			feastRequest := feast.OnlineFeaturesRequest{
-				Project:  project,
-				Entities: entityList,
-				Features: features,
-			}
-
-			var feastResponse *feast.OnlineFeaturesResponse
-			var err error
-
-			for i := 0; i <= fr.options.FeastHystrixRetryCount; i++ {
-				err = hystrix.Do(hystrixCommandName, func() error {
-					startTime := time.Now()
-					feastResponse, err = fr.feastClient.GetOnlineFeatures(ctx, &feastRequest)
-					durationMs := time.Now().Sub(startTime).Milliseconds()
-					if err != nil {
-						feastLatency.WithLabelValues("error").Observe(float64(durationMs))
-						feastError.Inc()
-						return err
-					}
-
-					feastLatency.WithLabelValues("success").Observe(float64(durationMs))
-					return nil
-				}, nil)
-
-				if err != nil {
-					backoffTime := fr.retrier.NextInterval(i)
-					time.Sleep(backoffTime)
-					continue
-				}
-
-				break
-			}
-
-			if err != nil {
-				batchResultChan <- batchResult{featuresData: nil, err: err}
-				return
-			}
-
-			fr.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
-
-			entityFeaturePairs, err := fr.buildFeastFeaturesData(ctx, feastResponse, featureTableSpec.Project, columns, entityIndices)
-			if err != nil {
-				batchResultChan <- batchResult{featuresData: nil, columnTypes: nil, err: err}
-				return
-			}
-
-			var featuresData transTypes.ValueRows
-			for _, data := range entityFeaturePairs {
-				featuresData = append(featuresData, data.value)
-			}
-
-			if fr.options.CacheEnabled {
-				if err := insertMultipleFeaturesToCache(fr.cache, entityFeaturePairs, project, fr.options.CacheTTL); err != nil {
-					fr.logger.Error("insert_to_cache", zap.Any("error", err))
-				}
-			}
-
-			batchResultChan <- batchResult{featuresData: featuresData, columnTypes: entityFeaturePairs[0].columnTypes, err: nil}
-		}(featureTableSpec.Project, batchedEntities, columns)
-	}
-
-	data := cachedValues
-	for i := 0; i < numOfBatch; i++ {
-		res := <-batchResultChan
-		if res.err != nil {
-			return nil, res.err
-		}
-		data = append(data, res.featuresData...)
-		columnTypes = mergeColumnTypes(columnTypes, res.columnTypes)
-	}
-
-	return &transTypes.FeatureTable{
-		Name:        featureTableSpec.TableName,
-		Columns:     columns,
-		ColumnTypes: columnTypes,
-		Data:        data,
-	}, nil
+	statusMonitoringEnabled bool
+	valueMonitoringEnabled  bool
 }
 
-func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, projectName string, columns []string, entityIndexMap map[int]int) ([]entityFeaturePair, error) {
+func (fr *FeastRetriever) newFeastCall(
+	featureTableSpec *spec.FeatureTable,
+	entityList []feast.Row,
+) *feastCall {
+	return &feastCall{
+		featureTableSpec: featureTableSpec,
+		entityList:       entityList,
+		defaultValues:    fr.defaultValues,
+
+		feastClient: fr.feastClient,
+
+		cache:        fr.cache,
+		cacheEnabled: fr.options.CacheEnabled,
+		cacheTTL:     fr.options.CacheTTL,
+		logger:       fr.logger,
+
+		statusMonitoringEnabled: fr.options.StatusMonitoringEnabled,
+		valueMonitoringEnabled:  fr.options.ValueMonitoringEnabled,
+	}
+}
+
+func (fc *feastCall) do(
+	ctx context.Context,
+	features []string,
+	columns []string,
+	entityIndexMap map[int]int,
+) batchResult {
+	feastRequest := feast.OnlineFeaturesRequest{
+		Project:  fc.featureTableSpec.Project,
+		Entities: fc.entityList,
+		Features: features,
+	}
+
+	startTime := time.Now()
+	feastResponse, err := fc.feastClient.GetOnlineFeatures(ctx, &feastRequest)
+	durationMs := time.Now().Sub(startTime).Milliseconds()
+	if err != nil {
+		feastLatency.WithLabelValues("error").Observe(float64(durationMs))
+		feastError.Inc()
+
+		return batchResult{featuresData: nil, err: err}
+	}
+	feastLatency.WithLabelValues("success").Observe(float64(durationMs))
+
+	fc.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
+
+	entityFeaturePairs, err := fc.buildFeastFeaturesData(ctx, feastResponse, fc.featureTableSpec.Project, columns, entityIndexMap)
+	if err != nil {
+		return batchResult{featuresData: nil, columnTypes: nil, err: err}
+	}
+
+	var featuresData transTypes.ValueRows
+	for _, data := range entityFeaturePairs {
+		featuresData = append(featuresData, data.value)
+	}
+
+	if fc.cacheEnabled {
+		if err := insertMultipleFeaturesToCache(fc.cache, entityFeaturePairs, fc.featureTableSpec.Project, fc.cacheTTL); err != nil {
+			fc.logger.Error("insert_to_cache", zap.Any("error", err))
+		}
+	}
+
+	return batchResult{featuresData: featuresData, columnTypes: entityFeaturePairs[0].columnTypes, err: nil}
+}
+
+func (fc *feastCall) buildFeastFeaturesData(ctx context.Context, feastResponse *feast.OnlineFeaturesResponse, projectName string, columns []string, entityIndexMap map[int]int) ([]entityFeaturePair, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildFeastFeaturesData")
 	defer span.Finish()
 
@@ -385,7 +344,7 @@ func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastRespo
 				}
 				row = append(row, featVal)
 				// put behind feature toggle since it will generate high cardinality metrics
-				if fr.options.ValueMonitoringEnabled {
+				if fc.valueMonitoringEnabled {
 					v, err := getFloatValue(featVal)
 					if err != nil {
 						continue
@@ -393,7 +352,7 @@ func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastRespo
 					feastFeatureSummary.WithLabelValues(column).Observe(v)
 				}
 			case serving.GetOnlineFeaturesResponse_NOT_FOUND, serving.GetOnlineFeaturesResponse_NULL_VALUE, serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
-				defVal, ok := fr.defaultValues.GetDefaultValue(projectName, column)
+				defVal, ok := fc.defaultValues.GetDefaultValue(projectName, column)
 				if !ok {
 					row = append(row, nil)
 					continue
@@ -411,7 +370,7 @@ func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastRespo
 				return nil, fmt.Errorf("Unsupported feature retrieval status: %s", featureStatus)
 			}
 			// put behind feature toggle since it will generate high cardinality metrics
-			if fr.options.StatusMonitoringEnabled {
+			if fc.statusMonitoringEnabled {
 				feastFeatureStatus.WithLabelValues(column, featureStatus.String()).Inc()
 			}
 		}
@@ -419,6 +378,70 @@ func (fr *FeastRetriever) buildFeastFeaturesData(ctx context.Context, feastRespo
 	}
 
 	return data, nil
+}
+
+func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.Row, featureTableSpec *spec.FeatureTable) (*transTypes.FeatureTable, error) {
+	var cachedValues transTypes.ValueRows
+	entityNotInCache := entities
+	var columnTypes []types.ValueType_Enum
+
+	if fr.options.CacheEnabled {
+		cachedValues, columnTypes, entityNotInCache = fetchFeaturesFromCache(fr.cache, entities, featureTableSpec.Project)
+	}
+
+	var features []string
+	for _, feature := range featureTableSpec.Features {
+		features = append(features, feature.Name)
+	}
+
+	columns := getColumnNames(featureTableSpec)
+	entityIndices := getEntityIndicesFromColumns(columns, featureTableSpec.Entities)
+
+	numOfBatchBeforeCeil := float64(len(entityNotInCache)) / float64(fr.options.BatchSize)
+	numOfBatch := int(math.Ceil(numOfBatchBeforeCeil))
+
+	batchResultChan := make(chan batchResult, numOfBatch)
+
+	for i := 0; i < numOfBatch; i++ {
+		startIndex := i * fr.options.BatchSize
+		endIndex := len(entityNotInCache)
+		if endIndex > startIndex+fr.options.BatchSize {
+			endIndex = startIndex + fr.options.BatchSize
+		}
+		batchedEntities := entityNotInCache[startIndex:endIndex]
+
+		f := fr.newFeastCall(featureTableSpec, batchedEntities)
+		errors := hystrix.GoC(ctx, "feast_hystrix", func(ctx context.Context) error {
+			batchResultChan <- f.do(ctx, features, columns, entityIndices)
+			return nil
+		}, nil)
+
+		select {
+		case err := <-errors:
+			if err != nil {
+				return nil, err
+			}
+		default:
+			continue
+		}
+	}
+
+	data := cachedValues
+	for i := 0; i < numOfBatch; i++ {
+		res := <-batchResultChan
+		if res.err != nil {
+			return nil, res.err
+		}
+		data = append(data, res.featuresData...)
+		columnTypes = mergeColumnTypes(columnTypes, res.columnTypes)
+	}
+
+	return &transTypes.FeatureTable{
+		Name:        featureTableSpec.TableName,
+		Columns:     columns,
+		ColumnTypes: columnTypes,
+		Data:        data,
+	}, nil
 }
 
 func getColumnNames(config *spec.FeatureTable) []string {
