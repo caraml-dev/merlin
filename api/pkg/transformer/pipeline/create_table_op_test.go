@@ -34,6 +34,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 		"$.signature_name":   jsonpath.MustCompileJsonPath("$.signature_name"),
 		"$.instances":        jsonpath.MustCompileJsonPath("$.instances"),
 		"$.object_with_null": jsonpath.MustCompileJsonPath("$.object_with_null"),
+		"$.one_row_array":    jsonpath.MustCompileJsonPath("$.one_row_array"),
 		"$.array_int":        jsonpath.MustCompileJsonPath("$.array_int"),
 		"$.array_float":      jsonpath.MustCompileJsonPath("$.array_float"),
 		"$.array_float_2":    jsonpath.MustCompileJsonPath("$.array_float_2"),
@@ -144,6 +145,33 @@ func TestCreateTableOp_Execute(t *testing.T) {
 					series.New([]interface{}{0, 1}, series.Int, "row_number"),
 					series.New([]interface{}{2.8, 0.1}, series.Float, "sepal_length"),
 					series.New([]interface{}{1.0, 0.5}, series.Float, "sepal_width"),
+				),
+			},
+			wantErr: false,
+		},
+		{
+			name: "create table from json with only 1 row",
+			tableSpecs: []*spec.Table{
+				{
+					Name: "my_table",
+					BaseTable: &spec.BaseTable{
+						BaseTable: &spec.BaseTable_FromJson{
+							FromJson: &spec.FromJson{
+								JsonPath:     "$.one_row_array",
+								AddRowNumber: true,
+							},
+						},
+					},
+				},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"my_table": table.New(
+					series.New([]interface{}{1.8}, series.Float, "petal_length"),
+					series.New([]interface{}{2.4}, series.Float, "petal_width"),
+					series.New([]interface{}{0}, series.Int, "row_number"),
+					series.New([]interface{}{0.1}, series.Float, "sepal_length"),
+					series.New([]interface{}{0.5}, series.Float, "sepal_width"),
 				),
 			},
 			wantErr: false,
