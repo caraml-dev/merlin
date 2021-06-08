@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -1761,7 +1762,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
 			mockCache := &mocks2.Cache{}
-			logger.Debug("Test Case %", zap.String("title", tt.name))
+			logger.Debug("Test Case:", zap.String("title", tt.name))
 			for _, cc := range tt.cacheMocks {
 				key := CacheKey{Entity: cc.entity, Project: cc.project}
 				keyByte, err := json.Marshal(key)
@@ -1831,6 +1832,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 				t.Errorf("spec.Enrich() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			logger.Debug("got", zap.Any("feature_tables", gotFeatureTables))
 
 			assert.Equal(t, len(gotFeatureTables), len(tt.want))
 			for _, exp := range tt.want {
@@ -2704,7 +2706,7 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 		mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
 			Return(defaultMockFeastResponse, nil).
 			Run(func(arg mock.Arguments) {
-				time.Sleep(2 * time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
 			})
 	}
 
@@ -2721,27 +2723,40 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
 
 	options := &Options{
-		StatusMonitoringEnabled: true,
-		ValueMonitoringEnabled:  true,
-		BatchSize:               100,
+		BatchSize: 100,
 
-		FeastTimeout:                     1 * time.Millisecond,
-		FeastClientMaxConcurrentRequests: 1,
+		FeastTimeout:                     1 * time.Second,
+		FeastClientMaxConcurrentRequests: 2,
+		FeastClientSleepWindow:           0,
 	}
 
 	logger, _ := zap.NewDevelopment()
 
-	fr := NewFeastRetriever(mockFeast, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
-
 	var requestJson transTypes.JSONObject
 	err = json.Unmarshal([]byte(`{"driver_id":"1001"}`), &requestJson)
-	if err != nil {
-		panic(err)
+	assert.NoError(t, err)
+
+	fr := NewFeastRetriever(mockFeast, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
+
+	var good, bad uint32
+
+	for i := 0; i < 3; i++ {
+		go func() {
+			_, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
+			if err != nil {
+				atomic.AddUint32(&bad, 1)
+			} else {
+				atomic.AddUint32(&good, 1)
+			}
+		}()
+
+		time.Sleep(10 * time.Millisecond)
 	}
 
-	got, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
-	assert.Error(t, err)
-	assert.Nil(t, got)
+	time.Sleep(2 * time.Second)
 
-	time.Sleep(15 * time.Millisecond)
+	assert.GreaterOrEqual(t, atomic.LoadUint32(&bad), uint32(0))
+	assert.GreaterOrEqual(t, atomic.LoadUint32(&good), uint32(2))
+
+	mockFeast.AssertExpectations(t)
 }

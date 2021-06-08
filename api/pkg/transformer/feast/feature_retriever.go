@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"strings"
 	"time"
@@ -85,7 +86,7 @@ type Options struct {
 	FeastTimeout                      time.Duration `envconfig:"FEAST_TIMEOUT" default:"1s"`
 	FeastClientMaxConcurrentRequests  int           `envconfig:"FEAST_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
 	FeastClientRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
-	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"10"`
+	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"1000"` // How long, in milliseconds, to wait after a circuit opens before testing for recovery
 	FeastClientErrorPercentThreshold  int           `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
 }
 
@@ -127,11 +128,11 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Co
 
 	// parallelize feast call per feature table
 	resChan := make(chan parallelCallResult, nbTables)
-	for _, config := range fr.featureTableSpecs {
+	for _, featureTableSpec := range fr.featureTableSpecs {
 		go func(featureTableSpec *spec.FeatureTable) {
 			featureTable, err := fr.getFeaturePerTable(ctx, symbolRegistry, featureTableSpec)
 			resChan <- parallelCallResult{featureTable, err}
-		}(config)
+		}(featureTableSpec)
 	}
 
 	// collect result
@@ -149,7 +150,9 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Co
 
 func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry symbol.Registry, featureTableSpec *spec.FeatureTable) (*transTypes.FeatureTable, error) {
 	if featureTableSpec.TableName == "" {
-		featureTableSpec.TableName = GetTableName(featureTableSpec)
+		spec := *featureTableSpec
+		spec.TableName = GetTableName(&spec)
+		featureTableSpec = &spec
 	}
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.getFeaturePerTable")
@@ -301,6 +304,7 @@ func (fc *feastCall) do(
 	}
 
 	if fc.cacheEnabled {
+		log.Println("entityFeaturePairs", entityFeaturePairs)
 		if err := insertMultipleFeaturesToCache(fc.cache, entityFeaturePairs, fc.featureTableSpec.Project, fc.cacheTTL); err != nil {
 			fc.logger.Error("insert_to_cache", zap.Any("error", err))
 		}

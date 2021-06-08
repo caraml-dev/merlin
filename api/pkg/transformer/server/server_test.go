@@ -551,7 +551,7 @@ func Test_newHystrixClient_RetriesGetOnFailure5xx(t *testing.T) {
 	count := 0
 
 	client := newHystrixClient("retries-on-5xx", &Options{
-		ModelTimeout:                       1 * time.Millisecond,
+		ModelTimeout:                       10 * time.Millisecond,
 		ModelHystrixMaxConcurrentRequests:  100,
 		ModelHystrixRetryMaxJitterInterval: 1 * time.Millisecond,
 		ModelHystrixRetryBackoffInterval:   1 * time.Millisecond,
