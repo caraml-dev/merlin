@@ -25,15 +25,16 @@ import (
 const PropertyPyTorchClassName = "pytorch_class_name"
 
 type Version struct {
-	ID          ID                 `json:"id" gorm:"primary_key"`
-	ModelID     ID                 `json:"model_id" gorm:"primary_key"`
-	Model       *Model             `json:"model" gorm:"foreignkey:ModelID;"`
-	RunID       string             `json:"mlflow_run_id" gorm:"column:mlflow_run_id"`
-	MlflowURL   string             `json:"mlflow_url" gorm:"-"`
-	ArtifactURI string             `json:"artifact_uri" gorm:"artifact_uri"`
-	Endpoints   []*VersionEndpoint `json:"endpoints" gorm:"foreignkey:VersionID,VersionModelID;association_foreignkey:ID,ModelID;"`
-	Properties  KV                 `json:"properties" gorm:"properties"`
-	Labels      KV                 `json:"labels" gorm:"labels"`
+	ID              ID                 `json:"id" gorm:"primary_key"`
+	ModelID         ID                 `json:"model_id" gorm:"primary_key"`
+	Model           *Model             `json:"model" gorm:"foreignkey:ModelID;"`
+	RunID           string             `json:"mlflow_run_id" gorm:"column:mlflow_run_id"`
+	MlflowURL       string             `json:"mlflow_url" gorm:"-"`
+	ArtifactURI     string             `json:"artifact_uri" gorm:"artifact_uri"`
+	Endpoints       []*VersionEndpoint `json:"endpoints" gorm:"foreignkey:VersionID,VersionModelID;association_foreignkey:ID,ModelID;"`
+	Properties      KV                 `json:"properties" gorm:"properties"`
+	Labels          KV                 `json:"labels" gorm:"labels"`
+	CustomPredictor *CustomPredictor   `json:"custom_predictor"`
 	CreatedUpdated
 }
 
@@ -42,7 +43,27 @@ type VersionPost struct {
 }
 
 type VersionPatch struct {
-	Properties *KV `json:"properties,omitempty"`
+	Properties      *KV              `json:"properties,omitempty"`
+	CustomPredictor *CustomPredictor `json:"custom_predictor,omitempty"`
+}
+
+type CustomPredictor struct {
+	Image   string `json:"image"`
+	Command string `json:"command"`
+	Args    string `json:"args"`
+}
+
+func (cp CustomPredictor) Value() (driver.Value, error) {
+	return json.Marshal(cp)
+}
+
+func (cp *CustomPredictor) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+
+	return json.Unmarshal(b, &cp)
 }
 
 type KV map[string]interface{}
@@ -63,6 +84,9 @@ func (kv *KV) Scan(value interface{}) error {
 func (v *Version) Patch(patch *VersionPatch) {
 	if patch.Properties != nil {
 		v.Properties = *patch.Properties
+	}
+	if patch.CustomPredictor != nil && v.Model.Type == ModelTypeCustom {
+		v.CustomPredictor = patch.CustomPredictor
 	}
 }
 
@@ -97,6 +121,7 @@ func (v *Version) GetEndpointByEnvironmentName(envName string) (endpoint *Versio
 type ModelOption struct {
 	PyFuncImageName       string
 	PyTorchModelClassName string
+	CustomPredictor       *CustomPredictor
 }
 
 const DefaultPyTorchClassName = "PyTorchModel"
@@ -114,4 +139,8 @@ func NewPyTorchModelOption(version *Version) *ModelOption {
 		return &ModelOption{PyTorchModelClassName: DefaultPyTorchClassName}
 	}
 	return &ModelOption{PyTorchModelClassName: clsNameStr}
+}
+
+func NewCustomModelOption(version *Version) *ModelOption {
+	return &ModelOption{CustomPredictor: version.CustomPredictor}
 }

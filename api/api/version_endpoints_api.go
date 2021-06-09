@@ -122,6 +122,15 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 		return NotFound(err.Error())
 	}
 
+	// validate custom predictor
+	if model.Type == models.ModelTypeCustom {
+		err := c.validateCustomPredictor(ctx, version)
+		if err != nil {
+			log.Errorf("error validating custom predictor: %v", err)
+			return BadRequest(err.Error())
+		}
+	}
+
 	env, err := c.AppContext.EnvironmentService.GetDefaultEnvironment()
 	if err != nil {
 		return InternalServerError("Unable to find default environment, specify environment target for deployment")
@@ -195,6 +204,15 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 			return InternalServerError(err.Error())
 		}
 		return NotFound(err.Error())
+	}
+
+	// validate custom predictor
+	if model.Type == models.ModelTypeCustom {
+		err := c.validateCustomPredictor(ctx, version)
+		if err != nil {
+			log.Errorf("error validating custom predictor: %v", err)
+			return BadRequest(err.Error())
+		}
 	}
 
 	endpoint, err := c.EndpointsService.FindByID(endpointID)
@@ -372,6 +390,17 @@ func (c *EndpointsController) validateTransformer(ctx context.Context, trans *mo
 		return errors.New(fmt.Sprintf("Unknown transformer type: %s", trans.TransformerType))
 	}
 
+	return nil
+}
+
+func (c *EndpointsController) validateCustomPredictor(ctx context.Context, version *models.Version) error {
+	customPredictor := version.CustomPredictor
+	if customPredictor == nil {
+		return errors.New("custom predictor must be specified")
+	}
+	if customPredictor.Image == "" {
+		return errors.New("custom predictor image must be set")
+	}
 	return nil
 }
 

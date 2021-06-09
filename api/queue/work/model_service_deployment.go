@@ -139,6 +139,8 @@ func (depl *ModelServiceDeployment) generateModelOptions(model *models.Model, ve
 		modelOpt.PyFuncImageName = imageRef
 	case models.ModelTypePyTorch:
 		modelOpt = models.NewPyTorchModelOption(version)
+	case models.ModelTypeCustom:
+		modelOpt = models.NewCustomModelOption(version)
 	}
 	return modelOpt, nil
 }

@@ -261,6 +261,7 @@ class ModelType(Enum):
     ONNX = "onnx"
     PYFUNC = "pyfunc"
     PYFUNC_V2 = "pyfunc_v2"
+    CUSTOM = "custom"
 
 
 @autostr
