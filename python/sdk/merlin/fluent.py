@@ -322,6 +322,21 @@ def log_model(model_dir):
     _check_active_model_version()
     _active_model_version.log_model(model_dir)  # type: ignore
 
+def log_custom_model(self, model_dir: str, image :str, command: str, args: str):
+    """
+    Upload model to artifact storage.
+    This method is used to upload model for custom model type.
+
+    :param model_dir: directory which contain serialized model
+    :param image: Docker image that will be used as predictor
+    :param command: Command to run docker image
+    :param args: Arguments that needs to be specified when running docker
+    """
+    _check_active_model_version()
+    _active_model_version.log_custom_model(model_dir=model_dir,
+                                           image=image,
+                                           command=command,
+                                           args=args)
 
 def deploy(model_version: ModelVersion = None,
            environment_name: str = None,

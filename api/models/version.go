@@ -53,6 +53,10 @@ type CustomPredictor struct {
 	Args    string `json:"args"`
 }
 
+func (cp CustomPredictor) IsValid() bool {
+	return cp.Image != ""
+}
+
 func (cp CustomPredictor) Value() (driver.Value, error) {
 	return json.Marshal(cp)
 }
@@ -81,13 +85,17 @@ func (kv *KV) Scan(value interface{}) error {
 	return json.Unmarshal(b, &kv)
 }
 
-func (v *Version) Patch(patch *VersionPatch) {
+func (v *Version) Patch(patch *VersionPatch) error {
 	if patch.Properties != nil {
 		v.Properties = *patch.Properties
 	}
 	if patch.CustomPredictor != nil && v.Model.Type == ModelTypeCustom {
+		if !patch.CustomPredictor.IsValid() {
+			return errors.New("custom predictor image must be set")
+		}
 		v.CustomPredictor = patch.CustomPredictor
 	}
+	return nil
 }
 
 func (v *Version) BeforeCreate(scope *gorm.Scope) {

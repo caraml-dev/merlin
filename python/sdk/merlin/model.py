@@ -626,6 +626,7 @@ class ModelVersion:
         self._model = model
         self._artifact_uri = version.artifact_uri
         self._labels = version.labels
+        self._custom_predictor = version.custom_predictor
         mlflow.set_tracking_uri(model.project.mlflow_tracking_url)
 
     @property
@@ -912,6 +913,44 @@ class ModelVersion:
 
         validate_model_dir(self._model.type, None, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
+
+    def log_custom_model(self, model_dir=None, image="", command="", args=""):
+        """
+        Upload model to artifact storage.
+        This method is used to upload model for custom model type.
+
+        :param model_dir: directory which contain serialized model
+        :param image: Docker image that will be used as predictor
+        :param command: Command to run docker image
+        :param args: Arguments that needs to be specified when running docker
+        """
+        if self._model.type != ModelType.CUSTOM:
+            raise ValueError("use log_custom_model to log custom model")
+
+        is_using_dummy_artifact = False
+        temp_dummy_file_loc = "/tmp/custom-model.txt"
+
+        if model_dir is None:
+            """
+                Create dummy file, which later on will be uploaded
+                If no data that will be uploaded to mlflow artifact (gcs), given artifact URI will not exist
+                Hence will raise error when creating inferenceservice
+            """
+            is_using_dummy_artifact = True
+            with open(temp_dummy_file_loc, 'w') as writer:
+                writer.write("Custom Model")
+            model_dir = temp_dummy_file_loc
+
+        validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
+        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
+        if is_using_dummy_artifact:
+            os.remove(model_dir)
+
+        version_api = VersionApi(self._api_client)
+        custom_predictor_body = client.CustomPredictor(image=image, command=command, args=args)
+        version_api.models_model_id_versions_version_id_patch(
+            int(self.model.id), int(self.id), body={"custom_predictor": custom_predictor_body})
+
 
     def list_endpoint(self) -> List[VersionEndpoint]:
         """

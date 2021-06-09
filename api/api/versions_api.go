@@ -72,7 +72,10 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 		return InternalServerError("Unable to parse request body")
 	}
 
-	v.Patch(versionPatch)
+	if err := v.Patch(versionPatch); err != nil {
+		return BadRequest(err.Error())
+	}
+
 	patchedVersion, err := c.VersionsService.Save(ctx, v, c.MonitoringConfig)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error patching model version for given model %s version %s", modelID, versionID))

@@ -1032,6 +1032,7 @@ definitions:
           - "pyfunc"
           - "onnx"
           - "pyfunc_v2"
+          - "custom"
           - "other"
       mlflow_url:
         type: "string"
@@ -1452,6 +1453,7 @@ definitions:
               - ONNX
               - PYFUNC
               - PYFUNC_V2
+              - CUSTOM
             default: INVALID_MODEL_TYPE
           uri:
             type: string

@@ -533,6 +533,43 @@ func TestPatchVersion(t *testing.T) {
 			},
 		},
 		{
+			desc: "Return 400 patch version - model type custom but custom predictor object doesn't have image",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionPatch{
+				CustomPredictor: &models.CustomPredictor{
+					Command: "./run.sh",
+					Args:    "firstArg secondArg",
+				},
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
+					&models.Version{
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
+						Model: &models.Model{
+							ID:           models.ID(1),
+							Name:         "model-1",
+							ProjectID:    models.ID(1),
+							Project:      mlp.Project{},
+							ExperimentID: 1,
+							Type:         "custom",
+							MlflowURL:    "http://mlflow.com",
+						},
+						MlflowURL:       "http://mlflow.com",
+						CustomPredictor: nil,
+					}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "custom predictor image must be set"},
+			},
+		},
+		{
 			desc: "Should return 404 if version is not found",
 			vars: map[string]string{
 				"model_id":   "1",

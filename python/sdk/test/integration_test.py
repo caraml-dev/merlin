@@ -715,3 +715,43 @@ def test_standard_transformer_with_feast(integration_test_url, project_name, use
 
     assert resp.json()["instances"] == exp_resp["instances"]
     merlin.undeploy(v)
+
+@pytest.mark.integration
+def test_custom_model_without_artifact(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("custom-wo-artifact", ModelType.CUSTOM)
+
+    undeploy_all_version()
+
+    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+
+    with merlin.new_model_version() as v:
+        v.log_custom_model(image="ghcr.io/tiopramayudi/custom-predictor:v0.2")
+
+    endpoint = merlin.deploy(v, resource_request= resource_request)
+    with open(os.path.join("test/custom-model", "input.json"), "r") as f:
+        req = json.load(f)
+
+
+    sleep(5)
+    resp = requests.post(f"{endpoint.url}", json=req)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert resp.json()['predictions'] is not None
+
+    model_endpoint = merlin.serve_traffic({endpoint: 100})
+    sleep(5)
+    resp = requests.post(f"{model_endpoint.url}", json=req)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert resp.json()['predictions'] is not None
+
+    # Try to undeploy serving model version. It must be fail
+    with pytest.raises(Exception):
+        assert merlin.undeploy(v)
+
+    # Undeploy other running model version endpoints
+    undeploy_all_version()

@@ -191,7 +191,7 @@ class Model(object):
         :param type: The type of this Model.  # noqa: E501
         :type: str
         """
-        allowed_values = ["xgboost", "tensorflow", "sklearn", "h2o", "pytorch", "pyfunc", "onnx", "pyfunc_v2", "other"]  # noqa: E501
+        allowed_values = ["xgboost", "tensorflow", "sklearn", "h2o", "pytorch", "pyfunc", "onnx", "pyfunc_v2", "custom", "other"]  # noqa: E501
         if type not in allowed_values:
             raise ValueError(
                 "Invalid value for `type` ({0}), must be one of {1}"  # noqa: E501
