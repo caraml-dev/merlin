@@ -322,7 +322,7 @@ def log_model(model_dir):
     _check_active_model_version()
     _active_model_version.log_model(model_dir)  # type: ignore
 
-def log_custom_model(self, model_dir: str, image :str, command: str, args: str):
+def log_custom_model(model_dir: str, image :str, command: str, args: str):
     """
     Upload model to artifact storage.
     This method is used to upload model for custom model type.
@@ -333,7 +333,7 @@ def log_custom_model(self, model_dir: str, image :str, command: str, args: str):
     :param args: Arguments that needs to be specified when running docker
     """
     _check_active_model_version()
-    _active_model_version.log_custom_model(model_dir=model_dir,
+    _active_model_version.log_custom_model(model_dir=model_dir, # type: ignore
                                            image=image,
                                            command=command,
                                            args=args)

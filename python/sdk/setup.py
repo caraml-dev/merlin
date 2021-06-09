@@ -50,7 +50,7 @@ TEST_REQUIRES = [
     "xgboost==0.82",
     "scikit-learn==0.20.3",
     "joblib>=0.13.0",
-    "mypy",
+    "mypy==0.812",
     "google-cloud-bigquery==1.22.0",
     "google-cloud-bigquery-storage==0.7.0",
     "grpcio==1.22.0"

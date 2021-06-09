@@ -951,7 +951,6 @@ class ModelVersion:
         version_api.models_model_id_versions_version_id_patch(
             int(self.model.id), int(self.id), body={"custom_predictor": custom_predictor_body})
 
-
     def list_endpoint(self) -> List[VersionEndpoint]:
         """
         Return all endpoint deployment for this particular model version
