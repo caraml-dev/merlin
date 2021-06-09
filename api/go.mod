@@ -6,6 +6,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.3.3
 	github.com/GoogleCloudPlatform/spark-on-k8s-operator v0.0.0-20200424034326-7cd886c7ec44
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
+	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/antihax/optional v1.0.0
 	github.com/antonmedv/expr v1.8.9
 	github.com/buger/jsonparser v1.1.1
@@ -18,6 +19,7 @@ require (
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator v9.30.0+incompatible
 	github.com/gogo/protobuf v1.3.1
+	github.com/gojek/heimdall/v7 v7.0.2
 	github.com/gojek/merlin-pyspark-app v0.0.3
 	github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8
 	github.com/golang-migrate/migrate/v4 v4.11.0
@@ -41,6 +43,7 @@ require (
 	github.com/pilagod/gorm-cursor-paginator v1.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.5.1
+	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/rs/cors v1.7.0

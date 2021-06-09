@@ -17,7 +17,6 @@ package mlflow
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -107,7 +106,6 @@ func (mlflow *client) CreateRun(experimentID string) (*Run, error) {
 	}
 
 	if err := mlflow.doCall(&req, &resp); err != nil {
-		log.Println(err)
 		return nil, err
 	}
 

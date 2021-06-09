@@ -13,6 +13,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gojek/heimdall/v7"
+	"github.com/gojek/heimdall/v7/httpclient"
+	"github.com/gojek/heimdall/v7/hystrix"
+	"github.com/gojek/merlin/pkg/transformer/server/response"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -20,14 +24,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
-
-	"github.com/gojek/merlin/pkg/transformer/server/response"
 )
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"
 
 var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
 var onlyOneSignalHandler = make(chan struct{})
+
+var hystrixCommandName = "model_predict"
 
 // Options for the server.
 type Options struct {
@@ -36,13 +40,19 @@ type Options struct {
 	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"localhost:8080"`
 
 	HTTPServerTimeout time.Duration `envconfig:"HTTP_SERVER_TIMEOUT" default:"30s"`
-	HTTPClientTimeout time.Duration `envconfig:"HTTP_CLIENT_TIMEOUT" default:"15s"`
+	HTTPClientTimeout time.Duration `envconfig:"HTTP_CLIENT_TIMEOUT" default:"1s"`
+
+	ModelTimeout                       time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
+	ModelHystrixMaxConcurrentRequests  int           `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
+	ModelHystrixRetryCount             int           `envconfig:"MODEL_HYSTRIX_RETRY_COUNT" default:"0"`
+	ModelHystrixRetryBackoffInterval   time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
+	ModelHystrixRetryMaxJitterInterval time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_MAX_JITTER_INTERVAL" default:"5ms"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
 type Server struct {
 	options    *Options
-	httpClient *http.Client
+	httpClient *hystrix.Client
 	router     *mux.Router
 	logger     *zap.Logger
 
@@ -53,16 +63,37 @@ type Server struct {
 
 // New initializes a new Server.
 func New(o *Options, logger *zap.Logger) *Server {
-	httpClient := &http.Client{
-		Timeout: o.HTTPClientTimeout,
-	}
-
 	return &Server{
 		options:    o,
-		httpClient: httpClient,
+		httpClient: newHystrixClient(hystrixCommandName, o),
 		router:     mux.NewRouter(),
 		logger:     logger,
 	}
+}
+
+func newHystrixClient(commandName string, o *Options) *hystrix.Client {
+	hystrixOptions := []hystrix.Option{
+		hystrix.WithCommandName(commandName),
+		hystrix.WithHTTPClient(httpclient.NewClient(httpclient.WithHTTPTimeout(o.ModelTimeout))),
+		hystrix.WithHTTPTimeout(o.ModelTimeout),
+		hystrix.WithHystrixTimeout(o.ModelTimeout),
+		hystrix.WithMaxConcurrentRequests(o.ModelHystrixMaxConcurrentRequests),
+	}
+
+	if o.ModelHystrixRetryCount > 0 {
+		backoffInterval := o.ModelHystrixRetryMaxJitterInterval
+		maximumJitterInterval := o.ModelHystrixRetryBackoffInterval
+		backoff := heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval)
+		retrier := heimdall.NewRetrier(backoff)
+
+		hystrixOptions = append(hystrixOptions,
+			hystrix.WithRetrier(retrier),
+			hystrix.WithRetryCount(int(o.ModelHystrixRetryCount)),
+		)
+	}
+
+	client := hystrix.NewClient(hystrixOptions...)
+	return client
 }
 
 // PredictHandler handles prediction request to the transformer and model.
