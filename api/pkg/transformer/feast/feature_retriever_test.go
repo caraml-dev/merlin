@@ -948,9 +948,10 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				entityExtractor,
 				tt.fields.featureTableSpecs,
 				&Options{
-					StatusMonitoringEnabled: true,
-					ValueMonitoringEnabled:  true,
-					BatchSize:               100,
+					StatusMonitoringEnabled:          true,
+					ValueMonitoringEnabled:           true,
+					BatchSize:                        100,
+					FeastClientMaxConcurrentRequests: 2,
 				},
 				nil,
 				logger,
@@ -2725,9 +2726,7 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	options := &Options{
 		BatchSize: 100,
 
-		FeastTimeout:                     1 * time.Second,
 		FeastClientMaxConcurrentRequests: 2,
-		FeastClientSleepWindow:           0,
 	}
 
 	logger, _ := zap.NewDevelopment()
@@ -2749,14 +2748,12 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 				atomic.AddUint32(&good, 1)
 			}
 		}()
-
-		time.Sleep(10 * time.Millisecond)
 	}
 
 	time.Sleep(2 * time.Second)
 
-	assert.GreaterOrEqual(t, atomic.LoadUint32(&bad), uint32(0))
-	assert.GreaterOrEqual(t, atomic.LoadUint32(&good), uint32(2))
+	assert.Equal(t, atomic.LoadUint32(&bad), uint32(1))
+	assert.Equal(t, atomic.LoadUint32(&good), uint32(2))
 
 	mockFeast.AssertExpectations(t)
 }

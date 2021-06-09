@@ -411,19 +411,13 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		batchedEntities := entityNotInCache[startIndex:endIndex]
 
 		f := fr.newFeastCall(featureTableSpec, batchedEntities)
-		errors := hystrix.GoC(ctx, hystrixCommandName, func(ctx context.Context) error {
+		hystrix.GoC(ctx, hystrixCommandName, func(ctx context.Context) error {
 			batchResultChan <- f.do(ctx, features, columns, entityIndices)
 			return nil
-		}, nil)
-
-		select {
-		case err := <-errors:
-			if err != nil {
-				return nil, err
-			}
-		default:
-			continue
-		}
+		}, func(ctx context.Context, err error) error {
+			batchResultChan <- batchResult{featuresData: nil, err: err}
+			return nil
+		})
 	}
 
 	data := cachedValues
