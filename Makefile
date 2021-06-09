@@ -16,6 +16,7 @@ all: setup init-dep lint test clean build run
 setup:
 	@echo "> Setting up tools ..."
 	@test -x ${GOPATH}/bin/golint || go get -u golang.org/x/lint/golint
+	@test -x ${GOPATH}/bin/gotest || go get -u github.com/rakyll/gotest
 
 .PHONY: init-dep
 init-dep: init-dep-ui init-dep-api
@@ -61,25 +62,25 @@ test-ui:
 .PHONY: test-api
 test-api: init-dep-api
 	@echo "> API unit testing ..."
-	@cd ${API_PATH} && go test -race -cover -coverprofile cover.out -tags unit ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && gotest -race -cover -coverprofile cover.out -tags unit ${API_ALL_PACKAGES}
 	@cd ${API_PATH} && go tool cover -func cover.out
 
 .PHONY: it-test-api-local
 it-test-api-local: local-db
 	@echo "> API integration testing locally ..."
-	@cd ${API_PATH} && go test -race -short -cover -coverprofile cover.out -tags unit,integration_local ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && gotest -race -short -cover -coverprofile cover.out -tags unit,integration_local ${API_ALL_PACKAGES}
 	@cd ${API_PATH} && go tool cover -func cover.out
 
 .PHONY: it-test-api-ci
 it-test-api-ci:
 	@echo "> API integration testing ..."
-	@cd ${API_PATH} && go test -race -short -cover -coverprofile cover.out -tags unit,integration ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && gotest -race -short -cover -coverprofile cover.out -tags unit,integration ${API_ALL_PACKAGES}
 	@cd ${API_PATH} && go tool cover -func cover.out
 
 .PHONY:
 bench:
 	@echo "> Running Benchmark ..."
-	@cd ${API_PATH} && go test ${API_ALL_PACKAGES} -bench=. -run=^$$
+	@cd ${API_PATH} && gotest ${API_ALL_PACKAGES} -bench=. -run=^$$
 
 # ============================================================
 # Building recipes

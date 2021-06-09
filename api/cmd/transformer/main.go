@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/afex/hystrix-go/hystrix/metric_collector"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/kelseyhightower/envconfig"
@@ -17,6 +18,7 @@ import (
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
 
+	"github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
@@ -28,7 +30,10 @@ import (
 )
 
 func init() {
-	prometheus.MustRegister(version.NewCollector("feast_transformer"))
+	prometheus.MustRegister(version.NewCollector("transformer"))
+
+	hystrixCollector := hystrix.NewPrometheusCollector("hystrix", map[string]string{"app": "transformer"})
+	metricCollector.Registry.Register(hystrixCollector)
 }
 
 type AppConfig struct {

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -947,9 +948,10 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				entityExtractor,
 				tt.fields.featureTableSpecs,
 				&Options{
-					StatusMonitoringEnabled: true,
-					ValueMonitoringEnabled:  true,
-					BatchSize:               100,
+					StatusMonitoringEnabled:          true,
+					ValueMonitoringEnabled:           true,
+					BatchSize:                        100,
+					FeastClientMaxConcurrentRequests: 2,
 				},
 				nil,
 				logger,
@@ -1761,7 +1763,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
 			mockCache := &mocks2.Cache{}
-			logger.Debug("Test Case %", zap.String("title", tt.name))
+			logger.Debug("Test Case:", zap.String("title", tt.name))
 			for _, cc := range tt.cacheMocks {
 				key := CacheKey{Entity: cc.entity, Project: cc.project}
 				keyByte, err := json.Marshal(key)
@@ -1831,6 +1833,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 				t.Errorf("spec.Enrich() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			logger.Debug("got", zap.Any("feature_tables", gotFeatureTables))
 
 			assert.Equal(t, len(gotFeatureTables), len(tt.want))
 			for _, exp := range tt.want {
@@ -2653,4 +2656,104 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 		request, _ := fr.buildEntityRows(context.Background(), sr, featureTableSpecs[0].Entities, "default")
 		_ = request
 	}
+}
+
+var (
+	defaultMockFeastResponse = &feast.OnlineFeaturesResponse{
+		RawResponse: &serving.GetOnlineFeaturesResponse{
+			FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				{
+					Fields: map[string]*feastTypes.Value{
+						"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+						"driver_id":                        feast.StrVal("1001"),
+					},
+					Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+						"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+						"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+					},
+				},
+			},
+		},
+	}
+
+	defaultFeatureTableSpecs = []*spec.FeatureTable{
+		{
+			Project: "default",
+			Entities: []*spec.Entity{
+
+				{
+					Name:      "driver_id",
+					ValueType: "STRING",
+					Extractor: &spec.Entity_JsonPath{
+						JsonPath: "$.driver_id",
+					},
+				},
+			},
+			Features: []*spec.Feature{
+				{
+					Name:         "driver_trips:average_daily_rides",
+					DefaultValue: "0.0",
+					ValueType:    "DOUBLE",
+				},
+			},
+		},
+	}
+)
+
+func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
+	mockFeast := &mocks.Client{}
+
+	for i := 0; i < 3; i++ {
+		mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
+			Return(defaultMockFeastResponse, nil).
+			Run(func(arg mock.Arguments) {
+				time.Sleep(500 * time.Millisecond)
+			})
+	}
+
+	compiledJSONPaths, err := CompileJSONPaths(defaultFeatureTableSpecs)
+	assert.NoError(t, err)
+
+	compiledExpressions, err := CompileExpressions(defaultFeatureTableSpecs)
+	assert.NoError(t, err)
+
+	jsonPathStorage := jsonpath.NewStorage()
+	jsonPathStorage.AddAll(compiledJSONPaths)
+	expressionStorage := expression.NewStorage()
+	expressionStorage.AddAll(compiledExpressions)
+	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
+
+	options := &Options{
+		BatchSize: 100,
+
+		FeastClientMaxConcurrentRequests: 2,
+	}
+
+	logger, _ := zap.NewDevelopment()
+
+	var requestJson transTypes.JSONObject
+	err = json.Unmarshal([]byte(`{"driver_id":"1001"}`), &requestJson)
+	assert.NoError(t, err)
+
+	fr := NewFeastRetriever(mockFeast, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
+
+	var good, bad uint32
+
+	for i := 0; i < 3; i++ {
+		go func() {
+			_, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
+			if err != nil {
+				atomic.AddUint32(&bad, 1)
+			} else {
+				atomic.AddUint32(&good, 1)
+			}
+		}()
+	}
+
+	time.Sleep(2 * time.Second)
+
+	assert.Equal(t, atomic.LoadUint32(&bad), uint32(1))
+	assert.Equal(t, atomic.LoadUint32(&good), uint32(2))
+
+	mockFeast.AssertExpectations(t)
 }

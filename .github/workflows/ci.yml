@@ -127,7 +127,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/sdk
         run: |
-          pip install mypy pipenv
+          pip install mypy==0.812 pipenv
           make setup
       - name: Unit test Python SDK
         env:
@@ -162,6 +162,10 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: 1.13
+      - name: Install dependencies
+        run: |
+          make setup
+          make init-dep-api
       - name: Test API files
         env:
           POSTGRES_HOST: localhost
