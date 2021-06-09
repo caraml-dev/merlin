@@ -16,6 +16,7 @@ package imagebuilder
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 )
 
@@ -31,5 +32,5 @@ type ErrUnableToBuildImage struct {
 }
 
 func (e ErrUnableToBuildImage) Error() string {
-	return fmt.Sprintf("error building pyfunc image: %s", e)
+	return fmt.Sprintf("error building pyfunc image: %s", e.Message)
 }

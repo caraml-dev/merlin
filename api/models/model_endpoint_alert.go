@@ -19,13 +19,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 )
 
 const (
 	defaultAlertForDuration = "5m"
-
-	dashboardFormat = "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=%s&var-project=%s&var-model=%s"
 )
 
 const (
@@ -98,7 +97,7 @@ type PromAlertRuleAnnotations struct {
 	Playbook  string `yaml:"playbook"`
 }
 
-func (alert ModelEndpointAlert) ToPromAlertSpec() PromAlert {
+func (alert ModelEndpointAlert) ToPromAlertSpec(dashboardBaseURL string) PromAlert {
 	var rules []PromAlertRule
 
 	for _, alertCondition := range alert.AlertConditions {
@@ -118,7 +117,7 @@ func (alert ModelEndpointAlert) ToPromAlertSpec() PromAlert {
 			Annotations: PromAlertRuleAnnotations{
 				Summary:   alert.summary(*alertCondition),
 				Playbook:  "TODO",
-				Dashboard: alert.dashboardLink(),
+				Dashboard: alert.dashboardLink(dashboardBaseURL),
 			},
 		}
 		rules = append(rules, rule)
@@ -228,8 +227,23 @@ func (alert ModelEndpointAlert) summary(alertCondition AlertCondition) string {
 	}
 }
 
-func (alert ModelEndpointAlert) dashboardLink() string {
-	return fmt.Sprintf(dashboardFormat, alert.ModelEndpoint.Environment.Cluster, alert.Model.Project.Name, alert.Model.Name)
+func (alert ModelEndpointAlert) dashboardLink(dashboardBaseURL string) string {
+	url, _ := url.Parse(dashboardBaseURL)
+
+	q := url.Query()
+	if alert.ModelEndpoint.Environment.Cluster != "" {
+		q.Set("var-cluster", alert.ModelEndpoint.Environment.Cluster)
+	}
+	if alert.Model.Project.Name != "" {
+		q.Set("var-project", alert.Model.Project.Name)
+	}
+	if alert.Model.Name != "" {
+		q.Set("var-model", alert.Model.Name)
+	}
+
+	url.RawQuery = q.Encode()
+
+	return url.String()
 }
 
 type AlertConditions []*AlertCondition
