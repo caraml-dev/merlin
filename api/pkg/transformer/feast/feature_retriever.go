@@ -290,8 +290,6 @@ func (fc *feastCall) do(
 	}
 	feastLatency.WithLabelValues("success").Observe(float64(durationMs))
 
-	fc.logger.Debug("feast_response", zap.Any("feast_response", feastResponse.Rows()))
-
 	entityFeaturePairs, err := fc.buildFeastFeaturesData(ctx, feastResponse, fc.featureTableSpec.Project, columns, entityIndexMap)
 	if err != nil {
 		return batchResult{featuresData: nil, columnTypes: nil, err: err}
