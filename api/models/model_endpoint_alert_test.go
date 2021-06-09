@@ -22,6 +22,10 @@ import (
 	"github.com/gojek/merlin/mlp"
 )
 
+const (
+	dashboardBaseURL = "https://monitoring.dev/graph/d/123456789/merlin-dashboard"
+)
+
 func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 	type fields struct {
 		ID              ID
@@ -83,7 +87,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 								},
 								Annotations: PromAlertRuleAnnotations{
 									Summary:   "Throughput (RPM) of model-1 model in env-1 is less than 10.00. Current value is {{ $value }}.",
-									Dashboard: "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=cluster-1&var-project=project-1&var-model=model-1",
+									Dashboard: "https://monitoring.dev/graph/d/123456789/merlin-dashboard?var-cluster=cluster-1&var-model=model-1&var-project=project-1",
 									Playbook:  "TODO",
 								},
 							},
@@ -138,7 +142,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 								},
 								Annotations: PromAlertRuleAnnotations{
 									Summary:   "99.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 100.00 ms. Current value is {{ $value }} ms.",
-									Dashboard: "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=cluster-1&var-project=project-1&var-model=model-1",
+									Dashboard: "https://monitoring.dev/graph/d/123456789/merlin-dashboard?var-cluster=cluster-1&var-model=model-1&var-project=project-1",
 									Playbook:  "TODO",
 								},
 							},
@@ -191,7 +195,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 								},
 								Annotations: PromAlertRuleAnnotations{
 									Summary:   "Error rate of model-1 model in env-1 is higher than 50.00%. Current value is {{ $value }}%.",
-									Dashboard: "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=cluster-1&var-project=project-1&var-model=model-1",
+									Dashboard: "https://monitoring.dev/graph/d/123456789/merlin-dashboard?var-cluster=cluster-1&var-model=model-1&var-project=project-1",
 									Playbook:  "TODO",
 								},
 							},
@@ -244,7 +248,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 								},
 								Annotations: PromAlertRuleAnnotations{
 									Summary:   "CPU usage of model-1 model in env-1 is higher than 50.00%. Current value is {{ $value }}%.",
-									Dashboard: "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=cluster-1&var-project=project-1&var-model=model-1",
+									Dashboard: "https://monitoring.dev/graph/d/123456789/merlin-dashboard?var-cluster=cluster-1&var-model=model-1&var-project=project-1",
 									Playbook:  "TODO",
 								},
 							},
@@ -297,7 +301,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 								},
 								Annotations: PromAlertRuleAnnotations{
 									Summary:   "Memory usage of model-1 model in env-1 is higher than 50.00%. Current value is {{ $value }}%.",
-									Dashboard: "https://monitoring.dev/graph/d/z0MBKR1Wz/mlp-model-version-dashboard?var-cluster=cluster-1&var-project=project-1&var-model=model-1",
+									Dashboard: "https://monitoring.dev/graph/d/123456789/merlin-dashboard?var-cluster=cluster-1&var-model=model-1&var-project=project-1",
 									Playbook:  "TODO",
 								},
 							},
@@ -320,7 +324,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 				AlertConditions: tt.fields.AlertConditions,
 				CreatedUpdated:  tt.fields.CreatedUpdated,
 			}
-			got := alert.ToPromAlertSpec()
+			got := alert.ToPromAlertSpec(dashboardBaseURL)
 			assert.Equal(t, tt.want, got)
 		})
 	}

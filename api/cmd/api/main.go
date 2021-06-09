@@ -233,7 +233,8 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	modelEndpointAlertService := service.NewModelEndpointAlertService(
 		storage.NewAlertStorage(db), gitlabClient, wardenClient,
 		gitlabConfig.DashboardRepository, gitlabConfig.DashboardBranch,
-		gitlabConfig.AlertRepository, gitlabConfig.AlertBranch)
+		gitlabConfig.AlertRepository, gitlabConfig.AlertBranch,
+		cfg.FeatureToggleConfig.MonitoringConfig.MonitoringBaseURL)
 
 	mlflowConfig := cfg.MlflowConfig
 	mlflowClient := mlflow.NewClient(mlflowConfig.TrackingURL)
