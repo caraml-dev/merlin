@@ -928,25 +928,9 @@ class ModelVersion:
         if self._model.type != ModelType.CUSTOM:
             raise ValueError("use log_custom_model to log custom model")
 
-        is_using_dummy_artifact = False
-        temp_file_name = "README.txt"
-        temp_file_dir = "/tmp/custom"
-        if model_dir is None:
-            """
-                Create dummy file, which later on will be uploaded
-                If no data that will be uploaded to mlflow artifact (gcs), given artifact URI will not exist
-                Hence will raise error when creating inferenceservice
-            """
-            is_using_dummy_artifact = True
-            os.makedirs(temp_file_dir, exist_ok=True)
-            with open(os.path.join(temp_file_dir, temp_file_name), 'w') as writer:
-                writer.write("Custom Model")
-            model_dir = temp_file_dir
-
-        validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
-        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
-        if is_using_dummy_artifact:
-            shutil.rmtree(temp_file_dir)
+        if model_dir is not None:
+            validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
+            mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
         version_api = VersionApi(self._api_client)
         custom_predictor_body = client.CustomPredictor(image=image, command=command, args=args)

@@ -374,9 +374,10 @@ func TestPatchVersion(t *testing.T) {
 			},
 			requestBody: &models.VersionPatch{
 				CustomPredictor: &models.CustomPredictor{
-					Image:   "gcr.io/custom-predictor:v0.1",
-					Command: "./run.sh",
-					Args:    "firstArg secondArg",
+					Image:           "gcr.io/custom-predictor:v0.1",
+					Command:         "./run.sh",
+					Args:            "firstArg secondArg",
+					IsArtifactExist: true,
 				},
 			},
 			versionService: func() *mocks.VersionsService {
@@ -424,9 +425,10 @@ func TestPatchVersion(t *testing.T) {
 					},
 					MlflowURL: "http://mlflow.com",
 					CustomPredictor: &models.CustomPredictor{
-						Image:   "gcr.io/custom-predictor:v0.1",
-						Command: "./run.sh",
-						Args:    "firstArg secondArg",
+						Image:           "gcr.io/custom-predictor:v0.1",
+						Command:         "./run.sh",
+						Args:            "firstArg secondArg",
+						IsArtifactExist: true,
 					},
 				}, nil)
 				return svc
@@ -447,9 +449,10 @@ func TestPatchVersion(t *testing.T) {
 					},
 					MlflowURL: "http://mlflow.com",
 					CustomPredictor: &models.CustomPredictor{
-						Image:   "gcr.io/custom-predictor:v0.1",
-						Command: "./run.sh",
-						Args:    "firstArg secondArg",
+						Image:           "gcr.io/custom-predictor:v0.1",
+						Command:         "./run.sh",
+						Args:            "firstArg secondArg",
+						IsArtifactExist: true,
 					},
 				},
 			},

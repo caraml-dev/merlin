@@ -48,9 +48,10 @@ type VersionPatch struct {
 }
 
 type CustomPredictor struct {
-	Image   string `json:"image"`
-	Command string `json:"command"`
-	Args    string `json:"args"`
+	Image           string `json:"image"`
+	Command         string `json:"command"`
+	Args            string `json:"args"`
+	IsArtifactExist bool   `json:"is_artifact_exist"`
 }
 
 func (cp CustomPredictor) IsValid() bool {
