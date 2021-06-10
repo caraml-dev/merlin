@@ -1188,6 +1188,8 @@ definitions:
         type: "string"
       args:
         type: "string"
+      is_artifact_exist:
+        type: "boolean"
 
   VersionEndpoint:
     type: "object"

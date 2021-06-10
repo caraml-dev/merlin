@@ -33,21 +33,24 @@ class CustomPredictor(object):
     swagger_types = {
         'image': 'str',
         'command': 'str',
-        'args': 'str'
+        'args': 'str',
+        'is_artifact_exist': 'bool'
     }
 
     attribute_map = {
         'image': 'image',
         'command': 'command',
-        'args': 'args'
+        'args': 'args',
+        'is_artifact_exist': 'is_artifact_exist'
     }
 
-    def __init__(self, image=None, command=None, args=None):  # noqa: E501
+    def __init__(self, image=None, command=None, args=None, is_artifact_exist=None):  # noqa: E501
         """CustomPredictor - a model defined in Swagger"""  # noqa: E501
 
         self._image = None
         self._command = None
         self._args = None
+        self._is_artifact_exist = None
         self.discriminator = None
 
         if image is not None:
@@ -56,6 +59,8 @@ class CustomPredictor(object):
             self.command = command
         if args is not None:
             self.args = args
+        if is_artifact_exist is not None:
+            self.is_artifact_exist = is_artifact_exist
 
     @property
     def image(self):
@@ -119,6 +124,27 @@ class CustomPredictor(object):
         """
 
         self._args = args
+
+    @property
+    def is_artifact_exist(self):
+        """Gets the is_artifact_exist of this CustomPredictor.  # noqa: E501
+
+
+        :return: The is_artifact_exist of this CustomPredictor.  # noqa: E501
+        :rtype: bool
+        """
+        return self._is_artifact_exist
+
+    @is_artifact_exist.setter
+    def is_artifact_exist(self, is_artifact_exist):
+        """Sets the is_artifact_exist of this CustomPredictor.
+
+
+        :param is_artifact_exist: The is_artifact_exist of this CustomPredictor.  # noqa: E501
+        :type: bool
+        """
+
+        self._is_artifact_exist = is_artifact_exist
 
     def to_dict(self):
         """Returns the model properties as a dict"""

@@ -928,12 +928,18 @@ class ModelVersion:
         if self._model.type != ModelType.CUSTOM:
             raise ValueError("use log_custom_model to log custom model")
 
-        if model_dir is not None:
+        is_artifact_exist = model_dir is not None
+        if is_artifact_exist:
             validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
             mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
         version_api = VersionApi(self._api_client)
-        custom_predictor_body = client.CustomPredictor(image=image, command=command, args=args)
+        custom_predictor_body = client.CustomPredictor(
+            image=image,
+            command=command,
+            args=args,
+            is_artifact_exist=is_artifact_exist
+        )
         version_api.models_model_id_versions_version_id_patch(
             int(self.model.id), int(self.id), body={"custom_predictor": custom_predictor_body})
 
