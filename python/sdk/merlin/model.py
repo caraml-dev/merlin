@@ -16,6 +16,7 @@ import os
 import pathlib
 import re
 import urllib.parse
+import shutil
 
 from abc import abstractmethod
 from datetime import datetime
@@ -928,8 +929,8 @@ class ModelVersion:
             raise ValueError("use log_custom_model to log custom model")
 
         is_using_dummy_artifact = False
-        temp_dummy_file_loc = "/tmp/custom-model.txt"
-
+        temp_file_name = "README.txt"
+        temp_file_dir = "/tmp/custom"
         if model_dir is None:
             """
                 Create dummy file, which later on will be uploaded
@@ -937,14 +938,15 @@ class ModelVersion:
                 Hence will raise error when creating inferenceservice
             """
             is_using_dummy_artifact = True
-            with open(temp_dummy_file_loc, 'w') as writer:
+            os.makedirs(temp_file_dir, exist_ok=True)
+            with open(os.path.join(temp_file_dir, temp_file_name), 'w') as writer:
                 writer.write("Custom Model")
-            model_dir = temp_dummy_file_loc
+            model_dir = temp_file_dir
 
         validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
         if is_using_dummy_artifact:
-            os.remove(model_dir)
+            shutil.rmtree(temp_file_dir)
 
         version_api = VersionApi(self._api_client)
         custom_predictor_body = client.CustomPredictor(image=image, command=command, args=args)

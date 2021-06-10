@@ -31,6 +31,7 @@ import (
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/utils"
 )
 
 var (
@@ -473,7 +474,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 										models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "8080"},
 										models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: models.CreateInferenceServiceName(model.Name, "1")},
 										models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models"},
-										models.EnvVar{Name: "STORAGE_URI", Value: model.ArtifactURI},
+										models.EnvVar{Name: "STORAGE_URI", Value: utils.CreateModelLocation(model.ArtifactURI)},
 									}.ToKubernetesEnvVars(),
 									Resources: expUserResourceRequests,
 									Command: []string{
@@ -483,6 +484,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 										"firstArg",
 										"secondArg",
 									},
+									Name: "kfserving-container",
 								},
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
@@ -534,11 +536,12 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 										models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "8080"},
 										models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: models.CreateInferenceServiceName(model.Name, "1")},
 										models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models"},
-										models.EnvVar{Name: "STORAGE_URI", Value: model.ArtifactURI},
+										models.EnvVar{Name: "STORAGE_URI", Value: utils.CreateModelLocation(model.ArtifactURI)},
 									}.ToKubernetesEnvVars(),
 									Resources: expDefaultModelResourceRequests,
 									Command:   nil,
 									Args:      nil,
+									Name:      "kfserving-container",
 								},
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
@@ -1608,7 +1611,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 										models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "8080"},
 										models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: models.CreateInferenceServiceName(model.Name, "1")},
 										models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models"},
-										models.EnvVar{Name: "STORAGE_URI", Value: model.ArtifactURI},
+										models.EnvVar{Name: "STORAGE_URI", Value: utils.CreateModelLocation(model.ArtifactURI)},
 									}.ToKubernetesEnvVars(),
 									Resources: expUserResourceRequests,
 									Command: []string{
@@ -1618,6 +1621,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 										"firstArg",
 										"secondArg",
 									},
+									Name: "kfserving-container",
 								},
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{
@@ -1654,7 +1658,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 										models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "8080"},
 										models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: models.CreateInferenceServiceName(model.Name, "1")},
 										models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models"},
-										models.EnvVar{Name: "STORAGE_URI", Value: model.ArtifactURI},
+										models.EnvVar{Name: "STORAGE_URI", Value: utils.CreateModelLocation(model.ArtifactURI)},
 									}.ToKubernetesEnvVars(),
 									Resources: expUserResourceRequests,
 									Command: []string{
@@ -1664,6 +1668,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 										"firstArg",
 										"secondArg",
 									},
+									Name: "kfserving-container",
 								},
 							},
 							DeploymentSpec: v1alpha2.DeploymentSpec{

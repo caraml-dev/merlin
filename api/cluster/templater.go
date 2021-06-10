@@ -42,6 +42,7 @@ const (
 
 	defaultPredictorArtifactLocation = "/mnt/models"
 	defaultPredictorPort             = "8080"
+	defaultPredictorContainerName    = "kfserving-container"
 
 	defaultTransformerPort = "8080"
 
@@ -220,7 +221,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources v1.Resour
 	envVars = append(envVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
 	envVars = append(envVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
 	envVars = append(envVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
-	envVars = append(envVars, models.EnvVar{Name: envPredictorStorageURI, Value: modelService.ArtifactURI})
+	envVars = append(envVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
 
 	customPredictor := modelService.Options.CustomPredictor
 	var containerCommand []string
@@ -246,6 +247,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources v1.Resour
 				Resources: resources,
 				Command:   containerCommand,
 				Args:      containerArgs,
+				Name:      defaultPredictorContainerName,
 			},
 		},
 	}

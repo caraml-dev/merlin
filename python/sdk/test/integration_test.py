@@ -724,7 +724,7 @@ def test_custom_model_without_artifact(integration_test_url, project_name, use_g
 
     undeploy_all_version()
 
-    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+    resource_request = ResourceRequest(1, 1, "1", "1Gi")
 
     with merlin.new_model_version() as v:
         v.log_custom_model(image="ghcr.io/tiopramayudi/custom-predictor:v0.2")
