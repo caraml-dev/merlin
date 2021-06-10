@@ -126,7 +126,6 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	if model.Type == models.ModelTypeCustom {
 		err := c.validateCustomPredictor(ctx, version)
 		if err != nil {
-			log.Errorf("error validating custom predictor: %v", err)
 			return BadRequest(err.Error())
 		}
 	}
@@ -210,7 +209,6 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 	if model.Type == models.ModelTypeCustom {
 		err := c.validateCustomPredictor(ctx, version)
 		if err != nil {
-			log.Errorf("error validating custom predictor: %v", err)
 			return BadRequest(err.Error())
 		}
 	}
@@ -398,10 +396,7 @@ func (c *EndpointsController) validateCustomPredictor(ctx context.Context, versi
 	if customPredictor == nil {
 		return errors.New("custom predictor must be specified")
 	}
-	if customPredictor.Image == "" {
-		return errors.New("custom predictor image must be set")
-	}
-	return nil
+	return customPredictor.IsValid()
 }
 
 func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Context, cfg string) error {

@@ -54,8 +54,11 @@ type CustomPredictor struct {
 	IsArtifactExist bool   `json:"is_artifact_exist"`
 }
 
-func (cp CustomPredictor) IsValid() bool {
-	return cp.Image != ""
+func (cp CustomPredictor) IsValid() error {
+	if cp.Image == "" {
+		return errors.New("custom predictor image must be set")
+	}
+	return nil
 }
 
 func (cp CustomPredictor) Value() (driver.Value, error) {
@@ -91,8 +94,8 @@ func (v *Version) Patch(patch *VersionPatch) error {
 		v.Properties = *patch.Properties
 	}
 	if patch.CustomPredictor != nil && v.Model.Type == ModelTypeCustom {
-		if !patch.CustomPredictor.IsValid() {
-			return errors.New("custom predictor image must be set")
+		if err := patch.CustomPredictor.IsValid(); err != nil {
+			return err
 		}
 		v.CustomPredictor = patch.CustomPredictor
 	}
