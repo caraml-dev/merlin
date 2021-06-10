@@ -915,13 +915,17 @@ class ModelVersion:
         validate_model_dir(self._model.type, None, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
-    def log_custom_model(self, model_dir=None, image="", command="", args=""):
+    def log_custom_model(self,
+                         image: str,
+                         model_dir: str = None,
+                         command: str = "",
+                         args: str = ""):
         """
         Upload model to artifact storage.
         This method is used to upload model for custom model type.
 
-        :param model_dir: directory which contain serialized model
         :param image: Docker image that will be used as predictor
+        :param model_dir: directory which contain serialized model
         :param command: Command to run docker image
         :param args: Arguments that needs to be specified when running docker
         """
