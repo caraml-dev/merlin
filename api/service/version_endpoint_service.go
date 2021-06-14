@@ -148,6 +148,8 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 			}
 			endpoint.EnvVars = models.MergeEnvVars(pyfuncDefaultEnvVars, newEndpoint.EnvVars)
 		}
+	} else if model.Type == models.ModelTypeCustom {
+		endpoint.EnvVars = newEndpoint.EnvVars
 	}
 
 	originalEndpoint := *endpoint

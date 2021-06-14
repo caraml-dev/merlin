@@ -146,6 +146,55 @@ func TestDeployEndpoint(t *testing.T) {
 				},
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
+					EnvVars: models.EnvVars{
+						{
+							Name:  "MODEL_NAME",
+							Value: "model-1",
+						},
+						{
+							Name:  "MODEL_DIR",
+							Value: "/model",
+						},
+						{
+							Name:  "WORKERS",
+							Value: "1",
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			"success: empty custom model",
+			args{
+				env,
+				&models.Model{Name: "model", Project: project, Type: models.ModelTypeCustom},
+				&models.Version{ID: 1},
+				&models.VersionEndpoint{
+					ResourceRequest: env.DefaultResourceRequest,
+					EnvVars: models.EnvVars{
+						{
+							Name:  "TF_MODEL_NAME",
+							Value: "saved_model.pb",
+						},
+						{
+							Name:  "NUM_OF_ITERATION",
+							Value: "1",
+						},
+					},
+				},
+				&models.VersionEndpoint{
+					ResourceRequest: env.DefaultResourceRequest,
+					EnvVars: models.EnvVars{
+						{
+							Name:  "TF_MODEL_NAME",
+							Value: "saved_model.pb",
+						},
+						{
+							Name:  "NUM_OF_ITERATION",
+							Value: "1",
+						},
+					},
 				},
 			},
 			false,
@@ -412,6 +461,7 @@ func TestDeployEndpoint(t *testing.T) {
 					assert.Equal(t, errRaised.ResourceRequest, tt.args.environment.DefaultResourceRequest)
 				}
 
+				assert.Equal(t, errRaised.EnvVars, tt.args.expectedEndpoint.EnvVars)
 				assert.Equal(t, tt.args.expectedEndpoint.Logger, errRaised.Logger)
 				mockStorage.AssertNumberOfCalls(t, "Save", 1)
 			}
