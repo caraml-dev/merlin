@@ -432,7 +432,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "custom spec with resource request - artifact exist",
+			name: "custom spec with resource request",
 			modelSvc: &models.Service{
 				Name:        models.CreateInferenceServiceName(model.Name, "1"),
 				Namespace:   project.Name,
@@ -440,10 +440,9 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypeCustom,
 				Options: &models.ModelOption{
 					CustomPredictor: &models.CustomPredictor{
-						Image:           "gcr.io/custom-model:v0.1",
-						Command:         "./run.sh",
-						Args:            "firstArg secondArg",
-						IsArtifactExist: true,
+						Image:   "gcr.io/custom-model:v0.1",
+						Command: "./run.sh",
+						Args:    "firstArg secondArg",
 					},
 				},
 				Metadata:        model.Metadata,
@@ -498,71 +497,6 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "custom spec with resource request - artifact not exist",
-			modelSvc: &models.Service{
-				Name:        models.CreateInferenceServiceName(model.Name, "1"),
-				Namespace:   project.Name,
-				ArtifactURI: model.ArtifactURI,
-				Type:        models.ModelTypeCustom,
-				Options: &models.ModelOption{
-					CustomPredictor: &models.CustomPredictor{
-						Image:           "gcr.io/custom-model:v0.1",
-						Command:         "./run.sh",
-						Args:            "firstArg secondArg",
-						IsArtifactExist: false,
-					},
-				},
-				Metadata:        model.Metadata,
-				ResourceRequest: userResourceRequests,
-			},
-			exp: &v1alpha2.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
-					},
-					Labels: map[string]string{
-						"gojek.com/app":                model.Metadata.App,
-						"gojek.com/orchestrator":       "merlin",
-						"gojek.com/stream":             model.Metadata.Stream,
-						"gojek.com/team":               model.Metadata.Team,
-						"gojek.com/user-labels/sample": "true",
-						"gojek.com/environment":        model.Metadata.Environment,
-					},
-				},
-				Spec: v1alpha2.InferenceServiceSpec{
-					Default: v1alpha2.EndpointSpec{
-						Predictor: v1alpha2.PredictorSpec{
-							Custom: &kfsv1alpha2.CustomSpec{
-								Container: v1.Container{
-									Image: "gcr.io/custom-model:v0.1",
-									Env: models.EnvVars{
-										models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "8080"},
-										models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: models.CreateInferenceServiceName(model.Name, "1")},
-										models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models"},
-									}.ToKubernetesEnvVars(),
-									Resources: expUserResourceRequests,
-									Command: []string{
-										"./run.sh",
-									},
-									Args: []string{
-										"firstArg",
-										"secondArg",
-									},
-									Name: "kfserving-container",
-								},
-							},
-							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: &userResourceRequests.MinReplica,
-								MaxReplicas: userResourceRequests.MaxReplica,
-							},
-						},
-					},
-				},
-			},
-		},
-		{
 			name: "custom spec without resource request",
 			modelSvc: &models.Service{
 				Name:        models.CreateInferenceServiceName(model.Name, "1"),
@@ -571,8 +505,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypeCustom,
 				Options: &models.ModelOption{
 					CustomPredictor: &models.CustomPredictor{
-						Image:           "gcr.io/custom-model:v0.1",
-						IsArtifactExist: true,
+						Image: "gcr.io/custom-model:v0.1",
 					},
 				},
 				Metadata: model.Metadata,
@@ -1636,7 +1569,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "custom spec - artifact exist",
+			name: "custom spec",
 			modelSvc: &models.Service{
 				Name:        models.CreateInferenceServiceName(model.Name, "1"),
 				Namespace:   project.Name,
@@ -1644,10 +1577,9 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypeCustom,
 				Options: &models.ModelOption{
 					CustomPredictor: &models.CustomPredictor{
-						Image:           "gcr.io/custom-model:v0.2",
-						Command:         "./run-1.sh",
-						Args:            "firstArg secondArg",
-						IsArtifactExist: true,
+						Image:   "gcr.io/custom-model:v0.2",
+						Command: "./run-1.sh",
+						Args:    "firstArg secondArg",
 					},
 				},
 				Metadata:        model.Metadata,
@@ -1727,117 +1659,6 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 										models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: models.CreateInferenceServiceName(model.Name, "1")},
 										models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models"},
 										models.EnvVar{Name: "STORAGE_URI", Value: utils.CreateModelLocation(model.ArtifactURI)},
-									}.ToKubernetesEnvVars(),
-									Resources: expUserResourceRequests,
-									Command: []string{
-										"./run-1.sh",
-									},
-									Args: []string{
-										"firstArg",
-										"secondArg",
-									},
-									Name: "kfserving-container",
-								},
-							},
-							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: &userResourceRequests.MinReplica,
-								MaxReplicas: userResourceRequests.MaxReplica,
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "custom spec - artifact not exist",
-			modelSvc: &models.Service{
-				Name:        models.CreateInferenceServiceName(model.Name, "1"),
-				Namespace:   project.Name,
-				ArtifactURI: model.ArtifactURI,
-				Type:        models.ModelTypeCustom,
-				Options: &models.ModelOption{
-					CustomPredictor: &models.CustomPredictor{
-						Image:           "gcr.io/custom-model:v0.2",
-						Command:         "./run-1.sh",
-						Args:            "firstArg secondArg",
-						IsArtifactExist: false,
-					},
-				},
-				Metadata:        model.Metadata,
-				ResourceRequest: userResourceRequests,
-			},
-			original: &v1alpha2.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
-					},
-					Labels: map[string]string{
-						"gojek.com/app":                model.Metadata.App,
-						"gojek.com/orchestrator":       "merlin",
-						"gojek.com/stream":             model.Metadata.Stream,
-						"gojek.com/team":               model.Metadata.Team,
-						"gojek.com/user-labels/sample": "true",
-						"gojek.com/environment":        model.Metadata.Environment,
-					},
-				},
-				Spec: v1alpha2.InferenceServiceSpec{
-					Default: v1alpha2.EndpointSpec{
-						Predictor: v1alpha2.PredictorSpec{
-							Custom: &kfsv1alpha2.CustomSpec{
-								Container: v1.Container{
-									Image: "gcr.io/custom-model:v0.1",
-									Env: models.EnvVars{
-										models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "8080"},
-										models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: models.CreateInferenceServiceName(model.Name, "1")},
-										models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models"},
-									}.ToKubernetesEnvVars(),
-									Resources: expUserResourceRequests,
-									Command: []string{
-										"./run.sh",
-									},
-									Args: []string{
-										"firstArg",
-										"secondArg",
-									},
-									Name: "kfserving-container",
-								},
-							},
-							DeploymentSpec: v1alpha2.DeploymentSpec{
-								MinReplicas: &userResourceRequests.MinReplica,
-								MaxReplicas: userResourceRequests.MaxReplica,
-							},
-						},
-					},
-				},
-			},
-			exp: &v1alpha2.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
-					},
-					Labels: map[string]string{
-						"gojek.com/app":                model.Metadata.App,
-						"gojek.com/orchestrator":       "merlin",
-						"gojek.com/stream":             model.Metadata.Stream,
-						"gojek.com/team":               model.Metadata.Team,
-						"gojek.com/user-labels/sample": "true",
-						"gojek.com/environment":        model.Metadata.Environment,
-					},
-				},
-				Spec: v1alpha2.InferenceServiceSpec{
-					Default: v1alpha2.EndpointSpec{
-						Predictor: v1alpha2.PredictorSpec{
-							Custom: &kfsv1alpha2.CustomSpec{
-								Container: v1.Container{
-									Image: "gcr.io/custom-model:v0.2",
-									Env: models.EnvVars{
-										models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "8080"},
-										models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: models.CreateInferenceServiceName(model.Name, "1")},
-										models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models"},
 									}.ToKubernetesEnvVars(),
 									Resources: expUserResourceRequests,
 									Command: []string{

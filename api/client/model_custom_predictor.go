@@ -10,8 +10,7 @@
 package client
 
 type CustomPredictor struct {
-	Image           string `json:"image,omitempty"`
-	Command         string `json:"command,omitempty"`
-	Args            string `json:"args,omitempty"`
-	IsArtifactExist bool   `json:"is_artifact_exist,omitempty"`
+	Image   string `json:"image,omitempty"`
+	Command string `json:"command,omitempty"`
+	Args    string `json:"args,omitempty"`
 }

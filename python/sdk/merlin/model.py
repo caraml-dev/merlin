@@ -932,18 +932,37 @@ class ModelVersion:
         if self._model.type != ModelType.CUSTOM:
             raise ValueError("use log_custom_model to log custom model")
 
-        is_artifact_exist = model_dir is not None
-        if is_artifact_exist:
-            validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
-            mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
+        is_using_temp_dir = False
+        model_properties_file = "model.properties"
+
+        if model_dir is None:
+            """
+                Create temp directory, which later on will be uploaded
+                The reason is iff no data that will be uploaded to mlflow artifact (gcs), given artifact URI will not exist
+                Hence will raise error when creating inferenceservice
+            """
+            is_using_temp_dir = True
+            temp_file_dir = "/tmp/custom"
+            os.makedirs(temp_file_dir, exist_ok=True)
+            model_dir = temp_file_dir
+
+        with open(os.path.join(model_dir, model_properties_file), 'w') as writer:
+            writer.write(f"image = {image}\n")
+            writer.write(f"command = {command}\n")
+            writer.write(f"args = {args}\n")
+
+        validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
+        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
+
+        if is_using_temp_dir:
+            """
+            If user didn't specify model_dir, sdk will create new temp directory.
+            This directory needs to be deleted after it is been uploaded to mlflow
+            """
+            shutil.rmtree(model_dir)
 
         version_api = VersionApi(self._api_client)
-        custom_predictor_body = client.CustomPredictor(
-            image=image,
-            command=command,
-            args=args,
-            is_artifact_exist=is_artifact_exist
-        )
+        custom_predictor_body = client.CustomPredictor(image=image, command=command, args=args)
         version_api.models_model_id_versions_version_id_patch(
             int(self.model.id), int(self.id), body={"custom_predictor": custom_predictor_body})
 

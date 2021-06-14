@@ -221,13 +221,10 @@ func createCustomPredictorSpec(modelService *models.Service, resources v1.Resour
 	envVars = append(envVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
 	envVars = append(envVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
 	envVars = append(envVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
-
-	customPredictor := modelService.Options.CustomPredictor
-	if customPredictor.IsArtifactExist {
-		envVars = append(envVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
-	}
+	envVars = append(envVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
 
 	var containerCommand []string
+	customPredictor := modelService.Options.CustomPredictor
 	if customPredictor.Command != "" {
 		command := strings.Split(customPredictor.Command, " ")
 		if len(command) > 0 {
