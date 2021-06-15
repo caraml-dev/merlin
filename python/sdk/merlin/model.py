@@ -16,6 +16,7 @@ import os
 import pathlib
 import re
 import urllib.parse
+import shutil
 
 from abc import abstractmethod
 from datetime import datetime
@@ -261,6 +262,7 @@ class ModelType(Enum):
     ONNX = "onnx"
     PYFUNC = "pyfunc"
     PYFUNC_V2 = "pyfunc_v2"
+    CUSTOM = "custom"
 
 
 @autostr
@@ -625,6 +627,7 @@ class ModelVersion:
         self._model = model
         self._artifact_uri = version.artifact_uri
         self._labels = version.labels
+        self._custom_predictor = version.custom_predictor
         mlflow.set_tracking_uri(model.project.mlflow_tracking_url)
 
     @property
@@ -911,6 +914,57 @@ class ModelVersion:
 
         validate_model_dir(self._model.type, None, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
+
+    def log_custom_model(self,
+                         image: str,
+                         model_dir: str = None,
+                         command: str = "",
+                         args: str = ""):
+        """
+        Upload model to artifact storage.
+        This method is used to upload model for custom model type.
+
+        :param image: Docker image that will be used as predictor
+        :param model_dir: directory which contain serialized model
+        :param command: Command to run docker image
+        :param args: Arguments that needs to be specified when running docker
+        """
+        if self._model.type != ModelType.CUSTOM:
+            raise ValueError("use log_custom_model to log custom model")
+
+        is_using_temp_dir = False
+        model_properties_file = "model.properties"
+
+        if model_dir is None:
+            """
+                Create temp directory, which later on will be uploaded
+                The reason is iff no data that will be uploaded to mlflow artifact (gcs), given artifact URI will not exist
+                Hence will raise error when creating inferenceservice
+            """
+            is_using_temp_dir = True
+            temp_file_dir = "/tmp/custom"
+            os.makedirs(temp_file_dir, exist_ok=True)
+            model_dir = temp_file_dir
+
+        with open(os.path.join(model_dir, model_properties_file), 'w') as writer:
+            writer.write(f"image = {image}\n")
+            writer.write(f"command = {command}\n")
+            writer.write(f"args = {args}\n")
+
+        validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
+        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
+
+        if is_using_temp_dir:
+            """
+            If user didn't specify model_dir, sdk will create new temp directory.
+            This directory needs to be deleted after it is been uploaded to mlflow
+            """
+            shutil.rmtree(model_dir)
+
+        version_api = VersionApi(self._api_client)
+        custom_predictor_body = client.CustomPredictor(image=image, command=command, args=args)
+        version_api.models_model_id_versions_version_id_patch(
+            int(self.model.id), int(self.id), body={"custom_predictor": custom_predictor_body})
 
     def list_endpoint(self) -> List[VersionEndpoint]:
         """

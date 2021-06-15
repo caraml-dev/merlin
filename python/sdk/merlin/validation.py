@@ -33,7 +33,7 @@ def validate_model_dir(input_model_type, target_model_type, model_dir):
         if len(listdir(model_dir)) > 0 and all(path_isdir):
             model_dir = f'{model_dir}/{sorted(listdir(model_dir))[-1]}'
 
-    if input_model_type != ModelType.PYFUNC and input_model_type != ModelType.PYFUNC_V2:
+    if input_model_type != ModelType.PYFUNC and input_model_type != ModelType.PYFUNC_V2 and input_model_type != ModelType.CUSTOM:
         file_structure_reqs_map = {
             ModelType.XGBOOST: ['model.bst'],
             ModelType.TENSORFLOW: ['saved_model.pb', 'variables'],

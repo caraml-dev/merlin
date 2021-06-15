@@ -39,6 +39,7 @@ class Version(object):
         'endpoints': 'list[VersionEndpoint]',
         'properties': 'object',
         'labels': 'dict(str, str)',
+        'custom_predictor': 'CustomPredictor',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -52,11 +53,12 @@ class Version(object):
         'endpoints': 'endpoints',
         'properties': 'properties',
         'labels': 'labels',
+        'custom_predictor': 'custom_predictor',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, model_id=None, mlflow_run_id=None, mlflow_url=None, artifact_uri=None, endpoints=None, properties=None, labels=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, id=None, model_id=None, mlflow_run_id=None, mlflow_url=None, artifact_uri=None, endpoints=None, properties=None, labels=None, custom_predictor=None, created_at=None, updated_at=None):  # noqa: E501
         """Version - a model defined in Swagger"""  # noqa: E501
 
         self._id = None
@@ -67,6 +69,7 @@ class Version(object):
         self._endpoints = None
         self._properties = None
         self._labels = None
+        self._custom_predictor = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -87,6 +90,8 @@ class Version(object):
             self.properties = properties
         if labels is not None:
             self.labels = labels
+        if custom_predictor is not None:
+            self.custom_predictor = custom_predictor
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -259,6 +264,27 @@ class Version(object):
         """
 
         self._labels = labels
+
+    @property
+    def custom_predictor(self):
+        """Gets the custom_predictor of this Version.  # noqa: E501
+
+
+        :return: The custom_predictor of this Version.  # noqa: E501
+        :rtype: CustomPredictor
+        """
+        return self._custom_predictor
+
+    @custom_predictor.setter
+    def custom_predictor(self, custom_predictor):
+        """Sets the custom_predictor of this Version.
+
+
+        :param custom_predictor: The custom_predictor of this Version.  # noqa: E501
+        :type: CustomPredictor
+        """
+
+        self._custom_predictor = custom_predictor
 
     @property
     def created_at(self):

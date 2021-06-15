@@ -35,6 +35,15 @@ const (
 	envTransformerModelName  = "MERLIN_TRANSFORMER_MODEL_NAME"
 	envTransformerPredictURL = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
 
+	envPredictorPort             = "MERLIN_PREDICTOR_PORT"
+	envPredictorModelName        = "MERLIN_MODEL_NAME"
+	envPredictorArtifactLocation = "MERLIN_ARTIFACT_LOCATION"
+	envPredictorStorageURI       = "STORAGE_URI"
+
+	defaultPredictorArtifactLocation = "/mnt/models"
+	defaultPredictorPort             = "8080"
+	defaultPredictorContainerName    = "kfserving-container"
+
 	defaultTransformerPort = "8080"
 
 	annotationQueueProxyResource   = "queue.sidecar.serving.knative.dev/resourcePercentage"
@@ -105,8 +114,6 @@ func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kfsv1alpha2
 }
 
 func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kfsv1alpha2.PredictorSpec {
-	var predictorSpec kfsv1alpha2.PredictorSpec
-
 	if modelService.ResourceRequest == nil {
 		modelService.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.DefaultModelResourceRequests.MinReplica,
@@ -132,6 +139,8 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			v1.ResourceMemory: memoryLimit,
 		},
 	}
+
+	var predictorSpec kfsv1alpha2.PredictorSpec
 
 	switch modelService.Type {
 	case models.ModelTypeTensorflow:
@@ -180,6 +189,8 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				},
 			},
 		}
+	case models.ModelTypeCustom:
+		predictorSpec = createCustomPredictorSpec(modelService, Resources)
 	}
 
 	var loggerSpec *kfsv1alpha2.Logger
@@ -202,6 +213,43 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kfsv1
 	return &kfsv1alpha2.Logger{
 		Url:  &loggerURL,
 		Mode: loggerMode,
+	}
+}
+
+func createCustomPredictorSpec(modelService *models.Service, resources v1.ResourceRequirements) kfsv1alpha2.PredictorSpec {
+	envVars := modelService.EnvVars
+	envVars = append(envVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
+	envVars = append(envVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
+	envVars = append(envVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
+	envVars = append(envVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
+
+	var containerCommand []string
+	customPredictor := modelService.Options.CustomPredictor
+	if customPredictor.Command != "" {
+		command := strings.Split(customPredictor.Command, " ")
+		if len(command) > 0 {
+			containerCommand = command
+		}
+	}
+
+	var containerArgs []string
+	if customPredictor.Args != "" {
+		args := strings.Split(customPredictor.Args, " ")
+		if len(args) > 0 {
+			containerArgs = args
+		}
+	}
+	return kfsv1alpha2.PredictorSpec{
+		Custom: &kfsv1alpha2.CustomSpec{
+			Container: v1.Container{
+				Image:     customPredictor.Image,
+				Env:       envVars.ToKubernetesEnvVars(),
+				Resources: resources,
+				Command:   containerCommand,
+				Args:      containerArgs,
+				Name:      defaultPredictorContainerName,
+			},
+		},
 	}
 }
 

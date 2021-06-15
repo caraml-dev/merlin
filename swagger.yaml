@@ -1032,6 +1032,7 @@ definitions:
           - "pyfunc"
           - "onnx"
           - "pyfunc_v2"
+          - "custom"
           - "other"
       mlflow_url:
         type: "string"
@@ -1169,12 +1170,24 @@ definitions:
         type: "object"
         additionalProperties:
           type: "string"
+      custom_predictor:
+        $ref: "#/definitions/CustomPredictor"
       created_at:
         type: "string"
         format: "date-time"
       updated_at:
         type: "string"
         format: "date-time"
+
+  CustomPredictor:
+    type: "object"
+    properties:
+      image:
+        type: "string"
+      command:
+        type: "string"
+      args:
+        type: "string"
 
   VersionEndpoint:
     type: "object"
@@ -1440,6 +1453,7 @@ definitions:
               - ONNX
               - PYFUNC
               - PYFUNC_V2
+              - CUSTOM
             default: INVALID_MODEL_TYPE
           uri:
             type: string

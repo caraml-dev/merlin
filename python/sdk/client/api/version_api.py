@@ -45,7 +45,7 @@ class VersionApi(object):
         :param int model_id: (required)
         :param int limit:
         :param str cursor:
-        :param str search:
+        :param str search: Search query to filter the model versions. These searches are currently supported: - Search by \"mlflow_run_id\" e.g. `?search=cfca7716b45f4b149479630a98332a13` - Search by \"environment_name\" e.g `?search=environment_name:myenv` - Search by \"labels\" e.g. `?search=labels:app IN (nginx,postgres), country in (SG)` - Search by \"environment_name\" and \"labels\" e.g.    `?search=environment_name:myenv labels:app IN (nginx,postgres), country in (SG)` 
         :return: list[Version]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -69,7 +69,7 @@ class VersionApi(object):
         :param int model_id: (required)
         :param int limit:
         :param str cursor:
-        :param str search:
+        :param str search: Search query to filter the model versions. These searches are currently supported: - Search by \"mlflow_run_id\" e.g. `?search=cfca7716b45f4b149479630a98332a13` - Search by \"environment_name\" e.g `?search=environment_name:myenv` - Search by \"labels\" e.g. `?search=labels:app IN (nginx,postgres), country in (SG)` - Search by \"environment_name\" and \"labels\" e.g.    `?search=environment_name:myenv labels:app IN (nginx,postgres), country in (SG)` 
         :return: list[Version]
                  If the method is called asynchronously,
                  returns the request thread.
