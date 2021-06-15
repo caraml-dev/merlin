@@ -32,7 +32,7 @@ def test_validate_model_dir():
                      and target_function == None):
                 assert validate_model_dir(input_model, target_function,
                                           valid_model_dir) == None
-                if input_model != ModelType.PYFUNC:
+                if input_model != ModelType.PYFUNC and input_model != ModelType.CUSTOM:
                     with pytest.raises(Exception) as exc:
                         validate_model_dir(input_model, target_function,
                                            invalid_model_dir)

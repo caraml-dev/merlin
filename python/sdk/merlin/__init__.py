@@ -59,6 +59,7 @@ log_artifact = merlin.fluent.log_artifact
 log_pyfunc_model = merlin.fluent.log_pyfunc_model
 log_pytorch_model = merlin.fluent.log_pytorch_model
 log_model = merlin.fluent.log_model
+log_custom_model = merlin.fluent.log_custom_model
 
 # Model deployment - deploy active model version
 deploy = merlin.fluent.deploy

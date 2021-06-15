@@ -20,13 +20,13 @@ import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import { ModelServicePanel } from "./ModelServicePanel";
 import { TransformerServicePanel } from "./TransformerServicePanel";
 
-export const VersionConfig = ({ endpoint }) => {
+export const VersionConfig = ({ endpoint, version }) => {
   return (
     endpoint && (
       <Fragment>
         <EuiFlexGroup direction="column">
           <EuiFlexItem>
-            <ModelServicePanel endpoint={endpoint} />
+            <ModelServicePanel endpoint={endpoint} version={version} />
           </EuiFlexItem>
 
           {endpoint.transformer && endpoint.transformer.enabled && (

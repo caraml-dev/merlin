@@ -29,6 +29,7 @@ const (
 	ModelTypePyTorch    = "pytorch"
 	ModelTypeOnnx       = "onnx"
 	ModelTypePyFuncV2   = "pyfunc_v2"
+	ModelTypeCustom     = "custom"
 )
 
 type ID int

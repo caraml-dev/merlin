@@ -80,7 +80,7 @@ class PredictionJobConfigModel(object):
         :param type: The type of this PredictionJobConfigModel.  # noqa: E501
         :type: str
         """
-        allowed_values = ["INVALID_MODEL_TYPE", "XGBOOST", "TENSORFLOW", "SKLEARN", "PYTORCH", "ONNX", "PYFUNC", "PYFUNC_V2"]  # noqa: E501
+        allowed_values = ["INVALID_MODEL_TYPE", "XGBOOST", "TENSORFLOW", "SKLEARN", "PYTORCH", "ONNX", "PYFUNC", "PYFUNC_V2", "CUSTOM"]  # noqa: E501
         if type not in allowed_values:
             raise ValueError(
                 "Invalid value for `type` ({0}), must be one of {1}"  # noqa: E501

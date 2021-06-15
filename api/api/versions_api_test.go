@@ -367,6 +367,209 @@ func TestPatchVersion(t *testing.T) {
 			},
 		},
 		{
+			desc: "Should success patch version - patch customer container if model type is CUSTOM",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionPatch{
+				CustomPredictor: &models.CustomPredictor{
+					Image:   "gcr.io/custom-predictor:v0.1",
+					Command: "./run.sh",
+					Args:    "firstArg secondArg",
+				},
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
+					&models.Version{
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
+						Model: &models.Model{
+							ID:           models.ID(1),
+							Name:         "model-1",
+							ProjectID:    models.ID(1),
+							Project:      mlp.Project{},
+							ExperimentID: 1,
+							Type:         "pyfunc",
+							MlflowURL:    "http://mlflow.com",
+						},
+						MlflowURL:       "http://mlflow.com",
+						CustomPredictor: nil,
+					}, nil)
+				svc.On("Save", mock.Anything, &models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+				}, mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					CustomPredictor: &models.CustomPredictor{
+						Image:   "gcr.io/custom-predictor:v0.1",
+						Command: "./run.sh",
+						Args:    "firstArg secondArg",
+					},
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusOK,
+				data: &models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					CustomPredictor: &models.CustomPredictor{
+						Image:   "gcr.io/custom-predictor:v0.1",
+						Command: "./run.sh",
+						Args:    "firstArg secondArg",
+					},
+				},
+			},
+		},
+		{
+			desc: "Should success patch version - do nothing when trying patch custom_container where its type is not CUSTOM",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionPatch{
+				CustomPredictor: &models.CustomPredictor{
+					Image:   "gcr.io/custom-predictor:v0.1",
+					Command: "./run.sh",
+					Args:    "firstArg secondArg",
+				},
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
+					&models.Version{
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
+						Model: &models.Model{
+							ID:           models.ID(1),
+							Name:         "model-1",
+							ProjectID:    models.ID(1),
+							Project:      mlp.Project{},
+							ExperimentID: 1,
+							Type:         "pyfunc",
+							MlflowURL:    "http://mlflow.com",
+						},
+						MlflowURL:       "http://mlflow.com",
+						CustomPredictor: nil,
+					}, nil)
+				svc.On("Save", mock.Anything, &models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+				}, mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusOK,
+				data: &models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+				},
+			},
+		},
+		{
+			desc: "Return 400 patch version - model type custom but custom predictor object doesn't have image",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionPatch{
+				CustomPredictor: &models.CustomPredictor{
+					Command: "./run.sh",
+					Args:    "firstArg secondArg",
+				},
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
+					&models.Version{
+						ID:      models.ID(1),
+						ModelID: models.ID(1),
+						Model: &models.Model{
+							ID:           models.ID(1),
+							Name:         "model-1",
+							ProjectID:    models.ID(1),
+							Project:      mlp.Project{},
+							ExperimentID: 1,
+							Type:         "custom",
+							MlflowURL:    "http://mlflow.com",
+						},
+						MlflowURL:       "http://mlflow.com",
+						CustomPredictor: nil,
+					}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "custom predictor image must be set"},
+			},
+		},
+		{
 			desc: "Should return 404 if version is not found",
 			vars: map[string]string{
 				"model_id":   "1",

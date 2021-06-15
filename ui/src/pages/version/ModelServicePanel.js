@@ -24,14 +24,21 @@ import {
 } from "../../components/section";
 import { EnvVarsConfigTable } from "../../components/EnvVarsConfigTable";
 import { ResourcesConfigTable } from "../../components/ResourcesConfigTable";
+import { ContainerConfigTable } from "../../components/ContainerConfigTable";
 
-export const ModelServicePanel = ({ endpoint }) => {
+export const ModelServicePanel = ({ endpoint, version }) => {
   return (
     <ConfigSection title="Model Service">
       <EuiFlexGroup direction="row" wrap>
         <EuiFlexItem grow={3}>
           <ConfigSectionPanel>
             <EuiFlexGroup direction="column" gutterSize="m">
+              {version.custom_predictor && (
+                <EuiFlexItem>
+                  <ConfigSectionPanelTitle title="Container" />
+                  <ContainerConfigTable config={version.custom_predictor} />
+                </EuiFlexItem>
+              )}
               <EuiFlexItem>
                 <ConfigSectionPanelTitle title="Environment Variables" />
                 {endpoint.env_vars ? (

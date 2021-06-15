@@ -12,6 +12,7 @@
     "dagre-d3-react": "^0.2.4",
     "js-yaml": "^4.0.0",
     "moment": "2.25.3",
+    "node-sass": "^4.14.1",
     "object-assign-deep": "0.4.0",
     "proper-url-join": "^2.1.1",
     "react": "16.13.1",
@@ -28,7 +29,6 @@
     "eslint-plugin-flowtype": "^3.13.0",
     "husky": "^3.1.0",
     "lint-staged": "^9.5.0",
-    "node-sass": "^4.14.1",
     "prettier": "^1.19.1",
     "prop-types": "^15.7.2",
     "typescript": "^3.9.2"
