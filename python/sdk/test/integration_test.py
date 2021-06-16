@@ -764,7 +764,7 @@ def test_custom_model_with_artifact(integration_test_url, project_name, use_goog
     undeploy_all_version()
 
     resource_request = ResourceRequest(1, 1, "1", "1Gi")
-    model_dir = "custom-with-artifact-model"
+    model_dir = "custom-model"
     BST_FILE = "model.bst"
 
     with merlin.new_model_version() as v:
