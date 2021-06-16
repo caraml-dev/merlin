@@ -1032,7 +1032,7 @@ class ModelVersion:
             resource_request.cpu_request, resource_request.memory_request)
 
         target_env_vars = []
-        if self._model.type == ModelType.PYFUNC:
+        if self._model.type == ModelType.PYFUNC or self._model.type == ModelType.CUSTOM:
             if env_vars is not None:
                 if not isinstance(env_vars, dict):
                     raise ValueError(
