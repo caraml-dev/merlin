@@ -767,21 +767,22 @@ def test_custom_model_with_artifact(integration_test_url, project_name, use_goog
     model_dir = "test/custom-model"
     BST_FILE = "model.bst"
 
+    iris = load_iris()
+    y = iris['target']
+    X = iris['data']
+    dtrain = xgb.DMatrix(X, label=y)
+    param = {'max_depth': 6,
+             'eta': 0.1,
+             'silent': 1,
+             'nthread': 4,
+             'num_class': 10,
+             'objective': 'multi:softmax'
+             }
+    xgb_model = xgb.train(params=param, dtrain=dtrain)
+    model_file = os.path.join((model_dir), BST_FILE)
+    xgb_model.save_model(model_file)
+
     with merlin.new_model_version() as v:
-        iris = load_iris()
-        y = iris['target']
-        X = iris['data']
-        dtrain = xgb.DMatrix(X, label=y)
-        param = {'max_depth': 6,
-                 'eta': 0.1,
-                 'silent': 1,
-                 'nthread': 4,
-                 'num_class': 10,
-                 'objective': 'multi:softmax'
-                 }
-        xgb_model = xgb.train(params=param, dtrain=dtrain)
-        model_file = os.path.join((model_dir), BST_FILE)
-        xgb_model.save_model(model_file)
         v.log_custom_model(image="ghcr.io/tiopramayudi/custom-predictor-go:v0.2", model_dir=model_dir)
 
     endpoint = merlin.deploy(v, resource_request= resource_request, env_vars={"MODEL_FILE_NAME": BST_FILE})
