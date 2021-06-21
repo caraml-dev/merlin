@@ -75,6 +75,7 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
                         <Fragment key={`input-${idx}-table-${tableIdx}`}>
                           <TableInputCard
                             index={idx}
+                            tableIdx={tableIdx}
                             table={table}
                             onChangeHandler={onChange(
                               `${idx}.tables.${tableIdx}`
