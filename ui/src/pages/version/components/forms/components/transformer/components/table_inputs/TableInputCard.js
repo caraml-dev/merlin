@@ -20,6 +20,7 @@ import { get } from "@gojek/mlp-ui";
 
 export const TableInputCard = ({
   index = 0,
+  tableIdx = 0,
   table,
   onChangeHandler,
   onColumnChangeHandler,
@@ -80,7 +81,7 @@ export const TableInputCard = ({
             <EuiFlexGroup>
               <EuiFlexItem grow={false}>
                 <EuiRadio
-                  id={`table-input-none-${index}`}
+                  id={`table-input-none-${index}-${tableIdx}`}
                   label="None"
                   checked={table.baseTable === undefined}
                   onChange={() => {
@@ -90,26 +91,26 @@ export const TableInputCard = ({
               </EuiFlexItem>
               <EuiFlexItem grow={false}>
                 <EuiRadio
-                  id={`table-input-fromTable-${index}`}
+                  id={`table-input-fromTable-${index}-${tableIdx}`}
                   label="From Table"
                   checked={
                     (table.baseTable && !!table.baseTable.fromTable) || false
                   }
-                  onChange={() => {
-                    onChange("baseTable", { fromTable: new FromTable() });
-                  }}
+                  onChange={() =>
+                    onChange("baseTable", { fromTable: new FromTable() })
+                  }
                 />
               </EuiFlexItem>
               <EuiFlexItem>
                 <EuiRadio
-                  id={`table-input-fromJson-${index}`}
+                  id={`table-input-fromJson-${index}-${tableIdx}`}
                   label="From JSON"
                   checked={
                     (table.baseTable && !!table.baseTable.fromJson) || false
                   }
-                  onChange={() => {
-                    onChange("baseTable", { fromJson: new FromJson() });
-                  }}
+                  onChange={() =>
+                    onChange("baseTable", { fromJson: new FromJson() })
+                  }
                 />
               </EuiFlexItem>
             </EuiFlexGroup>
