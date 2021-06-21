@@ -161,6 +161,35 @@ export class Pipeline {
             });
         });
 
+      input.tables &&
+        input.tables.forEach(table => {
+          console.log(table);
+          table.columns &&
+            table.columns.forEach(column => {
+              if (column.fromJson) {
+                column["type"] = "jsonpath";
+                column["value"] = column.fromJson.jsonPath;
+              } else if (column.expression) {
+                column["type"] = "expression";
+                column["value"] = column.expression;
+              } else if (column.literal) {
+                if (column.literal.stringValue) {
+                  column["type"] = "string";
+                  column["value"] = column.literal.stringValue;
+                } else if (column.literal.intValue) {
+                  column["type"] = "int";
+                  column["value"] = parseInt(column.literal.intValue);
+                } else if (column.literal.floatValue) {
+                  column["type"] = "float";
+                  column["value"] = parseFloat(column.literal.floatValue);
+                } else if (column.literal.boolValue !== undefined) {
+                  column["type"] = "bool";
+                  column["value"] = column.literal.boolValue.toString();
+                }
+              }
+            });
+        });
+
       input.variables &&
         input.variables.forEach(variable => {
           if (variable.jsonPath !== undefined && variable.jsonPath !== "") {
