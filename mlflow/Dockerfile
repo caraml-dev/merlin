@@ -1,7 +1,7 @@
 FROM python:3.7.2-slim
 
 RUN pip install google-cloud-storage
-RUN pip install psycopg2-binary
+RUN pip install psycopg2-binary==2.8.6
 
 ARG BOTO3_VERSION=1.7.12
 ARG MLFLOW_VERSION=1.3.0
