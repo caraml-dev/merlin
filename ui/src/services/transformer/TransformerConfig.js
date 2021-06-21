@@ -163,7 +163,6 @@ export class Pipeline {
 
       input.tables &&
         input.tables.forEach(table => {
-          console.log(table);
           table.columns &&
             table.columns.forEach(column => {
               if (column.fromJson) {
