@@ -951,6 +951,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					StatusMonitoringEnabled:          true,
 					ValueMonitoringEnabled:           true,
 					BatchSize:                        100,
+					FeastClientHystrixCommandName:    "TestFeatureRetriever_RetrieveFeatureOfEntityInRequest",
 					FeastClientMaxConcurrentRequests: 2,
 				},
 				nil,
@@ -2244,11 +2245,13 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 				entityExtractor,
 				tt.fields.featureTableSpecs,
 				&Options{
-					StatusMonitoringEnabled: true,
-					ValueMonitoringEnabled:  true,
-					BatchSize:               1,
-					CacheEnabled:            true,
-					CacheTTL:                60 * time.Second,
+					StatusMonitoringEnabled:          true,
+					ValueMonitoringEnabled:           true,
+					BatchSize:                        1,
+					CacheEnabled:                     true,
+					CacheTTL:                         60 * time.Second,
+					FeastClientHystrixCommandName:    "TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache",
+					FeastClientMaxConcurrentRequests: 100,
 				},
 				mockCache,
 				logger,
@@ -2823,8 +2826,9 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 				entityExtractor,
 				featureTableSpecs,
 				&Options{
-					StatusMonitoringEnabled: true,
-					ValueMonitoringEnabled:  true,
+					StatusMonitoringEnabled:       true,
+					ValueMonitoringEnabled:        true,
+					FeastClientHystrixCommandName: "TestFeatureRetriever_buildEntitiesRows",
 				},
 				nil,
 				logger,
@@ -3068,8 +3072,9 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 		entityExtractor,
 		featureTableSpecs,
 		&Options{
-			StatusMonitoringEnabled: true,
-			ValueMonitoringEnabled:  true,
+			StatusMonitoringEnabled:       true,
+			ValueMonitoringEnabled:        true,
+			FeastClientHystrixCommandName: "Benchmark_buildEntitiesRequest_geohashArrays",
 		},
 		nil,
 		logger,
@@ -3158,6 +3163,7 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	options := &Options{
 		BatchSize: 100,
 
+		FeastClientHystrixCommandName:    "TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent",
 		FeastClientMaxConcurrentRequests: 2,
 	}
 

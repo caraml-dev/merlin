@@ -24,8 +24,6 @@ import (
 )
 
 const (
-	hystrixCommandName = "feast_retrieval"
-
 	maxUint = ^uint(0)
 	maxInt  = int(maxUint >> 1)
 )
@@ -56,7 +54,7 @@ func NewFeastRetriever(
 
 	defaultValues := compileDefaultValues(featureTableSpecs)
 
-	hystrix.ConfigureCommand(hystrixCommandName, hystrix.CommandConfig{
+	hystrix.ConfigureCommand(options.FeastClientHystrixCommandName, hystrix.CommandConfig{
 		Timeout:                durationToInt(options.FeastTimeout, time.Millisecond),
 		MaxConcurrentRequests:  options.FeastClientMaxConcurrentRequests,
 		RequestVolumeThreshold: options.FeastClientRequestVolumeThreshold,
@@ -85,6 +83,7 @@ type Options struct {
 	CacheTTL                time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
 
 	FeastTimeout                      time.Duration `envconfig:"FEAST_TIMEOUT" default:"1s"`
+	FeastClientHystrixCommandName     string        `envconfig:"FEAST_HYSTRIX_COMMAND_NAME" default:"feast_retrieval"`
 	FeastClientMaxConcurrentRequests  int           `envconfig:"FEAST_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
 	FeastClientRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
 	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"1000"` // How long, in milliseconds, to wait after a circuit opens before testing for recovery
@@ -435,7 +434,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		batchedEntities := entityNotInCache[startIndex:endIndex]
 
 		f := fr.newFeastCall(featureTableSpec, batchedEntities)
-		hystrix.GoC(ctx, hystrixCommandName, func(ctx context.Context) error {
+		hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
 			batchResultChan <- f.do(ctx, features, columns, entityIndices)
 			return nil
 		}, func(ctx context.Context, err error) error {
