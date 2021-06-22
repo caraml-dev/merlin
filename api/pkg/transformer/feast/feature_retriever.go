@@ -3,6 +3,7 @@ package feast
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
+	"github.com/cespare/xxhash"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
@@ -213,7 +215,29 @@ func (fr *FeastRetriever) buildEntityRows(ctx context.Context, symbolRegistry sy
 		}
 	}
 
-	return entities, nil
+	uniqueEntities, err := dedupEntities(entities)
+	if err != nil {
+		return nil, err
+	}
+
+	return uniqueEntities, nil
+}
+
+func dedupEntities(rows []feast.Row) ([]feast.Row, error) {
+	uniqueRows := make([]feast.Row, 0, len(rows))
+	rowLookup := make(map[uint64]bool)
+	for _, row := range rows {
+		rowByte, err := json.Marshal(row)
+		if err != nil {
+			return nil, err
+		}
+		rowHashVal := xxhash.Sum64(rowByte)
+		if _, found := rowLookup[rowHashVal]; !found {
+			uniqueRows = append(uniqueRows, row)
+			rowLookup[rowHashVal] = true
+		}
+	}
+	return uniqueRows, nil
 }
 
 func broadcastSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {

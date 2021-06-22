@@ -1758,6 +1758,438 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 			},
 			wantErr: false,
 		},
+		{
+			name: "one config: retrieve multiple entities, single feature table, deduplicate request",
+			fields: fields{
+				featureTableSpecs: []*spec.FeatureTable{
+					{
+						Project: "default",
+						Entities: []*spec.Entity{
+							{
+								Name:      "driver_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.drivers[*].id",
+								},
+							},
+						},
+						Features: []*spec.Feature{
+							{
+								Name:         "driver_trips:average_daily_rides",
+								DefaultValue: "0.0",
+								ValueType:    "DOUBLE",
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}, {"id": "1001"}]}`),
+			},
+			cacheMocks: []mockCache{
+				{
+					entity: feast.Row{
+						"driver_id": feast.StrVal("1001"),
+					},
+					project:          "default",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  transTypes.ValueRow([]interface{}{"1001", 1.1}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+				{
+					entity: feast.Row{
+						"driver_id": feast.StrVal("2002"),
+					},
+					project:          "default",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  transTypes.ValueRow([]interface{}{"2002", 2.2}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+			},
+			feastMocks: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default",
+						Entities: []feast.Row{
+							{
+								"driver_id": feast.StrVal("1001"),
+							},
+						},
+						Features: []string{"driver_trips:average_daily_rides"},
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+										"driver_id":                        feast.StrVal("1001"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default",
+						Entities: []feast.Row{
+							{
+								"driver_id": feast.StrVal("2002"),
+							},
+						},
+						Features: []string{"driver_trips:average_daily_rides"},
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(2.2),
+										"driver_id":                        feast.StrVal("2002"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []*transTypes.FeatureTable{
+				{
+					Name:    "driver_id",
+					Columns: []string{"driver_id", "driver_trips:average_daily_rides"},
+					Data: transTypes.ValueRows{
+						transTypes.ValueRow{"1001", 1.1},
+						transTypes.ValueRow{"2002", 2.2},
+					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "one config: retrieve multiple entities, multiple feature table, deduplicate request",
+			fields: fields{
+				featureTableSpecs: []*spec.FeatureTable{
+					{
+						Project: "default",
+						Entities: []*spec.Entity{
+							{
+								Name:      "driver_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.drivers[*].id",
+								},
+							},
+							{
+								Name:      "merchant_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.merchants[*].id",
+								},
+							},
+						},
+						Features: []*spec.Feature{
+							{
+								Name:         "driver_trips:average_daily_rides",
+								DefaultValue: "0.0",
+								ValueType:    "DOUBLE",
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}, {"id": "1001"}],"merchants":[{"id":"1"},{"id": "2"}, {"id": "1"}]}`),
+			},
+			cacheMocks: []mockCache{
+				{
+					entity: feast.Row{
+						"driver_id":   feast.StrVal("1001"),
+						"merchant_id": feast.StrVal("1"),
+					},
+					project:          "default",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  transTypes.ValueRow([]interface{}{"1001", "1", 1.1}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+				{
+					entity: feast.Row{
+						"driver_id":   feast.StrVal("2002"),
+						"merchant_id": feast.StrVal("2"),
+					},
+					project:          "default",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  transTypes.ValueRow([]interface{}{"2002", "2", 2.2}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+			},
+			feastMocks: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default",
+						Entities: []feast.Row{
+							{
+								"driver_id":   feast.StrVal("1001"),
+								"merchant_id": feast.StrVal("1"),
+							},
+						},
+						Features: []string{"driver_trips:average_daily_rides"},
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+										"driver_id":                        feast.StrVal("1001"),
+										"merchant_id":                      feast.StrVal("1"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+										"merchant_id":                      serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default",
+						Entities: []feast.Row{
+							{
+								"driver_id":   feast.StrVal("2002"),
+								"merchant_id": feast.StrVal("2"),
+							},
+						},
+						Features: []string{"driver_trips:average_daily_rides"},
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(2.2),
+										"driver_id":                        feast.StrVal("2002"),
+										"merchant_id":                      feast.StrVal("2"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+										"merchant_id":                      serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []*transTypes.FeatureTable{
+				{
+					Name:    "driver_id_merchant_id",
+					Columns: []string{"driver_id", "merchant_id", "driver_trips:average_daily_rides"},
+					Data: transTypes.ValueRows{
+						transTypes.ValueRow{"1001", "1", 1.1},
+						transTypes.ValueRow{"2002", "2", 2.2},
+					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "one config: retrieve multiple entities, multiple feature table, deduplicate request - 2",
+			fields: fields{
+				featureTableSpecs: []*spec.FeatureTable{
+					{
+						Project: "default",
+						Entities: []*spec.Entity{
+							{
+								Name:      "driver_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.drivers[*].id",
+								},
+							},
+							{
+								Name:      "merchant_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.merchants[*].id",
+								},
+							},
+						},
+						Features: []*spec.Feature{
+							{
+								Name:         "driver_trips:average_daily_rides",
+								DefaultValue: "0.0",
+								ValueType:    "DOUBLE",
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"drivers":[{"id": "1001"},{"id": "2002"}, {"id": "1001"}],"merchants":[{"id":"1"},{"id": "2"}, {"id": "3"}]}`),
+			},
+			cacheMocks: []mockCache{
+				{
+					entity: feast.Row{
+						"driver_id":   feast.StrVal("1001"),
+						"merchant_id": feast.StrVal("1"),
+					},
+					project:          "default",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  transTypes.ValueRow([]interface{}{"1001", "1", 1.1}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+				{
+					entity: feast.Row{
+						"driver_id":   feast.StrVal("2002"),
+						"merchant_id": feast.StrVal("2"),
+					},
+					project:          "default",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  transTypes.ValueRow([]interface{}{"2002", "2", 2.2}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+				{
+					entity: feast.Row{
+						"driver_id":   feast.StrVal("1001"),
+						"merchant_id": feast.StrVal("3"),
+					},
+					project:          "default",
+					value:            nil,
+					errFetchingCache: fmt.Errorf("Value not found"),
+					willInsertValue:  transTypes.ValueRow([]interface{}{"1001", "3", 1.2}),
+					columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+			},
+			feastMocks: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default",
+						Entities: []feast.Row{
+							{
+								"driver_id":   feast.StrVal("1001"),
+								"merchant_id": feast.StrVal("1"),
+							},
+						},
+						Features: []string{"driver_trips:average_daily_rides"},
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
+										"driver_id":                        feast.StrVal("1001"),
+										"merchant_id":                      feast.StrVal("1"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+										"merchant_id":                      serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default",
+						Entities: []feast.Row{
+							{
+								"driver_id":   feast.StrVal("2002"),
+								"merchant_id": feast.StrVal("2"),
+							},
+						},
+						Features: []string{"driver_trips:average_daily_rides"},
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(2.2),
+										"driver_id":                        feast.StrVal("2002"),
+										"merchant_id":                      feast.StrVal("2"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+										"merchant_id":                      serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default",
+						Entities: []feast.Row{
+							{
+								"driver_id":   feast.StrVal("1001"),
+								"merchant_id": feast.StrVal("3"),
+							},
+						},
+						Features: []string{"driver_trips:average_daily_rides"},
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_trips:average_daily_rides": feast.DoubleVal(1.2),
+										"driver_id":                        feast.StrVal("1001"),
+										"merchant_id":                      feast.StrVal("3"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+										"merchant_id":                      serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []*transTypes.FeatureTable{
+				{
+					Name:    "driver_id_merchant_id",
+					Columns: []string{"driver_id", "merchant_id", "driver_trips:average_daily_rides"},
+					Data: transTypes.ValueRows{
+						transTypes.ValueRow{"1001", "1", 1.1},
+						transTypes.ValueRow{"2002", "2", 2.2},
+						transTypes.ValueRow{"1001", "3", 1.2},
+					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
