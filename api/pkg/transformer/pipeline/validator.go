@@ -19,6 +19,9 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 	// compile pipeline
 	compiler := NewCompiler(symbol.NewRegistry(), nil, &feast.Options{}, &cache.Options{}, nil)
 	_, err := compiler.Compile(transformerConfig)
+	if err != nil {
+		return err
+	}
 
 	// validate all feast features in preprocess input
 	err = validateFeastFeaturesInPipeline(ctx, coreClient, transformerConfig.TransformerConfig.Preprocess, compiler.sr)
@@ -27,12 +30,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 	}
 
 	// validate all feast features in post process input
-	err = validateFeastFeaturesInPipeline(ctx, coreClient, transformerConfig.TransformerConfig.Postprocess, compiler.sr)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return validateFeastFeaturesInPipeline(ctx, coreClient, transformerConfig.TransformerConfig.Postprocess, compiler.sr)
 }
 
 func validateFeastFeaturesInPipeline(ctx context.Context, coreClient core.CoreServiceClient, pipeline *spec.Pipeline, symbolRegistry symbol.Registry) error {
