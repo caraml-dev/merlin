@@ -3,6 +3,9 @@ package converter
 import (
 	"fmt"
 	"strconv"
+
+	feast "github.com/feast-dev/feast/sdk/go"
+	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 )
 
 func ToString(val interface{}) (string, error) {
@@ -86,5 +89,55 @@ func ToBool(v interface{}) (bool, error) {
 		return strconv.ParseBool(v)
 	default:
 		return false, fmt.Errorf("unsupported conversion from %T to bool", v)
+	}
+}
+
+func ToFeastValue(v interface{}, valueType feastType.ValueType_Enum) (*feastType.Value, error) {
+	switch valueType {
+	case feastType.ValueType_INT32:
+		val, err := ToInt(v)
+		if err != nil {
+			return nil, err
+		}
+		return feast.Int32Val(int32(val)), nil
+
+	case feastType.ValueType_INT64:
+		val, err := ToInt64(v)
+		if err != nil {
+			return nil, err
+		}
+		return feast.Int64Val(val), nil
+	case feastType.ValueType_FLOAT:
+		val, err := ToFloat64(v)
+		if err != nil {
+			return nil, err
+		}
+		return feast.FloatVal(float32(val)), nil
+	case feastType.ValueType_DOUBLE:
+		val, err := ToFloat64(v)
+		if err != nil {
+			return nil, err
+		}
+		return feast.DoubleVal(val), nil
+	case feastType.ValueType_BOOL:
+		val, err := ToBool(v)
+		if err != nil {
+			return nil, err
+		}
+		return feast.BoolVal(val), nil
+	case feastType.ValueType_STRING:
+		switch v.(type) {
+		case float64:
+			// we'll truncate decimal point as number in json is treated as float64 and it doesn't make sense to have decimal as entity id
+			return feast.StrVal(fmt.Sprintf("%.0f", v.(float64))), nil
+		default:
+			val, err := ToString(v)
+			if err != nil {
+				return nil, err
+			}
+			return feast.StrVal(val), nil
+		}
+	default:
+		return nil, fmt.Errorf("unsupported type %s", valueType.String())
 	}
 }

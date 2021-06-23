@@ -16,6 +16,8 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
 func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
@@ -65,401 +67,522 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 		entityConfig *spec.Entity
 		expValues    []*feastType.Value
 		expError     error
+		variables    map[string]interface{}
 	}{
 		{
-			"integer to int64",
-			&spec.Entity{
+			name: "integer to int64",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT64",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.Int64Val(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"integer to float",
-			&spec.Entity{
+			name: "integer to float",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "FLOAT",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.FloatVal(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"integer to double",
-			&spec.Entity{
+			name: "integer to double",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "DOUBLE",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.DoubleVal(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"integer to string",
-			&spec.Entity{
+			name: "integer to string",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.integer",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("1234"),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"long integer to string",
-			&spec.Entity{
+			name: "long integer to string",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.longInteger",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("12986086"),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"float to int32",
-			&spec.Entity{
+			name: "float to int32",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.Int32Val(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"float to int64",
-			&spec.Entity{
+			name: "float to int64",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT64",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.Int64Val(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"float to float",
-			&spec.Entity{
+			name: "float to float",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "FLOAT",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.FloatVal(1234.111),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"float to double",
-			&spec.Entity{
+			name: "float to double",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "DOUBLE",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.DoubleVal(1234.111),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"float to string",
-			&spec.Entity{
+			name: "float to string",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.float",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("1234"),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"string to int32",
-			&spec.Entity{
+			name: "string to int32",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.Int32Val(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"string to int64",
-			&spec.Entity{
+			name: "string to int64",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT64",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.Int64Val(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"string to float",
-			&spec.Entity{
+			name: "string to float",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "FLOAT",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.FloatVal(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"string to double",
-			&spec.Entity{
+			name: "string to double",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "DOUBLE",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.DoubleVal(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"string to string",
-			&spec.Entity{
+			name: "string to string",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.string",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("1234"),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"boolean to boolean",
-			&spec.Entity{
+			name: "boolean to boolean",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "BOOL",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.boolean",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.BoolVal(true),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"string to boolean",
-			&spec.Entity{
+			name: "string to boolean",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "BOOL",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.booleanString",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.BoolVal(false),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"array of integer",
-			&spec.Entity{
+			name: "array of integer",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.array[*].integer",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.Int32Val(1111),
 				feast.Int32Val(2222),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"array of string",
-			&spec.Entity{
+			name: "array of string",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.array[*].string",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("value1"),
 				feast.StrVal("value2"),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"struct integer",
-			&spec.Entity{
+			name: "struct integer",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "INT32",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.struct.integer",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.Int32Val(1234),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"Geohash udf",
-			&spec.Entity{
+			name: "Geohash udf",
+			entityConfig: &spec.Entity{
 				Name:      "my_geohash",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_Udf{
 					Udf: "Geohash(\"$.latitude\", \"$.longitude\", 12)",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal(geohash.Encode(1.0, 2.0)),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"Array of Geohash udf",
-			&spec.Entity{
+			name: "Array of Geohash udf",
+			entityConfig: &spec.Entity{
 				Name:      "my_geohash",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_Udf{
 					Udf: "Geohash(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal(geohash.Encode(1.0, 2.0)),
 				feast.StrVal(geohash.Encode(1.0, 2.0)),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"JsonExtract udf",
-			&spec.Entity{
+			name: "JsonExtract udf",
+			entityConfig: &spec.Entity{
 				Name:      "jsonextract",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_Udf{
 					Udf: "JsonExtract(\"$.details\", \"$.merchant_id\")",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("9001"),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"S2ID udf",
-			&spec.Entity{
+			name: "S2ID udf",
+			entityConfig: &spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_Udf{
 					Udf: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("1154732743855177728"),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"Array of S2ID udf",
-			&spec.Entity{
+			name: "Array of S2ID udf",
+			entityConfig: &spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_Udf{
 					Udf: "S2ID(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("1154732743855177728"),
 				feast.StrVal("1154732743855177728"),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"unsupported feast type",
-			&spec.Entity{
+			name: "unsupported feast type",
+			entityConfig: &spec.Entity{
 				Name:      "my_entity",
 				ValueType: "BYTES",
 				Extractor: &spec.Entity_JsonPath{
 					JsonPath: "$.booleanString",
 				},
 			},
-			nil,
-			errors.New("unsupported type BYTES"),
+			expValues: nil,
+			expError:  errors.New("unsupported type BYTES"),
 		},
 		{
-			"S2ID expression",
-			&spec.Entity{
+			name: "S2ID expression",
+			entityConfig: &spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_Expression{
 					Expression: "S2ID(\"$.latitude\", \"$.longitude\", 12)",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("1154732743855177728"),
 			},
-			nil,
+			expError: nil,
 		},
 		{
-			"Array of S2ID expression",
-			&spec.Entity{
+			name: "Array of S2ID expression",
+			entityConfig: &spec.Entity{
 				Name:      "s2id",
 				ValueType: "STRING",
 				Extractor: &spec.Entity_Expression{
 					Expression: "S2ID(\"$.locations[*].latitude\", \"$.locations[*].longitude\", 12)",
 				},
 			},
-			[]*feastType.Value{
+			expValues: []*feastType.Value{
 				feast.StrVal("1154732743855177728"),
 				feast.StrVal("1154732743855177728"),
 			},
-			nil,
+			expError: nil,
+		},
+		{
+			name: "Entity from string variable",
+			variables: map[string]interface{}{
+				"string_var": "my_string",
+			},
+			entityConfig: &spec.Entity{
+				Name:      "s2id",
+				ValueType: "STRING",
+				Extractor: &spec.Entity_Expression{
+					Expression: "string_var",
+				},
+			},
+			expValues: []*feastType.Value{
+				feast.StrVal("my_string"),
+			},
+			expError: nil,
+		},
+		{
+			name: "Entity from int64 variable",
+			variables: map[string]interface{}{
+				"int64_var": int64(1234),
+			},
+			entityConfig: &spec.Entity{
+				Name:      "s2id",
+				ValueType: "INT64",
+				Extractor: &spec.Entity_Expression{
+					Expression: "int64_var",
+				},
+			},
+			expValues: []*feastType.Value{
+				feast.Int64Val(int64(1234)),
+			},
+			expError: nil,
+		},
+		{
+			name: "Entity from float64 variable",
+			variables: map[string]interface{}{
+				"float64_var": float64(1234.5678),
+			},
+			entityConfig: &spec.Entity{
+				Name:      "s2id",
+				ValueType: "DOUBLE",
+				Extractor: &spec.Entity_Expression{
+					Expression: "float64_var",
+				},
+			},
+			expValues: []*feastType.Value{
+				feast.DoubleVal(float64(1234.5678)),
+			},
+			expError: nil,
+		},
+		{
+			name: "Entity from string series",
+			variables: map[string]interface{}{
+				"my_table": table.New(
+					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
+					series.New([]interface{}{1111, 2222, 3333, nil}, series.Int, "int_col"),
+					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
+				),
+			},
+			entityConfig: &spec.Entity{
+				Name:      "s2id",
+				ValueType: "STRING",
+				Extractor: &spec.Entity_Expression{
+					Expression: "my_table.Col('string_col')",
+				},
+			},
+			expValues: []*feastType.Value{
+				feast.StrVal("1111"),
+				feast.StrVal("2222"),
+				feast.StrVal("3333"),
+			},
+			expError: nil,
+		},
+		{
+			name: "Entity from int series",
+			variables: map[string]interface{}{
+				"my_table": table.New(
+					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
+					series.New([]interface{}{1111, 2222, 3333, nil}, series.Int, "int_col"),
+					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
+				),
+			},
+			entityConfig: &spec.Entity{
+				Name:      "s2id",
+				ValueType: "INT64",
+				Extractor: &spec.Entity_Expression{
+					Expression: "my_table.Col('int_col')",
+				},
+			},
+			expValues: []*feastType.Value{
+				feast.Int64Val(1111),
+				feast.Int64Val(2222),
+				feast.Int64Val(3333),
+			},
+			expError: nil,
+		},
+		{
+			name: "Entity from float series",
+			variables: map[string]interface{}{
+				"my_table": table.New(
+					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
+					series.New([]interface{}{1111, 2222, 3333, nil}, series.Int, "int_col"),
+					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
+				),
+			},
+			entityConfig: &spec.Entity{
+				Name:      "s2id",
+				ValueType: "STRING",
+				Extractor: &spec.Entity_Expression{
+					Expression: "my_table.Col('int_col')",
+				},
+			},
+			expValues: []*feastType.Value{
+				feast.StrVal("1111"),
+				feast.StrVal("2222"),
+				feast.StrVal("3333"),
+			},
+			expError: nil,
 		},
 	}
 	for _, test := range tests {
@@ -475,6 +598,9 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 
 			sr := symbol.NewRegistryWithCompiledJSONPath(compiledJsonPaths)
 			sr.SetRawRequestJSON(nodesBody)
+			for name, value := range test.variables {
+				sr[name] = value
+			}
 
 			switch test.entityConfig.Extractor.(type) {
 			case *spec.Entity_JsonPath:

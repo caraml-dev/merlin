@@ -268,7 +268,7 @@ func (sr Registry) evalArg(arg interface{}) (interface{}, error) {
 
 		return cplJsonPath.LookupFromContainer(sr.jsonObjectContainer())
 	case *series.Series:
-		return val.GetRecords()
+		return val.GetRecords(), nil
 	default:
 		return arg, nil
 	}
