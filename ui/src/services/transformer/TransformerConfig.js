@@ -89,8 +89,12 @@ export class TransformerConfig {
         feast.entities &&
           feast.entities.forEach(entity => {
             if (entity.udf) {
-              entity["fieldType"] = "UDF";
+              /* For backward compatibility */
+              entity["fieldType"] = "Expression";
               entity["field"] = entity.udf;
+            } else if (entity.expression) {
+              entity["fieldType"] = "Expression";
+              entity["field"] = entity.expression;
             } else if (entity.jsonPath) {
               entity["fieldType"] = "JSONPath";
               entity["field"] = entity.jsonPath;
@@ -121,7 +125,10 @@ export class TransformerConfig {
         feast.entities &&
           feast.entities.forEach(entity => {
             if (entity.fieldType === "UDF") {
-              entity["udf"] = entity.field;
+              /* For backward compatibility */
+              entity["expression"] = entity.field;
+            } else if (entity.fieldType === "Expression") {
+              entity["expression"] = entity.field;
             } else {
               entity["jsonPath"] = entity.field;
             }
@@ -152,8 +159,12 @@ export class Pipeline {
           feast.entities &&
             feast.entities.forEach(entity => {
               if (entity.udf) {
-                entity["fieldType"] = "UDF";
+                /* For backward compatibility */
+                entity["fieldType"] = "Expression";
                 entity["field"] = entity.udf;
+              } else if (entity.expression) {
+                entity["fieldType"] = "Expression";
+                entity["field"] = entity.expression;
               } else if (entity.jsonPath) {
                 entity["fieldType"] = "JSONPath";
                 entity["field"] = entity.jsonPath;
@@ -262,7 +273,10 @@ export class Pipeline {
             feast.entities &&
               feast.entities.forEach(entity => {
                 if (entity.fieldType === "UDF") {
-                  entity["udf"] = entity.field;
+                  /* For backward compatibility */
+                  entity["expression"] = entity.field;
+                } else if (entity.fieldType === "Expression") {
+                  entity["expression"] = entity.field;
                 } else {
                   entity["jsonPath"] = entity.field;
                 }
