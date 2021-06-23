@@ -12,6 +12,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
 
 func TestValidateTransformerConfig(t *testing.T) {
@@ -622,7 +623,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 				mockClient.On("ListFeatures", mock.Anything, mock.Anything).Return(fr, nil)
 			}
 
-			err := ValidateTransformerConfig(context.Background(), mockClient, test.trfConfig.TransformerConfig.Feast)
+			err := ValidateTransformerConfig(context.Background(), mockClient, test.trfConfig.TransformerConfig.Feast, symbol.NewRegistry())
 			if test.wantError != nil {
 				assert.EqualError(t, err, test.wantError.Error())
 				return

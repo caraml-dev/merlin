@@ -15,7 +15,7 @@ import (
 )
 
 // ValidateTransformerConfig validate transformer config by checking the presence of entity and features in feast core
-func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, featureTableConfigs []*spec.FeatureTable) error {
+func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, featureTableConfigs []*spec.FeatureTable, symbolRegistry symbol.Registry) error {
 	// for each feature retrieval table
 	for _, config := range featureTableConfigs {
 		if len(config.Entities) == 0 {
@@ -64,7 +64,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 				}
 			case *spec.Entity_Udf, *spec.Entity_Expression:
 				expressionExtractor := getExpressionExtractor(entity)
-				_, err = expr.Compile(expressionExtractor, expr.Env(symbol.NewRegistryWithCompiledJSONPath(nil)))
+				_, err = expr.Compile(expressionExtractor, expr.Env(symbolRegistry))
 				if err != nil {
 					return fmt.Errorf("udf compilation failed: %v", err)
 				}

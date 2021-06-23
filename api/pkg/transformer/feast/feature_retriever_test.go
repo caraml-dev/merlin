@@ -934,7 +934,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				panic(err)
 			}
 
-			compiledExpressions, err := CompileExpressions(tt.fields.featureTableSpecs)
+			compiledExpressions, err := CompileExpressions(tt.fields.featureTableSpecs, symbol.NewRegistry())
 			if err != nil {
 				panic(err)
 			}
@@ -2231,7 +2231,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 				panic(err)
 			}
 
-			compiledExpressions, err := CompileExpressions(tt.fields.featureTableSpecs)
+			compiledExpressions, err := CompileExpressions(tt.fields.featureTableSpecs, symbol.NewRegistry())
 			if err != nil {
 				panic(err)
 			}
@@ -2812,7 +2812,7 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 				panic(err)
 			}
 
-			compiledExpressions, err := CompileExpressions(featureTableSpecs)
+			compiledExpressions, err := CompileExpressions(featureTableSpecs, symbol.NewRegistry())
 			if err != nil {
 				panic(err)
 			}
@@ -3058,7 +3058,7 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 		panic(err)
 	}
 
-	compiledExpressions, err := CompileExpressions(featureTableSpecs)
+	compiledExpressions, err := CompileExpressions(featureTableSpecs, symbol.NewRegistry())
 	if err != nil {
 		panic(err)
 	}
@@ -3151,7 +3151,7 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	compiledJSONPaths, err := CompileJSONPaths(defaultFeatureTableSpecs)
 	assert.NoError(t, err)
 
-	compiledExpressions, err := CompileExpressions(defaultFeatureTableSpecs)
+	compiledExpressions, err := CompileExpressions(defaultFeatureTableSpecs, symbol.NewRegistry())
 	assert.NoError(t, err)
 
 	jsonPathStorage := jsonpath.NewStorage()

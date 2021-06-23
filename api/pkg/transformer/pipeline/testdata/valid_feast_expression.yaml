@@ -1,0 +1,82 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - variables:
+          - name: customer_id
+            jsonPath: $.customer.id
+          - name: customer_level
+            literal:
+              intValue: 10
+      - tables:
+          - name: driver_table
+            baseTable:
+              fromJson:
+                jsonPath: $.drivers[*]
+                addRowNumber: true
+      - feast:
+          - tableName: driver_feature_table
+            project: default
+            entities:
+              - name: driver_id
+                valueType: STRING
+                jsonPath: $.drivers[*].id
+            features:
+              - name: driver_feature_1
+                valueType: INT64
+                defaultValue: '0'
+              - name: driver_feature_2
+                valueType: INT64
+                defaultValue: '0'
+          - tableName: customer_feature_table
+            project: default
+            entities:
+              - name: customer_id
+                valueType: STRING
+                expression: customer_id
+              - name: customer_level
+                valueType: INT32
+                expression: customer_level
+              - name: hour_of_day
+                valueType: INT32
+                expression: Now().Hour()
+            features:
+              - name: customer_feature_1
+                valueType: INT64
+                defaultValue: '0'
+    transformations:
+      - tableTransformation:
+          inputTable: driver_table
+          outputTable: driver_table
+          steps:
+            - sort:
+                - column: "row_number"
+                  order: DESC
+            - renameColumns:
+                row_number: rank
+                id: driver_id
+            - updateColumns:
+                - column: customer_id
+                  expression: customer_id
+            - selectColumns: ["customer_id", "driver_id" ,"name", "rank"]
+      - tableJoin:
+          leftTable: driver_table
+          rightTable: driver_feature_table
+          outputTable: result_table
+          how: LEFT
+          onColumn: driver_id
+      - tableTransformation:
+          inputTable: result_table
+          outputTable: result_table
+          steps:
+            - sort:
+                - column: "rank"
+                  order: ASC
+            - selectColumns: [ "rank", "driver_id", "customer_id", "driver_feature_1", "driver_feature_2" ]
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: result_table
+                  format: "SPLIT"

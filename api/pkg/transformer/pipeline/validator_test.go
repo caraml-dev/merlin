@@ -34,7 +34,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 		expError              error
 	}{
 		{
-			name: "succuss: valid legacy feast enricher spec",
+			name: "success: valid legacy feast enricher spec",
 			args: args{
 				ctx:        context.Background(),
 				coreClient: &mocks.CoreServiceClient{},
@@ -215,6 +215,97 @@ func TestValidateTransformerConfig(t *testing.T) {
 						{
 							Spec: &core.EntitySpecV2{
 								Name:      "customer_id",
+								ValueType: types.ValueType_STRING,
+							},
+						},
+					},
+				},
+				listFeaturesResponses: []*core.ListFeaturesResponse{
+					{
+						Features: map[string]*core.FeatureSpecV2{
+							"customer_feature_table:total_booking": &core.FeatureSpecV2{
+								Name:      "total_booking",
+								ValueType: types.ValueType_INT32,
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "success: valid spec with feast expression",
+			args: args{
+				ctx:        context.Background(),
+				coreClient: &mocks.CoreServiceClient{},
+				transformerConfig: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Preprocess: &spec.Pipeline{
+							Inputs: []*spec.Input{
+								{
+									Variables: []*spec.Variable{
+										{
+											Name: "customer_id",
+											Value: &spec.Variable_JsonPath{
+												"$.customer_id",
+											},
+										},
+										{
+											Name: "customer_level",
+											Value: &spec.Variable_Literal{
+												Literal: &spec.Literal{
+													LiteralValue: &spec.Literal_StringValue{
+														StringValue: "1",
+													},
+												},
+											},
+										},
+									},
+									Feast: []*spec.FeatureTable{
+										{
+											Project: "merlin",
+											Entities: []*spec.Entity{
+												{
+													Name: "customer_id",
+													Extractor: &spec.Entity_Expression{
+														Expression: "customer_id",
+													},
+													ValueType: "STRING",
+												},
+												{
+													Name: "customer_level",
+													Extractor: &spec.Entity_Expression{
+														Expression: "customer_level",
+													},
+													ValueType: "STRING",
+												},
+											},
+											Features: []*spec.Feature{
+												{
+													Name:      "customer_feature_table:total_booking",
+													ValueType: "INT32",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			mockFeastCoreResponse: mockFeastCoreResponse{
+				listEntitiesResponse: &core.ListEntitiesResponse{
+					Entities: []*core.Entity{
+						{
+							Spec: &core.EntitySpecV2{
+								Name:      "customer_id",
+								ValueType: types.ValueType_STRING,
+							},
+						},
+						{
+							Spec: &core.EntitySpecV2{
+								Name:      "customer_level",
 								ValueType: types.ValueType_STRING,
 							},
 						},

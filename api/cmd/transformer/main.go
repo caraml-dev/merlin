@@ -127,7 +127,7 @@ func initFeastTransformer(appCfg AppConfig,
 		return nil, err
 	}
 
-	compiledExpressions, err := feast.CompileExpressions(transformerConfig.TransformerConfig.Feast)
+	compiledExpressions, err := feast.CompileExpressions(transformerConfig.TransformerConfig.Feast, symbol.NewRegistry())
 	if err != nil {
 		return nil, err
 	}

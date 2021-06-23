@@ -169,7 +169,7 @@ func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compil
 	}
 	compiledJsonPaths.AddAll(jsonPaths)
 
-	expressions, err := feast.CompileExpressions(featureTableSpecs)
+	expressions, err := feast.CompileExpressions(featureTableSpecs, c.sr)
 	if err != nil {
 		return nil, err
 	}

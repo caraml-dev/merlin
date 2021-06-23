@@ -30,14 +30,14 @@ func CompileJSONPaths(featureTableSpecs []*spec.FeatureTable) (map[string]*jsonp
 	return compiledJsonPath, nil
 }
 
-func CompileExpressions(featureTableSpecs []*spec.FeatureTable) (map[string]*vm.Program, error) {
+func CompileExpressions(featureTableSpecs []*spec.FeatureTable, symbolRegistry symbol.Registry) (map[string]*vm.Program, error) {
 	compiledExpression := make(map[string]*vm.Program)
 	for _, ft := range featureTableSpecs {
 		for _, configEntity := range ft.Entities {
 			switch configEntity.Extractor.(type) {
 			case *spec.Entity_Udf, *spec.Entity_Expression:
 				expressionExtractor := getExpressionExtractor(configEntity)
-				c, err := expr.Compile(expressionExtractor, expr.Env(symbol.NewRegistry()), expr.AllowUndefinedVariables())
+				c, err := expr.Compile(expressionExtractor, expr.Env(symbolRegistry))
 				if err != nil {
 					return nil, err
 				}
