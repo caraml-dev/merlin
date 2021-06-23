@@ -13,28 +13,29 @@ import (
 
 func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, transformerConfig *spec.StandardTransformerConfig) error {
 	if transformerConfig.TransformerConfig.Feast != nil {
-		return feast.ValidateTransformerConfig(ctx, coreClient, transformerConfig.TransformerConfig.Feast)
+		return feast.ValidateTransformerConfig(ctx, coreClient, transformerConfig.TransformerConfig.Feast, symbol.NewRegistryWithCompiledJSONPath(nil))
 	}
 
+	// compile pipeline
+	compiler := NewCompiler(symbol.NewRegistry(), nil, &feast.Options{}, &cache.Options{}, nil)
+	_, err := compiler.Compile(transformerConfig)
+
 	// validate all feast features in preprocess input
-	err := validateFeastFeaturesInPipeline(ctx, coreClient, transformerConfig.TransformerConfig.Preprocess)
+	err = validateFeastFeaturesInPipeline(ctx, coreClient, transformerConfig.TransformerConfig.Preprocess, compiler.sr)
 	if err != nil {
 		return err
 	}
 
 	// validate all feast features in post process input
-	err = validateFeastFeaturesInPipeline(ctx, coreClient, transformerConfig.TransformerConfig.Postprocess)
+	err = validateFeastFeaturesInPipeline(ctx, coreClient, transformerConfig.TransformerConfig.Postprocess, compiler.sr)
 	if err != nil {
 		return err
 	}
 
-	// compile pipeline
-	compiler := NewCompiler(symbol.NewRegistry(), nil, &feast.Options{}, &cache.Options{}, nil)
-	_, err = compiler.Compile(transformerConfig)
 	return err
 }
 
-func validateFeastFeaturesInPipeline(ctx context.Context, coreClient core.CoreServiceClient, pipeline *spec.Pipeline) error {
+func validateFeastFeaturesInPipeline(ctx context.Context, coreClient core.CoreServiceClient, pipeline *spec.Pipeline, symbolRegistry symbol.Registry) error {
 	if pipeline == nil {
 		return nil
 	}
@@ -45,7 +46,7 @@ func validateFeastFeaturesInPipeline(ctx context.Context, coreClient core.CoreSe
 
 	for _, input := range pipeline.Inputs {
 		if input.Feast != nil {
-			err := feast.ValidateTransformerConfig(ctx, coreClient, input.Feast)
+			err := feast.ValidateTransformerConfig(ctx, coreClient, input.Feast, symbolRegistry)
 			if err != nil {
 				return err
 			}
