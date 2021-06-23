@@ -1,0 +1,177 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - variables:
+          - name: customer_id
+            jsonPath: $.customer_id
+          - name: customer_lat
+            jsonPath: $.customer_location.lat
+          - name: customer_lon
+            jsonPath: $.customer_location.lon
+          - name: default_merchant_latitude
+            literal:
+              floatValue: -6.1212121
+          - name: default_merchant_longitude
+            literal:
+              floatValue: 110.32323232
+      - tables:
+          - name: merchant_request_table
+            baseTable:
+              fromJson:
+                jsonPath: $.merchants[*]
+                addRowNumber: true
+      - feast:
+        - project: default
+          tableName: customer_table
+          entities:
+            - name: customer_id
+              valueType: INT64
+              jsonPath: $.customer_id
+          features:
+            - name: customer_historical_bookings_aggregates:cust_orders_avg_dist
+              valueType: DOUBLE
+              defaultValue: '0'
+            - name: customer_historical_bookings_aggregates:cust_orders_avg_gmv
+              valueType: DOUBLE
+              defaultValue: '0'
+            - name: customer_historical_bookings_aggregates:cust_total_orders
+              valueType: INT64
+              defaultValue: '0'
+            - name: customer_historical_bookings_aggregates:cust_total_discount_orders
+              valueType: INT64
+              defaultValue: '0'
+            - name: customer_historical_bookings_aggregates:cust_total_deliveryfee_orders
+              valueType: INT64
+              defaultValue: '0'
+        - project: default
+          tableName: merchant_customer_table
+          entities:
+            - name: merchant_uuid
+              valueType: STRING
+              jsonPath: $.merchants[*].id
+            - name: customer_id
+              valueType: INT64
+              jsonPath: $.customer_id
+          features:
+            - name: customer_merchant_interactions:int_order_count_24weeks
+              valueType: INT64
+              defaultValue: '0'
+            - name: customer_merchant_interactions:int_order_count_4weeks
+              valueType: INT64
+              defaultValue: '0'
+            - name: >-
+                customer_merchant_interactions:int_merchant_visits_4weeks
+              valueType: INT64
+              defaultValue: '0'
+            - name: customer_merchant_interactions:days_since_last_order
+              valueType: INT64
+              defaultValue: '0'
+    transformations:
+      - tableTransformation:
+          inputTable: customer_table
+          outputTable: customer_transformed_table
+          steps:
+            - sort:
+                - column: "customer_id"
+                  order: ASC
+            - renameColumns:
+                customer_historical_bookings_aggregates:cust_orders_avg_dist: cust_orders_avg_dist
+                customer_historical_bookings_aggregates:cust_orders_avg_gmv: cust_orders_avg_gmv
+                customer_historical_bookings_aggregates:cust_total_orders: cust_total_orders
+                customer_historical_bookings_aggregates:cust_total_discount_orders: cust_total_discount_orders
+                customer_historical_bookings_aggregates:cust_total_deliveryfee_orders: cust_total_deliveryfee_orders
+            - selectColumns: ["customer_id", "cust_total_discount_orders"]
+            - updateColumns:
+              - column: customer_lat
+                expression: customer_lat
+              - column: customer_lon
+                expression: customer_lon
+      - tableTransformation:
+          inputTable: merchant_customer_table
+          outputTable: merchant_customer_transformed_table
+          steps:
+            - sort:
+                - column: "customer_id"
+                  order: ASC
+                - column: "merchant_uuid"
+            - renameColumns:
+                customer_merchant_interactions:int_order_count_24weeks: int_order_count_24weeks
+                customer_merchant_interactions:int_order_count_4weeks: int_order_count_4weeks
+                customer_merchant_interactions:int_merchant_visits_4weeks: int_merchant_visits_4weeks
+                customer_merchant_interactions:days_since_last_order: days_since_last_order
+            - updateColumns:
+                - column: requested_at
+                  expression: Now()
+            - selectColumns: ["customer_id", "merchant_uuid" ,"int_order_count_24weeks", "days_since_last_order"]
+      - tableTransformation:
+          inputTable: merchant_request_table
+          outputTable: merchant_request_table
+          steps:
+            - updateColumns:
+              - column: lat
+                expression: default_merchant_latitude
+              - column: lon
+                expression: default_merchant_longitude
+      - tableJoin:
+          leftTable: customer_transformed_table
+          rightTable: merchant_customer_transformed_table
+          outputTable: merged_customer_merchant_table
+          how: LEFT
+          onColumn: customer_id
+      - tableTransformation:
+          inputTable: merged_customer_merchant_table
+          outputTable: merged_customer_merchant_table
+          steps:
+            - sort:
+                - column: "customer_id"
+                  order: ASC
+                - column: "merchant_uuid"
+            - updateColumns:
+                - column: distance
+                  expression: HaversineDistance(merged_customer_merchant_table.Col("customer_lat"), merged_customer_merchant_table.Col("customer_lon"), merchant_request_table.Col("lat"), merchant_request_table.Col("lon"))
+                - column: polar_angle
+                  expression: PolarAngle(merged_customer_merchant_table.Col("customer_lat"), merged_customer_merchant_table.Col("customer_lon"), merchant_request_table.Col("lat"), merchant_request_table.Col("lon"))
+                - column: customer_s2id
+                  expression: S2ID(merged_customer_merchant_table.Col("customer_lat"), merged_customer_merchant_table.Col("customer_lon"), 13)
+                - column: customer_geohash
+                  expression: Geohash(merged_customer_merchant_table.Col("customer_lat"), merged_customer_merchant_table.Col("customer_lon"), 7)
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: merged_customer_merchant_table
+                  format: "RECORD"
+              - fieldName: merchants
+                fromTable:
+                  tableName: merchant_request_table
+                  format: "RECORD"
+  postprocess:
+    inputs:
+      - tables:
+        - name: prediction_table
+          baseTable:
+            fromJson:
+              jsonPath: $.model_response.instances[*]
+              addRowNumber: false
+    transformations:
+      - tableTransformation:
+          inputTable: prediction_table
+          outputTable: prediction_table
+          steps:
+            - sort:
+                - column: "merchant_uuid"
+                  order: DESC
+            - dropColumns: ["days_since_last_order", "int_order_count_24weeks", "customer_lat", "customer_lon"]
+            - updateColumns:
+              - column: timestamp
+                expression: Now()
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: prediction_table
+                  format: "SPLIT"

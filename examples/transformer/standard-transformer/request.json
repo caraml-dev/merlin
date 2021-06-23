@@ -1,0 +1,610 @@
+{
+    "customer_id": 123,
+    "search_query": "burger",
+    "customer_location": {
+        "lat": -6.2439,
+        "lon": 106.8029
+    },
+    "merchants": [
+        {
+            "id": "3c98a91a",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "b921deaf",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "d81c4aad",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "de74e552",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "69fefd0f",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "e58fe997",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "4e1ca59e",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "41dfa901",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "1b081d1c",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "6666161f",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "533f2b15",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "2f266b0e",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "754e2534",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "b9040ba8",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "1772e6ed",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "946b8e44",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "d615bdc4",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "2cace225",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "9d720fa4",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "78a055c1",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "02afd21c",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "011ea551",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "05b7bf18",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "c855fe0c",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "443d3616",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "b6b373fb",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "d4d59842",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "0b4aadd2",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "59e4dbed",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "b38969a1",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "487049fa",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "2ddc411d",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "c3f7857d",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "5ae356d1",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "cd534a11",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "d6d91238",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "a38f93e9",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "f236c564",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "2bfb1392",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "547aa9a5",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "913f0a42",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "f8439365",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "8c7aba34",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "04ebbd15",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "727e9dd1",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "270b3690",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "2d9d4008",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "5d5661a1",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "e35e7867",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "2cd121c6",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "72c150e8",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "5d1e354e",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "a7b3e93b",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "792690d0",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "3bb23819",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "792f4073",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "2afe5827",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "708004bf",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "f55b5616",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "2be3c2bc",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "fd0ec395",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "5913b6fa",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "6bb80dc3",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "8150a985",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "66fc0b6b",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "20496bbc",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "02d4ff04",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "a029ab53",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "b80a51cd",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "4bd1d6b9",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "87c79167",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "08fec658",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "abb32ef7",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "7a043e15",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "755471e3",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "47c8e140",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "8a4348c9",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "a72e1642",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "04937ce1",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "244d388c",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "f11586b1",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "9e0c0022",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "4a252942",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "e0d1b2fa",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "f2606d4c",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "0b71dcd3",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "50583232",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "8447bae8",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "e478ab06",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "0df812b3",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "3d892333",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "3d282428",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "e4be531d",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "ee0a392d",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "ada9acad",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "6b942ef0",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "87a77115",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "2a7606a5",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "afc62e2c",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        },
+        {
+            "id": "206930a0",
+            "matching_dishes_count": 2,
+            "matching_dish_es_score": 0.5919899367752606,
+            "dist_bucket": "1-3"
+        }
+    ]
+}

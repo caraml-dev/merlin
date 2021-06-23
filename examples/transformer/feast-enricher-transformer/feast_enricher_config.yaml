@@ -1,0 +1,27 @@
+transformerConfig:
+ feast:
+  - project: default
+    entities:
+    - name: location_geohash
+      valueType: STRING
+      udf: Geohash("$.lat", "$.lon", 7)
+    features:
+    - name: poi_geohash:total
+      valueType: DOUBLE
+      defaultValue: "0"
+    - name: poi_geohash:ppoi
+      valueType: DOUBLE
+      defaultValue: "0"
+  - project: default 
+    entities:
+      - name: merchant_id
+        valueType: STRING
+        udf: JsonExtract("$.details", "$.merchant_id")
+    features:
+    - name: merchant_ratings:average_rating
+      valueType: DOUBLE
+      defaultValue: "0"
+    - name: merchant_ratings:total_ratings
+      valueType: INT64
+      defaultValue: "0"
+

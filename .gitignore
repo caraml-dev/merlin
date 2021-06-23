@@ -1,3 +1,9 @@
 .idea
 bin/
 **/*.ipynb_checkpoints/
+
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
