@@ -90,7 +90,7 @@ export class TransformerConfig {
           feast.entities.forEach(entity => {
             if (entity.udf) {
               /* For backward compatibility */
-              entity["fieldType"] = "UDF";
+              entity["fieldType"] = "Expression";
               entity["field"] = entity.udf;
             } else if (entity.expression) {
               entity["fieldType"] = "Expression";
@@ -126,7 +126,7 @@ export class TransformerConfig {
           feast.entities.forEach(entity => {
             if (entity.fieldType === "UDF") {
               /* For backward compatibility */
-              entity["udf"] = entity.field;
+              entity["expression"] = entity.field;
             } else if (entity.fieldType === "Expression") {
               entity["expression"] = entity.field;
             } else {
@@ -160,7 +160,7 @@ export class Pipeline {
             feast.entities.forEach(entity => {
               if (entity.udf) {
                 /* For backward compatibility */
-                entity["fieldType"] = "UDF";
+                entity["fieldType"] = "Expression";
                 entity["field"] = entity.udf;
               } else if (entity.expression) {
                 entity["fieldType"] = "Expression";
@@ -274,7 +274,7 @@ export class Pipeline {
               feast.entities.forEach(entity => {
                 if (entity.fieldType === "UDF") {
                   /* For backward compatibility */
-                  entity["udf"] = entity.field;
+                  entity["expression"] = entity.field;
                 } else if (entity.fieldType === "Expression") {
                   entity["expression"] = entity.field;
                 } else {
