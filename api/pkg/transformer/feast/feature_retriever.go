@@ -3,6 +3,7 @@ package feast
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
+	"github.com/cespare/xxhash"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
@@ -22,8 +24,6 @@ import (
 )
 
 const (
-	hystrixCommandName = "feast_retrieval"
-
 	maxUint = ^uint(0)
 	maxInt  = int(maxUint >> 1)
 )
@@ -54,7 +54,7 @@ func NewFeastRetriever(
 
 	defaultValues := compileDefaultValues(featureTableSpecs)
 
-	hystrix.ConfigureCommand(hystrixCommandName, hystrix.CommandConfig{
+	hystrix.ConfigureCommand(options.FeastClientHystrixCommandName, hystrix.CommandConfig{
 		Timeout:                durationToInt(options.FeastTimeout, time.Millisecond),
 		MaxConcurrentRequests:  options.FeastClientMaxConcurrentRequests,
 		RequestVolumeThreshold: options.FeastClientRequestVolumeThreshold,
@@ -83,6 +83,7 @@ type Options struct {
 	CacheTTL                time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
 
 	FeastTimeout                      time.Duration `envconfig:"FEAST_TIMEOUT" default:"1s"`
+	FeastClientHystrixCommandName     string        `envconfig:"FEAST_HYSTRIX_COMMAND_NAME" default:"feast_retrieval"`
 	FeastClientMaxConcurrentRequests  int           `envconfig:"FEAST_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
 	FeastClientRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
 	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"1000"` // How long, in milliseconds, to wait after a circuit opens before testing for recovery
@@ -213,7 +214,29 @@ func (fr *FeastRetriever) buildEntityRows(ctx context.Context, symbolRegistry sy
 		}
 	}
 
-	return entities, nil
+	uniqueEntities, err := dedupEntities(entities)
+	if err != nil {
+		return nil, err
+	}
+
+	return uniqueEntities, nil
+}
+
+func dedupEntities(rows []feast.Row) ([]feast.Row, error) {
+	uniqueRows := make([]feast.Row, 0, len(rows))
+	rowLookup := make(map[uint64]bool)
+	for _, row := range rows {
+		rowByte, err := json.Marshal(row)
+		if err != nil {
+			return nil, err
+		}
+		rowHashVal := xxhash.Sum64(rowByte)
+		if _, found := rowLookup[rowHashVal]; !found {
+			uniqueRows = append(uniqueRows, row)
+			rowLookup[rowHashVal] = true
+		}
+	}
+	return uniqueRows, nil
 }
 
 func broadcastSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
@@ -411,7 +434,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		batchedEntities := entityNotInCache[startIndex:endIndex]
 
 		f := fr.newFeastCall(featureTableSpec, batchedEntities)
-		hystrix.GoC(ctx, hystrixCommandName, func(ctx context.Context) error {
+		hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
 			batchResultChan <- f.do(ctx, features, columns, entityIndices)
 			return nil
 		}, func(ctx context.Context, err error) error {
