@@ -259,6 +259,78 @@ func TestCompiler_Compile(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "feast preprocess",
+			fields: fields{
+				sr:          symbol.NewRegistry(),
+				feastClient: &mocks.Client{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/valid_feast_preprocess.yaml",
+			want: want{
+				expressions: []string{
+					"customer_id",
+				},
+				jsonPaths: []string{
+					"$.customer.id",
+					"$.drivers[*]",
+					"$.drivers[*].id",
+				},
+				preprocessOps: []Op{
+					&VariableDeclarationOp{},
+					&CreateTableOp{},
+					&FeastOp{},
+					&TableTransformOp{},
+					&TableJoinOp{},
+					&TableTransformOp{},
+					&JsonOutputOp{},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "feast with expression",
+			fields: fields{
+				sr:          symbol.NewRegistry(),
+				feastClient: &mocks.Client{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/valid_feast_expression.yaml",
+			want: want{
+				expressions: []string{
+					"customer_level",
+					"customer_id",
+					"Now().Hour()",
+				},
+				jsonPaths: []string{
+					"$.customer.id",
+					"$.drivers[*]",
+					"$.drivers[*].id",
+				},
+				preprocessOps: []Op{
+					&VariableDeclarationOp{},
+					&CreateTableOp{},
+					&FeastOp{},
+					&TableTransformOp{},
+					&TableJoinOp{},
+					&TableTransformOp{},
+					&JsonOutputOp{},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "preprocess - postprocess input and output - invalid",
 			fields: fields{
 				sr:          symbol.NewRegistry(),
