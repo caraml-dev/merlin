@@ -190,7 +190,7 @@ export const FeastEntities = ({
           singleSelection={{ asPlainText: true }}
           isClearable={false}
           placeholder="Field Type"
-          options={[{ label: "JSONPath" }, { label: "UDF" }]}
+          options={[{ label: "JSONPath" }, { label: "Expression" }]}
           onChange={onEntityChange(item.idx, "fieldType")}
           onCreateOption={searchValue =>
             onEntityCreate(searchValue, item.idx, "fieldType")
@@ -202,7 +202,7 @@ export const FeastEntities = ({
     },
     {
       name: (
-        <EuiToolTip content="Specify the JSONPath/UDF syntax to extract entity value from the request payload">
+        <EuiToolTip content="Specify the JSONPath/Expression syntax to extract entity value from the request payload">
           <span>
             Input Value <EuiIcon type="questionInCircle" color="subdued" />
           </span>
