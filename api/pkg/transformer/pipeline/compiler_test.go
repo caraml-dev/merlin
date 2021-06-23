@@ -311,6 +311,7 @@ func TestCompiler_Compile(t *testing.T) {
 				expressions: []string{
 					"customer_level",
 					"customer_id",
+					"Now().Hour()",
 				},
 				jsonPaths: []string{
 					"$.customer.id",

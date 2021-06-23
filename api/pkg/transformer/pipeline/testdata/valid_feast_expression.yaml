@@ -36,6 +36,9 @@ transformerConfig:
               - name: customer_level
                 valueType: INT32
                 expression: customer_level
+              - name: hour_of_day
+                valueType: INT32
+                expression: Now().Hour()
             features:
               - name: customer_feature_1
                 valueType: INT64
