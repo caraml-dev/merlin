@@ -6,6 +6,7 @@ import (
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
 type defaultValues map[string]*feastTypes.Value
@@ -26,7 +27,7 @@ func compileDefaultValues(featureTableSpecs []*spec.FeatureTable) defaultValues 
 		for _, f := range ft.Features {
 			if len(f.DefaultValue) != 0 {
 				feastValType := feastTypes.ValueType_Enum(feastTypes.ValueType_Enum_value[f.ValueType])
-				defVal, err := getValue(f.DefaultValue, feastValType)
+				defVal, err := converter.ToFeastValue(f.DefaultValue, feastValType)
 				if err != nil {
 					continue
 				}

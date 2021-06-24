@@ -72,11 +72,7 @@ func generateJsonOutput(field *spec.Field, output map[string]interface{}, env *E
 		var fieldVal interface{}
 		switch valPerType := exprVal.(type) {
 		case *series.Series:
-			seriesVal, err := valPerType.GetRecords()
-			if err != nil {
-				return nil, err
-			}
-			fieldVal = seriesVal
+			fieldVal = valPerType.GetRecords()
 		case *table.Table:
 			tableJsonOutput, err := table.TableToJson(valPerType, spec.FromTable_SPLIT)
 			if err != nil {

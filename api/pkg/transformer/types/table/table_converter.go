@@ -87,12 +87,7 @@ func getTableRecordsPerColumns(tbl *Table) (map[string][]interface{}, error) {
 	columnsValues := make(map[string][]interface{})
 	for _, col := range columns {
 		valueSeries := tbl.Col(col)
-		values, err := valueSeries.GetRecords()
-		if err != nil {
-			return nil, err
-		}
-
-		columnsValues[col] = values
+		columnsValues[col] = valueSeries.GetRecords()
 	}
 	return columnsValues, nil
 }
