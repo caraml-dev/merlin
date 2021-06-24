@@ -63,13 +63,13 @@ func (s *Series) Type() Type {
 	return Type(s.series.Type())
 }
 
-func (s *Series) GetRecords() ([]interface{}, error) {
+func (s *Series) GetRecords() []interface{} {
 	genericArr := make([]interface{}, s.series.Len())
 	for i := 0; i < s.series.Len(); i++ {
 		genericArr[i] = s.series.Val(i)
 	}
 
-	return genericArr, nil
+	return genericArr
 }
 
 func (s *Series) Get(index int) interface{} {
