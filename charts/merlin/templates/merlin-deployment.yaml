@@ -151,6 +151,16 @@ spec:
             value: "{{ .Values.merlin.transformer.feast.authEnabled }}"
           - name: STANDARD_TRANSFORMER_IMAGE_NAME
             value: "{{ .Values.merlin.transformer.image }}"
+          - name: JAEGER_AGENT_HOST
+            value: "{{ .Values.merlin.transformer.jaeger.agentHost }}"
+          - name: JAEGER_AGENT_PORT
+            value: "{{ .Values.merlin.transformer.jaeger.agentPort }}"
+          - name: JAEGER_SAMPLER_TYPE
+            value: "{{ .Values.merlin.transformer.jaeger.samplerType }}"
+          - name: JAEGER_SAMPLER_PARAM
+            value: "{{ .Values.merlin.transformer.jaeger.samplerParam }}"
+          - name: JAEGER_DISABLED
+            value: "{{ .Values.merlin.transformer.jaeger.disabled }}"
           - name: VAULT_ADDRESS
             valueFrom:
               secretKeyRef:

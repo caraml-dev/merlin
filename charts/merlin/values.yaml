@@ -92,6 +92,12 @@ merlin:
       coreAuthAudience: core.feast.dev
       authEnabled: false
     image: merlin-transformer:1.0.0
+    jaeger:
+      agentHost: localhost
+      agentPort: 6831
+      samplerType: const
+      samplerParam: 1
+      disabled: false
 
   # Google service account used to access GCP's resources.
   #
