@@ -35,10 +35,10 @@ func NewFeastOp(feastClient feastSdk.Client, feastOptions *feast.Options, cache 
 }
 
 func (op *FeastOp) Execute(context context.Context, env *Environment) error {
-	span, context := opentracing.StartSpanFromContext(context, "pipeline.FeastOp")
+	span, ctx := opentracing.StartSpanFromContext(context, "pipeline.FeastOp")
 	defer span.Finish()
 
-	featureTables, err := op.feastRetriever.RetrieveFeatureOfEntityInSymbolRegistry(context, env.SymbolRegistry())
+	featureTables, err := op.feastRetriever.RetrieveFeatureOfEntityInSymbolRegistry(ctx, env.SymbolRegistry())
 	if err != nil {
 		return err
 	}

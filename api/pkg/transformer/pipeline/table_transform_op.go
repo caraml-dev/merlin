@@ -25,6 +25,9 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 	inputTableName := t.tableTransformSpec.InputTable
 	outputTableName := t.tableTransformSpec.OutputTable
 
+	span.SetTag("table.input", inputTableName)
+	span.SetTag("table.output", outputTableName)
+
 	inputTable, err := getTable(env, inputTableName)
 	if err != nil {
 		return err

@@ -23,6 +23,10 @@ func (t TableJoinOp) Execute(context context.Context, environment *Environment) 
 	span, _ := opentracing.StartSpanFromContext(context, "pipeline.TableJoin")
 	defer span.Finish()
 
+	span.SetTag("table.left", t.tableJoinSpec.LeftTable)
+	span.SetTag("table.right", t.tableJoinSpec.RightTable)
+	span.SetTag("table.output", t.tableJoinSpec.OutputTable)
+
 	leftTable, err := getTable(environment, t.tableJoinSpec.LeftTable)
 	if err != nil {
 		return err

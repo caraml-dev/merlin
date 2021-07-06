@@ -168,8 +168,8 @@ type StandardTransformerConfig struct {
 type JaegerConfig struct {
 	AgentHost    string `envconfig:"JAEGER_AGENT_HOST"`
 	AgentPort    string `envconfig:"JAEGER_AGENT_PORT"`
-	SamplerType  string `envconfig:"JAEGER_SAMPLER_TYPE" default:"const"`
-	SamplerParam string `envconfig:"JAEGER_SAMPLER_PARAM" default:"1"`
+	SamplerType  string `envconfig:"JAEGER_SAMPLER_TYPE" default:"probabilistic"`
+	SamplerParam string `envconfig:"JAEGER_SAMPLER_PARAM" default:"0.1"`
 	Disabled     string `envconfig:"JAEGER_DISABLED" default:"false"`
 }
 
