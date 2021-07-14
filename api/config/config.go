@@ -169,7 +169,7 @@ type JaegerConfig struct {
 	AgentHost    string `envconfig:"JAEGER_AGENT_HOST"`
 	AgentPort    string `envconfig:"JAEGER_AGENT_PORT"`
 	SamplerType  string `envconfig:"JAEGER_SAMPLER_TYPE" default:"probabilistic"`
-	SamplerParam string `envconfig:"JAEGER_SAMPLER_PARAM" default:"0.1"`
+	SamplerParam string `envconfig:"JAEGER_SAMPLER_PARAM" default:"0.01"`
 	Disabled     string `envconfig:"JAEGER_DISABLED" default:"false"`
 }
 
