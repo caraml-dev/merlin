@@ -289,11 +289,14 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLEnvName, Value: t.standardTransformerConfig.FeastServingURL})
 
 		jaegerCfg := t.standardTransformerConfig.Jaeger
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.JaegerAgentHost, Value: jaegerCfg.AgentHost})
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.JaegerAgentPort, Value: jaegerCfg.AgentPort})
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.JaegerSamplerParam, Value: jaegerCfg.SamplerParam})
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType})
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled})
+		jaegerEnvVars := []models.EnvVar{
+			{Name: transformerpkg.JaegerAgentHost, Value: jaegerCfg.AgentHost},
+			{Name: transformerpkg.JaegerAgentPort, Value: jaegerCfg.AgentPort},
+			{Name: transformerpkg.JaegerSamplerParam, Value: jaegerCfg.SamplerParam},
+			{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType},
+			{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
+		}
+		envVars = append(jaegerEnvVars, envVars...)
 	}
 
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})

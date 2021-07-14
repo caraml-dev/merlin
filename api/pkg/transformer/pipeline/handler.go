@@ -29,6 +29,10 @@ func (h *Handler) Preprocess(ctx context.Context, rawRequest []byte, rawRequestH
 	defer span.Finish()
 
 	env := getEnvironment(ctx)
+	if !env.IsPreprocessOpExist() {
+		return rawRequest, nil
+	}
+
 	var rawRequestObj types.JSONObject
 	err := json.Unmarshal(rawRequest, &rawRequestObj)
 	if err != nil {
@@ -40,7 +44,11 @@ func (h *Handler) Preprocess(ctx context.Context, rawRequest []byte, rawRequestH
 		return nil, err
 	}
 
-	return json.Marshal(transformedRequest)
+	jsonSpan, _ := opentracing.StartSpanFromContext(ctx, "pipeline.Preprocess.JsonMarshall")
+	preprocessJson, err := json.Marshal(transformedRequest)
+	jsonSpan.Finish()
+
+	return preprocessJson, err
 }
 
 func (h *Handler) Postprocess(ctx context.Context, modelResponse []byte, modelResponseHeaders map[string]string) ([]byte, error) {
@@ -48,6 +56,9 @@ func (h *Handler) Postprocess(ctx context.Context, modelResponse []byte, modelRe
 	defer span.Finish()
 
 	env := getEnvironment(ctx)
+	if !env.IsPostProcessOpExist() {
+		return modelResponse, nil
+	}
 
 	var modelResponseObj types.JSONObject
 	err := json.Unmarshal(modelResponse, &modelResponseObj)
