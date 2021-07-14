@@ -13,10 +13,10 @@ import (
 	"syscall"
 	"time"
 
+	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/httpclient"
 	"github.com/gojek/heimdall/v7/hystrix"
-	"github.com/gojek/merlin/pkg/transformer/server/response"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -24,6 +24,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
+
+	"github.com/gojek/merlin/pkg/transformer/server/response"
 )
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"
@@ -42,11 +44,14 @@ type Options struct {
 	HTTPServerTimeout time.Duration `envconfig:"HTTP_SERVER_TIMEOUT" default:"30s"`
 	HTTPClientTimeout time.Duration `envconfig:"HTTP_CLIENT_TIMEOUT" default:"1s"`
 
-	ModelTimeout                       time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
-	ModelHystrixMaxConcurrentRequests  int           `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
-	ModelHystrixRetryCount             int           `envconfig:"MODEL_HYSTRIX_RETRY_COUNT" default:"0"`
-	ModelHystrixRetryBackoffInterval   time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
-	ModelHystrixRetryMaxJitterInterval time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_MAX_JITTER_INTERVAL" default:"5ms"`
+	ModelTimeout                         time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
+	ModelHystrixMaxConcurrentRequests    int           `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
+	ModelHystrixRetryCount               int           `envconfig:"MODEL_HYSTRIX_RETRY_COUNT" default:"0"`
+	ModelHystrixRetryBackoffInterval     time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
+	ModelHystrixRetryMaxJitterInterval   time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_MAX_JITTER_INTERVAL" default:"5ms"`
+	ModelHystrixErrorPercentageThreshold int           `envconfig:"MODEL_HYSTRIX_ERROR_PERCENTAGE_THRESHOLD" default:"25"`
+	ModelHystrixRequestVolumeThreshold   int           `envconfig:"MODEL_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
+	ModelHystrixSleepWindowMs            int           `envconfig:"MODEL_HYSTRIX_SLEEP_WINDOW_MS" default:"10"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
@@ -55,6 +60,7 @@ type Server struct {
 	httpClient *hystrix.Client
 	router     *mux.Router
 	logger     *zap.Logger
+	modelURL   string
 
 	ContextModifier    func(ctx context.Context) context.Context
 	PreprocessHandler  func(ctx context.Context, request []byte, requestHeaders map[string]string) ([]byte, error)
@@ -63,9 +69,17 @@ type Server struct {
 
 // New initializes a new Server.
 func New(o *Options, logger *zap.Logger) *Server {
+	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelName)
+	if !strings.Contains(predictURL, "http://") {
+		predictURL = "http://" + predictURL
+	}
+
+	hystrixGo.SetLogger(newHystrixLogger(logger))
+
 	return &Server{
 		options:    o,
 		httpClient: newHystrixClient(hystrixCommandName, o),
+		modelURL:   predictURL,
 		router:     mux.NewRouter(),
 		logger:     logger,
 	}
@@ -78,6 +92,9 @@ func newHystrixClient(commandName string, o *Options) *hystrix.Client {
 		hystrix.WithHTTPTimeout(o.ModelTimeout),
 		hystrix.WithHystrixTimeout(o.ModelTimeout),
 		hystrix.WithMaxConcurrentRequests(o.ModelHystrixMaxConcurrentRequests),
+		hystrix.WithErrorPercentThreshold(o.ModelHystrixErrorPercentageThreshold),
+		hystrix.WithRequestVolumeThreshold(o.ModelHystrixRequestVolumeThreshold),
+		hystrix.WithSleepWindow(o.ModelHystrixSleepWindowMs),
 	}
 
 	if o.ModelHystrixRetryCount > 0 {
@@ -190,12 +207,7 @@ func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (
 	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
 	defer span.Finish()
 
-	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", s.options.ModelPredictURL, s.options.ModelName)
-	if !strings.Contains(predictURL, "http://") {
-		predictURL = "http://" + predictURL
-	}
-
-	req, err := http.NewRequest("POST", predictURL, bytes.NewBuffer(request))
+	req, err := http.NewRequest("POST", s.modelURL, bytes.NewBuffer(request))
 	if err != nil {
 		return nil, err
 	}
