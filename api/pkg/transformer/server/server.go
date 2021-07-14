@@ -135,6 +135,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	predictionDurationMs := time.Since(predictStartTime).Milliseconds()
 	if err != nil {
 		pipelineLatency.WithLabelValues(errorResult, predictStep).Observe(float64(predictionDurationMs))
+		s.logger.Error("predict error", zap.Error(err))
 		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
 		return
 	}
@@ -144,6 +145,7 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	postprocessedRequestBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		s.logger.Error("error reading model response", zap.Error(err))
 		response.NewError(http.StatusInternalServerError, err).Write(w)
 		return
 	}
