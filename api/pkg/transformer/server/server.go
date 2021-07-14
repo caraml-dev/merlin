@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/httpclient"
 	"github.com/gojek/heimdall/v7/hystrix"
@@ -72,6 +73,8 @@ func New(o *Options, logger *zap.Logger) *Server {
 	if !strings.Contains(predictURL, "http://") {
 		predictURL = "http://" + predictURL
 	}
+
+	hystrixGo.SetLogger(newHystrixLogger(logger))
 
 	return &Server{
 		options:    o,
