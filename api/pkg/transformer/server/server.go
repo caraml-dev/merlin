@@ -16,7 +16,6 @@ import (
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/httpclient"
 	"github.com/gojek/heimdall/v7/hystrix"
-	"github.com/gojek/merlin/pkg/transformer/server/response"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -24,6 +23,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
+
+	"github.com/gojek/merlin/pkg/transformer/server/response"
 )
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"
@@ -55,6 +56,7 @@ type Server struct {
 	httpClient *hystrix.Client
 	router     *mux.Router
 	logger     *zap.Logger
+	modelUrl   string
 
 	ContextModifier    func(ctx context.Context) context.Context
 	PreprocessHandler  func(ctx context.Context, request []byte, requestHeaders map[string]string) ([]byte, error)
@@ -63,9 +65,15 @@ type Server struct {
 
 // New initializes a new Server.
 func New(o *Options, logger *zap.Logger) *Server {
+	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelName)
+	if !strings.Contains(predictURL, "http://") {
+		predictURL = "http://" + predictURL
+	}
+
 	return &Server{
 		options:    o,
 		httpClient: newHystrixClient(hystrixCommandName, o),
+		modelUrl:   predictURL,
 		router:     mux.NewRouter(),
 		logger:     logger,
 	}
@@ -190,12 +198,7 @@ func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (
 	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
 	defer span.Finish()
 
-	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", s.options.ModelPredictURL, s.options.ModelName)
-	if !strings.Contains(predictURL, "http://") {
-		predictURL = "http://" + predictURL
-	}
-
-	req, err := http.NewRequest("POST", predictURL, bytes.NewBuffer(request))
+	req, err := http.NewRequest("POST", s.modelUrl, bytes.NewBuffer(request))
 	if err != nil {
 		return nil, err
 	}
