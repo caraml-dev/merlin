@@ -43,11 +43,14 @@ type Options struct {
 	HTTPServerTimeout time.Duration `envconfig:"HTTP_SERVER_TIMEOUT" default:"30s"`
 	HTTPClientTimeout time.Duration `envconfig:"HTTP_CLIENT_TIMEOUT" default:"1s"`
 
-	ModelTimeout                       time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
-	ModelHystrixMaxConcurrentRequests  int           `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
-	ModelHystrixRetryCount             int           `envconfig:"MODEL_HYSTRIX_RETRY_COUNT" default:"0"`
-	ModelHystrixRetryBackoffInterval   time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
-	ModelHystrixRetryMaxJitterInterval time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_MAX_JITTER_INTERVAL" default:"5ms"`
+	ModelTimeout                         time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
+	ModelHystrixMaxConcurrentRequests    int           `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
+	ModelHystrixRetryCount               int           `envconfig:"MODEL_HYSTRIX_RETRY_COUNT" default:"0"`
+	ModelHystrixRetryBackoffInterval     time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
+	ModelHystrixRetryMaxJitterInterval   time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_MAX_JITTER_INTERVAL" default:"5ms"`
+	ModelHystrixErrorPercentageThreshold int           `envconfig:"MODEL_HYSTRIX_ERROR_PERCENTAGE_THRESHOLD" default:"25"`
+	ModelHystrixRequestVolumeThreshold   int           `envconfig:"MODEL_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
+	ModelHystrixSleepWindowMs            int           `envconfig:"MODEL_HYSTRIX_SLEEP_WINDOW_MS" default:"10"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
@@ -86,6 +89,9 @@ func newHystrixClient(commandName string, o *Options) *hystrix.Client {
 		hystrix.WithHTTPTimeout(o.ModelTimeout),
 		hystrix.WithHystrixTimeout(o.ModelTimeout),
 		hystrix.WithMaxConcurrentRequests(o.ModelHystrixMaxConcurrentRequests),
+		hystrix.WithErrorPercentThreshold(o.ModelHystrixErrorPercentageThreshold),
+		hystrix.WithRequestVolumeThreshold(o.ModelHystrixRequestVolumeThreshold),
+		hystrix.WithSleepWindow(o.ModelHystrixSleepWindowMs),
 	}
 
 	if o.ModelHystrixRetryCount > 0 {
