@@ -59,7 +59,7 @@ type Server struct {
 	httpClient *hystrix.Client
 	router     *mux.Router
 	logger     *zap.Logger
-	modelUrl   string
+	modelURL   string
 
 	ContextModifier    func(ctx context.Context) context.Context
 	PreprocessHandler  func(ctx context.Context, request []byte, requestHeaders map[string]string) ([]byte, error)
@@ -76,7 +76,7 @@ func New(o *Options, logger *zap.Logger) *Server {
 	return &Server{
 		options:    o,
 		httpClient: newHystrixClient(hystrixCommandName, o),
-		modelUrl:   predictURL,
+		modelURL:   predictURL,
 		router:     mux.NewRouter(),
 		logger:     logger,
 	}
@@ -204,7 +204,7 @@ func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (
 	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
 	defer span.Finish()
 
-	req, err := http.NewRequest("POST", s.modelUrl, bytes.NewBuffer(request))
+	req, err := http.NewRequest("POST", s.modelURL, bytes.NewBuffer(request))
 	if err != nil {
 		return nil, err
 	}
