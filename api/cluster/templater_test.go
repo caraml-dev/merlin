@@ -93,6 +93,13 @@ var (
 		ImageName:       "merlin-standard-transformer",
 		FeastServingURL: "serving.feast.dev:8081",
 		FeastCoreURL:    "core.feast.dev:8081",
+		Jaeger: config.JaegerConfig{
+			AgentHost:    "localhost",
+			AgentPort:    "6831",
+			SamplerType:  "const",
+			SamplerParam: "1",
+			Disabled:     "false",
+		},
 	}
 )
 
@@ -807,6 +814,11 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Env: []v1.EnvVar{
 										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 										{Name: transformer.FeastServingURLEnvName, Value: standardTransformerConfig.FeastServingURL},
+										{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
+										{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+										{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
+										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},

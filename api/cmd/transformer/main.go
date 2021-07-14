@@ -6,7 +6,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/afex/hystrix-go/hystrix/metric_collector"
+	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/kelseyhightower/envconfig"
@@ -152,7 +152,6 @@ func initTracing(serviceName string) (io.Closer, error) {
 	// Set tracing configuration defaults.
 	cfg := &jcfg.Configuration{
 		ServiceName: serviceName,
-		Disabled:    true,
 	}
 
 	// Available options can be seen here:

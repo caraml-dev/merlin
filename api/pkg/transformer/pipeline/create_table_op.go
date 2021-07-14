@@ -7,6 +7,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
+	"github.com/opentracing/opentracing-go"
 )
 
 type CreateTableOp struct {
@@ -17,7 +18,10 @@ func NewCreateTableOp(tableSpecs []*spec.Table) Op {
 	return &CreateTableOp{tableSpecs: tableSpecs}
 }
 
-func (c CreateTableOp) Execute(_ context.Context, env *Environment) error {
+func (c CreateTableOp) Execute(ctx context.Context, env *Environment) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "pipeline.CreateTableOp")
+	defer span.Finish()
+
 	for _, tableSpec := range c.tableSpecs {
 		var t *table.Table
 		if tableSpec.BaseTable != nil {

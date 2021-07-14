@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -20,6 +21,9 @@ func NewJsonOutputOp(outputSpec *spec.JsonOutput) Op {
 }
 
 func (j JsonOutputOp) Execute(ctx context.Context, env *Environment) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "pipeline.JsonOutputOp")
+	defer span.Finish()
+
 	template := j.outputSpec.JsonTemplate
 	outputJson := make(types.JSONObject)
 	if template.BaseJson != nil {

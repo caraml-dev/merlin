@@ -162,6 +162,15 @@ type StandardTransformerConfig struct {
 	FeastCoreURL          string `envconfig:"FEAST_CORE_URL" required:"true"`
 	FeastCoreAuthAudience string `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
 	EnableAuth            bool   `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
+	Jaeger                JaegerConfig
+}
+
+type JaegerConfig struct {
+	AgentHost    string `envconfig:"JAEGER_AGENT_HOST"`
+	AgentPort    string `envconfig:"JAEGER_AGENT_PORT"`
+	SamplerType  string `envconfig:"JAEGER_SAMPLER_TYPE" default:"probabilistic"`
+	SamplerParam string `envconfig:"JAEGER_SAMPLER_PARAM" default:"0.01"`
+	Disabled     string `envconfig:"JAEGER_DISABLED" default:"false"`
 }
 
 type MlflowConfig struct {
