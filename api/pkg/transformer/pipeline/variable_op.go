@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/opentracing/opentracing-go"
 )
 
 type VariableDeclarationOp struct {
@@ -18,6 +19,9 @@ func NewVariableDeclarationOp(variables []*spec.Variable) Op {
 }
 
 func (v *VariableDeclarationOp) Execute(context context.Context, env *Environment) error {
+	span, _ := opentracing.StartSpanFromContext(context, "pipeline.VariableOp")
+	defer span.Finish()
+
 	for _, varDef := range v.variableSpec {
 		switch v := varDef.Value.(type) {
 		case *spec.Variable_Literal:

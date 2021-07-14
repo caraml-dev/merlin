@@ -6,6 +6,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
+	"github.com/opentracing/opentracing-go"
 )
 
 type TableJoinOp struct {
@@ -19,6 +20,13 @@ func NewTableJoinOp(tableJoinSpec *spec.TableJoin) Op {
 }
 
 func (t TableJoinOp) Execute(context context.Context, environment *Environment) error {
+	span, _ := opentracing.StartSpanFromContext(context, "pipeline.TableJoin")
+	defer span.Finish()
+
+	span.SetTag("table.left", t.tableJoinSpec.LeftTable)
+	span.SetTag("table.right", t.tableJoinSpec.RightTable)
+	span.SetTag("table.output", t.tableJoinSpec.OutputTable)
+
 	leftTable, err := getTable(environment, t.tableJoinSpec.LeftTable)
 	if err != nil {
 		return err

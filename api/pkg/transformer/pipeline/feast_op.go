@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
@@ -34,7 +35,10 @@ func NewFeastOp(feastClient feastSdk.Client, feastOptions *feast.Options, cache 
 }
 
 func (op *FeastOp) Execute(context context.Context, env *Environment) error {
-	featureTables, err := op.feastRetriever.RetrieveFeatureOfEntityInSymbolRegistry(context, env.SymbolRegistry())
+	span, ctx := opentracing.StartSpanFromContext(context, "pipeline.FeastOp")
+	defer span.Finish()
+
+	featureTables, err := op.feastRetriever.RetrieveFeatureOfEntityInSymbolRegistry(ctx, env.SymbolRegistry())
 	if err != nil {
 		return err
 	}

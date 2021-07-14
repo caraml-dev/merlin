@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/opentracing/opentracing-go"
 )
 
 type TableTransformOp struct {
@@ -18,8 +19,14 @@ func NewTableTransformOp(tableTransformSpec *spec.TableTransformation) Op {
 }
 
 func (t TableTransformOp) Execute(context context.Context, env *Environment) error {
+	span, _ := opentracing.StartSpanFromContext(context, "pipeline.TableTransformOp")
+	defer span.Finish()
+
 	inputTableName := t.tableTransformSpec.InputTable
 	outputTableName := t.tableTransformSpec.OutputTable
+
+	span.SetTag("table.input", inputTableName)
+	span.SetTag("table.output", outputTableName)
 
 	inputTable, err := getTable(env, inputTableName)
 	if err != nil {
