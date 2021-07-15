@@ -42,7 +42,9 @@ type AppConfig struct {
 
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
 	LogLevel                      string `envconfig:"LOG_LEVEL"`
-	InitHeapSizeInMB              int    `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
+
+	// By default the value is 0, users should configure this value below the memory requested
+	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
 }
 
 // Trick GC frequency based on this https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap-26c2462549a2/

@@ -219,7 +219,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body:       []byte(`{"status": "ok"}`),
+				body:       []byte(`{"status":"ok"}`),
 				statusCode: 200,
 			},
 			expTransformedResponse: response{
@@ -283,7 +283,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body:       []byte(`{"status": "ok"}`),
+				body:       []byte(`{"status":"ok"}`),
 				statusCode: 200,
 			},
 			expTransformedResponse: response{
