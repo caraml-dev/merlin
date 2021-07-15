@@ -8,16 +8,6 @@ import (
 
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/kelseyhightower/envconfig"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/version"
-	jcfg "github.com/uber/jaeger-client-go/config"
-	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
-	"go.uber.org/zap"
-
 	"github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
@@ -27,6 +17,15 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/kelseyhightower/envconfig"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/version"
+	jcfg "github.com/uber/jaeger-client-go/config"
+	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -43,12 +42,22 @@ type AppConfig struct {
 
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
 	LogLevel                      string `envconfig:"LOG_LEVEL"`
+
+	// By default the value is 0, users should configure this value below the memory requested
+	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
 }
+
+// Trick GC frequency based on this https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap-26c2462549a2/
+var initialHeapAllocation []byte
 
 func main() {
 	appConfig := AppConfig{}
 	if err := envconfig.Process("", &appConfig); err != nil {
 		log.Fatal(errors.Wrap(err, "Error processing environment variables"))
+	}
+
+	if appConfig.InitHeapSizeInMB > 0 {
+		initialHeapAllocation = make([]byte, appConfig.InitHeapSizeInMB<<20)
 	}
 
 	logger, _ := zap.NewProduction()

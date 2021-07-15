@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/antonmedv/expr/vm"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
@@ -31,6 +32,9 @@ func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Env
 }
 
 func (e *Environment) Preprocess(ctx context.Context, rawRequest types.JSONObject, rawRequestHeaders map[string]string) (types.JSONObject, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "environment.Preprocess")
+	defer span.Finish()
+
 	e.symbolRegistry.SetRawRequestJSON(rawRequest)
 	e.symbolRegistry.SetRawRequestHeaders(rawRequestHeaders)
 	e.SetOutputJSON(rawRequest)
@@ -39,11 +43,22 @@ func (e *Environment) Preprocess(ctx context.Context, rawRequest types.JSONObjec
 }
 
 func (e *Environment) Postprocess(ctx context.Context, modelResponse types.JSONObject, modelResponseHeaders map[string]string) (types.JSONObject, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "environment.Postprocess")
+	defer span.Finish()
+
 	e.symbolRegistry.SetModelResponseJSON(modelResponse)
 	e.symbolRegistry.SetModelResponseHeaders(modelResponseHeaders)
 	e.SetOutputJSON(modelResponse)
 
 	return e.compiledPipeline.Postprocess(ctx, e)
+}
+
+func (e *Environment) IsPostProcessOpExist() bool {
+	return len(e.compiledPipeline.postprocessOps) > 0
+}
+
+func (e *Environment) IsPreprocessOpExist() bool {
+	return len(e.compiledPipeline.preprocessOps) > 0
 }
 
 func (e *Environment) SetOutputJSON(jsonObj types.JSONObject) {
