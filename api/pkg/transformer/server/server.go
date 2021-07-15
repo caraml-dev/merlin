@@ -225,6 +225,8 @@ func (s *Server) Run() {
 	health := healthcheck.NewHandler()
 	s.router.Handle("/", health)
 	s.router.Handle("/metrics", promhttp.Handler())
+	s.router.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
+	s.router.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
 	s.router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 
 	s.router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelName), s.PredictHandler).Methods("POST")
