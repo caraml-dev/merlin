@@ -107,15 +107,16 @@ func main() {
 
 	reactConfig := cfg.ReactAppConfig
 	uiEnv := uiEnvHandler{
-		OauthClientID:    reactConfig.OauthClientID,
-		Environment:      reactConfig.Environment,
-		SentryDSN:        reactConfig.SentryDSN,
-		DocURL:           reactConfig.DocURL,
-		HomePage:         reactConfig.HomePage,
-		MerlinURL:        reactConfig.MerlinURL,
-		MlpURL:           reactConfig.MlpURL,
-		FeastCoreURL:     reactConfig.FeastCoreURL,
-		DockerRegistries: reactConfig.DockerRegistries,
+		OauthClientID:     reactConfig.OauthClientID,
+		Environment:       reactConfig.Environment,
+		SentryDSN:         reactConfig.SentryDSN,
+		DocURL:            reactConfig.DocURL,
+		HomePage:          reactConfig.HomePage,
+		MerlinURL:         reactConfig.MerlinURL,
+		MlpURL:            reactConfig.MlpURL,
+		FeastCoreURL:      reactConfig.FeastCoreURL,
+		DockerRegistries:  reactConfig.DockerRegistries,
+		MaxAllowedReplica: reactConfig.MaxAllowedReplica,
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
