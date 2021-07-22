@@ -25,6 +25,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
+	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/server/response"
 )
 
@@ -52,12 +53,13 @@ type Options struct {
 	ModelHystrixErrorPercentageThreshold int           `envconfig:"MODEL_HYSTRIX_ERROR_PERCENTAGE_THRESHOLD" default:"25"`
 	ModelHystrixRequestVolumeThreshold   int           `envconfig:"MODEL_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
 	ModelHystrixSleepWindowMs            int           `envconfig:"MODEL_HYSTRIX_SLEEP_WINDOW_MS" default:"10"`
+	ModelHystrixHeimdallDisabled         bool          `envconfig:"MODEL_HYSTRIX_HEIMDALL_DISABLED" default:"true"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
 type Server struct {
 	options    *Options
-	httpClient *hystrix.Client
+	httpClient hystrixHttpClient
 	router     *mux.Router
 	logger     *zap.Logger
 	modelURL   string
@@ -67,6 +69,10 @@ type Server struct {
 	PostprocessHandler func(ctx context.Context, response []byte, responseHeaders map[string]string) ([]byte, error)
 }
 
+type hystrixHttpClient interface {
+	Do(request *http.Request) (*http.Response, error)
+}
+
 // New initializes a new Server.
 func New(o *Options, logger *zap.Logger) *Server {
 	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelName)
@@ -74,18 +80,38 @@ func New(o *Options, logger *zap.Logger) *Server {
 		predictURL = "http://" + predictURL
 	}
 
+	var modelHttpClient hystrixHttpClient
 	hystrixGo.SetLogger(newHystrixLogger(logger))
+	if o.ModelHystrixHeimdallDisabled {
+		modelHttpClient = newHTTPHystrixClient(hystrixCommandName, o)
+	} else {
+		modelHttpClient = newHeimdallClient(hystrixCommandName, o)
+	}
 
 	return &Server{
 		options:    o,
-		httpClient: newHystrixClient(hystrixCommandName, o),
+		httpClient: modelHttpClient,
 		modelURL:   predictURL,
 		router:     mux.NewRouter(),
 		logger:     logger,
 	}
 }
 
-func newHystrixClient(commandName string, o *Options) *hystrix.Client {
+func newHTTPHystrixClient(commandName string, o *Options) *hystrixpkg.Client {
+	hystrixConfig := hystrixGo.CommandConfig{
+		Timeout:                int(o.ModelTimeout / time.Millisecond),
+		MaxConcurrentRequests:  o.ModelHystrixMaxConcurrentRequests,
+		RequestVolumeThreshold: o.ModelHystrixRequestVolumeThreshold,
+		SleepWindow:            o.ModelHystrixSleepWindowMs,
+		ErrorPercentThreshold:  o.ModelHystrixErrorPercentageThreshold,
+	}
+	cl := &http.Client{
+		Timeout: o.ModelTimeout,
+	}
+	return hystrixpkg.NewClient(cl, &hystrixConfig, hystrixCommandName)
+}
+
+func newHeimdallClient(commandName string, o *Options) *hystrix.Client {
 	hystrixOptions := []hystrix.Option{
 		hystrix.WithCommandName(commandName),
 		hystrix.WithHTTPClient(httpclient.NewClient(httpclient.WithHTTPTimeout(o.ModelTimeout))),
