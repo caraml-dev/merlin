@@ -59,7 +59,7 @@ type Options struct {
 // Server serves various HTTP endpoints of Feast transformer.
 type Server struct {
 	options    *Options
-	httpClient doer
+	httpClient hystrixHttpClient
 	router     *mux.Router
 	logger     *zap.Logger
 	modelURL   string
@@ -69,7 +69,7 @@ type Server struct {
 	PostprocessHandler func(ctx context.Context, response []byte, responseHeaders map[string]string) ([]byte, error)
 }
 
-type doer interface {
+type hystrixHttpClient interface {
 	Do(request *http.Request) (*http.Response, error)
 }
 
@@ -80,12 +80,12 @@ func New(o *Options, logger *zap.Logger) *Server {
 		predictURL = "http://" + predictURL
 	}
 
-	var modelHttpClient doer
+	var modelHttpClient hystrixHttpClient
 	hystrixGo.SetLogger(newHystrixLogger(logger))
 	if o.ModelHystrixHeimdallDisabled {
 		modelHttpClient = newHTTPHystrixClient(hystrixCommandName, o)
 	} else {
-		modelHttpClient = newHeimdallHystrixClient(hystrixCommandName, o)
+		modelHttpClient = newHeimdallClient(hystrixCommandName, o)
 	}
 
 	return &Server{
@@ -111,7 +111,7 @@ func newHTTPHystrixClient(commandName string, o *Options) *hystrixpkg.Client {
 	return hystrixpkg.NewClient(cl, &hystrixConfig, hystrixCommandName)
 }
 
-func newHeimdallHystrixClient(commandName string, o *Options) *hystrix.Client {
+func newHeimdallClient(commandName string, o *Options) *hystrix.Client {
 	hystrixOptions := []hystrix.Option{
 		hystrix.WithCommandName(commandName),
 		hystrix.WithHTTPClient(httpclient.NewClient(httpclient.WithHTTPTimeout(o.ModelTimeout))),

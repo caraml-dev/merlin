@@ -1,7 +1,7 @@
 package hystrix
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/afex/hystrix-go/hystrix"
@@ -39,7 +39,7 @@ func (cl *Client) Do(request *http.Request) (*http.Response, error) {
 			return err
 		}
 		if response.StatusCode >= http.StatusInternalServerError {
-			return errors.New("got 5xx response code")
+			return fmt.Errorf("got 5xx response code: %d", response.StatusCode)
 		}
 		return nil
 	}, nil)

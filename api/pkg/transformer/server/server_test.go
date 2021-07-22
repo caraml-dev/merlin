@@ -462,7 +462,7 @@ func assertHasHeaders(t *testing.T, expected map[string]string, actual http.Head
 	return true
 }
 
-func Test_newHeimdallHystrixClient(t *testing.T) {
+func Test_newHeimdallClient(t *testing.T) {
 	defaultRequestBodyString := `{ "name": "merlin" }`
 	defaultResponseBodyString := `{ "response": "ok" }`
 
@@ -516,7 +516,7 @@ func Test_newHeimdallHystrixClient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := newHeimdallHystrixClient(tt.name, tt.args.o)
+			client := newHeimdallClient(tt.name, tt.args.o)
 			assert.NotNil(t, client)
 
 			if tt.handler != nil {
@@ -635,7 +635,7 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 func Test_newHystrixClient_RetriesGetOnFailure5xx(t *testing.T) {
 	count := 0
 
-	client := newHeimdallHystrixClient("retries-on-5xx", &Options{
+	client := newHeimdallClient("retries-on-5xx", &Options{
 		ModelTimeout:                       10 * time.Millisecond,
 		ModelHystrixMaxConcurrentRequests:  100,
 		ModelHystrixRetryMaxJitterInterval: 1 * time.Millisecond,

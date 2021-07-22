@@ -2,6 +2,7 @@ package hystrix
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -74,7 +75,7 @@ func Test_Do(t *testing.T) {
 				StatusCode: http.StatusInternalServerError,
 				Body:       ioutil.NopCloser(strings.NewReader("")),
 			},
-			wantErr: errors.New("got 5xx response code"),
+			wantErr: fmt.Errorf("got 5xx response code: %d", http.StatusInternalServerError),
 		},
 		{
 			desc: "Should error when doer failed got response",
@@ -95,6 +96,7 @@ func Test_Do(t *testing.T) {
 			resp, err := client.Do(req)
 			if tC.wantErr != nil {
 				assert.Error(t, tC.wantErr, err)
+				assert.EqualError(t, err, tC.wantErr.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tC.want, resp)
