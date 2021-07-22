@@ -11,6 +11,8 @@ import {
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "./Panel";
 
+const maxTicks = 20;
+
 export const ResourcesPanel = ({
   resourcesConfig,
   onChangeHandler,
@@ -87,7 +89,8 @@ export const ResourcesPanel = ({
             fullWidth
             min={0}
             max={maxAllowedReplica}
-            step={maxAllowedReplica / 10}
+            // This component only allows up to 20 ticks to be displayed at the slider
+            tickInterval={Math.ceil((maxAllowedReplica + 1) / maxTicks)}
             showInput
             showTicks
             value={[
