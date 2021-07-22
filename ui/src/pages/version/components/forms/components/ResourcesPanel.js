@@ -87,7 +87,7 @@ export const ResourcesPanel = ({
             fullWidth
             min={0}
             max={maxAllowedReplica}
-            step={maxAllowedReplica / 10}
+            step={1}
             showInput
             showTicks
             value={[
