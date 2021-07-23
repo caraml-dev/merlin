@@ -21,6 +21,8 @@ import (
 	"github.com/gojek/merlin/models"
 )
 
+const maxMessageChar = 2048
+
 type VersionEndpointStorage interface {
 	ListEndpoints(model *models.Model, version *models.Version) (endpoints []*models.VersionEndpoint, err error)
 	Get(uuid.UUID) (*models.VersionEndpoint, error)
@@ -50,7 +52,16 @@ func (v *versionEndpointStorage) Get(uuid uuid.UUID) (*models.VersionEndpoint, e
 }
 
 func (v *versionEndpointStorage) Save(endpoint *models.VersionEndpoint) error {
+	sanitizeEndpoint(endpoint)
 	return v.db.Save(&endpoint).Error
+}
+
+func sanitizeEndpoint(endpoint *models.VersionEndpoint) {
+	message := endpoint.Message
+	if len(message) > maxMessageChar {
+		message = message[:maxMessageChar]
+	}
+	endpoint.Message = message
 }
 
 func (v *versionEndpointStorage) CountEndpoints(environment *models.Environment, model *models.Model) (int, error) {
