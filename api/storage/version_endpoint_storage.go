@@ -52,11 +52,11 @@ func (v *versionEndpointStorage) Get(uuid uuid.UUID) (*models.VersionEndpoint, e
 }
 
 func (v *versionEndpointStorage) Save(endpoint *models.VersionEndpoint) error {
-	checkDBContraint(endpoint)
+	sanitizeEndpoint(endpoint)
 	return v.db.Save(&endpoint).Error
 }
 
-func checkDBContraint(endpoint *models.VersionEndpoint) {
+func sanitizeEndpoint(endpoint *models.VersionEndpoint) {
 	message := endpoint.Message
 	if len(message) > maxMessageChar {
 		message = message[:maxMessageChar]
