@@ -16,6 +16,7 @@ package models
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -23,15 +24,36 @@ import (
 const (
 	onlineInferenceLabelTemplate = "serving.kubeflow.org/inferenceservice=%s"
 	batchInferenceLabelTemplate  = "prediction-job-id=%s"
+
+	ImageBuilderComponentType     = "image_builder"
+	ModelComponentType            = "model"
+	TransformerComponentType      = "transformer"
+	BatchJobDriverComponentType   = "batch_job_driver"
+	BatchJobExecutorComponentType = "batch_job_executor"
 )
 
 type Container struct {
 	Name              string    `json:"name"`
 	PodName           string    `json:"pod_name"`
+	ComponentType     string    `json:"component_type"`
 	Namespace         string    `json:"namespace"`
 	Cluster           string    `json:"cluster"`
 	GcpProject        string    `json:"gcp_project"`
 	VersionEndpointID uuid.UUID `json:"version_endpoint_id"`
+}
+
+func ComponentType(podName string) string {
+	componentType := ""
+	if strings.Contains(podName, "predictor-default") {
+		componentType = ModelComponentType
+	} else if strings.Contains(podName, "transformer-default") {
+		componentType = TransformerComponentType
+	} else if strings.Contains(podName, "driver") {
+		componentType = BatchJobDriverComponentType
+	} else if strings.Contains(podName, "executor") {
+		componentType = BatchJobDriverComponentType
+	}
+	return componentType
 }
 
 func OnlineInferencePodLabelSelector(modelName string, versionID string) string {

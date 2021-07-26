@@ -56,11 +56,12 @@ func (cf *containerFetcher) GetContainers(namespace string, labelSelector string
 	for _, pod := range podList.Items {
 		for _, c := range pod.Spec.Containers {
 			container := &models.Container{
-				Name:       c.Name,
-				PodName:    pod.Name,
-				Namespace:  pod.Namespace,
-				Cluster:    cf.metadata.ClusterName,
-				GcpProject: cf.metadata.GcpProject,
+				Name:          c.Name,
+				PodName:       pod.Name,
+				ComponentType: models.ComponentType(pod.Name),
+				Namespace:     pod.Namespace,
+				Cluster:       cf.metadata.ClusterName,
+				GcpProject:    cf.metadata.GcpProject,
 			}
 
 			containers = append(containers, container)
@@ -68,11 +69,12 @@ func (cf *containerFetcher) GetContainers(namespace string, labelSelector string
 
 		for _, ic := range pod.Spec.InitContainers {
 			container := &models.Container{
-				Name:       ic.Name,
-				PodName:    pod.Name,
-				Namespace:  pod.Namespace,
-				Cluster:    cf.metadata.ClusterName,
-				GcpProject: cf.metadata.GcpProject,
+				Name:          ic.Name,
+				PodName:       pod.Name,
+				ComponentType: models.ComponentType(pod.Name),
+				Namespace:     pod.Namespace,
+				Cluster:       cf.metadata.ClusterName,
+				GcpProject:    cf.metadata.GcpProject,
 			}
 
 			containers = append(containers, container)

@@ -15,9 +15,9 @@
 package api
 
 import (
-	"bufio"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/schema"
 
@@ -42,38 +42,34 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := l.LogService.ReadLog(&query)
-	if err != nil {
-		log.Errorf("Error while retrieving log %v", err)
-		InternalServerError(fmt.Sprintf("Error while retrieving log for container %s: %s", query.Name, err)).WriteTo(w)
-		return
-	}
+	podLogs := make(chan service.PodLog)
+	stopCh := make(chan struct{})
 
 	// send status code and content-type
 	w.Header().Set("Content-Type", "plain/text; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
-	// stream the response body
-	defer res.Close()
-	buff := bufio.NewReader(res)
-	for {
-		line, readErr := buff.ReadString('\n')
-		_, writeErr := w.Write([]byte(line))
-		if writeErr != nil {
-			// connection from caller is closed
-			return
-		}
+	go func() {
+		for podLog := range podLogs {
+			// _, writeErr := w.Write([]byte(podLog.Timestamp.Format(time.RFC3339) + " " + podLog.PodName + "/" + podLog.ContainerName + ": " + podLog.TextPayload + "\n"))
+			_, writeErr := w.Write([]byte(podLog.Timestamp.Format(time.RFC3339) + " " + podLog.TextPayload + "\n"))
+			if writeErr != nil {
+				// connection from caller is closed
+				close(stopCh)
+				return
+			}
 
-		// send the response over network
-		// although it's not guaranteed to reach client if it sits behind proxy
-		flusher, ok := w.(http.Flusher)
-		if ok {
-			flusher.Flush()
+			// send the response over network
+			// although it's not guaranteed to reach client if it sits behind proxy
+			flusher, ok := w.(http.Flusher)
+			if ok {
+				flusher.Flush()
+			}
 		}
+	}()
 
-		if readErr != nil {
-			// unable to read log from container anymore most likely EOF
-			return
-		}
+	if err := l.LogService.StreamLogs(podLogs, stopCh, &query); err != nil {
+		InternalServerError(err.Error())
+		return
 	}
 }
