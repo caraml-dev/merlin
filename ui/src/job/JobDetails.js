@@ -25,26 +25,27 @@ import {
   EuiFlexItem,
   EuiFlexGroup
 } from "@elastic/eui";
-import Log from "../log/Log";
 import { Router } from "@reach/router";
 import JobConfig from "./JobConfig";
 import RecreateJobView from "./RecreateJobView";
 import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import PropTypes from "prop-types";
+import { ContainerLogsView } from "../components/logs/ContainerLogsView";
+
+const JobLog = ({ model, versionId, jobId }) => {
+  const containerURL = `/models/${model.id}/versions/${versionId}/jobs/${jobId}/containers`;
+  return (
+    <ContainerLogsView
+      model={model}
+      versionId={versionId}
+      jobId={jobId}
+      fetchContainerURL={containerURL}
+    />
+  );
+};
 
 const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
-  const JobLog = ({ modelId, versionId, jobId, breadcrumbs }) => {
-    const containerURL = `/models/${modelId}/versions/${versionId}/jobs/${jobId}/containers`;
-    return (
-      <Log
-        modelId={modelId}
-        fetchContainerURL={containerURL}
-        breadcrumbs={breadcrumbs}
-      />
-    );
-  };
-
   const [model] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
@@ -102,7 +103,12 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
           <JobConfig path="/" breadcrumbs={breadcrumbs} />
         </Router>
         <Router>
-          <JobLog path="logs" breadcrumbs={breadcrumbs} />
+          <JobLog
+            path="logs"
+            model={model}
+            versionId={versionId}
+            jobId={jobId}
+          />
         </Router>
         <Router>
           <RecreateJobView path="recreate" breadcrumbs={breadcrumbs} />
