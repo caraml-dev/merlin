@@ -17,16 +17,19 @@ package service
 import (
 	"bufio"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/models"
+	"github.com/fatih/color"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+
+	"github.com/gojek/merlin/log"
+	"github.com/gojek/merlin/models"
 )
 
 const (
@@ -55,20 +58,25 @@ type LogLine struct {
 	ContainerName string `json:"container_name"`
 	// Log in text format
 	TextPayload string `json:"text_payload,omitempty"`
+
+	PrefixColor *color.Color `json:"-"`
 }
 
 func (l LogLine) GenerateText(options LogQuery) string {
-	text := []string{
-		l.Timestamp.Format(time.RFC3339),
+	text := []string{}
+
+	if options.Prefix != "" {
+		p := l.PrefixColor.SprintFunc()
+		if options.Prefix == prefixAddPodContainer {
+			text = append(text, p(l.PodName)+" "+p(l.ContainerName))
+		} else if options.Prefix == prefixAddPod {
+			text = append(text, p(l.PodName))
+		} else if options.Prefix == prefixAddContainer {
+			text = append(text, p(l.ContainerName))
+		}
 	}
-	if options.Prefix == prefixAddPodContainer {
-		text = append(text, l.PodName+"/"+l.ContainerName)
-	} else if options.Prefix == prefixAddPod {
-		text = append(text, l.PodName)
-	} else if options.Prefix == prefixAddContainer {
-		text = append(text, l.ContainerName)
-	}
-	text = append(text, l.TextPayload)
+
+	text = append(text, l.Timestamp.Format(time.RFC3339), l.TextPayload)
 	return strings.Join(text, " ") + "\n"
 }
 
@@ -173,7 +181,30 @@ func (l logService) getLabelSelector(query LogQuery) string {
 	return ""
 }
 
+// The colorList variable and determinceColor function is inspired from the file stern/tail.go from
+// https://github.com/wercker/stern/blob/54c7d52581f1dd9aa8503d79443f4f2d07e2c8b8/stern/tail.go.
+// Copyright 2016 Wercker Holding BV, licensed under the Apache 2.0 license.
+var colorList = []*color.Color{
+	color.New(color.FgRed),
+	color.New(color.FgGreen),
+	color.New(color.FgYellow),
+	color.New(color.FgBlue),
+	color.New(color.FgMagenta),
+	color.New(color.FgCyan),
+	color.New(color.FgWhite),
+}
+
+func determineColor(podName string) (color *color.Color) {
+	hash := fnv.New32()
+	hash.Write([]byte(podName))
+	idx := hash.Sum32() % uint32(len(colorList))
+
+	return colorList[idx]
+}
+
 func (l logService) getContainerLogs(clusterClient corev1.CoreV1Interface, namespace, podName string, options *LogQuery) []LogLine {
+	prefixColor := determineColor(podName)
+
 	stream, err := clusterClient.Pods(namespace).GetLogs(podName, options.ToKubernetesLogOption()).Stream()
 	if err != nil {
 		// Error is handled here by logging it rather than returned because the caller usually does not know how to
@@ -219,6 +250,7 @@ func (l logService) getContainerLogs(clusterClient corev1.CoreV1Interface, names
 			PodName:       podName,
 			ContainerName: options.ContainerName,
 			TextPayload:   logLine[timestampIndex+1:],
+			PrefixColor:   prefixColor,
 		}
 
 		logLines = append(logLines, log)

@@ -12,6 +12,7 @@ require (
 	github.com/buger/jsonparser v1.1.1
 	github.com/cespare/xxhash v1.1.0
 	github.com/coocood/freecache v1.1.1
+	github.com/fatih/color v1.7.0
 	github.com/feast-dev/feast/sdk/go v0.9.2
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-gota/gota v0.10.1
