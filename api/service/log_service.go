@@ -26,8 +26,8 @@ import (
 	"github.com/fatih/color"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
+	"github.com/gojek/merlin/cluster"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 )
@@ -92,17 +92,17 @@ type LogService interface {
 
 type logService struct {
 	// map of cluster name to cluster client
-	clusterClients map[string]corev1.CoreV1Interface
+	clusterControllers map[string]cluster.Controller
 }
 
 // NewLogService create a log service
-// clusterClients is a map of cluster name to its cluster client (CoreV1Interface)
-func NewLogService(clusterClients map[string]corev1.CoreV1Interface) LogService {
-	return &logService{clusterClients: clusterClients}
+// clusterControllers is a map of cluster name to its cluster.Controller
+func NewLogService(clusterControllers map[string]cluster.Controller) LogService {
+	return &logService{clusterControllers: clusterControllers}
 }
 
 func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, options *LogQuery) error {
-	clusterClient, ok := l.clusterClients[options.Cluster]
+	clusterController, ok := l.clusterControllers[options.Cluster]
 	if !ok {
 		return fmt.Errorf("unable to find cluster %s", options.Cluster)
 	}
@@ -110,7 +110,7 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 	namespace := options.Namespace
 	labelSelector := l.getLabelSelector(*options)
 
-	pods, err := clusterClient.Pods(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+	pods, err := clusterController.ListPods(namespace, labelSelector)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 				for _, initContainer := range pod.Spec.InitContainers {
 					options.ContainerName = initContainer.Name
 
-					logLines := l.getContainerLogs(clusterClient, namespace, pod.Name, options)
+					logLines := l.getContainerLogs(clusterController, namespace, pod.Name, options)
 					allLogLines = append(allLogLines, logLines...)
 				}
 
@@ -135,7 +135,7 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 
 						options.ContainerName = container.Name
 
-						logLines := l.getContainerLogs(clusterClient, namespace, pod.Name, options)
+						logLines := l.getContainerLogs(clusterController, namespace, pod.Name, options)
 						allLogLines = append(allLogLines, logLines...)
 					}
 				}
@@ -202,10 +202,10 @@ func determineColor(podName string) (color *color.Color) {
 	return colorList[idx]
 }
 
-func (l logService) getContainerLogs(clusterClient corev1.CoreV1Interface, namespace, podName string, options *LogQuery) []LogLine {
+func (l logService) getContainerLogs(clusterController cluster.Controller, namespace, podName string, options *LogQuery) []LogLine {
 	prefixColor := determineColor(podName)
 
-	stream, err := clusterClient.Pods(namespace).GetLogs(podName, options.ToKubernetesLogOption()).Stream()
+	stream, err := clusterController.StreamPodLogs(namespace, podName, options.ToKubernetesLogOption())
 	if err != nil {
 		// Error is handled here by logging it rather than returned because the caller usually does not know how to
 		// handle it. Example of what can trigger ListLogLines error: while the container is being created/terminated
@@ -290,7 +290,7 @@ func (opt *LogQuery) ToKubernetesLogOption() *v1.PodLogOptions {
 	}
 
 	tailLines := opt.TailLines
-	if *tailLines == 0 {
+	if tailLines != nil && *tailLines == 0 {
 		tailLines = nil
 	}
 

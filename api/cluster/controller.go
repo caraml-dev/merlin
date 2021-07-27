@@ -15,12 +15,14 @@
 package cluster
 
 import (
+	"io"
 	"time"
 
 	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
 	kfservice "github.com/kubeflow/kfserving/pkg/client/clientset/versioned/typed/serving/v1alpha2"
 	"github.com/kubeflow/kfserving/pkg/constants"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -35,6 +37,10 @@ import (
 type Controller interface {
 	Deploy(modelService *models.Service) (*models.Service, error)
 	Delete(modelService *models.Service) (*models.Service, error)
+
+	ListPods(namespace, labelSelector string) (*v1.PodList, error)
+	StreamPodLogs(namespace, podName string, opts *v1.PodLogOptions) (io.ReadCloser, error)
+
 	ContainerFetcher
 }
 
@@ -218,4 +224,12 @@ func (k *controller) waitInferenceServiceReady(service *kfsv1alpha2.InferenceSer
 			}
 		}
 	}
+}
+
+func (c *controller) ListPods(namespace, labelSelector string) (*v1.PodList, error) {
+	return c.clusterClient.Pods(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+}
+
+func (c *controller) StreamPodLogs(namespace, podName string, opts *v1.PodLogOptions) (io.ReadCloser, error) {
+	return c.clusterClient.Pods(namespace).GetLogs(podName, opts).Stream()
 }
