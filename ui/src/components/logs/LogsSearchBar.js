@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { EuiSearchBar, EuiToolTip } from "@elastic/eui";
+import { EuiSearchBar } from "@elastic/eui";
 
 export const LogsSearchBar = ({ componentTypes, params, setParams }) => {
   const filters = useMemo(() => {
@@ -10,43 +10,23 @@ export const LogsSearchBar = ({ componentTypes, params, setParams }) => {
         items: [
           {
             value: "image_builder",
-            name: (
-              <EuiToolTip position="top" content="TODO">
-                <p>Image Builder</p>
-              </EuiToolTip>
-            )
+            name: "Image Builder"
           },
           {
             value: "model",
-            name: (
-              <EuiToolTip position="top" content="TODO">
-                <p>Model</p>
-              </EuiToolTip>
-            )
+            name: "Model"
           },
           {
             value: "transformer",
-            name: (
-              <EuiToolTip position="top" content="TODO">
-                <p>Transformer</p>
-              </EuiToolTip>
-            )
+            name: "Transformer"
           },
           {
             value: "batch_job_driver",
-            name: (
-              <EuiToolTip position="top" content="TODO">
-                <p>Batch Job Driver</p>
-              </EuiToolTip>
-            )
+            name: "Batch Job Driver"
           },
           {
             value: "batch_job_executor",
-            name: (
-              <EuiToolTip position="top" content="TODO">
-                <p>Batch Job Executor</p>
-              </EuiToolTip>
-            )
+            name: "Batch Job Executor"
           }
         ].filter(option => componentTypes.includes(option.value))
       },

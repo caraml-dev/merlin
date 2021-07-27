@@ -199,7 +199,7 @@ export const ContainerLogsView = ({
               <Fragment>
                 <p>
                   We cannot find any logs because there is no active component
-                  for your model deployment.
+                  for your {jobId ? "batch job" : "model deployment"}.
                 </p>
               </Fragment>
             }
