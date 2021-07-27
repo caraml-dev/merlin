@@ -30,8 +30,7 @@ RUN go build -o bin/merlin_api ./cmd/api
 # ============================================================
 # Build stage 2: Build UI
 # ============================================================
-FROM node:14-alpine as node-builder
-RUN apk add git
+FROM node:14 as node-builder
 WORKDIR /src/ui
 COPY ui .
 RUN yarn
