@@ -21,6 +21,8 @@ import config from "../../config";
 import mocks from "../../mocks";
 import { LogsSearchBar } from "./LogsSearchBar";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
+import StackdriverLink from "./StackdriverLink";
+import { createStackdriverUrl } from "../../utils/createStackdriverUrl";
 
 const querystring = require("querystring");
 
@@ -104,16 +106,19 @@ export const ContainerLogsView = ({
   };
 
   const [logUrl, setLogUrl] = useState("");
+  const [stackdriverUrl, setStackdriverUrl] = useState("");
+
   useEffect(() => {
     if (params.component_type !== "" && projectLoaded) {
-      const container = containers.find(
+      const activeContainers = containers.filter(
         container => container.component_type === params.component_type
       );
-      if (container) {
+
+      if (activeContainers && activeContainers.length > 0) {
         const containerQuery = {
           ...params,
-          cluster: container.cluster,
-          namespace: container.namespace,
+          cluster: activeContainers[0].cluster,
+          namespace: activeContainers[0].namespace,
           timestamps: true,
           project_name: project.name,
           model_id: model.id,
@@ -123,6 +128,19 @@ export const ContainerLogsView = ({
         };
         const logParams = querystring.stringify(containerQuery);
         setLogUrl(config.MERLIN_API + "/logs?" + logParams);
+
+        const pods = [
+          ...new Set(
+            activeContainers.map(container => `"${container.pod_name}"`)
+          )
+        ];
+        let stackdriverQuery = {
+          gcp_project: activeContainers[0].gcp_project,
+          cluster: activeContainers[0].cluster,
+          namespace: activeContainers[0].namespace,
+          pod_name: pods.join(" OR ")
+        };
+        setStackdriverUrl(createStackdriverUrl(stackdriverQuery));
       }
     }
   }, [params, containers, project, projectLoaded, model, versionId, jobId]);
@@ -146,8 +164,8 @@ export const ContainerLogsView = ({
               <EuiSpacer size="s" />
             </EuiFlexItem>
 
-            <EuiFlexItem grow={true}>
-              {logUrl && (
+            {logUrl && (
+              <EuiFlexItem grow={true}>
                 <ScrollFollow
                   startFollowing={true}
                   render={({ onScroll, follow }) => (
@@ -165,8 +183,14 @@ export const ContainerLogsView = ({
                     />
                   )}
                 />
-              )}
-            </EuiFlexItem>
+              </EuiFlexItem>
+            )}
+
+            {stackdriverUrl && (
+              <EuiFlexItem grow={false}>
+                <StackdriverLink stackdriverUrl={stackdriverUrl} />
+              </EuiFlexItem>
+            )}
           </EuiFlexGroup>
         ) : (
           <EuiEmptyPrompt
