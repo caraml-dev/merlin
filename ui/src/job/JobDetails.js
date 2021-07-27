@@ -33,10 +33,11 @@ import { useMerlinApi } from "../hooks/useMerlinApi";
 import PropTypes from "prop-types";
 import { ContainerLogsView } from "../components/logs/ContainerLogsView";
 
-const JobLog = ({ model, versionId, jobId }) => {
+const JobLog = ({ projectId, model, versionId, jobId }) => {
   const containerURL = `/models/${model.id}/versions/${versionId}/jobs/${jobId}/containers`;
   return (
     <ContainerLogsView
+      projectId={projectId}
       model={model}
       versionId={versionId}
       jobId={jobId}
@@ -46,7 +47,7 @@ const JobLog = ({ model, versionId, jobId }) => {
 };
 
 const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
-  const [model] = useMerlinApi(
+  const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
     []
@@ -58,7 +59,7 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
       href: `/merlin/projects/${projectId}/models`
     },
     {
-      text: model.data.name,
+      text: model && model.data ? model.data.name : "",
       href: `/merlin/projects/${projectId}/models/${modelId}`
     },
     {
@@ -101,16 +102,17 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
         </EuiPageHeader>
         <Router>
           <JobConfig path="/" breadcrumbs={breadcrumbs} />
-        </Router>
-        <Router>
-          <JobLog
-            path="logs"
-            model={model}
-            versionId={versionId}
-            jobId={jobId}
-          />
-        </Router>
-        <Router>
+
+          {projectId && modelLoaded && model && (
+            <JobLog
+              path="logs"
+              projectId={projectId}
+              model={model}
+              versionId={versionId}
+              jobId={jobId}
+            />
+          )}
+
           <RecreateJobView path="recreate" breadcrumbs={breadcrumbs} />
         </Router>
       </EuiPageBody>

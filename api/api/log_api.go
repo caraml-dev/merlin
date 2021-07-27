@@ -17,7 +17,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/schema"
 
@@ -42,7 +41,7 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logLines := make(chan service.LogLine)
+	logLines := make(chan string)
 	stopCh := make(chan struct{})
 
 	// send status code and content-type
@@ -51,9 +50,7 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		for logLine := range logLines {
-			// _, writeErr := w.Write([]byte(podLog.Timestamp.Format(time.RFC3339) + " " + podLog.PodName + "/" + podLog.ContainerName + ": " + podLog.TextPayload + "\n"))
-			// _, writeErr := w.Write([]byte(podLog.Timestamp.Format(time.RFC3339) + " " + podLog.ContainerName + " " + podLog.TextPayload + "\n"))
-			_, writeErr := w.Write([]byte(logLine.Timestamp.Format(time.RFC3339) + " " + logLine.TextPayload + "\n"))
+			_, writeErr := w.Write([]byte(logLine))
 			if writeErr != nil {
 				// connection from caller is closed
 				close(stopCh)

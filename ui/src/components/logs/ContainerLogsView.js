@@ -118,13 +118,14 @@ export const ContainerLogsView = ({
           project_name: project.name,
           model_id: model.id,
           model_name: model.name,
-          version_id: versionId
+          version_id: versionId,
+          prediction_job_id: jobId
         };
         const logParams = querystring.stringify(containerQuery);
         setLogUrl(config.MERLIN_API + "/logs?" + logParams);
       }
     }
-  }, [params, containers, project, projectLoaded, model, versionId]);
+  }, [params, containers, project, projectLoaded, model, versionId, jobId]);
 
   return (
     <Fragment>

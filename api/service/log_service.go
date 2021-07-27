@@ -33,6 +33,10 @@ const (
 	ImageBuilderLabelKey       = "job-name"
 	KnativeServiceLabelKey     = "serving.knative.dev/service"
 	BatchPredictionJobLabelKey = "prediction-job-id"
+
+	prefixAddPod          = "pod"
+	prefixAddContainer    = "container"
+	prefixAddPodContainer = "pod_and_container"
 )
 
 var (
@@ -53,6 +57,21 @@ type LogLine struct {
 	TextPayload string `json:"text_payload,omitempty"`
 }
 
+func (l LogLine) GenerateText(options LogQuery) string {
+	text := []string{
+		l.Timestamp.Format(time.RFC3339),
+	}
+	if options.Prefix == prefixAddPodContainer {
+		text = append(text, l.PodName+"/"+l.ContainerName)
+	} else if options.Prefix == prefixAddPod {
+		text = append(text, l.PodName)
+	} else if options.Prefix == prefixAddContainer {
+		text = append(text, l.ContainerName)
+	}
+	text = append(text, l.TextPayload)
+	return strings.Join(text, " ") + "\n"
+}
+
 type ReadLogStream struct {
 	Stream        io.ReadCloser
 	PodName       string
@@ -60,7 +79,7 @@ type ReadLogStream struct {
 }
 
 type LogService interface {
-	StreamLogs(logLines chan LogLine, stopCh chan struct{}, options *LogQuery) error
+	StreamLogs(logLines chan string, stopCh chan struct{}, options *LogQuery) error
 }
 
 type logService struct {
@@ -74,7 +93,7 @@ func NewLogService(clusterClients map[string]corev1.CoreV1Interface) LogService 
 	return &logService{clusterClients: clusterClients}
 }
 
-func (l logService) StreamLogs(logLines chan LogLine, stopCh chan struct{}, options *LogQuery) error {
+func (l logService) StreamLogs(logLines chan string, stopCh chan struct{}, options *LogQuery) error {
 	clusterClient, ok := l.clusterClients[options.Cluster]
 	if !ok {
 		return fmt.Errorf("unable to find cluster %s", options.Cluster)
@@ -120,7 +139,7 @@ func (l logService) StreamLogs(logLines chan LogLine, stopCh chan struct{}, opti
 			})
 
 			for _, logLine := range allLogLines {
-				logLines <- logLine
+				logLines <- logLine.GenerateText(*options)
 			}
 
 			now := time.Now()
@@ -137,7 +156,11 @@ func (l logService) StreamLogs(logLines chan LogLine, stopCh chan struct{}, opti
 func (l logService) getLabelSelector(query LogQuery) string {
 	switch query.ComponentType {
 	case models.ImageBuilderComponentType:
-		return ImageBuilderLabelKey + "=" + query.ProjectName + "-" + query.ModelName + "-" + query.VersionID
+		if query.PredictionJobID == "" {
+			return ImageBuilderLabelKey + "=" + query.ProjectName + "-" + query.ModelName + "-" + query.VersionID
+		} else {
+			return ImageBuilderLabelKey + "=batch-" + query.ProjectName + "-" + query.ModelName + "-" + query.VersionID
+		}
 	case models.ModelComponentType:
 		return KnativeServiceLabelKey + "=" + query.ModelName + "-" + query.VersionID + "-predictor-default"
 	case models.TransformerComponentType:
@@ -215,6 +238,8 @@ type LogQuery struct {
 	Namespace     string `schema:"namespace,required"`
 	ComponentType string `schema:"component_type,required"`
 	ContainerName string `schema:"container_name"`
+
+	Prefix string `schema:"prefix"`
 
 	// Used for Kubernetes v1.PodLogOptions
 	Follow       bool       `schema:"follow"`

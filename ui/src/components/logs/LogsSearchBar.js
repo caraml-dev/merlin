@@ -69,6 +69,30 @@ export const LogsSearchBar = ({ componentTypes, params, setParams }) => {
             name: "From the container start"
           }
         ]
+      },
+      {
+        type: "field_value_selection",
+        field: "prefix",
+        name: "Prefix",
+        multiSelect: false,
+        options: [
+          {
+            value: "",
+            name: "No prefix"
+          },
+          {
+            value: "container",
+            name: "Container name"
+          },
+          {
+            value: "pod",
+            name: "Pod name"
+          },
+          {
+            value: "pod_and_container",
+            name: "Pod + container name"
+          }
+        ]
       }
     ];
   }, [componentTypes]);
