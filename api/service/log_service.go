@@ -98,6 +98,8 @@ type logService struct {
 // NewLogService create a log service
 // clusterControllers is a map of cluster name to its cluster.Controller
 func NewLogService(clusterControllers map[string]cluster.Controller) LogService {
+	color.NoColor = false // To bypasses the check for non-tty output streams.
+
 	return &logService{clusterControllers: clusterControllers}
 }
 
@@ -191,7 +193,6 @@ var colorList = []*color.Color{
 	color.New(color.FgBlue),
 	color.New(color.FgMagenta),
 	color.New(color.FgCyan),
-	color.New(color.FgWhite),
 }
 
 func determineColor(podName string) (color *color.Color) {
@@ -208,10 +209,10 @@ func (l logService) getContainerLogs(clusterController cluster.Controller, names
 	stream, err := clusterController.StreamPodLogs(namespace, podName, options.ToKubernetesLogOption())
 	if err != nil {
 		// Error is handled here by logging it rather than returned because the caller usually does not know how to
-		// handle it. Example of what can trigger ListLogLines error: while the container is being created/terminated
+		// handle it. Example of what can trigger StreamPodLogs error: while the container is being created/terminated
 		// Kubernetes API server will return error when logs are requested. In such case, it is better to return
 		// empty logs and let the caller retry after the container becomes ready eventually.
-		log.Warnf("Failed to ListLogLines: %s", err.Error())
+		log.Warnf("Failed to StreamPodLogs: %s", err.Error())
 		return nil
 	}
 
