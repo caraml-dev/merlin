@@ -33,7 +33,7 @@ RUN go build -o bin/merlin_api ./cmd/api
 FROM node:14 as node-builder
 WORKDIR /src/ui
 COPY ui .
-RUN yarn
+RUN yarn install --network-concurrency 1
 RUN yarn run build
 
 # ============================================================

@@ -24,7 +24,7 @@ init-dep: init-dep-ui init-dep-api
 .PHONY: init-dep-ui
 init-dep-ui:
 	@echo "> Initializing UI dependencies ..."
-	@cd ${UI_PATH} && yarn
+	@cd ${UI_PATH} && yarn install --network-concurrency 1
 
 .PHONY: init-dep-api
 init-dep-api:

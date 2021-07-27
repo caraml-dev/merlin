@@ -10257,9 +10257,9 @@ react-is@~16.3.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.3.2.tgz#f4d3d0e2f5fbb6ac46450641eb2e25bf05d36b22"
   integrity sha512-ybEM7YOr4yBgFd6w8dJqwxegqZGJNBZl6U27HnGKuTZmDvVrD5quWOK/wAnMywiZzW+Qsk+l4X2c70+thp/A8Q==
 
-"react-lazylog@git+https://github.com/gojekfarm/react-lazylog.git#b3169f86be1d186f4d8cd7b14d425bca91a877f2":
+"react-lazylog@git+https://github.com/romanwozniak/react-lazylog.git#e3a7f026983df0dc59d25843fe87ce7e37e24e82":
   version "4.5.3"
-  resolved "git+https://github.com/gojekfarm/react-lazylog.git#b3169f86be1d186f4d8cd7b14d425bca91a877f2"
+  resolved "git+https://github.com/romanwozniak/react-lazylog.git#e3a7f026983df0dc59d25843fe87ce7e37e24e82"
   dependencies:
     "@mattiasbuelens/web-streams-polyfill" "^0.2.0"
     fetch-readablestream "^0.2.0"
