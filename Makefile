@@ -15,6 +15,7 @@ all: setup init-dep lint test clean build run
 .PHONY: setup
 setup:
 	@echo "> Setting up tools ..."
+	@test -x ${GOPATH}/bin/goimports || go get -u golang.org/x/tools/cmd/goimports
 	@test -x ${GOPATH}/bin/golint || go get -u golang.org/x/lint/golint
 	@test -x ${GOPATH}/bin/gotest || go get -u github.com/rakyll/gotest
 
