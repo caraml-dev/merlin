@@ -42,16 +42,33 @@ type Container struct {
 	VersionEndpointID uuid.UUID `json:"version_endpoint_id"`
 }
 
-func ComponentType(podName string) string {
+func NewContainer(name string,
+	podName string,
+	namespace string,
+	cluster string,
+	gcpProject string) *Container {
+	return &Container{
+		Name:          name,
+		PodName:       podName,
+		ComponentType: componentType(name, podName),
+		Namespace:     namespace,
+		Cluster:       cluster,
+		GcpProject:    gcpProject,
+	}
+}
+
+func componentType(containerName, podName string) string {
 	componentType := ""
 	if strings.Contains(podName, "predictor-default") {
 		componentType = ModelComponentType
 	} else if strings.Contains(podName, "transformer-default") {
 		componentType = TransformerComponentType
-	} else if strings.Contains(podName, "driver") {
+	} else if strings.Contains(podName, "driver") || containerName == "spark-kubernetes-driver" {
 		componentType = BatchJobDriverComponentType
-	} else if strings.Contains(podName, "executor") {
-		componentType = BatchJobDriverComponentType
+	} else if strings.Contains(podName, "exec") || containerName == "executor" {
+		componentType = BatchJobExecutorComponentType
+	} else if containerName == "pyfunc-image-builder" {
+		componentType = ImageBuilderComponentType
 	}
 	return componentType
 }

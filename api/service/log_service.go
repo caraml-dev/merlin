@@ -79,7 +79,7 @@ type ReadLogStream struct {
 }
 
 type LogService interface {
-	StreamLogs(logLines chan string, stopCh chan struct{}, options *LogQuery) error
+	StreamLogs(logLineCh chan string, stopCh chan struct{}, options *LogQuery) error
 }
 
 type logService struct {
@@ -93,7 +93,7 @@ func NewLogService(clusterClients map[string]corev1.CoreV1Interface) LogService 
 	return &logService{clusterClients: clusterClients}
 }
 
-func (l logService) StreamLogs(logLines chan string, stopCh chan struct{}, options *LogQuery) error {
+func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, options *LogQuery) error {
 	clusterClient, ok := l.clusterClients[options.Cluster]
 	if !ok {
 		return fmt.Errorf("unable to find cluster %s", options.Cluster)
@@ -139,7 +139,7 @@ func (l logService) StreamLogs(logLines chan string, stopCh chan struct{}, optio
 			})
 
 			for _, logLine := range allLogLines {
-				logLines <- logLine.GenerateText(*options)
+				logLineCh <- logLine.GenerateText(*options)
 			}
 
 			now := time.Now()

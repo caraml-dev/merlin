@@ -41,7 +41,7 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logLines := make(chan string)
+	logLineCh := make(chan string)
 	stopCh := make(chan struct{})
 
 	// send status code and content-type
@@ -49,7 +49,7 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	go func() {
-		for logLine := range logLines {
+		for logLine := range logLineCh {
 			_, writeErr := w.Write([]byte(logLine))
 			if writeErr != nil {
 				// connection from caller is closed
@@ -66,7 +66,7 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if err := l.LogService.StreamLogs(logLines, stopCh, &query); err != nil {
+	if err := l.LogService.StreamLogs(logLineCh, stopCh, &query); err != nil {
 		InternalServerError(err.Error())
 		return
 	}

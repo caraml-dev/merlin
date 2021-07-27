@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   EuiIcon,
   EuiPage,
@@ -32,9 +32,15 @@ import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import PropTypes from "prop-types";
 import { ContainerLogsView } from "../components/logs/ContainerLogsView";
+import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 
-const JobLog = ({ projectId, model, versionId, jobId }) => {
+const JobLog = ({ projectId, model, versionId, jobId, breadcrumbs }) => {
+  useEffect(() => {
+    breadcrumbs && replaceBreadcrumbs([...breadcrumbs, { text: "Logs" }]);
+  }, [breadcrumbs]);
+
   const containerURL = `/models/${model.id}/versions/${versionId}/jobs/${jobId}/containers`;
+
   return (
     <ContainerLogsView
       projectId={projectId}
@@ -110,6 +116,7 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
               model={model}
               versionId={versionId}
               jobId={jobId}
+              breadcrumbs={breadcrumbs}
             />
           )}
 

@@ -25,14 +25,6 @@ export const LogsSearchBar = ({ componentTypes, params, setParams }) => {
             )
           },
           {
-            value: "model_logger",
-            name: (
-              <EuiToolTip position="top" content="TODO">
-                <p>Model Logger</p>
-              </EuiToolTip>
-            )
-          },
-          {
             value: "transformer",
             name: (
               <EuiToolTip position="top" content="TODO">
@@ -41,10 +33,18 @@ export const LogsSearchBar = ({ componentTypes, params, setParams }) => {
             )
           },
           {
-            value: "transformer_logger",
+            value: "batch_job_driver",
             name: (
               <EuiToolTip position="top" content="TODO">
-                <p>Transformer Logger</p>
+                <p>Batch Job Driver</p>
+              </EuiToolTip>
+            )
+          },
+          {
+            value: "batch_job_executor",
+            name: (
+              <EuiToolTip position="top" content="TODO">
+                <p>Batch Job Executor</p>
               </EuiToolTip>
             )
           }

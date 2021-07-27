@@ -55,27 +55,25 @@ func (cf *containerFetcher) GetContainers(namespace string, labelSelector string
 	containers := make([]*models.Container, 0)
 	for _, pod := range podList.Items {
 		for _, c := range pod.Spec.Containers {
-			container := &models.Container{
-				Name:          c.Name,
-				PodName:       pod.Name,
-				ComponentType: models.ComponentType(pod.Name),
-				Namespace:     pod.Namespace,
-				Cluster:       cf.metadata.ClusterName,
-				GcpProject:    cf.metadata.GcpProject,
-			}
+			container := models.NewContainer(
+				c.Name,
+				pod.Name,
+				pod.Namespace,
+				cf.metadata.ClusterName,
+				cf.metadata.GcpProject,
+			)
 
 			containers = append(containers, container)
 		}
 
 		for _, ic := range pod.Spec.InitContainers {
-			container := &models.Container{
-				Name:          ic.Name,
-				PodName:       pod.Name,
-				ComponentType: models.ComponentType(pod.Name),
-				Namespace:     pod.Namespace,
-				Cluster:       cf.metadata.ClusterName,
-				GcpProject:    cf.metadata.GcpProject,
-			}
+			container := models.NewContainer(
+				ic.Name,
+				pod.Name,
+				pod.Namespace,
+				cf.metadata.ClusterName,
+				cf.metadata.GcpProject,
+			)
 
 			containers = append(containers, container)
 		}
