@@ -42,7 +42,7 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	podLogs := make(chan service.PodLog)
+	logLines := make(chan service.LogLine)
 	stopCh := make(chan struct{})
 
 	// send status code and content-type
@@ -50,9 +50,10 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	go func() {
-		for podLog := range podLogs {
+		for logLine := range logLines {
 			// _, writeErr := w.Write([]byte(podLog.Timestamp.Format(time.RFC3339) + " " + podLog.PodName + "/" + podLog.ContainerName + ": " + podLog.TextPayload + "\n"))
-			_, writeErr := w.Write([]byte(podLog.Timestamp.Format(time.RFC3339) + " " + podLog.TextPayload + "\n"))
+			// _, writeErr := w.Write([]byte(podLog.Timestamp.Format(time.RFC3339) + " " + podLog.ContainerName + " " + podLog.TextPayload + "\n"))
+			_, writeErr := w.Write([]byte(logLine.Timestamp.Format(time.RFC3339) + " " + logLine.TextPayload + "\n"))
 			if writeErr != nil {
 				// connection from caller is closed
 				close(stopCh)
@@ -68,7 +69,7 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if err := l.LogService.StreamLogs(podLogs, stopCh, &query); err != nil {
+	if err := l.LogService.StreamLogs(logLines, stopCh, &query); err != nil {
 		InternalServerError(err.Error())
 		return
 	}

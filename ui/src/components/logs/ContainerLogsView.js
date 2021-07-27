@@ -115,6 +115,7 @@ export const ContainerLogsView = ({
           cluster: container.cluster,
           namespace: container.namespace,
           timestamps: true,
+          project_name: project.name,
           model_id: model.id,
           model_name: model.name,
           version_id: versionId

@@ -30,15 +30,17 @@ import (
 )
 
 const (
-	KnativeServiceLabelKey = "serving.knative.dev/service"
+	ImageBuilderLabelKey       = "job-name"
+	KnativeServiceLabelKey     = "serving.knative.dev/service"
+	BatchPredictionJobLabelKey = "prediction-job-id"
 )
 
 var (
 	skippedContainers = []string{"queue-proxy"}
 )
 
-// PodLog represents a single log line from a container running in Kubernetes.
-type PodLog struct {
+// LogLine represents a single log line from a container running in Kubernetes.
+type LogLine struct {
 	// Log timestamp in RFC3339 format
 	Timestamp time.Time `json:"timestamp"`
 	// Kubernetes namespace where the pod running the container is created
@@ -58,7 +60,7 @@ type ReadLogStream struct {
 }
 
 type LogService interface {
-	StreamLogs(logs chan PodLog, stopCh chan struct{}, options *LogQuery) error
+	StreamLogs(logLines chan LogLine, stopCh chan struct{}, options *LogQuery) error
 }
 
 type logService struct {
@@ -72,15 +74,15 @@ func NewLogService(clusterClients map[string]corev1.CoreV1Interface) LogService 
 	return &logService{clusterClients: clusterClients}
 }
 
-func (l logService) StreamLogs(podLogs chan PodLog, stopCh chan struct{}, options *LogQuery) error {
+func (l logService) StreamLogs(logLines chan LogLine, stopCh chan struct{}, options *LogQuery) error {
 	clusterClient, ok := l.clusterClients[options.Cluster]
 	if !ok {
 		return fmt.Errorf("unable to find cluster %s", options.Cluster)
 	}
 
 	namespace := options.Namespace
-
 	labelSelector := l.getLabelSelector(*options)
+
 	pods, err := clusterClient.Pods(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
 		return err
@@ -88,62 +90,14 @@ func (l logService) StreamLogs(podLogs chan PodLog, stopCh chan struct{}, option
 
 	go func() {
 		for {
-			allPodLogs := make([]*PodLog, 0)
+			allLogLines := make([]LogLine, 0)
 
 			for _, pod := range pods.Items {
 				for _, initContainer := range pod.Spec.InitContainers {
 					options.ContainerName = initContainer.Name
-					stream, err := clusterClient.Pods(namespace).GetLogs(pod.Name, options.ToKubernetesLogOption()).Stream()
-					if err != nil {
-						// Error is handled here by logging it rather than returned because the caller usually does not know how to
-						// handle it. Example of what can trigger ListPodLogs error: while the container is being created/terminated
-						// Kubernetes API server will return error when logs are requested. In such case, it is better to return
-						// empty logs and let the caller retry after the container becomes ready eventually.
-						log.Warnf("Failed to ListPodLogs: %s", err.Error())
-						return
-					}
 
-					scanner := bufio.NewScanner(stream)
-					podLogs := make([]*PodLog, 0)
-					for scanner.Scan() {
-						logLine := scanner.Text()
-
-						// A log line from Kubernetes API server will follow this format:
-						// 2020-07-14T07:48:14.191189249Z {"msg":"log message"}
-						timestampIndex := strings.Index(logLine, " ")
-						if timestampIndex < 0 {
-							// Missing expected RFC3339 timstamp in the log line, skip to next line
-							continue
-						}
-						if (len(logLine) - 1) <= timestampIndex {
-							// Empty log message, skip to next log line
-							continue
-						}
-
-						timestamp, err := time.Parse(time.RFC3339, logLine[:timestampIndex])
-						if err != nil {
-							log.Warnf("log message timestamp is not in RFC3339 format: %s", logLine[:timestampIndex])
-							// Log timestamp value from Kube API server has invalid format, skip to next line
-							continue
-						}
-
-						// We require this check because we send (SinceTime - 1sec) to Kube API Server
-						if options.SinceTime != nil && (timestamp == *options.SinceTime || timestamp.Before(*options.SinceTime)) {
-							continue
-						}
-
-						log := &PodLog{
-							Timestamp:     timestamp,
-							Namespace:     namespace,
-							PodName:       pod.Name,
-							ContainerName: options.ContainerName,
-							TextPayload:   logLine[timestampIndex+1:],
-						}
-
-						podLogs = append(podLogs, log)
-					}
-
-					allPodLogs = append(allPodLogs, podLogs...)
+					logLines := l.getContainerLogs(clusterClient, namespace, pod.Name, options)
+					allLogLines = append(allLogLines, logLines...)
 				}
 
 				for _, container := range pod.Spec.Containers {
@@ -153,68 +107,20 @@ func (l logService) StreamLogs(podLogs chan PodLog, stopCh chan struct{}, option
 						}
 
 						options.ContainerName = container.Name
-						stream, err := clusterClient.Pods(namespace).GetLogs(pod.Name, options.ToKubernetesLogOption()).Stream()
-						if err != nil {
-							// Error is handled here by logging it rather than returned because the caller usually does not know how to
-							// handle it. Example of what can trigger ListPodLogs error: while the container is being created/terminated
-							// Kubernetes API server will return error when logs are requested. In such case, it is better to return
-							// empty logs and let the caller retry after the container becomes ready eventually.
-							log.Warnf("Failed to ListPodLogs: %s", err.Error())
-							return
-						}
 
-						scanner := bufio.NewScanner(stream)
-						podLogs := make([]*PodLog, 0)
-						for scanner.Scan() {
-							logLine := scanner.Text()
-
-							// A log line from Kubernetes API server will follow this format:
-							// 2020-07-14T07:48:14.191189249Z {"msg":"log message"}
-							timestampIndex := strings.Index(logLine, " ")
-							if timestampIndex < 0 {
-								// Missing expected RFC3339 timstamp in the log line, skip to next line
-								continue
-							}
-							if (len(logLine) - 1) <= timestampIndex {
-								// Empty log message, skip to next log line
-								continue
-							}
-
-							timestamp, err := time.Parse(time.RFC3339, logLine[:timestampIndex])
-							if err != nil {
-								log.Warnf("log message timestamp is not in RFC3339 format: %s", logLine[:timestampIndex])
-								// Log timestamp value from Kube API server has invalid format, skip to next line
-								continue
-							}
-
-							// We require this check because we send (SinceTime - 1sec) to Kube API Server
-							if options.SinceTime != nil && (timestamp == *options.SinceTime || timestamp.Before(*options.SinceTime)) {
-								continue
-							}
-
-							log := &PodLog{
-								Timestamp:     timestamp,
-								Namespace:     namespace,
-								PodName:       pod.Name,
-								ContainerName: options.ContainerName,
-								TextPayload:   logLine[timestampIndex+1:],
-							}
-
-							podLogs = append(podLogs, log)
-						}
-
-						allPodLogs = append(allPodLogs, podLogs...)
+						logLines := l.getContainerLogs(clusterClient, namespace, pod.Name, options)
+						allLogLines = append(allLogLines, logLines...)
 					}
 				}
 			}
 
 			// Sort all the logs by timestamp in ascending order
-			sort.Slice(allPodLogs, func(i, j int) bool {
-				return allPodLogs[i].Timestamp.Before(allPodLogs[j].Timestamp)
+			sort.Slice(allLogLines, func(i, j int) bool {
+				return allLogLines[i].Timestamp.Before(allLogLines[j].Timestamp)
 			})
 
-			for _, podLog := range allPodLogs {
-				podLogs <- *podLog
+			for _, logLine := range allLogLines {
+				logLines <- logLine
 			}
 
 			now := time.Now()
@@ -230,15 +136,76 @@ func (l logService) StreamLogs(podLogs chan PodLog, stopCh chan struct{}, option
 
 func (l logService) getLabelSelector(query LogQuery) string {
 	switch query.ComponentType {
+	case models.ImageBuilderComponentType:
+		return ImageBuilderLabelKey + "=" + query.ProjectName + "-" + query.ModelName + "-" + query.VersionID
 	case models.ModelComponentType:
 		return KnativeServiceLabelKey + "=" + query.ModelName + "-" + query.VersionID + "-predictor-default"
 	case models.TransformerComponentType:
 		return KnativeServiceLabelKey + "=" + query.ModelName + "-" + query.VersionID + "-transformer-default"
+	case models.BatchJobDriverComponentType:
+		return "spark-role=driver," + BatchPredictionJobLabelKey + "=" + query.PredictionJobID
+	case models.BatchJobExecutorComponentType:
+		return "spark-role=executor," + BatchPredictionJobLabelKey + "=" + query.PredictionJobID
 	}
 	return ""
 }
 
+func (l logService) getContainerLogs(clusterClient corev1.CoreV1Interface, namespace, podName string, options *LogQuery) []LogLine {
+	stream, err := clusterClient.Pods(namespace).GetLogs(podName, options.ToKubernetesLogOption()).Stream()
+	if err != nil {
+		// Error is handled here by logging it rather than returned because the caller usually does not know how to
+		// handle it. Example of what can trigger ListLogLines error: while the container is being created/terminated
+		// Kubernetes API server will return error when logs are requested. In such case, it is better to return
+		// empty logs and let the caller retry after the container becomes ready eventually.
+		log.Warnf("Failed to ListLogLines: %s", err.Error())
+		return nil
+	}
+
+	scanner := bufio.NewScanner(stream)
+	logLines := make([]LogLine, 0)
+	for scanner.Scan() {
+		logLine := scanner.Text()
+
+		// A log line from Kubernetes API server will follow this format:
+		// 2020-07-14T07:48:14.191189249Z {"msg":"log message"}
+		timestampIndex := strings.Index(logLine, " ")
+		if timestampIndex < 0 {
+			// Missing expected RFC3339 timstamp in the log line, skip to next line
+			continue
+		}
+		if (len(logLine) - 1) <= timestampIndex {
+			// Empty log message, skip to next log line
+			continue
+		}
+
+		timestamp, err := time.Parse(time.RFC3339, logLine[:timestampIndex])
+		if err != nil {
+			log.Warnf("log message timestamp is not in RFC3339 format: %s", logLine[:timestampIndex])
+			// Log timestamp value from Kube API server has invalid format, skip to next line
+			continue
+		}
+
+		// We require this check because we send (SinceTime - 1sec) to Kube API Server
+		if options.SinceTime != nil && (timestamp == *options.SinceTime || timestamp.Before(*options.SinceTime)) {
+			continue
+		}
+
+		log := LogLine{
+			Timestamp:     timestamp,
+			Namespace:     namespace,
+			PodName:       podName,
+			ContainerName: options.ContainerName,
+			TextPayload:   logLine[timestampIndex+1:],
+		}
+
+		logLines = append(logLines, log)
+	}
+
+	return logLines
+}
+
 type LogQuery struct {
+	ProjectName     string `schema:"project_name"`
 	ModelID         string `schema:"model_id"`
 	ModelName       string `schema:"model_name"`
 	VersionID       string `schema:"version_id"`
@@ -249,7 +216,7 @@ type LogQuery struct {
 	ComponentType string `schema:"component_type,required"`
 	ContainerName string `schema:"container_name"`
 
-	Pretty       bool       `schema:"pretty"`
+	// Used for Kubernetes v1.PodLogOptions
 	Follow       bool       `schema:"follow"`
 	Previous     bool       `schema:"previous"`
 	SinceSeconds *int64     `schema:"since_seconds"`
