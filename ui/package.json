@@ -19,7 +19,7 @@
     "react-collapsed": "^3.0.1",
     "react-dom": "16.13.1",
     "react-ellipsis-text": "^1.2.1",
-    "react-lazylog": "git+https://github.com/romanwozniak/react-lazylog.git#e3a7f026983df0dc59d25843fe87ce7e37e24e82",
+    "react-lazylog": "git+https://github.com/gojekfarm/react-lazylog.git#e3a7f026983df0dc59d25843fe87ce7e37e24e82",
     "react-scripts": "3.4.1",
     "use-query-params": "^0.6.0",
     "yup": "^0.29.1"
