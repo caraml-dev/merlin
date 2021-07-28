@@ -15,7 +15,7 @@
 package service
 
 import (
-	"io"
+	"io/ioutil"
 	"strings"
 	"testing"
 	"time"
@@ -31,6 +31,8 @@ import (
 )
 
 func TestLogLine_GenerateText(t *testing.T) {
+	color.NoColor = false
+
 	type fields struct {
 		Timestamp     time.Time
 		Namespace     string
@@ -57,8 +59,57 @@ func TestLogLine_GenerateText(t *testing.T) {
 			args{},
 			nowRFC3339 + " hello\n",
 		},
-		// Testing colors is kinda difficult so we skipped testing pod and container prefix for now.
-		// Reference: https://github.com/fatih/color/blob/master/color_test.go
+		{
+			"pod and container prefix",
+			fields{
+				Timestamp:   now,
+				TextPayload: "hello",
+
+				PodName:       "pod",
+				ContainerName: "container",
+				PrefixColor:   color.New(color.FgRed),
+			},
+			args{
+				LogQuery{
+					Prefix: prefixAddPodContainer,
+				},
+			},
+			"\x1b[31mpod\x1b[0m \x1b[31mcontainer\x1b[0m " + nowRFC3339 + " hello\n",
+		},
+		{
+			"pod prefix",
+			fields{
+				Timestamp:   now,
+				TextPayload: "hello",
+
+				PodName:       "pod",
+				ContainerName: "container",
+				PrefixColor:   color.New(color.FgRed),
+			},
+			args{
+				LogQuery{
+					Prefix: prefixAddPod,
+				},
+			},
+			"\x1b[31mpod\x1b[0m " + nowRFC3339 + " hello\n",
+		},
+		{
+			"container prefix",
+			fields{
+				Timestamp:   now,
+				TextPayload: "hello",
+
+				PodName:       "pod",
+				ContainerName: "container",
+				PrefixColor:   color.New(color.FgRed),
+			},
+			args{
+				LogQuery{
+					Prefix: prefixAddContainer,
+				},
+			},
+			"\x1b[31mcontainer\x1b[0m " + nowRFC3339 + " hello\n",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -145,7 +196,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 
 	for _, pod := range pods {
 		for _, container := range containers {
-			r := io.NopCloser(strings.NewReader(nowRFC3339 + " log from " + pod + "/" + container))
+			r := ioutil.NopCloser(strings.NewReader(nowRFC3339 + " log from " + pod + "/" + container))
 
 			c := container
 			mockController.On("StreamPodLogs", "test-namespace", pod, mock.MatchedBy(func(opts *v1.PodLogOptions) bool {
@@ -173,8 +224,11 @@ func Test_logService_StreamLogs(t *testing.T) {
 
 	idx := 0
 	for _, pod := range pods {
+		prefixColor := determineColor(pod)
+		p := prefixColor.SprintFunc()
+
 		for _, container := range containers {
-			assert.Equal(t, pod+" "+container+" "+nowRFC3339+" log from "+pod+"/"+container+"\n", got[idx])
+			assert.Equal(t, p(pod)+" "+p(container)+" "+nowRFC3339+" log from "+pod+"/"+container+"\n", got[idx])
 			idx += 1
 		}
 	}
