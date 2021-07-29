@@ -86,9 +86,22 @@ export const ContainerLogsView = ({
     [containers, containersLoaded]
   );
 
+  const [{ data: newContainers }, getNewContainers] = useMerlinApi(
+    fetchContainerURL,
+    { mock: mocks.containerOptions },
+    []
+  );
+
+  useEffect(() => {
+    var handle = setInterval(getNewContainers, 5000);
+    return () => {
+      clearInterval(handle);
+    };
+  }, [getNewContainers]);
+
   const componentTypes = useMemo(() => {
-    return containers
-      ? containers
+    return newContainers
+      ? newContainers
           .sort(
             (a, b) =>
               componentOrder.indexOf(a.component_type) -
@@ -96,7 +109,7 @@ export const ContainerLogsView = ({
           )
           .map(container => container.component_type)
       : [];
-  }, [containers]);
+  }, [newContainers]);
 
   const authCtx = useContext(AuthContext);
   const fetchOptions = {

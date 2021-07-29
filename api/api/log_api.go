@@ -33,6 +33,13 @@ type LogController struct {
 
 // ReadLog parses log requests and fetches logs.
 func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
+	// Make sure that the writer supports flushing.
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		InternalServerError("Streaming unsupported!").WriteTo(w)
+		return
+	}
+
 	var query service.LogQuery
 	err := decoder.Decode(&query, r.URL.Query())
 	if err != nil {
@@ -44,10 +51,10 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 	logLineCh := make(chan string)
 	stopCh := make(chan struct{})
 
-	// Listen to the closing of the http connection via the CloseNotifier
-	notify := r.Context().Done()
+	// Listen to the closing of the http connection via the request's context.
+	ctx := r.Context()
 	go func() {
-		<-notify
+		<-ctx.Done()
 		close(stopCh)
 	}()
 
@@ -58,20 +65,19 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Transfer-Encoding", "chunked")
 
 	go func() {
-		for logLine := range logLineCh {
-			_, writeErr := w.Write([]byte(logLine))
-			if writeErr != nil {
-				// Connection from caller is closed
-				close(stopCh)
+		for {
+			logLine := <-logLineCh
+
+			// Write to the ResponseWriter
+			_, err := w.Write(([]byte(logLine)))
+			if err != nil {
+				InternalServerError(err.Error()).WriteTo(w)
 				return
 			}
 
 			// Send the response over network
 			// although it's not guaranteed to reach client if it sits behind proxy
-			flusher, ok := w.(http.Flusher)
-			if flusher != nil && ok {
-				flusher.Flush()
-			}
+			flusher.Flush()
 		}
 	}()
 

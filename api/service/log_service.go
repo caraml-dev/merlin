@@ -44,7 +44,7 @@ const (
 )
 
 var (
-	skippedContainers = []string{"queue-proxy"}
+	ignoredContainers = []string{"queue-proxy"}
 )
 
 // LogLine represents a single log line from a container running in Kubernetes.
@@ -112,63 +112,25 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 		return fmt.Errorf("unable to find cluster %s", options.Cluster)
 	}
 
-	namespace := options.Namespace
-	labelSelector := l.getLabelSelector(*options)
-
-	pods, err := clusterController.ListPods(namespace, labelSelector)
-	if err != nil {
-		return err
-	}
-
 	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {
-			allLogLines := []*LogLine{}
-			mu := &sync.Mutex{}
-
-			var wg sync.WaitGroup
-			for _, pod := range pods.Items {
-				containers := []string{}
-				for _, initContainer := range pod.Spec.InitContainers {
-					containers = append(containers, initContainer.Name)
-				}
-				for _, container := range pod.Spec.Containers {
-					for _, skippedContainer := range skippedContainers {
-						if container.Name == skippedContainer {
-							break
-						}
-
-						containers = append(containers, container.Name)
-					}
-				}
-
-				for _, container := range containers {
-					options.ContainerName = container
-
-					wg.Add(1)
-					go func(clusterController cluster.Controller, namespace string, pod v1.Pod, options LogQuery) {
-						defer wg.Done()
-						logLines := l.getContainerLogs(clusterController, namespace, pod.Name, options)
-
-						mu.Lock()
-						allLogLines = append(allLogLines, logLines...)
-						mu.Unlock()
-					}(clusterController, namespace, pod, *options)
-				}
+			allLogLines, err := l.getPodsLogs(clusterController, options)
+			if err != nil {
+				log.Errorf("failed getting all pods' logs: %s", err.Error())
+				return
 			}
-			wg.Wait()
-
-			// Sort all the logs by timestamp in ascending order
-			sort.Slice(allLogLines, func(i, j int) bool {
-				return allLogLines[i].Timestamp.Before(allLogLines[j].Timestamp)
-			})
 
 			for _, logLine := range allLogLines {
 				logLineCh <- logLine.generateText(*options)
 			}
 
-			now := time.Now()
-			options.SinceTime = &now
+			if len(allLogLines) > 0 {
+				options.SinceTime = &allLogLines[len(allLogLines)-1].Timestamp
+			} else {
+				now := time.Now()
+				options.SinceTime = &now
+			}
 
 			select {
 			case <-stopCh:
@@ -181,6 +143,58 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 	<-stopCh
 
 	return nil
+}
+
+func (l logService) getPodsLogs(clusterController cluster.Controller, options *LogQuery) ([]*LogLine, error) {
+	namespace := options.Namespace
+	labelSelector := l.getLabelSelector(*options)
+
+	pods, err := clusterController.ListPods(namespace, labelSelector)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list pods: %s", err.Error())
+	}
+
+	allLogLines := []*LogLine{}
+	mu := &sync.Mutex{}
+
+	var wg sync.WaitGroup
+	for _, pod := range pods.Items {
+		containers := []string{}
+		for _, initContainer := range pod.Spec.InitContainers {
+			containers = append(containers, initContainer.Name)
+		}
+		for _, container := range pod.Spec.Containers {
+			for _, skippedContainer := range ignoredContainers {
+				if container.Name == skippedContainer {
+					break
+				}
+
+				containers = append(containers, container.Name)
+			}
+		}
+
+		for _, container := range containers {
+			options.ContainerName = container
+
+			wg.Add(1)
+			go func(clusterController cluster.Controller, namespace string, pod v1.Pod, options LogQuery) {
+				defer wg.Done()
+				logLines := l.getContainerLogs(clusterController, namespace, pod.Name, options)
+
+				mu.Lock()
+				allLogLines = append(allLogLines, logLines...)
+				mu.Unlock()
+			}(clusterController, namespace, pod, *options)
+		}
+	}
+	wg.Wait()
+
+	// Sort all the logs by timestamp in ascending order
+	sort.Slice(allLogLines, func(i, j int) bool {
+		return allLogLines[i].Timestamp.Before(allLogLines[j].Timestamp)
+	})
+
+	return allLogLines, nil
 }
 
 func (l logService) getLabelSelector(query LogQuery) string {
@@ -261,7 +275,7 @@ func (l logService) getContainerLogs(clusterController cluster.Controller, names
 			continue
 		}
 
-		// We require this check because we send (SinceTime - 1sec) to Kube API Server
+		// We require this check because we don't want to send previous log
 		if options.SinceTime != nil && (timestamp == *options.SinceTime || timestamp.Before(*options.SinceTime)) {
 			continue
 		}
@@ -306,9 +320,9 @@ type LogQuery struct {
 }
 
 func (opt *LogQuery) ToKubernetesLogOption() *v1.PodLogOptions {
-	var sinceTime metav1.Time
+	var sinceTime *metav1.Time
 	if opt.SinceTime != nil {
-		sinceTime = metav1.NewTime(*opt.SinceTime)
+		sinceTime = &metav1.Time{Time: opt.SinceTime.Add(-time.Second)}
 	}
 
 	tailLines := opt.TailLines
@@ -321,7 +335,7 @@ func (opt *LogQuery) ToKubernetesLogOption() *v1.PodLogOptions {
 		Follow:       opt.Follow,
 		Previous:     opt.Previous,
 		SinceSeconds: opt.SinceSeconds,
-		SinceTime:    &sinceTime,
+		SinceTime:    sinceTime,
 		Timestamps:   opt.Timestamps,
 		TailLines:    tailLines,
 		LimitBytes:   opt.LimitBytes,
