@@ -202,9 +202,7 @@ func NewRouter(appCtx AppContext) *mux.Router {
 	}
 
 	rawRoutes := []RawRoutes{
-		{
-			http.MethodGet, "/logs", http.HandlerFunc(logController.ReadLog), "ReadLogs",
-		},
+		{http.MethodGet, "/logs", http.HandlerFunc(logController.ReadLog), "ReadLogs"},
 	}
 
 	var authzMiddleware *middleware.Authorizer

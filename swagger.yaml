@@ -267,7 +267,7 @@ paths:
             - Search by "mlflow_run_id" e.g. `?search=cfca7716b45f4b149479630a98332a13`
             - Search by "environment_name" e.g `?search=environment_name:myenv`
             - Search by "labels" e.g. `?search=labels:app IN (nginx,postgres), country in (SG)`
-            - Search by "environment_name" and "labels" e.g. 
+            - Search by "environment_name" and "labels" e.g.
               `?search=environment_name:myenv labels:app IN (nginx,postgres), country in (SG)`
       responses:
         200:
@@ -689,11 +689,27 @@ paths:
       summary: "Retrieve log from a container"
       parameters:
         - in: "query"
-          name: "name"
+          name: "project_name"
           type: "string"
-          required: true
+          required: false
         - in: "query"
-          name: "pod_name"
+          name: "model_id"
+          type: "string"
+          required: false
+        - in: "query"
+          name: "model_name"
+          type: "string"
+          required: false
+        - in: "query"
+          name: "version_id"
+          type: "string"
+          required: false
+        - in: "query"
+          name: "prediction_job_id"
+          type: "string"
+          required: false
+        - in: "query"
+          name: "cluster"
           type: "string"
           required: true
         - in: "query"
@@ -701,19 +717,25 @@ paths:
           type: "string"
           required: true
         - in: "query"
-          name: "cluster"
+          name: "component_type"
           type: "string"
           required: true
+          enum:
+            - image_builder
+            - model
+            - transformer
+            - batch_job_driver
+            - batch_job_executor
+        - in: "query"
+          name: "container_name"
+          type: "string"
+          required: false
+        - in: "query"
+          name: "prefix"
+          type: "string"
+          required: false
         - in: "query"
           name: "follow"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "limit_bytes"
-          type: "string"
-          required: false
-        - in: "query"
-          name: "pretty"
           type: "string"
           required: false
         - in: "query"
@@ -729,11 +751,15 @@ paths:
           type: "string"
           required: false
         - in: "query"
+          name: "timestamps"
+          type: "string"
+          required: false
+        - in: "query"
           name: "tail_lines"
           type: "string"
           required: false
         - in: "query"
-          name: "timestamps"
+          name: "limit_bytes"
           type: "string"
           required: false
       responses:
@@ -1288,6 +1314,14 @@ definitions:
         type: "string"
       pod_name:
         type: "string"
+      component_type:
+        type: "string"
+        enum:
+          - image_builder
+          - model
+          - transformer
+          - batch_job_driver
+          - batch_job_executor
       namespace:
         type: "string"
       cluster:

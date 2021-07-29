@@ -1,5 +1,14 @@
 FROM python:3.7.2-slim
 
+RUN apt-get update && \
+    apt-get install -y \
+        build-essential \
+        make \
+        gcc \
+        locales \
+        libgdal20 libgdal-dev && \
+    apt-get clean
+
 RUN pip install google-cloud-storage
 RUN pip install psycopg2-binary==2.8.6
 

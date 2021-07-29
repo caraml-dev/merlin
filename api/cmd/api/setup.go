@@ -31,7 +31,6 @@ import (
 	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -472,20 +471,23 @@ func initLogService(cfg *config.Config, vaultClient vault.Client) service.LogSer
 	if err != nil {
 		log.Panicf("unable to retrieve secret for cluster %s from vault: %v", cfg.ImageBuilderConfig.ClusterName, err)
 	}
-	restConfig := &rest.Config{
-		Host: imgBuilderClusterSecret.Endpoint,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: false,
-			CAData:   []byte(imgBuilderClusterSecret.CaCert),
-			CertData: []byte(imgBuilderClusterSecret.ClientCert),
-			KeyData:  []byte(imgBuilderClusterSecret.ClientKey),
-		},
+	ctl, err := cluster.NewController(cluster.Config{
+		Host:       imgBuilderClusterSecret.Endpoint,
+		CACert:     imgBuilderClusterSecret.CaCert,
+		ClientCert: imgBuilderClusterSecret.ClientCert,
+		ClientKey:  imgBuilderClusterSecret.ClientKey,
+
+		ClusterName: cfg.ImageBuilderConfig.ClusterName,
+		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
+	},
+		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
+		cfg.StandardTransformerConfig)
+	if err != nil {
+		log.Panicf("unable to initialize cluster controller %v", err)
 	}
 
-	c, err := corev1.NewForConfig(restConfig)
-
-	var clusterClients = make(map[string]corev1.CoreV1Interface)
-	clusterClients[cfg.ImageBuilderConfig.ClusterName] = c
+	var clusterControllers = make(map[string]cluster.Controller)
+	clusterControllers[cfg.ImageBuilderConfig.ClusterName] = ctl
 
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
@@ -494,19 +496,23 @@ func initLogService(cfg *config.Config, vaultClient vault.Client) service.LogSer
 			log.Panicf("unable to get cluster secret of cluster %s %v", clusterName, err)
 		}
 
-		restConfig := &rest.Config{
-			Host: clusterSecret.Endpoint,
-			TLSClientConfig: rest.TLSClientConfig{
-				Insecure: false,
-				CAData:   []byte(clusterSecret.CaCert),
-				CertData: []byte(clusterSecret.ClientCert),
-				KeyData:  []byte(clusterSecret.ClientKey),
-			},
+		ctl, err := cluster.NewController(cluster.Config{
+			Host:       clusterSecret.Endpoint,
+			CACert:     clusterSecret.CaCert,
+			ClientCert: clusterSecret.ClientCert,
+			ClientKey:  clusterSecret.ClientKey,
+
+			ClusterName: clusterName,
+			GcpProject:  env.GcpProject,
+		},
+			config.ParseDeploymentConfig(env),
+			cfg.StandardTransformerConfig)
+		if err != nil {
+			log.Panicf("unable to initialize cluster controller %v", err)
 		}
 
-		c, err = corev1.NewForConfig(restConfig)
-		clusterClients[clusterName] = c
+		clusterControllers[clusterName] = ctl
 	}
 
-	return service.NewLogService(clusterClients)
+	return service.NewLogService(clusterControllers)
 }

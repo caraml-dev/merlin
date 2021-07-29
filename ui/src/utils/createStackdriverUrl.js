@@ -18,20 +18,19 @@ const querystring = require("querystring");
 
 const stackdriverAPI = "https://console.cloud.google.com/logs/viewer";
 
-const stackdriverFilter = container => {
-  return `resource.type:"k8s_container"
-resource.labels.project_id:${container.gcp_project}
-resource.labels.cluster_name:${container.cluster}
-resource.labels.namespace_name:${container.namespace}
-resource.labels.pod_name:${container.pod_name}
-resource.labels.container_name:${container.name}`;
+const stackdriverFilter = query => {
+  return `resource.type:"k8s_query" OR "k8s_container" OR "k8s_pod"
+resource.labels.project_id:${query.gcp_project}
+resource.labels.cluster_name:${query.cluster}
+resource.labels.namespace_name:${query.namespace}
+resource.labels.pod_name:${query.pod_name}`;
 };
 
-export const createStackdriverUrl = container => {
-  const advanceFilter = stackdriverFilter(container);
+export const createStackdriverUrl = query => {
+  const advanceFilter = stackdriverFilter(query);
   const url = {
-    interval: "NO_LIMIT",
-    project: container.gcp_project,
+    interval: "PT1H",
+    project: query.gcp_project,
     minLogLevel: 0,
     expandAll: false,
     advancedFilter: advanceFilter

@@ -40,7 +40,9 @@ const (
 )
 
 var (
-	now                    = time.Now()
+	now        = time.Now()
+	nowRFC3339 = now.Format(time.RFC3339)
+
 	environmentLabel       = "dev"
 	isDefaultPredictionJob = true
 	predJobEnv             = &models.Environment{

@@ -15,7 +15,6 @@
 package api
 
 import (
-	"bufio"
 	"fmt"
 	"net/http"
 
@@ -34,6 +33,15 @@ type LogController struct {
 
 // ReadLog parses log requests and fetches logs.
 func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Make sure that the writer supports flushing.
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		InternalServerError("Streaming unsupported!").WriteTo(w)
+		return
+	}
+
 	var query service.LogQuery
 	err := decoder.Decode(&query, r.URL.Query())
 	if err != nil {
@@ -42,38 +50,38 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := l.LogService.ReadLog(&query)
-	if err != nil {
-		log.Errorf("Error while retrieving log %v", err)
-		InternalServerError(fmt.Sprintf("Error while retrieving log for container %s: %s", query.Name, err)).WriteTo(w)
+	logLineCh := make(chan string)
+	stopCh := make(chan struct{})
+
+	// Set the headers related to event streaming.
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Transfer-Encoding", "chunked")
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				close(stopCh)
+				return
+			case logLine := <-logLineCh:
+				// Write to the ResponseWriter
+				_, err := w.Write(([]byte(logLine)))
+				if err != nil {
+					InternalServerError(err.Error()).WriteTo(w)
+					return
+				}
+
+				// Send the response over network
+				// although it's not guaranteed to reach client if it sits behind proxy
+				flusher.Flush()
+			}
+		}
+	}()
+
+	if err := l.LogService.StreamLogs(logLineCh, stopCh, &query); err != nil {
+		InternalServerError(err.Error()).WriteTo(w)
 		return
-	}
-
-	// send status code and content-type
-	w.Header().Set("Content-Type", "plain/text; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-
-	// stream the response body
-	defer res.Close()
-	buff := bufio.NewReader(res)
-	for {
-		line, readErr := buff.ReadString('\n')
-		_, writeErr := w.Write([]byte(line))
-		if writeErr != nil {
-			// connection from caller is closed
-			return
-		}
-
-		// send the response over network
-		// although it's not guaranteed to reach client if it sits behind proxy
-		flusher, ok := w.(http.Flusher)
-		if ok {
-			flusher.Flush()
-		}
-
-		if readErr != nil {
-			// unable to read log from container anymore most likely EOF
-			return
-		}
 	}
 }
