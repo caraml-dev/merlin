@@ -47,6 +47,8 @@ type Config struct {
 	UI                        UIConfig
 	StandardTransformerConfig StandardTransformerConfig
 	MlflowConfig              MlflowConfig
+
+	EnablePprof bool `envconfig:"ENABLE_PPROF" default:"false"`
 }
 
 // UIConfig stores the configuration for the UI.

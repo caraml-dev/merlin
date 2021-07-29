@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"strings"
@@ -131,6 +132,23 @@ func main() {
 
 	ui := uiHandler{staticPath: cfg.UI.StaticPath, indexPath: cfg.UI.IndexPath}
 	router.PathPrefix(uiHomePage).Handler(http.StripPrefix(uiHomePage, ui))
+
+	// Debug routes
+	if cfg.EnablePprof {
+		router.Path("/debug/pprof/cmdline").HandlerFunc(http.HandlerFunc(pprof.Cmdline))
+		router.Path("/debug/pprof/profile").HandlerFunc(http.HandlerFunc(pprof.Profile))
+		router.Path("/debug/pprof/symbol").HandlerFunc(http.HandlerFunc(pprof.Symbol))
+		router.Path("/debug/pprof/trace").HandlerFunc(http.HandlerFunc(pprof.Trace))
+
+		router.Path("/debug/pprof/allocs").Handler(pprof.Handler("allocs"))
+		router.Path("/debug/pprof/block").Handler(pprof.Handler("block"))
+		router.Path("/debug/pprof/goroutine").Handler(pprof.Handler("goroutine"))
+		router.Path("/debug/pprof/heap").Handler(pprof.Handler("heap"))
+		router.Path("/debug/pprof/mutex").Handler(pprof.Handler("mutex"))
+		router.Path("/debug/pprof/threadcreate").Handler(pprof.Handler("threadcreate"))
+
+		router.Path("/debug/pprof/").HandlerFunc(http.HandlerFunc(pprof.Index))
+	}
 
 	log.Infof("listening at port :%d", cfg.Port)
 	srv := &http.Server{
