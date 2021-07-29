@@ -21,6 +21,7 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/fatih/color"
@@ -119,29 +120,46 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 
 	go func() {
 		for {
-			allLogLines := make([]LogLine, 0)
+			select {
+			case <-stopCh:
+				return
+			default:
+			}
 
+			allLogLines := []*LogLine{}
+			mu := &sync.Mutex{}
+
+			var wg sync.WaitGroup
 			for _, pod := range pods.Items {
+				containers := []string{}
 				for _, initContainer := range pod.Spec.InitContainers {
-					options.ContainerName = initContainer.Name
-
-					logLines := l.getContainerLogs(clusterController, namespace, pod.Name, options)
-					allLogLines = append(allLogLines, logLines...)
+					containers = append(containers, initContainer.Name)
 				}
-
 				for _, container := range pod.Spec.Containers {
 					for _, skippedContainer := range skippedContainers {
 						if container.Name == skippedContainer {
 							break
 						}
 
-						options.ContainerName = container.Name
-
-						logLines := l.getContainerLogs(clusterController, namespace, pod.Name, options)
-						allLogLines = append(allLogLines, logLines...)
+						containers = append(containers, container.Name)
 					}
 				}
+
+				for _, container := range containers {
+					options.ContainerName = container
+
+					wg.Add(1)
+					go func(clusterController cluster.Controller, namespace string, pod v1.Pod, options LogQuery) {
+						defer wg.Done()
+						logLines := l.getContainerLogs(clusterController, namespace, pod.Name, options)
+
+						mu.Lock()
+						allLogLines = append(allLogLines, logLines...)
+						mu.Unlock()
+					}(clusterController, namespace, pod, *options)
+				}
 			}
+			wg.Wait()
 
 			// Sort all the logs by timestamp in ascending order
 			sort.Slice(allLogLines, func(i, j int) bool {
@@ -149,17 +167,22 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 			})
 
 			for _, logLine := range allLogLines {
-				logLineCh <- logLine.GenerateText(*options)
+				select {
+				case <-stopCh:
+					return
+				case logLineCh <- logLine.GenerateText(*options):
+				}
 			}
 
 			now := time.Now()
 			options.SinceTime = &now
 
-			time.Sleep(1 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 	}()
 
 	<-stopCh
+
 	return nil
 }
 
@@ -203,7 +226,9 @@ func determineColor(podName string) (color *color.Color) {
 	return colorList[idx]
 }
 
-func (l logService) getContainerLogs(clusterController cluster.Controller, namespace, podName string, options *LogQuery) []LogLine {
+func (l logService) getContainerLogs(clusterController cluster.Controller, namespace, podName string, options LogQuery) []*LogLine {
+	logLines := make([]*LogLine, 0)
+
 	prefixColor := determineColor(podName)
 
 	stream, err := clusterController.StreamPodLogs(namespace, podName, options.ToKubernetesLogOption())
@@ -217,7 +242,6 @@ func (l logService) getContainerLogs(clusterController cluster.Controller, names
 	}
 
 	scanner := bufio.NewScanner(stream)
-	logLines := make([]LogLine, 0)
 	for scanner.Scan() {
 		logLine := scanner.Text()
 
@@ -235,8 +259,8 @@ func (l logService) getContainerLogs(clusterController cluster.Controller, names
 
 		timestamp, err := time.Parse(time.RFC3339, logLine[:timestampIndex])
 		if err != nil {
-			log.Warnf("log message timestamp is not in RFC3339 format: %s", logLine[:timestampIndex])
 			// Log timestamp value from Kube API server has invalid format, skip to next line
+			log.Warnf("log message timestamp is not in RFC3339 format: %s", logLine[:timestampIndex])
 			continue
 		}
 
@@ -245,7 +269,7 @@ func (l logService) getContainerLogs(clusterController cluster.Controller, names
 			continue
 		}
 
-		log := LogLine{
+		l := &LogLine{
 			Timestamp:     timestamp,
 			Namespace:     namespace,
 			PodName:       podName,
@@ -254,7 +278,7 @@ func (l logService) getContainerLogs(clusterController cluster.Controller, names
 			PrefixColor:   prefixColor,
 		}
 
-		logLines = append(logLines, log)
+		logLines = append(logLines, l)
 	}
 
 	return logLines
