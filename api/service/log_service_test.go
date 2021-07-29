@@ -30,7 +30,7 @@ import (
 	"github.com/gojek/merlin/cluster/mocks"
 )
 
-func TestLogLine_GenerateText(t *testing.T) {
+func TestLogLine_generateText(t *testing.T) {
 	color.NoColor = false
 
 	type fields struct {
@@ -121,8 +121,8 @@ func TestLogLine_GenerateText(t *testing.T) {
 				TextPayload:   tt.fields.TextPayload,
 				PrefixColor:   tt.fields.PrefixColor,
 			}
-			if got := l.GenerateText(tt.args.options); got != tt.want {
-				t.Errorf("LogLine.GenerateText() = %v, want %v", got, tt.want)
+			if got := l.generateText(tt.args.options); got != tt.want {
+				t.Errorf("LogLine.generateText() = %v, want %v", got, tt.want)
 			}
 		})
 	}

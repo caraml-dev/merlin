@@ -63,7 +63,9 @@ type LogLine struct {
 	PrefixColor *color.Color `json:"-"`
 }
 
-func (l LogLine) GenerateText(options LogQuery) string {
+// generateText returns a formatted log line ended with '\n'.
+// If the prefix configured, it prepends the log with colorized pod or container name.
+func (l LogLine) generateText(options LogQuery) string {
 	text := []string{}
 
 	if options.Prefix != "" {
@@ -118,14 +120,9 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 		return err
 	}
 
+	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {
-			select {
-			case <-stopCh:
-				return
-			default:
-			}
-
 			allLogLines := []*LogLine{}
 			mu := &sync.Mutex{}
 
@@ -167,17 +164,17 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 			})
 
 			for _, logLine := range allLogLines {
-				select {
-				case <-stopCh:
-					return
-				case logLineCh <- logLine.GenerateText(*options):
-				}
+				logLineCh <- logLine.generateText(*options)
 			}
 
 			now := time.Now()
 			options.SinceTime = &now
 
-			time.Sleep(5 * time.Second)
+			select {
+			case <-stopCh:
+				return
+			case <-ticker.C:
+			}
 		}
 	}()
 

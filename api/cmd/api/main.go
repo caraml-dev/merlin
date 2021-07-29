@@ -105,11 +105,7 @@ func main() {
 	mount(router, "/v1/internal", healthcheck.NewHandler())
 	mount(router, "/v1", api.NewRouter(appCtx))
 	mount(router, "/metrics", promhttp.Handler())
-
-	// Debug routes
-	if cfg.EnablePprof {
-		mount(router, "/debug", newPprofRouter())
-	}
+	mount(router, "/debug", newPprofRouter())
 
 	reactConfig := cfg.ReactAppConfig
 	uiEnv := uiEnvHandler{
