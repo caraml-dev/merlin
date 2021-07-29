@@ -31,9 +31,9 @@ import {
 } from "@elastic/eui";
 import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 import config from "../../config";
-import { useMerlinApi } from "../../hooks/useMerlinApi";
-import Log from "../../log/Log";
 import mocks from "../../mocks";
+import { useMerlinApi } from "../../hooks/useMerlinApi";
+import { ContainerLogsView } from "../../components/logs/ContainerLogsView";
 import { PageTitle } from "../../components/PageTitle";
 import { DeploymentPanelHeader } from "./DeploymentPanelHeader";
 import { ModelVersionPanelHeader } from "./ModelVersionPanelHeader";
@@ -196,23 +196,23 @@ const Version = ({ projectId, modelId, versionId, endpointId, ...props }) => {
                 />
               )}
 
-            <Router primary={false}>
-              {model && modelLoaded && version && versionLoaded && endpoint && (
+            {model && modelLoaded && version && versionLoaded && endpoint && (
+              <Router primary={false}>
                 <VersionConfig
                   path="details"
                   model={model}
                   version={version}
                   endpoint={endpoint}
                 />
-              )}
 
-              <Log
-                path="logs"
-                modelId={modelId}
-                versionId={versionId}
-                fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
-              />
-            </Router>
+                <ContainerLogsView
+                  path="logs"
+                  model={model}
+                  versionId={versionId}
+                  fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
+                />
+              </Router>
+            )}
           </Fragment>
         )}
       </EuiPageBody>

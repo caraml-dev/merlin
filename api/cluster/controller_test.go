@@ -698,3 +698,61 @@ func isIn(container v1.Container, containers []*models.Container, podName string
 	}
 	return false
 }
+
+func Test_controller_ListPods(t *testing.T) {
+	namespace := "test-namespace"
+
+	v1Client := fake.NewSimpleClientset()
+	v1Client.PrependReactor(listMethod, podResource, func(action ktesting.Action) (bool, runtime.Object, error) {
+		return true, &v1.PodList{
+			Items: []v1.Pod{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test-model-1-predictor-default-a",
+						Labels: map[string]string{
+							"serving.knative.dev/service": "test-model-1-predictor-default",
+						},
+					},
+					Spec: v1.PodSpec{
+						InitContainers: []v1.Container{
+							{Name: "storage-initializer"},
+						},
+						Containers: []v1.Container{
+							{Name: "kfserving-container"},
+							{Name: "queue-proxy"},
+							{Name: "inferenceservice-logger"},
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test-model-1-predictor-default-b",
+						Labels: map[string]string{
+							"serving.knative.dev/service": "test-model-1-predictor-default",
+						},
+					},
+					Spec: v1.PodSpec{
+						InitContainers: []v1.Container{
+							{Name: "storage-initializer"},
+						},
+						Containers: []v1.Container{
+							{Name: "kfserving-container"},
+							{Name: "queue-proxy"},
+							{Name: "inferenceservice-logger"},
+						},
+					},
+				},
+			}}, nil
+	})
+
+	ctl := &controller{
+		clusterClient: v1Client.CoreV1(),
+	}
+
+	podList, err := ctl.ListPods(namespace, "serving.knative.dev/service=test-model-1-predictor-default")
+
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(podList.Items))
+	assert.Equal(t, "test-model-1-predictor-default-a", podList.Items[0].ObjectMeta.Name)
+	assert.Equal(t, "test-model-1-predictor-default-b", podList.Items[1].ObjectMeta.Name)
+}

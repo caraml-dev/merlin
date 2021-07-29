@@ -17,9 +17,9 @@ jobs:
     steps:
       - name: Checkout to the target branch
         uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 14
       - name: Install dependencies
         run: make init-dep-ui
       - name: Lint UI files
@@ -64,9 +64,9 @@ jobs:
     steps:
       - name: Checkout to the target branch
         uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 14
       - name: Install dependencies
         run: make init-dep-ui
       - name: Test UI files
@@ -86,9 +86,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 14
       - name: Install dependencies
         run: make init-dep-ui
       - name: Build UI static files

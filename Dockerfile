@@ -30,10 +30,10 @@ RUN go build -o bin/merlin_api ./cmd/api
 # ============================================================
 # Build stage 2: Build UI
 # ============================================================
-FROM node:14-alpine as node-builder
+FROM node:14 as node-builder
 WORKDIR /src/ui
 COPY ui .
-RUN yarn
+RUN yarn install --network-concurrency 1
 RUN yarn run build
 
 # ============================================================

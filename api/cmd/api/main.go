@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"strings"
@@ -104,6 +105,7 @@ func main() {
 	mount(router, "/v1/internal", healthcheck.NewHandler())
 	mount(router, "/v1", api.NewRouter(appCtx))
 	mount(router, "/metrics", promhttp.Handler())
+	mount(router, "/debug", newPprofRouter())
 
 	reactConfig := cfg.ReactAppConfig
 	uiEnv := uiEnvHandler{
@@ -183,6 +185,22 @@ func mount(r *mux.Router, path string, handler http.Handler) {
 			handler,
 		),
 	)
+}
+
+func newPprofRouter() *mux.Router {
+	r := mux.NewRouter().StrictSlash(true)
+	r.Path("/pprof/cmdline").HandlerFunc(http.HandlerFunc(pprof.Cmdline))
+	r.Path("/pprof/profile").HandlerFunc(http.HandlerFunc(pprof.Profile))
+	r.Path("/pprof/symbol").HandlerFunc(http.HandlerFunc(pprof.Symbol))
+	r.Path("/pprof/trace").HandlerFunc(http.HandlerFunc(pprof.Trace))
+	r.Path("/pprof/allocs").Handler(pprof.Handler("allocs"))
+	r.Path("/pprof/block").Handler(pprof.Handler("block"))
+	r.Path("/pprof/goroutine").Handler(pprof.Handler("goroutine"))
+	r.Path("/pprof/heap").Handler(pprof.Handler("heap"))
+	r.Path("/pprof/mutex").Handler(pprof.Handler("mutex"))
+	r.Path("/pprof/threadcreate").Handler(pprof.Handler("threadcreate"))
+	r.Path("/pprof/").HandlerFunc(http.HandlerFunc(pprof.Index))
+	return r
 }
 
 func registerQueueJob(consumer queue.Consumer, modelServiceDepl *work.ModelServiceDeployment, batchDepl *work.BatchDeployment) {

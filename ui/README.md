@@ -17,7 +17,7 @@ To work with the React UI code, you will need to have the following tools instal
 
 The React UI depends on a large number of [npm](https://www.npmjs.com/) packages. These are not checked in, so you will need to download and install them locally via the Yarn package manager:
 
-    yarn
+    yarn install --network-concurrency 1
 
 Yarn consults the `package.json` and `yarn.lock` files for dependencies to install. It creates a `node_modules` directory with all installed dependencies.
 

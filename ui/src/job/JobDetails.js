@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   EuiIcon,
   EuiPage,
@@ -25,27 +25,35 @@ import {
   EuiFlexItem,
   EuiFlexGroup
 } from "@elastic/eui";
-import Log from "../log/Log";
 import { Router } from "@reach/router";
 import JobConfig from "./JobConfig";
 import RecreateJobView from "./RecreateJobView";
 import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import PropTypes from "prop-types";
+import { ContainerLogsView } from "../components/logs/ContainerLogsView";
+import { replaceBreadcrumbs } from "@gojek/mlp-ui";
+
+const JobLog = ({ projectId, model, versionId, jobId, breadcrumbs }) => {
+  useEffect(() => {
+    breadcrumbs && replaceBreadcrumbs([...breadcrumbs, { text: "Logs" }]);
+  }, [breadcrumbs]);
+
+  const containerURL = `/models/${model.id}/versions/${versionId}/jobs/${jobId}/containers`;
+
+  return (
+    <ContainerLogsView
+      projectId={projectId}
+      model={model}
+      versionId={versionId}
+      jobId={jobId}
+      fetchContainerURL={containerURL}
+    />
+  );
+};
 
 const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
-  const JobLog = ({ modelId, versionId, jobId, breadcrumbs }) => {
-    const containerURL = `/models/${modelId}/versions/${versionId}/jobs/${jobId}/containers`;
-    return (
-      <Log
-        modelId={modelId}
-        fetchContainerURL={containerURL}
-        breadcrumbs={breadcrumbs}
-      />
-    );
-  };
-
-  const [model] = useMerlinApi(
+  const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
     []
@@ -57,7 +65,7 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
       href: `/merlin/projects/${projectId}/models`
     },
     {
-      text: model.data.name,
+      text: model && model.data ? model.data.name : "",
       href: `/merlin/projects/${projectId}/models/${modelId}`
     },
     {
@@ -100,11 +108,18 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
         </EuiPageHeader>
         <Router>
           <JobConfig path="/" breadcrumbs={breadcrumbs} />
-        </Router>
-        <Router>
-          <JobLog path="logs" breadcrumbs={breadcrumbs} />
-        </Router>
-        <Router>
+
+          {projectId && modelLoaded && model && (
+            <JobLog
+              path="logs"
+              projectId={projectId}
+              model={model}
+              versionId={versionId}
+              jobId={jobId}
+              breadcrumbs={breadcrumbs}
+            />
+          )}
+
           <RecreateJobView path="recreate" breadcrumbs={breadcrumbs} />
         </Router>
       </EuiPageBody>

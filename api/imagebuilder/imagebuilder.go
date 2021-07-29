@@ -171,13 +171,14 @@ func (c *imageBuilder) GetContainers(project mlp.Project, model *models.Model, v
 
 	containers := make([]*models.Container, 0)
 	for _, pod := range pods.Items {
-		containers = append(containers, &models.Container{
-			Name:       containerName,
-			PodName:    pod.Name,
-			Namespace:  pod.Namespace,
-			Cluster:    c.config.ClusterName,
-			GcpProject: c.config.GcpProject,
-		})
+		container := models.NewContainer(
+			containerName,
+			pod.Name,
+			pod.Namespace,
+			c.config.ClusterName,
+			c.config.GcpProject,
+		)
+		containers = append(containers, container)
 	}
 
 	return containers, nil
