@@ -41,7 +41,7 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logLineCh := make(chan string, 1000)
+	logLineCh := make(chan string)
 	stopCh := make(chan struct{})
 
 	// Listen to the closing of the http connection via the CloseNotifier
