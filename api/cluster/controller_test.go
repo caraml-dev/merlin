@@ -267,7 +267,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			ctl, _ := newController(kfClient, v1Client, deployConfig, containerFetcher, nil)
+			ctl, _ := newController(kfClient, v1Client, nil, deployConfig, containerFetcher, nil)
 			iSvc, err := ctl.Deploy(modelSvc)
 
 			if tt.wantError {
@@ -603,7 +603,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			ctl, _ := newController(kfClient, v1Client, deployConfig, containerFetcher, nil)
+			ctl, _ := newController(kfClient, v1Client, nil, deployConfig, containerFetcher, nil)
 			iSvc, err := ctl.Deploy(tt.modelService)
 
 			if tt.wantError {

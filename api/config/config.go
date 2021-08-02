@@ -16,6 +16,7 @@ package config
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/kelseyhightower/envconfig"
 
@@ -110,6 +111,8 @@ type ImageBuilderConfig struct {
 	BuildNamespace               string `envconfig:"IMG_BUILDER_NAMESPACE" default:"mlp"`
 	DockerRegistry               string `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
 	BuildTimeout                 string `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
+	// How long to keep the image building job resource in the Kubernetes cluster. Default: A week (168 hours).
+	Retention time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"168h"`
 }
 
 type VaultConfig struct {

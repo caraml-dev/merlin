@@ -23,7 +23,6 @@ import (
 	"github.com/gojek/merlin/service"
 	"github.com/gojek/merlin/storage"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/robfig/cron"
 )
 
 var projectCount = prometheus.NewGauge(
@@ -59,7 +58,6 @@ var firstSuccessfulPredictionJobGauge = prometheus.NewGaugeVec(
 )
 
 type Tracker struct {
-	c                    *cron.Cron
 	projectService       service.ProjectsService
 	modelService         service.ModelsService
 	predictionJobStorage storage.PredictionJobStorage
@@ -75,30 +73,21 @@ func NewTracker(projectService service.ProjectsService,
 	prometheus.MustRegister(firstSuccessfulDeploymentGauge)
 	prometheus.MustRegister(firstSuccessfulPredictionJobGauge)
 
-	c := cron.New()
 	t := &Tracker{
-		c:                    c,
 		projectService:       projectService,
 		modelService:         modelService,
 		predictionJobStorage: predictionJobStorage,
 		deploymentStorage:    deploymentStorage,
 	}
 
-	err := c.AddFunc("@hourly", t.trackMetrics)
-	if err != nil {
-		return nil, err
-	}
-
 	// run once during initialization to avoid zero value during/after redeployment
-	t.trackMetrics()
+	t.TrackMetrics()
 	return t, nil
 }
 
-func (t *Tracker) Start() {
-	t.c.Start()
-}
+func (t *Tracker) TrackMetrics() {
+	log.Infof("Merlin Tracker: Start recording metrics...")
 
-func (t *Tracker) trackMetrics() {
 	t.recordFirstSuccessfulDeploymentStats()
 	t.recordProjectAndModelCount()
 	t.recordFirstSuccessfulBatchJobStats()
