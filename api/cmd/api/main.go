@@ -39,10 +39,10 @@ import (
 
 	"github.com/gojek/merlin/api"
 	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/cronjob"
 	"github.com/gojek/merlin/gitlab"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlflow"
+	"github.com/gojek/merlin/pkg/cronjob"
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/queue/work"
 	"github.com/gojek/merlin/service"
