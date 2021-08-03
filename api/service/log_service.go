@@ -271,7 +271,6 @@ func (l logService) getContainerLogs(clusterController cluster.Controller, names
 		timestamp, err := time.Parse(time.RFC3339, logLine[:timestampIndex])
 		if err != nil {
 			// Log timestamp value from Kube API server has invalid format, skip to next line
-			log.Warnf("log message timestamp is not in RFC3339 format: %s", logLine[:timestampIndex])
 			continue
 		}
 
