@@ -44,13 +44,27 @@ func (_m *Controller) Delete(modelService *models.Service) (*models.Service, err
 	return r0, r1
 }
 
-// DeleteJob provides a mock function with given fields: namespace, jobName, opts
-func (_m *Controller) DeleteJob(namespace string, jobName string, opts *v1.DeleteOptions) error {
-	ret := _m.Called(namespace, jobName, opts)
+// DeleteJob provides a mock function with given fields: namespace, jobName, options
+func (_m *Controller) DeleteJob(namespace string, jobName string, options *v1.DeleteOptions) error {
+	ret := _m.Called(namespace, jobName, options)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, *v1.DeleteOptions) error); ok {
-		r0 = rf(namespace, jobName, opts)
+		r0 = rf(namespace, jobName, options)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteJobs provides a mock function with given fields: namespace, options, listOptions
+func (_m *Controller) DeleteJobs(namespace string, options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	ret := _m.Called(namespace, options, listOptions)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, *v1.DeleteOptions, v1.ListOptions) error); ok {
+		r0 = rf(namespace, options, listOptions)
 	} else {
 		r0 = ret.Error(0)
 	}

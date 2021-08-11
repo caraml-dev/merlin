@@ -44,7 +44,8 @@ type Controller interface {
 	StreamPodLogs(namespace, podName string, opts *v1.PodLogOptions) (io.ReadCloser, error)
 
 	ListJobs(namespace, labelSelector string) (*batchv1.JobList, error)
-	DeleteJob(namespace, jobName string, opts *metav1.DeleteOptions) error
+	DeleteJob(namespace, jobName string, options *metav1.DeleteOptions) error
+	DeleteJobs(namespace string, options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
 
 	ContainerFetcher
 }
@@ -245,12 +246,4 @@ func (c *controller) ListPods(namespace, labelSelector string) (*v1.PodList, err
 
 func (c *controller) StreamPodLogs(namespace, podName string, opts *v1.PodLogOptions) (io.ReadCloser, error) {
 	return c.clusterClient.Pods(namespace).GetLogs(podName, opts).Stream()
-}
-
-func (c *controller) ListJobs(namespace, labelSelector string) (*batchv1.JobList, error) {
-	return c.batchClient.Jobs(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
-}
-
-func (c *controller) DeleteJob(namespace, jobName string, opts *metav1.DeleteOptions) error {
-	return c.batchClient.Jobs(namespace).Delete(jobName, opts)
 }

@@ -43,11 +43,12 @@ import (
 )
 
 const (
-	listMethod   = "list"
-	getMethod    = "get"
-	createMethod = "create"
-	updateMethod = "update"
-	deleteMethod = "delete"
+	listMethod             = "list"
+	getMethod              = "get"
+	createMethod           = "create"
+	updateMethod           = "update"
+	deleteMethod           = "delete"
+	deleteCollectionMethod = "delete-collection"
 
 	kfservingGroup           = "kubeflow.com/kfserving"
 	inferenceServiceResource = "inferenceservices"
@@ -55,6 +56,7 @@ const (
 	coreGroup         = ""
 	namespaceResource = "namespaces"
 	podResource       = "pods"
+	jobResource       = "jobs"
 )
 
 type namespaceReactor struct {
