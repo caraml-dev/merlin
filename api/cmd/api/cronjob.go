@@ -27,7 +27,7 @@ func initCronJob(dependencies deps, db *gorm.DB) error {
 	}
 
 	c.AddFunc("@hourly", tracker.TrackMetrics)
-	c.AddFunc("@daily", imageBuilderJanitor.CleanJobs)
+	c.AddFunc("@hourly", imageBuilderJanitor.CleanJobs)
 
 	c.Start()
 

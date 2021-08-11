@@ -63,7 +63,7 @@ merlin:
     timeout: "30m"
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
-    retention: "168h"
+    retention: "48h"
 
   vault:
     secretName: "vault-secret" # Must be bootstraped first.
