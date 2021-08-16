@@ -85,6 +85,30 @@ var (
 	}
 )
 
+func TestJanitor_CleanJobs(t *testing.T) {
+	mc := &mocks.Controller{}
+	j := NewJanitor(mc, JanitorConfig{BuildNamespace: namespace, Retention: retention})
+
+	totalDelete := 0
+
+	mc.On("ListJobs", namespace, labelOrchestratorName+"=merlin").
+		Return(&batchv1.JobList{Items: []batchv1.Job{expiredJob1, expiredJob2, notExpiredJob1}}, nil)
+
+	mc.On("DeleteJob", namespace, expiredJob1.Name, mock.Anything).
+		Run(func(args mock.Arguments) {
+			totalDelete++
+		}).
+		Return(nil)
+	mc.On("DeleteJob", namespace, expiredJob2.Name, mock.Anything).
+		Run(func(args mock.Arguments) {
+			totalDelete++
+		}).
+		Return(nil)
+
+	j.CleanJobs()
+	assert.Equal(t, 2, totalDelete)
+}
+
 func TestJanitor_getExpiredJobs(t *testing.T) {
 	type fields struct {
 		cc  cluster.Controller
