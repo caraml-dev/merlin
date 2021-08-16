@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
@@ -48,7 +47,7 @@ func Test_controller_ListJobs(t *testing.T) {
 					Spec: batchv1.JobSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
-								Containers: []v1.Container{
+								Containers: []corev1.Container{
 									{Name: "pyfunc-image-builder"},
 								},
 							},
@@ -65,7 +64,7 @@ func Test_controller_ListJobs(t *testing.T) {
 					Spec: batchv1.JobSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
-								Containers: []v1.Container{
+								Containers: []corev1.Container{
 									{Name: "pyfunc-image-builder"},
 								},
 							},
@@ -82,7 +81,7 @@ func Test_controller_ListJobs(t *testing.T) {
 					Spec: batchv1.JobSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
-								Containers: []v1.Container{
+								Containers: []corev1.Container{
 									{Name: "pyfunc-image-builder"},
 								},
 							},
