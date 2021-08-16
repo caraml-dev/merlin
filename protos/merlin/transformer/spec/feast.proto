@@ -9,6 +9,7 @@ message FeatureTable {
   repeated Entity entities = 2;
   repeated Feature features = 3;
   string tableName = 4;
+  string servingEndpoint = 5;
 }
 
 message Entity {
