@@ -158,12 +158,30 @@ type MlpAPIConfig struct {
 }
 
 type StandardTransformerConfig struct {
-	ImageName             string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
-	FeastServingURL       string `envconfig:"FEAST_SERVING_URL" required:"true"`
-	FeastCoreURL          string `envconfig:"FEAST_CORE_URL" required:"true"`
-	FeastCoreAuthAudience string `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
-	EnableAuth            bool   `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
-	Jaeger                JaegerConfig
+	ImageName                   string                `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
+	DefaultFeastServingEndpoint string                `envconfig:"DEFAULT_FEAST_SERVING_ENDPOINT" required:"true"`
+	FeastServingEndpoints       FeastServingEndpoints `envconfig:"FEAST_SERVING_ENDPOINTS" required:"true"`
+	FeastCoreURL                string                `envconfig:"FEAST_CORE_URL" required:"true"`
+	FeastCoreAuthAudience       string                `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
+	EnableAuth                  bool                  `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
+	Jaeger                      JaegerConfig
+}
+
+type FeastServingEndpoints []FeastServingEndpoint
+
+type FeastServingEndpoint struct {
+	Host  string `json:"host"`
+	Label string `json:"label"`
+	Icon  string `json:"icon"`
+}
+
+func (e *FeastServingEndpoints) Decode(value string) error {
+	var endpoints FeastServingEndpoints
+	if err := json.Unmarshal([]byte(value), &endpoints); err != nil {
+		return err
+	}
+	*e = endpoints
+	return nil
 }
 
 type JaegerConfig struct {

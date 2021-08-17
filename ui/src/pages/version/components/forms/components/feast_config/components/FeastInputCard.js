@@ -16,6 +16,7 @@ import { FeastEntities } from "./FeastEntities";
 import { FeastFeatures } from "./FeastFeatures";
 import FeastProjectsContext from "../../../../../../../providers/feast/FeastProjectsContext";
 import FeastResourcesContext from "../../../../../../../providers/feast/FeastResourcesContext";
+import { FeastServingEndpointSelect } from "./FeastServingEndpointSelect";
 
 export const FeastInputCard = ({
   index = 0,
@@ -86,6 +87,21 @@ export const FeastInputCard = ({
               feastProjects={projects}
               onChange={value => onChange("project", value)}
               isInvalid={!!get(errors, "project")}
+            />
+          </EuiFormRow>
+        </EuiFlexItem>
+
+        <EuiFlexItem>
+          <EuiFormRow
+            label="Feast Serving Endpoint *"
+            display="columnCompressed"
+            isInvalid={!!get(errors, "servingEndpoint")}
+            error={get(errors, "servingEndpoint")}
+            fullWidth>
+            <FeastServingEndpointSelect
+              servingEndpoint={table.servingEndpoint}
+              onChange={value => onChange("servingEndpoint", value)}
+              isInvalid={!!get(errors, "servingEndpoint")}
             />
           </EuiFormRow>
         </EuiFlexItem>
