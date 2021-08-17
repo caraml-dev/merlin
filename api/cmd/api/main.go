@@ -109,9 +109,12 @@ func main() {
 		HomePage:          reactConfig.HomePage,
 		MerlinURL:         reactConfig.MerlinURL,
 		MlpURL:            reactConfig.MlpURL,
-		FeastCoreURL:      reactConfig.FeastCoreURL,
 		DockerRegistries:  reactConfig.DockerRegistries,
 		MaxAllowedReplica: reactConfig.MaxAllowedReplica,
+
+		DefaultFeastServingEndpoint: cfg.StandardTransformerConfig.DefaultFeastServingEndpoint,
+		FeastServingEndpoints:       cfg.StandardTransformerConfig.FeastServingEndpoints,
+		FeastCoreURL:                reactConfig.FeastCoreURL,
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,

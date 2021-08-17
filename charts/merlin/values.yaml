@@ -90,7 +90,19 @@ merlin:
 
   transformer:
     feast:
-      servingURL: serving.feast.dev
+      defaultServingEndpoint: online-serving-redis.feast.dev
+      servingEndpoints: [
+        {
+          host: "online-serving-redis.feast.dev",
+          label: "Online Serving with Redis",
+          icon: "redis",
+        },
+        {
+          host: "online-serving-bigtable.feast.dev",
+          label: "Online Serving with BigTable",
+          icon: "bigtable",
+        }
+      ]
       coreURL: core.feast.dev
       coreAuthAudience: core.feast.dev
       authEnabled: false

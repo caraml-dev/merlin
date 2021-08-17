@@ -84,6 +84,7 @@ export const feastInputSchema = yup.object().shape({
     then: yup.string().required("Table name is required")
   }),
   project: yup.string().required("Project name is required"),
+  servingEndpoint: yup.string().required("Serving endpoint is required"),
   entities: yup.array(feastEntitiesSchema),
   features: yup.array(feastFeaturesSchema)
 });

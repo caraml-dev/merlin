@@ -18,9 +18,12 @@ type uiEnvHandler struct {
 	HomePage          string                `json:"REACT_APP_HOMEPAGE,omitempty"`
 	MerlinURL         string                `json:"REACT_APP_MERLIN_API,omitempty"`
 	MlpURL            string                `json:"REACT_APP_MLP_API,omitempty"`
-	FeastCoreURL      string                `json:"REACT_APP_FEAST_CORE_API,omitempty"`
 	DockerRegistries  string                `json:"REACT_APP_DOCKER_REGISTRIES,omitempty"`
 	MaxAllowedReplica int                   `json:"REACT_APP_MAX_ALLOWED_REPLICA,omitempty"`
+
+	DefaultFeastServingEndpoint string                       `json:"REACT_APP_DEFAULT_FEAST_SERVING_ENDPOINT,omitempty"`
+	FeastServingEndpoints       config.FeastServingEndpoints `json:"REACT_APP_FEAST_SERVING_ENDPOINTS,omitempty"`
+	FeastCoreURL                string                       `json:"REACT_APP_FEAST_CORE_API,omitempty"`
 
 	MonitoringEnabled              bool   `json:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
 	MonitoringPredictionJobBaseURL string `json:"REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"`

@@ -97,7 +97,7 @@ spec:
           {{- end }}
           {{- if .Values.merlin.docsURL }}
           - name: REACT_APP_MERLIN_DOCS_URL
-            value: {{ .Values.merlin.docsURL | toJson | quote  }}
+            value: {{ .Values.merlin.docsURL | toJson | quote }}
           {{- end }}
           - name: REACT_APP_ALERT_ENABLED
             value: "{{ .Values.merlin.alert.enabled }}"
@@ -145,8 +145,10 @@ spec:
           {{- end }}
           - name: IMG_BUILDER_RETENTION
             value: "{{ .Values.merlin.imageBuilder.retention }}"
-          - name: FEAST_SERVING_URL
-            value: "{{ .Values.merlin.transformer.feast.servingURL }}"
+          - name: DEFAULT_FEAST_SERVING_ENDPOINT
+            value: "{{ .Values.merlin.transformer.feast.defaultServingEndpoint }}"
+          - name: FEAST_SERVING_ENDPOINTS
+            value: {{ .Values.merlin.transformer.feast.servingEndpoints | toJson | quote }}
           - name: FEAST_CORE_URL
             value: "{{ .Values.merlin.transformer.feast.coreURL }}"
           - name: FEAST_CORE_AUTH_AUDIENCE
