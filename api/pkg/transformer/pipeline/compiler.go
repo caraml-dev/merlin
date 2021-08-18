@@ -5,7 +5,6 @@ import (
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -21,15 +20,15 @@ import (
 type Compiler struct {
 	sr symbol.Registry
 
-	feastClient  feastSdk.Client
+	feastClients feast.Clients
 	feastOptions *feast.Options
 	cacheOptions *cache.Options
 
 	logger *zap.Logger
 }
 
-func NewCompiler(sr symbol.Registry, feastClient feastSdk.Client, feastOptions *feast.Options, cacheOptions *cache.Options, logger *zap.Logger) *Compiler {
-	return &Compiler{sr: sr, feastClient: feastClient, feastOptions: feastOptions, cacheOptions: cacheOptions, logger: logger}
+func NewCompiler(sr symbol.Registry, feastClients feast.Clients, feastOptions *feast.Options, cacheOptions *cache.Options, logger *zap.Logger) *Compiler {
+	return &Compiler{sr: sr, feastClients: feastClients, feastOptions: feastOptions, cacheOptions: cacheOptions, logger: logger}
 }
 
 func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipeline, error) {
@@ -185,7 +184,7 @@ func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compil
 	}
 
 	entityExtractor := feast.NewEntityExtractor(compiledJsonPaths, compiledExpressions)
-	return NewFeastOp(c.feastClient, c.feastOptions, memoryCache, entityExtractor, featureTableSpecs, c.logger), nil
+	return NewFeastOp(c.feastClients, c.feastOptions, memoryCache, entityExtractor, featureTableSpecs, c.logger), nil
 }
 
 func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {

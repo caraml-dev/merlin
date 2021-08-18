@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"testing"
 
-	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
@@ -22,7 +20,7 @@ func TestCompiler_Compile(t *testing.T) {
 	type (
 		fields struct {
 			sr           symbol.Registry
-			feastClient  feastSdk.Client
+			feastClients feast.Clients
 			feastOptions *feast.Options
 			cacheOptions *cache.Options
 			logger       *zap.Logger
@@ -52,8 +50,8 @@ func TestCompiler_Compile(t *testing.T) {
 		{
 			name: "preprocess input only",
 			fields: fields{
-				sr:          symbol.NewRegistry(),
-				feastClient: &mocks.Client{},
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
 					CacheEnabled: true,
 				},
@@ -86,8 +84,8 @@ func TestCompiler_Compile(t *testing.T) {
 		{
 			name: "no pipeline",
 			fields: fields{
-				sr:          symbol.NewRegistry(),
-				feastClient: &mocks.Client{},
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
 					CacheEnabled: true,
 				},
@@ -108,8 +106,8 @@ func TestCompiler_Compile(t *testing.T) {
 		{
 			name: "preprocess postprocess input only",
 			fields: fields{
-				sr:          symbol.NewRegistry(),
-				feastClient: &mocks.Client{},
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
 					CacheEnabled: true,
 				},
@@ -146,8 +144,8 @@ func TestCompiler_Compile(t *testing.T) {
 		{
 			name: "preprocess with input and transformation",
 			fields: fields{
-				sr:          symbol.NewRegistry(),
-				feastClient: &mocks.Client{},
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
 					CacheEnabled: true,
 				},
@@ -183,8 +181,8 @@ func TestCompiler_Compile(t *testing.T) {
 		{
 			name: "sequential table dependency",
 			fields: fields{
-				sr:          symbol.NewRegistry(),
-				feastClient: &mocks.Client{},
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
 					CacheEnabled: true,
 				},
@@ -222,8 +220,8 @@ func TestCompiler_Compile(t *testing.T) {
 		{
 			name: "preprocess - postprocess input and output - valid",
 			fields: fields{
-				sr:          symbol.NewRegistry(),
-				feastClient: &mocks.Client{},
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
 					CacheEnabled: true,
 				},
@@ -261,8 +259,8 @@ func TestCompiler_Compile(t *testing.T) {
 		{
 			name: "feast preprocess",
 			fields: fields{
-				sr:          symbol.NewRegistry(),
-				feastClient: &mocks.Client{},
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
 					CacheEnabled: true,
 				},
@@ -296,8 +294,8 @@ func TestCompiler_Compile(t *testing.T) {
 		{
 			name: "feast with expression",
 			fields: fields{
-				sr:          symbol.NewRegistry(),
-				feastClient: &mocks.Client{},
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
 					CacheEnabled: true,
 				},
@@ -333,8 +331,8 @@ func TestCompiler_Compile(t *testing.T) {
 		{
 			name: "preprocess - postprocess input and output - invalid",
 			fields: fields{
-				sr:          symbol.NewRegistry(),
-				feastClient: &mocks.Client{},
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
 					CacheEnabled: true,
 				},
@@ -352,7 +350,7 @@ func TestCompiler_Compile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Compiler{
 				sr:           tt.fields.sr,
-				feastClient:  tt.fields.feastClient,
+				feastClients: tt.fields.feastClients,
 				feastOptions: tt.fields.feastOptions,
 				cacheOptions: tt.fields.cacheOptions,
 				logger:       tt.fields.logger,

@@ -15,18 +15,28 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/merlin/pkg/transformer/cache"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
+
+	"github.com/gojek/merlin/pkg/transformer/cache"
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
 
 const (
 	maxUint = ^uint(0)
 	maxInt  = int(maxUint >> 1)
+
+	// DefaultClientEndpointKey defines a key used to store and retrieve
+	// the default Feast gRPC client from Clients map.
+	// Used for backward compatibility (transformer will use this default client
+	// if standard transformer config does not specify Feast's serving endpoint).
+	DefaultClientEndpointKey Endpoint = "default"
 )
+
+type Endpoint string
+type Clients map[Endpoint]feast.Client
 
 type FeatureRetriever interface {
 	RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error)
@@ -34,7 +44,7 @@ type FeatureRetriever interface {
 }
 
 type FeastRetriever struct {
-	feastClient       feast.Client
+	feastClients      Clients
 	entityExtractor   *EntityExtractor
 	featureTableSpecs []*spec.FeatureTable
 
@@ -45,7 +55,7 @@ type FeastRetriever struct {
 }
 
 func NewFeastRetriever(
-	feastClient feast.Client,
+	feastClients Clients,
 	entityExtractor *EntityExtractor,
 	featureTableSpecs []*spec.FeatureTable,
 	options *Options,
@@ -63,7 +73,7 @@ func NewFeastRetriever(
 	})
 
 	return &FeastRetriever{
-		feastClient:       feastClient,
+		feastClients:      feastClients,
 		entityExtractor:   entityExtractor,
 		featureTableSpecs: featureTableSpecs,
 		defaultValues:     defaultValues,
@@ -75,7 +85,9 @@ func NewFeastRetriever(
 
 // Options for the Feast transformer.
 type Options struct {
-	ServingURL              string        `envconfig:"FEAST_SERVING_URL" required:"true"`
+	DefaultServingEndpoint string   `envconfig:"DEFAULT_FEAST_SERVING_ENDPOINT" required:"true"`
+	ServingEndpoints       []string `envconfig:"FEAST_SERVING_ENDPOINTS" required:"true"`
+
 	StatusMonitoringEnabled bool          `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
 	ValueMonitoringEnabled  bool          `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
 	BatchSize               int           `envconfig:"FEAST_BATCH_SIZE" default:"50"`
@@ -157,6 +169,7 @@ func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.getFeaturePerTable")
 	span.SetTag("table.name", featureTableSpec.TableName)
+	span.SetTag("feast.endpoint", fr.getFeastEndpoint(featureTableSpec.ServingEndpoint))
 	defer span.Finish()
 
 	entities, err := fr.buildEntityRows(ctx, symbolRegistry, featureTableSpec.Entities, featureTableSpec.TableName)
@@ -258,7 +271,8 @@ type feastCall struct {
 	entityList       []feast.Row
 	defaultValues    defaultValues
 
-	feastClient feast.Client
+	feastClient   feast.Client
+	feastEndpoint string
 
 	cache        cache.Cache
 	cacheEnabled bool
@@ -278,7 +292,8 @@ func (fr *FeastRetriever) newFeastCall(
 		entityList:       entityList,
 		defaultValues:    fr.defaultValues,
 
-		feastClient: fr.feastClient,
+		feastClient:   fr.getFeastClient(featureTableSpec.ServingEndpoint),
+		feastEndpoint: fr.getFeastEndpoint(featureTableSpec.ServingEndpoint),
 
 		cache:        fr.cache,
 		cacheEnabled: fr.options.CacheEnabled,
@@ -288,6 +303,21 @@ func (fr *FeastRetriever) newFeastCall(
 		statusMonitoringEnabled: fr.options.StatusMonitoringEnabled,
 		valueMonitoringEnabled:  fr.options.ValueMonitoringEnabled,
 	}
+}
+
+func (fr *FeastRetriever) getFeastClient(endpoint string) feast.Client {
+	client, ok := fr.feastClients[Endpoint(endpoint)]
+	if !ok {
+		return fr.feastClients[DefaultClientEndpointKey]
+	}
+	return client
+}
+
+func (fr *FeastRetriever) getFeastEndpoint(endpoint string) string {
+	if endpoint == "" {
+		return fr.options.DefaultServingEndpoint
+	}
+	return endpoint
 }
 
 func (fc *feastCall) do(
@@ -302,16 +332,18 @@ func (fc *feastCall) do(
 		Features: features,
 	}
 
+	feastEndpoint := fc.feastEndpoint
+
 	startTime := time.Now()
 	feastResponse, err := fc.feastClient.GetOnlineFeatures(ctx, &feastRequest)
 	durationMs := time.Now().Sub(startTime).Milliseconds()
 	if err != nil {
-		feastLatency.WithLabelValues("error").Observe(float64(durationMs))
-		feastError.Inc()
+		feastLatency.WithLabelValues("error", feastEndpoint).Observe(float64(durationMs))
+		feastError.WithLabelValues(feastEndpoint).Inc()
 
 		return batchResult{featuresData: nil, err: err}
 	}
-	feastLatency.WithLabelValues("success").Observe(float64(durationMs))
+	feastLatency.WithLabelValues("success", feastEndpoint).Observe(float64(durationMs))
 
 	entityFeaturePairs, err := fc.buildFeastFeaturesData(ctx, feastResponse, fc.featureTableSpec.Project, columns, entityIndexMap)
 	if err != nil {

@@ -922,6 +922,9 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
+			feastClients := Clients{}
+			feastClients[DefaultClientEndpointKey] = mockFeast
+
 			for _, m := range tt.mockFeast {
 				project := m.request.Project
 				mockFeast.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feast.OnlineFeaturesRequest) bool {
@@ -944,7 +947,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 			expressionStorage := expression.NewStorage()
 			expressionStorage.AddAll(compiledExpressions)
 			entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
-			fr := NewFeastRetriever(mockFeast,
+			fr := NewFeastRetriever(feastClients,
 				entityExtractor,
 				tt.fields.featureTableSpecs,
 				&Options{
@@ -2195,6 +2198,9 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
+			feastClients := Clients{}
+			feastClients[DefaultClientEndpointKey] = mockFeast
+
 			mockCache := &mocks2.Cache{}
 			logger.Debug("Test Case:", zap.String("title", tt.name))
 			for _, cc := range tt.cacheMocks {
@@ -2241,7 +2247,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 			expressionStorage := expression.NewStorage()
 			expressionStorage.AddAll(compiledExpressions)
 			entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
-			fr := NewFeastRetriever(mockFeast,
+			fr := NewFeastRetriever(feastClients,
 				entityExtractor,
 				tt.fields.featureTableSpecs,
 				&Options{
@@ -2799,6 +2805,9 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
+			feastClients := Clients{}
+			feastClients[DefaultClientEndpointKey] = mockFeast
+
 			logger, _ := zap.NewDevelopment()
 
 			sr := symbol.NewRegistry()
@@ -2822,7 +2831,7 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 			expressionStorage := expression.NewStorage()
 			expressionStorage.AddAll(compiledExpressions)
 			entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
-			fr := NewFeastRetriever(mockFeast,
+			fr := NewFeastRetriever(feastClients,
 				entityExtractor,
 				featureTableSpecs,
 				&Options{
@@ -3028,6 +3037,9 @@ func Test_getFeatureValue(t *testing.T) {
 func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 	b.StopTimer()
 	mockFeast := &mocks.Client{}
+	feastClients := Clients{}
+	feastClients[DefaultClientEndpointKey] = mockFeast
+
 	logger, _ := zap.NewDevelopment()
 
 	request := []byte(`{"merchants":[{"id": "M111", "latitude": 1.0, "longitude": 1.0}, {"id": "M222", "latitude": 2.0, "longitude": 2.0}]}`)
@@ -3068,7 +3080,7 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 	expressionStorage := expression.NewStorage()
 	expressionStorage.AddAll(compiledExpressions)
 	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
-	fr := NewFeastRetriever(mockFeast,
+	fr := NewFeastRetriever(feastClients,
 		entityExtractor,
 		featureTableSpecs,
 		&Options{
@@ -3139,6 +3151,8 @@ var (
 
 func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	mockFeast := &mocks.Client{}
+	feastClients := Clients{}
+	feastClients[DefaultClientEndpointKey] = mockFeast
 
 	for i := 0; i < 3; i++ {
 		mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
@@ -3173,7 +3187,7 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	err = json.Unmarshal([]byte(`{"driver_id":"1001"}`), &requestJson)
 	assert.NoError(t, err)
 
-	fr := NewFeastRetriever(mockFeast, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
+	fr := NewFeastRetriever(feastClients, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
 
 	var good, bad uint32
 
