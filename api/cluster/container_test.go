@@ -87,7 +87,7 @@ func TestContainer_GetContainers(t *testing.T) {
 		clusterMetadata := Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
 
 		containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-		ctl, _ := newController(kfClient, v1Client, config.DeploymentConfig{}, containerFetcher, nil)
+		ctl, _ := newController(kfClient, v1Client, nil, config.DeploymentConfig{}, containerFetcher, nil)
 		containers, err := ctl.GetContainers(tt.args.namespace, tt.args.labelSelector)
 		if !tt.wantError {
 			assert.NoErrorf(t, err, "expected no error got %v", err)
