@@ -672,7 +672,7 @@ func TestGetContainers(t *testing.T) {
 			args{project, model, modelVersion},
 			&v1.PodList{
 				Items: []v1.Pod{
-					v1.Pod{
+					{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: fmt.Sprintf("%s-%s-%s-1", project.Name, model.Name, modelVersion.ID),
 							Labels: map[string]string{
@@ -687,7 +687,7 @@ func TestGetContainers(t *testing.T) {
 							},
 						},
 					},
-					v1.Pod{
+					{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: fmt.Sprintf("%s-%s-%s-2", project.Name, model.Name, modelVersion.ID),
 							Labels: map[string]string{

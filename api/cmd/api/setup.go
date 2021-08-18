@@ -10,6 +10,15 @@ import (
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/jinzhu/gorm"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/grpc"
+	"k8s.io/apimachinery/pkg/util/clock"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
 	"github.com/gojek/merlin/api"
 	"github.com/gojek/merlin/batch"
 	"github.com/gojek/merlin/cluster"
@@ -24,20 +33,13 @@ import (
 	"github.com/gojek/merlin/service"
 	"github.com/gojek/merlin/storage"
 	"github.com/gojek/merlin/vault"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/jinzhu/gorm"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/grpc"
-	"k8s.io/apimachinery/pkg/util/clock"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 type deps struct {
-	apiContext      api.AppContext
-	modelDeployment *work.ModelServiceDeployment
-	batchDeployment *work.BatchDeployment
+	apiContext          api.AppContext
+	modelDeployment     *work.ModelServiceDeployment
+	batchDeployment     *work.BatchDeployment
+	imageBuilderJanitor *imagebuilder.Janitor
 }
 
 func initDB(cfg config.DatabaseConfig) (*gorm.DB, func()) {
@@ -113,7 +115,7 @@ func initVault(cfg config.VaultConfig) vault.Client {
 	return vaultClient
 }
 
-func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder) {
+func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder, imageBuilderJanitor *imagebuilder.Janitor) {
 	imgBuilderClusterSecret, err := vaultClient.GetClusterSecret(cfg.ImageBuilderConfig.ClusterName)
 	if err != nil {
 		log.Panicf("unable to retrieve secret for cluster %s from vault", cfg.ImageBuilderConfig.ClusterName)
@@ -154,6 +156,7 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		Environment: cfg.Environment,
 	}
 	webserviceBuilder = imagebuilder.NewModelServiceImageBuilder(kubeClient, webServiceConfig)
+
 	predJobConfig := imagebuilder.Config{
 		BuildContextURL:      cfg.ImageBuilderConfig.PredictionJobBuildContextURI,
 		DockerfilePath:       cfg.ImageBuilderConfig.PredictionJobDockerfilePath,
@@ -169,6 +172,23 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		Environment: cfg.Environment,
 	}
 	predJobBuilder = imagebuilder.NewPredictionJobImageBuilder(kubeClient, predJobConfig)
+
+	ctl, err := cluster.NewController(cluster.Config{
+		Host:       imgBuilderClusterSecret.Endpoint,
+		CACert:     imgBuilderClusterSecret.CaCert,
+		ClientCert: imgBuilderClusterSecret.ClientCert,
+		ClientKey:  imgBuilderClusterSecret.ClientKey,
+
+		ClusterName: cfg.ImageBuilderConfig.ClusterName,
+		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
+	},
+		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
+		config.StandardTransformerConfig{})
+	imageBuilderJanitor = imagebuilder.NewJanitor(ctl, imagebuilder.JanitorConfig{
+		BuildNamespace: cfg.ImageBuilderConfig.BuildNamespace,
+		Retention:      cfg.ImageBuilderConfig.Retention,
+	})
+
 	return
 }
 

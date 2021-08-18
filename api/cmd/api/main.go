@@ -39,7 +39,6 @@ import (
 
 	"github.com/gojek/merlin/api"
 	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/cronjob"
 	"github.com/gojek/merlin/gitlab"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlflow"
@@ -90,20 +89,14 @@ func main() {
 	registerQueueJob(dispatcher, dependencies.modelDeployment, dependencies.batchDeployment)
 	dispatcher.Start()
 
-	appCtx := dependencies.apiContext
-	tracker, err := cronjob.NewTracker(appCtx.ProjectsService,
-		appCtx.ModelsService,
-		storage.NewPredictionJobStorage(db),
-		storage.NewDeploymentStorage(db))
-	if err != nil {
-		log.Panicf("unable to create tracker %v", err)
+	if err := initCronJob(dependencies, db); err != nil {
+		log.Panicf("Failed to initialize cron jobs: %s", err)
 	}
-	tracker.Start()
 
 	router := mux.NewRouter()
 
 	mount(router, "/v1/internal", healthcheck.NewHandler())
-	mount(router, "/v1", api.NewRouter(appCtx))
+	mount(router, "/v1", api.NewRouter(dependencies.apiContext))
 	mount(router, "/metrics", promhttp.Handler())
 	mount(router, "/debug", newPprofRouter())
 
@@ -213,7 +206,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL, cfg.StandardTransformerConfig.FeastCoreAuthAudience, cfg.StandardTransformerConfig.EnableAuth)
 
 	vaultClient := initVault(cfg.VaultConfig)
-	webServiceBuilder, predJobBuilder := initImageBuilder(cfg, vaultClient)
+	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg, vaultClient)
 
 	modelEndpointService := initModelEndpointService(cfg, vaultClient, db)
 
@@ -277,8 +270,9 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		MlflowClient:              mlflowClient,
 	}
 	return deps{
-		apiContext:      apiContext,
-		modelDeployment: modelServiceDeployment,
-		batchDeployment: batchDeployment,
+		apiContext:          apiContext,
+		modelDeployment:     modelServiceDeployment,
+		batchDeployment:     batchDeployment,
+		imageBuilderJanitor: imageBuilderJanitor,
 	}
 }

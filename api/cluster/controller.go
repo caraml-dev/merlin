@@ -22,9 +22,11 @@ import (
 	kfservice "github.com/kubeflow/kfserving/pkg/client/clientset/versioned/typed/serving/v1alpha2"
 	"github.com/kubeflow/kfserving/pkg/constants"
 	"github.com/pkg/errors"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	typedbatchv1 "k8s.io/client-go/kubernetes/typed/batch/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,6 +42,10 @@ type Controller interface {
 
 	ListPods(namespace, labelSelector string) (*v1.PodList, error)
 	StreamPodLogs(namespace, podName string, opts *v1.PodLogOptions) (io.ReadCloser, error)
+
+	ListJobs(namespace, labelSelector string) (*batchv1.JobList, error)
+	DeleteJob(namespace, jobName string, options *metav1.DeleteOptions) error
+	DeleteJobs(namespace string, options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
 
 	ContainerFetcher
 }
@@ -69,6 +75,7 @@ const (
 type controller struct {
 	servingClient              kfservice.ServingV1alpha2Interface
 	clusterClient              corev1.CoreV1Interface
+	batchClient                typedbatchv1.BatchV1Interface
 	namespaceCreator           NamespaceCreator
 	deploymentConfig           *config.DeploymentConfig
 	kfServingResourceTemplater *KFServingResourceTemplater
@@ -90,7 +97,13 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 	if err != nil {
 		return nil, err
 	}
+
 	coreV1Client, err := corev1.NewForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	batchV1Client, err := typedbatchv1.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -101,13 +114,14 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 	})
 
 	kfServingResourceTemplater := NewKFServingResourceTemplater(standardTransformerConfig)
-	return newController(servingClient, coreV1Client, deployConfig, containerFetcher, kfServingResourceTemplater)
+	return newController(servingClient, coreV1Client, batchV1Client, deployConfig, containerFetcher, kfServingResourceTemplater)
 }
 
-func newController(kfservingClient kfservice.ServingV1alpha2Interface, nsClient corev1.CoreV1Interface, deploymentConfig config.DeploymentConfig, containerFetcher ContainerFetcher, templater *KFServingResourceTemplater) (Controller, error) {
+func newController(kfservingClient kfservice.ServingV1alpha2Interface, nsClient corev1.CoreV1Interface, batchV1Client typedbatchv1.BatchV1Interface, deploymentConfig config.DeploymentConfig, containerFetcher ContainerFetcher, templater *KFServingResourceTemplater) (Controller, error) {
 	return &controller{
 		servingClient:              kfservingClient,
 		clusterClient:              nsClient,
+		batchClient:                batchV1Client,
 		namespaceCreator:           NewNamespaceCreator(nsClient, deploymentConfig.NamespaceTimeout),
 		deploymentConfig:           &deploymentConfig,
 		ContainerFetcher:           containerFetcher,
