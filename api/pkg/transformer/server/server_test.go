@@ -13,17 +13,18 @@ import (
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"go.uber.org/zap"
+	"google.golang.org/protobuf/encoding/protojson"
+	"sigs.k8s.io/yaml"
+
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"go.uber.org/zap"
-	"google.golang.org/protobuf/encoding/protojson"
-	"sigs.k8s.io/yaml"
 )
 
 func TestServer_PredictHandler_NoTransformation(t *testing.T) {
@@ -380,10 +381,13 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			}))
 			defer modelServer.Close()
 
-			feastClient := &mocks.Client{}
+			mockFeast := &mocks.Client{}
+			feastClients := feast.Clients{}
+			feastClients[feast.DefaultClientEndpointKey] = mockFeast
+
 			for _, m := range tt.mockFeasts {
 				project := m.request.Project
-				feastClient.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feastSdk.OnlineFeaturesRequest) bool {
+				mockFeast.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feastSdk.OnlineFeaturesRequest) bool {
 					return req.Project == project
 				})).Return(m.response, nil)
 			}
@@ -391,7 +395,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			options := &Options{
 				ModelPredictURL: modelServer.URL,
 			}
-			transformerServer, err := createTransformerServer(tt.specYamlPath, feastClient, options)
+			transformerServer, err := createTransformerServer(tt.specYamlPath, feastClients, options)
 			assert.NoError(t, err)
 
 			reqBody := bytes.NewBuffer(tt.rawRequest.body)
@@ -413,7 +417,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	}
 }
 
-func createTransformerServer(transformerConfigPath string, feastClient feastSdk.Client, options *Options) (*Server, error) {
+func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *Options) (*Server, error) {
 	yamlBytes, err := ioutil.ReadFile(transformerConfigPath)
 	if err != nil {
 		return nil, err
@@ -435,7 +439,7 @@ func createTransformerServer(transformerConfigPath string, feastClient feastSdk.
 		return nil, err
 	}
 
-	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClient, &feast.Options{
+	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClients, &feast.Options{
 		CacheEnabled: true,
 		BatchSize:    100,
 	}, &cache.Options{

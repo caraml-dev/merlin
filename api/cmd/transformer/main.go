@@ -81,32 +81,23 @@ func main() {
 		logger.Fatal("Unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
-	feastHost, feastPort, err := net.SplitHostPort(appConfig.Feast.ServingURL)
+	feastClients, err := initFeastClients(appConfig.Feast, logger)
 	if err != nil {
-		logger.Fatal("Unable to parse Feast Serving URL", zap.String("feast-serving-url", appConfig.Feast.ServingURL), zap.Error(err))
-	}
-	feastPortInt, err := strconv.Atoi(feastPort)
-	if err != nil {
-		logger.Fatal("Unable to parse Feast Serving Port", zap.String("feast-serving-port", feastPort), zap.Error(err))
-	}
-
-	feastClient, err := feastSdk.NewGrpcClient(feastHost, feastPortInt)
-	if err != nil {
-		logger.Fatal("Unable to initialize Feast client", zap.Error(err))
+		logger.Fatal("Unable to initialize Feast Clients", zap.Error(err))
 	}
 
 	s := server.New(&appConfig.Server, logger)
 
 	if transformerConfig.TransformerConfig.Feast != nil {
 		// Feast Enricher
-		feastTransformer, err := initFeastTransformer(appConfig, feastClient, transformerConfig, logger)
+		feastTransformer, err := initFeastTransformer(appConfig, feastClients, transformerConfig, logger)
 		if err != nil {
 			logger.Fatal("Unable to initialize transformer", zap.Error(err))
 		}
 		s.PreprocessHandler = feastTransformer.Enrich
 	} else {
 		// Standard Enricher
-		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClient, &appConfig.Feast, &appConfig.Cache, logger)
+		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClients, &appConfig.Feast, &appConfig.Cache, logger)
 		compiledPipeline, err := compiler.Compile(transformerConfig)
 		if err != nil {
 			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
@@ -121,8 +112,51 @@ func main() {
 	s.Run()
 }
 
+func initFeastClients(feastOptions feast.Options, logger *zap.Logger) (feast.Clients, error) {
+	clients := feast.Clients{}
+
+	// Default Feast gRPC client. Used if user does not specify serving endpoint
+	// on standard transformer config.
+	client, err := newFeastGrpcClient(feastOptions.DefaultServingEndpoint)
+	if err != nil {
+		return nil, err
+	}
+	clients[feast.Endpoint(feast.DefaultClientEndpointKey)] = client
+	logger.Info("Default Feast gRPC client initialized", zap.String("endpoint", feastOptions.DefaultServingEndpoint))
+
+	for _, endpoint := range feastOptions.ServingEndpoints {
+		client, err := newFeastGrpcClient(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		clients[feast.Endpoint(endpoint)] = client
+		logger.Info("Feast gRPC client initialized", zap.String("endpoint", endpoint))
+	}
+
+	return clients, nil
+}
+
+func newFeastGrpcClient(endpoint string) (*feastSdk.GrpcClient, error) {
+	host, port, err := net.SplitHostPort(endpoint)
+	if err != nil {
+		return nil, errors.Errorf("Unable to parse Feast Serving host (%s): %s", endpoint, err)
+	}
+
+	portInt, err := strconv.Atoi(port)
+	if err != nil {
+		return nil, errors.Errorf("Unable to parse Feast Serving port (%s): %s", endpoint, err)
+	}
+
+	client, err := feastSdk.NewGrpcClient(host, portInt)
+	if err != nil {
+		return nil, errors.Errorf("Unable to initialize a Feast gRPC client: %s", err)
+	}
+
+	return client, nil
+}
+
 func initFeastTransformer(appCfg AppConfig,
-	feastClient *feastSdk.GrpcClient,
+	feastClient feast.Clients,
 	transformerConfig *spec.StandardTransformerConfig,
 	logger *zap.Logger) (*feast.Enricher, error) {
 

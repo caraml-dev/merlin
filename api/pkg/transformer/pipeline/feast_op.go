@@ -3,10 +3,8 @@ package pipeline
 import (
 	"context"
 
-	"go.uber.org/zap"
-
-	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
@@ -18,9 +16,9 @@ type FeastOp struct {
 	logger         *zap.Logger
 }
 
-func NewFeastOp(feastClient feastSdk.Client, feastOptions *feast.Options, cache cache.Cache, entityExtractor *feast.EntityExtractor, featureTableSpecs []*spec.FeatureTable, logger *zap.Logger) Op {
+func NewFeastOp(feastClients feast.Clients, feastOptions *feast.Options, cache cache.Cache, entityExtractor *feast.EntityExtractor, featureTableSpecs []*spec.FeatureTable, logger *zap.Logger) Op {
 	feastRetriever := feast.NewFeastRetriever(
-		feastClient,
+		feastClients,
 		entityExtractor,
 		featureTableSpecs,
 		feastOptions,

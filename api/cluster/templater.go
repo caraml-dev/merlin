@@ -288,7 +288,15 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 		transformer.Image = t.standardTransformerConfig.ImageName
 
 		// TODO: (arief)
-		// envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLEnvName, Value: t.standardTransformerConfig.FeastServingURL})
+		feastServingEndpoints := []string{}
+		for _, feastServingEndpoint := range t.standardTransformerConfig.FeastServingEndpoints {
+			feastServingEndpoints = append(feastServingEndpoints, feastServingEndpoint.Host)
+		}
+
+		envVars = append(envVars,
+			models.EnvVar{Name: transformerpkg.DefaultFeastServingEndpointEnvName, Value: t.standardTransformerConfig.DefaultFeastServingEndpoint},
+			models.EnvVar{Name: transformerpkg.FeastServingEndpointsEnvName, Value: strings.Join(feastServingEndpoints, ",")},
+		)
 
 		jaegerCfg := t.standardTransformerConfig.Jaeger
 		jaegerEnvVars := []models.EnvVar{
