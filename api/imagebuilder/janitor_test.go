@@ -38,7 +38,8 @@ var (
 			},
 		},
 		Status: batchv1.JobStatus{
-			Active: 1,
+			Active:    1,
+			StartTime: &now,
 		},
 	}
 
@@ -59,7 +60,8 @@ var (
 			},
 		},
 		Status: batchv1.JobStatus{
-			Failed: 1,
+			Failed:    1,
+			StartTime: &now,
 		},
 	}
 
@@ -82,6 +84,7 @@ var (
 		Status: batchv1.JobStatus{
 			Succeeded:      1,
 			CompletionTime: &yesterday,
+			StartTime:      &yesterday,
 		},
 	}
 
@@ -104,6 +107,7 @@ var (
 		Status: batchv1.JobStatus{
 			Succeeded:      1,
 			CompletionTime: &yesterday,
+			StartTime:      &yesterday,
 		},
 	}
 )
