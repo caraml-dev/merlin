@@ -14,6 +14,12 @@ import (
 )
 
 var (
+	failedJobs = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: "merlin_api",
+		Name:      "image_builder_failed_jobs_count",
+		Help:      "The total number of failed jobs. These jobs won't be deleted by Janitor and must be manually troubleshooted by Merlin administrators.",
+	})
+
 	deleteJobsErrors = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: "merlin_api",
 		Name:      "image_builder_delete_jobs_error_count",
@@ -78,8 +84,15 @@ func (j *Janitor) getExpiredJobs() ([]batchv1.Job, error) {
 
 	now := time.Now()
 	for _, job := range jobs.Items {
-		if now.Sub(job.Status.CompletionTime.Time) > j.cfg.Retention {
-			expiredJobs = append(expiredJobs, job)
+		if job.Status.Failed > 0 {
+			failedJobs.Inc()
+			continue
+		}
+
+		if job.Status.Succeeded > 0 {
+			if now.Sub(job.Status.CompletionTime.Time) > j.cfg.Retention {
+				expiredJobs = append(expiredJobs, job)
+			}
 		}
 	}
 
