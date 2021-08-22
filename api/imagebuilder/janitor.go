@@ -25,7 +25,7 @@ var (
 		Name:      "image_builder_delete_jobs_duration_ms",
 		Help:      "Image builder delete jobs histogram",
 		Buckets:   prometheus.ExponentialBuckets(64, 2, 5), // 64, 128, 256, 512, 1024, +Inf
-	}, []string{"status"})
+	}, []string{"result", "job_status"})
 )
 
 // Janitor cleans the finished image building jobs.
@@ -78,7 +78,11 @@ func (j *Janitor) getExpiredJobs() ([]batchv1.Job, error) {
 
 	now := time.Now()
 	for _, job := range jobs.Items {
-		if now.Sub(job.Status.CompletionTime.Time) > j.cfg.Retention {
+		if job.Status.StartTime == nil {
+			continue
+		}
+
+		if now.Sub(job.Status.StartTime.Time) > j.cfg.Retention {
 			expiredJobs = append(expiredJobs, job)
 		}
 	}
@@ -88,9 +92,8 @@ func (j *Janitor) getExpiredJobs() ([]batchv1.Job, error) {
 
 func (j *Janitor) deleteJobs(expiredJobs []batchv1.Job) error {
 	for _, job := range expiredJobs {
-		startTime := time.Now()
-
-		logMsg := fmt.Sprintf("Image Builder Janitor: Deleting an image builder job (%s)", job.Name)
+		jobStatusType := j.getJobStatusType(job.Status)
+		logMsg := fmt.Sprintf("Image Builder Janitor: Deleting an image builder job (Name: %s, Status: %s)", job.Name, jobStatusType)
 
 		deleteOptions := &metav1.DeleteOptions{}
 		if j.cfg.DryRun {
@@ -100,21 +103,32 @@ func (j *Janitor) deleteJobs(expiredJobs []batchv1.Job) error {
 
 		log.Debugf(logMsg)
 
+		startTime := time.Now()
 		err := j.cc.DeleteJob(j.cfg.BuildNamespace, job.Name, deleteOptions)
-		durationMs := time.Now().Sub(startTime).Milliseconds()
+		durationMs := time.Since(startTime).Microseconds()
 
 		if err != nil {
 			// Failed deletion would be picked up by the next clean up job.
 			log.Errorf("failed to delete an image builder job (%s): %s", job.Name, err)
 
 			deleteJobsErrors.Inc()
-			deleteJobsLatency.WithLabelValues("error").Observe(float64(durationMs))
+			deleteJobsLatency.WithLabelValues("error", jobStatusType).Observe(float64(durationMs))
 
 			continue
 		}
 
-		deleteJobsLatency.WithLabelValues("success").Observe(float64(durationMs))
+		deleteJobsLatency.WithLabelValues("success", jobStatusType).Observe(float64(durationMs))
 	}
 
 	return nil
+}
+
+func (j *Janitor) getJobStatusType(jobStatus batchv1.JobStatus) string {
+	if jobStatus.Active > 0 {
+		return "active"
+	}
+	if jobStatus.Succeeded > 0 {
+		return "succeeded"
+	}
+	return "failed"
 }
