@@ -18,9 +18,6 @@ setup:
 	@test -x ${GOPATH}/bin/goimports || go get -u golang.org/x/tools/cmd/goimports
 	@test -x ${GOPATH}/bin/golint || go get -u golang.org/x/lint/golint
 	@test -x ${GOPATH}/bin/gotest || go get -u github.com/rakyll/gotest
-	@test -x ${GOPATH}/bin/protoc-gen-go || go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.25
-	@test -x ${GOPATH}/bin/protoc-gen-go-grpc || go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
-	@test -x ${GOPATH}/bin/protoc-gen-go-json || go install github.com/mitchellh/protoc-gen-go-json@v1.1.0
 
 .PHONY: init-dep
 init-dep: init-dep-ui init-dep-api
