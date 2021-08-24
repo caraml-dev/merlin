@@ -89,7 +89,6 @@ func NewFeastRetriever(
 type Options struct {
 	DefaultServingURL string   `envconfig:"DEFAULT_FEAST_SERVING_URL" required:"true"`
 	ServingURLs       []string `envconfig:"FEAST_SERVING_URLS" required:"true"`
-	CoreURL           string   `envconfig:"FEAST_CORE_URL" required:"true"`
 
 	StatusMonitoringEnabled bool          `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
 	ValueMonitoringEnabled  bool          `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
