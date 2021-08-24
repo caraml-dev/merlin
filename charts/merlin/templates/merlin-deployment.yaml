@@ -146,9 +146,9 @@ spec:
           - name: IMG_BUILDER_RETENTION
             value: "{{ .Values.merlin.imageBuilder.retention }}"
           - name: DEFAULT_FEAST_SERVING_URL
-            value: "{{ .Values.merlin.transformer.feast.defaultServingEndpoint }}"
+            value: "{{ .Values.merlin.transformer.feast.defaultServingURL }}"
           - name: FEAST_SERVING_URLS
-            value: {{ .Values.merlin.transformer.feast.servingEndpoints | toJson | quote }}
+            value: {{ .Values.merlin.transformer.feast.servingURLs | toJson | quote }}
           - name: FEAST_CORE_URL
             value: "{{ .Values.merlin.transformer.feast.coreURL }}"
           - name: FEAST_CORE_AUTH_AUDIENCE
