@@ -28,9 +28,13 @@ merlin:
 
   apiHost: http://merlin.mlp/v1
 
-  docsURL: [
-    {"href":"https://github.com/gojek/merlin/blob/main/docs/getting-started/README.md","label":"Getting Started with Merlin"}
-  ]
+  docsURL:
+    [
+      {
+        "href": "https://github.com/gojek/merlin/blob/main/docs/getting-started/README.md",
+        "label": "Getting Started with Merlin",
+      },
+    ]
 
   # Comma-separated value of Docker registries that can be chosen in deployment page
   dockerRegistries: ghcr.io/gojek,ghcr.io/your-company
@@ -89,19 +93,20 @@ merlin:
 
   transformer:
     feast:
-      defaultServingEndpoint: online-serving-redis.feast.dev
-      servingEndpoints: [
-        {
-          host: "online-serving-redis.feast.dev",
-          label: "Online Serving with Redis",
-          icon: "redis",
-        },
-        {
-          host: "online-serving-bigtable.feast.dev",
-          label: "Online Serving with BigTable",
-          icon: "bigtable",
-        }
-      ]
+      defaultServingURL: online-serving-redis.feast.dev
+      servingURLs:
+        [
+          {
+            host: "online-serving-redis.feast.dev",
+            label: "Online Serving with Redis",
+            icon: "redis",
+          },
+          {
+            host: "online-serving-bigtable.feast.dev",
+            label: "Online Serving with BigTable",
+            icon: "bigtable",
+          },
+        ]
       coreURL: core.feast.dev
       coreAuthAudience: core.feast.dev
       authEnabled: false
@@ -289,10 +294,10 @@ mlflow:
   # Feel free to put other podLabels as you deem fit.
   #
   # podLabels:
-    # environment: unknown
-    # team: unknown
-    # stream: unknown
-    # orchestrator: unknown
+  #   environment: unknown
+  #   team: unknown
+  #   stream: unknown
+  #   orchestrator: unknown
 
 mlflow-postgresql:
   enabled: true
