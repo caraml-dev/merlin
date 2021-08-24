@@ -923,7 +923,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
 			feastClients := Clients{}
-			feastClients[DefaultClientEndpointKey] = mockFeast
+			feastClients[DefaultClientURLKey] = mockFeast
 
 			for _, m := range tt.mockFeast {
 				project := m.request.Project
@@ -2199,7 +2199,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
 			feastClients := Clients{}
-			feastClients[DefaultClientEndpointKey] = mockFeast
+			feastClients[DefaultClientURLKey] = mockFeast
 
 			mockCache := &mocks2.Cache{}
 			logger.Debug("Test Case:", zap.String("title", tt.name))
@@ -2806,7 +2806,7 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
 			feastClients := Clients{}
-			feastClients[DefaultClientEndpointKey] = mockFeast
+			feastClients[DefaultClientURLKey] = mockFeast
 
 			logger, _ := zap.NewDevelopment()
 
@@ -3038,7 +3038,7 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 	b.StopTimer()
 	mockFeast := &mocks.Client{}
 	feastClients := Clients{}
-	feastClients[DefaultClientEndpointKey] = mockFeast
+	feastClients[DefaultClientURLKey] = mockFeast
 
 	logger, _ := zap.NewDevelopment()
 
@@ -3152,7 +3152,7 @@ var (
 func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	mockFeast := &mocks.Client{}
 	feastClients := Clients{}
-	feastClients[DefaultClientEndpointKey] = mockFeast
+	feastClients[DefaultClientURLKey] = mockFeast
 
 	for i := 0; i < 3; i++ {
 		mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).

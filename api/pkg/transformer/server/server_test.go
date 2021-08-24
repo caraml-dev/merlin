@@ -87,7 +87,6 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			mockPreprocessHandler := func(ctx context.Context, request []byte, requestHeaders map[string]string) ([]byte, error) {
 				return test.expModelRequest, nil
 			}
@@ -383,7 +382,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 
 			mockFeast := &mocks.Client{}
 			feastClients := feast.Clients{}
-			feastClients[feast.DefaultClientEndpointKey] = mockFeast
+			feastClients[feast.DefaultClientURLKey] = mockFeast
 
 			for _, m := range tt.mockFeasts {
 				project := m.request.Project
@@ -527,7 +526,7 @@ func Test_newHeimdallClient(t *testing.T) {
 				server := httptest.NewServer(http.HandlerFunc(tt.handler))
 				defer server.Close()
 
-				var requestBody = bytes.NewReader([]byte(nil))
+				requestBody := bytes.NewReader([]byte(nil))
 				if tt.requestBodyString != "" {
 					requestBody = bytes.NewReader([]byte(tt.requestBodyString))
 				}
@@ -612,7 +611,7 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 				server := httptest.NewServer(http.HandlerFunc(tt.handler))
 				defer server.Close()
 
-				var requestBody = bytes.NewReader([]byte(nil))
+				requestBody := bytes.NewReader([]byte(nil))
 				if tt.requestBodyString != "" {
 					requestBody = bytes.NewReader([]byte(tt.requestBodyString))
 				}

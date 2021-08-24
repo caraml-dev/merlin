@@ -41,6 +41,9 @@ import (
 
 // AppContext contains the services of the Merlin application.
 type AppContext struct {
+	DB       *gorm.DB
+	Enforcer enforcer.Enforcer
+
 	EnvironmentService        service.EnvironmentService
 	ProjectsService           service.ProjectsService
 	ModelsService             service.ModelsService
@@ -51,13 +54,15 @@ type AppContext struct {
 	PredictionJobService      service.PredictionJobService
 	SecretService             service.SecretService
 	ModelEndpointAlertService service.ModelEndpointAlertService
-	DB                        *gorm.DB
-	AuthorizationEnabled      bool
-	MonitoringConfig          config.MonitoringConfig
-	AlertEnabled              bool
-	Enforcer                  enforcer.Enforcer
-	FeastCoreClient           core.CoreServiceClient
-	MlflowClient              mlflow.Client
+
+	AuthorizationEnabled bool
+	AlertEnabled         bool
+	MonitoringConfig     config.MonitoringConfig
+
+	StandardTransformerConfig config.StandardTransformerConfig
+
+	FeastCoreClient core.CoreServiceClient
+	MlflowClient    mlflow.Client
 }
 
 // Handler handles the API requests and responses.

@@ -28,6 +28,7 @@ import (
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 )
@@ -406,5 +407,10 @@ func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Cont
 		return err
 	}
 
-	return pipeline.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig)
+	feastOptions := &feast.Options{
+		DefaultServingURL: c.StandardTransformerConfig.DefaultFeastServingURL,
+		ServingURLs:       c.StandardTransformerConfig.FeastServingURLs.URLs(),
+	}
+
+	return pipeline.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig, feastOptions)
 }
