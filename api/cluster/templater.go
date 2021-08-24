@@ -287,16 +287,10 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 		}
 		transformer.Image = t.standardTransformerConfig.ImageName
 
-		// TODO: (arief)
-		feastServingURLs := []string{}
-		for _, feastServingURL := range t.standardTransformerConfig.FeastServingURLs {
-			feastServingURLs = append(feastServingURLs, feastServingURL.Host)
-		}
+		feastServingURLs := t.standardTransformerConfig.FeastServingURLs.URLs()
 
-		envVars = append(envVars,
-			models.EnvVar{Name: transformerpkg.DefaultFeastServingURLEnvName, Value: t.standardTransformerConfig.DefaultFeastServingURL},
-			models.EnvVar{Name: transformerpkg.FeastServingURLsEnvName, Value: strings.Join(feastServingURLs, ",")},
-		)
+		envVars = append(envVars, models.EnvVar{Name: transformerpkg.DefaultFeastServingURLEnvName, Value: t.standardTransformerConfig.DefaultFeastServingURL})
+		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLsEnvName, Value: strings.Join(feastServingURLs, ",")})
 
 		jaegerCfg := t.standardTransformerConfig.Jaeger
 		jaegerEnvVars := []models.EnvVar{
@@ -306,7 +300,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 			{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType},
 			{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
 		}
-		envVars = append(jaegerEnvVars, envVars...)
+		envVars = append(envVars, jaegerEnvVars...)
 	}
 
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
