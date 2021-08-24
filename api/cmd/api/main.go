@@ -49,8 +49,10 @@ import (
 	"github.com/gojek/merlin/warden"
 )
 
-var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
-var onlyOneSignalHandler = make(chan struct{})
+var (
+	shutdownSignals      = []os.Signal{os.Interrupt, syscall.SIGTERM}
+	onlyOneSignalHandler = make(chan struct{})
+)
 
 func main() {
 	ctx := context.Background()
@@ -254,23 +256,28 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	mlflowConfig := cfg.MlflowConfig
 	mlflowClient := mlflow.NewClient(mlflowConfig.TrackingURL)
 	apiContext := api.AppContext{
+		DB:       db,
+		Enforcer: authEnforcer,
+
 		EnvironmentService:        environmentService,
 		ProjectsService:           projectsService,
 		ModelsService:             modelsService,
 		ModelEndpointsService:     modelEndpointService,
 		VersionsService:           versionsService,
 		EndpointsService:          versionEndpointService,
-		PredictionJobService:      predictionJobService,
 		LogService:                logService,
+		PredictionJobService:      predictionJobService,
 		SecretService:             secretService,
 		ModelEndpointAlertService: modelEndpointAlertService,
-		AuthorizationEnabled:      cfg.AuthorizationConfig.AuthorizationEnabled,
-		MonitoringConfig:          cfg.FeatureToggleConfig.MonitoringConfig,
-		AlertEnabled:              cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
-		DB:                        db,
-		Enforcer:                  authEnforcer,
-		FeastCoreClient:           coreClient,
-		MlflowClient:              mlflowClient,
+
+		AuthorizationEnabled: cfg.AuthorizationConfig.AuthorizationEnabled,
+		AlertEnabled:         cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
+		MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
+
+		StandardTransformerConfig: cfg.StandardTransformerConfig,
+
+		FeastCoreClient: coreClient,
+		MlflowClient:    mlflowClient,
 	}
 	return deps{
 		apiContext:          apiContext,

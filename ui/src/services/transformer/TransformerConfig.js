@@ -88,8 +88,8 @@ export class TransformerConfig {
     // For backward compatibilty with Feast Enricher transformer
     transformerConfig.feast &&
       transformerConfig.feast.forEach(feast => {
-        if (!feast.servingEndpoint || feast.servingEndpoint === "") {
-          feast.servingEndpoint = appConfig.defaultFeastServingEndpoint;
+        if (!feast.servingUrl || feast.servingUrl === "") {
+          feast.servingUrl = appConfig.defaultFeastServingUrl;
         }
 
         feast.entities &&
@@ -162,8 +162,8 @@ export class Pipeline {
     pipeline.inputs.forEach(input => {
       input.feast &&
         input.feast.forEach(feast => {
-          if (!feast.servingEndpoint || feast.servingEndpoint === "") {
-            feast.servingEndpoint = appConfig.defaultFeastServingEndpoint;
+          if (!feast.servingUrl || feast.servingUrl === "") {
+            feast.servingUrl = appConfig.defaultFeastServingUrl;
           }
 
           feast.entities &&

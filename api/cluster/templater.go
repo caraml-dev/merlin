@@ -300,7 +300,8 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 			{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType},
 			{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
 		}
-		envVars = append(envVars, jaegerEnvVars...)
+		// We want Jaeger's env vars to be on the first order so these values could be overriden by users.
+		envVars = append(jaegerEnvVars, envVars...)
 	}
 
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})

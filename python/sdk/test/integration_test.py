@@ -815,6 +815,7 @@ def test_standard_transformer_with_multiple_feast(
     )
     config_file = open(config_file_path, "wt")
     config_file.write(rendered_config)
+    config_file.close()
 
     transformer = StandardTransformer(config_file=config_file_path, enabled=True)
 
