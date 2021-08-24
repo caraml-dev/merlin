@@ -112,9 +112,9 @@ func main() {
 		DockerRegistries:  reactConfig.DockerRegistries,
 		MaxAllowedReplica: reactConfig.MaxAllowedReplica,
 
-		DefaultFeastServingEndpoint: cfg.StandardTransformerConfig.DefaultFeastServingEndpoint,
-		FeastServingEndpoints:       cfg.StandardTransformerConfig.FeastServingEndpoints,
-		FeastCoreURL:                reactConfig.FeastCoreURL,
+		DefaultFeastServingURL: cfg.StandardTransformerConfig.DefaultFeastServingURL,
+		FeastServingURLs:       cfg.StandardTransformerConfig.FeastServingURLs,
+		FeastCoreURL:           reactConfig.FeastCoreURL,
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,

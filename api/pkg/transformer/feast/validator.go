@@ -5,9 +5,8 @@ import (
 	"fmt"
 
 	"github.com/antonmedv/expr"
-	"github.com/oliveagle/jsonpath"
-
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
+	"github.com/oliveagle/jsonpath"
 	"github.com/pkg/errors"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -15,7 +14,7 @@ import (
 )
 
 // ValidateTransformerConfig validate transformer config by checking the presence of entity and features in feast core
-func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, featureTableConfigs []*spec.FeatureTable, symbolRegistry symbol.Registry) error {
+func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, featureTableConfigs []*spec.FeatureTable, symbolRegistry symbol.Registry, feastOptions *Options) error {
 	// for each feature retrieval table
 	for _, config := range featureTableConfigs {
 		if len(config.Entities) == 0 {
@@ -24,6 +23,12 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 
 		if len(config.Features) == 0 {
 			return errors.New("no feature")
+		}
+
+		if config.ServingUrl != "" {
+			if !feastOptions.IsServingURLSupported(config.ServingUrl) {
+				return errors.Errorf("serving url not supported: %s", config.ServingUrl)
+			}
 		}
 
 		entitiesReq := &core.ListEntitiesRequest{

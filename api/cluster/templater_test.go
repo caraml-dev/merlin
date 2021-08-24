@@ -90,9 +90,9 @@ var (
 	}
 
 	standardTransformerConfig = config.StandardTransformerConfig{
-		ImageName:                   "merlin-standard-transformer",
-		DefaultFeastServingEndpoint: "serving.feast.dev:8081",
-		FeastServingEndpoints: config.FeastServingEndpoints{
+		ImageName:              "merlin-standard-transformer",
+		DefaultFeastServingURL: "serving.feast.dev:8081",
+		FeastServingURLs: config.FeastServingURLs{
 			{Host: "serving-redis.feast.dev:8081"},
 			{Host: "serving-bigtable.feast.dev:8081"},
 		},
@@ -822,10 +822,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
-										{Name: transformer.DefaultFeastServingEndpointEnvName, Value: standardTransformerConfig.DefaultFeastServingEndpoint},
+										{Name: transformer.DefaultFeastServingURLEnvName, Value: standardTransformerConfig.DefaultFeastServingURL},
 										{
-											Name:  transformer.FeastServingEndpointsEnvName,
-											Value: standardTransformerConfig.FeastServingEndpoints[0].Host + "," + standardTransformerConfig.FeastServingEndpoints[1].Host,
+											Name:  transformer.FeastServingURLsEnvName,
+											Value: standardTransformerConfig.FeastServingURLs[0].Host + "," + standardTransformerConfig.FeastServingURLs[1].Host,
 										},
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},

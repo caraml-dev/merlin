@@ -15,24 +15,20 @@ const logoMaps = {
   bigtable: logoBigtable
 };
 
-export const FeastServingEndpointSelect = ({
-  servingEndpoint,
-  onChange,
-  isInvalid
-}) => {
-  const options = appConfig.feastServingEndpoints.map(endpoint => {
+export const FeastServingUrlSelect = ({ servingUrl, onChange, isInvalid }) => {
+  const options = appConfig.feastServingUrls.map(url => {
     return {
-      value: endpoint.host,
-      inputDisplay: `${endpoint.label} (${endpoint.host})`,
+      value: url.host,
+      inputDisplay: `${url.label} (${url.host})`,
       dropdownDisplay: (
         <EuiFlexGroup alignItems="center" gutterSize="m">
           <EuiFlexItem grow={false}>
-            <EuiIcon size="l" type={logoMaps[endpoint.icon]} />
+            <EuiIcon size="l" type={logoMaps[url.icon]} />
           </EuiFlexItem>
           <EuiFlexItem>
-            <strong>{endpoint.label}</strong>
+            <strong>{url.label}</strong>
             <EuiText size="xs" color="subdued">
-              <p className="euiTextColor--subdued">{endpoint.host}</p>
+              <p className="euiTextColor--subdued">{url.host}</p>
             </EuiText>
           </EuiFlexItem>
         </EuiFlexGroup>
@@ -43,9 +39,9 @@ export const FeastServingEndpointSelect = ({
   return (
     <EuiSuperSelect
       options={options}
-      valueOfSelected={servingEndpoint || ""}
+      valueOfSelected={servingUrl || ""}
       onChange={onChange}
-      placeholder="Select Feast Serving Endpoint"
+      placeholder="Select Feast Serving Url"
       isInvalid={isInvalid}
       hasDividers
       fullWidth

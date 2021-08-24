@@ -351,7 +351,7 @@ export class FeastInput {
     }
 
     this.project = "";
-    this.servingEndpoint = appConfig.defaultFeastServingEndpoint;
+    this.servingUrl = appConfig.defaultFeastServingUrl;
     this.entities = [];
     this.features = [];
   }

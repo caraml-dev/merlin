@@ -1,9 +1,9 @@
 package transformer
 
 const (
-	StandardTransformerConfigEnvName   = "STANDARD_TRANSFORMER_CONFIG"
-	DefaultFeastServingEndpointEnvName = "DEFAULT_FEAST_SERVING_ENDPOINT"
-	FeastServingEndpointsEnvName       = "FEAST_SERVING_ENDPOINTS"
+	StandardTransformerConfigEnvName = "STANDARD_TRANSFORMER_CONFIG"
+	DefaultFeastServingURLEnvName    = "DEFAULT_FEAST_SERVING_URL"
+	FeastServingURLsEnvName          = "FEAST_SERVING_URLS"
 
 	FeastFeatureJSONField = "feast_features"
 

@@ -11,7 +11,7 @@ transformerConfig:
             features:
               - name: entity_1:feature_1
                 valueType: INT64
-                defaultValue: '0'
+                defaultValue: "0"
           - tableName:
             project: entity_2_table
             entities:
@@ -21,7 +21,7 @@ transformerConfig:
             features:
               - name: entity_2
                 valueType: INT64
-                defaultValue: '0'
+                defaultValue: "0"
       - tables:
           - name: entity_3_table
             baseTable:
