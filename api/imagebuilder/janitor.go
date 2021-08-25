@@ -95,7 +95,10 @@ func (j *Janitor) deleteJobs(expiredJobs []batchv1.Job) error {
 		jobStatusType := j.getJobStatusType(job.Status)
 		logMsg := fmt.Sprintf("Image Builder Janitor: Deleting an image builder job (Name: %s, Status: %s)", job.Name, jobStatusType)
 
-		deleteOptions := &metav1.DeleteOptions{}
+		propagationPolicy := metav1.DeletePropagationBackground
+		deleteOptions := &metav1.DeleteOptions{
+			PropagationPolicy: &propagationPolicy,
+		}
 		if j.cfg.DryRun {
 			deleteOptions.DryRun = []string{"All"}
 			logMsg = "Dry run: All. " + logMsg
