@@ -28,6 +28,11 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
+var (
+	mockRedisServingURL    = "localhost:6566"
+	mockBigtableServingURL = "localhost:6567"
+)
+
 func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 
@@ -878,7 +883,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					},
 				},
 			},
-
 			args: args{
 				ctx:     context.Background(),
 				request: []byte(`{"driver_id":"1001"}`),
@@ -918,10 +922,166 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "calls redis and bigtable serving",
+			fields: fields{
+				featureTableSpecs: []*spec.FeatureTable{
+					{
+						Project:    "default",
+						ServingUrl: mockRedisServingURL,
+						Entities: []*spec.Entity{
+
+							{
+								Name:      "driver_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.driver_id",
+								},
+							},
+						},
+						Features: []*spec.Feature{
+							{
+								Name:         "double_list_feature",
+								DefaultValue: "0.0",
+								ValueType:    "DOUBLE_LIST",
+							},
+						},
+					},
+					{
+						Project:    "default",
+						ServingUrl: mockBigtableServingURL,
+						Entities: []*spec.Entity{
+
+							{
+								Name:      "driver_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.driver_id",
+								},
+							},
+						},
+						Features: []*spec.Feature{
+							{
+								Name:         "double_list_feature",
+								DefaultValue: "0.0",
+								ValueType:    "DOUBLE_LIST",
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"driver_id":"1001"}`),
+			},
+			mockFeast: []mockFeast{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"double_list_feature": {Val: &feastTypes.Value_DoubleListVal{DoubleListVal: &feastTypes.DoubleList{Val: []float64{111.1111, 222.2222}}}},
+										"driver_id":           feast.StrVal("1001"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"double_list_feature": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"double_list_feature": {Val: &feastTypes.Value_DoubleListVal{DoubleListVal: &feastTypes.DoubleList{Val: []float64{111.1111, 222.2222}}}},
+										"driver_id":           feast.StrVal("1001"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"double_list_feature": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []*transTypes.FeatureTable{
+				{
+					Name:    "driver_id",
+					Columns: []string{"driver_id", "double_list_feature"},
+					Data: transTypes.ValueRows{
+						transTypes.ValueRow{"1001", []float64{111.1111, 222.2222}},
+					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE_LIST},
+				},
+				{
+					Name:    "driver_id",
+					Columns: []string{"driver_id", "double_list_feature"},
+					Data: transTypes.ValueRows{
+						transTypes.ValueRow{"1001", []float64{111.1111, 222.2222}},
+					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE_LIST},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "unsupported serving url",
+			fields: fields{
+				featureTableSpecs: []*spec.FeatureTable{
+					{
+						Project:    "default",
+						ServingUrl: "this-is-unsupported-serving-url:8080",
+						Entities: []*spec.Entity{
+
+							{
+								Name:      "driver_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.driver_id",
+								},
+							},
+						},
+						Features: []*spec.Feature{
+							{
+								Name:         "double_list_feature",
+								DefaultValue: "0.0",
+								ValueType:    "DOUBLE_LIST",
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"driver_id":"1001"}`),
+			},
+			mockFeast: []mockFeast{},
+			want:      []*transTypes.FeatureTable{},
+			wantErr:   true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
+			feastClients := Clients{}
+			feastClients[DefaultClientURLKey] = mockFeast
+			feastClients[URL(mockRedisServingURL)] = mockFeast
+			feastClients[URL(mockBigtableServingURL)] = mockFeast
+
 			for _, m := range tt.mockFeast {
 				project := m.request.Project
 				mockFeast.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feast.OnlineFeaturesRequest) bool {
@@ -944,7 +1104,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 			expressionStorage := expression.NewStorage()
 			expressionStorage.AddAll(compiledExpressions)
 			entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
-			fr := NewFeastRetriever(mockFeast,
+			fr := NewFeastRetriever(feastClients,
 				entityExtractor,
 				tt.fields.featureTableSpecs,
 				&Options{
@@ -2195,6 +2355,9 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
+			feastClients := Clients{}
+			feastClients[DefaultClientURLKey] = mockFeast
+
 			mockCache := &mocks2.Cache{}
 			logger.Debug("Test Case:", zap.String("title", tt.name))
 			for _, cc := range tt.cacheMocks {
@@ -2241,7 +2404,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_BatchingCache(t *test
 			expressionStorage := expression.NewStorage()
 			expressionStorage.AddAll(compiledExpressions)
 			entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
-			fr := NewFeastRetriever(mockFeast,
+			fr := NewFeastRetriever(feastClients,
 				entityExtractor,
 				tt.fields.featureTableSpecs,
 				&Options{
@@ -2799,6 +2962,9 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
+			feastClients := Clients{}
+			feastClients[DefaultClientURLKey] = mockFeast
+
 			logger, _ := zap.NewDevelopment()
 
 			sr := symbol.NewRegistry()
@@ -2822,7 +2988,7 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 			expressionStorage := expression.NewStorage()
 			expressionStorage.AddAll(compiledExpressions)
 			entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
-			fr := NewFeastRetriever(mockFeast,
+			fr := NewFeastRetriever(feastClients,
 				entityExtractor,
 				featureTableSpecs,
 				&Options{
@@ -3028,6 +3194,9 @@ func Test_getFeatureValue(t *testing.T) {
 func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 	b.StopTimer()
 	mockFeast := &mocks.Client{}
+	feastClients := Clients{}
+	feastClients[DefaultClientURLKey] = mockFeast
+
 	logger, _ := zap.NewDevelopment()
 
 	request := []byte(`{"merchants":[{"id": "M111", "latitude": 1.0, "longitude": 1.0}, {"id": "M222", "latitude": 2.0, "longitude": 2.0}]}`)
@@ -3068,7 +3237,7 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 	expressionStorage := expression.NewStorage()
 	expressionStorage.AddAll(compiledExpressions)
 	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
-	fr := NewFeastRetriever(mockFeast,
+	fr := NewFeastRetriever(feastClients,
 		entityExtractor,
 		featureTableSpecs,
 		&Options{
@@ -3139,6 +3308,8 @@ var (
 
 func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	mockFeast := &mocks.Client{}
+	feastClients := Clients{}
+	feastClients[DefaultClientURLKey] = mockFeast
 
 	for i := 0; i < 3; i++ {
 		mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
@@ -3173,7 +3344,7 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	err = json.Unmarshal([]byte(`{"driver_id":"1001"}`), &requestJson)
 	assert.NoError(t, err)
 
-	fr := NewFeastRetriever(mockFeast, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
+	fr := NewFeastRetriever(feastClients, entityExtractor, defaultFeatureTableSpecs, options, nil, logger)
 
 	var good, bad uint32
 

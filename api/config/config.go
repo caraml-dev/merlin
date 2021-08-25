@@ -161,12 +161,38 @@ type MlpAPIConfig struct {
 }
 
 type StandardTransformerConfig struct {
-	ImageName             string `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
-	FeastServingURL       string `envconfig:"FEAST_SERVING_URL" required:"true"`
-	FeastCoreURL          string `envconfig:"FEAST_CORE_URL" required:"true"`
-	FeastCoreAuthAudience string `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
-	EnableAuth            bool   `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
-	Jaeger                JaegerConfig
+	ImageName              string           `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
+	DefaultFeastServingURL string           `envconfig:"DEFAULT_FEAST_SERVING_URL" required:"true"`
+	FeastServingURLs       FeastServingURLs `envconfig:"FEAST_SERVING_URLS" required:"true"`
+	FeastCoreURL           string           `envconfig:"FEAST_CORE_URL" required:"true"`
+	FeastCoreAuthAudience  string           `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
+	EnableAuth             bool             `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
+	Jaeger                 JaegerConfig
+}
+
+type FeastServingURLs []FeastServingURL
+
+type FeastServingURL struct {
+	Host  string `json:"host"`
+	Label string `json:"label"`
+	Icon  string `json:"icon"`
+}
+
+func (u *FeastServingURLs) Decode(value string) error {
+	var urls FeastServingURLs
+	if err := json.Unmarshal([]byte(value), &urls); err != nil {
+		return err
+	}
+	*u = urls
+	return nil
+}
+
+func (u *FeastServingURLs) URLs() []string {
+	urls := []string{}
+	for _, url := range *u {
+		urls = append(urls, url.Host)
+	}
+	return urls
 }
 
 type JaegerConfig struct {

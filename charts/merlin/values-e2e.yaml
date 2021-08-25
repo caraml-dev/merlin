@@ -23,41 +23,54 @@ merlin:
     enabled: false
 
   environmentConfigs:
-  - name: dev
-    is_default: true
-    cluster: dev
-    region: id
-    gcp_project: gcp-project
-    deployment_timeout: 10m
-    namespace_timeout: 2m
-    max_cpu: 250m
-    max_memory: 256Mi
-    queue_resource_percentage: 20
-    is_prediction_job_enabled: true
-    is_default_prediction_job: true
-    default_prediction_job_config:
-      executor_replica: 1
-      driver_cpu_request: 25m
-      driver_memory_request: 128Mi
-      executor_cpu_request: 25m
-      executor_memory_request: 128Mi
-    default_deployment_config:
-      min_replica: 0
-      max_replica: 1
-      cpu_request: "25m"
-      memory_request: "128Mi"
-    default_transformer_config:
-      min_replica: 0
-      max_replica: 1
-      cpu_request: "25m"
-      memory_request: "128Mi"
+    - name: dev
+      is_default: true
+      cluster: dev
+      region: id
+      gcp_project: gcp-project
+      deployment_timeout: 10m
+      namespace_timeout: 2m
+      max_cpu: 250m
+      max_memory: 256Mi
+      queue_resource_percentage: 20
+      is_prediction_job_enabled: true
+      is_default_prediction_job: true
+      default_prediction_job_config:
+        executor_replica: 1
+        driver_cpu_request: 25m
+        driver_memory_request: 128Mi
+        executor_cpu_request: 25m
+        executor_memory_request: 128Mi
+      default_deployment_config:
+        min_replica: 0
+        max_replica: 1
+        cpu_request: "25m"
+        memory_request: "128Mi"
+      default_transformer_config:
+        min_replica: 0
+        max_replica: 1
+        cpu_request: "25m"
+        memory_request: "128Mi"
 
   imageBuilder:
     clusterName: "dev"
 
   transformer:
     feast:
-      servingURL: serving.feast.dev
+      defaultServingURL: online-serving-redis.feast.dev
+      servingURLs:
+        [
+          {
+            host: "online-serving-redis.feast.dev",
+            label: "Online Serving with Redis",
+            icon: "redis",
+          },
+          {
+            host: "online-serving-bigtable.feast.dev",
+            label: "Online Serving with BigTable",
+            icon: "bigtable",
+          },
+        ]
       coreURL: core.feast.dev
     image: merlin-transformer:1.0.0
 
@@ -94,9 +107,9 @@ mlflow-postgresql:
   postgresqlDatabase: mlflow
   postgresqlPassword: mlflow
   resources:
-      requests:
-        cpu: 25m
-        memory: 256Mi
+    requests:
+      cpu: 25m
+      memory: 256Mi
 
 swagger:
   enabled: false

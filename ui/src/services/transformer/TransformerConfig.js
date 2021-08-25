@@ -15,6 +15,7 @@
  */
 
 import * as yup from "yup";
+import { appConfig } from "../../config";
 import {
   feastInputSchema,
   pipelineSchema
@@ -84,8 +85,13 @@ export class TransformerConfig {
   static fromJson(json) {
     const transformerConfig = objectAssignDeep(new TransformerConfig(), json);
 
+    // For backward compatibilty with Feast Enricher transformer
     transformerConfig.feast &&
       transformerConfig.feast.forEach(feast => {
+        if (!feast.servingUrl || feast.servingUrl === "") {
+          feast.servingUrl = appConfig.defaultFeastServingUrl;
+        }
+
         feast.entities &&
           feast.entities.forEach(entity => {
             if (entity.udf) {
@@ -156,6 +162,10 @@ export class Pipeline {
     pipeline.inputs.forEach(input => {
       input.feast &&
         input.feast.forEach(feast => {
+          if (!feast.servingUrl || feast.servingUrl === "") {
+            feast.servingUrl = appConfig.defaultFeastServingUrl;
+          }
+
           feast.entities &&
             feast.entities.forEach(entity => {
               if (entity.udf) {
@@ -341,6 +351,7 @@ export class FeastInput {
     }
 
     this.project = "";
+    this.servingUrl = appConfig.defaultFeastServingUrl;
     this.entities = [];
     this.features = [];
   }

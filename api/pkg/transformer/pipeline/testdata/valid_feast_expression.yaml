@@ -23,10 +23,10 @@ transformerConfig:
             features:
               - name: driver_feature_1
                 valueType: INT64
-                defaultValue: '0'
+                defaultValue: "0"
               - name: driver_feature_2
                 valueType: INT64
-                defaultValue: '0'
+                defaultValue: "0"
           - tableName: customer_feature_table
             project: default
             entities:
@@ -42,7 +42,7 @@ transformerConfig:
             features:
               - name: customer_feature_1
                 valueType: INT64
-                defaultValue: '0'
+                defaultValue: "0"
     transformations:
       - tableTransformation:
           inputTable: driver_table
@@ -57,7 +57,7 @@ transformerConfig:
             - updateColumns:
                 - column: customer_id
                   expression: customer_id
-            - selectColumns: ["customer_id", "driver_id" ,"name", "rank"]
+            - selectColumns: ["customer_id", "driver_id", "name", "rank"]
       - tableJoin:
           leftTable: driver_table
           rightTable: driver_feature_table
@@ -71,7 +71,14 @@ transformerConfig:
             - sort:
                 - column: "rank"
                   order: ASC
-            - selectColumns: [ "rank", "driver_id", "customer_id", "driver_feature_1", "driver_feature_2" ]
+            - selectColumns:
+                [
+                  "rank",
+                  "driver_id",
+                  "customer_id",
+                  "driver_feature_1",
+                  "driver_feature_2",
+                ]
     outputs:
       - jsonOutput:
           jsonTemplate:

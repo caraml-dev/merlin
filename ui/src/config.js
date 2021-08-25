@@ -37,6 +37,21 @@ export const appConfig = {
     : [],
   defaultDockerRegistry:
     process.env.REACT_APP_DEFAULT_DOCKER_REGISTRY || "docker.io", // User Docker Hub as the default
+  defaultFeastServingUrl:
+    getEnv("REACT_APP_DEFAULT_FEAST_SERVING_URL") ||
+    "online-serving-redis.feast.dev",
+  feastServingUrls: getEnv("REACT_APP_FEAST_SERVING_URLS") || [
+    {
+      host: "online-serving-redis.feast.dev",
+      label: "Online Serving with Redis",
+      icon: "redis"
+    },
+    {
+      host: "online-serving-bigtable.feast.dev",
+      label: "Online Serving with BigTable",
+      icon: "bigtable"
+    }
+  ],
   scaling: {
     maxAllowedReplica: getEnv("REACT_APP_MAX_ALLOWED_REPLICA")
       ? parseInt(getEnv("REACT_APP_MAX_ALLOWED_REPLICA"))
