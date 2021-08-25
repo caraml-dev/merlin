@@ -286,7 +286,11 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 			}
 		}
 		transformer.Image = t.standardTransformerConfig.ImageName
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLEnvName, Value: t.standardTransformerConfig.FeastServingURL})
+
+		feastServingURLs := t.standardTransformerConfig.FeastServingURLs.URLs()
+
+		envVars = append(envVars, models.EnvVar{Name: transformerpkg.DefaultFeastServingURLEnvName, Value: t.standardTransformerConfig.DefaultFeastServingURL})
+		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLsEnvName, Value: strings.Join(feastServingURLs, ",")})
 
 		jaegerCfg := t.standardTransformerConfig.Jaeger
 		jaegerEnvVars := []models.EnvVar{
@@ -296,6 +300,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 			{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType},
 			{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
 		}
+		// We want Jaeger's env vars to be on the first order so these values could be overriden by users.
 		envVars = append(jaegerEnvVars, envVars...)
 	}
 

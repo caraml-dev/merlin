@@ -15,4 +15,3 @@ transformerConfig:
                 fromTable:
                   tableName: "entity_table"
                   format: "SPLIT"
-                

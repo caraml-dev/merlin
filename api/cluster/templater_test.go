@@ -18,6 +18,7 @@ package cluster
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
@@ -90,9 +91,13 @@ var (
 	}
 
 	standardTransformerConfig = config.StandardTransformerConfig{
-		ImageName:       "merlin-standard-transformer",
-		FeastServingURL: "serving.feast.dev:8081",
-		FeastCoreURL:    "core.feast.dev:8081",
+		ImageName:              "merlin-standard-transformer",
+		DefaultFeastServingURL: "serving.feast.dev:8081",
+		FeastServingURLs: config.FeastServingURLs{
+			{Host: "serving-redis.feast.dev:8081"},
+			{Host: "serving-bigtable.feast.dev:8081"},
+		},
+		FeastCoreURL: "core.feast.dev:8081",
 		Jaeger: config.JaegerConfig{
 			AgentHost:    "localhost",
 			AgentPort:    "6831",
@@ -766,7 +771,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					EnvVars: models.EnvVars{
 						{
 							Name:  transformer.StandardTransformerConfigEnvName,
-							Value: `  { "standard_transformer": null}`,
+							Value: `{"standard_transformer": null}`,
 						},
 					},
 				},
@@ -818,7 +823,11 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
-										{Name: transformer.FeastServingURLEnvName, Value: standardTransformerConfig.FeastServingURL},
+										{Name: transformer.DefaultFeastServingURLEnvName, Value: standardTransformerConfig.DefaultFeastServingURL},
+										{
+											Name:  transformer.FeastServingURLsEnvName,
+											Value: standardTransformerConfig.FeastServingURLs[0].Host + "," + standardTransformerConfig.FeastServingURLs[1].Host,
+										},
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
@@ -1733,16 +1742,75 @@ func TestCreateTransformerSpec(t *testing.T) {
 		want *kfsv1alpha2.TransformerSpec
 	}{
 		{
-			"complete",
+			"standard transformer",
 			args{
 				&models.Service{
 					Name:      "test-1",
 					Namespace: "test",
 				},
 				&models.Transformer{
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
-					Command: "python",
-					Args:    "main.py",
+					TransformerType: models.StandardTransformerType,
+					Image:           standardTransformerConfig.ImageName,
+					Command:         "python",
+					Args:            "main.py",
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    1,
+						MaxReplica:    1,
+						CPURequest:    cpuRequest,
+						MemoryRequest: memoryRequest,
+					},
+				},
+				&config.DeploymentConfig{},
+			},
+			&kfsv1alpha2.TransformerSpec{
+				Custom: &kfsv1alpha2.CustomSpec{
+					Container: v1.Container{
+						Name:    "transformer",
+						Image:   standardTransformerConfig.ImageName,
+						Command: []string{"python"},
+						Args:    []string{"main.py"},
+						Env: []v1.EnvVar{
+							{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
+							{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+							{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+							{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
+							{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
+							{Name: transformer.DefaultFeastServingURLEnvName, Value: standardTransformerConfig.DefaultFeastServingURL},
+							{Name: transformer.FeastServingURLsEnvName, Value: strings.Join(standardTransformerConfig.FeastServingURLs.URLs(), ",")},
+							{Name: envTransformerPort, Value: defaultTransformerPort},
+							{Name: envTransformerModelName, Value: "test-1"},
+							{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
+						},
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceCPU:    cpuRequest,
+								v1.ResourceMemory: memoryRequest,
+							},
+							Limits: v1.ResourceList{
+								v1.ResourceCPU:    cpuLimit,
+								v1.ResourceMemory: memoryLimit,
+							},
+						},
+					},
+				},
+				DeploymentSpec: kfsv1alpha2.DeploymentSpec{
+					MinReplicas: &one,
+					MaxReplicas: one,
+				},
+			},
+		},
+		{
+			"custom transformer",
+			args{
+				&models.Service{
+					Name:      "test-1",
+					Namespace: "test",
+				},
+				&models.Transformer{
+					TransformerType: models.CustomTransformerType,
+					Image:           "ghcr.io/gojek/merlin-transformer-test",
+					Command:         "python",
+					Args:            "main.py",
 					ResourceRequest: &models.ResourceRequest{
 						MinReplica:    1,
 						MaxReplica:    1,

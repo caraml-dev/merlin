@@ -2,8 +2,10 @@ package transformer
 
 const (
 	StandardTransformerConfigEnvName = "STANDARD_TRANSFORMER_CONFIG"
-	FeastServingURLEnvName           = "FEAST_SERVING_URL"
-	FeastFeatureJSONField            = "feast_features"
+	DefaultFeastServingURLEnvName    = "DEFAULT_FEAST_SERVING_URL"
+	FeastServingURLsEnvName          = "FEAST_SERVING_URLS"
+
+	FeastFeatureJSONField = "feast_features"
 
 	JaegerAgentHost    = "JAEGER_AGENT_HOST"
 	JaegerAgentPort    = "JAEGER_AGENT_PORT"

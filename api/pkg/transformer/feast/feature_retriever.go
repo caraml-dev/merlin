@@ -15,17 +15,29 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/merlin/pkg/transformer/cache"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
+
+	"github.com/gojek/merlin/pkg/transformer/cache"
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
 
 const (
 	maxUint = ^uint(0)
 	maxInt  = int(maxUint >> 1)
+
+	// DefaultClientURLKey defines a key used to store and retrieve
+	// the default Feast gRPC client from Clients map.
+	// Used for backward compatibility (transformer will use this default client
+	// if standard transformer config does not specify Feast's serving url).
+	DefaultClientURLKey URL = "default"
+)
+
+type (
+	URL     string
+	Clients map[URL]feast.Client
 )
 
 type FeatureRetriever interface {
@@ -34,7 +46,7 @@ type FeatureRetriever interface {
 }
 
 type FeastRetriever struct {
-	feastClient       feast.Client
+	feastClients      Clients
 	entityExtractor   *EntityExtractor
 	featureTableSpecs []*spec.FeatureTable
 
@@ -45,7 +57,7 @@ type FeastRetriever struct {
 }
 
 func NewFeastRetriever(
-	feastClient feast.Client,
+	feastClients Clients,
 	entityExtractor *EntityExtractor,
 	featureTableSpecs []*spec.FeatureTable,
 	options *Options,
@@ -63,7 +75,7 @@ func NewFeastRetriever(
 	})
 
 	return &FeastRetriever{
-		feastClient:       feastClient,
+		feastClients:      feastClients,
 		entityExtractor:   entityExtractor,
 		featureTableSpecs: featureTableSpecs,
 		defaultValues:     defaultValues,
@@ -75,7 +87,9 @@ func NewFeastRetriever(
 
 // Options for the Feast transformer.
 type Options struct {
-	ServingURL              string        `envconfig:"FEAST_SERVING_URL" required:"true"`
+	DefaultServingURL string   `envconfig:"DEFAULT_FEAST_SERVING_URL" required:"true"`
+	ServingURLs       []string `envconfig:"FEAST_SERVING_URLS" required:"true"`
+
 	StatusMonitoringEnabled bool          `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
 	ValueMonitoringEnabled  bool          `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
 	BatchSize               int           `envconfig:"FEAST_BATCH_SIZE" default:"50"`
@@ -88,6 +102,15 @@ type Options struct {
 	FeastClientRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
 	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"1000"` // How long, in milliseconds, to wait after a circuit opens before testing for recovery
 	FeastClientErrorPercentThreshold  int           `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
+}
+
+func (o Options) IsServingURLSupported(url string) bool {
+	for _, supportedURL := range o.ServingURLs {
+		if supportedURL == url {
+			return true
+		}
+	}
+	return false
 }
 
 const defaultProjectName = "default"
@@ -157,6 +180,7 @@ func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.getFeaturePerTable")
 	span.SetTag("table.name", featureTableSpec.TableName)
+	span.SetTag("feast.url", fr.getFeastURL(featureTableSpec.ServingUrl))
 	defer span.Finish()
 
 	entities, err := fr.buildEntityRows(ctx, symbolRegistry, featureTableSpec.Entities, featureTableSpec.TableName)
@@ -259,6 +283,7 @@ type feastCall struct {
 	defaultValues    defaultValues
 
 	feastClient feast.Client
+	feastURL    string
 
 	cache        cache.Cache
 	cacheEnabled bool
@@ -272,13 +297,19 @@ type feastCall struct {
 func (fr *FeastRetriever) newFeastCall(
 	featureTableSpec *spec.FeatureTable,
 	entityList []feast.Row,
-) *feastCall {
+) (*feastCall, error) {
+	feastClient, err := fr.getFeastClient(featureTableSpec.ServingUrl)
+	if err != nil {
+		return nil, err
+	}
+
 	return &feastCall{
 		featureTableSpec: featureTableSpec,
 		entityList:       entityList,
 		defaultValues:    fr.defaultValues,
 
-		feastClient: fr.feastClient,
+		feastClient: feastClient,
+		feastURL:    fr.getFeastURL(featureTableSpec.ServingUrl),
 
 		cache:        fr.cache,
 		cacheEnabled: fr.options.CacheEnabled,
@@ -287,7 +318,27 @@ func (fr *FeastRetriever) newFeastCall(
 
 		statusMonitoringEnabled: fr.options.StatusMonitoringEnabled,
 		valueMonitoringEnabled:  fr.options.ValueMonitoringEnabled,
+	}, nil
+}
+
+func (fr *FeastRetriever) getFeastClient(url string) (feast.Client, error) {
+	if url == "" {
+		return fr.feastClients[DefaultClientURLKey], nil
 	}
+
+	client, ok := fr.feastClients[URL(url)]
+	if ok {
+		return client, nil
+	}
+
+	return nil, errors.New("invalid feast serving url")
+}
+
+func (fr *FeastRetriever) getFeastURL(url string) string {
+	if url == "" {
+		return fr.options.DefaultServingURL
+	}
+	return url
 }
 
 func (fc *feastCall) do(
@@ -302,16 +353,18 @@ func (fc *feastCall) do(
 		Features: features,
 	}
 
+	feastURL := fc.feastURL
+
 	startTime := time.Now()
 	feastResponse, err := fc.feastClient.GetOnlineFeatures(ctx, &feastRequest)
 	durationMs := time.Now().Sub(startTime).Milliseconds()
 	if err != nil {
-		feastLatency.WithLabelValues("error").Observe(float64(durationMs))
-		feastError.Inc()
+		feastLatency.WithLabelValues("error", feastURL).Observe(float64(durationMs))
+		feastError.WithLabelValues(feastURL).Inc()
 
 		return batchResult{featuresData: nil, err: err}
 	}
-	feastLatency.WithLabelValues("success").Observe(float64(durationMs))
+	feastLatency.WithLabelValues("success", feastURL).Observe(float64(durationMs))
 
 	entityFeaturePairs, err := fc.buildFeastFeaturesData(ctx, feastResponse, fc.featureTableSpec.Project, columns, entityIndexMap)
 	if err != nil {
@@ -433,7 +486,11 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		}
 		batchedEntities := entityNotInCache[startIndex:endIndex]
 
-		f := fr.newFeastCall(featureTableSpec, batchedEntities)
+		f, err := fr.newFeastCall(featureTableSpec, batchedEntities)
+		if err != nil {
+			return nil, err
+		}
+
 		hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
 			batchResultChan <- f.do(ctx, features, columns, entityIndices)
 			return nil
