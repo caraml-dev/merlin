@@ -3,10 +3,12 @@ package pipeline
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
-	"github.com/opentracing/opentracing-go"
 )
 
 type TableJoinOp struct {
@@ -38,45 +40,50 @@ func (t TableJoinOp) Execute(context context.Context, environment *Environment) 
 	}
 
 	var resultTable *table.Table
-	joinColumn := t.tableJoinSpec.OnColumn
+
+	joinColumns := []string{t.tableJoinSpec.OnColumn}
+	if len(t.tableJoinSpec.OnColumns) > 0 {
+		joinColumns = t.tableJoinSpec.OnColumns
+	}
+
 	switch t.tableJoinSpec.How {
 	case spec.JoinMethod_LEFT:
-		err := validateJoinColumn(leftTable, rightTable, joinColumn)
+		err := validateJoinColumns(leftTable, rightTable, joinColumns)
 		if err != nil {
 			return err
 		}
 
-		resultTable, err = leftTable.LeftJoin(rightTable, joinColumn)
+		resultTable, err = leftTable.LeftJoin(rightTable, joinColumns)
 		if err != nil {
 			return err
 		}
 	case spec.JoinMethod_RIGHT:
-		err := validateJoinColumn(leftTable, rightTable, joinColumn)
+		err := validateJoinColumns(leftTable, rightTable, joinColumns)
 		if err != nil {
 			return err
 		}
 
-		resultTable, err = leftTable.RightJoin(rightTable, joinColumn)
+		resultTable, err = leftTable.RightJoin(rightTable, joinColumns)
 		if err != nil {
 			return err
 		}
 	case spec.JoinMethod_INNER:
-		err := validateJoinColumn(leftTable, rightTable, joinColumn)
+		err := validateJoinColumns(leftTable, rightTable, joinColumns)
 		if err != nil {
 			return err
 		}
 
-		resultTable, err = leftTable.InnerJoin(rightTable, joinColumn)
+		resultTable, err = leftTable.InnerJoin(rightTable, joinColumns)
 		if err != nil {
 			return err
 		}
 	case spec.JoinMethod_OUTER:
-		err := validateJoinColumn(leftTable, rightTable, joinColumn)
+		err := validateJoinColumns(leftTable, rightTable, joinColumns)
 		if err != nil {
 			return err
 		}
 
-		resultTable, err = leftTable.OuterJoin(rightTable, joinColumn)
+		resultTable, err = leftTable.OuterJoin(rightTable, joinColumns)
 		if err != nil {
 			return err
 		}
@@ -112,15 +119,28 @@ func getTable(env *Environment, tableName string) (*table.Table, error) {
 	return tableOut, nil
 }
 
-func validateJoinColumn(leftTable *table.Table, rightTable *table.Table, joinColumn string) error {
-	_, err := leftTable.GetColumn(joinColumn)
-	if err != nil {
-		return fmt.Errorf("invalid join column: column %s does not exists in left table", joinColumn)
+func validateJoinColumns(leftTable *table.Table, rightTable *table.Table, joinColumns []string) error {
+	var errMessages []string
+
+	for _, joinColumn := range joinColumns {
+		notFoundTables := []string{}
+
+		if _, err := leftTable.GetColumn(joinColumn); err != nil {
+			notFoundTables = append(notFoundTables, "left table")
+		}
+
+		if _, err := rightTable.GetColumn(joinColumn); err != nil {
+			notFoundTables = append(notFoundTables, "right table")
+		}
+
+		if len(notFoundTables) > 0 {
+			errMessages = append(errMessages, fmt.Sprintf("invalid join column: column %s does not exists in %s", joinColumn, strings.Join(notFoundTables, " and ")))
+		}
 	}
 
-	_, err = rightTable.GetColumn(joinColumn)
-	if err != nil {
-		return fmt.Errorf("invalid join column: column %s does not exists in right table", joinColumn)
+	if len(errMessages) > 0 {
+		return fmt.Errorf("%s", strings.Join(errMessages, "\n"))
 	}
-	return err
+
+	return nil
 }
