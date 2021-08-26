@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import {
+  EuiCode,
   EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
@@ -8,9 +9,10 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { DraggableHeader } from "../../../DraggableHeader";
 import { SelectTableJoin } from "./SelectTableJoin";
+import { ColumnsComboBox } from "./ColumnsComboBox";
 
 export const TableJoinCard = ({
   index = 0,
@@ -109,19 +111,19 @@ export const TableJoinCard = ({
 
               <EuiFlexGroup direction="row">
                 <EuiFlexItem>
-                  <EuiFormRow
-                    label="On Column *"
-                    isInvalid={!!errors.onColumn}
-                    error={errors.onColumn}
-                    fullWidth>
-                    <EuiFieldText
-                      fullWidth
-                      value={data.onColumn || ""}
-                      onChange={e => onChange("onColumn")(e.target.value)}
-                      isInvalid={!!errors.onColumn}
-                      name="cpu"
-                    />
-                  </EuiFormRow>
+                  <ColumnsComboBox
+                    columns={data.onColumns || []}
+                    onChange={onChange("onColumns")}
+                    errors={get(errors, "onColumns")}
+                    title="On Columns *"
+                    description={
+                      <p>
+                        Will do join on these columns. Use <EuiCode>↩</EuiCode>{" "}
+                        to enter new entry, use <EuiCode>,</EuiCode> as
+                        delimiter.
+                      </p>
+                    }
+                  />
                 </EuiFlexItem>
               </EuiFlexGroup>
             </Fragment>
