@@ -1,6 +1,7 @@
 name: merlin-model
 dependencies:
   - python=3.7
+  - pip=20.2.4
   - pip:
       - -r file:requirements.txt
       - --extra-index-url=https://test.pypi.org/simple

@@ -311,6 +311,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.ContextSubPath))
 	}
 
+	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kanikoPodName,
@@ -321,6 +322,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 			Completions:             &jobCompletions,
 			BackoffLimit:            &jobBackOffLimit,
 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
 					// https://stackoverflow.com/questions/54091659/kubernetes-pods-disappear-after-failed-jobs

@@ -71,8 +71,9 @@ var (
 		ArtifactURI: artifactURI,
 	}
 
-	timeout, _ = time.ParseDuration("10s")
-	config     = Config{
+	timeout, _      = time.ParseDuration("10s")
+	timeoutInSecond = int64(timeout / time.Second)
+	config          = Config{
 		BuildContextURL:      buildContextURL,
 		DockerfilePath:       "./Dockerfile",
 		BuildNamespace:       buildNamespace,
@@ -127,6 +128,7 @@ func TestBuildImage(t *testing.T) {
 					Completions:             &jobCompletions,
 					BackoffLimit:            &jobBackOffLimit,
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
@@ -206,6 +208,7 @@ func TestBuildImage(t *testing.T) {
 					Completions:             &jobCompletions,
 					BackoffLimit:            &jobBackOffLimit,
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
@@ -293,6 +296,7 @@ func TestBuildImage(t *testing.T) {
 					Completions:             &jobCompletions,
 					BackoffLimit:            &jobBackOffLimit,
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
@@ -371,6 +375,7 @@ func TestBuildImage(t *testing.T) {
 					Completions:             &jobCompletions,
 					BackoffLimit:            &jobBackOffLimit,
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
@@ -452,6 +457,7 @@ func TestBuildImage(t *testing.T) {
 					Completions:             &jobCompletions,
 					BackoffLimit:            &jobBackOffLimit,
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
@@ -521,6 +527,7 @@ func TestBuildImage(t *testing.T) {
 					Completions:             &jobCompletions,
 					BackoffLimit:            &jobBackOffLimit,
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
