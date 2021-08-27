@@ -8,6 +8,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
@@ -21,13 +22,14 @@ func NewTableJoinOp(tableJoinSpec *spec.TableJoin) Op {
 	}
 }
 
-func (t TableJoinOp) Execute(context context.Context, environment *Environment) error {
-	span, _ := opentracing.StartSpanFromContext(context, "pipeline.TableJoin")
+func (t TableJoinOp) Execute(ctx context.Context, environment *Environment) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "pipeline.TableJoin")
 	defer span.Finish()
 
 	span.SetTag("table.left", t.tableJoinSpec.LeftTable)
 	span.SetTag("table.right", t.tableJoinSpec.RightTable)
 	span.SetTag("table.output", t.tableJoinSpec.OutputTable)
+	span.SetTag("table.how", t.tableJoinSpec.How)
 
 	leftTable, err := getTable(environment, t.tableJoinSpec.LeftTable)
 	if err != nil {
@@ -107,7 +109,11 @@ func (t TableJoinOp) Execute(context context.Context, environment *Environment) 
 }
 
 func getTable(env *Environment, tableName string) (*table.Table, error) {
-	tableRaw := env.symbolRegistry[tableName]
+	return getTableFromSymbolRegistry(env.symbolRegistry, tableName)
+}
+
+func getTableFromSymbolRegistry(sr symbol.Registry, tableName string) (*table.Table, error) {
+	tableRaw := sr[tableName]
 	if tableRaw == nil {
 		return nil, fmt.Errorf("table %s is not declared", tableName)
 	}

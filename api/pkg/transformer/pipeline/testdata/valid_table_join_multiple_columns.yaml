@@ -1,0 +1,71 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - tables:
+          - name: driver_table
+            baseTable:
+              fromJson:
+                jsonPath: $.drivers[*]
+                addRowNumber: true
+      - feast:
+          - tableName: driver_feature_table
+            project: default
+            entities:
+              - name: driver_id
+                valueType: STRING
+                jsonPath: $.drivers[*].id
+            features:
+              - name: name
+                valueType: STRING
+                defaultValue: ""
+              - name: driver_feature_1
+                valueType: INT64
+                defaultValue: "0"
+              - name: driver_feature_2
+                valueType: INT64
+                defaultValue: "0"
+              - name: driver_feature_3
+                valueType: INT64
+                defaultValue: "0"
+    transformations:
+      - tableTransformation:
+          inputTable: driver_table
+          outputTable: driver_table
+          steps:
+            - sort:
+                - column: row_number
+                  order: DESC
+            - renameColumns:
+                row_number: rank
+                id: driver_id
+            - selectColumns: [driver_id, name, rank]
+      - tableJoin:
+          leftTable: driver_table
+          rightTable: driver_feature_table
+          outputTable: result_table
+          how: LEFT
+          onColumns: [driver_id, name]
+      - tableTransformation:
+          inputTable: result_table
+          outputTable: result_table
+          steps:
+            - sort:
+                - column: rank
+                  order: ASC
+            - selectColumns:
+                [
+                  rank,
+                  driver_id,
+                  name,
+                  driver_feature_1,
+                  driver_feature_2,
+                  driver_feature_3,
+                ]
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: result_table
+                  format: SPLIT
