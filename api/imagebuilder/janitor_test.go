@@ -5,13 +5,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gojek/merlin/cluster"
-	"github.com/gojek/merlin/cluster/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/gojek/merlin/cluster"
+	"github.com/gojek/merlin/cluster/mocks"
 )
 
 var (
@@ -248,4 +250,26 @@ func TestJanitor_deleteJobs_two(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, 2, totalDelete)
+}
+
+func TestJanitor_deleteJob_notFound(t *testing.T) {
+	mc := &mocks.Controller{}
+	j := NewJanitor(mc, JanitorConfig{BuildNamespace: namespace, Retention: retention})
+
+	mc.On("DeleteJob", namespace, completedJob1.Name, mock.Anything).
+		Return(errors.NewNotFound(batchv1.Resource("jobs"), "batch-image-builder-expired-1"))
+
+	err := j.deleteJobs([]batchv1.Job{completedJob1})
+	assert.Nil(t, err)
+}
+
+func TestJanitor_deleteJob_serverTimeout(t *testing.T) {
+	mc := &mocks.Controller{}
+	j := NewJanitor(mc, JanitorConfig{BuildNamespace: namespace, Retention: retention})
+
+	mc.On("DeleteJob", namespace, completedJob1.Name, mock.Anything).
+		Return(errors.NewServerTimeout(batchv1.Resource("jobs"), "reason", 0))
+
+	err := j.deleteJobs([]batchv1.Job{completedJob1})
+	assert.Nil(t, err)
 }
