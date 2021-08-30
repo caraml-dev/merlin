@@ -29,6 +29,7 @@ RUN conda env create -f ./environment.yaml && \
 RUN gsutil cp -r ${MODEL_URL} .
 RUN /bin/bash -c ". activate merlin-model && \
     sed -i 's/mlflow$/mlflow==1.6.0/' /model/conda.yaml && \
+    sed -i 's/pip$/pip=20.2.4/' /model/conda.yaml && \
     conda env update --name merlin-model --file /model/conda.yaml && \
     python -m pyfuncserver --model_dir /model --dry_run"
 

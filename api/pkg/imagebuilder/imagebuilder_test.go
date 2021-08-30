@@ -103,7 +103,7 @@ func TestBuildImage(t *testing.T) {
 		version *models.Version
 	}
 
-	var tests = []struct {
+	tests := []struct {
 		name              string
 		args              args
 		existingJob       *batchv1.Job
@@ -818,7 +818,6 @@ func TestGetContainers(t *testing.T) {
 			assert.Equal(t, expectedPod.Spec.Containers[0].Name, container.Name)
 		}
 	}
-
 }
 
 func Test_kanikoBuilder_imageRefExists(t *testing.T) {
