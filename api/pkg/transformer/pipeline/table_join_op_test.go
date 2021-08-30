@@ -2,10 +2,10 @@ package pipeline
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 
@@ -28,7 +28,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 	)
 
 	orderTable := table.New(
-		series.New([]interface{}{111, 222, 333, 444}, series.Int, "oid"),
+		series.New([]interface{}{111, 222, 333, 444}, series.Int, "order_id"),
 		series.New([]interface{}{3, 3, 2, 4}, series.Int, "customer_id"),
 		series.New([]interface{}{500, 10, 12, 24}, series.Int, "amount"),
 	)
@@ -41,6 +41,18 @@ func TestTableJoinOp_Execute(t *testing.T) {
 		series.New([]interface{}{11, 22, 33}, series.Int, "col_b"),
 	)
 
+	table1 := table.New(
+		series.New([]interface{}{1, 2, 3}, series.Int, "col_int"),
+		series.New([]interface{}{"a", "b", "c"}, series.String, "col_string"),
+		series.New([]interface{}{true, false, true}, series.Bool, "col_bool"),
+	)
+
+	table2 := table.New(
+		series.New([]interface{}{1, 2, 3, 4, 5}, series.Int, "col_int"),
+		series.New([]interface{}{"a", "b", "c", "d", "e"}, series.String, "col_string"),
+		series.New([]interface{}{0.1, 0.2, 0.3, 0.4, 0.5}, series.Int, "col_float"),
+	)
+
 	env := NewEnvironment(&CompiledPipeline{
 		compiledJsonpath:   compiledJsonPath,
 		compiledExpression: compiledExpression,
@@ -50,6 +62,8 @@ func TestTableJoinOp_Execute(t *testing.T) {
 	env.SetSymbol("order_table", orderTable)
 	env.SetSymbol("table_a", tableA)
 	env.SetSymbol("table_b", tableB)
+	env.SetSymbol("table_1", table1)
+	env.SetSymbol("table_2", table2)
 	env.SetSymbol("integer_var", 12345)
 
 	tests := []struct {
@@ -61,7 +75,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 		expError     error
 	}{
 		{
-			name: "success: left join two table",
+			name: "success: left join two table -- join on one column (using deprecated onColumn field)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "customer_table",
 				RightTable:  "order_table",
@@ -75,14 +89,14 @@ func TestTableJoinOp_Execute(t *testing.T) {
 					series.New([]interface{}{1, 2, 3, 3, 4}, series.Int, "customer_id"),
 					series.New([]interface{}{"Ramesh", "Hardik", "Komal", "Komal", "Elise"}, series.String, "name"),
 					series.New([]interface{}{24, 25, 23, 23, 20}, series.Int, "age"),
-					series.New([]interface{}{nil, 333, 111, 222, 444}, series.Int, "oid"),
+					series.New([]interface{}{nil, 333, 111, 222, 444}, series.Int, "order_id"),
 					series.New([]interface{}{nil, 12, 500, 10, 24}, series.Int, "amount")),
 			},
 			wantErr:  false,
 			expError: nil,
 		},
 		{
-			name: "success: right join two table",
+			name: "success: right join two table -- join on one column (using deprecated onColumn field)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "order_table",
 				RightTable:  "customer_table",
@@ -94,7 +108,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			expVariables: map[string]interface{}{
 				"result_table": table.New(
 					series.New([]interface{}{2, 3, 3, 4, 1}, series.Int, "customer_id"),
-					series.New([]interface{}{333, 111, 222, 444, nil}, series.Int, "oid"),
+					series.New([]interface{}{333, 111, 222, 444, nil}, series.Int, "order_id"),
 					series.New([]interface{}{12, 500, 10, 24, nil}, series.Int, "amount"),
 					series.New([]interface{}{"Hardik", "Komal", "Komal", "Elise", "Ramesh"}, series.String, "name"),
 					series.New([]interface{}{25, 23, 23, 20, 24}, series.Int, "age"),
@@ -104,7 +118,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			expError: nil,
 		},
 		{
-			name: "success: inner join two table",
+			name: "success: inner join two table -- join on one column (using deprecated onColumn field)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "customer_table",
 				RightTable:  "order_table",
@@ -118,7 +132,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 					series.New([]interface{}{2, 3, 3, 4}, series.Int, "customer_id"),
 					series.New([]interface{}{"Hardik", "Komal", "Komal", "Elise"}, series.String, "name"),
 					series.New([]interface{}{25, 23, 23, 20}, series.Int, "age"),
-					series.New([]interface{}{333, 111, 222, 444}, series.Int, "oid"),
+					series.New([]interface{}{333, 111, 222, 444}, series.Int, "order_id"),
 					series.New([]interface{}{12, 500, 10, 24}, series.Int, "amount"),
 				),
 			},
@@ -126,7 +140,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			expError: nil,
 		},
 		{
-			name: "success: outer join two table",
+			name: "success: outer join two table -- join on one column (using deprecated onColumn field)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "customer_table",
 				RightTable:  "order_table",
@@ -140,7 +154,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 					series.New([]interface{}{1, 2, 3, 3, 4}, series.Int, "customer_id"),
 					series.New([]interface{}{"Ramesh", "Hardik", "Komal", "Komal", "Elise"}, series.String, "name"),
 					series.New([]interface{}{24, 25, 23, 23, 20}, series.Int, "age"),
-					series.New([]interface{}{nil, 333, 111, 222, 444}, series.Int, "oid"),
+					series.New([]interface{}{nil, 333, 111, 222, 444}, series.Int, "order_id"),
 					series.New([]interface{}{nil, 12, 500, 10, 24}, series.Int, "amount"),
 				),
 			},
@@ -148,7 +162,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			expError: nil,
 		},
 		{
-			name: "success: cross join two table",
+			name: "success: cross join two table (no onColumn)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "table_a",
 				RightTable:  "table_b",
@@ -166,7 +180,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			expError: nil,
 		},
 		{
-			name: "success: concat  two table",
+			name: "success: concat two table (no onColumn)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "table_a",
 				RightTable:  "table_b",
@@ -184,20 +198,20 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			expError: nil,
 		},
 		{
-			name: "error: join column does not exist in left table",
+			name: "error: join column does not exist in left table -- join on one column (using deprecated onColumn field)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "customer_table",
 				RightTable:  "order_table",
 				OutputTable: "result_table",
 				How:         spec.JoinMethod_LEFT,
-				OnColumn:    "oid",
+				OnColumn:    "order_id",
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid join column: column oid does not exists in left table"),
+			expError: errors.New("invalid join column: column order_id does not exists in left table"),
 		},
 		{
-			name: "error: join column does not exist in right table",
+			name: "error: join column does not exist in right table -- join on one column (using deprecated onColumn field)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "customer_table",
 				RightTable:  "order_table",
@@ -210,7 +224,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			expError: errors.New("invalid join column: column age does not exists in right table"),
 		},
 		{
-			name: "error: not a table",
+			name: "error: not a table -- join on one column (using deprecated onColumn field)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "integer_var",
 				RightTable:  "order_table",
@@ -223,7 +237,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			expError: errors.New("variable integer_var is not a table"),
 		},
 		{
-			name: "error: table not found",
+			name: "error: table not found -- join on one column (using deprecated onColumn field)",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "unknown_table",
 				RightTable:  "order_table",
@@ -234,6 +248,320 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			env:      env,
 			wantErr:  true,
 			expError: errors.New("table unknown_table is not declared"),
+		},
+		{
+			name: "success: left join two table -- join on one column",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "customer_table",
+				RightTable:  "order_table",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"customer_id"},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"result_table": table.New(
+					series.New([]interface{}{1, 2, 3, 3, 4}, series.Int, "customer_id"),
+					series.New([]interface{}{"Ramesh", "Hardik", "Komal", "Komal", "Elise"}, series.String, "name"),
+					series.New([]interface{}{24, 25, 23, 23, 20}, series.Int, "age"),
+					series.New([]interface{}{nil, 333, 111, 222, 444}, series.Int, "order_id"),
+					series.New([]interface{}{nil, 12, 500, 10, 24}, series.Int, "amount")),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "success: right join two table -- join on one column",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "order_table",
+				RightTable:  "customer_table",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_RIGHT,
+				OnColumns:   []string{"customer_id"},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"result_table": table.New(
+					series.New([]interface{}{2, 3, 3, 4, 1}, series.Int, "customer_id"),
+					series.New([]interface{}{333, 111, 222, 444, nil}, series.Int, "order_id"),
+					series.New([]interface{}{12, 500, 10, 24, nil}, series.Int, "amount"),
+					series.New([]interface{}{"Hardik", "Komal", "Komal", "Elise", "Ramesh"}, series.String, "name"),
+					series.New([]interface{}{25, 23, 23, 20, 24}, series.Int, "age"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "success: inner join two table -- join on one column",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "customer_table",
+				RightTable:  "order_table",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_INNER,
+				OnColumns:   []string{"customer_id"},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"result_table": table.New(
+					series.New([]interface{}{2, 3, 3, 4}, series.Int, "customer_id"),
+					series.New([]interface{}{"Hardik", "Komal", "Komal", "Elise"}, series.String, "name"),
+					series.New([]interface{}{25, 23, 23, 20}, series.Int, "age"),
+					series.New([]interface{}{333, 111, 222, 444}, series.Int, "order_id"),
+					series.New([]interface{}{12, 500, 10, 24}, series.Int, "amount"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "success: outer join two table -- join on one column",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "customer_table",
+				RightTable:  "order_table",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_OUTER,
+				OnColumns:   []string{"customer_id"},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"result_table": table.New(
+					series.New([]interface{}{1, 2, 3, 3, 4}, series.Int, "customer_id"),
+					series.New([]interface{}{"Ramesh", "Hardik", "Komal", "Komal", "Elise"}, series.String, "name"),
+					series.New([]interface{}{24, 25, 23, 23, 20}, series.Int, "age"),
+					series.New([]interface{}{nil, 333, 111, 222, 444}, series.Int, "order_id"),
+					series.New([]interface{}{nil, 12, 500, 10, 24}, series.Int, "amount"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "error: join column does not exist in left table -- join on one column",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "customer_table",
+				RightTable:  "order_table",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"order_id"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column order_id does not exists in left table"),
+		},
+		{
+			name: "error: join column does not exist in right table -- join on one column",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "customer_table",
+				RightTable:  "order_table",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"age"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column age does not exists in right table"),
+		},
+		{
+			name: "error: not a table -- join on one column",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "integer_var",
+				RightTable:  "order_table",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"age"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("variable integer_var is not a table"),
+		},
+		{
+			name: "error: table not found -- join on one column",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "unknown_table",
+				RightTable:  "order_table",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"age"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("table unknown_table is not declared"),
+		},
+		{
+			name: "success: left join two table-- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_int", "col_string"},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"result_table": table.New(
+					series.New([]interface{}{1, 2, 3}, series.Int, "col_int"),
+					series.New([]interface{}{"a", "b", "c"}, series.String, "col_string"),
+					series.New([]interface{}{true, false, true}, series.Bool, "col_bool"),
+					series.New([]interface{}{0.1, 0.2, 0.3}, series.Int, "col_float"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "success: right join two table-- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_RIGHT,
+				OnColumns:   []string{"col_int", "col_string"},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"result_table": table.New(
+					series.New([]interface{}{1, 2, 3, 4, 5}, series.Int, "col_int"),
+					series.New([]interface{}{"a", "b", "c", "d", "e"}, series.String, "col_string"),
+					series.New([]interface{}{true, false, true, nil, nil}, series.Bool, "col_bool"),
+					series.New([]interface{}{0.1, 0.2, 0.3, 0.4, 0.5}, series.Int, "col_float"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "success: inner join two table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_INNER,
+				OnColumns:   []string{"col_int", "col_string"},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"result_table": table.New(
+					series.New([]interface{}{1, 2, 3}, series.Int, "col_int"),
+					series.New([]interface{}{"a", "b", "c"}, series.String, "col_string"),
+					series.New([]interface{}{true, false, true}, series.Bool, "col_bool"),
+					series.New([]interface{}{0.1, 0.2, 0.3}, series.Int, "col_float"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "success: outer join two table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_OUTER,
+				OnColumns:   []string{"col_int", "col_string"},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"result_table": table.New(
+					series.New([]interface{}{1, 2, 3, 4, 5}, series.Int, "col_int"),
+					series.New([]interface{}{"a", "b", "c", "d", "e"}, series.String, "col_string"),
+					series.New([]interface{}{true, false, true, nil, nil}, series.Bool, "col_bool"),
+					series.New([]interface{}{0.1, 0.2, 0.3, 0.4, 0.5}, series.Int, "col_float"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "error: join column does not exist in left table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_float"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_float does not exists in left table"),
+		},
+		{
+			name: "error: join column does not exist in right table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_bool"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_bool does not exists in right table"),
+		},
+		{
+			name: "error: a join column does not exist in left table or right table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_float", "col_bool"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_float does not exists in left table and column col_bool does not exists in right table"),
+		},
+		{
+			name: "error: join column does not exist in right table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_bool"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_bool does not exists in right table"),
+		},
+		{
+			name: "error: join column does not exist in both tables -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_float32"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_float32 does not exists in left table and right table"),
+		},
+		{
+			name: "error: join columns does not exist in both tables -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_float32", "col_float64"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_float32, col_float64 does not exists in left table and right table"),
+		},
+		{
+			name: "error: multiple join columns does not exist in left table or right table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_float", "col_bool", "col_float32", "col_float64"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_float, col_float32, col_float64 does not exists in left table and column col_bool, col_float32, col_float64 does not exists in right table"),
 		},
 	}
 	for _, tt := range tests {

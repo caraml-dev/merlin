@@ -362,6 +362,94 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				statusCode: 200,
 			},
 		},
+		{
+			name:         "multiple columns table join with feast",
+			specYamlPath: "../pipeline/testdata/valid_table_join_multiple_columns.yaml",
+			mockFeasts: []mockFeast{
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(1),
+										"name":             feastSdk.StrVal("driver-1"),
+										"driver_feature_1": feastSdk.Int64Val(1),
+										"driver_feature_2": feastSdk.Int64Val(2),
+										"driver_feature_3": feastSdk.Int64Val(3),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"name":             serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(2),
+										"name":             feastSdk.StrVal("driver-2"),
+										"driver_feature_1": feastSdk.Int64Val(10),
+										"driver_feature_2": feastSdk.Int64Val(20),
+										"driver_feature_3": feastSdk.Int64Val(30),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"name":             serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{
+					"drivers" : [
+						{"id": 1, "name": "driver-1"},
+						{"id": 2, "name": "driver-2"}
+					]
+				}`),
+			},
+			expTransformedRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{
+					"instances": {
+						"columns": ["rank", "driver_id", "name", "driver_feature_1", "driver_feature_2", "driver_feature_3"],
+						"data": [
+							[0, 1, "driver-1", 1, 2, 3],
+							[1, 2, "driver-2", 10, 20, 30]
+						]
+					}
+				}`),
+			},
+			modelResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status": "ok"}`),
+				statusCode: 200,
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status": "ok"}`),
+				statusCode: 200,
+			},
+		},
 	}
 
 	for _, tt := range tests {

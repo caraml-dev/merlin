@@ -264,6 +264,13 @@ export class Pipeline {
             step["operation"] = "updateColumns";
           }
         });
+
+      if (transformation.tableJoin && transformation.tableJoin.onColumn) {
+        transformation.tableJoin.onColumns = [
+          transformation.tableJoin.onColumn
+        ];
+        delete transformation.tableJoin["onColumn"];
+      }
     });
 
     return pipeline;
@@ -386,7 +393,7 @@ export class TableJoin {
     this.rightTable = undefined;
     this.outputTable = undefined;
     this.how = undefined;
-    this.onColumn = undefined;
+    this.onColumns = undefined;
   }
 }
 
