@@ -126,26 +126,37 @@ func getTableFromSymbolRegistry(sr symbol.Registry, tableName string) (*table.Ta
 }
 
 func validateJoinColumns(leftTable *table.Table, rightTable *table.Table, joinColumns []string) error {
-	var errMessages []string
+	var leftTableColumns, rightTableColumns []string
 
 	for _, joinColumn := range joinColumns {
-		notFoundTables := []string{}
-
 		if _, err := leftTable.GetColumn(joinColumn); err != nil {
-			notFoundTables = append(notFoundTables, "left table")
+			leftTableColumns = append(leftTableColumns, joinColumn)
 		}
 
 		if _, err := rightTable.GetColumn(joinColumn); err != nil {
-			notFoundTables = append(notFoundTables, "right table")
-		}
-
-		if len(notFoundTables) > 0 {
-			errMessages = append(errMessages, fmt.Sprintf("invalid join column: column %s does not exists in %s", joinColumn, strings.Join(notFoundTables, " and ")))
+			rightTableColumns = append(rightTableColumns, joinColumn)
 		}
 	}
 
+	if len(leftTableColumns) > 0 && len(rightTableColumns) > 0 {
+		if strings.Join(leftTableColumns, ", ") == strings.Join(rightTableColumns, ", ") {
+			return fmt.Errorf("invalid join column: column %s does not exists in %s", strings.Join(leftTableColumns, ", "), "left table and right table")
+		}
+	}
+
+	var errMessages []string
+	if len(leftTableColumns) > 0 {
+		missingColumns := strings.Join(leftTableColumns, ", ")
+		errMessages = append(errMessages, fmt.Sprintf("column %s does not exists in %s", missingColumns, "left table"))
+	}
+
+	if len(rightTableColumns) > 0 {
+		missingColumns := strings.Join(rightTableColumns, ", ")
+		errMessages = append(errMessages, fmt.Sprintf("column %s does not exists in %s", missingColumns, "right table"))
+	}
+
 	if len(errMessages) > 0 {
-		return fmt.Errorf("%s", strings.Join(errMessages, "\n"))
+		return fmt.Errorf("invalid join column: %s", strings.Join(errMessages, " and "))
 	}
 
 	return nil

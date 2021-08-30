@@ -499,6 +499,32 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			expError: errors.New("invalid join column: column col_bool does not exists in right table"),
 		},
 		{
+			name: "error: a join column does not exist in left table or right table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_float", "col_bool"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_float does not exists in left table and column col_bool does not exists in right table"),
+		},
+		{
+			name: "error: join column does not exist in right table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_bool"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_bool does not exists in right table"),
+		},
+		{
 			name: "error: join column does not exist in both tables -- join on multiple columns",
 			joinSpec: &spec.TableJoin{
 				LeftTable:   "table_1",
@@ -522,7 +548,20 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid join column: column col_float32 does not exists in left table and right table\ninvalid join column: column col_float64 does not exists in left table and right table"),
+			expError: errors.New("invalid join column: column col_float32, col_float64 does not exists in left table and right table"),
+		},
+		{
+			name: "error: multiple join columns does not exist in left table or right table -- join on multiple columns",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_1",
+				RightTable:  "table_2",
+				OutputTable: "result_table",
+				How:         spec.JoinMethod_LEFT,
+				OnColumns:   []string{"col_float", "col_bool", "col_float32", "col_float64"},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: errors.New("invalid join column: column col_float, col_float32, col_float64 does not exists in left table and column col_bool, col_float32, col_float64 does not exists in right table"),
 		},
 	}
 	for _, tt := range tests {
