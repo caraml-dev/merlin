@@ -171,7 +171,7 @@ const VersionListTable = ({
                 )
                 .map((versionEndpoint, index) => (
                   <div key={`${versionEndpoint.id}-version-endpoint`}>
-                    <EuiFlexGroup>
+                    <EuiFlexGroup justifyContent="spaceBetween">
                       <EuiFlexItem grow={1}>
                         <EuiText className="expandedRow-title" size="xs">
                           Environment
@@ -252,7 +252,7 @@ const VersionListTable = ({
                           size={defaultTextSize}
                         />
                       </EuiFlexItem>
-                      <EuiFlexItem grow={2}>
+                      <EuiFlexItem grow={false}>
                         <VersionEndpointActions
                           versionEndpoint={versionEndpoint}
                           activeVersion={version}
@@ -349,7 +349,7 @@ const VersionListTable = ({
       mobileOptions: {
         fullWidth: true
       },
-      width: "20%",
+      width: "25%",
       render: (run_id, version) => (
         <EuiLink
           href={version.mlflow_url}
@@ -378,7 +378,6 @@ const VersionListTable = ({
       mobileOptions: {
         fullWidth: true
       },
-      width: "10%",
       render: endpoints => {
         if (endpoints && endpoints.length !== 0) {
           const endpointList = endpoints
@@ -435,7 +434,6 @@ const VersionListTable = ({
     {
       field: "labels",
       name: "Labels",
-      width: "20%",
       render: labels => (
         <CollapsibleLabelsPanel labels={labels} labelOnClick={onChange} />
       )
@@ -443,13 +441,11 @@ const VersionListTable = ({
     {
       field: "created_at",
       name: "Created",
-      width: "10%",
       render: date => <DateFromNow date={date} size={defaultTextSize} />
     },
     {
       field: "updated_at",
       name: "Updated",
-      width: "10%",
       render: date => <DateFromNow date={date} size={defaultTextSize} />
     },
     {
@@ -472,13 +468,9 @@ const VersionListTable = ({
         header: true,
         fullWidth: false
       },
-      width: "10%",
       render: (_, version) =>
         activeModel && (
-          <EuiFlexGroup
-            alignItems="flexStart"
-            direction="column"
-            gutterSize="xs">
+          <EuiFlexGroup alignItems="flexEnd" direction="column" gutterSize="xs">
             <EuiFlexItem grow={false}>
               <EuiToolTip
                 position="top"
