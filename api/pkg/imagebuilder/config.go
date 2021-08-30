@@ -31,6 +31,12 @@ type Config struct {
 	DockerRegistry string
 	// Build timeout duration
 	BuildTimeoutDuration time.Duration
+	// Kaniko Image
+	KanikoImage string
+	// Maximum number of retry until the job success
+	MaximumRetry int
+	// Number of requested CPU for running kaniko job
+	CpuRequest string
 
 	// Cluster Name
 	ClusterName string

@@ -68,6 +68,11 @@ merlin:
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
     retention: "48h"
+    kanikoImage: "gcr.io/kaniko-project/executor:v1.1.0"
+    maxRetry: 3
+    resources:
+      requests:
+        cpu: 1
 
   vault:
     secretName: "vault-secret" # Must be bootstraped first.

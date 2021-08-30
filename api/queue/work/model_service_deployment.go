@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/cluster"
-	"github.com/gojek/merlin/imagebuilder"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/imagebuilder"
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/storage"
 	"github.com/jinzhu/gorm"

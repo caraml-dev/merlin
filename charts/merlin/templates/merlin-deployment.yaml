@@ -135,6 +135,12 @@ spec:
             value: "{{ .Values.merlin.imageBuilder.dockerRegistry }}"
           - name: IMG_BUILDER_TIMEOUT
             value: "{{ .Values.merlin.imageBuilder.timeout }}"
+          - name: IMG_BUILDER_KANIKO_IMAGE
+            value: "{{ .Values.merlin.imageBuilder.kanikoImage }}"
+          - name: IMG_BUILDER_MAX_RETRY
+            value: "{{ .Values.merlin.imageBuilder.maxRetry }}"
+          - name: IMG_BUILDER_CPU_REQUEST
+            value: "{{ .Values.merlin.imageBuilder.resources.requests.cpu }}"
           {{- if .Values.merlin.imageBuilder.contextSubPath }}
           - name: IMG_BUILDER_CONTEXT_SUB_PATH
             value: "{{ .Values.merlin.imageBuilder.contextSubPath }}"

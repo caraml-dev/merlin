@@ -24,7 +24,7 @@ REQUIRES = [
     "certifi>=2017.4.17",
     "python-dateutil>=2.1",
     "six>=1.10",
-    "mlflow==1.6.0",
+    "mlflow>=1.2.0",
     "google-cloud-storage <=1.28.1",
     "boto3>=1.9.84",
     "urllib3>=1.23",

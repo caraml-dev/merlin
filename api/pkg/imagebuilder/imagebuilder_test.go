@@ -26,6 +26,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -84,6 +85,14 @@ var (
 		ClusterName:          "my-cluster",
 		GcpProject:           "test-project",
 		Environment:          "dev",
+		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+		MaximumRetry:         3,
+		CpuRequest:           "1",
+	}
+
+	jobBackOffLimit  = int32(config.MaximumRetry)
+	resourceRequests = v1.ResourceList{
+		v1.ResourceCPU: resource.MustParse(config.CpuRequest),
 	}
 )
 
@@ -135,7 +144,7 @@ func TestBuildImage(t *testing.T) {
 							Containers: []v1.Container{
 								{
 									Name:  containerName,
-									Image: kanikoImage,
+									Image: config.KanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextURL),
@@ -159,7 +168,7 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
+										Requests: resourceRequests,
 									},
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
@@ -173,6 +182,17 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"image-build-job": "true",
 							},
 						},
 					},
@@ -215,7 +235,7 @@ func TestBuildImage(t *testing.T) {
 							Containers: []v1.Container{
 								{
 									Name:  containerName,
-									Image: kanikoImage,
+									Image: config.KanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextURL),
@@ -238,7 +258,7 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
+										Requests: resourceRequests,
 									},
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
@@ -252,6 +272,17 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"image-build-job": "true",
 							},
 						},
 					},
@@ -270,6 +301,9 @@ func TestBuildImage(t *testing.T) {
 				ClusterName:          config.ClusterName,
 				GcpProject:           config.GcpProject,
 				Environment:          config.Environment,
+				MaximumRetry:         config.MaximumRetry,
+				CpuRequest:           config.CpuRequest,
+				KanikoImage:          config.KanikoImage,
 			},
 		},
 		{
@@ -303,7 +337,7 @@ func TestBuildImage(t *testing.T) {
 							Containers: []v1.Container{
 								{
 									Name:  containerName,
-									Image: kanikoImage,
+									Image: config.KanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextURL),
@@ -327,7 +361,7 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
+										Requests: resourceRequests,
 									},
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
@@ -341,6 +375,17 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"image-build-job": "true",
 							},
 						},
 					},
@@ -382,7 +427,7 @@ func TestBuildImage(t *testing.T) {
 							Containers: []v1.Container{
 								{
 									Name:  containerName,
-									Image: kanikoImage,
+									Image: config.KanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextURL),
@@ -406,7 +451,7 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
+										Requests: resourceRequests,
 									},
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
@@ -420,6 +465,17 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"image-build-job": "true",
 							},
 						},
 					},
@@ -464,7 +520,7 @@ func TestBuildImage(t *testing.T) {
 							Containers: []v1.Container{
 								{
 									Name:  containerName,
-									Image: kanikoImage,
+									Image: config.KanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextURL),
@@ -488,7 +544,7 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
+										Requests: resourceRequests,
 									},
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
@@ -502,6 +558,17 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"image-build-job": "true",
 							},
 						},
 					},
@@ -534,7 +601,7 @@ func TestBuildImage(t *testing.T) {
 							Containers: []v1.Container{
 								{
 									Name:  containerName,
-									Image: kanikoImage,
+									Image: config.KanikoImage,
 									Args: []string{
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextURL),
@@ -558,7 +625,7 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
+										Requests: resourceRequests,
 									},
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
@@ -572,6 +639,17 @@ func TestBuildImage(t *testing.T) {
 										},
 									},
 								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"image-build-job": "true",
 							},
 						},
 					},

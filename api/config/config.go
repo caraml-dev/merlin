@@ -112,7 +112,10 @@ type ImageBuilderConfig struct {
 	DockerRegistry               string `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
 	BuildTimeout                 string `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
-	Retention time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
+	Retention    time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
+	KanikoImage  string        `envconfig:"IMG_BUILDER_KANIKO_IMAGE"`
+	MaximumRetry int           `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
+	CpuRequest   string        `envconfig:"IMG_BUILDER_CPU_REQUEST" default:"1"`
 }
 
 type VaultConfig struct {
