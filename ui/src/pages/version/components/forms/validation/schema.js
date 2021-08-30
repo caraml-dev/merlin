@@ -163,10 +163,14 @@ const transformationPipelineSchema = yup.object().shape({
       rightTable: yup.string().required("Right Table is required"),
       outputTable: yup.string().required("Output Table is required"),
       how: yup.string().required("Join Method is required"),
-      onColumn: yup.string().when("how", {
-        is: v => v !== undefined && v !== "" && v !== "CROSS" && v !== "CONCAT",
-        then: yup.string().required("On Column is required")
-      })
+      onColumns: yup
+        .array()
+        .of(yup.string())
+        .when("how", {
+          is: v =>
+            v !== undefined && v !== "" && v !== "CROSS" && v !== "CONCAT",
+          then: yup.array().required("On Columns is required")
+        })
     })
 });
 

@@ -8,7 +8,7 @@ export const SelectTableJoin = ({ how, onChangeHandler, errors = {} }) => {
   const setValue = value => {
     onChange("how")(value);
     if (value === "CROSS" || value === "CONCAT") {
-      onChange("onColumn")(undefined);
+      onChange("onColumns")(undefined);
     }
   };
 

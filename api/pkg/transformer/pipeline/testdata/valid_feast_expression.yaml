@@ -63,7 +63,7 @@ transformerConfig:
           rightTable: driver_feature_table
           outputTable: result_table
           how: LEFT
-          onColumn: driver_id
+          onColumns: [driver_id]
       - tableTransformation:
           inputTable: result_table
           outputTable: result_table
