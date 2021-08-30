@@ -70,6 +70,7 @@ merlin:
     retention: "48h"
     kanikoImage: "gcr.io/kaniko-project/executor:v1.1.0"
     maxRetry: 3
+    nodePoolName: "image-build-job-node-pool"
     resources:
       requests:
         cpu: 1

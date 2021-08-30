@@ -72,10 +72,9 @@ const (
 	labelOrchestratorName = "gojek.com/orchestrator"
 	labelUsersHeading     = "gojek.com/user-labels/%s"
 
-	podTolerationKey     = "image-build-job"
-	podTolerationValue   = "true"
-	podNodeSelectorKey   = "image-build-job"
-	podNodeSelectorValue = "true"
+	podTolerationKey   = "image-build-job"
+	podTolerationValue = "true"
+	podNodeSelectorKey = "cloud.google.com/gke-nodepool"
 )
 
 var (
@@ -370,7 +369,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 						},
 					},
 					NodeSelector: map[string]string{
-						podNodeSelectorKey: podNodeSelectorValue,
+						podNodeSelectorKey: c.config.NodePoolName,
 					},
 				},
 			},

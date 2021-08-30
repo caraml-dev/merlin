@@ -116,6 +116,7 @@ type ImageBuilderConfig struct {
 	KanikoImage  string        `envconfig:"IMG_BUILDER_KANIKO_IMAGE"`
 	MaximumRetry int           `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
 	CpuRequest   string        `envconfig:"IMG_BUILDER_CPU_REQUEST" default:"1"`
+	NodePoolName string        `envconfig:"IMG_BUILDER_NODE_POOL_NAME" default:"image-build-job-node-pool"`
 }
 
 type VaultConfig struct {

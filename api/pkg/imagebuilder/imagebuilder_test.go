@@ -88,6 +88,7 @@ var (
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
 		MaximumRetry:         3,
 		CpuRequest:           "1",
+		NodePoolName:         "image-building-job-node-pool",
 	}
 
 	jobBackOffLimit  = int32(config.MaximumRetry)
@@ -192,7 +193,7 @@ func TestBuildImage(t *testing.T) {
 								},
 							},
 							NodeSelector: map[string]string{
-								"image-build-job": "true",
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 							},
 						},
 					},
@@ -282,7 +283,7 @@ func TestBuildImage(t *testing.T) {
 								},
 							},
 							NodeSelector: map[string]string{
-								"image-build-job": "true",
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 							},
 						},
 					},
@@ -304,6 +305,7 @@ func TestBuildImage(t *testing.T) {
 				MaximumRetry:         config.MaximumRetry,
 				CpuRequest:           config.CpuRequest,
 				KanikoImage:          config.KanikoImage,
+				NodePoolName:         config.NodePoolName,
 			},
 		},
 		{
@@ -385,7 +387,7 @@ func TestBuildImage(t *testing.T) {
 								},
 							},
 							NodeSelector: map[string]string{
-								"image-build-job": "true",
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 							},
 						},
 					},
@@ -475,7 +477,7 @@ func TestBuildImage(t *testing.T) {
 								},
 							},
 							NodeSelector: map[string]string{
-								"image-build-job": "true",
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 							},
 						},
 					},
@@ -568,7 +570,7 @@ func TestBuildImage(t *testing.T) {
 								},
 							},
 							NodeSelector: map[string]string{
-								"image-build-job": "true",
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 							},
 						},
 					},
@@ -649,7 +651,7 @@ func TestBuildImage(t *testing.T) {
 								},
 							},
 							NodeSelector: map[string]string{
-								"image-build-job": "true",
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 							},
 						},
 					},

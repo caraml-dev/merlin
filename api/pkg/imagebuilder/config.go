@@ -37,6 +37,8 @@ type Config struct {
 	MaximumRetry int
 	// Number of requested CPU for running kaniko job
 	CpuRequest string
+	// Name of node pool that used as dedicated node
+	NodePoolName string
 
 	// Cluster Name
 	ClusterName string

@@ -86,7 +86,6 @@ func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClien
 }
 
 func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool) core.CoreServiceClient {
-
 	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
 	if enableAuth {
 		cred, err := feast.NewGoogleCredential(feastAuthAudience)
@@ -152,6 +151,7 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
 		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
 		CpuRequest:           cfg.ImageBuilderConfig.CpuRequest,
+		NodePoolName:         cfg.ImageBuilderConfig.NodePoolName,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -171,6 +171,7 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
 		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
 		CpuRequest:           cfg.ImageBuilderConfig.CpuRequest,
+		NodePoolName:         cfg.ImageBuilderConfig.NodePoolName,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -512,7 +513,7 @@ func initLogService(cfg *config.Config, vaultClient vault.Client) service.LogSer
 		log.Panicf("unable to initialize cluster controller %v", err)
 	}
 
-	var clusterControllers = make(map[string]cluster.Controller)
+	clusterControllers := make(map[string]cluster.Controller)
 	clusterControllers[cfg.ImageBuilderConfig.ClusterName] = ctl
 
 	for _, env := range cfg.EnvironmentConfigs {
