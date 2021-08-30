@@ -122,6 +122,8 @@ export const DeployModelVersionForm = ({
             setSteps(mainSteps);
             break;
         }
+      } else {
+        setSteps(mainSteps);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
