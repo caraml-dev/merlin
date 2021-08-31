@@ -137,12 +137,8 @@ spec:
             value: "{{ .Values.merlin.imageBuilder.timeout }}"
           - name: IMG_BUILDER_KANIKO_IMAGE
             value: "{{ .Values.merlin.imageBuilder.kanikoImage }}"
-          - name: IMG_BUILDER_MAX_RETRY
-            value: "{{ .Values.merlin.imageBuilder.maxRetry }}"
-          - name: IMG_BUILDER_CPU_REQUEST
-            value: "{{ .Values.merlin.imageBuilder.resources.requests.cpu }}"
-          - name: IMG_BUILDER_NODE_POOL_NAME
-            value: "{{ .Values.merlin.imageBuilder.nodePoolName }}"
+          - name: IMG_BUILDER_JOB_SPEC
+            value: {{ .Values.merlin.imageBuilder.jobSpec | toJson | quote }}
           {{- if .Values.merlin.imageBuilder.contextSubPath }}
           - name: IMG_BUILDER_CONTEXT_SUB_PATH
             value: "{{ .Values.merlin.imageBuilder.contextSubPath }}"

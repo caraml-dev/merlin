@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
@@ -111,12 +112,31 @@ type ImageBuilderConfig struct {
 	BuildNamespace               string `envconfig:"IMG_BUILDER_NAMESPACE" default:"mlp"`
 	DockerRegistry               string `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
 	BuildTimeout                 string `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
+	KanikoImage                  string `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
-	Retention    time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
-	KanikoImage  string        `envconfig:"IMG_BUILDER_KANIKO_IMAGE"`
-	MaximumRetry int           `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
-	CpuRequest   string        `envconfig:"IMG_BUILDER_CPU_REQUEST" default:"1"`
-	NodePoolName string        `envconfig:"IMG_BUILDER_NODE_POOL_NAME" default:"image-build-job-node-pool"`
+	Retention time.Duration       `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
+	JobSpec   ImageBuilderJobSpec `envconfig:"IMG_BUILDER_JOB_SPEC"`
+}
+
+type ImageBuilderJobSpec struct {
+	BackoffLimit            *int32                  `json:"backoffLimit,omitempty"`
+	Volumes                 []v1.Volume             `json:"volumes,omitempty"`
+	VolumeMounts            []v1.VolumeMount        `json:"volumeMounts,omitempty"`
+	Env                     []v1.EnvVar             `json:"env,omitempty"`
+	Resources               v1.ResourceRequirements `json:"resources,omitempty"`
+	Tolerations             []v1.Toleration         `json:"tolerations,omitempty"`
+	NodeSelector            map[string]string       `json:"nodeSelectors,omitempty"`
+	TTLSecondsAfterFinished *int32                  `json:"ttlSecondsAfterFinished,omitempty"`
+}
+
+func (spec *ImageBuilderJobSpec) Decode(value string) error {
+	var jobSpec ImageBuilderJobSpec
+
+	if err := json.Unmarshal([]byte(value), &jobSpec); err != nil {
+		return err
+	}
+	*spec = jobSpec
+	return nil
 }
 
 type VaultConfig struct {

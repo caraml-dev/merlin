@@ -14,7 +14,11 @@
 
 package imagebuilder
 
-import "time"
+import (
+	"time"
+
+	cfg "github.com/gojek/merlin/config"
+)
 
 type Config struct {
 	// GCS URL Containing build context
@@ -31,14 +35,10 @@ type Config struct {
 	DockerRegistry string
 	// Build timeout duration
 	BuildTimeoutDuration time.Duration
-	// Kaniko Image
+	// Kaniko docker image
 	KanikoImage string
-	// Maximum number of retry until the job success
-	MaximumRetry int
-	// Number of requested CPU for running kaniko job
-	CpuRequest string
-	// Name of node pool that used as dedicated node
-	NodePoolName string
+	// Kaniko Build Image Job Specification
+	JobSpec cfg.ImageBuilderJobSpec
 
 	// Cluster Name
 	ClusterName string

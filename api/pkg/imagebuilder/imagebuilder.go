@@ -24,7 +24,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -71,10 +70,6 @@ const (
 	labelEnvironment      = "gojek.com/environment"
 	labelOrchestratorName = "gojek.com/orchestrator"
 	labelUsersHeading     = "gojek.com/user-labels/%s"
-
-	podTolerationKey   = "image-build-job"
-	podTolerationValue = "true"
-	podNodeSelectorKey = "cloud.google.com/gke-nodepool"
 )
 
 var (
@@ -288,10 +283,6 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		labelOrchestratorName: "merlin",
 	}
 
-	for _, label := range project.Labels {
-		labels[fmt.Sprintf(labelUsersHeading, label.Key)] = label.Value
-	}
-
 	kanikoArgs := []string{
 		fmt.Sprintf("--dockerfile=%s", c.config.DockerfilePath),
 		fmt.Sprintf("--context=%s", c.config.BuildContextURL),
@@ -307,10 +298,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 	}
 
 	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
-	maxRetry := int32(c.config.MaximumRetry)
-	resourceRequests := v1.ResourceList{
-		v1.ResourceCPU: resource.MustParse(c.config.CpuRequest),
-	}
+	jobSpec := c.config.JobSpec
 
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -320,8 +308,8 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		},
 		Spec: batchv1.JobSpec{
 			Completions:             &jobCompletions,
-			BackoffLimit:            &maxRetry,
-			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+			BackoffLimit:            jobSpec.BackoffLimit,
+			TTLSecondsAfterFinished: jobSpec.TTLSecondsAfterFinished,
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
@@ -329,48 +317,18 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 					RestartPolicy: v1.RestartPolicyNever,
 					Containers: []v1.Container{
 						{
-							Name:  containerName,
-							Image: c.config.KanikoImage,
-							Args:  kanikoArgs,
-							VolumeMounts: []v1.VolumeMount{
-								{
-									Name:      kanikoSecretName,
-									MountPath: "/secret",
-								},
-							},
-							Env: []v1.EnvVar{
-								{
-									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-									Value: "/secret/kaniko-secret.json",
-								},
-							},
-							Resources: v1.ResourceRequirements{
-								Requests: resourceRequests,
-							},
+							Name:                     containerName,
+							Image:                    c.config.KanikoImage,
+							Args:                     kanikoArgs,
+							VolumeMounts:             jobSpec.VolumeMounts,
+							Env:                      jobSpec.Env,
+							Resources:                jobSpec.Resources,
 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 						},
 					},
-					Volumes: []v1.Volume{
-						{
-							Name: kanikoSecretName,
-							VolumeSource: v1.VolumeSource{
-								Secret: &v1.SecretVolumeSource{
-									SecretName: kanikoSecretName,
-								},
-							},
-						},
-					},
-					Tolerations: []v1.Toleration{
-						{
-							Key:      podTolerationKey,
-							Operator: v1.TolerationOpEqual,
-							Value:    podTolerationValue,
-							Effect:   v1.TaintEffectNoSchedule,
-						},
-					},
-					NodeSelector: map[string]string{
-						podNodeSelectorKey: c.config.NodePoolName,
-					},
+					Volumes:      jobSpec.Volumes,
+					Tolerations:  jobSpec.Tolerations,
+					NodeSelector: jobSpec.NodeSelector,
 				},
 			},
 		},

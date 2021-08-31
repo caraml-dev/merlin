@@ -67,13 +67,30 @@ merlin:
     timeout: "30m"
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
+    kanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
     retention: "48h"
-    kanikoImage: "gcr.io/kaniko-project/executor:v1.1.0"
-    maxRetry: 3
-    nodePoolName: "image-build-job-node-pool"
-    resources:
-      requests:
-        cpu: 1
+    jobSpec:
+      backoffLimit: 3
+      volumes:
+        - name: "kaniko-secret"
+          secret:
+            secretName: "kaniko-secret"
+      volumeMounts:
+        - name: "kaniko-secret"
+          mountPath: "/secret"
+      env:
+        - name: "GOOGLE_APPLICATION_CREDENTIALS"
+          value: "/secret/kaniko-secret.json"
+      resources:
+        requests:
+          cpu: "1"
+      tolerations:
+        - key: "image-build-job"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      nodeSelectors:
+        cloud.google.com/gke-nodepool: "image-building-job-node-pool"
 
   vault:
     secretName: "vault-secret" # Must be bootstraped first.

@@ -62,6 +62,8 @@ func main() {
 		log.Panicf("Failed initializing config: %v", err)
 	}
 
+	fmt.Printf("imageBuilding job config %+v", cfg.ImageBuilderConfig)
+
 	// Initializing Sentry client
 	cfg.Sentry.Labels = map[string]string{"environment": cfg.Environment}
 	if err := sentry.InitSentry(cfg.Sentry); err != nil {
