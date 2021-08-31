@@ -18,6 +18,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "@reach/router";
 import {
   EuiBadge,
+  EuiButtonEmpty,
   EuiButtonIcon,
   EuiCallOut,
   EuiCopy,
@@ -32,8 +33,7 @@ import {
   EuiText,
   EuiTextAlign,
   EuiToolTip,
-  EuiSearchBar,
-  EuiButtonEmpty
+  EuiSearchBar
 } from "@elastic/eui";
 import { DateFromNow } from "@gojek/mlp-ui";
 import ModelEndpointActions from "./ModelEndpointActions";
@@ -97,7 +97,9 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
                   <div key={`${endpoint.id}-endpoint`}>
                     {endpointIndex > 0 && <EuiHorizontalRule />}
 
-                    <EuiFlexGroup>
+                    <EuiFlexGroup
+                      alignItems="center"
+                      justifyContent="spaceBetween">
                       <EuiFlexItem grow={2}>
                         <EuiText className="expandedRow-title" size="xs">
                           Environment
@@ -161,7 +163,7 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
                           ))}
                         </EuiFlexGroup>
                       </EuiFlexItem>
-                      <EuiFlexItem grow={2}>
+                      <EuiFlexItem grow={false}>
                         <ModelEndpointActions
                           model={item}
                           modelEndpoint={endpoint}
@@ -227,7 +229,7 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
         fullWidth: true
       },
       sortable: true,
-      width: "15%",
+      width: "25%",
       render: (name, item) => (
         <Link
           to={`${item.id}/versions`}
@@ -245,13 +247,11 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     {
       field: "type",
       name: "Type",
-      width: "10%",
       render: type => <EuiText size={defaultTextSize}>{type}</EuiText>
     },
     {
       field: "mlflow_url",
       name: "MLflow Experiment",
-      width: "10%",
       render: link => (
         <EuiLink href={link} target="_blank" onClick={e => e.stopPropagation()}>
           <EuiIcon type={"symlink"} size={defaultIconSize} />
@@ -277,7 +277,6 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
       mobileOptions: {
         fullWidth: true
       },
-      width: "10%",
       render: endpoints => {
         if (
           endpoints &&
@@ -305,7 +304,6 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     {
       field: "created_at",
       name: "Created",
-      width: "10%",
       render: date => (
         <EuiToolTip
           position="top"
@@ -317,7 +315,6 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     {
       field: "updated_at",
       name: "Updated",
-      width: "10%",
       render: date => (
         <EuiToolTip
           position="top"
@@ -346,7 +343,6 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
         header: true,
         fullWidth: false
       },
-      width: "10%",
       render: (_, model) =>
         model.type === "pyfunc_v2" && (
           <EuiToolTip position="top" content={<p>Batch Prediction Job</p>}>
