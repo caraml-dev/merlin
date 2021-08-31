@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	batchv1 "k8s.io/api/batch/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gojek/merlin/cluster"
@@ -65,7 +66,6 @@ func (j *Janitor) CleanJobs() {
 	}
 
 	log.Infof("Image Builder Janitor: Cleaning jobs finish...")
-	return
 }
 
 func (j *Janitor) getExpiredJobs() ([]batchv1.Job, error) {
@@ -110,7 +110,7 @@ func (j *Janitor) deleteJobs(expiredJobs []batchv1.Job) error {
 		err := j.cc.DeleteJob(j.cfg.BuildNamespace, job.Name, deleteOptions)
 		durationMs := time.Since(startTime).Microseconds()
 
-		if err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			// Failed deletion would be picked up by the next clean up job.
 			log.Errorf("failed to delete an image builder job (%s): %s", job.Name, err)
 
