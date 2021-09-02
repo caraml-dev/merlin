@@ -149,7 +149,9 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		ContextSubPath:       cfg.ImageBuilderConfig.ContextSubPath,
 		BuildTimeoutDuration: timeout,
 		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
-		JobSpec:              cfg.ImageBuilderConfig.JobSpec,
+		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -167,7 +169,9 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		ContextSubPath:       cfg.ImageBuilderConfig.PredictionJobContextSubPath,
 		BuildTimeoutDuration: timeout,
 		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
-		JobSpec:              cfg.ImageBuilderConfig.JobSpec,
+		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,

@@ -17,7 +17,7 @@ package imagebuilder
 import (
 	"time"
 
-	cfg "github.com/gojek/merlin/config"
+	v1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
@@ -37,8 +37,12 @@ type Config struct {
 	BuildTimeoutDuration time.Duration
 	// Kaniko docker image
 	KanikoImage string
-	// Kaniko Build Image Job Specification
-	JobSpec cfg.ImageBuilderJobSpec
+	// Tolerations for Jobs Specification
+	Tolerations []v1.Toleration
+	// Node Selectors for Jobs Specification
+	NodeSelectors map[string]string
+	// Maximum number of retry of image builder job
+	MaximumRetry int32
 
 	// Cluster Name
 	ClusterName string

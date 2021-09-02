@@ -114,28 +114,33 @@ type ImageBuilderConfig struct {
 	BuildTimeout                 string `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
 	KanikoImage                  string `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
-	Retention time.Duration       `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
-	JobSpec   ImageBuilderJobSpec `envconfig:"IMG_BUILDER_JOB_SPEC"`
+	Retention     time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
+	Tolerations   Tolerations   `envconfig:"IMG_BUILDER_TOLERATIONS"`
+	NodeSelectors NodeSelectors `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
+	MaximumRetry  int32         `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
 }
 
-type ImageBuilderJobSpec struct {
-	BackoffLimit            *int32                  `json:"backoffLimit,omitempty"`
-	Volumes                 []v1.Volume             `json:"volumes,omitempty"`
-	VolumeMounts            []v1.VolumeMount        `json:"volumeMounts,omitempty"`
-	Env                     []v1.EnvVar             `json:"env,omitempty"`
-	Resources               v1.ResourceRequirements `json:"resources,omitempty"`
-	Tolerations             []v1.Toleration         `json:"tolerations,omitempty"`
-	NodeSelector            map[string]string       `json:"nodeSelectors,omitempty"`
-	TTLSecondsAfterFinished *int32                  `json:"ttlSecondsAfterFinished,omitempty"`
-}
+type Tolerations []v1.Toleration
 
-func (spec *ImageBuilderJobSpec) Decode(value string) error {
-	var jobSpec ImageBuilderJobSpec
+func (spec *Tolerations) Decode(value string) error {
+	var tolerations Tolerations
 
-	if err := json.Unmarshal([]byte(value), &jobSpec); err != nil {
+	if err := json.Unmarshal([]byte(value), &tolerations); err != nil {
 		return err
 	}
-	*spec = jobSpec
+	*spec = tolerations
+	return nil
+}
+
+type NodeSelectors map[string]string
+
+func (ns *NodeSelectors) Decode(value string) error {
+	var nodeSelectors NodeSelectors
+
+	if err := json.Unmarshal([]byte(value), &nodeSelectors); err != nil {
+		return err
+	}
+	*ns = nodeSelectors
 	return nil
 }
 

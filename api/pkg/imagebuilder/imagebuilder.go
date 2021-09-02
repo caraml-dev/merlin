@@ -24,6 +24,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -76,6 +77,10 @@ var (
 	jobTTLSecondAfterComplete int32 = 3600 * 24 // 24 hours
 	jobCompletions            int32 = 1
 )
+
+var defaultResourceRequests = v1.ResourceList{
+	v1.ResourceCPU: resource.MustParse("1"),
+}
 
 func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator) ImageBuilder {
 	return &imageBuilder{
@@ -298,7 +303,6 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 	}
 
 	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
-	jobSpec := c.config.JobSpec
 
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -308,8 +312,8 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		},
 		Spec: batchv1.JobSpec{
 			Completions:             &jobCompletions,
-			BackoffLimit:            jobSpec.BackoffLimit,
-			TTLSecondsAfterFinished: jobSpec.TTLSecondsAfterFinished,
+			BackoffLimit:            &c.config.MaximumRetry,
+			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
@@ -317,18 +321,39 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 					RestartPolicy: v1.RestartPolicyNever,
 					Containers: []v1.Container{
 						{
-							Name:                     containerName,
-							Image:                    c.config.KanikoImage,
-							Args:                     kanikoArgs,
-							VolumeMounts:             jobSpec.VolumeMounts,
-							Env:                      jobSpec.Env,
-							Resources:                jobSpec.Resources,
+							Name:  containerName,
+							Image: c.config.KanikoImage,
+							Args:  kanikoArgs,
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      kanikoSecretName,
+									MountPath: "/secret",
+								},
+							},
+							Env: []v1.EnvVar{
+								{
+									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+									Value: "/secret/kaniko-secret.json",
+								},
+							},
+							Resources: v1.ResourceRequirements{
+								Requests: defaultResourceRequests,
+							},
 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 						},
 					},
-					Volumes:      jobSpec.Volumes,
-					Tolerations:  jobSpec.Tolerations,
-					NodeSelector: jobSpec.NodeSelector,
+					Volumes: []v1.Volume{
+						{
+							Name: kanikoSecretName,
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: kanikoSecretName,
+								},
+							},
+						},
+					},
+					Tolerations:  c.config.Tolerations,
+					NodeSelector: c.config.NodeSelectors,
 				},
 			},
 		},
