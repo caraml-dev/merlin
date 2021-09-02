@@ -218,9 +218,10 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 			if terr.StatusCode == http.StatusNotFound {
 				return false, nil
 			}
-		} else {
-			return false, errors.Wrapf(err, "error getting image tags for %s", repo)
 		}
+
+		// If it's not transport error or 404, raise error
+		return false, errors.Wrapf(err, "error getting image tags for %s", repo)
 	}
 
 	for _, tag := range tags {
