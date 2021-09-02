@@ -19,8 +19,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/gojek/merlin/gitlab"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/gitlab"
 	"github.com/gojek/merlin/storage"
 	"github.com/gojek/merlin/warden"
 )
