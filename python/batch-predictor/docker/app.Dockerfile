@@ -19,4 +19,7 @@ FROM ${BASE_IMAGE}
 
 ARG MODEL_URL
 RUN gsutil cp -r ${MODEL_URL} .
-RUN /bin/bash -c ". activate merlin-model && conda env update --name merlin-model --file /model/conda.yaml && python merlin-spark-app/main.py --dry-run-model /model"
+RUN /bin/bash -c ". activate merlin-model && \
+    sed -i 's/pip$/pip=20.2.4/' /model/conda.yaml && \
+    conda env update --name merlin-model --file /model/conda.yaml && \
+    python merlin-spark-app/main.py --dry-run-model /model"

@@ -23,11 +23,11 @@ import (
 	"github.com/gojek/merlin/batch"
 	"github.com/gojek/merlin/cluster"
 	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/imagebuilder"
 	"github.com/gojek/merlin/istio"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/imagebuilder"
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/queue/work"
 	"github.com/gojek/merlin/service"
@@ -86,7 +86,6 @@ func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClien
 }
 
 func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool) core.CoreServiceClient {
-
 	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
 	if enableAuth {
 		cred, err := feast.NewGoogleCredential(feastAuthAudience)
@@ -149,6 +148,10 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
 		ContextSubPath:       cfg.ImageBuilderConfig.ContextSubPath,
 		BuildTimeoutDuration: timeout,
+		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
+		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -165,6 +168,10 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
 		ContextSubPath:       cfg.ImageBuilderConfig.PredictionJobContextSubPath,
 		BuildTimeoutDuration: timeout,
+		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
+		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -506,7 +513,7 @@ func initLogService(cfg *config.Config, vaultClient vault.Client) service.LogSer
 		log.Panicf("unable to initialize cluster controller %v", err)
 	}
 
-	var clusterControllers = make(map[string]cluster.Controller)
+	clusterControllers := make(map[string]cluster.Controller)
 	clusterControllers[cfg.ImageBuilderConfig.ClusterName] = ctl
 
 	for _, env := range cfg.EnvironmentConfigs {

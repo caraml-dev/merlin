@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
@@ -111,8 +112,36 @@ type ImageBuilderConfig struct {
 	BuildNamespace               string `envconfig:"IMG_BUILDER_NAMESPACE" default:"mlp"`
 	DockerRegistry               string `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
 	BuildTimeout                 string `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
+	KanikoImage                  string `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
-	Retention time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
+	Retention     time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
+	Tolerations   Tolerations   `envconfig:"IMG_BUILDER_TOLERATIONS"`
+	NodeSelectors NodeSelectors `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
+	MaximumRetry  int32         `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
+}
+
+type Tolerations []v1.Toleration
+
+func (spec *Tolerations) Decode(value string) error {
+	var tolerations Tolerations
+
+	if err := json.Unmarshal([]byte(value), &tolerations); err != nil {
+		return err
+	}
+	*spec = tolerations
+	return nil
+}
+
+type NodeSelectors map[string]string
+
+func (ns *NodeSelectors) Decode(value string) error {
+	var nodeSelectors NodeSelectors
+
+	if err := json.Unmarshal([]byte(value), &nodeSelectors); err != nil {
+		return err
+	}
+	*ns = nodeSelectors
+	return nil
 }
 
 type VaultConfig struct {
