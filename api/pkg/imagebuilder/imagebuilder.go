@@ -21,12 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/google"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
-	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,6 +31,12 @@ import (
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/google"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	"github.com/pkg/errors"
 )
 
 type ImageBuilder interface {
@@ -62,7 +62,6 @@ type imageBuilder struct {
 
 const (
 	containerName      = "pyfunc-image-builder"
-	kanikoImage        = "gcr.io/kaniko-project/executor:v1.1.0"
 	kanikoSecretName   = "kaniko-secret"
 	tickDurationSecond = 5
 
@@ -77,14 +76,11 @@ const (
 var (
 	jobTTLSecondAfterComplete int32 = 3600 * 24 // 24 hours
 	jobCompletions            int32 = 1
-	jobBackOffLimit           int32 = 3
 )
 
-var (
-	defaultResourceRequests = v1.ResourceList{
-		v1.ResourceCPU: resource.MustParse("1"),
-	}
-)
+var defaultResourceRequests = v1.ResourceList{
+	v1.ResourceCPU: resource.MustParse("1"),
+}
 
 func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator) ImageBuilder {
 	return &imageBuilder{
@@ -164,7 +160,6 @@ func (c *imageBuilder) GetContainers(project mlp.Project, model *models.Model, v
 		LabelSelector: fmt.Sprintf("job-name=%s", c.nameGenerator.generateBuilderJobName(project, model, version)),
 		FieldSelector: "status.phase!=Pending",
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -285,16 +280,12 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
 
-	var labels = map[string]string{
+	labels := map[string]string{
 		labelTeamName:         project.Team,
 		labelStreamName:       project.Stream,
 		labelAppName:          model.Name,
 		labelEnvironment:      c.config.Environment,
 		labelOrchestratorName: "merlin",
-	}
-
-	for _, label := range project.Labels {
-		labels[fmt.Sprintf(labelUsersHeading, label.Key)] = label.Value
 	}
 
 	kanikoArgs := []string{
@@ -311,6 +302,8 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		kanikoArgs = append(kanikoArgs, fmt.Sprintf("--context-sub-path=%s", c.config.ContextSubPath))
 	}
 
+	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
+
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kanikoPodName,
@@ -319,8 +312,9 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		},
 		Spec: batchv1.JobSpec{
 			Completions:             &jobCompletions,
-			BackoffLimit:            &jobBackOffLimit,
+			BackoffLimit:            &c.config.MaximumRetry,
 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
 					// https://stackoverflow.com/questions/54091659/kubernetes-pods-disappear-after-failed-jobs
@@ -328,7 +322,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 					Containers: []v1.Container{
 						{
 							Name:  containerName,
-							Image: kanikoImage,
+							Image: c.config.KanikoImage,
 							Args:  kanikoArgs,
 							VolumeMounts: []v1.VolumeMount{
 								{
@@ -358,6 +352,8 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 							},
 						},
 					},
+					Tolerations:  c.config.Tolerations,
+					NodeSelector: c.config.NodeSelectors,
 				},
 			},
 		},
