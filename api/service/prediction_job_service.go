@@ -19,12 +19,12 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/common/log"
 	"k8s.io/apimachinery/pkg/api/resource"
 	clock2 "k8s.io/apimachinery/pkg/util/clock"
 
 	"github.com/gojek/merlin/batch"
 	"github.com/gojek/merlin/imagebuilder"
+	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/queue"

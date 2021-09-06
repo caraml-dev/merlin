@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	yamlv3 "gopkg.in/yaml.v3"
 
 	"github.com/gojek/merlin/mlp"
 )
@@ -73,13 +74,23 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 			},
 			want: PromAlert{
 				Groups: []PromAlertGroup{
-					PromAlertGroup{
+					{
 						Name: "merlin_project-1_model-1_env-1",
 						Rules: []PromAlertRule{
-							PromAlertRule{
-								Alert: "[merlin] model-1: Throughput warning",
-								Expr:  "round(sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m])), 0.001)\n < 10",
-								For:   "5m",
+							{
+								Alert: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.DoubleQuotedStyle,
+									Tag:   "!!str",
+									Value: "[merlin] model-1: Throughput warning",
+								},
+								Expr: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.LiteralStyle,
+									Tag:   "!!str",
+									Value: "round(sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m])), 0.001) < 10",
+								},
+								For: "5m",
 								Labels: PromAlertRuleLabels{
 									Owner:       "team-1",
 									ServiceName: "merlin_project-1_model-1_env-1",
@@ -128,13 +139,23 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 			},
 			want: PromAlert{
 				Groups: []PromAlertGroup{
-					PromAlertGroup{
+					{
 						Name: "merlin_project-1_model-1_env-1",
 						Rules: []PromAlertRule{
-							PromAlertRule{
-								Alert: "[merlin] model-1: 99.00p Latency warning",
-								Expr:  "histogram_quantile(0.990000, sum(rate(revision_request_latencies_bucket{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m])) by (le, revision_name))\n > 100",
-								For:   "5m",
+							{
+								Alert: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.DoubleQuotedStyle,
+									Tag:   "!!str",
+									Value: "[merlin] model-1: 99.00p Latency warning",
+								},
+								Expr: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.LiteralStyle,
+									Tag:   "!!str",
+									Value: "histogram_quantile(0.99, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m]))) > 100",
+								},
+								For: "5m",
 								Labels: PromAlertRuleLabels{
 									Owner:       "team-1",
 									ServiceName: "merlin_project-1_model-1_env-1",
@@ -181,13 +202,23 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 			},
 			want: PromAlert{
 				Groups: []PromAlertGroup{
-					PromAlertGroup{
+					{
 						Name: "merlin_project-1_model-1_env-1",
 						Rules: []PromAlertRule{
-							PromAlertRule{
-								Alert: "[merlin] model-1: Error Rate warning",
-								Expr:  "sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\", response_code_class != \"2xx\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m]))\n > 0.5",
-								For:   "5m",
+							{
+								Alert: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.DoubleQuotedStyle,
+									Tag:   "!!str",
+									Value: "[merlin] model-1: Error Rate warning",
+								},
+								Expr: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.LiteralStyle,
+									Tag:   "!!str",
+									Value: "(100 * sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",response_code_class!=\"2xx\",revision_name=~\".*model-1.*\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m]))) > 50",
+								},
+								For: "5m",
 								Labels: PromAlertRuleLabels{
 									Owner:       "team-1",
 									ServiceName: "merlin_project-1_model-1_env-1",
@@ -234,13 +265,23 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 			},
 			want: PromAlert{
 				Groups: []PromAlertGroup{
-					PromAlertGroup{
+					{
 						Name: "merlin_project-1_model-1_env-1",
 						Rules: []PromAlertRule{
-							PromAlertRule{
-								Alert: "[merlin] model-1: Cpu warning",
-								Expr:  "sum(rate(container_cpu_usage_seconds_total{cluster_name=\"cluster-1\", namespace=\"project-1\", pod_name=~\".*model-1.*\"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name=\"cluster-1\", namespace=\"project-1\", pod=~\".*model-1.*\"})\n > 0.5",
-								For:   "5m",
+							{
+								Alert: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.DoubleQuotedStyle,
+									Tag:   "!!str",
+									Value: "[merlin] model-1: Cpu warning",
+								},
+								Expr: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.LiteralStyle,
+									Tag:   "!!str",
+									Value: "(100 * sum(rate(container_cpu_usage_seconds_total{cluster_name=\"cluster-1\",namespace=\"project-1\",pod_name=~\".*model-1.*\"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name=\"cluster-1\",namespace=\"project-1\",pod=~\".*model-1.*\"})) > 50",
+								},
+								For: "5m",
 								Labels: PromAlertRuleLabels{
 									Owner:       "team-1",
 									ServiceName: "merlin_project-1_model-1_env-1",
@@ -287,13 +328,23 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 			},
 			want: PromAlert{
 				Groups: []PromAlertGroup{
-					PromAlertGroup{
+					{
 						Name: "merlin_project-1_model-1_env-1",
 						Rules: []PromAlertRule{
-							PromAlertRule{
-								Alert: "[merlin] model-1: Memory warning",
-								Expr:  "sum(container_memory_usage_bytes{cluster_name=\"cluster-1\",namespace=\"project-1\",pod_name=~\".*model-1.*\"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name=\"cluster-1\",namespace=\"project-1\",pod=~\".*model-1.*\"})\n > 0.5",
-								For:   "5m",
+							{
+								Alert: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.DoubleQuotedStyle,
+									Tag:   "!!str",
+									Value: "[merlin] model-1: Memory warning",
+								},
+								Expr: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.LiteralStyle,
+									Tag:   "!!str",
+									Value: "(100 * sum(container_memory_usage_bytes{cluster_name=\"cluster-1\",namespace=\"project-1\",pod_name=~\".*model-1.*\"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name=\"cluster-1\",namespace=\"project-1\",pod=~\".*model-1.*\"})) > 50",
+								},
+								For: "5m",
 								Labels: PromAlertRuleLabels{
 									Owner:       "team-1",
 									ServiceName: "merlin_project-1_model-1_env-1",
@@ -324,7 +375,8 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 				AlertConditions: tt.fields.AlertConditions,
 				CreatedUpdated:  tt.fields.CreatedUpdated,
 			}
-			got := alert.ToPromAlertSpec(dashboardBaseURL)
+			got, err := alert.ToPromAlertSpec(dashboardBaseURL)
+			assert.Nil(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

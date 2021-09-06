@@ -23,9 +23,9 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-	"github.com/prometheus/common/log"
 
 	"github.com/gojek/merlin/config"
+	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast"

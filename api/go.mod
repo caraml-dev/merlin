@@ -26,7 +26,7 @@ require (
 	github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/google/go-containerregistry v0.0.0-20191009212737-d753c5604768
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4
@@ -44,9 +44,10 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pilagod/gorm-cursor-paginator v1.3.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.5.1
+	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/client_model v0.2.0
-	github.com/prometheus/common v0.9.1
+	github.com/prometheus/common v0.30.0
+	github.com/prometheus/prometheus v2.5.0+incompatible
 	github.com/robfig/cron v1.2.0
 	github.com/rs/cors v1.7.0
 	github.com/stretchr/testify v1.6.1
@@ -55,11 +56,12 @@ require (
 	github.com/xanzy/go-gitlab v0.31.0
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/zap v1.13.0
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
 	google.golang.org/grpc v1.31.0
-	google.golang.org/protobuf v1.25.0
-	gopkg.in/yaml.v2 v2.2.8
+	google.golang.org/protobuf v1.26.0-rc.1
+	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	istio.io/api v0.0.0-20191115173247-e1a1952e5b81
 	istio.io/client-go v0.0.0-20191120150049-26c62a04cdbc
 	k8s.io/api v0.18.3
@@ -72,6 +74,7 @@ require (
 
 replace (
 	github.com/gojek/merlin-pyspark-app => ../python/batch-predictor
+	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
 	k8s.io/api => k8s.io/api v0.16.6
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.6
 	k8s.io/apimachinery => k8s.io/apimachinery v0.16.6
