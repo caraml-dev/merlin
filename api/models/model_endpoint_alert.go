@@ -21,6 +21,9 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/prometheus/prometheus/promql"
+	yamlv3 "gopkg.in/yaml.v3"
 )
 
 const (
@@ -28,11 +31,11 @@ const (
 )
 
 const (
-	throughputSliExprFormat = "round(sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])), 0.001)\n"
-	latencySliExprFormat    = "histogram_quantile(%f, sum(rate(revision_request_latencies_bucket{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])) by (le, revision_name))\n"
-	errorRateSliExprFormat  = "sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\", response_code_class != \"2xx\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m]))\n"
-	cpuSliExprFormat        = "sum(rate(container_cpu_usage_seconds_total{cluster_name=\"%s\", namespace=\"%s\", pod_name=~\".*%s.*\"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name=\"%s\", namespace=\"%s\", pod=~\".*%s.*\"})\n"
-	memorySliExprFormat     = "sum(container_memory_usage_bytes{cluster_name=\"%s\",namespace=\"%s\",pod_name=~\".*%s.*\"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\"})\n"
+	throughputSliExprFormat = "round(sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])), 0.001)"
+	latencySliExprFormat    = "histogram_quantile(%f, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
+	errorRateSliExprFormat  = "(100 * sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",response_code_class!=\"2xx\",revision_name=~\".*%s.*\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
+	cpuSliExprFormat        = "(100 * sum(rate(container_cpu_usage_seconds_total{cluster_name=\"%s\",namespace=\"%s\",pod_name=~\".*%s.*\"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\"}))"
+	memorySliExprFormat     = "(100 * sum(container_memory_usage_bytes{cluster_name=\"%s\",namespace=\"%s\",pod_name=~\".*%s.*\"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\"}))"
 )
 
 const (
@@ -78,8 +81,8 @@ type PromAlertGroup struct {
 }
 
 type PromAlertRule struct {
-	Alert       string                   `yaml:"alert"` // Alert name
-	Expr        string                   `yaml:"expr"`
+	Alert       yamlv3.Node              `yaml:"alert"` // Alert name
+	Expr        yamlv3.Node              `yaml:"expr"`
 	For         string                   `yaml:"for"`
 	Labels      PromAlertRuleLabels      `yaml:"labels"`
 	Annotations PromAlertRuleAnnotations `yaml:"annotations"`
@@ -92,12 +95,12 @@ type PromAlertRuleLabels struct {
 }
 
 type PromAlertRuleAnnotations struct {
-	Summary   string `yaml:"summary"`
 	Dashboard string `yaml:"dashboard"`
 	Playbook  string `yaml:"playbook"`
+	Summary   string `yaml:"summary"`
 }
 
-func (alert ModelEndpointAlert) ToPromAlertSpec(dashboardBaseURL string) PromAlert {
+func (alert ModelEndpointAlert) ToPromAlertSpec(dashboardBaseURL string) (PromAlert, error) {
 	var rules []PromAlertRule
 
 	for _, alertCondition := range alert.AlertConditions {
@@ -105,9 +108,19 @@ func (alert ModelEndpointAlert) ToPromAlertSpec(dashboardBaseURL string) PromAle
 			continue
 		}
 
+		alertNode := yamlv3.Node{
+			Style: yamlv3.DoubleQuotedStyle,
+		}
+		alertNode.SetString(alertCondition.alertName(alert.Model.Name))
+
+		exprNode := yamlv3.Node{
+			Style: yamlv3.LiteralStyle,
+		}
+		exprNode.SetString(alert.prometheusExpr(*alertCondition))
+
 		rule := PromAlertRule{
-			Alert: alertCondition.alertName(alert.Model.Name),
-			Expr:  alert.prometheusExpr(*alertCondition),
+			Alert: alertNode,
+			Expr:  exprNode,
 			For:   defaultAlertForDuration,
 			Labels: PromAlertRuleLabels{
 				Owner:       alert.TeamName,
@@ -131,7 +144,22 @@ func (alert ModelEndpointAlert) ToPromAlertSpec(dashboardBaseURL string) PromAle
 			},
 		},
 	}
-	return spec
+
+	// Lint alert to comply PromQL
+	for i, group := range spec.Groups {
+		for j, rule := range group.Rules {
+			exp, err := promql.ParseExpr(rule.Expr.Value)
+			if err != nil {
+				return PromAlert{}, err
+			}
+
+			if rule.Expr.Value != exp.String() {
+				spec.Groups[i].Rules[j].Expr.Value = exp.String()
+			}
+		}
+	}
+
+	return spec, nil
 }
 
 func (alert ModelEndpointAlert) sliExpr(alertCondition AlertCondition) string {
@@ -177,11 +205,11 @@ func (alert ModelEndpointAlert) sliTarget(alertCondition AlertCondition) string 
 	case AlertConditionTypeLatency:
 		return fmt.Sprint(alertCondition.Target)
 	case AlertConditionTypeErrorRate:
-		return fmt.Sprint(alertCondition.Target / 100)
+		return fmt.Sprint(alertCondition.Target)
 	case AlertConditionTypeCPU:
-		return fmt.Sprint(alertCondition.Target / 100)
+		return fmt.Sprint(alertCondition.Target)
 	case AlertConditionTypeMemory:
-		return fmt.Sprint(alertCondition.Target / 100)
+		return fmt.Sprint(alertCondition.Target)
 	default:
 		return "0"
 	}
