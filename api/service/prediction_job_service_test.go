@@ -27,9 +27,9 @@ import (
 
 	"github.com/gojek/merlin/batch"
 	"github.com/gojek/merlin/batch/mocks"
-	imageBuilderMock "github.com/gojek/merlin/imagebuilder/mocks"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	imageBuilderMock "github.com/gojek/merlin/pkg/imagebuilder/mocks"
 	queueMock "github.com/gojek/merlin/queue/mocks"
 	storageMock "github.com/gojek/merlin/storage/mocks"
 )

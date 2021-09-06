@@ -29,15 +29,17 @@ import (
 	"github.com/gojek/merlin/cluster"
 	clusterMock "github.com/gojek/merlin/cluster/mocks"
 	"github.com/gojek/merlin/config"
-	imageBuilderMock "github.com/gojek/merlin/imagebuilder/mocks"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	imageBuilderMock "github.com/gojek/merlin/pkg/imagebuilder/mocks"
 	queueMock "github.com/gojek/merlin/queue/mocks"
 	"github.com/gojek/merlin/storage/mocks"
 )
 
-var isDefaultTrue = true
-var loggerDestinationURL = "http://logger.default"
+var (
+	isDefaultTrue        = true
+	loggerDestinationURL = "http://logger.default"
+)
 
 func TestDeployEndpoint(t *testing.T) {
 	type args struct {
@@ -48,7 +50,8 @@ func TestDeployEndpoint(t *testing.T) {
 		expectedEndpoint *models.VersionEndpoint
 	}
 
-	env := &models.Environment{Name: "env1",
+	env := &models.Environment{
+		Name:       "env1",
 		Cluster:    "cluster1",
 		IsDefault:  &isDefaultTrue,
 		Region:     "id",
@@ -469,7 +472,6 @@ func TestDeployEndpoint(t *testing.T) {
 			if tt.args.endpoint.Transformer != nil {
 				assert.Equal(t, tt.args.endpoint.Transformer.Enabled, errRaised.Transformer.Enabled)
 			}
-
 		})
 	}
 }

@@ -8,9 +8,9 @@ import (
 
 	"github.com/gojek/merlin/batch"
 	"github.com/gojek/merlin/batch/mocks"
-	imageBuilderMock "github.com/gojek/merlin/imagebuilder/mocks"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	imageBuilderMock "github.com/gojek/merlin/pkg/imagebuilder/mocks"
 	"github.com/gojek/merlin/queue"
 	storageMock "github.com/gojek/merlin/storage/mocks"
 	"github.com/jinzhu/copier"
@@ -161,7 +161,6 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-
 			mockController := &mocks.Controller{}
 			mockControllers := map[string]batch.Controller{
 				predJobEnv.Name: mockController,

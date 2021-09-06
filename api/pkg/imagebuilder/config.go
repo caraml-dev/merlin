@@ -14,7 +14,11 @@
 
 package imagebuilder
 
-import "time"
+import (
+	"time"
+
+	v1 "k8s.io/api/core/v1"
+)
 
 type Config struct {
 	// GCS URL Containing build context
@@ -31,6 +35,14 @@ type Config struct {
 	DockerRegistry string
 	// Build timeout duration
 	BuildTimeoutDuration time.Duration
+	// Kaniko docker image
+	KanikoImage string
+	// Tolerations for Jobs Specification
+	Tolerations []v1.Toleration
+	// Node Selectors for Jobs Specification
+	NodeSelectors map[string]string
+	// Maximum number of retry of image builder job
+	MaximumRetry int32
 
 	// Cluster Name
 	ClusterName string

@@ -7,9 +7,9 @@ import (
 
 	"github.com/gojek/merlin/cluster"
 	clusterMock "github.com/gojek/merlin/cluster/mocks"
-	imageBuilderMock "github.com/gojek/merlin/imagebuilder/mocks"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	imageBuilderMock "github.com/gojek/merlin/pkg/imagebuilder/mocks"
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/storage/mocks"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +21,8 @@ func TestExecuteDeployment(t *testing.T) {
 	isDefaultTrue := true
 	loggerDestinationURL := "http://logger.default"
 
-	env := &models.Environment{Name: "env1",
+	env := &models.Environment{
+		Name:       "env1",
 		Cluster:    "cluster1",
 		IsDefault:  &isDefaultTrue,
 		Region:     "id",
