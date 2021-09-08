@@ -226,6 +226,7 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string, retryCounter i
 			// If unauthorized, it's more likely due to expired token. So, let's try again
 			if terr.StatusCode == http.StatusUnauthorized {
 				if retryCounter < maxCheckImageRetry {
+					time.Sleep(1 * time.Second)
 					log.Infof("%d retry listing tags for %s", retryCounter+1, imageName)
 					return c.imageRefExists(imageName, imageTag, retryCounter+1)
 				}
