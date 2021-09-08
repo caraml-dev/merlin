@@ -1052,11 +1052,13 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 	type args struct {
 		imageName string
 		imageTag  string
+		retry     int
 	}
 	tests := []struct {
 		name         string
 		fields       fields
 		args         args
+		statusCode   int
 		responseBody []byte
 		want         bool
 		wantErr      bool
@@ -1068,6 +1070,7 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 				imageName: "gojek/merlin-api",
 				imageTag:  "1.0.0",
 			},
+			statusCode:   http.StatusOK,
 			responseBody: []byte(`{"tags":["1.0.0", "0.9.0"]}`),
 			want:         true,
 			wantErr:      false,
@@ -1079,6 +1082,7 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 				imageName: "gojek/merlin-api",
 				imageTag:  "1.0.0",
 			},
+			statusCode:   http.StatusOK,
 			responseBody: []byte(`{"tags":["0.9.0"]}`),
 			want:         false,
 			wantErr:      false,
@@ -1090,6 +1094,7 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 				imageName: "gojek/merlin-api",
 				imageTag:  "1.0.0",
 			},
+			statusCode:   http.StatusOK,
 			responseBody: []byte(`{"tags":[]}`),
 			want:         false,
 			wantErr:      false,
@@ -1101,7 +1106,7 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				switch r.URL.Path {
 				case "/v2/":
-					w.WriteHeader(http.StatusOK)
+					w.WriteHeader(tt.statusCode)
 				case tagsPath:
 					if r.Method != http.MethodGet {
 						t.Errorf("Method; got %v, want %v", r.Method, http.MethodGet)
@@ -1123,7 +1128,7 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 				config:     tt.fields.config,
 			}
 
-			got, err := c.imageRefExists(fmt.Sprintf("%s/%s", u.Host, tt.args.imageName), tt.args.imageTag)
+			got, err := c.imageRefExists(fmt.Sprintf("%s/%s", u.Host, tt.args.imageName), tt.args.imageTag, tt.args.retry)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("imageBuilder.ImageRefExists() error = %v, wantErr %v", err, tt.wantErr)
 				return
