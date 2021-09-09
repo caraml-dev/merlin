@@ -9,6 +9,7 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -31,8 +32,10 @@ import (
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"
 
-var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
-var onlyOneSignalHandler = make(chan struct{})
+var (
+	shutdownSignals      = []os.Signal{os.Interrupt, syscall.SIGTERM}
+	onlyOneSignalHandler = make(chan struct{})
+)
 
 var hystrixCommandName = "model_predict"
 
@@ -247,9 +250,11 @@ func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (
 
 // Run serves the HTTP endpoints.
 func (s *Server) Run() {
-	// use default mux
+	s.router.Use(recoveryHandler)
+
 	health := healthcheck.NewHandler()
 	s.router.Handle("/", health)
+
 	s.router.Handle("/metrics", promhttp.Handler())
 	s.router.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
 	s.router.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
@@ -293,6 +298,19 @@ func (s *Server) Run() {
 	if err := srv.Shutdown(context.Background()); err != nil {
 		s.logger.Error(fmt.Sprintf("failed to shutdown HTTP server: %v", err))
 	}
+}
+
+func recoveryHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				debug.PrintStack()
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		}()
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // setupSignalHandler registered for SIGTERM and SIGINT. A stop channel is returned
