@@ -291,8 +291,8 @@ spec:
         args:
           - |
             mkdir /app
-            echo "Fetching swagger configuration from http://127.0.0.1:{{ .Values.merlin.service.internalPort }}/swagger.yaml..."
-            until $$(wget -O $${SWAGGER_JSON} --tries 1 --timeout 1 http://127.0.0.1:{{ .Values.merlin.service.internalPort }}/swagger.yaml); do
+            echo "Fetching swagger configuration from {{ .Values.swagger.specUrl }} ..."
+            until $$(wget -O $${SWAGGER_JSON} --tries 1 --timeout 1 {{ .Values.swagger.specUrl }}); do
               printf '.'
               sleep 10
             done
