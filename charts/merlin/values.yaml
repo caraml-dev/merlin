@@ -337,7 +337,6 @@ swagger:
     tag: v3.23.5
   apiHost: "merlin.dev"
   basePath: "/api/merlin/v1"
-  specUrl: "https://raw.githubusercontent.com/gojek/merlin/main/swagger.yaml"
   service:
     internalPort: 8080
     externalPort: 8080

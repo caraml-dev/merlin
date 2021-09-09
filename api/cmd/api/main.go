@@ -102,6 +102,10 @@ func main() {
 	mount(router, "/metrics", promhttp.Handler())
 	mount(router, "/debug", newPprofRouter())
 
+	router.Path("/swagger.yaml").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, cfg.SwaggerPath)
+	})
+
 	reactConfig := cfg.ReactAppConfig
 	uiEnv := uiEnvHandler{
 		OauthClientID:     reactConfig.OauthClientID,

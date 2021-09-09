@@ -37,6 +37,7 @@ type Config struct {
 	NewRelic              newrelic.Config `envconfig:"NEWRELIC" split_words:"false" `
 	EnvironmentConfigPath string          `envconfig:"DEPLOYMENT_CONFIG_PATH" required:"true"`
 	NumOfQueueWorkers     int             `envconfig:"NUM_OF_WORKERS" default:"2"`
+	SwaggerPath           string          `envconfig:"SWAGGER_PATH" default:"./swagger.yaml"`
 
 	DbConfig                  DatabaseConfig
 	VaultConfig               VaultConfig
