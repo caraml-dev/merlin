@@ -36,7 +36,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/google"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
-	"github.com/pkg/errors"
 )
 
 var maxCheckImageRetry int = 2
@@ -210,7 +209,7 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string, retryCounter i
 
 	repo, err := name.NewRepository(imageName)
 	if err != nil {
-		return false, errors.Wrapf(err, "unable to parse docker repository %s", imageName)
+		return false, fmt.Errorf("unable to parse docker repository %s: %s", imageName, err.Error())
 	}
 
 	tags, err := remote.List(repo, remote.WithAuthFromKeychain(keychain))
@@ -231,10 +230,10 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string, retryCounter i
 					return c.imageRefExists(imageName, imageTag, retryCounter+1)
 				}
 			}
+		} else {
+			// If it's not transport error, raise error
+			return false, fmt.Errorf("error getting image tags for %s: %s", repo, err.Error())
 		}
-
-		// If it's not identified transport error, raise error
-		return false, errors.Wrapf(err, "error getting image tags for %s", repo)
 	}
 
 	for _, tag := range tags {
