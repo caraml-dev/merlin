@@ -36,8 +36,9 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/google"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
-	"github.com/pkg/errors"
 )
+
+var maxCheckImageRetry int = 2
 
 type ImageBuilder interface {
 	// BuildImage build docker image for the given model version
@@ -95,7 +96,7 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, version *models.Version) (string, error) {
 	// check for existing image
 	imageName := c.nameGenerator.generateDockerImageName(project, model)
-	imageExists, err := c.imageRefExists(imageName, version.ID.String())
+	imageExists, err := c.imageRefExists(imageName, version.ID.String(), 0)
 	if err != nil {
 		log.Errorf("Unable to check existing image ref: %v", err)
 		return "", ErrUnableToGetImageRef
@@ -200,7 +201,7 @@ func (c *imageBuilder) imageRef(project mlp.Project, model *models.Model, versio
 // k8schain (use Kubelet's authentication), and googleKeyChain (emulate docker-credential-gcr).
 // https://github.com/google/go-containerregistry/blob/master/cmd/crane/README.md
 // https://github.com/google/go-containerregistry/blob/master/pkg/v1/google/README.md
-func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) {
+func (c *imageBuilder) imageRefExists(imageName, imageTag string, retryCounter int) (bool, error) {
 	keychain := authn.DefaultKeychain
 	if strings.Contains(c.config.DockerRegistry, "gcr.io") {
 		keychain = google.Keychain
@@ -208,18 +209,30 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 
 	repo, err := name.NewRepository(imageName)
 	if err != nil {
-		return false, errors.Wrapf(err, "unable to parse docker repository %s", imageName)
+		return false, fmt.Errorf("unable to parse docker repository %s: %s", imageName, err.Error())
 	}
 
 	tags, err := remote.List(repo, remote.WithAuthFromKeychain(keychain))
 	if err != nil {
 		if terr, ok := err.(*transport.Error); ok {
+			log.Errorf("transport error on listing tags for %s: status code: %d, error: %s", imageName, terr.StatusCode, terr.Error())
+
 			// If image not found, it's not exist yet
 			if terr.StatusCode == http.StatusNotFound {
 				return false, nil
 			}
+
+			// If unauthorized, it's more likely due to expired token. So, let's try again
+			if terr.StatusCode == http.StatusUnauthorized {
+				if retryCounter < maxCheckImageRetry {
+					time.Sleep(1 * time.Second)
+					log.Infof("retry (%d) listing tags for %s", retryCounter+1, imageName)
+					return c.imageRefExists(imageName, imageTag, retryCounter+1)
+				}
+			}
 		} else {
-			return false, errors.Wrapf(err, "error getting image tags for %s", repo)
+			// If it's not transport error, raise error
+			return false, fmt.Errorf("error getting image tags for %s: %s", repo, err.Error())
 		}
 	}
 
