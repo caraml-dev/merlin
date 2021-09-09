@@ -226,7 +226,7 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string, retryCounter i
 			if terr.StatusCode == http.StatusUnauthorized {
 				if retryCounter < maxCheckImageRetry {
 					time.Sleep(1 * time.Second)
-					log.Infof("%d retry listing tags for %s", retryCounter+1, imageName)
+					log.Infof("retry (%d) listing tags for %s", retryCounter+1, imageName)
 					return c.imageRefExists(imageName, imageTag, retryCounter+1)
 				}
 			}

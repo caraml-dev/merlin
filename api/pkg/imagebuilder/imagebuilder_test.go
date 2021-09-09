@@ -1139,3 +1139,40 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 		})
 	}
 }
+
+func Test_kanikoBuilder_imageRefExists_retry_success(t *testing.T) {
+	imageName := "gojek/merlin"
+	imageTag := "test"
+	retryCounter := 0
+
+	tagsPath := fmt.Sprintf("/v2/%s/tags/list", imageName)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v2/":
+			w.WriteHeader(http.StatusOK)
+		case tagsPath:
+			if retryCounter == 0 {
+				w.WriteHeader(http.StatusUnauthorized)
+				retryCounter += 1
+				return
+			} else if retryCounter == 1 {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"tags":["test"]}`))
+				retryCounter += 1
+				return
+			}
+		}
+	}))
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	assert.Nil(t, err)
+
+	c := &imageBuilder{}
+
+	ok, err := c.imageRefExists(fmt.Sprintf("%s/%s", u.Host, imageName), imageTag, 0)
+	assert.Nil(t, err)
+	assert.True(t, ok)
+
+	assert.Equal(t, 2, retryCounter)
+}
