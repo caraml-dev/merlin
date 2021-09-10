@@ -5,14 +5,17 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
@@ -763,4 +766,42 @@ func respBody(t *testing.T, response *http.Response) string {
 	assert.NoError(t, err, "should not have failed to read response body")
 
 	return string(respBody)
+}
+
+func Test_recoveryHandler(t *testing.T) {
+	router := mux.NewRouter()
+	logger, _ := zap.NewDevelopment()
+
+	ts := httptest.NewServer(nil)
+	defer ts.Close()
+
+	port := fmt.Sprint(ts.Listener.Addr().(*net.TCPAddr).Port)
+	modelName := "test-panic"
+
+	s := &Server{
+		router: router,
+		logger: logger,
+		options: &Options{
+			Port:      port,
+			ModelName: modelName,
+		},
+		PreprocessHandler: func(ctx context.Context, rawRequest []byte, rawRequestHeaders map[string]string) ([]byte, error) {
+			panic("panic at preprocess")
+			return nil, nil
+		},
+	}
+	go s.Run()
+
+	// Give some time for the server to run.
+	time.Sleep(1 * time.Second)
+
+	resp, err := http.Post(fmt.Sprintf("http://localhost:%s/v1/models/%s:predict", port, modelName), "", strings.NewReader("{}"))
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	assert.Nil(t, err)
+	assert.Equal(t, `{"code":500,"message":"panic: panic at preprocess"}`, string(respBody))
 }
