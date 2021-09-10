@@ -24,6 +24,7 @@ WORKDIR /src/api
 COPY api .
 COPY python/batch-predictor ../python/batch-predictor
 COPY db-migrations ./db-migrations
+COPY swagger.yaml ./swagger.yaml
 
 RUN go build -o bin/merlin_api ./cmd/api
 
@@ -43,6 +44,7 @@ FROM alpine:3.12
 
 COPY --from=go-builder /src/api/bin/merlin_api /usr/bin/merlin_api
 COPY --from=go-builder /src/api/db-migrations ./db-migrations
+COPY --from=go-builder /src/api/swagger.yaml ./swagger.yaml
 COPY --from=node-builder /src/ui/build ./ui/build
 
 CMD ["merlin_api"]
