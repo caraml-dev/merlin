@@ -305,7 +305,6 @@ func recoveryHandler(next http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				debug.PrintStack()
-				w.WriteHeader(http.StatusInternalServerError)
 				response.NewError(http.StatusInternalServerError, fmt.Errorf("panic: %v", err)).Write(w)
 			}
 		}()
