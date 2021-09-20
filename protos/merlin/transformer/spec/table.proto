@@ -3,6 +3,7 @@ syntax = "proto3";
 package merlin.transformer;
 
 import "transformer/spec/common.proto";
+import "transformer/spec/scaler.proto";
 
 option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
@@ -40,6 +41,8 @@ message TransformationStep {
   repeated SortColumnRule sort = 3;
   map<string, string> renameColumns = 4;
   repeated UpdateColumn updateColumns = 5;
+  repeated ScaleColumn scaleColumns = 6;
+  repeated EncodeColumn encodeColumns = 7;
 }
 
 message SortColumnRule {
@@ -74,4 +77,17 @@ enum JoinMethod {
   OUTER = 4;
   CROSS = 5;
   CONCAT = 6;
+}
+
+message ScaleColumn {
+  string column = 1;
+  oneof scalerConfig {
+    StandardScalerConfig standardScalerConfig = 2;
+    MinMaxScalerConfig minMaxScalerConfig = 3;  
+  }
+}
+
+message EncodeColumn {
+  repeated string columns = 1;
+  string encoder = 2;
 }

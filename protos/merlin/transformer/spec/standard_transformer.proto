@@ -6,6 +6,7 @@ import "transformer/spec/feast.proto";
 import "transformer/spec/table.proto";
 import "transformer/spec/variable.proto";
 import "transformer/spec/json.proto";
+import "transformer/spec/encoder.proto";
 
 option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
@@ -40,6 +41,7 @@ message Input {
   repeated Variable variables = 1;
   repeated FeatureTable feast = 2;
   repeated Table tables = 3;
+  repeated Encoder encoders = 4;
 }
 
 
