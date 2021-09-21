@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 import { EuiButtonIcon, EuiFieldText, EuiFormRow } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 
-export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
+export const EncodeColumns = ({ columns, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const [items, setItems] = useState([
     ...Object.keys(columns).map((v, idx) => ({
       idx,
-      before: v,
-      after: columns[v]
+      column: v,
+      encoder: columns[v]
     })),
     { idx: Object.keys(columns).length }
   ]);
@@ -18,11 +18,11 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
     () => {
       let newColumns = {};
       items
-        .filter(item => item.before && item.before !== "")
+        .filter(item => item.column && item.column !== "")
         .forEach(item => {
-          newColumns[item.before] = item.after;
+          newColumns[item.column] = item.encoder;
         });
-      onChange("renameColumns")(newColumns);
+      onChange("encodeColumns")(newColumns);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [items]
@@ -47,9 +47,9 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
       items[idx] = { ...items[idx], [field]: e.target.value };
 
       setItems(_ =>
-        field === "before" &&
-        items[items.length - 1].before &&
-        items[items.length - 1].before.trim()
+        field === "column" &&
+        items[items.length - 1].column &&
+        items[items.length - 1].column.trim()
           ? [...items, { idx: items.length }]
           : [...items]
       );
@@ -58,26 +58,26 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
 
   const tableColumns = [
     {
-      name: "Before",
-      field: "before",
+      name: "Column",
+      field: "column",
       width: "45%",
-      render: (before, item) => (
+      render: (column, item) => (
         <EuiFieldText
-          placeholder="Column Name Before"
-          value={before || ""}
-          onChange={onChangeRow(item.idx, "before")}
+          placeholder="Column Name"
+          value={column || ""}
+          onChange={onChangeRow(item.idx, "column")}
         />
       )
     },
     {
-      name: "After",
-      field: "after",
+      name: "Encoder",
+      field: "encoder",
       width: "45%",
-      render: (after, item) => (
+      render: (encoder, item) => (
         <EuiFieldText
-          placeholder="Column Name After"
-          value={after || ""}
-          onChange={onChangeRow(item.idx, "after")}
+          placeholder="Encoder name"
+          value={encoder || ""}
+          onChange={onChangeRow(item.idx, "encoder")}
         />
       )
     },
@@ -105,8 +105,8 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
   return (
     <EuiFormRow
       fullWidth
-      label="Columns to be renamed"
-      helpText="This operations will rename one column to another.">
+      label="Columns to be encoded"
+      helpText="This operation will map a column to an encoder.">
       <InMemoryTableForm
         columns={tableColumns}
         rowProps={getRowProps}

@@ -18,8 +18,14 @@ export const SelectTableOperation = ({
       case "dropColumns":
         newOperation[value] = [];
         break;
+      case "encodeColumns":
+        newOperation[value] = [];
+        break;
       case "renameColumns":
         newOperation[value] = {};
+        break;
+      case "scaleColumns":
+        newOperation[value] = [];
         break;
       case "selectColumns":
         newOperation[value] = [];
@@ -43,8 +49,16 @@ export const SelectTableOperation = ({
       inputDisplay: "Drop Columns"
     },
     {
+      value: "encodeColumns",
+      inputDisplay: "Encode Columns"
+    },
+    {
       value: "renameColumns",
       inputDisplay: "Rename Columns"
+    },
+    {
+      value: "scaleColumns",
+      inputDisplay: "Scale Columns"
     },
     {
       value: "selectColumns",

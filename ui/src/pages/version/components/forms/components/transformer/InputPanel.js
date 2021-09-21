@@ -141,6 +141,14 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
                 onClick={() => onAddInput("variables", [{}])}
               />
             </EuiFlexItem>
+
+            <EuiFlexItem>
+              <AddButton
+                title="+ Add Encoders"
+                description="Define an encoder for encoding input columns at transformation step"
+                onClick={() => onAddInput("encoders", [{}])}
+              />
+            </EuiFlexItem>
           </EuiFlexGroup>
         </EuiFlexItem>
       </EuiFlexGroup>
