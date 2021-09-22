@@ -172,6 +172,7 @@ func TestCompiler_Compile(t *testing.T) {
 					&FeastOp{},
 					&CreateTableOp{},
 					&VariableDeclarationOp{},
+					&EncoderOp{},
 					&TableTransformOp{},
 					&TableJoinOp{},
 				},
@@ -246,11 +247,13 @@ func TestCompiler_Compile(t *testing.T) {
 				preprocessOps: []Op{
 					&CreateTableOp{},
 					&VariableDeclarationOp{},
+					&EncoderOp{},
 					&JsonOutputOp{},
 				},
 				postprocessOps: []Op{
 					&CreateTableOp{},
 					&VariableDeclarationOp{},
+					&EncoderOp{},
 					&JsonOutputOp{},
 				},
 			},
@@ -344,6 +347,57 @@ func TestCompiler_Compile(t *testing.T) {
 			specYamlFilePath: "./testdata/invalid_output.yaml",
 			wantErr:          true,
 			expError:         errors.New("unable to compile preprocessing pipeline: variable entity_5_table is not registered"),
+		},
+		{
+			name: "invalid scale column - standard scale has zero standard deviation",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/invalid_standard_scale_column.yaml",
+			wantErr:          true,
+			expError:         errors.New("unable to compile preprocessing pipeline: standard scaler require non zero standard deviation"),
+		},
+		{
+			name: "invalid scale column - min max scale has same min and max",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/invalid_min_max_scale_column.yaml",
+			wantErr:          true,
+			expError:         errors.New("unable to compile preprocessing pipeline: minmax scaler require different value between min and max"),
+		},
+		{
+			name: "invalid encode column - encoder specified is not exist",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled: true,
+				},
+				cacheOptions: &cache.Options{
+					SizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/invalid_encode_column.yaml",
+			wantErr:          true,
+			expError:         errors.New("unable to compile preprocessing pipeline: unknown name notFoundEncoder (1:1)\n | notFoundEncoder\n | ^"),
 		},
 	}
 	for _, tt := range tests {

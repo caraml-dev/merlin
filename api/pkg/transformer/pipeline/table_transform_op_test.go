@@ -3,17 +3,19 @@ package pipeline
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/antonmedv/expr/vm"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/encoder"
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
@@ -63,6 +65,17 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 	env.SetSymbol("existing_table", existingTable)
 	env.SetSymbol("integer_var", 12345)
 	env.SymbolRegistry().SetRawRequestJSON(rawRequestJSON)
+
+	encImpl := &encoder.OrdinalEncoder{
+		DefaultValue: 0,
+		Mapping: map[string]interface{}{
+			"1111": 1,
+			"2222": 2,
+			"3333": 3,
+		},
+	}
+
+	env.SetSymbol("ordinalEncoder", encImpl)
 
 	tests := []struct {
 		name               string
@@ -237,6 +250,86 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 			},
 		},
 		{
+			name: "success: scale columns",
+			tableTransformSpec: &spec.TableTransformation{
+				InputTable:  "existing_table",
+				OutputTable: "output_table",
+				Steps: []*spec.TransformationStep{
+					{
+						ScaleColumns: []*spec.ScaleColumn{
+							{
+								Column: "int_col",
+								ScalerConfig: &spec.ScaleColumn_StandardScalerConfig{
+									StandardScalerConfig: &spec.StandardScalerConfig{
+										Mean: 1,
+										Std:  2,
+									},
+								},
+							},
+							{
+								Column: "float_col",
+								ScalerConfig: &spec.ScaleColumn_MinMaxScalerConfig{
+									MinMaxScalerConfig: &spec.MinMaxScalerConfig{
+										Min: 0,
+										Max: 4000,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			env:     env,
+			wantErr: false,
+			expVariables: map[string]interface{}{
+				"existing_table": table.New(
+					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
+					series.New([]interface{}{1111, 2222, 3333, nil}, series.Int, "int_col"),
+					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
+					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
+				),
+				"output_table": table.New(
+					series.New([]interface{}{0.277777775, 0.55555555, 0.8333333249999999, nil}, series.Float, "float_col"),
+					series.New([]interface{}{555.0, 1110.5, 1666.0, nil}, series.Float, "int_col"),
+					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
+					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
+				),
+			},
+		},
+		{
+			name: "success: encode columns",
+			tableTransformSpec: &spec.TableTransformation{
+				InputTable:  "existing_table",
+				OutputTable: "output_table",
+				Steps: []*spec.TransformationStep{
+					{
+						EncodeColumns: []*spec.EncodeColumn{
+							{
+								Columns: []string{"string_col"},
+								Encoder: "ordinalEncoder",
+							},
+						},
+					},
+				},
+			},
+			env:     env,
+			wantErr: false,
+			expVariables: map[string]interface{}{
+				"existing_table": table.New(
+					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
+					series.New([]interface{}{1111, 2222, 3333, nil}, series.Int, "int_col"),
+					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
+					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
+				),
+				"output_table": table.New(
+					series.New([]interface{}{1, 2, 3, 0}, series.Int, "string_col"),
+					series.New([]interface{}{1111, 2222, 3333, nil}, series.Int, "int_col"),
+					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
+					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
+				),
+			},
+		},
+		{
 			name: "success: chain operations",
 			tableTransformSpec: &spec.TableTransformation{
 				InputTable:  "existing_table",
@@ -325,6 +418,71 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 			wantErr:  true,
 			expError: errors.New("table unknown_table is not declared"),
 		},
+		{
+			name: "error: scale existing column in table is not numeric ",
+			tableTransformSpec: &spec.TableTransformation{
+				InputTable:  "existing_table",
+				OutputTable: "output_table",
+				Steps: []*spec.TransformationStep{
+					{
+						ScaleColumns: []*spec.ScaleColumn{
+							{
+								Column: "string_col",
+								ScalerConfig: &spec.ScaleColumn_StandardScalerConfig{
+									StandardScalerConfig: &spec.StandardScalerConfig{
+										Mean: 1,
+										Std:  2,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: fmt.Errorf("this series type is not numeric but string"),
+		},
+		{
+			name: "error: encode columns, referred encoder is not exist",
+			tableTransformSpec: &spec.TableTransformation{
+				InputTable:  "existing_table",
+				OutputTable: "output_table",
+				Steps: []*spec.TransformationStep{
+					{
+						EncodeColumns: []*spec.EncodeColumn{
+							{
+								Columns: []string{"string_col"},
+								Encoder: "notExistEncoder",
+							},
+						},
+					},
+				},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: fmt.Errorf("encoder notExistEncoder is not declared"),
+		},
+		{
+			name: "error: encode columns, referred encoder is not encoder type",
+			tableTransformSpec: &spec.TableTransformation{
+				InputTable:  "existing_table",
+				OutputTable: "output_table",
+				Steps: []*spec.TransformationStep{
+					{
+						EncodeColumns: []*spec.EncodeColumn{
+							{
+								Columns: []string{"string_col"},
+								Encoder: "existing_table",
+							},
+						},
+					},
+				},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: fmt.Errorf("variable existing_table is not encoder"),
+		},
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t *testing.T) {
@@ -344,7 +502,9 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 				case time.Time:
 					assert.True(t, v.Sub(tt.env.symbolRegistry[varName].(time.Time)) < time.Second)
 				default:
-					assert.Equal(t, v, tt.env.symbolRegistry[varName])
+					fmt.Println("actual ", tt.env.symbolRegistry[varName])
+					fmt.Println("expected ", v)
+					assert.EqualValues(t, v, tt.env.symbolRegistry[varName])
 				}
 			}
 		})

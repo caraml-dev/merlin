@@ -85,7 +85,7 @@ transformerConfig:
               - columns:
                   - col7
                   - col8
-                encoder: ordinalEncoder
+                encoder: notFoundEncoder
       - tableJoin:
           leftTable: entity_1_table
           rightTable: entity_3_table
