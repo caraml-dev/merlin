@@ -1,36 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { EuiButtonIcon, EuiFieldText, EuiFormRow } from "@elastic/eui";
+import React from "react";
+import { EuiButtonIcon, EuiFieldText } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
+import { ColumnsComboBox } from "./ColumnsComboBox";
 
 export const EncodeColumns = ({ columns, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
-  const [items, setItems] = useState([
-    ...Object.keys(columns).map((v, idx) => ({
-      idx,
-      column: v,
-      encoder: columns[v]
-    })),
-    { idx: Object.keys(columns).length }
-  ]);
+  const items = [
+    ...columns.map((v, idx) => ({ idx, ...v })),
+    { idx: columns.length }
+  ];
 
-  useEffect(
-    () => {
-      let newColumns = {};
-      items
-        .filter(item => item.column && item.column !== "")
-        .forEach(item => {
-          newColumns[item.column] = item.encoder;
-        });
-      onChange("encodeColumns")(newColumns);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items]
-  );
-
-  const onDeleteItem = idx => () => {
-    items.splice(idx, 1);
-    setItems([...items.map((v, idx) => ({ ...v, idx }))]);
+  const onDeleteColumn = idx => () => {
+    columns.splice(idx, 1);
+    onChange("encodeColumns")(columns);
   };
 
   const getRowProps = item => {
@@ -42,42 +25,27 @@ export const EncodeColumns = ({ columns, onChangeHandler, errors = {} }) => {
     };
   };
 
-  const onChangeRow = (idx, field) => {
-    return e => {
-      items[idx] = { ...items[idx], [field]: e.target.value };
-
-      setItems(_ =>
-        field === "column" &&
-        items[items.length - 1].column &&
-        items[items.length - 1].column.trim()
-          ? [...items, { idx: items.length }]
-          : [...items]
-      );
-    };
-  };
-
   const tableColumns = [
     {
-      name: "Column",
-      field: "column",
-      width: "45%",
-      render: (column, item) => (
-        <EuiFieldText
-          placeholder="Column Name"
-          value={column || ""}
-          onChange={onChangeRow(item.idx, "column")}
+      name: 'Columns (Press "return" or "comma" for new entry)',
+      field: "columns",
+      width: "50%",
+      render: (columns, item) => (
+        <ColumnsComboBox
+          columns={columns || []}
+          onChange={onChange(`${item.idx}.columns`)}
         />
       )
     },
     {
       name: "Encoder",
       field: "encoder",
-      width: "45%",
+      width: "40%",
       render: (encoder, item) => (
         <EuiFieldText
-          placeholder="Encoder name"
+          placeholder="Encoder Name"
           value={encoder || ""}
-          onChange={onChangeRow(item.idx, "encoder")}
+          onChange={e => onChange(`${item.idx}.encoder`)(e.target.value)}
         />
       )
     },
@@ -91,8 +59,8 @@ export const EncodeColumns = ({ columns, onChangeHandler, errors = {} }) => {
                 size="s"
                 color="danger"
                 iconType="trash"
-                onClick={onDeleteItem(item.idx)}
-                aria-label="Remove column"
+                onClick={onDeleteColumn(item.idx)}
+                aria-label="Remove variable"
               />
             ) : (
               <div />
@@ -103,18 +71,13 @@ export const EncodeColumns = ({ columns, onChangeHandler, errors = {} }) => {
   ];
 
   return (
-    <EuiFormRow
-      fullWidth
-      label="Columns to be encoded"
-      helpText="This operation will map a column to an encoder.">
-      <InMemoryTableForm
-        columns={tableColumns}
-        rowProps={getRowProps}
-        items={items}
-        hasActions={true}
-        errors={errors}
-        renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
-      />
-    </EuiFormRow>
+    <InMemoryTableForm
+      columns={tableColumns}
+      rowProps={getRowProps}
+      items={items}
+      hasActions={true}
+      errors={errors}
+      renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
+    />
   );
 };

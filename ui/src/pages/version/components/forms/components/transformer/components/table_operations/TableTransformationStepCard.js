@@ -71,7 +71,8 @@ export const TableTransformationStepCard = ({
           {step.operation === "encodeColumns" && (
             <EncodeColumns
               columns={step.encodeColumns}
-              onChangeHandler={onChangeHandler}
+              onChangeHandler={onChange("encodeColumns")}
+              errors={get(errors, "encodeColumns")}
             />
           )}
 

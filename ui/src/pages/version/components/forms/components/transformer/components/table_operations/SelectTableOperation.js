@@ -3,7 +3,7 @@ import { EuiForm, EuiFormRow, EuiSuperSelect } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const SelectTableOperation = ({
-  operation,
+  operation, //current selected operation (if any)
   onChangeHandler,
   errors = {}
 }) => {
@@ -14,6 +14,7 @@ export const SelectTableOperation = ({
       operation: value
     };
 
+    //storage for info about transformation (eg selected col)
     switch (value) {
       case "dropColumns":
         newOperation[value] = [];
@@ -39,7 +40,6 @@ export const SelectTableOperation = ({
       default:
         break;
     }
-
     onChange()(newOperation);
   };
 

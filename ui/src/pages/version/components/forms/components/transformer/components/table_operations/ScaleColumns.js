@@ -1,9 +1,33 @@
 import React from "react";
-import { EuiButtonIcon, EuiFieldText, EuiSuperSelect } from "@elastic/eui";
+import { useState } from "react";
+import {
+  EuiButtonIcon,
+  EuiFieldText,
+  EuiSuperSelect,
+  EuiFormRow
+} from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
+import { get } from "@gojek/mlp-ui";
 
 export const ScaleColumns = ({ columns, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
+
+  //An array to keep track of scaler type for each row
+  const [scalerArr, setScalerArr] = useState([]);
+
+  //Manage updating of array state
+  const updateArr = (idx, v) => {
+    let newArr = scalerArr;
+    newArr[idx] = v;
+    setScalerArr(newArr);
+  };
+
+  //Manage deleting of array element of state
+  const deleteArrElement = idx => {
+    let newArr = scalerArr;
+    newArr.splice(idx, 1);
+    setScalerArr(newArr);
+  };
 
   const items = [
     ...columns.map((v, idx) => ({ idx, ...v })),
@@ -12,6 +36,7 @@ export const ScaleColumns = ({ columns, onChangeHandler, errors = {} }) => {
 
   const onDeleteColumn = idx => () => {
     columns.splice(idx, 1);
+    deleteArrElement(idx);
     onChange("scaleColumns")(columns);
   };
 
@@ -25,15 +50,15 @@ export const ScaleColumns = ({ columns, onChangeHandler, errors = {} }) => {
   };
 
   const scalerOptions = [
-    { value: "STANDARD", inputDisplay: "Standard Scaler" },
-    { value: "MIN_MAX", inputDisplay: "Min-Max Scaler" }
+    { value: "standardScalerConfig", inputDisplay: "Standard Scaler" },
+    { value: "minMaxScalerConfig", inputDisplay: "Min-Max Scaler" }
   ];
 
   const tableColumns = [
     {
       name: "Column",
       field: "column",
-      width: "45%",
+      width: "20%",
       render: (column, item) => (
         <EuiFieldText
           placeholder="Column Name"
@@ -45,15 +70,81 @@ export const ScaleColumns = ({ columns, onChangeHandler, errors = {} }) => {
     {
       name: "Scaler",
       field: "scaler",
-      width: "45%",
-      render: (scaler, item) => (
-        <EuiSuperSelect
-          options={scalerOptions}
-          valueOfSelected={scaler || ""}
-          onChange={value => onChange(`${item.idx}.scaler`)(value)}
-          hasDividers
-        />
-      )
+      width: "20%",
+      render: (scaler, item) => {
+        return (
+          <EuiSuperSelect
+            options={scalerOptions}
+            valueOfSelected={scalerArr[item.idx] || "Select Scaler"}
+            onChange={value => updateArr(item.idx, value)}
+            hasDividers
+          />
+        );
+      }
+    },
+    {
+      name: "Param 1",
+      field: "param1",
+      width: "20%",
+      render: (param1, item) => {
+        let paramName =
+          scalerArr[item.idx] === "standardScalerConfig"
+            ? "Mean"
+            : scalerArr[item.idx] === "minMaxScalerConfig"
+            ? "Min"
+            : "";
+
+        return (
+          <EuiFormRow
+            fullWidth
+            label={paramName}
+            isInvalid={!!errors}
+            error={get(errors, "0")}>
+            <EuiFieldText
+              placeholder="Param 1"
+              onChange={e =>
+                onChange(
+                  `${item.idx}.${
+                    scalerArr[item.idx]
+                  }.${paramName.toLowerCase()}`
+                )(Number(e.target.value))
+              }
+            />
+          </EuiFormRow>
+        );
+      }
+    },
+    {
+      name: "Param 2",
+      field: "param2",
+      width: "20%",
+      render: (param2, item) => {
+        let paramName =
+          scalerArr[item.idx] === "standardScalerConfig"
+            ? "Std"
+            : scalerArr[item.idx] === "minMaxScalerConfig"
+            ? "Max"
+            : "";
+
+        return (
+          <EuiFormRow
+            fullWidth
+            label={paramName}
+            isInvalid={!!errors}
+            error={get(errors, "0")}>
+            <EuiFieldText
+              placeholder="Param 2"
+              onChange={e =>
+                onChange(
+                  `${item.idx}.${
+                    scalerArr[item.idx]
+                  }.${paramName.toLowerCase()}`
+                )(Number(e.target.value))
+              }
+            />
+          </EuiFormRow>
+        );
+      }
     },
     {
       width: "10%",

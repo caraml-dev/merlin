@@ -262,6 +262,12 @@ export class Pipeline {
             step["operation"] = "sort";
           } else if (step.updateColumns !== undefined) {
             step["operation"] = "updateColumns";
+          } else if (step.scaleColumns !== undefined) {
+            //TODO: confirm this is correct
+            step["operation"] = "scaleColumns";
+          } else if (step.encodeColumns !== undefined) {
+            //TODO: cfm
+            step["operation"] = "encodeColumns";
           }
         });
 
