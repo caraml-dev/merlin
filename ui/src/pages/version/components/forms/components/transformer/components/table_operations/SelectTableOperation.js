@@ -26,7 +26,7 @@ export const SelectTableOperation = ({
         newOperation[value] = {};
         break;
       case "scaleColumns":
-        newOperation[value] = [];
+        newOperation[value] = [{ column: "" }];
         break;
       case "selectColumns":
         newOperation[value] = [];

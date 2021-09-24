@@ -12,10 +12,10 @@ import { DraggableHeader } from "../../../DraggableHeader";
 import { ColumnsComboBox } from "./ColumnsComboBox";
 import { EncodeColumns } from "./EncodeColumns";
 import { RenameColumns } from "./RenameColumns";
-import { ScaleColumns } from "./ScaleColumns";
 import { SelectTableOperation } from "./SelectTableOperation";
 import { SortColumns } from "./SortColumns";
 import { UpdateColumns } from "./UpdateColumns";
+import { ScaleColumnsPanel } from "./ScaleColumnsPanel";
 
 export const TableTransformationStepCard = ({
   index = 0,
@@ -84,7 +84,7 @@ export const TableTransformationStepCard = ({
           )}
 
           {step.operation === "scaleColumns" && (
-            <ScaleColumns
+            <ScaleColumnsPanel
               columns={step.scaleColumns}
               onChangeHandler={onChange("scaleColumns")}
               errors={get(errors, "scaleColumns")}
