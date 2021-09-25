@@ -15,7 +15,7 @@ import { RenameColumns } from "./RenameColumns";
 import { SelectTableOperation } from "./SelectTableOperation";
 import { SortColumns } from "./SortColumns";
 import { UpdateColumns } from "./UpdateColumns";
-import { ScaleColumnsPanel } from "./ScaleColumnsPanel";
+import { ScaleColumnsGroup } from "./ScaleColumnsGroup";
 
 export const TableTransformationStepCard = ({
   index = 0,
@@ -84,7 +84,7 @@ export const TableTransformationStepCard = ({
           )}
 
           {step.operation === "scaleColumns" && (
-            <ScaleColumnsPanel
+            <ScaleColumnsGroup
               columns={step.scaleColumns}
               onChangeHandler={onChange("scaleColumns")}
               errors={get(errors, "scaleColumns")}

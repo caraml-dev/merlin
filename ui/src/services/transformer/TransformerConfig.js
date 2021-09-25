@@ -322,6 +322,11 @@ export class Pipeline {
             delete variable["type"];
             delete variable["value"];
           });
+
+        input.encoders &&
+          input.encoders.forEach(encoder => {
+            delete encoder["encoder"];
+          });
       });
     }
 

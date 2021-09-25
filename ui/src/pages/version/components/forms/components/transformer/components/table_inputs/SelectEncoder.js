@@ -2,47 +2,40 @@ import React from "react";
 import { EuiForm, EuiFormRow, EuiSuperSelect } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 
-export const SelectScaler = ({
-  column,
-  operation, //current selected operation (if any)
+export const SelectEncoder = ({
+  name,
+  encoder, //current selected encoder (if any)
   onChangeHandler,
   errors = {}
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const setValue = value => {
-    let newOperation = {
-      column: column || "",
-      operation: value
+    let newEncoder = {
+      name: name || "",
+      encoder: value
     };
 
     //storage for info about transformation (eg selected col)
     switch (value) {
-      case "standardScalerConfig":
-        newOperation[value] = {};
-        break;
-      case "minMaxScalerConfig":
-        newOperation[value] = {};
+      case "ordinalEncoderConfig":
+        newEncoder[value] = {};
         break;
       default:
         break;
     }
-    onChange()(newOperation);
+    onChange()(newEncoder);
   };
 
   const options = [
     {
-      value: "standardScalerConfig",
-      inputDisplay: "Standard Scaler"
-    },
-    {
-      value: "minMaxScalerConfig",
-      inputDisplay: "Min-Max Scaler"
+      value: "ordinalEncoderConfig",
+      inputDisplay: "Ordinal Encoder"
     }
   ];
 
   const selectedOption = options.find(option =>
-    operation !== "" ? option.value === operation : option.value === ""
+    encoder !== "" ? option.value === encoder : option.value === ""
   );
 
   return (
@@ -51,12 +44,12 @@ export const SelectScaler = ({
         fullWidth
         label={
           <FormLabelWithToolTip
-            label="Scaler *"
-            content="Choose a scaler type to apply to a column"
+            label="Encoder Type *"
+            content="Choose an encoder type"
           />
         }
-        isInvalid={!!errors.operation}
-        error={errors.operation}
+        isInvalid={!!errors.encoder}
+        error={errors.encoder}
         display="columnCompressed">
         <EuiSuperSelect
           fullWidth
@@ -65,7 +58,7 @@ export const SelectScaler = ({
           onChange={value => setValue(value)}
           itemLayoutAlign="top"
           hasDividers
-          isInvalid={!!errors.operation}
+          isInvalid={!!errors.encoder}
         />
       </EuiFormRow>
     </EuiForm>

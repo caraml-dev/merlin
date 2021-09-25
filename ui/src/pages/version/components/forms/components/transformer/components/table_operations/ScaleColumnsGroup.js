@@ -13,7 +13,7 @@ import { AddButton } from "../AddButton";
 import { ScaleColumnCard } from "./ScaleColumnCard";
 import { Panel } from "../../../Panel";
 
-export const ScaleColumnsPanel = ({
+export const ScaleColumnsGroup = ({
   columns,
   onChangeHandler,
   errors = {}
@@ -44,9 +44,7 @@ export const ScaleColumnsPanel = ({
     <Panel contentWidth="100%" color="subdued">
       <EuiDragDropContext onDragEnd={onDragEnd}>
         <EuiFlexGroup direction="column" gutterSize="s">
-          <EuiDroppable
-            droppableId="TABLE_TRANSFORMATION_STEPS_DROPPABLE_AREA"
-            spacing="m">
+          <EuiDroppable droppableId="SCALE_COLUMNS_DROPPABLE_AREA" spacing="m">
             {columns.map((col, idx) => (
               <EuiDraggable
                 key={`${idx}`}
