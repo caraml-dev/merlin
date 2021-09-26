@@ -2,9 +2,10 @@ import React from "react";
 import { EuiForm, EuiFormRow, EuiSuperSelect } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 
-export const SelectEncoder = ({
-  name,
-  encoder, //current selected encoder (if any)
+export const SelectOrdinalValueType = ({
+  defaultValue,
+  mapping,
+  valueType, //current selected value type (if any)
   onChangeHandler,
   errors = {}
 }) => {
@@ -12,32 +13,30 @@ export const SelectEncoder = ({
 
   const setValue = value => {
     //set new value only if there is changes
-    if (value !== encoder) {
-      let newEncoder = {
-        name: name || "",
-        encoder: value
+    if (value !== valueType) {
+      let newValueType = {
+        defaultValue: defaultValue || "",
+        targetValueType: value,
+        mapping: mapping || {}
       };
 
-      switch (value) {
-        case "ordinalEncoderConfig":
-          newEncoder[value] = {};
-          break;
-        default:
-          break;
-      }
-      onChange()(newEncoder);
+      onChange()(newValueType);
     }
   };
 
   const options = [
     {
-      value: "ordinalEncoderConfig",
-      inputDisplay: "Ordinal Encoder"
+      value: "INT",
+      inputDisplay: "Integer"
+    },
+    {
+      value: "FLOAT",
+      inputDisplay: "Float"
     }
   ];
 
   const selectedOption = options.find(option =>
-    encoder !== "" ? option.value === encoder : option.value === ""
+    valueType !== "" ? option.value === valueType : option.value === ""
   );
 
   return (
@@ -46,12 +45,12 @@ export const SelectEncoder = ({
         fullWidth
         label={
           <FormLabelWithToolTip
-            label="Encoder Type *"
-            content="Choose an encoder type"
+            label="Value Type *"
+            content="Choose a value type"
           />
         }
-        isInvalid={!!errors.encoder}
-        error={errors.encoder}
+        isInvalid={!!errors.valueType}
+        error={errors.valueType}
         display="columnCompressed">
         <EuiSuperSelect
           fullWidth
@@ -60,7 +59,7 @@ export const SelectEncoder = ({
           onChange={value => setValue(value)}
           itemLayoutAlign="top"
           hasDividers
-          isInvalid={!!errors.encoder}
+          isInvalid={!!errors.valueType}
         />
       </EuiFormRow>
     </EuiForm>
