@@ -773,9 +773,9 @@ func Test_recoveryHandler(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 
 	ts := httptest.NewServer(nil)
-	defer ts.Close()
-
 	port := fmt.Sprint(ts.Listener.Addr().(*net.TCPAddr).Port)
+	ts.Close()
+
 	modelName := "test-panic"
 
 	s := &Server{
