@@ -32,6 +32,14 @@ export const SelectOrdinalValueType = ({
     {
       value: "FLOAT",
       inputDisplay: "Float"
+    },
+    {
+      value: "BOOL",
+      inputDisplay: "Boolean"
+    },
+    {
+      value: "STRING",
+      inputDisplay: "String"
     }
   ];
 
