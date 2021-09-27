@@ -772,7 +772,7 @@ func Test_recoveryHandler(t *testing.T) {
 	router := mux.NewRouter()
 	logger, _ := zap.NewDevelopment()
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	ts := httptest.NewServer(nil)
 	port := fmt.Sprint(ts.Listener.Addr().(*net.TCPAddr).Port)
 	ts.Close()
 
