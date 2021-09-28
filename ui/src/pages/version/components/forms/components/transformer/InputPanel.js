@@ -13,6 +13,7 @@ import { AddButton } from "./components/AddButton";
 import { TableInputCard } from "./components/table_inputs/TableInputCard";
 import { VariablesInputCard } from "./components/table_inputs/VariablesInputCard";
 import { FeastInputGroup } from "../feast_config/components/FeastInputGroup";
+import { EncodersInputGroup } from "./components/table_inputs/EncodersInputGroup";
 import { Panel } from "../Panel";
 import {
   FeastInput,
@@ -108,6 +109,17 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
                       />
                     )}
 
+                    {input.encoders && (
+                      <EncodersInputGroup
+                        groupIndex={idx}
+                        encoders={input.encoders}
+                        onChangeHandler={onChangeHandler}
+                        onDelete={onDeleteInput(idx)}
+                        dragHandleProps={provided.dragHandleProps}
+                        errors={errors}
+                      />
+                    )}
+
                     <EuiSpacer size="s" />
                   </EuiFlexItem>
                 )}
@@ -139,6 +151,14 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
                 title="+ Add Variables"
                 description="Declare a variable that can be used as input to expression"
                 onClick={() => onAddInput("variables", [{}])}
+              />
+            </EuiFlexItem>
+
+            <EuiFlexItem>
+              <AddButton
+                title="+ Add Encoders"
+                description="Define an encoder for encoding input columns at transformation step"
+                onClick={() => onAddInput("encoders", [{ name: "" }])}
               />
             </EuiFlexItem>
           </EuiFlexGroup>

@@ -262,6 +262,10 @@ export class Pipeline {
             step["operation"] = "sort";
           } else if (step.updateColumns !== undefined) {
             step["operation"] = "updateColumns";
+          } else if (step.scaleColumns !== undefined) {
+            step["operation"] = "scaleColumns";
+          } else if (step.encodeColumns !== undefined) {
+            step["operation"] = "encodeColumns";
           }
         });
 
@@ -328,6 +332,33 @@ export class Pipeline {
         transformation.tableTransformation &&
           transformation.tableTransformation.steps &&
           transformation.tableTransformation.steps.forEach(step => {
+            if (step.operation === "scaleColumns") {
+              step.scaleColumns.forEach(col => {
+                if (col.standardScalerConfig) {
+                  if (col.standardScalerConfig.mean) {
+                    col.standardScalerConfig.mean = parseFloat(
+                      col.standardScalerConfig.mean
+                    );
+                  }
+                  if (col.standardScalerConfig.std) {
+                    col.standardScalerConfig.std = parseFloat(
+                      col.standardScalerConfig.std
+                    );
+                  }
+                } else if (col.minMaxScalerConfig) {
+                  if (col.minMaxScalerConfig.min) {
+                    col.minMaxScalerConfig.min = parseFloat(
+                      col.minMaxScalerConfig.min
+                    );
+                  }
+                  if (col.minMaxScalerConfig.max) {
+                    col.minMaxScalerConfig.max = parseFloat(
+                      col.minMaxScalerConfig.max
+                    );
+                  }
+                }
+              });
+            }
             delete step["operation"];
           });
       });
