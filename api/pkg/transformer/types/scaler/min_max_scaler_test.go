@@ -35,6 +35,16 @@ func TestMinMaxScaler_Validate(t *testing.T) {
 			},
 			expectedError: fmt.Errorf("minmax scaler require different value between min and max"),
 		},
+		{
+			desc: "Not Valid, min value is greater than max",
+			scaler: &MinMaxScaler{
+				config: &spec.MinMaxScalerConfig{
+					Min: 3,
+					Max: 2,
+				},
+			},
+			expectedError: fmt.Errorf("max value in minmax scaler must be greater than min value"),
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {

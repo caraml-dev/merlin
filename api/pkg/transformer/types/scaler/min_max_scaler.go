@@ -15,6 +15,9 @@ func (mm *MinMaxScaler) Validate() error {
 	if (mm.config.Max - mm.config.Min) == 0 {
 		return fmt.Errorf("minmax scaler require different value between min and max")
 	}
+	if mm.config.Min > mm.config.Max {
+		return fmt.Errorf("max value in minmax scaler must be greater than min value")
+	}
 	return nil
 }
 

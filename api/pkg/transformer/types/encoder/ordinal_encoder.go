@@ -8,8 +8,6 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
-var ()
-
 type OrdinalEncoder struct {
 	DefaultValue interface{}
 	Mapping      map[string]interface{}
