@@ -1,7 +1,8 @@
 import React from "react";
-import { EuiButtonIcon, EuiFieldText } from "@elastic/eui";
+import { EuiButtonIcon, EuiFieldText, EuiFormRow, EuiCode } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 import { ColumnsComboBox } from "./ColumnsComboBox";
+import { get } from "@gojek/mlp-ui";
 
 export const EncodeColumns = ({ columns, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
@@ -27,7 +28,7 @@ export const EncodeColumns = ({ columns, onChangeHandler, errors = {} }) => {
 
   const tableColumns = [
     {
-      name: 'Columns (Press "return" or "comma" for new entry)',
+      name: "Columns",
       field: "columns",
       width: "50%",
       render: (columns, item) => (
@@ -71,13 +72,24 @@ export const EncodeColumns = ({ columns, onChangeHandler, errors = {} }) => {
   ];
 
   return (
-    <InMemoryTableForm
-      columns={tableColumns}
-      rowProps={getRowProps}
-      items={items}
-      hasActions={true}
-      errors={errors}
-      renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
-    />
+    <EuiFormRow
+      fullWidth
+      helpText={
+        <p>
+          Use <EuiCode>↩</EuiCode> to enter new column, use <EuiCode>,</EuiCode>{" "}
+          as delimiter.
+        </p>
+      }
+      isInvalid={!!errors}
+      error={get(errors, "0")}>
+      <InMemoryTableForm
+        columns={tableColumns}
+        rowProps={getRowProps}
+        items={items}
+        hasActions={true}
+        errors={errors}
+        renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
+      />
+    </EuiFormRow>
   );
 };

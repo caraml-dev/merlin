@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { EuiButtonIcon, EuiFieldText, EuiFormRow } from "@elastic/eui";
+import { EuiButtonIcon, EuiFieldText } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const OrdinalEncoderMapper = ({

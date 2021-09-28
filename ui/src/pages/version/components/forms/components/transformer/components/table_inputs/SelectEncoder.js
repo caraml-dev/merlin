@@ -3,8 +3,7 @@ import { EuiForm, EuiFormRow, EuiSuperSelect } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const SelectEncoder = ({
-  name,
-  encoder, //current selected encoder (if any)
+  encoderConfig, //current encoder config (if any)
   onChangeHandler,
   errors = {}
 }) => {
@@ -12,15 +11,17 @@ export const SelectEncoder = ({
 
   const setValue = value => {
     //set new value only if there is changes
-    if (value !== encoder) {
+    if (encoderConfig[value] === undefined) {
       let newEncoder = {
-        name: name || "",
-        encoder: value
+        name: encoderConfig.name || ""
       };
 
       switch (value) {
         case "ordinalEncoderConfig":
-          newEncoder[value] = {};
+          newEncoder[value] = {
+            mapping: {},
+            targetValueType: "INT"
+          };
           break;
         default:
           break;
@@ -37,7 +38,9 @@ export const SelectEncoder = ({
   ];
 
   const selectedOption = options.find(option =>
-    encoder !== "" ? option.value === encoder : option.value === ""
+    encoderConfig !== undefined
+      ? encoderConfig[option.value] !== undefined
+      : option.value === ""
   );
 
   return (
@@ -50,8 +53,8 @@ export const SelectEncoder = ({
             content="Choose an encoder type"
           />
         }
-        isInvalid={!!errors.encoder}
-        error={errors.encoder}
+        isInvalid={!!errors.encoderConfig}
+        error={errors.encoderConfig}
         display="columnCompressed">
         <EuiSuperSelect
           fullWidth
@@ -60,7 +63,7 @@ export const SelectEncoder = ({
           onChange={value => setValue(value)}
           itemLayoutAlign="top"
           hasDividers
-          isInvalid={!!errors.encoder}
+          isInvalid={!!errors.encoderConfig}
         />
       </EuiFormRow>
     </EuiForm>

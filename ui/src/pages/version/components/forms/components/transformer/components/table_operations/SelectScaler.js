@@ -3,31 +3,31 @@ import { EuiForm, EuiFormRow, EuiSuperSelect } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const SelectScaler = ({
-  column,
-  operation, //current selected operation (if any)
+  scalerConfig, //current scaler config (if any)
   onChangeHandler,
   errors = {}
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const setValue = value => {
-    let newOperation = {
-      column: column || "",
-      operation: value
-    };
+    if (scalerConfig[value] === undefined) {
+      let newScalerConfig = {
+        column: scalerConfig.column || ""
+      };
 
-    //storage for info about transformation (eg selected col)
-    switch (value) {
-      case "standardScalerConfig":
-        newOperation[value] = {};
-        break;
-      case "minMaxScalerConfig":
-        newOperation[value] = {};
-        break;
-      default:
-        break;
+      //storage for info about transformation (eg selected col)
+      switch (value) {
+        case "standardScalerConfig":
+          newScalerConfig[value] = {};
+          break;
+        case "minMaxScalerConfig":
+          newScalerConfig[value] = {};
+          break;
+        default:
+          break;
+      }
+      onChange()(newScalerConfig);
     }
-    onChange()(newOperation);
   };
 
   const options = [
@@ -42,7 +42,9 @@ export const SelectScaler = ({
   ];
 
   const selectedOption = options.find(option =>
-    operation !== "" ? option.value === operation : option.value === ""
+    scalerConfig !== undefined
+      ? scalerConfig[option.value] !== undefined
+      : option.value === ""
   );
 
   return (
@@ -55,8 +57,8 @@ export const SelectScaler = ({
             content="Choose a scaler type to apply to a column"
           />
         }
-        isInvalid={!!errors.operation}
-        error={errors.operation}
+        isInvalid={!!errors.scalerConfig}
+        error={errors.scalerConfig}
         display="columnCompressed">
         <EuiSuperSelect
           fullWidth
@@ -65,7 +67,7 @@ export const SelectScaler = ({
           onChange={value => setValue(value)}
           itemLayoutAlign="top"
           hasDividers
-          isInvalid={!!errors.operation}
+          isInvalid={!!errors.scalerConfig}
         />
       </EuiFormRow>
     </EuiForm>

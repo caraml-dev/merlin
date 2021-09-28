@@ -97,7 +97,7 @@ export const EncodersInputGroup = ({
         <EuiFlexItem>
           <AddButton
             title="+ Add Another Encoder"
-            description="Add another encoder that will be created asynchronously with other encoders in this group."
+            description="Declare a new encoder function that can be used on table transformation step."
             titleSize="xs"
             onClick={() => onAddEncoder()}
           />

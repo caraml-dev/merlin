@@ -6,7 +6,6 @@ import {
   EuiFlexItem,
   EuiPanel,
   EuiSpacer,
-  EuiText,
   EuiFormRow
 } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
@@ -60,8 +59,7 @@ export const ScaleColumnCard = ({
 
             <EuiFlexItem>
               <SelectScaler
-                column={col.column}
-                operation={col.operation}
+                scalerConfig={col}
                 onChangeHandler={onChangeHandler}
                 errors={errors}
               />
@@ -71,7 +69,7 @@ export const ScaleColumnCard = ({
 
         <EuiSpacer size="s" />
 
-        {col.operation === "standardScalerConfig" && (
+        {col["standardScalerConfig"] !== undefined && (
           <EuiFlexItem>
             <EuiFlexGroup direction="row">
               <EuiFlexItem>
@@ -126,7 +124,7 @@ export const ScaleColumnCard = ({
           </EuiFlexItem>
         )}
 
-        {col.operation === "minMaxScalerConfig" && (
+        {col["minMaxScalerConfig"] !== undefined && (
           <EuiFlexItem>
             <EuiFlexGroup direction="row">
               <EuiFlexItem>
