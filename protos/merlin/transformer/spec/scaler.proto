@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
+
+message StandardScalerConfig {
+  double mean = 1;
+  double std = 2;
+}
+
+message MinMaxScalerConfig {
+  double min = 1;
+  double max = 2;
+}

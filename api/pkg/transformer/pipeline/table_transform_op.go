@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/scaler"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -79,9 +80,68 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 				return err
 			}
 		}
+
+		if step.ScaleColumns != nil {
+			columnValues := make(map[string]interface{}, len(step.ScaleColumns))
+			for _, scalerSpec := range step.ScaleColumns {
+				col := scalerSpec.Column
+				colSeries := resultTable.Col(col)
+				if err := colSeries.IsNumeric(); err != nil {
+					return err
+				}
+
+				scalerImpl, err := scaler.NewScaler(scalerSpec)
+				if err != nil {
+					return err
+				}
+				scaledValues, err := scalerImpl.Scale(colSeries.GetRecords())
+				if err != nil {
+					return err
+				}
+				columnValues[col] = scaledValues
+				if err := resultTable.UpdateColumnsRaw(columnValues); err != nil {
+					return err
+				}
+			}
+		}
+
+		if step.EncodeColumns != nil {
+			columnValues := make(map[string]interface{})
+			for _, encodeColumn := range step.EncodeColumns {
+				encoder, err := getEncoder(env, encodeColumn.Encoder)
+				if err != nil {
+					return err
+				}
+				for _, column := range encodeColumn.Columns {
+					values := resultTable.Col(column).GetRecords()
+					encodedValues, err := encoder.Encode(values, column)
+					if err != nil {
+						return err
+					}
+					for col, value := range encodedValues {
+						columnValues[col] = value
+					}
+				}
+			}
+			if err := resultTable.UpdateColumnsRaw(columnValues); err != nil {
+				return err
+			}
+		}
 	}
 
 	env.SetSymbol(outputTableName, resultTable)
 	env.LogOperation("table_transform", outputTableName)
 	return nil
+}
+
+func getEncoder(env *Environment, encoderName string) (Encoder, error) {
+	encoderRaw := env.symbolRegistry[encoderName]
+	if encoderRaw == nil {
+		return nil, fmt.Errorf("encoder %s is not declared", encoderName)
+	}
+	encodeImpl, ok := encoderRaw.(Encoder)
+	if !ok {
+		return nil, fmt.Errorf("variable %s is not encoder", encoderName)
+	}
+	return encodeImpl, nil
 }

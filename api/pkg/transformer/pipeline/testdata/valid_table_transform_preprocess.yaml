@@ -10,6 +10,15 @@ transformerConfig:
               fromJson:
                 jsonPath: $.drivers[*]
                 addRowNumber: true
+      - encoders:
+        - name: "vehicle_mapping"
+          ordinalEncoderConfig:
+            defaultValue: "0"
+            targetValueType: "INT"
+            mapping:
+              suv: "1"
+              sedan: "2"
+              mpv: "3"
     transformations:
       - tableTransformation:
           inputTable: driver_table
@@ -24,7 +33,22 @@ transformerConfig:
             - updateColumns:
                 - column: customer_id
                   expression: customer_id
-            - selectColumns: ["customer_id", "name", "rank"]
+            - scaleColumns:
+              - column: rank
+                standardScalerConfig:
+                  mean: 0.5
+                  std: 0.2
+            - scaleColumns:
+              - column: rating
+                minMaxScalerConfig:
+                  min: 1
+                  max: 5
+            - encodeColumns:
+              - columns:
+                  - vehicle
+                  - previous_vehicle
+                encoder: vehicle_mapping
+            - selectColumns: ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle"]
     outputs:
       - jsonOutput:
           jsonTemplate:

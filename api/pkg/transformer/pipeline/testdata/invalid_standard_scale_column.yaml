@@ -76,7 +76,7 @@ transformerConfig:
               - column: col5
                 standardScalerConfig:
                   mean: 3
-                  std: 1.22
+                  std: 0
               - column: col6
                 minMaxScalerConfig:
                   min: 1

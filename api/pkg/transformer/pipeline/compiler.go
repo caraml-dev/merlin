@@ -14,6 +14,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
+	"github.com/gojek/merlin/pkg/transformer/types/scaler"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
@@ -96,6 +97,14 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 				return nil, err
 			}
 			ops = append(ops, feastOp)
+		}
+
+		if input.Encoders != nil {
+			encoderOp, err := c.parseEncodersSpec(input.Encoders, compiledExpressions)
+			if err != nil {
+				return nil, err
+			}
+			ops = append(ops, encoderOp)
 		}
 	}
 
@@ -224,6 +233,13 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 	return NewCreateTableOp(tableSpecs), nil
 }
 
+func (c *Compiler) parseEncodersSpec(encoderSpecs []*spec.Encoder, compiledExpression *expression.Storage) (Op, error) {
+	for _, encoderSpec := range encoderSpecs {
+		c.registerDummyVariable(encoderSpec.Name)
+	}
+	return NewEncoderOp(encoderSpecs), nil
+}
+
 func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransformation, paths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
 	err := c.checkVariableRegistered(transformationSpecs.InputTable)
 	if err != nil {
@@ -237,6 +253,29 @@ func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransforma
 				return nil, err
 			}
 			compiledExpressions.Set(updateColumn.Expression, compiledExpression)
+		}
+
+		for _, scaleCol := range step.ScaleColumns {
+			if scaleCol.Column == "" {
+				return nil, fmt.Errorf("scale column require non empty column")
+			}
+
+			scalerImpl, err := scaler.NewScaler(scaleCol)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := scalerImpl.Validate(); err != nil {
+				return nil, err
+			}
+		}
+
+		for _, encodeColumn := range step.EncodeColumns {
+			compiledExpression, err := c.compileExpression(encodeColumn.Encoder)
+			if err != nil {
+				return nil, err
+			}
+			compiledExpressions.Set(encodeColumn.Encoder, compiledExpression)
 		}
 	}
 

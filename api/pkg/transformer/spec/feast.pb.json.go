@@ -4,53 +4,61 @@
 package spec
 
 import (
-	"google.golang.org/protobuf/encoding/protojson"
+	"bytes"
+
+	"github.com/golang/protobuf/jsonpb"
 )
 
 // MarshalJSON implements json.Marshaler
 func (msg *FeatureTable) MarshalJSON() ([]byte, error) {
-	return protojson.MarshalOptions{
-		UseEnumNumbers:  false,
-		EmitUnpopulated: false,
-		UseProtoNames:   false,
-	}.Marshal(msg)
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
 }
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *FeatureTable) UnmarshalJSON(b []byte) error {
-	return protojson.UnmarshalOptions{
-		DiscardUnknown: false,
-	}.Unmarshal(b, msg)
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
 }
 
 // MarshalJSON implements json.Marshaler
 func (msg *Entity) MarshalJSON() ([]byte, error) {
-	return protojson.MarshalOptions{
-		UseEnumNumbers:  false,
-		EmitUnpopulated: false,
-		UseProtoNames:   false,
-	}.Marshal(msg)
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
 }
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *Entity) UnmarshalJSON(b []byte) error {
-	return protojson.UnmarshalOptions{
-		DiscardUnknown: false,
-	}.Unmarshal(b, msg)
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
 }
 
 // MarshalJSON implements json.Marshaler
 func (msg *Feature) MarshalJSON() ([]byte, error) {
-	return protojson.MarshalOptions{
-		UseEnumNumbers:  false,
-		EmitUnpopulated: false,
-		UseProtoNames:   false,
-	}.Marshal(msg)
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
 }
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *Feature) UnmarshalJSON(b []byte) error {
-	return protojson.UnmarshalOptions{
-		DiscardUnknown: false,
-	}.Unmarshal(b, msg)
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
 }

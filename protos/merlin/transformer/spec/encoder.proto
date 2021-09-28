@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
+
+message Encoder {
+  string name = 1;
+  oneof encoderConfig {
+    OrdinalEncoderConfig ordinalEncoderConfig = 2;
+  }
+}
+
+message OrdinalEncoderConfig {
+  string defaultValue = 1;
+  ValueType targetValueType = 2;
+  map<string,string> mapping = 3;
+}
+
+enum ValueType {
+  STRING = 0;
+  INT = 1;
+  FLOAT = 2;
+  BOOL = 3;
+}
