@@ -1,28 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { EuiButtonIcon, EuiFieldText, EuiFormRow } from "@elastic/eui";
+import { EuiButtonIcon, EuiFieldText } from "@elastic/eui";
 import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 
-export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
+export const OrdinalEncoderMapper = ({
+  mappings,
+  onChangeHandler,
+  errors = {}
+}) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const [items, setItems] = useState([
-    ...Object.keys(columns).map((v, idx) => ({
+    ...Object.keys(mappings).map((v, idx) => ({
       idx,
-      before: v,
-      after: columns[v]
+      original: v,
+      transformed: mappings[v]
     })),
-    { idx: Object.keys(columns).length }
+    { idx: Object.keys(mappings).length }
   ]);
 
   useEffect(
     () => {
-      let newColumns = {};
+      let newMappings = {};
       items
-        .filter(item => item.before && item.before !== "")
+        .filter(item => item.original && item.original !== "")
         .forEach(item => {
-          newColumns[item.before] = item.after;
+          newMappings[item.original] = item.transformed;
         });
-      onChange("renameColumns")(newColumns);
+      onChange("mapping")(newMappings);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [items]
@@ -47,9 +51,9 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
       items[idx] = { ...items[idx], [field]: e.target.value };
 
       setItems(_ =>
-        field === "before" &&
-        items[items.length - 1].before &&
-        items[items.length - 1].before.trim()
+        field === "original" &&
+        items[items.length - 1].original &&
+        items[items.length - 1].original.trim()
           ? [...items, { idx: items.length }]
           : [...items]
       );
@@ -58,26 +62,26 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
 
   const tableColumns = [
     {
-      name: "Before",
-      field: "before",
+      name: "Original Value",
+      field: "original",
       width: "45%",
-      render: (before, item) => (
+      render: (original, item) => (
         <EuiFieldText
-          placeholder="Column Name Before"
-          value={before || ""}
-          onChange={onChangeRow(item.idx, "before")}
+          placeholder="Value to encode"
+          value={original || ""}
+          onChange={onChangeRow(item.idx, "original")}
         />
       )
     },
     {
-      name: "After",
-      field: "after",
+      name: "Transformed Value",
+      field: "transformed",
       width: "45%",
-      render: (after, item) => (
+      render: (transformed, item) => (
         <EuiFieldText
-          placeholder="Column Name After"
-          value={after || ""}
-          onChange={onChangeRow(item.idx, "after")}
+          placeholder="Value to map to"
+          value={transformed || ""}
+          onChange={onChangeRow(item.idx, "transformed")}
         />
       )
     },
@@ -92,7 +96,7 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
                 color="danger"
                 iconType="trash"
                 onClick={onDeleteItem(item.idx)}
-                aria-label="Remove column"
+                aria-label="Remove mapping"
               />
             ) : (
               <div />
@@ -103,18 +107,13 @@ export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
   ];
 
   return (
-    <EuiFormRow
-      fullWidth
-      label="Columns to be renamed"
-      helpText="This operations will rename one column to another.">
-      <InMemoryTableForm
-        columns={tableColumns}
-        rowProps={getRowProps}
-        items={items}
-        hasActions={true}
-        errors={errors}
-        renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
-      />
-    </EuiFormRow>
+    <InMemoryTableForm
+      columns={tableColumns}
+      rowProps={getRowProps}
+      items={items}
+      hasActions={true}
+      errors={errors}
+      renderErrorHeader={key => `Row ${parseInt(key) + 1}`}
+    />
   );
 };

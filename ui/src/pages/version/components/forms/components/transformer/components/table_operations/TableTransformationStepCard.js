@@ -10,10 +10,12 @@ import {
 import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { DraggableHeader } from "../../../DraggableHeader";
 import { ColumnsComboBox } from "./ColumnsComboBox";
+import { EncodeColumns } from "./EncodeColumns";
 import { RenameColumns } from "./RenameColumns";
 import { SelectTableOperation } from "./SelectTableOperation";
 import { SortColumns } from "./SortColumns";
 import { UpdateColumns } from "./UpdateColumns";
+import { ScaleColumnsGroup } from "./ScaleColumnsGroup";
 
 export const TableTransformationStepCard = ({
   index = 0,
@@ -66,10 +68,26 @@ export const TableTransformationStepCard = ({
             />
           )}
 
+          {step.operation === "encodeColumns" && (
+            <EncodeColumns
+              columns={step.encodeColumns}
+              onChangeHandler={onChange("encodeColumns")}
+              errors={get(errors, "encodeColumns")}
+            />
+          )}
+
           {step.operation === "renameColumns" && (
             <RenameColumns
               columns={step.renameColumns}
               onChangeHandler={onChangeHandler}
+            />
+          )}
+
+          {step.operation === "scaleColumns" && (
+            <ScaleColumnsGroup
+              columns={step.scaleColumns}
+              onChangeHandler={onChange("scaleColumns")}
+              errors={get(errors, "scaleColumns")}
             />
           )}
 
