@@ -1,12 +1,10 @@
 import React from "react";
 import {
   EuiFieldText,
-  EuiFieldNumber,
   EuiFlexGroup,
   EuiFlexItem,
   EuiPanel,
   EuiSpacer,
-  EuiText,
   EuiFormRow
 } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";

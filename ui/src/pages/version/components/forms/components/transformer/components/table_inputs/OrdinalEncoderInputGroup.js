@@ -65,8 +65,8 @@ export const OrdinalEncoderInputGroup = ({
         <EuiFlexItem>
           <EuiFlexGroup direction="column" gutterSize="s">
             <EuiFlexItem>
-              <EuiText size="s">
-                <h4>Mapping</h4>
+              <EuiText size="xs">
+                <h4>Mapping *</h4>
               </EuiText>
             </EuiFlexItem>
             <EuiFlexItem>
