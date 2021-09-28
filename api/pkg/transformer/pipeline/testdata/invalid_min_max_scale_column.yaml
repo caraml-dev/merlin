@@ -80,7 +80,7 @@ transformerConfig:
               - column: col6
                 minMaxScalerConfig:
                   min: 1
-                  max: 30
+                  max: 1
             - encodeColumns:
               - columns:
                   - col7

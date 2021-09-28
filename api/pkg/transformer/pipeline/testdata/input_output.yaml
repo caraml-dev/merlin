@@ -34,6 +34,15 @@ transformerConfig:
           - name: variable6
             literal:
               boolValue: true
+      - encoders:
+        - name: "ordinalEncoder"
+          ordinalEncoderConfig:
+            defaultValue: "1"
+            targetValueType: "INT"
+            mapping:
+              suv: "1"
+              sedan: "2"
+              mpv: "3"
     outputs:
       - jsonOutput:
           jsonTemplate:
@@ -73,6 +82,15 @@ transformerConfig:
       - variables:
           - name: variable1
             jsonPath: $.entity_2.id
+      - encoders:
+        - name: "ordinalEncoder2"
+          ordinalEncoderConfig:
+            defaultValue: "1"
+            targetValueType: "INT"
+            mapping:
+              suv: "1"
+              sedan: "2"
+              mpv: "3"
     outputs:
       - jsonOutput:
           jsonTemplate:

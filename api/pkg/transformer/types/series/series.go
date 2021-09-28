@@ -18,6 +18,8 @@ const (
 	Bool   Type = "bool"
 )
 
+var numericTypes = []Type{Int, Float}
+
 type Series struct {
 	series *series.Series
 }
@@ -61,6 +63,16 @@ func (s *Series) Series() *series.Series {
 
 func (s *Series) Type() Type {
 	return Type(s.series.Type())
+}
+
+func (s *Series) IsNumeric() error {
+	seriesType := s.Type()
+	for _, sType := range numericTypes {
+		if seriesType == sType {
+			return nil
+		}
+	}
+	return fmt.Errorf("this series type is not numeric but %s", seriesType)
 }
 
 func (s *Series) GetRecords() []interface{} {
