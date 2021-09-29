@@ -4,6 +4,7 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiPanel,
+  EuiText,
   EuiSpacer,
   EuiFormRow
 } from "@elastic/eui";
@@ -32,6 +33,12 @@ export const EncoderInputCard = ({
       <EuiSpacer size="s" />
 
       <EuiFlexGroup direction="column" gutterSize="s">
+        <EuiFlexItem>
+          <EuiText size="s">
+            <h4>Encoder</h4>
+          </EuiText>
+        </EuiFlexItem>
+
         <EuiFlexItem>
           <EuiFlexGroup direction="row">
             <EuiFlexItem>
