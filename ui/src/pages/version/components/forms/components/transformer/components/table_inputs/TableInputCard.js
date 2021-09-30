@@ -15,7 +15,7 @@ import {
   FromJson,
   FromTable
 } from "../../../../../../../../services/transformer/TransformerConfig";
-import { VariablesInput } from "./VariablesInput";
+import { TableColumnsInput } from "./TableColumnsInput";
 import { get } from "@gojek/mlp-ui";
 
 export const TableInputCard = ({
@@ -85,7 +85,11 @@ export const TableInputCard = ({
                   label="None"
                   checked={table.baseTable === undefined}
                   onChange={() => {
-                    onChangeHandler({ ...table, baseTable: undefined });
+                    onChangeHandler({
+                      ...table,
+                      baseTable: undefined,
+                      columns: []
+                    });
                   }}
                 />
               </EuiFlexItem>
@@ -97,7 +101,11 @@ export const TableInputCard = ({
                     (table.baseTable && !!table.baseTable.fromTable) || false
                   }
                   onChange={() =>
-                    onChange("baseTable", { fromTable: new FromTable() })
+                    onChangeHandler({
+                      ...table,
+                      baseTable: { fromTable: new FromTable() },
+                      columns: []
+                    })
                   }
                 />
               </EuiFlexItem>
@@ -109,7 +117,11 @@ export const TableInputCard = ({
                     (table.baseTable && !!table.baseTable.fromJson) || false
                   }
                   onChange={() =>
-                    onChange("baseTable", { fromJson: new FromJson() })
+                    onChangeHandler({
+                      ...table,
+                      baseTable: { fromJson: new FromJson() },
+                      columns: undefined
+                    })
                   }
                 />
               </EuiFlexItem>
@@ -120,8 +132,8 @@ export const TableInputCard = ({
         {table.baseTable === undefined && (
           <EuiFlexItem>
             <EuiFormRow label="Columns *" fullWidth>
-              <VariablesInput
-                variables={table.columns || []}
+              <TableColumnsInput
+                columns={table.columns || []}
                 onChangeHandler={onColumnChangeHandler}
                 errors={errors.columns}
               />
@@ -157,8 +169,8 @@ export const TableInputCard = ({
             </EuiFormRow>
 
             <EuiFormRow label="Columns *" fullWidth>
-              <VariablesInput
-                variables={table.columns || []}
+              <TableColumnsInput
+                columns={table.columns || []}
                 onChangeHandler={onColumnChangeHandler}
                 errors={errors.columns}
               />
