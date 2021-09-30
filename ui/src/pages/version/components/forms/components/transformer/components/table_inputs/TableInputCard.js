@@ -133,7 +133,7 @@ export const TableInputCard = ({
           <EuiFlexItem>
             <EuiFormRow label="Columns *" fullWidth>
               <TableColumnsInput
-                variables={table.columns || []}
+                columns={table.columns || []}
                 onChangeHandler={onColumnChangeHandler}
                 errors={errors.columns}
               />
@@ -170,7 +170,7 @@ export const TableInputCard = ({
 
             <EuiFormRow label="Columns *" fullWidth>
               <TableColumnsInput
-                variables={table.columns || []}
+                columns={table.columns || []}
                 onChangeHandler={onColumnChangeHandler}
                 errors={errors.columns}
               />

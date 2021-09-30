@@ -3,20 +3,20 @@ import { EuiButtonIcon, EuiFieldText, EuiSuperSelect } from "@elastic/eui";
 import { get, InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
 
 export const TableColumnsInput = ({
-  variables,
+  columns,
   onChangeHandler,
   errors = {}
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const items = [
-    ...variables.map((v, idx) => ({ idx, ...v })),
-    { idx: variables.length }
+    ...columns.map((v, idx) => ({ idx, ...v })),
+    { idx: columns.length }
   ];
 
   const onDeleteVariable = idx => () => {
-    variables.splice(idx, 1);
-    onChangeHandler(variables);
+    columns.splice(idx, 1);
+    onChangeHandler(columns);
   };
 
   const typeOptions = [
@@ -83,7 +83,7 @@ export const TableColumnsInput = ({
     onChange(`${idx}`)(newItem);
   };
 
-  const columns = [
+  const cols = [
     {
       name: "Name",
       field: "name",
@@ -156,7 +156,7 @@ export const TableColumnsInput = ({
 
   return (
     <InMemoryTableForm
-      columns={columns}
+      columns={cols}
       rowProps={getRowProps}
       items={items}
       hasActions={true}
