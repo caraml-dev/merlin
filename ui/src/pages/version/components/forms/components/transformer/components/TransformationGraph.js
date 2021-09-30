@@ -11,6 +11,30 @@ const modelServiceNode = {
   class: "modelServiceNode"
 };
 
+const addEncoderInputNodesLinks = (
+  nodes,
+  links,
+  nodeMap,
+  idx,
+  encoders,
+  stage
+) => {
+  const id = `${stage}-encoders-input-${idx}`;
+  let encs = [];
+
+  encoders.forEach(encoder => {
+    if (encoder.name !== undefined && encoder.name !== "") {
+      encs.push(encoder.name);
+      nodeMap[encoder.name] = id;
+    }
+  });
+
+  nodes.push({
+    id: id,
+    label: `Encoders\nOutput:\n- ${encs.join("\n- ")}`
+  });
+};
+
 const addFeastInputNodesLinks = (nodes, links, nodeMap, idx, feast, stage) => {
   feast.forEach((feast, feastIdx) => {
     const id = `${stage}-input-${idx}-feast-${feastIdx}`;
@@ -142,6 +166,21 @@ const addTableTransformationNodesLinks = (
             }
           }
         });
+
+      step.encodeColumns &&
+        step.encodeColumns.forEach(encodeColumn => {
+          if (
+            encodeColumn.encoder !== undefined &&
+            encodeColumn.encoder !== ""
+          ) {
+            if (nodeMap.hasOwnProperty(encodeColumn.encoder)) {
+              links.push({
+                source: nodeMap[encodeColumn.encoder],
+                target: id
+              });
+            }
+          }
+        });
     });
 
   nodes.push({ id: id, label: label });
@@ -234,6 +273,15 @@ const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
           nodeMap,
           idx,
           input.variables,
+          stage
+        );
+      } else if (input.encoders) {
+        addEncoderInputNodesLinks(
+          nodes,
+          links,
+          nodeMap,
+          idx,
+          input.encoders,
           stage
         );
       }
