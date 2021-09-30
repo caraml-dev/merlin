@@ -268,7 +268,6 @@ const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
           stage
         );
       } else if (input.variables) {
-        console.log(input);
         addVariablesInputNodesLinks(
           nodes,
           links,
