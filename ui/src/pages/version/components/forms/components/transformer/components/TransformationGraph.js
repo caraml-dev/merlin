@@ -258,7 +258,6 @@ const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
       if (input.feast) {
         addFeastInputNodesLinks(nodes, links, nodeMap, idx, input.feast, stage);
       } else if (input.tables) {
-        console.log(input);
         addGenericTableInputNodesLinks(
           nodes,
           links,
@@ -277,7 +276,6 @@ const addPipelineNodesLinks = (nodes, links, nodeMap, config, stage) => {
           stage
         );
       } else if (input.encoders) {
-        console.log(input);
         addEncoderInputNodesLinks(
           nodes,
           links,
