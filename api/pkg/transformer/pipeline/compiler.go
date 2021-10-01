@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -23,13 +22,12 @@ type Compiler struct {
 
 	feastClients feast.Clients
 	feastOptions *feast.Options
-	cacheOptions *cache.Options
 
 	logger *zap.Logger
 }
 
-func NewCompiler(sr symbol.Registry, feastClients feast.Clients, feastOptions *feast.Options, cacheOptions *cache.Options, logger *zap.Logger) *Compiler {
-	return &Compiler{sr: sr, feastClients: feastClients, feastOptions: feastOptions, cacheOptions: cacheOptions, logger: logger}
+func NewCompiler(sr symbol.Registry, feastClients feast.Clients, feastOptions *feast.Options, logger *zap.Logger) *Compiler {
+	return &Compiler{sr: sr, feastClients: feastClients, feastOptions: feastOptions, logger: logger}
 }
 
 func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipeline, error) {
@@ -187,13 +185,8 @@ func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compil
 		c.registerDummyTable(feast.GetTableName(featureTableSpec))
 	}
 
-	var memoryCache cache.Cache
-	if c.feastOptions.CacheEnabled {
-		memoryCache = cache.NewInMemoryCache(c.cacheOptions)
-	}
-
 	entityExtractor := feast.NewEntityExtractor(compiledJsonPaths, compiledExpressions)
-	return NewFeastOp(c.feastClients, c.feastOptions, memoryCache, entityExtractor, featureTableSpecs, c.logger), nil
+	return NewFeastOp(c.feastClients, c.feastOptions, entityExtractor, featureTableSpecs, c.logger), nil
 }
 
 func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
