@@ -1,336 +1,340 @@
 package feast
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 
-	"github.com/gojek/merlin/pkg/transformer/cache/mocks"
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
-func TestFetchFeaturesFromCache(t *testing.T) {
-	type mockCache struct {
-		cacheKey         feast.Row
-		cacheValue       *CacheValue
-		errFetchingCache error
+func TestFetchFeatureTable(t *testing.T) {
+	type cacheConfig struct {
+		ttl      time.Duration
+		sizeInMB int
 	}
-	testCases := []struct {
-		desc              string
-		cacheMocks        []mockCache
-		entities          []feast.Row
-		project           string
-		featuresFromCache types.ValueRows
-		columnTypes       []feastTypes.ValueType_Enum
-		entityNotInCache  []feast.Row
+	type args struct {
+		entities     []feast.Row
+		featureNames []string
+		project      string
+	}
+	tests := []struct {
+		name           string
+		cacheConfig    cacheConfig
+		args           args
+		valueInCache   *internalFeatureTable
+		want           *internalFeatureTable
+		missedEntities []feast.Row
 	}{
 		{
-			desc:    "Success - 1, all entity has value in cache",
-			project: "default",
-			cacheMocks: []mockCache{
-				{
-					cacheKey: feast.Row{
+			name: "single entity, no value in cache",
+			cacheConfig: cacheConfig{
+				ttl:      10 * time.Minute,
+				sizeInMB: 10,
+			},
+			args: args{
+				entities: []feast.Row{
+					{
 						"driver_id": feast.StrVal("1001"),
 					},
-					cacheValue: &CacheValue{
-						ValueRow:   types.ValueRow{"1001", 1.1},
-						ValueTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-					},
 				},
-				{
-					cacheKey: feast.Row{
-						"driver_id": feast.StrVal("2002"),
-					},
-					cacheValue: &CacheValue{
-						ValueRow:   types.ValueRow{"2002", 2.2},
-						ValueTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-					},
-				},
+				featureNames: []string{"feature1", "feature2"},
+				project:      "my-project",
 			},
-			entities: []feast.Row{
+			valueInCache: nil,
+			want: &internalFeatureTable{
+				entities:    nil,
+				columnNames: []string{"feature1", "feature2"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INVALID, feastTypes.ValueType_INVALID},
+				valueRows:   nil,
+			},
+			missedEntities: []feast.Row{
 				{
 					"driver_id": feast.StrVal("1001"),
-				},
-				{
-					"driver_id": feast.StrVal("2002"),
-				},
-			},
-			featuresFromCache: types.ValueRows{
-				{
-					"1001",
-					1.1,
-				},
-				{
-					"2002",
-					2.2,
-				},
-			},
-			columnTypes:      []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-			entityNotInCache: nil,
-		},
-		{
-			desc:    "Success - 2, one of  entity has value in cache",
-			project: "default",
-			cacheMocks: []mockCache{
-				{
-					cacheKey: feast.Row{
-						"driver_id": feast.StrVal("1001"),
-					},
-					cacheValue: &CacheValue{
-						ValueRow:   types.ValueRow{"1001", 1.1},
-						ValueTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-					},
-				},
-				{
-					cacheKey: feast.Row{
-						"driver_id": feast.StrVal("2002"),
-					},
-					cacheValue:       nil,
-					errFetchingCache: fmt.Errorf("Value not found"),
-				},
-			},
-			entities: []feast.Row{
-				{
-					"driver_id": feast.StrVal("1001"),
-				},
-				{
-					"driver_id": feast.StrVal("2002"),
-				},
-			},
-			featuresFromCache: types.ValueRows{
-				{
-					"1001",
-					1.1,
-				},
-			},
-			columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-			entityNotInCache: []feast.Row{
-				{
-					"driver_id": feast.StrVal("2002"),
 				},
 			},
 		},
 		{
-			desc:    "Success - 3, none of entity has value in cache",
-			project: "default",
-			cacheMocks: []mockCache{
-				{
-					cacheKey: feast.Row{
+			name: "two entities, no value in cache",
+			cacheConfig: cacheConfig{
+				ttl:      10 * time.Minute,
+				sizeInMB: 10,
+			},
+			args: args{
+				entities: []feast.Row{
+					{
 						"driver_id": feast.StrVal("1001"),
 					},
-					cacheValue:       nil,
-					errFetchingCache: fmt.Errorf("Value not found"),
-				},
-				{
-					cacheKey: feast.Row{
-						"driver_id": feast.StrVal("2002"),
+					{
+						"driver_id": feast.StrVal("1002"),
 					},
-					cacheValue:       nil,
-					errFetchingCache: fmt.Errorf("Value not found"),
 				},
+				featureNames: []string{"feature1", "feature2"},
+				project:      "my-project",
 			},
-			entities: []feast.Row{
+			valueInCache: nil,
+			want: &internalFeatureTable{
+				entities:    nil,
+				columnNames: []string{"feature1", "feature2"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INVALID, feastTypes.ValueType_INVALID},
+				valueRows:   nil,
+			},
+			missedEntities: []feast.Row{
 				{
 					"driver_id": feast.StrVal("1001"),
 				},
 				{
-					"driver_id": feast.StrVal("2002"),
+					"driver_id": feast.StrVal("1002"),
 				},
 			},
-			featuresFromCache: nil,
-			entityNotInCache: []feast.Row{
+		},
+		{
+			name: "two entities, only one has value in cache",
+			cacheConfig: cacheConfig{
+				ttl:      10 * time.Minute,
+				sizeInMB: 10,
+			},
+			args: args{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+					{
+						"driver_id": feast.StrVal("1002"),
+					},
+				},
+				featureNames: []string{"feature1", "feature2"},
+				project:      "my-project",
+			},
+			valueInCache: &internalFeatureTable{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+				},
+				columnNames: []string{"feature1", "feature2"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				valueRows: types.ValueRows{
+					types.ValueRow{
+						"val1",
+						"val2",
+					},
+				},
+			},
+			want: &internalFeatureTable{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+				},
+				columnNames: []string{"feature1", "feature2"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				valueRows: types.ValueRows{
+					types.ValueRow{
+						"val1",
+						"val2",
+					},
+				},
+			},
+			missedEntities: []feast.Row{
+				{
+					"driver_id": feast.StrVal("1002"),
+				},
+			},
+		},
+		{
+			name: "two entities, both have value in cache",
+			cacheConfig: cacheConfig{
+				ttl:      10 * time.Minute,
+				sizeInMB: 10,
+			},
+			args: args{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+					{
+						"driver_id": feast.StrVal("1002"),
+					},
+				},
+				featureNames: []string{"feature1", "feature2"},
+				project:      "my-project",
+			},
+			valueInCache: &internalFeatureTable{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+					{
+						"driver_id": feast.StrVal("1002"),
+					},
+				},
+				columnNames: []string{"feature1", "feature2"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				valueRows: types.ValueRows{
+					types.ValueRow{
+						"val11",
+						"val12",
+					},
+					types.ValueRow{
+						"val21",
+						"val22",
+					},
+				},
+			},
+			want: &internalFeatureTable{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+					{
+						"driver_id": feast.StrVal("1002"),
+					},
+				},
+				columnNames: []string{"feature1", "feature2"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				valueRows: types.ValueRows{
+					types.ValueRow{
+						"val11",
+						"val12",
+					},
+					types.ValueRow{
+						"val21",
+						"val22",
+					},
+				},
+			},
+			missedEntities: nil,
+		},
+		{
+			name: "one entity, but cache contain different list of feature than requested",
+			cacheConfig: cacheConfig{
+				ttl:      10 * time.Minute,
+				sizeInMB: 10,
+			},
+			args: args{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+				},
+				featureNames: []string{"feature1", "feature2"},
+				project:      "my-project",
+			},
+			valueInCache: &internalFeatureTable{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+				},
+				columnNames: []string{"feature3", "feature4"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				valueRows: types.ValueRows{
+					types.ValueRow{
+						"val11",
+						"val12",
+					},
+					types.ValueRow{
+						"val21",
+						"val22",
+					},
+				},
+			},
+			want: &internalFeatureTable{
+				entities:    nil,
+				columnNames: []string{"feature1", "feature2"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INVALID, feastTypes.ValueType_INVALID},
+				valueRows:   nil,
+			},
+			missedEntities: []feast.Row{
 				{
 					"driver_id": feast.StrVal("1001"),
-				},
-				{
-					"driver_id": feast.StrVal("2002"),
 				},
 			},
 		},
 	}
-	for _, tt := range testCases {
-		t.Run(tt.desc, func(t *testing.T) {
-			mockCache := &mocks.Cache{}
-			for _, cc := range tt.cacheMocks {
-				key := CacheKey{Entity: cc.cacheKey, Project: tt.project}
-				keyByte, err := json.Marshal(key)
-				require.NoError(t, err)
-				value, err := json.Marshal(cc.cacheValue)
-				require.NoError(t, err)
-				mockCache.On("Fetch", keyByte).Return(value, cc.errFetchingCache)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fc := newFeatureCache(tt.cacheConfig.ttl, tt.cacheConfig.sizeInMB)
+			if tt.valueInCache != nil {
+				err := fc.insertFeatureTable(tt.valueInCache, tt.args.project)
+				if err != nil {
+					t.Fatalf("unable to pre-populate cache: %v", err)
+				}
 			}
-			cached, columnTypes, notInCacheEntity := fetchFeaturesFromCache(mockCache, tt.entities, tt.project)
-			assert.ElementsMatch(t, tt.featuresFromCache, cached)
-			assert.Equal(t, tt.entityNotInCache, notInCacheEntity)
-			assert.Equal(t, tt.columnTypes, columnTypes)
+			got, missedEntities := fc.fetchFeatureTable(tt.args.entities, tt.args.featureNames, tt.args.project)
+
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.missedEntities, missedEntities)
 		})
 	}
 }
 
-func TestInsertMultipleFeaturesToCache(t *testing.T) {
-	type mockCache struct {
-		entity            feast.Row
-		cacheValue        *CacheValue
-		errInsertingCache error
+func TestInsertFeatureTable(t *testing.T) {
+	type cacheConfig struct {
+		ttl      time.Duration
+		sizeInMB int
 	}
-
-	testCases := []struct {
-		desc             string
-		willBeCachedData []entityFeaturePair
-		project          string
-		cacheMocks       []mockCache
-		expectedError    error
+	type args struct {
+		featureTable *internalFeatureTable
+		project      string
+	}
+	tests := []struct {
+		name         string
+		cacheConfig  cacheConfig
+		args         args
+		wantErr      bool
+		wantErrorMsg string
 	}{
 		{
-			desc:    "Success - all features are successfully inserted to cache",
-			project: "default",
-			cacheMocks: []mockCache{
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("1001"),
-					},
-					cacheValue: &CacheValue{
-						ValueRow:   types.ValueRow{"1001", 1.1},
-						ValueTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-					},
-					errInsertingCache: nil,
-				},
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("2002"),
-					},
-					cacheValue: &CacheValue{
-						ValueRow:   types.ValueRow{"2002", 2.2},
-						ValueTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-					},
-					errInsertingCache: nil,
-				},
+			name: "insert table containing one entity",
+			cacheConfig: cacheConfig{
+				ttl:      10 * time.Minute,
+				sizeInMB: 10,
 			},
-			willBeCachedData: []entityFeaturePair{
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("1001"),
+			args: args{
+				featureTable: &internalFeatureTable{
+					entities: []feast.Row{
+						{
+							"driver_id": feast.StrVal("1001"),
+						},
 					},
-					value:       types.ValueRow{"1001", 1.1},
-					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-				},
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("2002"),
+					columnNames: []string{"feature3", "feature4"},
+					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+					valueRows: types.ValueRows{
+						types.ValueRow{
+							"val11",
+							"val12",
+						},
 					},
-					value:       types.ValueRow{"2002", 2.2},
-					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
 				},
+				project: "my-project",
 			},
-		},
-		{
-			desc:    "Success - one feature is failing inserted to cache",
-			project: "sample",
-			cacheMocks: []mockCache{
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("1001"),
-					},
-					cacheValue: &CacheValue{
-						ValueRow:   types.ValueRow{"1001", 1.1},
-						ValueTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-					},
-					errInsertingCache: nil,
-				},
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("2002"),
-					},
-					cacheValue: &CacheValue{
-						ValueRow:   types.ValueRow{"2002", 2.2},
-						ValueTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-					},
-					errInsertingCache: fmt.Errorf("Value is to big"),
-				},
-			},
-			willBeCachedData: []entityFeaturePair{
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("1001"),
-					},
-					value:       types.ValueRow{"1001", 1.1},
-					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-				},
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("2002"),
-					},
-					value:       types.ValueRow{"2002", 2.2},
-					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-				},
-			},
-			expectedError: fmt.Errorf("error inserting to cached: (value: [2002 2.2], with message: Value is to big)"),
-		},
-		{
-			desc:    "Success - all features are failing inserted to cache",
-			project: "test",
-			cacheMocks: []mockCache{
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("1001"),
-					},
-					cacheValue: &CacheValue{
-						ValueRow:   types.ValueRow{"1001", 1.1},
-						ValueTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-					},
-					errInsertingCache: fmt.Errorf("Memory is full"),
-				},
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("2002"),
-					},
-					cacheValue: &CacheValue{
-						ValueRow:   types.ValueRow{"2002", 2.2},
-						ValueTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-					},
-					errInsertingCache: fmt.Errorf("Value is to big"),
-				},
-			},
-			willBeCachedData: []entityFeaturePair{
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("1001"),
-					},
-					value:       types.ValueRow{"1001", 1.1},
-					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-				},
-				{
-					entity: feast.Row{
-						"driver_id": feast.StrVal("2002"),
-					},
-					value:       types.ValueRow{"2002", 2.2},
-					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE},
-				},
-			},
-			expectedError: fmt.Errorf("error inserting to cached: (value: [1001 1.1], with message: Memory is full),(value: [2002 2.2], with message: Value is to big)"),
+			wantErr: false,
 		},
 	}
-	for _, tt := range testCases {
-		t.Run(tt.desc, func(t *testing.T) {
-			mockCache := &mocks.Cache{}
-			for _, cc := range tt.cacheMocks {
-				key := CacheKey{Entity: cc.entity, Project: tt.project}
-				keyByte, err := json.Marshal(key)
-				require.NoError(t, err)
-				value, err := json.Marshal(cc.cacheValue)
-				require.NoError(t, err)
-				mockCache.On("Insert", keyByte, value, mock.Anything).Return(cc.errInsertingCache)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fc := newFeatureCache(tt.cacheConfig.ttl, tt.cacheConfig.sizeInMB)
+			err := fc.insertFeatureTable(tt.args.featureTable, tt.args.project)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("unexpected error = %v", err)
+					return
+				}
 
+				assert.EqualError(t, err, tt.wantErrorMsg)
 			}
-			err := insertMultipleFeaturesToCache(mockCache, tt.willBeCachedData, tt.project, 60*time.Second)
-			assert.Equal(t, tt.expectedError, err)
+
+			got, _ := fc.fetchFeatureTable(tt.args.featureTable.entities, tt.args.featureTable.columnNames, tt.args.project)
+			if err != nil {
+				t.Errorf("unexpected error returned from fetchFeatureTable = %v", err)
+			}
+
+			assert.Equal(t, tt.args.featureTable, got)
 		})
 	}
 }

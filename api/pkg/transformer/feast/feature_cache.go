@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cespare/xxhash"
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/prometheus/client_golang/prometheus"
@@ -16,9 +17,22 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
+type featureCache struct {
+	cache cache.Cache
+	ttl   time.Duration
+}
+
+func newFeatureCache(ttl time.Duration, sizeInMB int) *featureCache {
+	return &featureCache{
+		cache: cache.NewInMemoryCache(sizeInMB),
+		ttl:   ttl,
+	}
+}
+
 type CacheKey struct {
-	Entity  feast.Row
-	Project string
+	Entity          feast.Row
+	Project         string
+	FeatureNameHash uint64
 }
 
 type CacheValue struct {
@@ -40,12 +54,18 @@ var (
 	})
 )
 
-func fetchFeaturesFromCache(cache cache.Cache, entities []feast.Row, project string) (types.ValueRows, []feastTypes.ValueType_Enum, []feast.Row) {
+// fetchFeatureTable fetch features of several entities from cache scoped by its project and return it as a feature table
+func (fc *featureCache) fetchFeatureTable(entities []feast.Row, featureNames []string, project string) (*internalFeatureTable, []feast.Row) {
 	var entityNotInCache []feast.Row
+	var entityInCache []feast.Row
 	var featuresFromCache types.ValueRows
-	var columnTypes []feastTypes.ValueType_Enum
+
+	// initialize empty value types
+	columnTypes := make([]feastTypes.ValueType_Enum, len(featureNames))
+
+	hashedFeatureNames := computeHash(featureNames)
 	for _, entity := range entities {
-		key := CacheKey{Entity: entity, Project: project}
+		key := CacheKey{Entity: entity, Project: project, FeatureNameHash: hashedFeatureNames}
 		keyByte, err := json.Marshal(key)
 		if err != nil {
 			entityNotInCache = append(entityNotInCache, entity)
@@ -53,7 +73,7 @@ func fetchFeaturesFromCache(cache cache.Cache, entities []feast.Row, project str
 		}
 
 		feastCacheRetrievalCount.Inc()
-		val, err := cache.Fetch(keyByte)
+		val, err := fc.cache.Fetch(keyByte)
 		if err != nil {
 			entityNotInCache = append(entityNotInCache, entity)
 			continue
@@ -65,38 +85,27 @@ func fetchFeaturesFromCache(cache cache.Cache, entities []feast.Row, project str
 			entityNotInCache = append(entityNotInCache, entity)
 			continue
 		}
+
+		entityInCache = append(entityInCache, entity)
 		featuresFromCache = append(featuresFromCache, cacheValue.ValueRow)
 		columnTypes = mergeColumnTypes(columnTypes, cacheValue.ValueTypes)
 	}
-	return featuresFromCache, columnTypes, entityNotInCache
+
+	return &internalFeatureTable{
+		columnNames: featureNames,
+		columnTypes: columnTypes,
+		valueRows:   featuresFromCache,
+		entities:    entityInCache,
+	}, entityNotInCache
 }
 
-func insertFeaturesToCache(cache cache.Cache, data entityFeaturePair, project string, ttl time.Duration) error {
-	key := CacheKey{
-		Entity:  data.entity,
-		Project: project,
-	}
-	keyByte, err := json.Marshal(key)
-	if err != nil {
-		return err
-	}
-
-	value := CacheValue{
-		ValueRow:   data.value,
-		ValueTypes: data.columnTypes,
-	}
-	dataByte, err := json.Marshal(value)
-	if err != nil {
-		return err
-	}
-	return cache.Insert(keyByte, dataByte, ttl)
-}
-
-func insertMultipleFeaturesToCache(cache cache.Cache, cacheData []entityFeaturePair, project string, ttl time.Duration) error {
+// insertFeatureTable insert a feature tables containing list of entities and their features into cache scoped by the project
+func (fc *featureCache) insertFeatureTable(featureTable *internalFeatureTable, project string) error {
 	var errorMsgs []string
-	for _, data := range cacheData {
-		if err := insertFeaturesToCache(cache, data, project, ttl); err != nil {
-			errorMsgs = append(errorMsgs, fmt.Sprintf("(value: %v, with message: %v)", data.value, err.Error()))
+
+	for idx, entity := range featureTable.entities {
+		if err := fc.insertFeaturesOfEntity(entity, featureTable.columnNames, project, featureTable.valueRows[idx], featureTable.columnTypes); err != nil {
+			errorMsgs = append(errorMsgs, fmt.Sprintf("(value: %v, with message: %v)", featureTable.valueRows[idx], err.Error()))
 		}
 	}
 	if len(errorMsgs) > 0 {
@@ -104,4 +113,31 @@ func insertMultipleFeaturesToCache(cache cache.Cache, cacheData []entityFeatureP
 		return fmt.Errorf("error inserting to cached: %s", compiledErrorMsgs)
 	}
 	return nil
+}
+
+// insertFeaturesOfEntity insert features values of a given entity scoped by its project
+func (fc *featureCache) insertFeaturesOfEntity(entity feast.Row, featureNames []string, project string, value types.ValueRow, valueTypes []feastTypes.ValueType_Enum) error {
+	key := CacheKey{
+		Entity:          entity,
+		Project:         project,
+		FeatureNameHash: computeHash(featureNames),
+	}
+	keyByte, err := json.Marshal(key)
+	if err != nil {
+		return err
+	}
+
+	cacheValue := CacheValue{
+		ValueRow:   value,
+		ValueTypes: valueTypes,
+	}
+	dataByte, err := json.Marshal(cacheValue)
+	if err != nil {
+		return err
+	}
+	return fc.cache.Insert(keyByte, dataByte, fc.ttl)
+}
+
+func computeHash(names []string) uint64 {
+	return xxhash.Sum64String(strings.Join(names, "-"))
 }
