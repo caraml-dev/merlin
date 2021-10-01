@@ -3,6 +3,7 @@ package feast
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -138,6 +139,7 @@ func (fc *featureCache) insertFeaturesOfEntity(entity feast.Row, featureNames []
 	return fc.cache.Insert(keyByte, dataByte, fc.ttl)
 }
 
-func computeHash(names []string) uint64 {
-	return xxhash.Sum64String(strings.Join(names, "-"))
+func computeHash(columns []string) uint64 {
+	sort.Strings(columns)
+	return xxhash.Sum64String(strings.Join(columns, "-"))
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
-func TestFetchFeatureTable(t *testing.T) {
+func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 	type cacheConfig struct {
 		ttl      time.Duration
 		sizeInMB int
@@ -210,6 +210,70 @@ func TestFetchFeatureTable(t *testing.T) {
 			missedEntities: nil,
 		},
 		{
+			name: "two entities, both have value in cache, but columns request is in different order",
+			cacheConfig: cacheConfig{
+				ttl:      10 * time.Minute,
+				sizeInMB: 10,
+			},
+			args: args{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+					{
+						"driver_id": feast.StrVal("1002"),
+					},
+				},
+				columnNames: []string{"feature1", "feature2"},
+				project:     "my-project",
+			},
+			valueInCache: &internalFeatureTable{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+					{
+						"driver_id": feast.StrVal("1002"),
+					},
+				},
+				columnNames: []string{"feature2", "feature1"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				valueRows: types.ValueRows{
+					types.ValueRow{
+						"val11",
+						"val12",
+					},
+					types.ValueRow{
+						"val21",
+						"val22",
+					},
+				},
+			},
+			want: &internalFeatureTable{
+				entities: []feast.Row{
+					{
+						"driver_id": feast.StrVal("1001"),
+					},
+					{
+						"driver_id": feast.StrVal("1002"),
+					},
+				},
+				columnNames: []string{"feature1", "feature2"},
+				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				valueRows: types.ValueRows{
+					types.ValueRow{
+						"val11",
+						"val12",
+					},
+					types.ValueRow{
+						"val21",
+						"val22",
+					},
+				},
+			},
+			missedEntities: nil,
+		},
+		{
 			name: "one entity, but cache contain different list of feature than requested",
 			cacheConfig: cacheConfig{
 				ttl:      10 * time.Minute,
@@ -273,7 +337,7 @@ func TestFetchFeatureTable(t *testing.T) {
 	}
 }
 
-func TestInsertFeatureTable(t *testing.T) {
+func TestFeatureCache_InsertFeatureTable(t *testing.T) {
 	type cacheConfig struct {
 		ttl      time.Duration
 		sizeInMB int
