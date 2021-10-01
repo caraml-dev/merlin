@@ -55,17 +55,17 @@ var (
 )
 
 // fetchFeatureTable fetch features of several entities from cache scoped by its project and return it as a feature table
-func (fc *featureCache) fetchFeatureTable(entities []feast.Row, featureNames []string, project string) (*internalFeatureTable, []feast.Row) {
+func (fc *featureCache) fetchFeatureTable(entities []feast.Row, columnNames []string, project string) (*internalFeatureTable, []feast.Row) {
 	var entityNotInCache []feast.Row
 	var entityInCache []feast.Row
 	var featuresFromCache types.ValueRows
 
 	// initialize empty value types
-	columnTypes := make([]feastTypes.ValueType_Enum, len(featureNames))
+	columnTypes := make([]feastTypes.ValueType_Enum, len(columnNames))
 
-	hashedFeatureNames := computeHash(featureNames)
+	columnNameHash := computeHash(columnNames)
 	for _, entity := range entities {
-		key := CacheKey{Entity: entity, Project: project, FeatureNameHash: hashedFeatureNames}
+		key := CacheKey{Entity: entity, Project: project, FeatureNameHash: columnNameHash}
 		keyByte, err := json.Marshal(key)
 		if err != nil {
 			entityNotInCache = append(entityNotInCache, entity)
@@ -92,7 +92,7 @@ func (fc *featureCache) fetchFeatureTable(entities []feast.Row, featureNames []s
 	}
 
 	return &internalFeatureTable{
-		columnNames: featureNames,
+		columnNames: columnNames,
 		columnTypes: columnTypes,
 		valueRows:   featuresFromCache,
 		entities:    entityInCache,

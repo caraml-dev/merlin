@@ -17,9 +17,9 @@ func TestFetchFeatureTable(t *testing.T) {
 		sizeInMB int
 	}
 	type args struct {
-		entities     []feast.Row
-		featureNames []string
-		project      string
+		entities    []feast.Row
+		columnNames []string
+		project     string
 	}
 	tests := []struct {
 		name           string
@@ -41,8 +41,8 @@ func TestFetchFeatureTable(t *testing.T) {
 						"driver_id": feast.StrVal("1001"),
 					},
 				},
-				featureNames: []string{"feature1", "feature2"},
-				project:      "my-project",
+				columnNames: []string{"feature1", "feature2"},
+				project:     "my-project",
 			},
 			valueInCache: nil,
 			want: &internalFeatureTable{
@@ -72,8 +72,8 @@ func TestFetchFeatureTable(t *testing.T) {
 						"driver_id": feast.StrVal("1002"),
 					},
 				},
-				featureNames: []string{"feature1", "feature2"},
-				project:      "my-project",
+				columnNames: []string{"feature1", "feature2"},
+				project:     "my-project",
 			},
 			valueInCache: nil,
 			want: &internalFeatureTable{
@@ -106,8 +106,8 @@ func TestFetchFeatureTable(t *testing.T) {
 						"driver_id": feast.StrVal("1002"),
 					},
 				},
-				featureNames: []string{"feature1", "feature2"},
-				project:      "my-project",
+				columnNames: []string{"feature1", "feature2"},
+				project:     "my-project",
 			},
 			valueInCache: &internalFeatureTable{
 				entities: []feast.Row{
@@ -160,8 +160,8 @@ func TestFetchFeatureTable(t *testing.T) {
 						"driver_id": feast.StrVal("1002"),
 					},
 				},
-				featureNames: []string{"feature1", "feature2"},
-				project:      "my-project",
+				columnNames: []string{"feature1", "feature2"},
+				project:     "my-project",
 			},
 			valueInCache: &internalFeatureTable{
 				entities: []feast.Row{
@@ -221,8 +221,8 @@ func TestFetchFeatureTable(t *testing.T) {
 						"driver_id": feast.StrVal("1001"),
 					},
 				},
-				featureNames: []string{"feature1", "feature2"},
-				project:      "my-project",
+				columnNames: []string{"feature1", "feature2"},
+				project:     "my-project",
 			},
 			valueInCache: &internalFeatureTable{
 				entities: []feast.Row{
@@ -265,7 +265,7 @@ func TestFetchFeatureTable(t *testing.T) {
 					t.Fatalf("unable to pre-populate cache: %v", err)
 				}
 			}
-			got, missedEntities := fc.fetchFeatureTable(tt.args.entities, tt.args.featureNames, tt.args.project)
+			got, missedEntities := fc.fetchFeatureTable(tt.args.entities, tt.args.columnNames, tt.args.project)
 
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.missedEntities, missedEntities)
