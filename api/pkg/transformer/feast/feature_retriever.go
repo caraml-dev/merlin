@@ -15,11 +15,12 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/golang/protobuf/proto"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer/cache"
+	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
@@ -47,12 +48,12 @@ type FeatureRetriever interface {
 
 type FeastRetriever struct {
 	feastClients      Clients
+	featureCache      *featureCache
 	entityExtractor   *EntityExtractor
 	featureTableSpecs []*spec.FeatureTable
 
 	defaultValues defaultValues
 	options       *Options
-	cache         cache.Cache
 	logger        *zap.Logger
 }
 
@@ -61,7 +62,6 @@ func NewFeastRetriever(
 	entityExtractor *EntityExtractor,
 	featureTableSpecs []*spec.FeatureTable,
 	options *Options,
-	cache cache.Cache,
 	logger *zap.Logger) *FeastRetriever {
 
 	defaultValues := compileDefaultValues(featureTableSpecs)
@@ -77,6 +77,7 @@ func NewFeastRetriever(
 	return &FeastRetriever{
 		feastClients:      feastClients,
 		entityExtractor:   entityExtractor,
+		featureCache:      newFeatureCache(options.CacheTTL, options.CacheSizeInMB),
 		featureTableSpecs: featureTableSpecs,
 		defaultValues:     defaultValues,
 		options:           options,
@@ -95,6 +96,7 @@ type Options struct {
 	BatchSize               int           `envconfig:"FEAST_BATCH_SIZE" default:"50"`
 	CacheEnabled            bool          `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
 	CacheTTL                time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
+	CacheSizeInMB           int           `envconfig:"CACHE_SIZE_IN_MB" default:"100"`
 
 	FeastTimeout                      time.Duration `envconfig:"FEAST_TIMEOUT" default:"1s"`
 	FeastClientHystrixCommandName     string        `envconfig:"FEAST_HYSTRIX_COMMAND_NAME" default:"feast_retrieval"`
@@ -173,9 +175,9 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Co
 
 func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry symbol.Registry, featureTableSpec *spec.FeatureTable) (*transTypes.FeatureTable, error) {
 	if featureTableSpec.TableName == "" {
-		spec := *featureTableSpec
-		spec.TableName = GetTableName(&spec)
-		featureTableSpec = &spec
+		t := proto.Clone(featureTableSpec).(*spec.FeatureTable)
+		t.TableName = GetTableName(t)
+		featureTableSpec = t
 	}
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.getFeaturePerTable")
@@ -279,15 +281,14 @@ func addSeries(entityName string, series []*types.Value, entities []feast.Row) [
 
 type feastCall struct {
 	featureTableSpec *spec.FeatureTable
+	featureCache     *featureCache
 	entityList       []feast.Row
 	defaultValues    defaultValues
 
 	feastClient feast.Client
 	feastURL    string
 
-	cache        cache.Cache
 	cacheEnabled bool
-	cacheTTL     time.Duration
 	logger       *zap.Logger
 
 	statusMonitoringEnabled bool
@@ -311,9 +312,8 @@ func (fr *FeastRetriever) newFeastCall(
 		feastClient: feastClient,
 		feastURL:    fr.getFeastURL(featureTableSpec.ServingUrl),
 
-		cache:        fr.cache,
+		featureCache: fr.featureCache,
 		cacheEnabled: fr.options.CacheEnabled,
-		cacheTTL:     fr.options.CacheTTL,
 		logger:       fr.logger,
 
 		statusMonitoringEnabled: fr.options.StatusMonitoringEnabled,
