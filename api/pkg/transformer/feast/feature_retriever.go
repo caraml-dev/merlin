@@ -115,25 +115,6 @@ func (o Options) IsServingURLSupported(url string) bool {
 	return false
 }
 
-const defaultProjectName = "default"
-
-type entityFeaturePair struct {
-	entity      feast.Row
-	value       transTypes.ValueRow
-	columnTypes []types.ValueType_Enum
-}
-
-type batchResult struct {
-	featuresData transTypes.ValueRows
-	columnTypes  []types.ValueType_Enum
-	err          error
-}
-
-type parallelCallResult struct {
-	featureTable *transTypes.FeatureTable
-	err          error
-}
-
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.RetrieveFromRequest")
 	defer span.Finish()
