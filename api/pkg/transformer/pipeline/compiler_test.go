@@ -10,7 +10,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
 
-	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
@@ -22,7 +21,6 @@ func TestCompiler_Compile(t *testing.T) {
 			sr           symbol.Registry
 			feastClients feast.Clients
 			feastOptions *feast.Options
-			cacheOptions *cache.Options
 			logger       *zap.Logger
 		}
 
@@ -53,10 +51,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -87,10 +83,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -109,10 +103,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -147,10 +139,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -185,10 +175,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -224,10 +212,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -265,10 +251,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -300,10 +284,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -337,10 +319,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -354,10 +334,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -371,10 +349,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -388,10 +364,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
-				},
-				cacheOptions: &cache.Options{
-					SizeInMB: 100,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger: logger,
 			},
@@ -406,7 +380,6 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           tt.fields.sr,
 				feastClients: tt.fields.feastClients,
 				feastOptions: tt.fields.feastOptions,
-				cacheOptions: tt.fields.cacheOptions,
 				logger:       tt.fields.logger,
 			}
 
