@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strconv"
 
@@ -139,5 +140,44 @@ func ToFeastValue(v interface{}, valueType feastType.ValueType_Enum) (*feastType
 		}
 	default:
 		return nil, fmt.Errorf("unsupported type %s", valueType.String())
+	}
+}
+
+func ExtractFeastValue(val *feastType.Value) (interface{}, feastType.ValueType_Enum, error) {
+	switch val.Val.(type) {
+	case *feastType.Value_StringVal:
+		return val.GetStringVal(), feastType.ValueType_STRING, nil
+	case *feastType.Value_DoubleVal:
+		return val.GetDoubleVal(), feastType.ValueType_DOUBLE, nil
+	case *feastType.Value_FloatVal:
+		return val.GetFloatVal(), feastType.ValueType_FLOAT, nil
+	case *feastType.Value_Int32Val:
+		return val.GetInt32Val(), feastType.ValueType_INT32, nil
+	case *feastType.Value_Int64Val:
+		return val.GetInt64Val(), feastType.ValueType_INT64, nil
+	case *feastType.Value_BoolVal:
+		return val.GetBoolVal(), feastType.ValueType_BOOL, nil
+	case *feastType.Value_StringListVal:
+		return val.GetStringListVal().GetVal(), feastType.ValueType_STRING_LIST, nil
+	case *feastType.Value_DoubleListVal:
+		return val.GetDoubleListVal().GetVal(), feastType.ValueType_DOUBLE_LIST, nil
+	case *feastType.Value_FloatListVal:
+		return val.GetFloatListVal().GetVal(), feastType.ValueType_FLOAT_LIST, nil
+	case *feastType.Value_Int32ListVal:
+		return val.GetInt32ListVal().GetVal(), feastType.ValueType_INT32_LIST, nil
+	case *feastType.Value_Int64ListVal:
+		return val.GetInt64ListVal().GetVal(), feastType.ValueType_INT64_LIST, nil
+	case *feastType.Value_BoolListVal:
+		return val.GetBoolListVal().GetVal(), feastType.ValueType_BOOL_LIST, nil
+	case *feastType.Value_BytesVal:
+		return base64.StdEncoding.EncodeToString(val.GetBytesVal()), feastType.ValueType_STRING, nil
+	case *feastType.Value_BytesListVal:
+		results := make([]string, 0)
+		for _, bytes := range val.GetBytesListVal().GetVal() {
+			results = append(results, base64.StdEncoding.EncodeToString(bytes))
+		}
+		return results, feastType.ValueType_STRING_LIST, nil
+	default:
+		return nil, feastType.ValueType_INVALID, fmt.Errorf("unknown feature cacheValue type: %T", val.Val)
 	}
 }
