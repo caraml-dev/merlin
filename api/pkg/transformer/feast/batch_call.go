@@ -33,6 +33,7 @@ type batchCall struct {
 
 func (fc *batchCall) do(ctx context.Context, entityList []feast.Row, features []string) callResult {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.doBatchCall")
+	span.SetTag("feast.url", fc.feastURL)
 	defer span.Finish()
 
 	feastRequest := feast.OnlineFeaturesRequest{
@@ -52,7 +53,7 @@ func (fc *batchCall) do(ctx context.Context, entityList []feast.Row, features []
 	}
 	feastLatency.WithLabelValues("success", fc.feastURL).Observe(float64(durationMs))
 
-	featureTable, err := fc.processResponse(feastResponse, fc.columns, fc.entityIndexMap)
+	featureTable, err := fc.processResponse(feastResponse)
 	if err != nil {
 		return callResult{featureTable: nil, err: err}
 	}
@@ -61,21 +62,21 @@ func (fc *batchCall) do(ctx context.Context, entityList []feast.Row, features []
 }
 
 // processResponse process response from feast serving and create an internal feature table representation of it
-func (fc *batchCall) processResponse(feastResponse *feast.OnlineFeaturesResponse, columns []string, entityIndexMap map[int]int) (*internalFeatureTable, error) {
+func (fc *batchCall) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*internalFeatureTable, error) {
 	responseStatus := feastResponse.Statuses()
 	responseRows := feastResponse.Rows()
 	entities := make([]feast.Row, len(responseRows))
 	valueRows := make([]transTypes.ValueRow, len(responseRows))
-	columnTypes := make([]types.ValueType_Enum, len(columns))
+	columnTypes := make([]types.ValueType_Enum, len(fc.columns))
 
 	for rowIdx, feastRow := range responseRows {
-		valueRow := make(transTypes.ValueRow, len(columns))
+		valueRow := make(transTypes.ValueRow, len(fc.columns))
 
 		// create entity object, for cache key purpose
 		entity := feast.Row{}
-		for colIdx, column := range columns {
+		for colIdx, column := range fc.columns {
 			featureStatus := responseStatus[rowIdx][column]
-			_, isEntityIndex := entityIndexMap[colIdx]
+			_, isEntityIndex := fc.entityIndexMap[colIdx]
 			var rawValue *types.Value
 			switch featureStatus {
 			case serving.GetOnlineFeaturesResponse_PRESENT:
@@ -116,7 +117,7 @@ func (fc *batchCall) processResponse(feastResponse *feast.OnlineFeaturesResponse
 
 	return &internalFeatureTable{
 		entities:    entities,
-		columnNames: columns,
+		columnNames: fc.columns,
 		columnTypes: columnTypes,
 		valueRows:   valueRows,
 	}, nil
