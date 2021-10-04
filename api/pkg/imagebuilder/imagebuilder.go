@@ -97,23 +97,7 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, version *models.Version) (string, error) {
 	// check for existing image
 	imageName := c.nameGenerator.generateDockerImageName(project, model)
-
-	var imageExists bool = false
-
-	checkImageExists := func() error {
-		exists, err := c.imageRefExists(imageName, version.ID.String())
-		if err != nil {
-			log.Errorf("Unable to check existing image ref: %v", err)
-			return ErrUnableToGetImageRef
-		}
-		imageExists = exists
-		return nil
-	}
-
-	err := backoff.Retry(checkImageExists, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), maxCheckImageRetry))
-	if err != nil {
-		log.Errorf("Unable to check existing image ref after %d try: %v", maxCheckImageRetry, err)
-	}
+	imageExists := c.imageExists(imageName, version.ID.String())
 
 	imageRef := c.imageRef(project, model, version)
 	if imageExists {
@@ -207,8 +191,9 @@ func (c *imageBuilder) imageRef(project mlp.Project, model *models.Model, versio
 	return fmt.Sprintf("%s:%s", c.nameGenerator.generateDockerImageName(project, model), version.ID)
 }
 
+// imageExists wraps imageRefExists with backoff.Retry
 func (c *imageBuilder) imageExists(imageName, imageTag string) bool {
-	var imageExists bool = false
+	imageExists := false
 
 	checkImageExists := func() error {
 		exists, err := c.imageRefExists(imageName, imageTag)
