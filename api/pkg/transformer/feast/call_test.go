@@ -16,7 +16,7 @@ import (
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
 )
 
-func Test_batchCall_do(t *testing.T) {
+func TestCall_do(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	type mockFeastCall struct {
 		request  *feast.OnlineFeaturesRequest
@@ -466,7 +466,7 @@ func Test_batchCall_do(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fc := &batchCall{
+			fc := &call{
 				featureTableSpec:        tt.fields.featureTableSpec,
 				columns:                 tt.fields.columns,
 				entitySet:               tt.fields.entitySet,

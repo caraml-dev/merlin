@@ -16,7 +16,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
-type batchCall struct {
+type call struct {
 	featureTableSpec *spec.FeatureTable
 	columns          []string
 	entitySet        map[string]bool
@@ -32,7 +32,7 @@ type batchCall struct {
 }
 
 // do create request to feast and return the result as table
-func (fc *batchCall) do(ctx context.Context, entityList []feast.Row, features []string) callResult {
+func (fc *call) do(ctx context.Context, entityList []feast.Row, features []string) callResult {
 	tableName := GetTableName(fc.featureTableSpec)
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.doBatchCall")
@@ -66,7 +66,7 @@ func (fc *batchCall) do(ctx context.Context, entityList []feast.Row, features []
 }
 
 // processResponse process response from feast serving and create an internal feature table representation of it
-func (fc *batchCall) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*internalFeatureTable, error) {
+func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*internalFeatureTable, error) {
 	responseStatus := feastResponse.Statuses()
 	responseRows := feastResponse.Rows()
 	entities := make([]feast.Row, len(responseRows))
@@ -128,7 +128,7 @@ func (fc *batchCall) processResponse(feastResponse *feast.OnlineFeaturesResponse
 	}, nil
 }
 
-func (fc *batchCall) recordMetrics(val interface{}, column string, featureStatus serving.GetOnlineFeaturesResponse_FieldStatus) {
+func (fc *call) recordMetrics(val interface{}, column string, featureStatus serving.GetOnlineFeaturesResponse_FieldStatus) {
 	// put behind feature toggle since it will generate high cardinality metrics
 	if fc.valueMonitoringEnabled {
 		v, err := converter.ToFloat64(val)

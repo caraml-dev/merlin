@@ -213,13 +213,13 @@ func (fr *FeastRetriever) buildEntityRows(symbolRegistry symbol.Registry, config
 	return uniqueEntities, nil
 }
 
-func (fr *FeastRetriever) newBatchCall(featureTableSpec *spec.FeatureTable, columns []string, entitySet map[string]bool) (*batchCall, error) {
+func (fr *FeastRetriever) newCall(featureTableSpec *spec.FeatureTable, columns []string, entitySet map[string]bool) (*call, error) {
 	feastClient, err := fr.getFeastClient(featureTableSpec.ServingUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	return &batchCall{
+	return &call{
 		featureTableSpec: featureTableSpec,
 		defaultValues:    fr.defaultValues,
 		columns:          columns,
@@ -278,7 +278,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		}
 		batchedEntities := entityNotInCache[startIndex:endIndex]
 
-		f, err := fr.newBatchCall(featureTableSpec, columns, entitySet)
+		f, err := fr.newCall(featureTableSpec, columns, entitySet)
 		if err != nil {
 			return nil, err
 		}
