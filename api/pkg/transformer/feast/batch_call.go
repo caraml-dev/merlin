@@ -31,9 +31,13 @@ type batchCall struct {
 	valueMonitoringEnabled  bool
 }
 
+// do create request to feast and return the result as table
 func (fc *batchCall) do(ctx context.Context, entityList []feast.Row, features []string) callResult {
+	tableName := GetTableName(fc.featureTableSpec)
+
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.doBatchCall")
 	span.SetTag("feast.url", fc.feastURL)
+	span.SetTag("table", tableName)
 	defer span.Finish()
 
 	feastRequest := feast.OnlineFeaturesRequest{
@@ -58,7 +62,7 @@ func (fc *batchCall) do(ctx context.Context, entityList []feast.Row, features []
 		return callResult{featureTable: nil, err: err}
 	}
 
-	return callResult{tableName: GetTableName(fc.featureTableSpec), featureTable: featureTable, err: nil}
+	return callResult{tableName: tableName, featureTable: featureTable, err: nil}
 }
 
 // processResponse process response from feast serving and create an internal feature table representation of it
@@ -75,13 +79,14 @@ func (fc *batchCall) processResponse(feastResponse *feast.OnlineFeaturesResponse
 		// create entity object, for cache key purpose
 		entity := feast.Row{}
 		for colIdx, column := range fc.columns {
-			featureStatus := responseStatus[rowIdx][column]
-			_, isEntity := fc.entitySet[column]
 			var rawValue *types.Value
+
+			featureStatus := responseStatus[rowIdx][column]
 			switch featureStatus {
 			case serving.GetOnlineFeaturesResponse_PRESENT:
 				rawValue = feastRow[column]
 				// set value of entity
+				_, isEntity := fc.entitySet[column]
 				if isEntity {
 					entity[column] = rawValue
 				}
