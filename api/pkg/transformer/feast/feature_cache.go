@@ -3,7 +3,6 @@ package feast
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
 type featureCache struct {
@@ -31,9 +31,9 @@ func newFeatureCache(ttl time.Duration, sizeInMB int) *featureCache {
 }
 
 type CacheKey struct {
-	Entity          feast.Row
-	Project         string
-	FeatureNameHash uint64
+	Entity         feast.Row
+	Project        string
+	ColumnNameHash uint64
 }
 
 type CacheValue struct {
@@ -66,7 +66,7 @@ func (fc *featureCache) fetchFeatureTable(entities []feast.Row, columnNames []st
 
 	columnNameHash := computeHash(columnNames)
 	for _, entity := range entities {
-		key := CacheKey{Entity: entity, Project: project, FeatureNameHash: columnNameHash}
+		key := CacheKey{Entity: entity, Project: project, ColumnNameHash: columnNameHash}
 		keyByte, err := json.Marshal(key)
 		if err != nil {
 			entityNotInCache = append(entityNotInCache, entity)
@@ -87,9 +87,13 @@ func (fc *featureCache) fetchFeatureTable(entities []feast.Row, columnNames []st
 			continue
 		}
 
+		columnTypes = mergeColumnTypes(columnTypes, cacheValue.ValueTypes)
+		if cacheValue.ValueRow, err = castValueRow(cacheValue.ValueRow, columnTypes); err != nil {
+			continue
+		}
+
 		entityInCache = append(entityInCache, entity)
 		featuresFromCache = append(featuresFromCache, cacheValue.ValueRow)
-		columnTypes = mergeColumnTypes(columnTypes, cacheValue.ValueTypes)
 	}
 
 	return &internalFeatureTable{
@@ -117,11 +121,11 @@ func (fc *featureCache) insertFeatureTable(featureTable *internalFeatureTable, p
 }
 
 // insertFeaturesOfEntity insert features values of a given entity scoped by its project
-func (fc *featureCache) insertFeaturesOfEntity(entity feast.Row, featureNames []string, project string, value types.ValueRow, valueTypes []feastTypes.ValueType_Enum) error {
+func (fc *featureCache) insertFeaturesOfEntity(entity feast.Row, columnNames []string, project string, value types.ValueRow, valueTypes []feastTypes.ValueType_Enum) error {
 	key := CacheKey{
-		Entity:          entity,
-		Project:         project,
-		FeatureNameHash: computeHash(featureNames),
+		Entity:         entity,
+		Project:        project,
+		ColumnNameHash: computeHash(columnNames),
 	}
 	keyByte, err := json.Marshal(key)
 	if err != nil {
@@ -139,7 +143,30 @@ func (fc *featureCache) insertFeaturesOfEntity(entity feast.Row, featureNames []
 	return fc.cache.Insert(keyByte, dataByte, fc.ttl)
 }
 
+func castValueRow(row types.ValueRow, columnTypes []feastTypes.ValueType_Enum) (types.ValueRow, error) {
+	for idx, val := range row {
+		castedVal, err := castIntValue(val, columnTypes[idx])
+		if err != nil {
+			return row, err
+		}
+		row[idx] = castedVal
+	}
+	return row, nil
+}
+
+// castIntValue cast cache value of integer type to its correct type
+// It's necessary since we store value as json and any integer value will be converted to float64
+func castIntValue(val interface{}, valType feastTypes.ValueType_Enum) (interface{}, error) {
+	switch valType {
+	case feastTypes.ValueType_INT64:
+		return converter.ToInt64(val)
+	case feastTypes.ValueType_INT32:
+		return converter.ToInt32(val)
+	default:
+		return val, nil
+	}
+}
+
 func computeHash(columns []string) uint64 {
-	sort.Strings(columns)
 	return xxhash.Sum64String(strings.Join(columns, "-"))
 }
