@@ -2,20 +2,16 @@ package feast
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
-	"strings"
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/cespare/xxhash"
 	feast "github.com/feast-dev/feast/sdk/go"
-	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/golang/protobuf/proto"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
@@ -46,10 +42,11 @@ type FeatureRetriever interface {
 	RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error)
 }
 
+// FeastRetriever is feature retriever implementation for retrieving features from Feast
 type FeastRetriever struct {
 	feastClients      Clients
-	featureCache      *featureCache
 	entityExtractor   *EntityExtractor
+	featureCache      *featureCache
 	featureTableSpecs []*spec.FeatureTable
 
 	defaultValues defaultValues
@@ -81,7 +78,6 @@ func NewFeastRetriever(
 		featureTableSpecs: featureTableSpecs,
 		defaultValues:     defaultValues,
 		options:           options,
-		cache:             cache,
 		logger:            logger,
 	}
 }
@@ -129,44 +125,36 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Co
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.RetrieveFromSymbolRegistry")
 	defer span.Finish()
 
-	nbTables := len(fr.featureTableSpecs)
-	feastFeatures := make([]*transTypes.FeatureTable, 0)
-
 	// parallelize feast call per feature table
-	resChan := make(chan parallelCallResult, nbTables)
+	resChan := make(chan callResult, len(fr.featureTableSpecs))
 	for _, featureTableSpec := range fr.featureTableSpecs {
 		go func(featureTableSpec *spec.FeatureTable) {
 			featureTable, err := fr.getFeaturePerTable(ctx, symbolRegistry, featureTableSpec)
-			resChan <- parallelCallResult{featureTable, err}
+			resChan <- callResult{tableName: GetTableName(featureTableSpec), featureTable: featureTable, err: err}
 		}(featureTableSpec)
 	}
 
 	// collect result
+	feastFeatures := make([]*transTypes.FeatureTable, len(fr.featureTableSpecs))
 	for i := 0; i < cap(resChan); i++ {
 		res := <-resChan
 		if res.err != nil {
+			// cancel all other goroutine if one of the goroutine returning error.
 			ctx.Done()
 			return nil, res.err
 		}
-		feastFeatures = append(feastFeatures, res.featureTable)
+		feastFeatures[i] = res.featureTable.toFeatureTable(res.tableName)
 	}
 
 	return feastFeatures, nil
 }
 
-func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry symbol.Registry, featureTableSpec *spec.FeatureTable) (*transTypes.FeatureTable, error) {
-	if featureTableSpec.TableName == "" {
-		t := proto.Clone(featureTableSpec).(*spec.FeatureTable)
-		t.TableName = GetTableName(t)
-		featureTableSpec = t
-	}
-
+func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry symbol.Registry, featureTableSpec *spec.FeatureTable) (*internalFeatureTable, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.getFeaturePerTable")
-	span.SetTag("table.name", featureTableSpec.TableName)
-	span.SetTag("feast.url", fr.getFeastURL(featureTableSpec.ServingUrl))
+	span.SetTag("table.name", GetTableName(featureTableSpec))
 	defer span.Finish()
 
-	entities, err := fr.buildEntityRows(ctx, symbolRegistry, featureTableSpec.Entities, featureTableSpec.TableName)
+	entities, err := fr.buildEntityRows(symbolRegistry, featureTableSpec.Entities)
 	if err != nil {
 		return nil, err
 	}
@@ -178,11 +166,7 @@ func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry
 	return featureTable, nil
 }
 
-func (fr *FeastRetriever) buildEntityRows(ctx context.Context, symbolRegistry symbol.Registry, configEntities []*spec.Entity, tableName string) ([]feast.Row, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.buildEntityRows")
-	span.SetTag("table.name", tableName)
-	defer span.Finish()
-
+func (fr *FeastRetriever) buildEntityRows(symbolRegistry symbol.Registry, configEntities []*spec.Entity) ([]feast.Row, error) {
 	var allSeries [][]*types.Value
 	maxLength := 1
 
@@ -229,73 +213,22 @@ func (fr *FeastRetriever) buildEntityRows(ctx context.Context, symbolRegistry sy
 	return uniqueEntities, nil
 }
 
-func dedupEntities(rows []feast.Row) ([]feast.Row, error) {
-	uniqueRows := make([]feast.Row, 0, len(rows))
-	rowLookup := make(map[uint64]bool)
-	for _, row := range rows {
-		rowByte, err := json.Marshal(row)
-		if err != nil {
-			return nil, err
-		}
-		rowHashVal := xxhash.Sum64(rowByte)
-		if _, found := rowLookup[rowHashVal]; !found {
-			uniqueRows = append(uniqueRows, row)
-			rowLookup[rowHashVal] = true
-		}
-	}
-	return uniqueRows, nil
-}
-
-func broadcastSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
-	for _, entity := range entities {
-		entity[entityName] = series[0]
-	}
-	return entities
-}
-
-func addSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
-	for idx, entity := range entities {
-		entity[entityName] = series[idx]
-	}
-	return entities
-}
-
-type feastCall struct {
-	featureTableSpec *spec.FeatureTable
-	featureCache     *featureCache
-	entityList       []feast.Row
-	defaultValues    defaultValues
-
-	feastClient feast.Client
-	feastURL    string
-
-	cacheEnabled bool
-	logger       *zap.Logger
-
-	statusMonitoringEnabled bool
-	valueMonitoringEnabled  bool
-}
-
-func (fr *FeastRetriever) newFeastCall(
-	featureTableSpec *spec.FeatureTable,
-	entityList []feast.Row,
-) (*feastCall, error) {
+func (fr *FeastRetriever) newBatchCall(featureTableSpec *spec.FeatureTable, columns []string, entitySet map[string]bool) (*batchCall, error) {
 	feastClient, err := fr.getFeastClient(featureTableSpec.ServingUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	return &feastCall{
+	return &batchCall{
 		featureTableSpec: featureTableSpec,
-		entityList:       entityList,
 		defaultValues:    fr.defaultValues,
+		columns:          columns,
+		entitySet:        entitySet,
 
 		feastClient: feastClient,
 		feastURL:    fr.getFeastURL(featureTableSpec.ServingUrl),
 
-		featureCache: fr.featureCache,
-		cacheEnabled: fr.options.CacheEnabled,
-		logger:       fr.logger,
+		logger: fr.logger,
 
 		statusMonitoringEnabled: fr.options.StatusMonitoringEnabled,
 		valueMonitoringEnabled:  fr.options.ValueMonitoringEnabled,
@@ -325,12 +258,17 @@ func (fr *FeastRetriever) getFeastURL(url string) string {
 func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.Row, featureTableSpec *spec.FeatureTable) (*internalFeatureTable, error) {
 	features := getFeatureNames(featureTableSpec)
 	columns := getColumnNames(featureTableSpec)
-	entityIndices := getEntityIndicesFromColumns(columns, featureTableSpec.Entities)
+	entitySet := getEntitySet(columns, featureTableSpec.Entities)
+
+	var featureTable *internalFeatureTable
+	entityNotInCache := entities
+	if fr.options.CacheEnabled {
+		featureTable, entityNotInCache = fr.featureCache.fetchFeatureTable(entities, columns, featureTableSpec.Project)
+	}
 
 	numOfBatchBeforeCeil := float64(len(entityNotInCache)) / float64(fr.options.BatchSize)
 	numOfBatch := int(math.Ceil(numOfBatchBeforeCeil))
-
-	batchResultChan := make(chan batchResult, numOfBatch)
+	batchResultChan := make(chan callResult, numOfBatch)
 
 	for i := 0; i < numOfBatch; i++ {
 		startIndex := i * fr.options.BatchSize
@@ -340,38 +278,57 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		}
 		batchedEntities := entityNotInCache[startIndex:endIndex]
 
-		f, err := fr.newFeastCall(featureTableSpec, batchedEntities)
+		f, err := fr.newBatchCall(featureTableSpec, columns, entitySet)
 		if err != nil {
 			return nil, err
 		}
 
 		hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
-			batchResultChan <- f.do(ctx, features, columns, entityIndices)
+			batchResultChan <- f.do(ctx, batchedEntities, features)
 			return nil
 		}, func(ctx context.Context, err error) error {
-			batchResultChan <- batchResult{featuresData: nil, err: err}
+			batchResultChan <- callResult{featureTable: nil, err: err}
 			return nil
 		})
 	}
 
-	data := cachedValues
+	// merge result from all batch, including the cached one
 	for i := 0; i < numOfBatch; i++ {
 		res := <-batchResultChan
 		if res.err != nil {
 			return nil, res.err
 		}
-		data = append(data, res.featuresData...)
-		columnTypes = mergeColumnTypes(columnTypes, res.columnTypes)
+
+		if fr.options.CacheEnabled {
+			if err := fr.featureCache.insertFeatureTable(res.featureTable, featureTableSpec.Project); err != nil {
+				fr.logger.Error("insert_to_cache", zap.Any("error", err))
+			}
+		}
+
+		if featureTable == nil {
+			featureTable = res.featureTable
+			continue
+		}
+
+		err := featureTable.mergeFeatureTable(res.featureTable)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return &transTypes.FeatureTable{
-		Name:        featureTableSpec.TableName,
-		Columns:     columns,
-		ColumnTypes: columnTypes,
-		Data:        data,
-	}, nil
+	return featureTable, nil
 }
 
+// getFeatureNames get list of feature name within a feature table spec
+func getFeatureNames(config *spec.FeatureTable) []string {
+	features := make([]string, len(config.Features))
+	for idx, feature := range config.Features {
+		features[idx] = feature.Name
+	}
+	return features
+}
+
+// getColumnNames get list of feature and entity name within a feature table spec
 func getColumnNames(config *spec.FeatureTable) []string {
 	columns := make([]string, 0, len(config.Entities)+len(config.Features))
 	for _, entity := range config.Entities {
@@ -383,18 +340,18 @@ func getColumnNames(config *spec.FeatureTable) []string {
 	return columns
 }
 
-func getEntityIndicesFromColumns(columns []string, entitiesConfig []*spec.Entity) map[int]int {
-	indicesMapping := make(map[int]int, len(entitiesConfig))
+func getEntitySet(columns []string, entitiesConfig []*spec.Entity) map[string]bool {
+	entitySet := make(map[string]bool, len(entitiesConfig))
 	entitiesConfigMap := make(map[string]*spec.Entity)
 	for _, entityConfig := range entitiesConfig {
 		entitiesConfigMap[entityConfig.Name] = entityConfig
 	}
-	for i, column := range columns {
+	for _, column := range columns {
 		if _, found := entitiesConfigMap[column]; found {
-			indicesMapping[i] = i
+			entitySet[column] = true
 		}
 	}
-	return indicesMapping
+	return entitySet
 }
 
 func mergeColumnTypes(dst []types.ValueType_Enum, src []types.ValueType_Enum) []types.ValueType_Enum {
@@ -421,4 +378,35 @@ func durationToInt(duration, unit time.Duration) int {
 		return maxInt
 	}
 	return int(durationAsNumber)
+}
+
+func dedupEntities(rows []feast.Row) ([]feast.Row, error) {
+	uniqueRows := make([]feast.Row, 0, len(rows))
+	rowLookup := make(map[uint64]bool)
+	for _, row := range rows {
+		rowByte, err := json.Marshal(row)
+		if err != nil {
+			return nil, err
+		}
+		rowHashVal := xxhash.Sum64(rowByte)
+		if _, found := rowLookup[rowHashVal]; !found {
+			uniqueRows = append(uniqueRows, row)
+			rowLookup[rowHashVal] = true
+		}
+	}
+	return uniqueRows, nil
+}
+
+func broadcastSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
+	for _, entity := range entities {
+		entity[entityName] = series[0]
+	}
+	return entities
+}
+
+func addSeries(entityName string, series []*types.Value, entities []feast.Row) []feast.Row {
+	for idx, entity := range entities {
+		entity[entityName] = series[idx]
+	}
+	return entities
 }
