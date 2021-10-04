@@ -26,7 +26,7 @@ func Test_batchCall_do(t *testing.T) {
 	type fields struct {
 		featureTableSpec        *spec.FeatureTable
 		columns                 []string
-		entityIndexMap          map[int]int
+		entitySet               map[string]bool
 		defaultValues           defaultValues
 		feastClient             feast.Client
 		feastURL                string
@@ -84,9 +84,9 @@ func Test_batchCall_do(t *testing.T) {
 		"feature_4",
 	}
 
-	entityIndexMap := map[int]int{
-		0: 1,
-		1: 1,
+	entitySet := map[string]bool{
+		"entity_1": true,
+		"entity_2": true,
 	}
 
 	project := "default"
@@ -108,7 +108,7 @@ func Test_batchCall_do(t *testing.T) {
 			fields: fields{
 				featureTableSpec:        featureTableSpec,
 				columns:                 columns,
-				entityIndexMap:          entityIndexMap,
+				entitySet:               entitySet,
 				defaultValues:           defValues,
 				feastClient:             &feastmocks.Client{},
 				feastURL:                "localhost:6565",
@@ -228,7 +228,7 @@ func Test_batchCall_do(t *testing.T) {
 			fields: fields{
 				featureTableSpec:        featureTableSpec,
 				columns:                 columns,
-				entityIndexMap:          entityIndexMap,
+				entitySet:               entitySet,
 				defaultValues:           defaultValues{},
 				feastClient:             &feastmocks.Client{},
 				feastURL:                "localhost:6565",
@@ -348,7 +348,7 @@ func Test_batchCall_do(t *testing.T) {
 			fields: fields{
 				featureTableSpec:        featureTableSpec,
 				columns:                 columns,
-				entityIndexMap:          entityIndexMap,
+				entitySet:               entitySet,
 				defaultValues:           defValues,
 				feastClient:             &feastmocks.Client{},
 				feastURL:                "localhost:6565",
@@ -469,7 +469,7 @@ func Test_batchCall_do(t *testing.T) {
 			fc := &batchCall{
 				featureTableSpec:        tt.fields.featureTableSpec,
 				columns:                 tt.fields.columns,
-				entityIndexMap:          tt.fields.entityIndexMap,
+				entitySet:               tt.fields.entitySet,
 				defaultValues:           tt.fields.defaultValues,
 				feastClient:             tt.fields.feastClient,
 				feastURL:                tt.fields.feastURL,

@@ -19,7 +19,7 @@ import (
 type batchCall struct {
 	featureTableSpec *spec.FeatureTable
 	columns          []string
-	entityIndexMap   map[int]int
+	entitySet        map[string]bool
 	defaultValues    defaultValues
 
 	feastClient feast.Client
@@ -76,13 +76,13 @@ func (fc *batchCall) processResponse(feastResponse *feast.OnlineFeaturesResponse
 		entity := feast.Row{}
 		for colIdx, column := range fc.columns {
 			featureStatus := responseStatus[rowIdx][column]
-			_, isEntityIndex := fc.entityIndexMap[colIdx]
+			_, isEntity := fc.entitySet[column]
 			var rawValue *types.Value
 			switch featureStatus {
 			case serving.GetOnlineFeaturesResponse_PRESENT:
 				rawValue = feastRow[column]
 				// set value of entity
-				if isEntityIndex {
+				if isEntity {
 					entity[column] = rawValue
 				}
 			case serving.GetOnlineFeaturesResponse_NOT_FOUND, serving.GetOnlineFeaturesResponse_NULL_VALUE, serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
