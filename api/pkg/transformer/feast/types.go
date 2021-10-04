@@ -2,7 +2,6 @@ package feast
 
 import (
 	"errors"
-	"fmt"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
@@ -34,7 +33,6 @@ func (it *internalFeatureTable) mergeFeatureTable(right *internalFeatureTable) e
 
 	// It is assumed that
 	// both table have same number of columns
-	fmt.Printf("it = %v, right = %v", it, right)
 	if len(it.columnTypes) != len(right.columnTypes) ||
 		len(it.columnNames) != len(right.columnNames) {
 		return errors.New("unable to merge tables: different number of columns")
