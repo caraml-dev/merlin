@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	backoff "github.com/cenkalti/backoff/v4"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -38,7 +39,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 )
 
-var maxCheckImageRetry int = 2
+var maxCheckImageRetry uint64 = 2
 
 type ImageBuilder interface {
 	// BuildImage build docker image for the given model version
@@ -96,10 +97,22 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, version *models.Version) (string, error) {
 	// check for existing image
 	imageName := c.nameGenerator.generateDockerImageName(project, model)
-	imageExists, err := c.imageRefExists(imageName, version.ID.String(), 0)
+
+	var imageExists bool = false
+
+	checkImageExists := func() error {
+		exists, err := c.imageRefExists(imageName, version.ID.String())
+		if err != nil {
+			log.Errorf("Unable to check existing image ref: %v", err)
+			return ErrUnableToGetImageRef
+		}
+		imageExists = exists
+		return nil
+	}
+
+	err := backoff.Retry(checkImageExists, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), maxCheckImageRetry))
 	if err != nil {
-		log.Errorf("Unable to check existing image ref: %v", err)
-		return "", ErrUnableToGetImageRef
+		log.Errorf("Unable to check existing image ref after %d try: %v", maxCheckImageRetry, err)
 	}
 
 	imageRef := c.imageRef(project, model, version)
@@ -194,6 +207,29 @@ func (c *imageBuilder) imageRef(project mlp.Project, model *models.Model, versio
 	return fmt.Sprintf("%s:%s", c.nameGenerator.generateDockerImageName(project, model), version.ID)
 }
 
+func (c *imageBuilder) imageExists(imageName, imageTag string) bool {
+	var imageExists bool = false
+
+	checkImageExists := func() error {
+		exists, err := c.imageRefExists(imageName, imageTag)
+		if err != nil {
+			log.Errorf("Unable to check existing image ref: %v", err)
+			return ErrUnableToGetImageRef
+		}
+
+		imageExists = exists
+		return nil
+	}
+
+	err := backoff.Retry(checkImageExists, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), maxCheckImageRetry))
+	if err != nil {
+		log.Errorf("Unable to check existing image ref after %d try: %v", maxCheckImageRetry, err)
+		return false
+	}
+
+	return imageExists
+}
+
 // ImageExists returns true if the versioned image (tag) already exist in the image repository.
 //
 // We are using Crane to interacting with container registry because the authentication already handled by Crane's keychain.
@@ -201,7 +237,7 @@ func (c *imageBuilder) imageRef(project mlp.Project, model *models.Model, versio
 // k8schain (use Kubelet's authentication), and googleKeyChain (emulate docker-credential-gcr).
 // https://github.com/google/go-containerregistry/blob/master/cmd/crane/README.md
 // https://github.com/google/go-containerregistry/blob/master/pkg/v1/google/README.md
-func (c *imageBuilder) imageRefExists(imageName, imageTag string, retryCounter int) (bool, error) {
+func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) {
 	keychain := authn.DefaultKeychain
 	if strings.Contains(c.config.DockerRegistry, "gcr.io") {
 		keychain = google.Keychain
@@ -215,22 +251,18 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string, retryCounter i
 	tags, err := remote.List(repo, remote.WithAuthFromKeychain(keychain))
 	if err != nil {
 		if terr, ok := err.(*transport.Error); ok {
-			log.Errorf("transport error on listing tags for %s: status code: %d, error: %s", imageName, terr.StatusCode, terr.Error())
-
 			// If image not found, it's not exist yet
 			if terr.StatusCode == http.StatusNotFound {
+				log.Errorf("image (%s) not found", imageName)
 				return false, nil
 			}
 
-			if retryCounter < maxCheckImageRetry {
-				time.Sleep(1 * time.Second)
-				log.Infof("retry (%d) listing tags for %s", retryCounter+1, imageName)
-				return c.imageRefExists(imageName, imageTag, retryCounter+1)
-			}
-		} else {
-			// If it's not transport error, raise error
-			return false, fmt.Errorf("error getting image tags for %s: %s", repo, err.Error())
+			// Otherwise, it's another transport error
+			return false, fmt.Errorf("transport error on listing tags for %s: status code: %d, error: %s", imageName, terr.StatusCode, terr.Error())
 		}
+
+		// If it's not transport error, raise error
+		return false, fmt.Errorf("error getting image tags for %s: %s", repo, err.Error())
 	}
 
 	for _, tag := range tags {
