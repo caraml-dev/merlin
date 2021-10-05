@@ -53,3 +53,17 @@ type callResult struct {
 	featureTable *internalFeatureTable
 	err          error
 }
+
+func mergeColumnTypes(dst []types.ValueType_Enum, src []types.ValueType_Enum) []types.ValueType_Enum {
+	if len(dst) == 0 {
+		dst = src
+		return dst
+	}
+
+	for i, t := range dst {
+		if t == types.ValueType_INVALID {
+			dst[i] = src[i]
+		}
+	}
+	return dst
+}

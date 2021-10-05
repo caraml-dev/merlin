@@ -354,20 +354,6 @@ func getEntitySet(columns []string, entitiesConfig []*spec.Entity) map[string]bo
 	return entitySet
 }
 
-func mergeColumnTypes(dst []types.ValueType_Enum, src []types.ValueType_Enum) []types.ValueType_Enum {
-	if len(dst) == 0 {
-		dst = src
-		return dst
-	}
-
-	for i, t := range dst {
-		if t == types.ValueType_INVALID {
-			dst[i] = src[i]
-		}
-	}
-	return dst
-}
-
 func durationToInt(duration, unit time.Duration) int {
 	durationAsNumber := duration / unit
 
