@@ -1044,7 +1044,7 @@ func TestGetContainers(t *testing.T) {
 	}
 }
 
-func Test_kanikoBuilder_imageRefExists(t *testing.T) {
+func Test_kanikoBuilder_imageExists(t *testing.T) {
 	type fields struct {
 		kubeClient kubernetes.Interface
 		config     Config
@@ -1052,7 +1052,6 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 	type args struct {
 		imageName string
 		imageTag  string
-		retry     int
 	}
 	tests := []struct {
 		name         string
@@ -1128,19 +1127,15 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 				config:     tt.fields.config,
 			}
 
-			got, err := c.imageRefExists(fmt.Sprintf("%s/%s", u.Host, tt.args.imageName), tt.args.imageTag, tt.args.retry)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("imageBuilder.ImageRefExists() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := c.imageExists(fmt.Sprintf("%s/%s", u.Host, tt.args.imageName), tt.args.imageTag)
 			if got != tt.want {
-				t.Errorf("imageBuilder.ImageRefExists() = %v, want %v", got, tt.want)
+				t.Errorf("imageBuilder.ImageExists() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_kanikoBuilder_imageRefExists_retry_success(t *testing.T) {
+func Test_kanikoBuilder_imageExists_retry_success(t *testing.T) {
 	imageName := "gojek/merlin"
 	imageTag := "test"
 	retryCounter := 0
@@ -1170,9 +1165,37 @@ func Test_kanikoBuilder_imageRefExists_retry_success(t *testing.T) {
 
 	c := &imageBuilder{}
 
-	ok, err := c.imageRefExists(fmt.Sprintf("%s/%s", u.Host, imageName), imageTag, 0)
-	assert.Nil(t, err)
+	ok := c.imageExists(fmt.Sprintf("%s/%s", u.Host, imageName), imageTag)
 	assert.True(t, ok)
 
 	assert.Equal(t, 2, retryCounter)
+}
+
+func Test_kanikoBuilder_imageExists_noretry(t *testing.T) {
+	imageName := "gojek/merlin"
+	imageTag := "test"
+	retryCounter := 0
+
+	tagsPath := fmt.Sprintf("/v2/%s/tags/list", imageName)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v2/":
+			w.WriteHeader(http.StatusOK)
+		case tagsPath:
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"tags":["test"]}`))
+			retryCounter += 1
+		}
+	}))
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	assert.Nil(t, err)
+
+	c := &imageBuilder{}
+
+	ok := c.imageExists(fmt.Sprintf("%s/%s", u.Host, imageName), imageTag)
+	assert.True(t, ok)
+
+	assert.Equal(t, 1, retryCounter)
 }

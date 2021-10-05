@@ -10,6 +10,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/antonmedv/expr v1.8.9
 	github.com/buger/jsonparser v1.1.1
+	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/cespare/xxhash v1.1.0
 	github.com/coocood/freecache v1.1.1
 	github.com/fatih/color v1.7.0
