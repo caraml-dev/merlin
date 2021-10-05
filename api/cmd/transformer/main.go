@@ -19,7 +19,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/hystrix"
-	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
@@ -39,7 +38,6 @@ func init() {
 type AppConfig struct {
 	Server server.Options
 	Feast  feast.Options
-	Cache  cache.Options
 
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
 	LogLevel                      string `envconfig:"LOG_LEVEL"`
@@ -98,7 +96,7 @@ func main() {
 		s.PreprocessHandler = feastTransformer.Enrich
 	} else {
 		// Standard Enricher
-		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &appConfig.Feast, &appConfig.Cache, logger)
+		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &appConfig.Feast, logger)
 		compiledPipeline, err := compiler.Compile(transformerConfig)
 		if err != nil {
 			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
@@ -161,11 +159,6 @@ func initFeastTransformer(appCfg AppConfig,
 	transformerConfig *spec.StandardTransformerConfig,
 	logger *zap.Logger) (*feast.Enricher, error) {
 
-	var memoryCache cache.Cache
-	if appCfg.Feast.CacheEnabled {
-		memoryCache = cache.NewInMemoryCache(&appCfg.Cache)
-	}
-
 	compiledJSONPaths, err := feast.CompileJSONPaths(transformerConfig.TransformerConfig.Feast)
 	if err != nil {
 		return nil, err
@@ -185,7 +178,6 @@ func initFeastTransformer(appCfg AppConfig,
 		entityExtractor,
 		transformerConfig.TransformerConfig.Feast,
 		&appCfg.Feast,
-		memoryCache,
 		logger,
 	)
 

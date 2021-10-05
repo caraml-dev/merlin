@@ -5,7 +5,6 @@ import (
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 
-	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
@@ -17,7 +16,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 	}
 
 	// compile pipeline
-	compiler := NewCompiler(symbol.NewRegistry(), nil, feastOptions, &cache.Options{}, nil)
+	compiler := NewCompiler(symbol.NewRegistry(), nil, feastOptions, nil)
 	_, err := compiler.Compile(transformerConfig)
 	if err != nil {
 		return err
