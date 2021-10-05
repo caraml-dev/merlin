@@ -6,7 +6,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 )
@@ -16,13 +15,12 @@ type FeastOp struct {
 	logger         *zap.Logger
 }
 
-func NewFeastOp(feastClients feast.Clients, feastOptions *feast.Options, cache cache.Cache, entityExtractor *feast.EntityExtractor, featureTableSpecs []*spec.FeatureTable, logger *zap.Logger) Op {
+func NewFeastOp(feastClients feast.Clients, feastOptions *feast.Options, entityExtractor *feast.EntityExtractor, featureTableSpecs []*spec.FeatureTable, logger *zap.Logger) Op {
 	feastRetriever := feast.NewFeastRetriever(
 		feastClients,
 		entityExtractor,
 		featureTableSpecs,
 		feastOptions,
-		cache,
 		logger,
 	)
 

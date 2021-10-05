@@ -22,7 +22,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
 
-	"github.com/gojek/merlin/pkg/transformer/cache"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
@@ -530,10 +529,9 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 	}
 
 	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClients, &feast.Options{
-		CacheEnabled: true,
-		BatchSize:    100,
-	}, &cache.Options{
-		SizeInMB: 100,
+		CacheEnabled:  true,
+		CacheSizeInMB: 100,
+		BatchSize:     100,
 	}, logger)
 	compiledPipeline, err := compiler.Compile(&transformerConfig)
 	if err != nil {
