@@ -14,9 +14,10 @@
 
 import kfserving
 from mlflow import pyfunc
-
+from merlin.model import PYFUNC_EXTRA_ARGS_KEY, PYFUNC_MODEL_INPUT_KEY
 
 class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
+
     def __init__(self, name: str, artifact_dir: str):
         super().__init__(name)
         self.name = name
@@ -30,4 +31,8 @@ class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
         self.ready = True
 
     def predict(self, inputs: dict, **kwargs) -> dict:
-        return self._model.python_model.predict(inputs, **kwargs)
+        model_inputs = { PYFUNC_MODEL_INPUT_KEY: inputs}
+        if kwargs is not None:
+            model_inputs[PYFUNC_EXTRA_ARGS_KEY] = kwargs
+
+        return self._model.predict(model_inputs)

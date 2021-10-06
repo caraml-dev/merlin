@@ -58,6 +58,8 @@ DEFAULT_PREDICTION_JOB_DELAY = 5
 DEFAULT_PREDICTION_JOB_RETRY_DELAY = 30
 V1 = "v1"
 PREDICTION_JOB = "PredictionJob"
+PYFUNC_EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
+PYFUNC_MODEL_INPUT_KEY = "__INPUT__"
 
 
 class ModelEndpointDeploymentError(Exception):
@@ -1453,11 +1455,20 @@ class ModelVersion:
 
 
 class PyFuncModel(PythonModel):
+    
     def load_context(self, context):
         self.initialize(context.artifacts)
         self._use_kwargs_infer = True
 
-    def predict(self, model_input, **kwargs):
+    def predict(self, context,  model_input):
+        extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
+        input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
+        if extra_args is not None and (type(extra_args) is dict) :
+            return self._do_predict(input, **extra_args)
+        
+        return self._do_predict(input)
+
+    def _do_predict(self, model_input, **kwargs):
         if self._use_kwargs_infer:
             try:
                 return self.infer(model_input, **kwargs)
