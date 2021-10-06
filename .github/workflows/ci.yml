@@ -253,7 +253,7 @@ jobs:
           password: ${{ secrets.GHCR_TOKEN }}
           registry: ghcr.io
           repository: gojek/merlin-pyfunc-base
-          path: python/pyfunc-server
+          path: python
           dockerfile: python/pyfunc-server/base.Dockerfile
           tags: ${{ env.branch_name }}
 
