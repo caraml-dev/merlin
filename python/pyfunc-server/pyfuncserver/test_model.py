@@ -36,7 +36,7 @@ class NewModelImpl(mlflow.pyfunc.PythonModel):
     def predict(self, context, model_input):
         extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
         input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
-        if extra_args is not None and (type(extra_args) is dict):
+        if extra_args is not None:
             return self._do_predict(input, **extra_args)
 
         return self._do_predict(input)
@@ -108,7 +108,6 @@ class HttpErrorModel(NewModelImpl):
             status_code=model_input["status_code"],
             reason=model_input["reason"]
         )
-
 
 
 def test_model():
