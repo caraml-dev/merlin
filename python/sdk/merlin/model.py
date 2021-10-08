@@ -58,6 +58,8 @@ DEFAULT_PREDICTION_JOB_DELAY = 5
 DEFAULT_PREDICTION_JOB_RETRY_DELAY = 30
 V1 = "v1"
 PREDICTION_JOB = "PredictionJob"
+PYFUNC_EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
+PYFUNC_MODEL_INPUT_KEY = "__INPUT__"
 
 
 class ModelEndpointDeploymentError(Exception):
@@ -1453,11 +1455,35 @@ class ModelVersion:
 
 
 class PyFuncModel(PythonModel):
+    
     def load_context(self, context):
+        """
+        Override method of PythonModel `load_context`. This method load artifacts from context 
+        that can be used in predict function. This method is called by internal MLflow when an MLflow 
+        is loaded.
+
+        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
+                        can use to perform inference
+        """
         self.initialize(context.artifacts)
         self._use_kwargs_infer = True
 
-    def predict(self, model_input, **kwargs):
+    def predict(self, context,  model_input):
+        """
+        Implementation of PythonModel `predict` method. This method evaluates model input and produces model output.
+        
+        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
+                        can use to perform inference
+        :param model_input: A pyfunc-compatible input for the model to evaluate.
+        """
+        extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
+        input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
+        if extra_args is not None:
+            return self._do_predict(input, **extra_args)
+        
+        return self._do_predict(input)
+
+    def _do_predict(self, model_input, **kwargs):
         if self._use_kwargs_infer:
             try:
                 return self.infer(model_input, **kwargs)
@@ -1504,9 +1530,24 @@ class PyFuncModel(PythonModel):
 
 class PyFuncV2Model(PythonModel):
     def load_context(self, context):
+        """
+        Override method of PythonModel `load_context`. This method load artifacts from context 
+        that can be used in predict function. This method is called by internal MLflow when an MLflow 
+        is loaded.
+
+        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
+                        can use to perform inference
+        """
         self.initialize(context.artifacts)
 
     def predict(self, context, model_input):
+        """
+        Implementation of PythonModel `predict` method. This method evaluates model input and produces model output.
+        
+        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
+                        can use to perform inference
+        :param model_input: A pyfunc-compatible input for the model to evaluate.
+        """
         return self.infer(model_input)
 
     def initialize(self, artifacts: dict):

@@ -26,25 +26,34 @@ import tornado.web
 from prometheus_client import Counter, Gauge
 
 from pyfuncserver import PyFuncModel
+from merlin.model import PYFUNC_EXTRA_ARGS_KEY, PYFUNC_MODEL_INPUT_KEY
 
-
-class ModelImpl(mlflow.pyfunc.PythonModel):
+class NewModelImpl(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
         self.initialize(context.artifacts)
         self._use_kwargs_infer = True
 
-    def predict(self, model_inputs, **kwargs):
+    def predict(self, context, model_input):
+        extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
+        input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
+        if extra_args is not None:
+            return self._do_predict(input, **extra_args)
+
+        return self._do_predict(input)
+
+    def _do_predict(self, model_input, **kwargs):
         if self._use_kwargs_infer:
             try:
-                return self.infer(model_inputs, **kwargs)
+                return self.infer(model_input, **kwargs)
             except TypeError as e:
                 if "infer() got an unexpected keyword argument" in str(e):
-                    print('Fallback to the old infer() method, got TypeError exception: {}'.format(e))
+                    print(
+                        'Fallback to the old infer() method, got TypeError exception: {}'.format(e))
                     self._use_kwargs_infer = False
                 else:
                     raise e
 
-        return self.infer(model_inputs)
+        return self.infer(model_input)
 
     @abstractmethod
     def initialize(self, artifacts: dict):
@@ -70,7 +79,8 @@ class ModelImpl(mlflow.pyfunc.PythonModel):
         pass
 
 
-class EchoModel(ModelImpl):
+
+class EchoModel(NewModelImpl):
     def initialize(self, artifacts):
         self._req_count = Counter("my_req_count", "Number of incoming request")
         self._temp = Gauge("my_gauge", "Number of incoming request")
@@ -81,7 +91,7 @@ class EchoModel(ModelImpl):
         return model_input
 
 
-class HeadersModel(ModelImpl):
+class HeadersModel(NewModelImpl):
     def initialize(self, artifacts):
         pass
 
@@ -89,7 +99,7 @@ class HeadersModel(ModelImpl):
         return kwargs.get('headers', {})
 
 
-class HttpErrorModel(ModelImpl):
+class HttpErrorModel(NewModelImpl):
     def initialize(self, artifacts):
         pass
 
