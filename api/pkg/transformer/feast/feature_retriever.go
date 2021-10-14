@@ -32,9 +32,13 @@ const (
 	DefaultClientURLKey URL = "default"
 )
 
+type StorageClient interface {
+	GetOnlineFeatures(ctx context.Context, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error)
+}
+
 type (
 	URL     string
-	Clients map[URL]feast.Client
+	Clients map[URL]StorageClient
 )
 
 type FeatureRetriever interface {
@@ -235,7 +239,7 @@ func (fr *FeastRetriever) newCall(featureTableSpec *spec.FeatureTable, columns [
 	}, nil
 }
 
-func (fr *FeastRetriever) getFeastClient(url string) (feast.Client, error) {
+func (fr *FeastRetriever) getFeastClient(url string) (StorageClient, error) {
 	if url == "" {
 		return fr.feastClients[DefaultClientURLKey], nil
 	}

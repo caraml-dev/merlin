@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+option go_package = "github.com/gojek/merlin/pkg/transformer/feast";
+
+message OnlineStorage {
+  oneof storage {
+    RedisStorage redis = 1;
+  }
+}
+
+message RedisStorage {
+  string host = 1;
+  int32 port = 2;
+}
