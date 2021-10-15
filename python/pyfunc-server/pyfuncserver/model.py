@@ -21,9 +21,18 @@ MODEL_INPUT_KEY = "__INPUT__"
 
 
 class PyFuncModelVersion(Enum):
+    """
+    PyFunc model version based on the merlin-sdk and mlflow version used in PyFunc model
+    * LATEST -> using latest merlin-sdk or user doesn't specify merlin-sdk as dependency in PyFunc model
+    * OLD_PYFUNC_LATEST_MLFLOW -> using older merlin-sdk which doesn't have `predict(context, model_input)` signature,
+        using latest version of mlflow
+    * OLD_PYFUNC_OLD_MLFLOW -> using older merlin-sdk which doesn't have `predict(context, model_input)` signature,
+        using older version of mlflow
+    """
     LATEST = 'latest'
     OLD_PYFUNC_LATEST_MLFLOW = 'old_pyfunc_latest_mlflow'
     OLD_PYFUNC_OLD_MLFLOW = 'old_pyfunc_old_mlflow'
+
 
 class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
 
