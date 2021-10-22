@@ -21,13 +21,15 @@ require (
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator v9.30.0+incompatible
+	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-redis/redismock/v8 v8.0.6
 	github.com/gogo/protobuf v1.3.1
 	github.com/gojek/heimdall/v7 v7.0.2
 	github.com/gojek/merlin-pyspark-app v0.0.3
 	github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.5.2
 	github.com/google/go-containerregistry v0.0.0-20191009212737-d753c5604768
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4
@@ -51,7 +53,8 @@ require (
 	github.com/prometheus/prometheus v2.5.0+incompatible
 	github.com/robfig/cron v1.2.0
 	github.com/rs/cors v1.7.0
-	github.com/stretchr/testify v1.6.1
+	github.com/spaolacci/murmur3 v1.1.0
+	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.4.0+incompatible
 	github.com/xanzy/go-gitlab v0.31.0
@@ -60,7 +63,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
 	google.golang.org/grpc v1.31.0
-	google.golang.org/protobuf v1.26.0-rc.1
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	istio.io/api v0.0.0-20191115173247-e1a1952e5b81
