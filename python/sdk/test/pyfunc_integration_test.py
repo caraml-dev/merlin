@@ -100,7 +100,7 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth):
 def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("pyfunc-old-merlin-latest-mlflow", ModelType.PYFUNC)
+    merlin.set_model("pf-old-merlin-new-mlflow", ModelType.PYFUNC)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
@@ -135,7 +135,7 @@ def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use
 def test_pyfunc_old_merlin_old_mlflow(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("pyfunc-old-merlin-old-mlflow", ModelType.PYFUNC)
+    merlin.set_model("pf-old-merlin-mlflow", ModelType.PYFUNC)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
