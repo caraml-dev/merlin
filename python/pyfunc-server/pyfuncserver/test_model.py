@@ -26,7 +26,7 @@ import tornado.web
 from prometheus_client import Counter, Gauge
 
 from pyfuncserver import PyFuncModel
-from merlin.model import PYFUNC_EXTRA_ARGS_KEY, PYFUNC_MODEL_INPUT_KEY
+from pyfuncserver.model import EXTRA_ARGS_KEY, MODEL_INPUT_KEY
 
 class NewModelImpl(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
@@ -34,8 +34,8 @@ class NewModelImpl(mlflow.pyfunc.PythonModel):
         self._use_kwargs_infer = True
 
     def predict(self, context, model_input):
-        extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
-        input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
+        extra_args = model_input.get(EXTRA_ARGS_KEY, {})
+        input = model_input.get(MODEL_INPUT_KEY, {})
         if extra_args is not None:
             return self._do_predict(input, **extra_args)
 
@@ -78,9 +78,51 @@ class NewModelImpl(mlflow.pyfunc.PythonModel):
         """
         pass
 
+class ModelImpl(mlflow.pyfunc.PythonModel):
+    def load_context(self, context):
+        self.initialize(context.artifacts)
+        self._use_kwargs_infer = True
+
+    def predict(self, model_input, **kwargs):
+        if self._use_kwargs_infer:
+            try:
+                return self.infer(model_input, **kwargs)
+            except TypeError as e:
+                if "infer() got an unexpected keyword argument" in str(e):
+                    print(
+                        'Fallback to the old infer() method, got TypeError exception: {}'.format(e))
+                    self._use_kwargs_infer = False
+                else:
+                    raise e
+
+        return self.infer(model_input)
+
+    @abstractmethod
+    def initialize(self, artifacts: dict):
+        """
+        Implementation of PyFuncModel can specify initialization step which
+        will be called one time during model initialization.
+        :param artifacts: dictionary of artifacts passed to log_model method
+        """
+        pass
+
+    @abstractmethod
+    def infer(self, request: dict, **kwargs) -> dict:
+        """
+        Do inference
+        This method MUST be implemented by concrete implementation of
+        PyFuncModel.
+        This method accept 'request' which is the body content of incoming
+        request.
+        Implementation should return inference a json object of response.
+        :param request: Dictionary containing incoming request body content
+        :return: Dictionary containing response body
+        """
+        pass
 
 
-class EchoModel(NewModelImpl):
+
+class EchoModel(ModelImpl):
     def initialize(self, artifacts):
         self._req_count = Counter("my_req_count", "Number of incoming request")
         self._temp = Gauge("my_gauge", "Number of incoming request")
@@ -90,8 +132,25 @@ class EchoModel(NewModelImpl):
         self._temp.set(10)
         return model_input
 
+class NewEchoModel(NewModelImpl):
+    def initialize(self, artifacts):
+        self._req_count = Counter("new_my_req_count", "Number of incoming request")
+        self._temp = Gauge("new_my_gauge", "Number of incoming request")
 
-class HeadersModel(NewModelImpl):
+    def infer(self, model_input):
+        self._req_count.inc()
+        self._temp.set(10)
+        return model_input
+
+
+class HeadersModel(ModelImpl):
+    def initialize(self, artifacts):
+        pass
+
+    def infer(self, model_input, **kwargs):
+        return kwargs.get('headers', {})
+
+class NewHeadersModel(NewModelImpl):
     def initialize(self, artifacts):
         pass
 
@@ -99,7 +158,7 @@ class HeadersModel(NewModelImpl):
         return kwargs.get('headers', {})
 
 
-class HttpErrorModel(NewModelImpl):
+class HttpErrorModel(ModelImpl):
     def initialize(self, artifacts):
         pass
 
@@ -109,9 +168,22 @@ class HttpErrorModel(NewModelImpl):
             reason=model_input["reason"]
         )
 
+class NewHttpErrorModel(NewModelImpl):
+    def initialize(self, artifacts):
+        pass
 
-def test_model():
-    mlflow.pyfunc.log_model("model", python_model=EchoModel())
+    def infer(self, model_input):
+        raise tornado.web.HTTPError(
+            status_code=model_input["status_code"],
+            reason=model_input["reason"]
+        )
+
+@pytest.mark.parametrize(
+    "model",
+    [EchoModel(), NewEchoModel()]
+)
+def test_model(model):
+    mlflow.pyfunc.log_model("model", python_model=model)
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
     model = PyFuncModel("echo-model", model_path)
     model.load()
@@ -122,9 +194,12 @@ def test_model():
     outputs = model.predict(inputs)
     assert inputs == outputs
 
-
-def test_model_int():
-    mlflow.pyfunc.log_model("model", python_model=EchoModel())
+@pytest.mark.parametrize(
+    "model",
+    [EchoModel(), NewEchoModel()]
+)
+def test_model_int(model):
+    mlflow.pyfunc.log_model("model", python_model=model)
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
     env = os.environ.copy()
     mlflow.end_run()
@@ -154,8 +229,12 @@ def test_model_int():
         c.kill()
 
 
-def test_model_headers():
-    mlflow.pyfunc.log_model("model", python_model=HeadersModel())
+@pytest.mark.parametrize(
+    "model",
+    [HeadersModel(), NewHeadersModel()]
+)
+def test_model_headers(model):
+    mlflow.pyfunc.log_model("model", python_model=model)
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
     env = os.environ.copy()
     mlflow.end_run()
@@ -182,15 +261,18 @@ def test_model_headers():
 
 
 @pytest.mark.parametrize(
-    "error_core,message",
+    "error_core,message,model",
     [
-        (http.HTTPStatus.BAD_REQUEST, "invalid request"),
-        (http.HTTPStatus.NOT_FOUND, "not found"),
-        (http.HTTPStatus.INTERNAL_SERVER_ERROR, "server error"),
+        (http.HTTPStatus.BAD_REQUEST, "invalid request", HttpErrorModel()),
+        (http.HTTPStatus.NOT_FOUND, "not found", HttpErrorModel()),
+        (http.HTTPStatus.INTERNAL_SERVER_ERROR, "server error", HttpErrorModel()),
+(http.HTTPStatus.BAD_REQUEST, "invalid request", NewHttpErrorModel()),
+        (http.HTTPStatus.NOT_FOUND, "not found", NewHttpErrorModel()),
+        (http.HTTPStatus.INTERNAL_SERVER_ERROR, "server error", NewHttpErrorModel()),
     ]
 )
-def test_error_model_int(error_core, message):
-    mlflow.pyfunc.log_model("model", python_model=HttpErrorModel())
+def test_error_model_int(error_core, message, model):
+    mlflow.pyfunc.log_model("model", python_model=model)
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
     env = os.environ.copy()
     mlflow.end_run()
