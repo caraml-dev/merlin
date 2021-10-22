@@ -24,10 +24,13 @@ class PyFuncModelVersion(Enum):
     """
     PyFunc model version based on the merlin-sdk and mlflow version used in PyFunc model
     * LATEST -> using latest merlin-sdk or user doesn't specify merlin-sdk as dependency in PyFunc model
-    * OLD_PYFUNC_LATEST_MLFLOW -> using older merlin-sdk which doesn't have `predict(context, model_input)` signature,
-        using latest version of mlflow
-    * OLD_PYFUNC_OLD_MLFLOW -> using older merlin-sdk which doesn't have `predict(context, model_input)` signature,
-        using older version of mlflow
+    * OLD_PYFUNC_LATEST_MLFLOW -> using older merlin-sdk (< 0.16) which doesn't have `predict(context, model_input)` signature,
+        using latest version of mlflow (> 1.8).
+    * OLD_PYFUNC_OLD_MLFLOW -> using older merlin-sdk (< 0.16) which doesn't have `predict(context, model_input)` signature,
+        using older version of mlflow (<= 1.8)
+
+    older version of merlin-sdk, merlin-sdk < 0.16
+    older version of mlflow,  mlflow <= 1.8
     """
     LATEST = 'latest'
     OLD_PYFUNC_LATEST_MLFLOW = 'old_pyfunc_latest_mlflow'
