@@ -96,6 +96,78 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth):
     assert resp.status_code == 404
 
 
+@pytest.mark.integration
+def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("pf-old-merlin-new-mlflow", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        iris = load_iris()
+        y = iris['target']
+        X = iris['data']
+        xgb_path = train_xgboost_model(X, y)
+        sklearn_path = train_sklearn_model(X, y)
+
+        v.log_pyfunc_model(model_instance=EnsembleModel(),
+                           conda_env="test/pyfunc/env-old-merlin-latest-mlflow.yaml",
+                           code_dir=["test"],
+                           artifacts={"xgb_model": xgb_path,
+                                      "sklearn_model": sklearn_path})
+
+    endpoint = merlin.deploy(v)
+    sleep(5)
+
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()['predictions']) == len(request_json['instances'])
+
+    merlin.undeploy(v)
+    sleep(5)
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 404
+
+@pytest.mark.integration
+def test_pyfunc_old_merlin_old_mlflow(integration_test_url, project_name, use_google_oauth):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("pf-old-merlin-mlflow", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        iris = load_iris()
+        y = iris['target']
+        X = iris['data']
+        xgb_path = train_xgboost_model(X, y)
+        sklearn_path = train_sklearn_model(X, y)
+
+        v.log_pyfunc_model(model_instance=EnsembleModel(),
+                           conda_env="test/pyfunc/env-old-merlin-old-mlflow.yaml",
+                           code_dir=["test"],
+                           artifacts={"xgb_model": xgb_path,
+                                      "sklearn_model": sklearn_path})
+
+    endpoint = merlin.deploy(v)
+    sleep(5)
+
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()['predictions']) == len(request_json['instances'])
+
+    merlin.undeploy(v)
+    sleep(5)
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 404
+
+
+
 class EnvVarModel(PyFuncModel):
     def initialize(self, artifacts):
         self.env_var = {}

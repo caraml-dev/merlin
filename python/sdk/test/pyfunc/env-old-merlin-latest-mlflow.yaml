@@ -1,0 +1,11 @@
+dependencies:
+  - python=3.7
+  - pip=20.2.4
+  - pip:
+    - joblib
+    - numpy
+    - scikit-learn==0.20.3
+    - xgboost==0.82
+    - pytest
+    - pytest-xdist==1.34.0
+    - merlin-sdk==0.14.0
