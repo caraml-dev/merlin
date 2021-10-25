@@ -108,7 +108,9 @@ func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[strin
 	}
 	for featureReference, featureValue := range featureValues {
 		entityFeatureValue[featureReference] = featureValue
-		if e.spec.MaxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(e.spec.MaxAge) * time.Second).Before(time.Now()) {
+		if proto.Equal(featureValue, &types.Value{}) {
+			status[featureReference] = serving.GetOnlineFeaturesResponse_NOT_FOUND
+		} else if e.spec.MaxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(e.spec.MaxAge) * time.Second).Before(time.Now()) {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE
 		} else {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_PRESENT
@@ -120,13 +122,9 @@ func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[strin
 	}
 }
 
-func (e RedisEncoder) DecodeStoredRedisValue(sliceCmds []*redis.SliceCmd, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error) {
-	fieldValues := make([]*serving.GetOnlineFeaturesResponse_FieldValues, len(sliceCmds))
-	for index, sliceCmd := range sliceCmds {
-		encodedHashMap, err := sliceCmd.Result()
-		if err != nil {
-			return nil, err
-		}
+func (e RedisEncoder) DecodeStoredRedisValue(redisHashMaps [][]interface{}, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error) {
+	fieldValues := make([]*serving.GetOnlineFeaturesResponse_FieldValues, len(redisHashMaps))
+	for index, encodedHashMap := range redisHashMaps {
 		decodedHashMap, eventTimestamp, err := e.decodeHashMap(encodedHashMap)
 		if err != nil {
 			return nil, err
@@ -194,7 +192,15 @@ func (r RedisClient) GetOnlineFeatures(ctx context.Context, req *feast.OnlineFea
 	if err != nil {
 		return nil, err
 	}
-	response, err := r.encoder.DecodeStoredRedisValue(hmGetResults, req)
+	redisHashMaps := make([][]interface{}, len(hmGetResults))
+	for index, result := range hmGetResults {
+		redisHashMap, err := result.Result()
+		if err != nil {
+			return nil, err
+		}
+		redisHashMaps[index] = redisHashMap
+	}
+	response, err := r.encoder.DecodeStoredRedisValue(redisHashMaps, req)
 	if err != nil {
 		return nil, err
 	}
