@@ -135,7 +135,8 @@ func Test_createVirtualService(t *testing.T) {
 		want    *v1alpha3.VirtualService
 		wantErr bool
 	}{
-		{"success",
+		{
+			"success",
 			fields{
 				istioClients: map[string]istio.Client{env.Name: &mocks.Client{}},
 				db:           mockDB,
@@ -147,12 +148,12 @@ func Test_createVirtualService(t *testing.T) {
 					Name:      model1.Name,
 					Namespace: model1.Project.Name,
 					Labels: map[string]string{
-						"gojek.com/app":                model1.Name,
-						"gojek.com/orchestrator":       "merlin",
-						"gojek.com/stream":             model1.Project.Stream,
-						"gojek.com/team":               model1.Project.Team,
-						"gojek.com/environment":        "staging",
-						"gojek.com/user-labels/sample": "true",
+						"gojek.com/app":          model1.Name,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model1.Project.Stream,
+						"gojek.com/team":         model1.Project.Team,
+						"gojek.com/environment":  "staging",
+						"user-labels/sample":     "true",
 					},
 				},
 				Spec: networking.VirtualService{
@@ -180,7 +181,8 @@ func Test_createVirtualService(t *testing.T) {
 										},
 									},
 									Weight: 100,
-								}},
+								},
+							},
 							Rewrite: &networking.HTTPRewrite{
 								Uri: "/v1/models/version-1:predict",
 							},

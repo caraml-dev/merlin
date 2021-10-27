@@ -37,7 +37,7 @@ const (
 	labelAppName          = "gojek.com/app"
 	labelOrchestratorName = "gojek.com/orchestrator"
 	labelEnvironment      = "gojek.com/environment"
-	labelUsersPrefix      = "gojek.com/user-labels/%s"
+	labelUsersPrefix      = "user-labels/%s"
 
 	sparkType    = "Python"
 	sparkVersion = "2.4.5"
@@ -256,7 +256,7 @@ func toMegabyte(request string) (*string, error) {
 }
 
 func createLabel(job *models.PredictionJob) map[string]string {
-	var labels = map[string]string{
+	labels := map[string]string{
 		labelPredictionJobID: job.ID.String(),
 		labelModelID:         job.VersionModelID.String(),
 		labelModelVersionID:  job.VersionID.String(),

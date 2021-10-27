@@ -49,7 +49,7 @@ const (
 	labelAppName          = "gojek.com/app"
 	labelEnvironment      = "gojek.com/environment"
 	labelOrchestratorName = "gojek.com/orchestrator"
-	labelUsersHeading     = "gojek.com/user-labels/"
+	labelUsersHeading     = "user-labels/"
 
 	dataArgKey = "data"
 )
@@ -218,7 +218,7 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 }
 
 func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoint *models.ModelEndpoint) (*v1alpha3.VirtualService, error) {
-	var labels = map[string]string{
+	labels := map[string]string{
 		labelTeamName:         model.Project.Team,
 		labelStreamName:       model.Project.Stream,
 		labelAppName:          model.Name,

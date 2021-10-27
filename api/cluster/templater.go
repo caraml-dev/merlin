@@ -55,7 +55,7 @@ const (
 	labelAppName          = "gojek.com/app"
 	labelOrchestratorName = "gojek.com/orchestrator"
 	labelEnvironment      = "gojek.com/environment"
-	labelUsersHeading     = "gojek.com/user-labels/%s"
+	labelUsersHeading     = "user-labels/%s"
 
 	prometheusPort = "8080"
 )

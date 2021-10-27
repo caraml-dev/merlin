@@ -72,7 +72,6 @@ const (
 	labelAppName          = "gojek.com/app"
 	labelEnvironment      = "gojek.com/environment"
 	labelOrchestratorName = "gojek.com/orchestrator"
-	labelUsersHeading     = "gojek.com/user-labels/%s"
 )
 
 var (
