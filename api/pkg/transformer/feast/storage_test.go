@@ -1,8 +1,6 @@
 package feast
 
 import (
-	"context"
-	"fmt"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
@@ -17,7 +15,7 @@ func TestRedisEncoder_EncodeFeatureRequest(t *testing.T) {
 		name           string
 		want           EncodedFeatureRequest
 		req 		   *feast.OnlineFeaturesRequest
-		featureTable   *spec.FeatureTable
+		featureTables  []*spec.FeatureTable
 	}{
 		{
 			name: "multiple entities, single feature table",
@@ -37,24 +35,24 @@ func TestRedisEncoder_EncodeFeatureRequest(t *testing.T) {
 				},
 				Project:  "default",
 			},
-			featureTable: &spec.FeatureTable{
-				Project:    "default",
-				Entities:   []*spec.Entity{{
-					Name:      "driver_id",
-				}},
-				Features:   []*spec.Feature{{
-					Name:         "trips_today",
-				}},
-				TableName:  "driver_trips",
+			featureTables: []*spec.FeatureTable{
+				{
+					Project:    "default",
+					Entities:   []*spec.Entity{{
+						Name:      "driver_id",
+					}},
+					Features:   []*spec.Feature{{
+						Name:         "trips_today",
+					}},
+					TableName:  "driver_trips",
+				},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			encoder := RedisEncoder{
-				spec: tt.featureTable,
-			}
+			encoder := NewRedisEncoder(tt.featureTables)
 			encodedFeatureRequest, err := encoder.EncodeFeatureRequest(tt.req)
 			if err != nil {
 				panic(err)
@@ -72,7 +70,7 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 		want           		*feast.OnlineFeaturesResponse
 		req					*feast.OnlineFeaturesRequest
 		storedRedisValues 	[][]interface{}
-		featureTable   		*spec.FeatureTable
+		featureTables   	[]*spec.FeatureTable
 	}{
 		{
 			name:              "one present entity, one missing entity",
@@ -115,15 +113,17 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 				Project:  "default",
 			},
 			storedRedisValues: [][]interface{}{{"\x18I", "\b\xe2\f"}, {nil, nil}},
-			featureTable:      &spec.FeatureTable{
-				Project:    "default",
-				Entities:   []*spec.Entity{{
-					Name:      "driver_id",
-				}},
-				Features:   []*spec.Feature{{
-					Name:      "trips_today",
-				}},
-				TableName:  "driver_trips",
+			featureTables:     []*spec.FeatureTable{
+				{
+					Project:    "default",
+					Entities:   []*spec.Entity{{
+						Name:      "driver_id",
+					}},
+					Features:   []*spec.Feature{{
+						Name:      "trips_today",
+					}},
+					TableName:  "driver_trips",
+				},
 			},
 		},
 	}
@@ -131,9 +131,7 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			encoder := RedisEncoder{
-				spec: tt.featureTable,
-			}
+			encoder := NewRedisEncoder(tt.featureTables)
 			response, err := encoder.DecodeStoredRedisValue(tt.storedRedisValues, tt.req)
 			if err != nil {
 				panic(err)
@@ -143,56 +141,4 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 			}
 		})
 	}
-
-}
-
-
-func TestGetOnlineRequests(t *testing.T) {
-	onlineStorage := OnlineStorage{
-		Storage:       &OnlineStorage_Redis{
-			&RedisStorage{
-				Host:          "localhost",
-				Port:          31000,
-			},
-		},
-	}
-	featureTable := spec.FeatureTable{
-		Project:    "default",
-		Entities:   []*spec.Entity{{
-			Name:      "driver_id",
-			ValueType: "INT64",
-		}},
-		Features:   []*spec.Feature{{
-			Name:         "trips_today",
-			ValueType:    "INT32",
-			DefaultValue: "-1",
-		}},
-		TableName:  "driver_trips",
-		ServingUrl: "",
-		MaxAge:     0,
-	}
-
-	storageClient, err := NewDirectStorageClient(&onlineStorage, &featureTable)
-
-	if err != nil {
-		t.Errorf("error initializing client: %v", err)
-	}
-
-	features, err := storageClient.GetOnlineFeatures(context.Background(), &feast.OnlineFeaturesRequest{
-		Features: []string{"driver_trips:trips_today"},
-		Entities: []feast.Row{
-			{
-				"driver_id": feast.Int64Val(2),
-			},
-			{
-				"driver_id": feast.Int64Val(1),
-			},
-		},
-		Project:  "default",
-	})
-	if err != nil {
-		return
-	}
-
-	fmt.Println(features)
 }
