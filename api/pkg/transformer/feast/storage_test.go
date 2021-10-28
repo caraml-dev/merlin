@@ -48,6 +48,40 @@ func TestRedisEncoder_EncodeFeatureRequest(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "composite entities",
+			want: EncodedFeatureRequest{
+				EncodedEntities: []string{"\n\adefault\x12\tdriver_id\x12\x0bmerchant_id\x1a\x02 \x01\x1a\x02 \x02"},
+				EncodedFeatures: []string{"0\fþ", "_ts:driver_merchant_transactions"},
+			},
+			req:  &feast.OnlineFeaturesRequest{
+				Features: []string{"driver_merchant_transactions:total_transactions"},
+				Entities: []feast.Row{
+					{
+						"driver_id": feast.Int64Val(1),
+						"merchant_id": feast.Int64Val(2),
+					},
+				},
+				Project:  "default",
+			},
+			featureTables: []*spec.FeatureTable{
+				{
+					Project:    "default",
+					Entities:   []*spec.Entity{
+						{
+							Name:      "driver_id",
+						},
+						{
+							Name:      "merchant_id",
+						},
+					},
+					Features:   []*spec.Feature{{
+						Name:         "total_transactions",
+					}},
+					TableName:  "driver_merchant_transactions",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -123,6 +157,97 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 						Name:      "trips_today",
 					}},
 					TableName:  "driver_trips",
+				},
+			},
+		},
+		{
+			name:              "stale features",
+			want:              &feast.OnlineFeaturesResponse{
+				RawResponse: &serving.GetOnlineFeaturesResponse{
+					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+						{
+							Fields: map[string]*types.Value {
+								"driver_id": feast.Int64Val(1),
+								"driver_trips:trips_today": {},
+							},
+							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus {
+								"driver_id": serving.GetOnlineFeaturesResponse_PRESENT,
+								"driver_trips:trips_today": serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE,
+							},
+						},
+					},
+				},
+			},
+			req: &feast.OnlineFeaturesRequest{
+				Features: []string{"driver_trips:trips_today"},
+				Entities: []feast.Row{
+					{
+						"driver_id": feast.Int64Val(1),
+					},
+				},
+				Project:  "default",
+			},
+			storedRedisValues: [][]interface{}{{"\x18I", "\b\xe2\f"}},
+			featureTables:     []*spec.FeatureTable{
+				{
+					Project:    "default",
+					Entities:   []*spec.Entity{{
+						Name:      "driver_id",
+					}},
+					Features:   []*spec.Feature{{
+						Name:      "trips_today",
+					}},
+					TableName:  "driver_trips",
+					MaxAge: 1,
+				},
+			},
+		},
+		{
+			name:              "composite entity",
+			want:              &feast.OnlineFeaturesResponse{
+				RawResponse: &serving.GetOnlineFeaturesResponse{
+					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+						{
+							Fields: map[string]*types.Value {
+								"driver_id": feast.Int64Val(1),
+								"merchant_id": feast.Int64Val(2),
+								"driver_merchant_transactions:total_transactions": feast.DoubleVal(1610.0),
+							},
+							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus {
+								"driver_id": serving.GetOnlineFeaturesResponse_PRESENT,
+								"merchant_id": serving.GetOnlineFeaturesResponse_PRESENT,
+								"driver_merchant_transactions:total_transactions": serving.GetOnlineFeaturesResponse_PRESENT,
+							},
+						},
+					},
+				},
+			},
+			req: &feast.OnlineFeaturesRequest{
+				Features: []string{"driver_merchant_transactions:total_transactions"},
+				Entities: []feast.Row{
+					{
+						"driver_id": feast.Int64Val(1),
+						"merchant_id": feast.Int64Val(2),
+					},
+				},
+				Project:  "default",
+			},
+			storedRedisValues: [][]interface{}{{")\x00\x00\x00\x00\x00(\x99@", "\b\xe3\x0c"}},
+			featureTables:     []*spec.FeatureTable{
+				{
+					Project:    "default",
+					Entities:   []*spec.Entity{
+						{
+							Name:      "driver_id",
+						},
+						{
+							Name:      "merchant_id",
+						},
+					},
+					Features:   []*spec.Feature{{
+						Name:      "total_transactions",
+					}},
+					TableName:  "driver_merchant_transactions",
 				},
 			},
 		},
