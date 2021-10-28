@@ -157,6 +157,7 @@ func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[strin
 			status[featureReference] = serving.GetOnlineFeaturesResponse_NOT_FOUND
 		} else if maxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(maxAge) * time.Second).Before(time.Now()) {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE
+			entityFeatureValue[featureReference] = &types.Value{}
 		} else {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_PRESENT
 		}
