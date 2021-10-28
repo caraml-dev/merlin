@@ -66,6 +66,8 @@ export const ContainerLogsView = ({
   useEffect(
     () => {
       if (containersLoaded && params.component_type === "") {
+        console.log(params);
+        console.log(containers);
         if (
           containers.find(
             container => container.component_type === "image_builder"
@@ -77,6 +79,12 @@ export const ContainerLogsView = ({
           containers.find(container => container.component_type === "model")
         ) {
           setParams({ ...params, component_type: "model" });
+        } else if (
+          containers.find(
+            container => container.component_type === "transformer"
+          )
+        ) {
+          setParams({ ...params, component_type: "transformer" });
         }
         if (
           containers.find(
