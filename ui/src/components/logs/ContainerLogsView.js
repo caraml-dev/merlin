@@ -66,8 +66,6 @@ export const ContainerLogsView = ({
   useEffect(
     () => {
       if (containersLoaded && params.component_type === "") {
-        console.log(params);
-        console.log(containers);
         if (
           containers.find(
             container => container.component_type === "image_builder"
