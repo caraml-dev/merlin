@@ -15,17 +15,18 @@ import (
 	"github.com/spaolacci/murmur3"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"sort"
+	"strings"
 	"time"
 )
 
-func NewDirectStorageClient(storage *OnlineStorage, featureTable *spec.FeatureTable) (StorageClient, error) {
+func NewDirectStorageClient(storage *OnlineStorage, featureTables []*spec.FeatureTable) (StorageClient, error) {
 	switch storage.Storage.(type) {
 	case *OnlineStorage_Redis:
 		redisClient := redis.NewClient(&redis.Options{
 			Addr: fmt.Sprintf("%s:%d", storage.GetRedis().GetHost(), storage.GetRedis().GetPort()),
 		})
 		return RedisClient{
-			encoder: RedisEncoder{spec: featureTable},
+			encoder: NewRedisEncoder(featureTables),
 			pipeliner: redisClient.Pipeline(),
 		}, nil
 	}
@@ -38,8 +39,16 @@ type RedisClient struct {
 	pipeliner redis.Pipeliner
 }
 
+func NewRedisEncoder(featureTables []*spec.FeatureTable) RedisEncoder {
+	specs := make(map[string]*spec.FeatureTable)
+	for _, featureTable := range featureTables {
+		specs[featureTable.TableName] = featureTable
+	}
+	return RedisEncoder{specs: specs}
+}
+
 type RedisEncoder struct {
-	spec *spec.FeatureTable
+	specs map[string]*spec.FeatureTable
 }
 
 type EncodedFeatureRequest struct {
@@ -56,11 +65,15 @@ func (e RedisEncoder) EncodeFeatureRequest(req *feast.OnlineFeaturesRequest) (En
 		}
 		encodedEntities[index] = encodedEntity
 	}
-	encodedFeatures := e.encodeFeature(req.Features)
+	encodedFeatures := e.encodeFeatureReferences(req.Features)
 	return EncodedFeatureRequest{
 		EncodedEntities: encodedEntities,
 		EncodedFeatures: encodedFeatures,
 	}, nil
+}
+
+func (e RedisEncoder) getFeatureTableFromFeatureRef(ref string) string {
+	return strings.Split(ref, ":")[0]
 }
 
 func (e RedisEncoder) encodeEntity(project string, entity feast.Row) (string, error) {
@@ -86,20 +99,49 @@ func (e RedisEncoder) encodeEntity(project string, entity feast.Row) (string, er
 	return string(keyByte), nil
 }
 
-func (e RedisEncoder) encodeFeature(featureReferences []string) []string {
-	serializedFeatureWithTimestamp := make([]string, len(featureReferences) + 1)
+func (e RedisEncoder) encodeFeatureReferences(featureReferences []string) []string {
+	encodedFeatures := make([]string, len(featureReferences))
 	for index, featureReference := range featureReferences {
 		hashedFeatureReference := murmur3.Sum32([]byte(featureReference))
 		arr := make([]byte, 4)
 		binary.LittleEndian.PutUint32(arr, hashedFeatureReference)
-		serializedFeatureWithTimestamp[index] = string(arr)
+		encodedFeatures[index] = string(arr)
 	}
-	serializedFeatureWithTimestamp[len(featureReferences)] = fmt.Sprintf("_ts:%s", e.spec.TableName)
+	encodedTimestamps := e.encodeTimestamp(featureReferences)
+	serializedFeatureWithTimestamp := make([]string, len(encodedFeatures) + len(encodedTimestamps))
+	for index, encodedFeature := range encodedFeatures {
+		serializedFeatureWithTimestamp[index] = encodedFeature
+	}
+	for index, encodedTimestamp := range encodedTimestamps {
+		serializedFeatureWithTimestamp[len(encodedFeatures) + index] = encodedTimestamp
+	}
 
 	return serializedFeatureWithTimestamp
 }
 
-func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[string]*types.Value, eventTimestamp *timestamppb.Timestamp) *serving.GetOnlineFeaturesResponse_FieldValues {
+func (e RedisEncoder) encodeTimestamp(featureReferences []string) []string {
+	sortedFeatureTableSet := e.getSortedFeatureTableSet(featureReferences)
+	encodedTimestamps := make([]string, len(sortedFeatureTableSet))
+	for index, featureTable := range sortedFeatureTableSet {
+		encodedTimestamps[index] = fmt.Sprintf("_ts:%s", featureTable)
+	}
+	return encodedTimestamps
+}
+
+func (e RedisEncoder) getSortedFeatureTableSet(featureReferences []string) []string {
+	featureTableSet := make(map[string]bool)
+	sortedFeatureTables := make([]string, 0)
+	for _, featureReference := range featureReferences {
+		featureTable := e.getFeatureTableFromFeatureRef(featureReference)
+		if _, exists := featureTableSet[featureTable]; !exists {
+			sortedFeatureTables = append(sortedFeatureTables, featureTable)
+		}
+		featureTableSet[featureTable] = true
+	}
+	return sortedFeatureTables
+}
+
+func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[string]*types.Value, eventTimestamps map[string]*timestamppb.Timestamp) *serving.GetOnlineFeaturesResponse_FieldValues {
 	entityFeatureValue := make(map[string]*types.Value)
 	status := make(map[string]serving.GetOnlineFeaturesResponse_FieldStatus)
 	for entityName, entityValue := range entity {
@@ -108,9 +150,12 @@ func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[strin
 	}
 	for featureReference, featureValue := range featureValues {
 		entityFeatureValue[featureReference] = featureValue
+		featureTable := e.getFeatureTableFromFeatureRef(featureReference)
+		eventTimestamp := eventTimestamps[featureTable]
+		maxAge := e.specs[featureTable].MaxAge
 		if proto.Equal(featureValue, &types.Value{}) {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_NOT_FOUND
-		} else if e.spec.MaxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(e.spec.MaxAge) * time.Second).Before(time.Now()) {
+		} else if maxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(maxAge) * time.Second).Before(time.Now()) {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE
 		} else {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_PRESENT
@@ -125,11 +170,11 @@ func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[strin
 func (e RedisEncoder) DecodeStoredRedisValue(redisHashMaps [][]interface{}, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error) {
 	fieldValues := make([]*serving.GetOnlineFeaturesResponse_FieldValues, len(redisHashMaps))
 	for index, encodedHashMap := range redisHashMaps {
-		decodedHashMap, eventTimestamp, err := e.decodeHashMap(encodedHashMap)
+		decodedHashMap, eventTimestamps, err := e.decodeHashMap(encodedHashMap, req.Features)
 		if err != nil {
 			return nil, err
 		}
-		fieldValues[index] = e.buildFieldValues(req.Entities[index], decodedHashMap, eventTimestamp)
+		fieldValues[index] = e.buildFieldValues(req.Entities[index], decodedHashMap, eventTimestamps)
 	}
 	return &feast.OnlineFeaturesResponse{
 		RawResponse: &serving.GetOnlineFeaturesResponse{
@@ -160,20 +205,28 @@ func (e RedisEncoder) decodeEventTimestamp(encodedTimestamp interface{}) (*times
 	return &eventTimestamp, nil
 }
 
-func (e RedisEncoder) decodeHashMap(encodedHashMap []interface{}) (map[string]*types.Value, *timestamppb.Timestamp, error) {
+func (e RedisEncoder) decodeHashMap(encodedHashMap []interface{}, featureReferences []string) (map[string]*types.Value, map[string]*timestamppb.Timestamp, error) {
 	featureValues := make(map[string]*types.Value)
-	for index, encodedField := range encodedHashMap[:len(encodedHashMap) - 1] {
+	for index, encodedField := range encodedHashMap[:len(featureReferences)] {
 		featureValue, err := e.decodeFeature(encodedField)
 		if err != nil {
 			return nil, nil, err
 		}
-		featureValues[fmt.Sprintf("%s:%s", e.spec.TableName, e.spec.Features[index].Name)] = featureValue
+		featureValues[featureReferences[index]] = featureValue
 	}
-	eventTimestamp, err := e.decodeEventTimestamp(encodedHashMap[len(encodedHashMap) - 1])
-	if err != nil {
-		return nil, nil, err
+
+	eventTimestamps := make(map[string]*timestamppb.Timestamp)
+	sortedFeatureTableSet := e.getSortedFeatureTableSet(featureReferences)
+	for index, encodedTimestamp := range encodedHashMap[len(featureReferences) :] {
+		timestamp, err := e.decodeEventTimestamp(encodedTimestamp)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		eventTimestamps[sortedFeatureTableSet[index]] = timestamp
 	}
-	return featureValues, eventTimestamp, nil
+
+	return featureValues, eventTimestamps, nil
 }
 
 func (r RedisClient) GetOnlineFeatures(ctx context.Context, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error) {
