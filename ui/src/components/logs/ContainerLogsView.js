@@ -77,6 +77,12 @@ export const ContainerLogsView = ({
           containers.find(container => container.component_type === "model")
         ) {
           setParams({ ...params, component_type: "model" });
+        } else if (
+          containers.find(
+            container => container.component_type === "transformer"
+          )
+        ) {
+          setParams({ ...params, component_type: "transformer" });
         }
         if (
           containers.find(
