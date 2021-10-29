@@ -10,7 +10,6 @@ message FeatureTable {
   repeated Feature features = 3;
   string tableName = 4;
   string servingUrl = 5;
-  int64 maxAge = 6;
 }
 
 message Entity {

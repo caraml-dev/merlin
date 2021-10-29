@@ -2,12 +2,14 @@ package feast
 
 import (
 	feast "github.com/feast-dev/feast/sdk/go"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestRedisEncoder_EncodeFeatureRequest(t *testing.T) {
@@ -15,7 +17,7 @@ func TestRedisEncoder_EncodeFeatureRequest(t *testing.T) {
 		name           string
 		want           EncodedFeatureRequest
 		req 		   *feast.OnlineFeaturesRequest
-		featureTables  []*spec.FeatureTable
+		featureTables  []*core.FeatureTableSpec
 	}{
 		{
 			name: "multiple entities, single feature table",
@@ -35,16 +37,15 @@ func TestRedisEncoder_EncodeFeatureRequest(t *testing.T) {
 				},
 				Project:  "default",
 			},
-			featureTables: []*spec.FeatureTable{
+			featureTables: []*core.FeatureTableSpec{
 				{
-					Project:    "default",
-					Entities:   []*spec.Entity{{
-						Name:      "driver_id",
-					}},
-					Features:   []*spec.Feature{{
-						Name:         "trips_today",
-					}},
-					TableName:  "driver_trips",
+					Name:         "driver_trips",
+					Entities:     []string{"driver_id"},
+					Features:     []*core.FeatureSpecV2{
+						{
+							Name:      "trips_today",
+						},
+					},
 				},
 			},
 		},
@@ -64,21 +65,15 @@ func TestRedisEncoder_EncodeFeatureRequest(t *testing.T) {
 				},
 				Project:  "default",
 			},
-			featureTables: []*spec.FeatureTable{
+			featureTables: []*core.FeatureTableSpec{
 				{
-					Project:    "default",
-					Entities:   []*spec.Entity{
+					Name:         "driver_merchant_transactions",
+					Entities:     []string{"driver_id", "merchant_id"},
+					Features:     []*core.FeatureSpecV2{
 						{
-							Name:      "driver_id",
-						},
-						{
-							Name:      "merchant_id",
+							Name:      "total_transactions",
 						},
 					},
-					Features:   []*spec.Feature{{
-						Name:         "total_transactions",
-					}},
-					TableName:  "driver_merchant_transactions",
 				},
 			},
 		},
@@ -104,7 +99,7 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 		want           		*feast.OnlineFeaturesResponse
 		req					*feast.OnlineFeaturesRequest
 		storedRedisValues 	[][]interface{}
-		featureTables   	[]*spec.FeatureTable
+		featureTables   	[]*core.FeatureTableSpec
 	}{
 		{
 			name:              "one present entity, one missing entity",
@@ -147,16 +142,15 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 				Project:  "default",
 			},
 			storedRedisValues: [][]interface{}{{"\x18I", "\b\xe2\f"}, {nil, nil}},
-			featureTables:     []*spec.FeatureTable{
+			featureTables:     []*core.FeatureTableSpec{
 				{
-					Project:    "default",
-					Entities:   []*spec.Entity{{
-						Name:      "driver_id",
-					}},
-					Features:   []*spec.Feature{{
-						Name:      "trips_today",
-					}},
-					TableName:  "driver_trips",
+					Name:         "driver_trips",
+					Entities:     []string{"driver_id"},
+					Features:     []*core.FeatureSpecV2{
+						{
+							Name:      "trips_today",
+						},
+					},
 				},
 			},
 		},
@@ -188,17 +182,16 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 				Project:  "default",
 			},
 			storedRedisValues: [][]interface{}{{"\x18I", "\b\xe2\f"}},
-			featureTables:     []*spec.FeatureTable{
+			featureTables:     []*core.FeatureTableSpec{
 				{
-					Project:    "default",
-					Entities:   []*spec.Entity{{
-						Name:      "driver_id",
-					}},
-					Features:   []*spec.Feature{{
-						Name:      "trips_today",
-					}},
-					TableName:  "driver_trips",
-					MaxAge: 1,
+					Name:         "driver_trips",
+					Entities:     []string{"driver_id"},
+					Features:     []*core.FeatureSpecV2{
+						{
+							Name:      "trips_today",
+						},
+					},
+					MaxAge: durationpb.New(1 * time.Second),
 				},
 			},
 		},
@@ -233,21 +226,15 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 				Project:  "default",
 			},
 			storedRedisValues: [][]interface{}{{")\x00\x00\x00\x00\x00(\x99@", "\b\xe3\x0c"}},
-			featureTables:     []*spec.FeatureTable{
+			featureTables:     []*core.FeatureTableSpec{
 				{
-					Project:    "default",
-					Entities:   []*spec.Entity{
+					Name:         "driver_merchant_transactions",
+					Entities:     []string{"driver_id", "merchant_id"},
+					Features:     []*core.FeatureSpecV2{
 						{
-							Name:      "driver_id",
-						},
-						{
-							Name:      "merchant_id",
+							Name:      "total_transactions",
 						},
 					},
-					Features:   []*spec.Feature{{
-						Name:      "total_transactions",
-					}},
-					TableName:  "driver_merchant_transactions",
 				},
 			},
 		},

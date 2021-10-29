@@ -4,13 +4,35 @@ package merlin.transformer;
 
 option go_package = "github.com/gojek/merlin/pkg/transformer/feast";
 
+import "google/protobuf/duration.proto";
+
 message OnlineStorage {
   oneof storage {
     RedisStorage redis = 1;
+    BigTableStorage bigtable = 2;
   }
 }
 
+message BigTableStorage {
+  string feastServingUrl = 1;
+}
+
 message RedisStorage {
-  string host = 1;
-  int32 port = 2;
+  string feastServingUrl = 1;
+  string redisAddress = 2;
+  RedisOption option =3;
+}
+
+// options to be passed to the goredis client
+message RedisOption {
+  int32 maxRetries = 1;
+  google.protobuf.Duration minRetryBackoff = 2;
+  google.protobuf.Duration dialTimeout = 3;
+  google.protobuf.Duration readTimeout = 4;
+  google.protobuf.Duration writeTimeout = 5;
+  int32 poolSize = 6;
+  google.protobuf.Duration maxConnAge = 7;
+  google.protobuf.Duration poolTimeout = 8;
+  google.protobuf.Duration idleTimeout = 9;
+  google.protobuf.Duration idleCheckFrequency = 10;
 }
