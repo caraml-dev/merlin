@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/feast-dev/feast/sdk/go"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/storage"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/go-redis/redis/v8"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/golang/protobuf/proto"
 	"github.com/spaolacci/murmur3"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -19,11 +19,23 @@ import (
 	"time"
 )
 
-func NewDirectStorageClient(storage *OnlineStorage, featureTables []*spec.FeatureTable) (StorageClient, error) {
+func NewDirectStorageClient(storage *OnlineStorage, featureTables []*core.FeatureTableSpec) (StorageClient, error) {
 	switch storage.Storage.(type) {
 	case *OnlineStorage_Redis:
+		option := storage.GetRedis().GetOption()
 		redisClient := redis.NewClient(&redis.Options{
-			Addr: fmt.Sprintf("%s:%d", storage.GetRedis().GetHost(), storage.GetRedis().GetPort()),
+			Addr:               storage.GetRedis().GetRedisAddress(),
+			MaxRetries:         int(option.MaxRetries),
+			MinRetryBackoff:    option.MinRetryBackoff.AsDuration(),
+			MaxRetryBackoff:    option.MinRetryBackoff.AsDuration(),
+			DialTimeout:        option.DialTimeout.AsDuration(),
+			ReadTimeout:        option.ReadTimeout.AsDuration(),
+			WriteTimeout:       option.WriteTimeout.AsDuration(),
+			PoolSize:           int(option.PoolSize),
+			MaxConnAge:         option.MaxConnAge.AsDuration(),
+			PoolTimeout:        option.PoolTimeout.AsDuration(),
+			IdleTimeout:        option.IdleTimeout.AsDuration(),
+			IdleCheckFrequency: option.IdleCheckFrequency.AsDuration(),
 		})
 		return RedisClient{
 			encoder: NewRedisEncoder(featureTables),
@@ -39,16 +51,16 @@ type RedisClient struct {
 	pipeliner redis.Pipeliner
 }
 
-func NewRedisEncoder(featureTables []*spec.FeatureTable) RedisEncoder {
-	specs := make(map[string]*spec.FeatureTable)
+func NewRedisEncoder(featureTables []*core.FeatureTableSpec) RedisEncoder {
+	specs := make(map[string]*core.FeatureTableSpec)
 	for _, featureTable := range featureTables {
-		specs[featureTable.TableName] = featureTable
+		specs[featureTable.Name] = featureTable
 	}
 	return RedisEncoder{specs: specs}
 }
 
 type RedisEncoder struct {
-	specs map[string]*spec.FeatureTable
+	specs map[string]*core.FeatureTableSpec
 }
 
 type EncodedFeatureRequest struct {
@@ -152,7 +164,7 @@ func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[strin
 		entityFeatureValue[featureReference] = featureValue
 		featureTable := e.getFeatureTableFromFeatureRef(featureReference)
 		eventTimestamp := eventTimestamps[featureTable]
-		maxAge := e.specs[featureTable].MaxAge
+		maxAge := e.specs[featureTable].MaxAge.GetSeconds()
 		if proto.Equal(featureValue, &types.Value{}) {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_NOT_FOUND
 		} else if maxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(maxAge) * time.Second).Before(time.Now()) {

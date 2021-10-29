@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"io"
 	"log"
 	"net"
@@ -39,8 +40,9 @@ type AppConfig struct {
 	Server server.Options
 	Feast  feast.Options
 
-	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
-	LogLevel                      string `envconfig:"LOG_LEVEL"`
+	StandardTransformerConfigJSON string	`envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
+	FeatureTableSpecJsons  		  []string  `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:"false"`
+	LogLevel                      string 	`envconfig:"LOG_LEVEL"`
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
@@ -80,7 +82,16 @@ func main() {
 		logger.Fatal("Unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
-	feastServingClients, err := initFeastServingClients(appConfig.Feast, logger)
+	featureSpecs := make([]*core.FeatureTableSpec, len(appConfig.FeatureTableSpecJsons))
+	for index, specJson := range appConfig.FeatureTableSpecJsons {
+		featureSpec := &core.FeatureTableSpec{}
+		err := jsonpb.UnmarshalString(specJson, featureSpec)
+		if err != nil {
+			logger.Fatal("Unable to parse standard transformer featureTableSpecs config", zap.Error(err))
+		}
+		featureSpecs[index] = featureSpec
+	}
+	feastServingClients, err := initFeastServingClients(appConfig.Feast, featureSpecs, logger)
 	if err != nil {
 		logger.Fatal("Unable to initialize Feast Clients", zap.Error(err))
 	}
@@ -111,7 +122,7 @@ func main() {
 	s.Run()
 }
 
-func initFeastServingClients(feastOptions feast.Options, logger *zap.Logger) (feast.Clients, error) {
+func initFeastServingClients(feastOptions feast.Options, specs []*core.FeatureTableSpec, logger *zap.Logger) (feast.Clients, error) {
 	clients := feast.Clients{}
 
 	// Default Feast gRPC client. Used if user does not specify serving url
