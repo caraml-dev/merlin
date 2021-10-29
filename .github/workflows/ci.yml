@@ -365,3 +365,20 @@ jobs:
 #        run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
 #      - name: Run E2E test
 #        run: ./merlin/scripts/e2e/run-e2e.sh
+
+  release-charts:
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run chart-releaser
+        uses: stefanprodan/helm-gh-pages@v1.4.1
+        with:
+          token: "${{ secrets.GH_PAGES_TOKEN }}"
+          charts_url: https://turing-ml.github.io/charts
+          charts_dir: charts
+          owner: turing-ml
+          repository: charts
+          commit_username: ${{ github.actor }}
+          commit_email: "${{ github.actor }}@users.noreply.github.com"
+

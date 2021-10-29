@@ -5,5 +5,5 @@ dependencies:
 - name: postgresql
   repository: https://charts.helm.sh/stable
   version: 7.0.0
-digest: sha256:90b2793500ca645901cfb360cb0908c71d475f9bee44adb83cb3ac1b452ffde2
-generated: "2021-03-19T20:18:42.479909+07:00"
+digest: sha256:570dd851f331533db4a76c0ba36d33a1561a20b1104d7bd84f61b26ed536a23d
+generated: "2021-10-29T11:56:03.802139+08:00"
