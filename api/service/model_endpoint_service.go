@@ -44,13 +44,6 @@ const (
 	defaultMatchURIPrefix = "/v1/predict"
 	predictPathSuffix     = ":predict"
 
-	labelTeamName         = "gojek.com/team"
-	labelStreamName       = "gojek.com/stream"
-	labelAppName          = "gojek.com/app"
-	labelEnvironment      = "gojek.com/environment"
-	labelOrchestratorName = "gojek.com/orchestrator"
-	labelUsersHeading     = "user-labels/"
-
 	dataArgKey = "data"
 )
 
@@ -218,17 +211,14 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 }
 
 func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoint *models.ModelEndpoint) (*v1alpha3.VirtualService, error) {
-	labels := map[string]string{
-		labelTeamName:         model.Project.Team,
-		labelStreamName:       model.Project.Stream,
-		labelAppName:          model.Name,
-		labelEnvironment:      s.environment,
-		labelOrchestratorName: "merlin",
+	metadata := models.Metadata{
+		Team:        model.Project.Team,
+		Stream:      model.Project.Stream,
+		App:         model.Name,
+		Environment: s.environment,
+		Labels:      model.Project.Labels,
 	}
-
-	for _, label := range model.Project.Labels {
-		labels[labelUsersHeading+label.Key] = label.Value
-	}
+	labels := metadata.ToLabel()
 
 	vs := &v1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{

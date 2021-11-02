@@ -153,7 +153,7 @@ func Test_createVirtualService(t *testing.T) {
 						"gojek.com/stream":       model1.Project.Stream,
 						"gojek.com/team":         model1.Project.Team,
 						"gojek.com/environment":  "staging",
-						"user-labels/sample":     "true",
+						"gojek.com/sample":       "true",
 					},
 				},
 				Spec: networking.VirtualService{

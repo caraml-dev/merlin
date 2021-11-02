@@ -50,6 +50,13 @@ var (
 	modelID   = models.ID(2)
 	versionID = models.ID(3)
 
+	labelTeamName         = "gojek.com/team"
+	labelStreamName       = "gojek.com/stream"
+	labelAppName          = "gojek.com/app"
+	labelOrchestratorName = "gojek.com/orchestrator"
+	labelEnvironment      = "gojek.com/environment"
+	labelUsersPrefix      = "gojek.com/%s"
+
 	defaultLabels = map[string]string{
 		labelOrchestratorName: "merlin",
 		labelModelID:          modelID.String(),

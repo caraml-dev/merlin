@@ -32,13 +32,6 @@ const (
 	labelModelVersionID  = "model-version-id"
 	labelModelID         = "model-id"
 
-	labelTeamName         = "gojek.com/team"
-	labelStreamName       = "gojek.com/stream"
-	labelAppName          = "gojek.com/app"
-	labelOrchestratorName = "gojek.com/orchestrator"
-	labelEnvironment      = "gojek.com/environment"
-	labelUsersPrefix      = "user-labels/%s"
-
 	sparkType    = "Python"
 	sparkVersion = "2.4.5"
 	sparkMode    = "cluster"
@@ -256,22 +249,10 @@ func toMegabyte(request string) (*string, error) {
 }
 
 func createLabel(job *models.PredictionJob) map[string]string {
-	labels := map[string]string{
-		labelPredictionJobID: job.ID.String(),
-		labelModelID:         job.VersionModelID.String(),
-		labelModelVersionID:  job.VersionID.String(),
-
-		// ROC labels
-		labelOrchestratorName: "merlin",
-		labelAppName:          job.Metadata.App,
-		labelEnvironment:      job.Metadata.Environment,
-		labelStreamName:       job.Metadata.Stream,
-		labelTeamName:         job.Metadata.Team,
-	}
-
-	for _, label := range job.Metadata.Labels {
-		labels[fmt.Sprintf(labelUsersPrefix, label.Key)] = label.Value
-	}
+	labels := job.Metadata.ToLabel()
+	labels[labelPredictionJobID] = job.ID.String()
+	labels[labelModelID] = job.VersionModelID.String()
+	labels[labelModelVersionID] = job.VersionID.String()
 
 	return labels
 }

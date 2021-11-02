@@ -24,11 +24,10 @@ import (
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/service"
+	"github.com/gojek/merlin/utils"
 )
 
-var (
-	labelsCheck = regexp.MustCompile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")
-)
+var labelsCheck = regexp.MustCompile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")
 
 type VersionsController struct {
 	*AppContext
@@ -149,15 +148,11 @@ func validateLabels(labels models.KV) bool {
 			return false
 		}
 
-		lengthNameCheckResult := len(key) < 64
-		lengthValueCheckResult := len(value) < 64
-		if !(lengthNameCheckResult && lengthValueCheckResult) {
+		if err := utils.IsValidLabel(key); err != nil {
 			return false
 		}
 
-		labelNameCheckResult := labelsCheck.MatchString(key)
-		labelValueCheckResult := labelsCheck.MatchString(value)
-		if !(labelNameCheckResult && labelValueCheckResult) {
+		if err := utils.IsValidLabel(value); err != nil {
 			return false
 		}
 	}
