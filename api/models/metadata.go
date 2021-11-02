@@ -18,9 +18,28 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/gojek/merlin/mlp"
+	"github.com/gojek/merlin/utils"
 )
+
+const (
+	labelTeamName         = "gojek.com/team"
+	labelStreamName       = "gojek.com/stream"
+	labelAppName          = "gojek.com/app"
+	labelOrchestratorName = "gojek.com/orchestrator"
+	labelEnvironment      = "gojek.com/environment"
+	labelUsersPrefix      = "gojek.com/%s"
+)
+
+var reservedKeys = map[string]bool{
+	labelTeamName:         true,
+	labelStreamName:       true,
+	labelAppName:          true,
+	labelOrchestratorName: true,
+	labelEnvironment:      true,
+}
 
 type Metadata struct {
 	Team        string
@@ -41,4 +60,32 @@ func (metadata *Metadata) Scan(value interface{}) error {
 	}
 
 	return json.Unmarshal(b, &metadata)
+}
+
+func (metadata *Metadata) ToLabel() map[string]string {
+	labels := map[string]string{
+		labelOrchestratorName: "merlin",
+		labelAppName:          metadata.App,
+		labelEnvironment:      metadata.Environment,
+		labelStreamName:       metadata.Stream,
+		labelTeamName:         metadata.Team,
+	}
+
+	for _, label := range metadata.Labels {
+		key := fmt.Sprintf(labelUsersPrefix, label.Key)
+		// skip label that is trying to override reserved key
+		if _, usingReservedKeys := reservedKeys[key]; usingReservedKeys {
+			continue
+		}
+		// skip label that has invalid key name
+		if err := utils.IsValidLabel(label.Key); err != nil {
+			continue
+		}
+		// skip label that has invalid value name
+		if err := utils.IsValidLabel(label.Value); err != nil {
+			continue
+		}
+		labels[key] = label.Value
+	}
+	return labels
 }

@@ -17,7 +17,6 @@ package cluster
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
@@ -50,13 +49,6 @@ const (
 	annotationPrometheusScrapeFlag = "prometheus.io/scrape"
 	annotationPrometheusScrapePort = "prometheus.io/port"
 
-	labelTeamName         = "gojek.com/team"
-	labelStreamName       = "gojek.com/stream"
-	labelAppName          = "gojek.com/app"
-	labelOrchestratorName = "gojek.com/orchestrator"
-	labelEnvironment      = "gojek.com/environment"
-	labelUsersHeading     = "gojek.com/user-labels/%s"
-
 	prometheusPort = "8080"
 )
 
@@ -69,7 +61,7 @@ func NewKFServingResourceTemplater(standardTransformerConfig config.StandardTran
 }
 
 func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
-	labels := createLabels(modelService)
+	labels := modelService.Metadata.ToLabel()
 
 	objectMeta := metav1.ObjectMeta{
 		Name:      modelService.Name,
@@ -102,7 +94,7 @@ func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *mo
 }
 
 func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kfsv1alpha2.InferenceService, modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
-	labels := createLabels(modelService)
+	labels := modelService.Metadata.ToLabel()
 	orig.ObjectMeta.Labels = labels
 	orig.Spec.Default.Predictor = createPredictorSpec(modelService, config)
 
@@ -353,22 +345,6 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	}
 
 	return transformerSpec
-}
-
-func createLabels(modelService *models.Service) map[string]string {
-	labels := map[string]string{
-		labelTeamName:         modelService.Metadata.Team,
-		labelStreamName:       modelService.Metadata.Stream,
-		labelAppName:          modelService.Metadata.App,
-		labelOrchestratorName: "merlin",
-		labelEnvironment:      modelService.Metadata.Environment,
-	}
-
-	for _, label := range modelService.Metadata.Labels {
-		labels[fmt.Sprintf(labelUsersHeading, label.Key)] = label.Value
-	}
-
-	return labels
 }
 
 func createPredictURL(modelService *models.Service) string {
