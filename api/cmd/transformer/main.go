@@ -40,9 +40,9 @@ type AppConfig struct {
 	Server server.Options
 	Feast  feast.Options
 
-	StandardTransformerConfigJSON string	`envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
-	FeatureTableSpecJsons  		  []string  `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:"false"`
-	LogLevel                      string 	`envconfig:"LOG_LEVEL"`
+	StandardTransformerConfigJSON string   `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
+	FeatureTableSpecJsons         []string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
+	LogLevel                      string   `envconfig:"LOG_LEVEL"`
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
