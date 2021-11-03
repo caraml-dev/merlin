@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
+	"encoding/json"
 	"io"
 	"log"
 	"net"
@@ -9,6 +9,7 @@ import (
 
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/kelseyhightower/envconfig"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -40,9 +41,9 @@ type AppConfig struct {
 	Server server.Options
 	Feast  feast.Options
 
-	StandardTransformerConfigJSON string   `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
-	FeatureTableSpecJsons         []string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
-	LogLevel                      string   `envconfig:"LOG_LEVEL"`
+	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
+	FeatureTableSpecJsons         string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
+	LogLevel                      string `envconfig:"LOG_LEVEL"`
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
@@ -82,14 +83,28 @@ func main() {
 		logger.Fatal("Unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
-	featureSpecs := make([]*core.FeatureTableSpec, len(appConfig.FeatureTableSpecJsons))
-	for index, specJson := range appConfig.FeatureTableSpecJsons {
-		featureSpec := &core.FeatureTableSpec{}
-		err := jsonpb.UnmarshalString(specJson, featureSpec)
-		if err != nil {
-			logger.Fatal("Unable to parse standard transformer featureTableSpecs config", zap.Error(err))
+	featureSpecs := make([]*core.FeatureTableSpec, 0)
+	if appConfig.FeatureTableSpecJsons != "" {
+		featureTableSpecJsons := make([]map[string]interface{}, 0)
+		if err := json.Unmarshal([]byte(appConfig.FeatureTableSpecJsons), &featureTableSpecJsons); err != nil {
+			panic(err)
 		}
-		featureSpecs[index] = featureSpec
+		for _, specJson := range featureTableSpecJsons {
+			s, err := json.Marshal(specJson)
+			if err != nil {
+				panic(err)
+			}
+			featureSpec := &core.FeatureTableSpec{}
+			err = jsonpb.UnmarshalString(string(s), featureSpec)
+			if err != nil {
+				return
+			}
+
+			if err != nil {
+				logger.Fatal("Unable to parse standard transformer featureTableSpecs config", zap.Error(err))
+			}
+			featureSpecs = append(featureSpecs, featureSpec)
+		}
 	}
 	feastServingClients, err := initFeastServingClients(appConfig.Feast, featureSpecs, logger)
 	if err != nil {

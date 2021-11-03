@@ -5,6 +5,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
@@ -13,10 +17,8 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/golang/protobuf/proto"
 	"github.com/spaolacci/murmur3"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"sort"
-	"strings"
-	"time"
 )
 
 func NewDirectStorageClient(storage *OnlineStorage, featureTables []*core.FeatureTableSpec) (StorageClient, error) {
@@ -26,19 +28,42 @@ func NewDirectStorageClient(storage *OnlineStorage, featureTables []*core.Featur
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:               storage.GetRedis().GetRedisAddress(),
 			MaxRetries:         int(option.MaxRetries),
-			MinRetryBackoff:    option.MinRetryBackoff.AsDuration(),
-			MaxRetryBackoff:    option.MinRetryBackoff.AsDuration(),
-			DialTimeout:        option.DialTimeout.AsDuration(),
-			ReadTimeout:        option.ReadTimeout.AsDuration(),
-			WriteTimeout:       option.WriteTimeout.AsDuration(),
+			MinRetryBackoff:    getNullableDuration(option.MinRetryBackoff),
+			MaxRetryBackoff:    getNullableDuration(option.MinRetryBackoff),
+			DialTimeout:        getNullableDuration(option.DialTimeout),
+			ReadTimeout:        getNullableDuration(option.ReadTimeout),
+			WriteTimeout:       getNullableDuration(option.WriteTimeout),
 			PoolSize:           int(option.PoolSize),
-			MaxConnAge:         option.MaxConnAge.AsDuration(),
-			PoolTimeout:        option.PoolTimeout.AsDuration(),
-			IdleTimeout:        option.IdleTimeout.AsDuration(),
-			IdleCheckFrequency: option.IdleCheckFrequency.AsDuration(),
+			MaxConnAge:         getNullableDuration(option.MaxConnAge),
+			PoolTimeout:        getNullableDuration(option.PoolTimeout),
+			IdleTimeout:        getNullableDuration(option.IdleTimeout),
+			IdleCheckFrequency: getNullableDuration(option.IdleCheckFrequency),
 		})
 		return RedisClient{
-			encoder: NewRedisEncoder(featureTables),
+			encoder:   NewRedisEncoder(featureTables),
+			pipeliner: redisClient.Pipeline(),
+		}, nil
+	case *OnlineStorage_RedisCluster:
+		option := storage.GetRedis().GetOption()
+		if option == nil {
+			option = &RedisOption{}
+		}
+		redisClient := redis.NewClusterClient(&redis.ClusterOptions{
+			Addrs:              storage.GetRedisCluster().GetRedisAddress(),
+			MaxRetries:         int(option.MaxRetries),
+			MinRetryBackoff:    getNullableDuration(option.MinRetryBackoff),
+			MaxRetryBackoff:    getNullableDuration(option.MinRetryBackoff),
+			DialTimeout:        getNullableDuration(option.DialTimeout),
+			ReadTimeout:        getNullableDuration(option.ReadTimeout),
+			WriteTimeout:       getNullableDuration(option.WriteTimeout),
+			PoolSize:           int(option.PoolSize),
+			MaxConnAge:         getNullableDuration(option.MaxConnAge),
+			PoolTimeout:        getNullableDuration(option.PoolTimeout),
+			IdleTimeout:        getNullableDuration(option.IdleTimeout),
+			IdleCheckFrequency: getNullableDuration(option.IdleCheckFrequency),
+		})
+		return RedisClient{
+			encoder:   NewRedisEncoder(featureTables),
 			pipeliner: redisClient.Pipeline(),
 		}, nil
 	}
@@ -46,8 +71,15 @@ func NewDirectStorageClient(storage *OnlineStorage, featureTables []*core.Featur
 	return nil, errors.New("unrecognized storage option")
 }
 
+func getNullableDuration(duration *durationpb.Duration) time.Duration {
+	if duration == nil {
+		return 0
+	}
+	return duration.AsDuration()
+}
+
 type RedisClient struct {
-	encoder RedisEncoder
+	encoder   RedisEncoder
 	pipeliner redis.Pipeliner
 }
 
@@ -99,9 +131,9 @@ func (e RedisEncoder) encodeEntity(project string, entity feast.Row) (string, er
 		entityValues[indexEntityName] = entity[entityName]
 	}
 
-	key := &storage.RedisKeyV2 {
-		Project: project,
-		EntityNames: entityNames,
+	key := &storage.RedisKeyV2{
+		Project:      project,
+		EntityNames:  entityNames,
 		EntityValues: entityValues,
 	}
 	keyByte, err := proto.Marshal(key)
@@ -120,12 +152,12 @@ func (e RedisEncoder) encodeFeatureReferences(featureReferences []string) []stri
 		encodedFeatures[index] = string(arr)
 	}
 	encodedTimestamps := e.encodeTimestamp(featureReferences)
-	serializedFeatureWithTimestamp := make([]string, len(encodedFeatures) + len(encodedTimestamps))
+	serializedFeatureWithTimestamp := make([]string, len(encodedFeatures)+len(encodedTimestamps))
 	for index, encodedFeature := range encodedFeatures {
 		serializedFeatureWithTimestamp[index] = encodedFeature
 	}
 	for index, encodedTimestamp := range encodedTimestamps {
-		serializedFeatureWithTimestamp[len(encodedFeatures) + index] = encodedTimestamp
+		serializedFeatureWithTimestamp[len(encodedFeatures)+index] = encodedTimestamp
 	}
 
 	return serializedFeatureWithTimestamp
@@ -167,7 +199,7 @@ func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[strin
 		maxAge := e.specs[featureTable].MaxAge.GetSeconds()
 		if proto.Equal(featureValue, &types.Value{}) {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_NOT_FOUND
-		} else if maxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(maxAge) * time.Second).Before(time.Now()) {
+		} else if maxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(maxAge)*time.Second).Before(time.Now()) {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE
 			entityFeatureValue[featureReference] = &types.Value{}
 		} else {
@@ -175,7 +207,7 @@ func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[strin
 		}
 	}
 	return &serving.GetOnlineFeaturesResponse_FieldValues{
-		Fields: entityFeatureValue,
+		Fields:   entityFeatureValue,
 		Statuses: status,
 	}
 }
@@ -196,7 +228,7 @@ func (e RedisEncoder) DecodeStoredRedisValue(redisHashMaps [][]interface{}, req 
 	}, nil
 }
 
-func (e RedisEncoder) decodeFeature(encodedFeature interface{}) (*types.Value, error){
+func (e RedisEncoder) decodeFeature(encodedFeature interface{}) (*types.Value, error) {
 	value := types.Value{}
 	if encodedFeature != nil {
 		err := proto.Unmarshal([]byte(encodedFeature.(string)), &value)
@@ -207,7 +239,7 @@ func (e RedisEncoder) decodeFeature(encodedFeature interface{}) (*types.Value, e
 	return &value, nil
 }
 
-func (e RedisEncoder) decodeEventTimestamp(encodedTimestamp interface{}) (*timestamppb.Timestamp, error){
+func (e RedisEncoder) decodeEventTimestamp(encodedTimestamp interface{}) (*timestamppb.Timestamp, error) {
 	eventTimestamp := timestamppb.Timestamp{}
 	if encodedTimestamp != nil {
 		err := proto.Unmarshal([]byte(encodedTimestamp.(string)), &eventTimestamp)
@@ -230,7 +262,7 @@ func (e RedisEncoder) decodeHashMap(encodedHashMap []interface{}, featureReferen
 
 	eventTimestamps := make(map[string]*timestamppb.Timestamp)
 	sortedFeatureTableSet := e.getSortedFeatureTableSet(featureReferences)
-	for index, encodedTimestamp := range encodedHashMap[len(featureReferences) :] {
+	for index, encodedTimestamp := range encodedHashMap[len(featureReferences):] {
 		timestamp, err := e.decodeEventTimestamp(encodedTimestamp)
 		if err != nil {
 			return nil, nil, err
