@@ -9,7 +9,8 @@ import "google/protobuf/duration.proto";
 message OnlineStorage {
   oneof storage {
     RedisStorage redis = 1;
-    BigTableStorage bigtable = 2;
+    RedisClusterStorage redisCluster = 2;
+    BigTableStorage bigtable = 3;
   }
 }
 
@@ -20,6 +21,12 @@ message BigTableStorage {
 message RedisStorage {
   string feastServingUrl = 1;
   string redisAddress = 2;
+  RedisOption option =3;
+}
+
+message RedisClusterStorage {
+  string feastServingUrl = 1;
+  repeated string redisAddress = 2;
   RedisOption option =3;
 }
 
