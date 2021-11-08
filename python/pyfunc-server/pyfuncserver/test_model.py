@@ -142,6 +142,18 @@ class NewEchoModel(NewModelImpl):
         self._temp.set(10)
         return model_input
 
+class NonEmptyEchoModel(NewModelImpl):
+    def initialize(self, artifacts):
+        self._req_count = Counter("non_empty_my_req_count", "Number of incoming request")
+        self._temp = Gauge("non_empty_my_gauge", "Number of incoming request")
+
+    def infer(self, model_input):
+        if model_input == {}:
+            raise TypeError("Request could not be empty")
+        self._req_count.inc()
+        self._temp.set(10)
+        return model_input
+
 
 class HeadersModel(ModelImpl):
     def initialize(self, artifacts):
@@ -180,7 +192,7 @@ class NewHttpErrorModel(NewModelImpl):
 
 @pytest.mark.parametrize(
     "model",
-    [EchoModel(), NewEchoModel()]
+    [EchoModel(), NewEchoModel(), NonEmptyEchoModel()]
 )
 def test_model(model):
     mlflow.pyfunc.log_model("model", python_model=model)
@@ -196,7 +208,7 @@ def test_model(model):
 
 @pytest.mark.parametrize(
     "model",
-    [EchoModel(), NewEchoModel()]
+    [EchoModel(), NewEchoModel(), NonEmptyEchoModel()]
 )
 def test_model_int(model):
     mlflow.pyfunc.log_model("model", python_model=model)
