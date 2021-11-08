@@ -25,10 +25,8 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 			return errors.New("no feature")
 		}
 
-		if config.ServingUrl != "" {
-			if !feastOptions.IsServingURLSupported(config.ServingUrl) {
-				return errors.Errorf("serving url not supported: %s", config.ServingUrl)
-			}
+		if !feastOptions.IsFeastConfigUsingCorrectSource(config) {
+			return errors.Errorf("feast source configuration is not valid, servingURL: %s source: %s", config.ServingUrl, config.Source)
 		}
 
 		entitiesReq := &core.ListEntitiesRequest{

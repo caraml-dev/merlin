@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build unit
-
 package cluster
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
@@ -91,12 +88,7 @@ var (
 	}
 
 	standardTransformerConfig = config.StandardTransformerConfig{
-		ImageName:              "merlin-standard-transformer",
-		DefaultFeastServingURL: "serving.feast.dev:8081",
-		FeastServingURLs: config.FeastServingURLs{
-			{Host: "serving-redis.feast.dev:8081"},
-			{Host: "serving-bigtable.feast.dev:8081"},
-		},
+		ImageName:    "merlin-standard-transformer",
 		FeastCoreURL: "core.feast.dev:8081",
 		Jaeger: config.JaegerConfig{
 			AgentHost:    "localhost",
@@ -104,6 +96,14 @@ var (
 			SamplerType:  "const",
 			SamplerParam: "1",
 			Disabled:     "false",
+		},
+		FeastRedisConfig: &config.FeastRedisConfig{
+			ServingURL:     "localhost:6866",
+			RedisAddresses: []string{"10.1.1.2", "10.1.1.3"},
+			PoolSize:       5,
+		},
+		FeastBigTableConfig: &config.FeastBigTableConfig{
+			ServingURL: "localhost:6867",
 		},
 	}
 )
@@ -823,10 +823,13 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
-										{Name: transformer.DefaultFeastServingURLEnvName, Value: standardTransformerConfig.DefaultFeastServingURL},
 										{
-											Name:  transformer.FeastServingURLsEnvName,
-											Value: standardTransformerConfig.FeastServingURLs[0].Host + "," + standardTransformerConfig.FeastServingURLs[1].Host,
+											Name:  transformer.DefaultFeastSource,
+											Value: standardTransformerConfig.DefaultFeastSource.String(),
+										},
+										{
+											Name:  transformer.FeastStorageConfigs,
+											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867"}}}`,
 										},
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
@@ -1775,8 +1778,11 @@ func TestCreateTransformerSpec(t *testing.T) {
 							{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
 							{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 							{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
-							{Name: transformer.DefaultFeastServingURLEnvName, Value: standardTransformerConfig.DefaultFeastServingURL},
-							{Name: transformer.FeastServingURLsEnvName, Value: strings.Join(standardTransformerConfig.FeastServingURLs.URLs(), ",")},
+							{Name: transformer.DefaultFeastSource, Value: standardTransformerConfig.DefaultFeastSource.String()},
+							{
+								Name:  transformer.FeastStorageConfigs,
+								Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867"}}}`,
+							},
 							{Name: envTransformerPort, Value: defaultTransformerPort},
 							{Name: envTransformerModelName, Value: "test-1"},
 							{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},

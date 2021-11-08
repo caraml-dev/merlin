@@ -36,6 +36,7 @@ import (
 	"github.com/gojek/merlin/mlflow"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	internalValidator "github.com/gojek/merlin/pkg/validator"
 	"github.com/gojek/merlin/service"
 )
 
@@ -107,7 +108,7 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 				}
 
 				if err := validate.Struct(body); err != nil {
-					s := err.(validator.ValidationErrors)[0].Translate(en)
+					s := err.(validator.ValidationErrors)[0].Translate(internalValidator.EN)
 					return BadRequest(s)
 				}
 			}
@@ -130,7 +131,7 @@ type RawRoutes struct {
 }
 
 func NewRouter(appCtx AppContext) *mux.Router {
-	validate := NewValidator()
+	validate := internalValidator.NewValidator()
 	environmentController := EnvironmentController{&appCtx}
 	projectsController := ProjectsController{&appCtx}
 	modelsController := ModelsController{&appCtx}

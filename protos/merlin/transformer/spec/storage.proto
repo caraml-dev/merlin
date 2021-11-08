@@ -2,15 +2,21 @@ syntax = "proto3";
 
 package merlin.transformer;
 
-option go_package = "github.com/gojek/merlin/pkg/transformer/feast";
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
 import "google/protobuf/duration.proto";
 
+enum ServingType {
+  FEAST_GRPC = 0;
+  DIRECT_STORAGE = 1;
+}
+
 message OnlineStorage {
+  ServingType servingType = 1;
   oneof storage {
-    RedisStorage redis = 1;
-    RedisClusterStorage redisCluster = 2;
-    BigTableStorage bigtable = 3;
+    RedisStorage redis = 2;
+    RedisClusterStorage redisCluster = 3;
+    BigTableStorage bigtable = 4;
   }
 }
 

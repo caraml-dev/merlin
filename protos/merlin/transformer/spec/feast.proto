@@ -4,12 +4,20 @@ package merlin.transformer;
 
 option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
+import "google/protobuf/duration.proto";
+
+enum ServingSource {
+  UNKNOWN = 0;
+  REDIS = 1;
+  BIGTABLE = 2;
+}
 message FeatureTable {
   string project = 1;
   repeated Entity entities = 2;
   repeated Feature features = 3;
   string tableName = 4;
   string servingUrl = 5;
+  ServingSource source = 6;
 }
 
 message Entity {
@@ -26,4 +34,11 @@ message Feature {
   string name = 1;
   string valueType = 2;
   string defaultValue = 3;
+}
+
+
+message FeatureTableMetadata {
+  string name = 1;
+  string project = 2;
+  google.protobuf.Duration maxAge = 3;
 }

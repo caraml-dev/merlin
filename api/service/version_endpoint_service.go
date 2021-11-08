@@ -15,8 +15,12 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 
 	"github.com/gojek/merlin/cluster"
@@ -24,6 +28,9 @@ import (
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/imagebuilder"
+	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/gojek/merlin/pkg/transformer/feast"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/queue/work"
 	"github.com/gojek/merlin/storage"
@@ -41,37 +48,43 @@ type EndpointsService interface {
 const defaultWorkers = 1
 
 type EndpointServiceParams struct {
-	ClusterControllers   map[string]cluster.Controller
-	ImageBuilder         imagebuilder.ImageBuilder
-	Storage              storage.VersionEndpointStorage
-	DeploymentStorage    storage.DeploymentStorage
-	Environment          string
-	MonitoringConfig     config.MonitoringConfig
-	LoggerDestinationURL string
-	JobProducer          queue.Producer
+	ClusterControllers        map[string]cluster.Controller
+	ImageBuilder              imagebuilder.ImageBuilder
+	Storage                   storage.VersionEndpointStorage
+	DeploymentStorage         storage.DeploymentStorage
+	Environment               string
+	MonitoringConfig          config.MonitoringConfig
+	LoggerDestinationURL      string
+	JobProducer               queue.Producer
+	FeastCoreClient           core.CoreServiceClient
+	StandardTransformerConfig config.StandardTransformerConfig
 }
 
 type endpointService struct {
-	clusterControllers   map[string]cluster.Controller
-	imageBuilder         imagebuilder.ImageBuilder
-	storage              storage.VersionEndpointStorage
-	deploymentStorage    storage.DeploymentStorage
-	environment          string
-	monitoringConfig     config.MonitoringConfig
-	loggerDestinationURL string
-	jobProducer          queue.Producer
+	clusterControllers        map[string]cluster.Controller
+	imageBuilder              imagebuilder.ImageBuilder
+	storage                   storage.VersionEndpointStorage
+	deploymentStorage         storage.DeploymentStorage
+	environment               string
+	monitoringConfig          config.MonitoringConfig
+	loggerDestinationURL      string
+	jobProducer               queue.Producer
+	feastCoreClient           core.CoreServiceClient
+	standardTransformerConfig config.StandardTransformerConfig
 }
 
 func NewEndpointService(params EndpointServiceParams) EndpointsService {
 	return &endpointService{
-		clusterControllers:   params.ClusterControllers,
-		imageBuilder:         params.ImageBuilder,
-		storage:              params.Storage,
-		deploymentStorage:    params.DeploymentStorage,
-		environment:          params.Environment,
-		monitoringConfig:     params.MonitoringConfig,
-		loggerDestinationURL: params.LoggerDestinationURL,
-		jobProducer:          params.JobProducer,
+		clusterControllers:        params.ClusterControllers,
+		imageBuilder:              params.ImageBuilder,
+		storage:                   params.Storage,
+		deploymentStorage:         params.DeploymentStorage,
+		environment:               params.Environment,
+		monitoringConfig:          params.MonitoringConfig,
+		loggerDestinationURL:      params.LoggerDestinationURL,
+		jobProducer:               params.JobProducer,
+		feastCoreClient:           params.FeastCoreClient,
+		standardTransformerConfig: params.StandardTransformerConfig,
 	}
 }
 
@@ -89,7 +102,6 @@ func (k *endpointService) FindByID(uuid uuid.UUID) (*models.VersionEndpoint, err
 }
 
 func (k *endpointService) DeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, newEndpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
-
 	endpoint, _ := version.GetEndpointByEnvironmentName(environment.Name)
 	if endpoint == nil {
 		endpoint = models.NewVersionEndpoint(environment, model.Project, model, version, k.monitoringConfig)
@@ -112,8 +124,17 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 			newEndpoint.Transformer.TransformerType = models.CustomTransformerType
 		}
 
+		if newEndpoint.Transformer.TransformerType == models.StandardTransformerType {
+			updatedStandardTransformer, err := k.reconfigureStandardTransformer(newEndpoint.Transformer)
+			if err != nil {
+				return nil, err
+			}
+			endpoint.Transformer = updatedStandardTransformer
+		}
+
 		endpoint.Transformer = newEndpoint.Transformer
 		endpoint.Transformer.VersionEndpointID = endpoint.ID
+
 	}
 
 	if newEndpoint.Logger != nil {
@@ -180,6 +201,76 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 	}
 
 	return endpoint, nil
+}
+
+func (k *endpointService) reconfigureStandardTransformer(standardTransformer *models.Transformer) (*models.Transformer, error) {
+	envVars := standardTransformer.EnvVars
+	envVarsMap := envVars.ToMap()
+	stdTransformerConfigString := envVarsMap[transformer.StandardTransformerConfigEnvName]
+	stdTransformerConfig := &spec.StandardTransformerConfig{}
+	err := jsonpb.UnmarshalString(stdTransformerConfigString, stdTransformerConfig)
+	if err != nil {
+		return nil, err
+	}
+	// add feature table metadata
+	standardTransformer, err = k.addFeatureTableMetadata(standardTransformer, stdTransformerConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// modify standard transformer feature table source for backward compatibility
+	standardTransformer, err = k.updateFeatureTableSource(standardTransformer, stdTransformerConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return standardTransformer, nil
+}
+
+func (k *endpointService) updateFeatureTableSource(standardTransformer *models.Transformer, standardTransformerConfig *spec.StandardTransformerConfig) (*models.Transformer, error) {
+	sourceFromServingURL := make(map[string]spec.ServingSource)
+	if bigTableCfg := k.standardTransformerConfig.FeastBigTableConfig; bigTableCfg != nil {
+		sourceFromServingURL[bigTableCfg.ServingURL] = spec.ServingSource_BIGTABLE
+	}
+	if redisCfg := k.standardTransformerConfig.FeastRedisConfig; redisCfg != nil {
+		sourceFromServingURL[redisCfg.ServingURL] = spec.ServingSource_REDIS
+	}
+
+	feast.UpdateFeatureTableSource(standardTransformerConfig, sourceFromServingURL, k.standardTransformerConfig.DefaultFeastSource)
+
+	marshaler := jsonpb.Marshaler{}
+	transformerCfgString, err := marshaler.MarshalToString(standardTransformerConfig)
+	if err != nil {
+		return nil, err
+	}
+	envVars := standardTransformer.EnvVars
+	models.MergeEnvVars(envVars, models.EnvVars{
+		{
+			Name:  transformer.StandardTransformerConfigEnvName,
+			Value: transformerCfgString,
+		},
+	})
+	standardTransformer.EnvVars = envVars
+	return standardTransformer, nil
+}
+
+func (k *endpointService) addFeatureTableMetadata(standardTransformer *models.Transformer, standardTransformerConfig *spec.StandardTransformerConfig) (*models.Transformer, error) {
+	featureTableSpecs, err := feast.GetAllFeatureTableMetadata(context.TODO(), k.feastCoreClient, standardTransformerConfig)
+	if err != nil {
+		return nil, err
+	}
+	// early return if feature table spec is empty
+	if len(featureTableSpecs) == 0 {
+		return standardTransformer, nil
+	}
+	featureTableSpecsJSON, err := json.Marshal(featureTableSpecs)
+	if err != nil {
+		return nil, err
+	}
+
+	envVars := append(standardTransformer.EnvVars, models.EnvVar{Name: transformer.FeastFeatureTableSpecsJSON, Value: string(featureTableSpecsJSON)})
+	standardTransformer.EnvVars = envVars
+	return standardTransformer, nil
 }
 
 func (k *endpointService) UndeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {

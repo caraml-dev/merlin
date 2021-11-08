@@ -21,6 +21,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 )
@@ -191,21 +192,24 @@ type MlpAPIConfig struct {
 }
 
 type StandardTransformerConfig struct {
-	ImageName              string           `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
-	DefaultFeastServingURL string           `envconfig:"DEFAULT_FEAST_SERVING_URL" required:"true"`
-	FeastServingURLs       FeastServingURLs `envconfig:"FEAST_SERVING_URLS" required:"true"`
-	FeastCoreURL           string           `envconfig:"FEAST_CORE_URL" required:"true"`
-	FeastCoreAuthAudience  string           `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
-	EnableAuth             bool             `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
-	Jaeger                 JaegerConfig
+	ImageName             string               `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
+	FeastServingURLs      FeastServingURLs     `envconfig:"FEAST_SERVING_URLS" required:"true"`
+	FeastCoreURL          string               `envconfig:"FEAST_CORE_URL" required:"true"`
+	FeastCoreAuthAudience string               `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
+	EnableAuth            bool                 `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
+	FeastRedisConfig      *FeastRedisConfig    `envconfig:"FEAST_REDIS_CONFIG"`
+	FeastBigTableConfig   *FeastBigTableConfig `envconfig:"FEAST_BIG_TABLE_CONFIG" required:"true"`
+	DefaultFeastSource    spec.ServingSource   `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
+	Jaeger                JaegerConfig
 }
 
 type FeastServingURLs []FeastServingURL
 
 type FeastServingURL struct {
-	Host  string `json:"host"`
-	Label string `json:"label"`
-	Icon  string `json:"icon"`
+	Host       string `json:"host"`
+	Label      string `json:"label"`
+	Icon       string `json:"icon"`
+	SourceType string `json:"source_type"`
 }
 
 func (u *FeastServingURLs) Decode(value string) error {

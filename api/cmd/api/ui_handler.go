@@ -21,9 +21,9 @@ type uiEnvHandler struct {
 	DockerRegistries  string                `json:"REACT_APP_DOCKER_REGISTRIES,omitempty"`
 	MaxAllowedReplica int                   `json:"REACT_APP_MAX_ALLOWED_REPLICA,omitempty"`
 
-	DefaultFeastServingURL string                  `json:"REACT_APP_DEFAULT_FEAST_SERVING_URL,omitempty"`
-	FeastServingURLs       config.FeastServingURLs `json:"REACT_APP_FEAST_SERVING_URLS,omitempty"`
-	FeastCoreURL           string                  `json:"REACT_APP_FEAST_CORE_API,omitempty"`
+	DefaultFeastServingSource string                  `json:"REACT_APP_DEFAULT_FEAST_SOURCE,omitempty"`
+	FeastServingURLs          config.FeastServingURLs `json:"REACT_APP_FEAST_SERVING_URLS,omitempty"`
+	FeastCoreURL              string                  `json:"REACT_APP_FEAST_CORE_API,omitempty"`
 
 	MonitoringEnabled              bool   `json:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
 	MonitoringPredictionJobBaseURL string `json:"REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"`

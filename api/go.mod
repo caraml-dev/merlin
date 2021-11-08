@@ -22,7 +22,6 @@ require (
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator v9.30.0+incompatible
 	github.com/go-redis/redis/v8 v8.11.4
-	github.com/go-redis/redismock/v8 v8.0.6
 	github.com/gogo/protobuf v1.3.1
 	github.com/gojek/heimdall/v7 v7.0.2
 	github.com/gojek/merlin-pyspark-app v0.0.3

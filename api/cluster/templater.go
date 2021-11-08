@@ -26,6 +26,9 @@ import (
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
 	transformerpkg "github.com/gojek/merlin/pkg/transformer"
+
+	"github.com/gojek/merlin/pkg/transformer/feast"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/utils"
 )
 
@@ -263,37 +266,8 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 
 	envVars := transformer.EnvVars
 	if transformer.TransformerType == models.StandardTransformerType {
-		// compact standard transformer config
-		envVarsMap := envVars.ToMap()
-		standardTransformerConfig := envVarsMap[transformerpkg.StandardTransformerConfigEnvName]
-		if standardTransformerConfig != "" {
-			compactedfJsonBuffer := new(bytes.Buffer)
-			if err := json.Compact(compactedfJsonBuffer, []byte(standardTransformerConfig)); err == nil {
-				models.MergeEnvVars(envVars, models.EnvVars{
-					{
-						Name:  transformerpkg.StandardTransformerConfigEnvName,
-						Value: compactedfJsonBuffer.String(),
-					},
-				})
-			}
-		}
 		transformer.Image = t.standardTransformerConfig.ImageName
-
-		feastServingURLs := t.standardTransformerConfig.FeastServingURLs.URLs()
-
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.DefaultFeastServingURLEnvName, Value: t.standardTransformerConfig.DefaultFeastServingURL})
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastServingURLsEnvName, Value: strings.Join(feastServingURLs, ",")})
-
-		jaegerCfg := t.standardTransformerConfig.Jaeger
-		jaegerEnvVars := []models.EnvVar{
-			{Name: transformerpkg.JaegerAgentHost, Value: jaegerCfg.AgentHost},
-			{Name: transformerpkg.JaegerAgentPort, Value: jaegerCfg.AgentPort},
-			{Name: transformerpkg.JaegerSamplerParam, Value: jaegerCfg.SamplerParam},
-			{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType},
-			{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
-		}
-		// We want Jaeger's env vars to be on the first order so these values could be overriden by users.
-		envVars = append(jaegerEnvVars, envVars...)
+		envVars = t.enrichStandardTransformerEnvVars(envVars)
 	}
 
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
@@ -345,6 +319,50 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	}
 
 	return transformerSpec
+}
+
+func (t *KFServingResourceTemplater) enrichStandardTransformerEnvVars(envVars models.EnvVars) models.EnvVars {
+	// compact standard transformer config
+	envVarsMap := envVars.ToMap()
+	standardTransformerConfig := envVarsMap[transformerpkg.StandardTransformerConfigEnvName]
+	if standardTransformerConfig != "" {
+		compactedfJsonBuffer := new(bytes.Buffer)
+		if err := json.Compact(compactedfJsonBuffer, []byte(standardTransformerConfig)); err == nil {
+			models.MergeEnvVars(envVars, models.EnvVars{
+				{
+					Name:  transformerpkg.StandardTransformerConfigEnvName,
+					Value: compactedfJsonBuffer.String(),
+				},
+			})
+		}
+	}
+
+	envVars = append(envVars, models.EnvVar{Name: transformerpkg.DefaultFeastSource, Value: t.standardTransformerConfig.DefaultFeastSource.String()})
+
+	// adding feast storage config env variable
+	feastStorageConfig := feast.FeastStorageConfig{}
+	if t.standardTransformerConfig.FeastRedisConfig != nil {
+		feastStorageConfig[spec.ServingSource_REDIS] = t.standardTransformerConfig.FeastRedisConfig.ToFeastStorage()
+	}
+	if t.standardTransformerConfig.FeastBigTableConfig != nil {
+		feastStorageConfig[spec.ServingSource_BIGTABLE] = t.standardTransformerConfig.FeastBigTableConfig.ToFeastStorage()
+	}
+
+	if feastStorageConfigJsonByte, err := json.Marshal(feastStorageConfig); err == nil {
+		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
+	}
+
+	jaegerCfg := t.standardTransformerConfig.Jaeger
+	jaegerEnvVars := []models.EnvVar{
+		{Name: transformerpkg.JaegerAgentHost, Value: jaegerCfg.AgentHost},
+		{Name: transformerpkg.JaegerAgentPort, Value: jaegerCfg.AgentPort},
+		{Name: transformerpkg.JaegerSamplerParam, Value: jaegerCfg.SamplerParam},
+		{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType},
+		{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
+	}
+	// We want Jaeger's env vars to be on the first order so these values could be overriden by users.
+	envVars = append(jaegerEnvVars, envVars...)
+	return envVars
 }
 
 func createPredictURL(modelService *models.Service) string {

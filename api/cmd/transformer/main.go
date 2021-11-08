@@ -4,12 +4,9 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"net"
-	"strconv"
+	"time"
 
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
-	feastSdk "github.com/feast-dev/feast/sdk/go"
-	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/kelseyhightower/envconfig"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -19,6 +16,7 @@ import (
 	jcfg "github.com/uber/jaeger-client-go/config"
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/feast"
@@ -44,9 +42,17 @@ type AppConfig struct {
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
 	FeatureTableSpecJsons         string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
 	LogLevel                      string `envconfig:"LOG_LEVEL"`
+	RedisOverwriteConfig          RedisOverwriteConfig
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
+}
+
+type RedisOverwriteConfig struct {
+	RedisDirectStorageEnabled *bool          `envconfig:"FEAST_REDIS_DIRECT_STORAGE_ENABLED"`
+	PoolSize                  *int32         `envconfig:"FEAST_REDIS_POOL_SIZE"`
+	ReadTimeout               *time.Duration `envconfig:"FEAST_REDIS_READ_TIMEOUT"`
+	WriteTimeout              *time.Duration `envconfig:"FEAST_REDIS_WRITE_TIMEOUT"`
 }
 
 // Trick GC frequency based on this https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap-26c2462549a2/
@@ -83,7 +89,7 @@ func main() {
 		logger.Fatal("Unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
-	featureSpecs := make([]*core.FeatureTableSpec, 0)
+	featureSpecs := make([]*spec.FeatureTableMetadata, 0)
 	if appConfig.FeatureTableSpecJsons != "" {
 		featureTableSpecJsons := make([]map[string]interface{}, 0)
 		if err := json.Unmarshal([]byte(appConfig.FeatureTableSpecJsons), &featureTableSpecJsons); err != nil {
@@ -94,7 +100,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			featureSpec := &core.FeatureTableSpec{}
+			featureSpec := &spec.FeatureTableMetadata{}
 			err = jsonpb.UnmarshalString(string(s), featureSpec)
 			if err != nil {
 				return
@@ -106,7 +112,11 @@ func main() {
 			featureSpecs = append(featureSpecs, featureSpec)
 		}
 	}
-	feastServingClients, err := initFeastServingClients(appConfig.Feast, featureSpecs, logger)
+	feastSources := feast.GetFeastServingSources(transformerConfig)
+	feastOpts := overwriteFeastOptionsConfig(appConfig)
+	logger.Info("feast options", zap.Any("val", feastOpts))
+
+	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureSpecs, feastSources, logger)
 	if err != nil {
 		logger.Fatal("Unable to initialize Feast Clients", zap.Error(err))
 	}
@@ -122,7 +132,7 @@ func main() {
 		s.PreprocessHandler = feastTransformer.Enrich
 	} else {
 		// Standard Enricher
-		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &appConfig.Feast, logger)
+		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger)
 		compiledPipeline, err := compiler.Compile(transformerConfig)
 		if err != nil {
 			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
@@ -137,47 +147,44 @@ func main() {
 	s.Run()
 }
 
-func initFeastServingClients(feastOptions feast.Options, specs []*core.FeatureTableSpec, logger *zap.Logger) (feast.Clients, error) {
-	clients := feast.Clients{}
-
-	// Default Feast gRPC client. Used if user does not specify serving url
-	// on standard transformer config.
-	client, err := newFeastGrpcClient(feastOptions.DefaultServingURL)
-	if err != nil {
-		return nil, err
+func getServingType(userEnableDirectStorage *bool, currentServingType spec.ServingType) spec.ServingType {
+	servingType := currentServingType
+	servingTypeMap := map[bool]spec.ServingType{true: spec.ServingType_DIRECT_STORAGE, false: spec.ServingType_FEAST_GRPC}
+	if userEnableDirectStorage != nil {
+		servingType = servingTypeMap[*userEnableDirectStorage]
 	}
-	clients[feast.URL(feast.DefaultClientURLKey)] = client
-	logger.Info("Default Feast gRPC client initialized", zap.String("url", feastOptions.DefaultServingURL))
-
-	for _, url := range feastOptions.ServingURLs {
-		client, err := newFeastGrpcClient(url)
-		if err != nil {
-			return nil, err
-		}
-		clients[feast.URL(url)] = client
-		logger.Info("Feast gRPC client initialized", zap.String("url", url))
-	}
-
-	return clients, nil
+	return servingType
 }
 
-func newFeastGrpcClient(url string) (*feastSdk.GrpcClient, error) {
-	host, port, err := net.SplitHostPort(url)
-	if err != nil {
-		return nil, errors.Errorf("Unable to parse Feast Serving host (%s): %s", url, err)
-	}
+func overwriteFeastOptionsConfig(appConfig AppConfig) feast.Options {
+	feastOptions := appConfig.Feast
+	redisOverwriteCfg := appConfig.RedisOverwriteConfig
 
-	portInt, err := strconv.Atoi(port)
-	if err != nil {
-		return nil, errors.Errorf("Unable to parse Feast Serving port (%s): %s", url, err)
+	for _, storage := range feastOptions.StorageConfigs {
+		switch storage.Storage.(type) {
+		case *spec.OnlineStorage_Redis:
+			storage.ServingType = getServingType(redisOverwriteCfg.RedisDirectStorageEnabled, storage.ServingType)
+			redisStorage := storage.GetRedis()
+			overwriteRedisOption(redisStorage.Option, redisOverwriteCfg)
+		case *spec.OnlineStorage_RedisCluster:
+			storage.ServingType = getServingType(redisOverwriteCfg.RedisDirectStorageEnabled, storage.ServingType)
+			redisClusterStorage := storage.GetRedisCluster()
+			overwriteRedisOption(redisClusterStorage.Option, redisOverwriteCfg)
+		}
 	}
+	return feastOptions
+}
 
-	client, err := feastSdk.NewGrpcClient(host, portInt)
-	if err != nil {
-		return nil, errors.Errorf("Unable to initialize a Feast gRPC client: %s", err)
+func overwriteRedisOption(opts *spec.RedisOption, redisOverwriteConfig RedisOverwriteConfig) {
+	if redisOverwriteConfig.PoolSize != nil {
+		opts.PoolSize = *redisOverwriteConfig.PoolSize
 	}
-
-	return client, nil
+	if redisOverwriteConfig.ReadTimeout != nil {
+		opts.ReadTimeout = durationpb.New(*redisOverwriteConfig.ReadTimeout)
+	}
+	if redisOverwriteConfig.WriteTimeout != nil {
+		opts.WriteTimeout = durationpb.New(*redisOverwriteConfig.WriteTimeout)
+	}
 }
 
 func initFeastTransformer(appCfg AppConfig,

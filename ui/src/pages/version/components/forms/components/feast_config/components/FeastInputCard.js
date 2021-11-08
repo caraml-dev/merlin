@@ -100,7 +100,8 @@ export const FeastInputCard = ({
             fullWidth>
             <FeastServingUrlSelect
               servingUrl={table.servingUrl}
-              onChange={value => onChange("servingUrl", value)}
+              servingSource={table.source}
+              onChange={onChange}
               isInvalid={!!get(errors, "servingUrl")}
             />
           </EuiFormRow>
