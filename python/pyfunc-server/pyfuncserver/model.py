@@ -66,7 +66,7 @@ class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
                 else:
                     raise Exception("no compatible predict() found")
             else:
-                raise e
+                return PyFuncModelVersion.LATEST
         except Exception:
             return PyFuncModelVersion.LATEST
 
