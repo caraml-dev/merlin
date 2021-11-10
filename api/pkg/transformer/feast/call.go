@@ -22,7 +22,7 @@ type call struct {
 	entitySet        map[string]bool
 	defaultValues    defaultValues
 
-	feastClient feast.Client
+	feastClient StorageClient
 	feastURL    string
 
 	logger *zap.Logger
