@@ -162,7 +162,7 @@ spec:
           - name: FEAST_BIG_TABLE_CONFIG
             value: {{ .Values.merlin.transformer.feast.bigtableStorage | toJson | quote }}
           - name: DEFAULT_FEAST_SOURCE
-            value: BIGTABLE
+            value: {{ .Values.merlin.transformer.feast.defaultFeastSource}}
           - name: FEAST_CORE_URL
             value: "{{ .Values.merlin.transformer.feast.coreURL }}"
           - name: FEAST_CORE_AUTH_AUDIENCE

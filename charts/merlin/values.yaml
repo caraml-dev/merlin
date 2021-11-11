@@ -130,6 +130,7 @@ merlin:
         write_timeout: "1s"
       bigtableStorage:
         serving_url: "online-serving-bigtable.feast.dev"
+      defaultFeastSource: BIGTABLE
       coreURL: core.feast.dev
       coreAuthAudience: core.feast.dev
       authEnabled: false
