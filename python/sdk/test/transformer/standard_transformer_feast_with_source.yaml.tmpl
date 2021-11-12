@@ -13,7 +13,6 @@ transformerConfig:
       - feast:
           - tableName: driver_redis_feature_table
             project: merlin
-            servingUrl: $feast_serving_redis_url
             entities:
               - name: merlin_test_driver_id
                 valueType: STRING
@@ -25,6 +24,7 @@ transformerConfig:
               - name: merlin_test_redis_driver_features:cancellation_rate
                 valueType: DOUBLE
                 defaultValue: "0.0"
+            source: REDIS
           - tableName: driver_bigtable_feature_table
             project: merlin
             servingUrl: $feast_serving_bigtable_url
