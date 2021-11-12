@@ -15,9 +15,11 @@
 import kfserving
 from mlflow import pyfunc
 from enum import Enum
+import inspect
 
 EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
 MODEL_INPUT_KEY = "__INPUT__"
+NUM_OF_LATEST_PREDICT_FUNC_ARGS = 3
 
 
 class PyFuncModelVersion(Enum):
@@ -37,6 +39,14 @@ class PyFuncModelVersion(Enum):
     OLD_PYFUNC_OLD_MLFLOW = 'old_pyfunc_old_mlflow'
 
 
+def _is_latest_pyfunc_model_version(func):
+    full_args = inspect.getfullargspec(func)
+    if len(full_args.args) == NUM_OF_LATEST_PREDICT_FUNC_ARGS:
+        return True
+
+    return False
+
+
 class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
 
     def __init__(self, name: str, artifact_dir: str):
@@ -54,21 +64,16 @@ class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
         self.pyfunc_type = self._get_pyfunc_model_version()
 
     def _get_pyfunc_model_version(self):
-        try:
-            self._model.predict({}) # try to call to determine the model type
-            return PyFuncModelVersion.LATEST
-        except TypeError as e:
-            if "predict() takes 2 positional arguments but 3 were given" in str(e):
-                if hasattr(self._model, 'python_model'):
-                    return PyFuncModelVersion.OLD_PYFUNC_OLD_MLFLOW
-                elif hasattr(self._model, '_model_impl'):
-                    return PyFuncModelVersion.OLD_PYFUNC_LATEST_MLFLOW
-                else:
-                    raise Exception("no compatible predict() found")
-            else:
-                return PyFuncModelVersion.LATEST
-        except Exception:
-            return PyFuncModelVersion.LATEST
+        if hasattr(self._model, 'python_model'):
+            is_latest_version = _is_latest_pyfunc_model_version(self._model.python_model.predict)
+            if not is_latest_version:
+                return PyFuncModelVersion.OLD_PYFUNC_OLD_MLFLOW
+        elif hasattr(self._model, '_model_impl'):
+            is_latest_version = _is_latest_pyfunc_model_version(self._model._model_impl.python_model.predict)
+            if not is_latest_version:
+                return PyFuncModelVersion.OLD_PYFUNC_LATEST_MLFLOW
+
+        return PyFuncModelVersion.LATEST
 
     def predict(self, inputs: dict, **kwargs) -> dict:
         if self.pyfunc_type == PyFuncModelVersion.OLD_PYFUNC_LATEST_MLFLOW:
@@ -80,7 +85,7 @@ class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
             return self._model.python_model.predict(inputs, **kwargs)
         else:
             # for case user doesn't specify merlin-sdk as dependency
-            model_inputs = { MODEL_INPUT_KEY: inputs}
+            model_inputs = {MODEL_INPUT_KEY: inputs}
             if kwargs is not None:
                 model_inputs[EXTRA_ARGS_KEY] = kwargs
 
