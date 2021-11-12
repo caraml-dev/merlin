@@ -130,11 +130,17 @@ func (o Options) IsFeastConfigUsingCorrectSource(featureTableCfg *spec.FeatureTa
 		for _, storageConfig := range o.StorageConfigs {
 			switch storageConfig.Storage.(type) {
 			case *spec.OnlineStorage_RedisCluster:
-				return storageConfig.GetRedisCluster().FeastServingUrl == servingURL
+				if storageConfig.GetRedisCluster().FeastServingUrl == servingURL {
+					return true
+				}
 			case *spec.OnlineStorage_Redis:
-				return storageConfig.GetRedis().FeastServingUrl == servingURL
+				if storageConfig.GetRedis().FeastServingUrl == servingURL {
+					return true
+				}
 			case *spec.OnlineStorage_Bigtable:
-				return storageConfig.GetBigtable().FeastServingUrl == servingURL
+				if storageConfig.GetBigtable().FeastServingUrl == servingURL {
+					return true
+				}
 			}
 		}
 		return false
