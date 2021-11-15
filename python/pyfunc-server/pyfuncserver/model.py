@@ -41,10 +41,7 @@ class PyFuncModelVersion(Enum):
 
 def _is_latest_pyfunc_model_version(func):
     full_args = inspect.getfullargspec(func)
-    if len(full_args.args) == NUM_OF_LATEST_PREDICT_FUNC_ARGS:
-        return True
-
-    return False
+    return len(full_args.args) == NUM_OF_LATEST_PREDICT_FUNC_ARGS
 
 
 class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
@@ -65,12 +62,10 @@ class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
 
     def _get_pyfunc_model_version(self):
         if hasattr(self._model, 'python_model'):
-            is_latest_version = _is_latest_pyfunc_model_version(self._model.python_model.predict)
-            if not is_latest_version:
+            if not _is_latest_pyfunc_model_version(self._model.python_model.predict):
                 return PyFuncModelVersion.OLD_PYFUNC_OLD_MLFLOW
         elif hasattr(self._model, '_model_impl'):
-            is_latest_version = _is_latest_pyfunc_model_version(self._model._model_impl.python_model.predict)
-            if not is_latest_version:
+            if not _is_latest_pyfunc_model_version(self._model._model_impl.python_model.predict):
                 return PyFuncModelVersion.OLD_PYFUNC_LATEST_MLFLOW
 
         return PyFuncModelVersion.LATEST
