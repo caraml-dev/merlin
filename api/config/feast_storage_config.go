@@ -41,8 +41,10 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 	}
 }
 
+// FeastRedisConfig is redis storage configuration for standard transformer whether it is single or cluster
 type FeastRedisConfig struct {
-	IsUsingDirectStorage bool      `json:"is_using_direct_storage" default:"false"`
+	IsRedisCluster       bool      `json:"is_redis_cluster"`
+	IsUsingDirectStorage bool      `json:"is_using_direct_storage"`
 	ServingURL           string    `json:"serving_url" validate:"required"`
 	RedisAddresses       []string  `json:"redis_addresses" validate:"required,gt=0"`
 	PoolSize             int32     `json:"pool_size" validate:"gt=0"`
@@ -76,36 +78,52 @@ func (redisCfg *FeastRedisConfig) ToFeastStorage() *spec.OnlineStorage {
 	if redisCfg.IsUsingDirectStorage {
 		servingType = spec.ServingType_DIRECT_STORAGE
 	}
+
+	redisOpts := &spec.RedisOption{
+		PoolSize:           redisCfg.PoolSize,
+		MaxRetries:         redisCfg.MaxRetries,
+		MinRetryBackoff:    getDurationProtoFromTime(redisCfg.MinRetryBackoff),
+		DialTimeout:        getDurationProtoFromTime(redisCfg.DialTimeout),
+		ReadTimeout:        getDurationProtoFromTime(redisCfg.ReadTimeout),
+		WriteTimeout:       getDurationProtoFromTime(redisCfg.WriteTimeout),
+		MaxConnAge:         getDurationProtoFromTime(redisCfg.MaxConnAge),
+		PoolTimeout:        getDurationProtoFromTime(redisCfg.PoolTimeout),
+		IdleTimeout:        getDurationProtoFromTime(redisCfg.IdleTimeout),
+		IdleCheckFrequency: getDurationProtoFromTime(redisCfg.IdleCheckFrequency),
+	}
+	if redisCfg.IsRedisCluster {
+		return &spec.OnlineStorage{
+			ServingType: servingType,
+			Storage: &spec.OnlineStorage_RedisCluster{
+				RedisCluster: &spec.RedisClusterStorage{
+					FeastServingUrl: redisCfg.ServingURL,
+					RedisAddress:    redisCfg.RedisAddresses,
+					Option:          redisOpts,
+				},
+			},
+		}
+	}
+
 	return &spec.OnlineStorage{
 		ServingType: servingType,
-		Storage: &spec.OnlineStorage_RedisCluster{
-			RedisCluster: &spec.RedisClusterStorage{
+		Storage: &spec.OnlineStorage_Redis{
+			Redis: &spec.RedisStorage{
 				FeastServingUrl: redisCfg.ServingURL,
-				RedisAddress:    redisCfg.RedisAddresses,
-				Option: &spec.RedisOption{
-					PoolSize:           redisCfg.PoolSize,
-					MaxRetries:         redisCfg.MaxRetries,
-					MinRetryBackoff:    getDurationProtoFromTime(redisCfg.MinRetryBackoff),
-					DialTimeout:        getDurationProtoFromTime(redisCfg.DialTimeout),
-					ReadTimeout:        getDurationProtoFromTime(redisCfg.ReadTimeout),
-					WriteTimeout:       getDurationProtoFromTime(redisCfg.WriteTimeout),
-					MaxConnAge:         getDurationProtoFromTime(redisCfg.MaxConnAge),
-					PoolTimeout:        getDurationProtoFromTime(redisCfg.PoolTimeout),
-					IdleTimeout:        getDurationProtoFromTime(redisCfg.IdleTimeout),
-					IdleCheckFrequency: getDurationProtoFromTime(redisCfg.IdleCheckFrequency),
-				},
+				RedisAddress:    redisCfg.RedisAddresses[0],
+				Option:          redisOpts,
 			},
 		},
 	}
 }
 
-type FeastBigTableConfig struct {
+// FeastBigtableConfig is bigtable storage configuration for standard transformer
+type FeastBigtableConfig struct {
 	IsUsingDirectStorage bool   `json:"is_using_direct_storage" default:"false"`
 	ServingURL           string `json:"serving_url" validate:"required"`
 }
 
-func (bigtableCfg *FeastBigTableConfig) Decode(value string) error {
-	var cfg FeastBigTableConfig
+func (bigtableCfg *FeastBigtableConfig) Decode(value string) error {
+	var cfg FeastBigtableConfig
 	if err := json.Unmarshal([]byte(value), &cfg); err != nil {
 		return err
 	}
@@ -118,7 +136,7 @@ func (bigtableCfg *FeastBigTableConfig) Decode(value string) error {
 	return nil
 }
 
-func (bigtableCfg *FeastBigTableConfig) ToFeastStorage() *spec.OnlineStorage {
+func (bigtableCfg *FeastBigtableConfig) ToFeastStorage() *spec.OnlineStorage {
 	servingType := spec.ServingType_FEAST_GRPC
 	if bigtableCfg.IsUsingDirectStorage {
 		servingType = spec.ServingType_DIRECT_STORAGE

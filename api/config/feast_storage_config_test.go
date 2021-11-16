@@ -21,10 +21,24 @@ func TestFeastRedisConfig(t *testing.T) {
 		err                 error
 	}{
 		{
-			desc:              "Success: valid redisconfig",
+			desc:              "Success: valid single redis config",
 			redisConfigString: `{"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`,
 			expectedRedisConfig: &FeastRedisConfig{
 				ServingURL: "online-storage.merlin.dev",
+				RedisAddresses: []string{
+					"10.1.1.10", "10.1.1.11",
+				},
+				PoolSize:    4,
+				MaxRetries:  1,
+				DialTimeout: &tenSecDuration,
+			},
+		},
+		{
+			desc:              "Success: valid redis cluster config",
+			redisConfigString: `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`,
+			expectedRedisConfig: &FeastRedisConfig{
+				IsRedisCluster: true,
+				ServingURL:     "online-storage.merlin.dev",
 				RedisAddresses: []string{
 					"10.1.1.10", "10.1.1.11",
 				},
@@ -69,20 +83,20 @@ func TestFeastBigtableConfig(t *testing.T) {
 	testCases := []struct {
 		desc                   string
 		bigtableString         string
-		expectedBigTableConfig *FeastBigTableConfig
+		expectedBigTableConfig *FeastBigtableConfig
 		err                    error
 	}{
 		{
 			desc:           "Success: valid env variable",
 			bigtableString: `{"serving_url":"10.1.1.3"}`,
-			expectedBigTableConfig: &FeastBigTableConfig{
+			expectedBigTableConfig: &FeastBigtableConfig{
 				ServingURL: "10.1.1.3",
 			},
 		},
 		{
 			desc:           "Fail: serving_url is not set",
 			bigtableString: `{"serving_url":""}`,
-			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigTableConfig: converting '{"serving_url":""}' to type config.FeastBigTableConfig. details: ServingURL is required`),
+			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigtableConfig: converting '{"serving_url":""}' to type config.FeastBigtableConfig. details: ServingURL is required`),
 		},
 	}
 	for _, tC := range testCases {
@@ -93,7 +107,7 @@ func TestFeastBigtableConfig(t *testing.T) {
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
 			if err == nil {
-				assert.Equal(t, tC.expectedBigTableConfig, cfg.FeastBigTableConfig)
+				assert.Equal(t, tC.expectedBigTableConfig, cfg.FeastBigtableConfig)
 			} else {
 				assert.EqualError(t, err, tC.err.Error())
 			}
@@ -109,8 +123,9 @@ func TestRedisConfig_ToFeastStorage(t *testing.T) {
 		expectedFeastStorage *spec.OnlineStorage
 	}{
 		{
-			desc: "Complete",
+			desc: "Complete redis cluster",
 			redisConfig: &FeastRedisConfig{
+				IsRedisCluster:       true,
 				IsUsingDirectStorage: true,
 				ServingURL:           "localhost",
 				RedisAddresses: []string{
@@ -152,9 +167,51 @@ func TestRedisConfig_ToFeastStorage(t *testing.T) {
 			},
 		},
 		{
+			desc: "Complete single redis",
+			redisConfig: &FeastRedisConfig{
+				IsUsingDirectStorage: true,
+				ServingURL:           "localhost",
+				RedisAddresses: []string{
+					"10.1.1.2", "10.1.1.3",
+				},
+				PoolSize:           5,
+				MaxRetries:         0,
+				MinRetryBackoff:    &timeDuration,
+				DialTimeout:        &timeDuration,
+				ReadTimeout:        &timeDuration,
+				WriteTimeout:       &timeDuration,
+				MaxConnAge:         &timeDuration,
+				PoolTimeout:        &timeDuration,
+				IdleTimeout:        &timeDuration,
+				IdleCheckFrequency: &timeDuration,
+			},
+			expectedFeastStorage: &spec.OnlineStorage{
+				ServingType: spec.ServingType_DIRECT_STORAGE,
+				Storage: &spec.OnlineStorage_Redis{
+					Redis: &spec.RedisStorage{
+						FeastServingUrl: "localhost",
+						RedisAddress:    "10.1.1.2",
+						Option: &spec.RedisOption{
+							MaxRetries:         0,
+							PoolSize:           5,
+							MinRetryBackoff:    durationpb.New(time.Duration(timeDuration)),
+							DialTimeout:        durationpb.New(time.Duration(timeDuration)),
+							ReadTimeout:        durationpb.New(time.Duration(timeDuration)),
+							WriteTimeout:       durationpb.New(time.Duration(timeDuration)),
+							MaxConnAge:         durationpb.New(time.Duration(timeDuration)),
+							PoolTimeout:        durationpb.New(time.Duration(timeDuration)),
+							IdleTimeout:        durationpb.New(time.Duration(timeDuration)),
+							IdleCheckFrequency: durationpb.New(time.Duration(timeDuration)),
+						},
+					},
+				},
+			},
+		},
+		{
 			desc: "Without set time related option",
 			redisConfig: &FeastRedisConfig{
-				ServingURL: "localhost",
+				IsRedisCluster: true,
+				ServingURL:     "localhost",
 				RedisAddresses: []string{
 					"10.1.1.2", "10.1.1.3",
 				},
@@ -188,12 +245,12 @@ func TestRedisConfig_ToFeastStorage(t *testing.T) {
 func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 	testCases := []struct {
 		desc                   string
-		bigtableConfig         *FeastBigTableConfig
+		bigtableConfig         *FeastBigtableConfig
 		expectedBigTableConfig *spec.OnlineStorage
 	}{
 		{
 			desc: "Success",
-			bigtableConfig: &FeastBigTableConfig{
+			bigtableConfig: &FeastBigtableConfig{
 				IsUsingDirectStorage: true,
 				ServingURL:           "localhost",
 			},

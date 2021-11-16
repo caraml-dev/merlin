@@ -6,14 +6,15 @@ option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
 import "google/protobuf/duration.proto";
 
+// ServingType indicate type of interaction to Feast
 enum ServingType {
-  FEAST_GRPC = 0;
-  DIRECT_STORAGE = 1;
+  FEAST_GRPC = 0; // Features are retrieved through GRPC web service
+  DIRECT_STORAGE = 1; // Features are retrieved by fetching feast storage directly
 }
 
 message OnlineStorage {
-  ServingType servingType = 1;
-  oneof storage {
+  ServingType servingType = 1; // Type of interaction to feast
+  oneof storage { // Storage configuration
     RedisStorage redis = 2;
     RedisClusterStorage redisCluster = 3;
     BigTableStorage bigtable = 4;
@@ -21,31 +22,31 @@ message OnlineStorage {
 }
 
 message BigTableStorage {
-  string feastServingUrl = 1;
+  string feastServingUrl = 1; // Feast GRPC URL
 }
 
 message RedisStorage {
-  string feastServingUrl = 1;
-  string redisAddress = 2;
-  RedisOption option =3;
+  string feastServingUrl = 1; // Feast GRPC URL
+  string redisAddress = 2; // Address of single redis
+  RedisOption option = 3; // Redis option
 }
 
 message RedisClusterStorage {
-  string feastServingUrl = 1;
-  repeated string redisAddress = 2;
-  RedisOption option =3;
+  string feastServingUrl = 1; // Feast GRPC URL
+  repeated string redisAddress = 2; // List of addresses of redis cluster
+  RedisOption option = 3; // Redis option
 }
 
 // options to be passed to the goredis client
 message RedisOption {
-  int32 maxRetries = 1;
-  google.protobuf.Duration minRetryBackoff = 2;
-  google.protobuf.Duration dialTimeout = 3;
-  google.protobuf.Duration readTimeout = 4;
-  google.protobuf.Duration writeTimeout = 5;
-  int32 poolSize = 6;
-  google.protobuf.Duration maxConnAge = 7;
-  google.protobuf.Duration poolTimeout = 8;
-  google.protobuf.Duration idleTimeout = 9;
-  google.protobuf.Duration idleCheckFrequency = 10;
+  int32 maxRetries = 1; // Number of maximum retry 
+  google.protobuf.Duration minRetryBackoff = 2; // minimum duration of backoff between retry
+  google.protobuf.Duration dialTimeout = 3; // dial timeout for establishing new connection
+  google.protobuf.Duration readTimeout = 4; // read timeout duration for redis command
+  google.protobuf.Duration writeTimeout = 5; // write timeout duration for redis command
+  int32 poolSize = 6; // maximum number of connection created that later on will be reused
+  google.protobuf.Duration maxConnAge = 7; // maximum age of redis connection
+  google.protobuf.Duration poolTimeout = 8; // amount of time clients wait for connection if all connection are busy before returning error
+  google.protobuf.Duration idleTimeout = 9; // amount of time after which client closes idle connections
+  google.protobuf.Duration idleCheckFrequency = 10; // frequency of idle check
 }

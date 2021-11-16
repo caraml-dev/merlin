@@ -28,7 +28,7 @@ func GetTableName(featureTableSpec *spec.FeatureTable) string {
 	return tableName
 }
 
-func GetFeastServingSources(stdTransformerConfig *spec.StandardTransformerConfig) []spec.ServingSource {
+func getFeastServingSources(stdTransformerConfig *spec.StandardTransformerConfig) []spec.ServingSource {
 	feastSources := make(map[spec.ServingSource]spec.ServingSource)
 	if stdTransformerConfig.TransformerConfig.Feast != nil {
 		for _, featureTableSpec := range stdTransformerConfig.TransformerConfig.Feast {
@@ -54,14 +54,14 @@ func GetFeastServingSources(stdTransformerConfig *spec.StandardTransformerConfig
 	return sources
 }
 
-func getFeatureTableConfigs(stdTransformerConfig *spec.StandardTransformerConfig) []*spec.FeatureTable {
+func getFeatureTableSpecs(stdTransformerConfig *spec.StandardTransformerConfig) []*spec.FeatureTable {
 	if stdTransformerConfig.TransformerConfig.Feast != nil {
 		return stdTransformerConfig.TransformerConfig.Feast
 	}
-	preprocessFeatureTableConfigs := getFeatureTableConfigsFromPipeline(stdTransformerConfig.TransformerConfig.Preprocess)
-	postprocessFeatureTableConfigs := getFeatureTableConfigsFromPipeline(stdTransformerConfig.TransformerConfig.Postprocess)
-	allFeatureTableConfigs := append(preprocessFeatureTableConfigs, postprocessFeatureTableConfigs...)
-	return allFeatureTableConfigs
+	preprocessFeatureTableSpecs := getFeatureTableConfigsFromPipeline(stdTransformerConfig.TransformerConfig.Preprocess)
+	postprocessFeatureTableSpecs := getFeatureTableConfigsFromPipeline(stdTransformerConfig.TransformerConfig.Postprocess)
+	allFeatureTableSpecs := append(preprocessFeatureTableSpecs, postprocessFeatureTableSpecs...)
+	return allFeatureTableSpecs
 }
 
 func getFeatureTableConfigsFromPipeline(pipeline *spec.Pipeline) []*spec.FeatureTable {

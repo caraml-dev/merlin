@@ -1950,7 +1950,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringBaseURL: "http://grafana",
 			},
 			standardTransformerConfig: config.StandardTransformerConfig{
-				FeastBigTableConfig: &config.FeastBigTableConfig{
+				FeastBigtableConfig: &config.FeastBigtableConfig{
 					ServingURL: "localhost:6567",
 				},
 				FeastRedisConfig: &config.FeastRedisConfig{
@@ -2221,7 +2221,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringBaseURL: "http://grafana",
 			},
 			standardTransformerConfig: config.StandardTransformerConfig{
-				FeastBigTableConfig: &config.FeastBigTableConfig{
+				FeastBigtableConfig: &config.FeastBigtableConfig{
 					ServingURL: "localhost:6567",
 				},
 				FeastRedisConfig: &config.FeastRedisConfig{
@@ -2455,7 +2455,7 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringBaseURL: "http://grafana",
 			},
 			standardTransformerConfig: config.StandardTransformerConfig{
-				FeastBigTableConfig: &config.FeastBigTableConfig{
+				FeastBigtableConfig: &config.FeastBigtableConfig{
 					ServingURL: "localhost:6567",
 				},
 				FeastRedisConfig: &config.FeastRedisConfig{

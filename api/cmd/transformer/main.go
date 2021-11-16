@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"time"
 
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
 	"github.com/golang/protobuf/jsonpb"
@@ -16,7 +15,6 @@ import (
 	jcfg "github.com/uber/jaeger-client-go/config"
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/feast"
@@ -42,17 +40,10 @@ type AppConfig struct {
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
 	FeatureTableSpecJsons         string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
 	LogLevel                      string `envconfig:"LOG_LEVEL"`
-	RedisOverwriteConfig          RedisOverwriteConfig
+	RedisOverwriteConfig          feast.RedisOverwriteConfig
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
-}
-
-type RedisOverwriteConfig struct {
-	RedisDirectStorageEnabled *bool          `envconfig:"FEAST_REDIS_DIRECT_STORAGE_ENABLED"`
-	PoolSize                  *int32         `envconfig:"FEAST_REDIS_POOL_SIZE"`
-	ReadTimeout               *time.Duration `envconfig:"FEAST_REDIS_READ_TIMEOUT"`
-	WriteTimeout              *time.Duration `envconfig:"FEAST_REDIS_WRITE_TIMEOUT"`
 }
 
 // Trick GC frequency based on this https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap-26c2462549a2/
@@ -112,11 +103,11 @@ func main() {
 			featureSpecs = append(featureSpecs, featureSpec)
 		}
 	}
-	feastSources := feast.GetFeastServingSources(transformerConfig)
-	feastOpts := overwriteFeastOptionsConfig(appConfig)
+
+	feastOpts := feast.OverwriteFeastOptionsConfig(appConfig.Feast, appConfig.RedisOverwriteConfig)
 	logger.Info("feast options", zap.Any("val", feastOpts))
 
-	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureSpecs, feastSources, logger)
+	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureSpecs, transformerConfig, logger)
 	if err != nil {
 		logger.Fatal("Unable to initialize Feast Clients", zap.Error(err))
 	}
@@ -145,46 +136,6 @@ func main() {
 	}
 
 	s.Run()
-}
-
-func getServingType(userEnableDirectStorage *bool, currentServingType spec.ServingType) spec.ServingType {
-	servingType := currentServingType
-	servingTypeMap := map[bool]spec.ServingType{true: spec.ServingType_DIRECT_STORAGE, false: spec.ServingType_FEAST_GRPC}
-	if userEnableDirectStorage != nil {
-		servingType = servingTypeMap[*userEnableDirectStorage]
-	}
-	return servingType
-}
-
-func overwriteFeastOptionsConfig(appConfig AppConfig) feast.Options {
-	feastOptions := appConfig.Feast
-	redisOverwriteCfg := appConfig.RedisOverwriteConfig
-
-	for _, storage := range feastOptions.StorageConfigs {
-		switch storage.Storage.(type) {
-		case *spec.OnlineStorage_Redis:
-			storage.ServingType = getServingType(redisOverwriteCfg.RedisDirectStorageEnabled, storage.ServingType)
-			redisStorage := storage.GetRedis()
-			overwriteRedisOption(redisStorage.Option, redisOverwriteCfg)
-		case *spec.OnlineStorage_RedisCluster:
-			storage.ServingType = getServingType(redisOverwriteCfg.RedisDirectStorageEnabled, storage.ServingType)
-			redisClusterStorage := storage.GetRedisCluster()
-			overwriteRedisOption(redisClusterStorage.Option, redisOverwriteCfg)
-		}
-	}
-	return feastOptions
-}
-
-func overwriteRedisOption(opts *spec.RedisOption, redisOverwriteConfig RedisOverwriteConfig) {
-	if redisOverwriteConfig.PoolSize != nil {
-		opts.PoolSize = *redisOverwriteConfig.PoolSize
-	}
-	if redisOverwriteConfig.ReadTimeout != nil {
-		opts.ReadTimeout = durationpb.New(*redisOverwriteConfig.ReadTimeout)
-	}
-	if redisOverwriteConfig.WriteTimeout != nil {
-		opts.WriteTimeout = durationpb.New(*redisOverwriteConfig.WriteTimeout)
-	}
 }
 
 func initFeastTransformer(appCfg AppConfig,

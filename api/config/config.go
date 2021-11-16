@@ -21,6 +21,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
@@ -198,9 +199,20 @@ type StandardTransformerConfig struct {
 	FeastCoreAuthAudience string               `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
 	EnableAuth            bool                 `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
 	FeastRedisConfig      *FeastRedisConfig    `envconfig:"FEAST_REDIS_CONFIG"`
-	FeastBigTableConfig   *FeastBigTableConfig `envconfig:"FEAST_BIG_TABLE_CONFIG" required:"true"`
+	FeastBigtableConfig   *FeastBigtableConfig `envconfig:"FEAST_BIG_TABLE_CONFIG"`
 	DefaultFeastSource    spec.ServingSource   `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
 	Jaeger                JaegerConfig
+}
+
+func (stc *StandardTransformerConfig) ToFeastStorageConfigs() feast.FeastStorageConfig {
+	feastStorageConfig := feast.FeastStorageConfig{}
+	if stc.FeastRedisConfig != nil {
+		feastStorageConfig[spec.ServingSource_REDIS] = stc.FeastRedisConfig.ToFeastStorage()
+	}
+	if stc.FeastBigtableConfig != nil {
+		feastStorageConfig[spec.ServingSource_BIGTABLE] = stc.FeastBigtableConfig.ToFeastStorage()
+	}
+	return feastStorageConfig
 }
 
 type FeastServingURLs []FeastServingURL

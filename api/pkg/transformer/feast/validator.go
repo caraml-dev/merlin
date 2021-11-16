@@ -25,7 +25,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 			return errors.New("no feature")
 		}
 
-		if !feastOptions.IsFeastConfigUsingCorrectSource(config) {
+		if !isValidStorageSource(config, feastOptions) {
 			return errors.Errorf("feast source configuration is not valid, servingURL: %s source: %s", config.ServingUrl, config.Source)
 		}
 
@@ -119,4 +119,40 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 	}
 
 	return nil
+}
+
+func isValidStorageSource(featureTableCfg *spec.FeatureTable, opts *Options) bool {
+	// user doesn't specify source
+	// need to check whether the servingURL is valid
+	if featureTableCfg.Source == spec.ServingSource_UNKNOWN {
+		servingURL := featureTableCfg.ServingUrl
+		// user using default serving url
+		if servingURL == "" {
+			return true
+		}
+		// check serving url based on storage configs
+		for _, storageConfig := range opts.StorageConfigs {
+			switch storageConfig.Storage.(type) {
+			case *spec.OnlineStorage_RedisCluster:
+				if storageConfig.GetRedisCluster().FeastServingUrl == servingURL {
+					return true
+				}
+			case *spec.OnlineStorage_Redis:
+				if storageConfig.GetRedis().FeastServingUrl == servingURL {
+					return true
+				}
+			case *spec.OnlineStorage_Bigtable:
+				if storageConfig.GetBigtable().FeastServingUrl == servingURL {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	if storageCfg := opts.StorageConfigs[featureTableCfg.Source]; storageCfg != nil {
+		return true
+	}
+
+	return false
 }

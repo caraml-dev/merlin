@@ -11,7 +11,9 @@ import (
 	"go.uber.org/zap"
 )
 
-func InitFeastServingClients(feastOptions Options, featureTableMetadata []*spec.FeatureTableMetadata, servingSources []spec.ServingSource, logger *zap.Logger) (Clients, error) {
+func InitFeastServingClients(feastOptions Options, featureTableMetadata []*spec.FeatureTableMetadata, standardTransformerConfig *spec.StandardTransformerConfig, logger *zap.Logger) (Clients, error) {
+	servingSources := getFeastServingSources(standardTransformerConfig)
+
 	clients := Clients{}
 	for _, source := range servingSources {
 		feastClient, err := createFeastServingClient(feastOptions, featureTableMetadata, source)

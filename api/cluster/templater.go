@@ -27,8 +27,6 @@ import (
 	"github.com/gojek/merlin/models"
 	transformerpkg "github.com/gojek/merlin/pkg/transformer"
 
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/utils"
 )
 
@@ -324,10 +322,10 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 func (t *KFServingResourceTemplater) enrichStandardTransformerEnvVars(envVars models.EnvVars) models.EnvVars {
 	// compact standard transformer config
 	envVarsMap := envVars.ToMap()
-	standardTransformerConfig := envVarsMap[transformerpkg.StandardTransformerConfigEnvName]
-	if standardTransformerConfig != "" {
+	standardTransformerSpec := envVarsMap[transformerpkg.StandardTransformerConfigEnvName]
+	if standardTransformerSpec != "" {
 		compactedfJsonBuffer := new(bytes.Buffer)
-		if err := json.Compact(compactedfJsonBuffer, []byte(standardTransformerConfig)); err == nil {
+		if err := json.Compact(compactedfJsonBuffer, []byte(standardTransformerSpec)); err == nil {
 			models.MergeEnvVars(envVars, models.EnvVars{
 				{
 					Name:  transformerpkg.StandardTransformerConfigEnvName,
@@ -340,13 +338,7 @@ func (t *KFServingResourceTemplater) enrichStandardTransformerEnvVars(envVars mo
 	envVars = append(envVars, models.EnvVar{Name: transformerpkg.DefaultFeastSource, Value: t.standardTransformerConfig.DefaultFeastSource.String()})
 
 	// adding feast storage config env variable
-	feastStorageConfig := feast.FeastStorageConfig{}
-	if t.standardTransformerConfig.FeastRedisConfig != nil {
-		feastStorageConfig[spec.ServingSource_REDIS] = t.standardTransformerConfig.FeastRedisConfig.ToFeastStorage()
-	}
-	if t.standardTransformerConfig.FeastBigTableConfig != nil {
-		feastStorageConfig[spec.ServingSource_BIGTABLE] = t.standardTransformerConfig.FeastBigTableConfig.ToFeastStorage()
-	}
+	feastStorageConfig := t.standardTransformerConfig.ToFeastStorageConfigs()
 
 	if feastStorageConfigJsonByte, err := json.Marshal(feastStorageConfig); err == nil {
 		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})

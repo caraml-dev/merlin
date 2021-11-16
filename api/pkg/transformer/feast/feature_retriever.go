@@ -86,8 +86,6 @@ func NewFeastRetriever(
 	}
 }
 
-type FeastStorageConfig map[spec.ServingSource]*spec.OnlineStorage
-
 func (storageCfg *FeastStorageConfig) Decode(value string) error {
 	var cfg FeastStorageConfig
 	if err := json.Unmarshal([]byte(value), &cfg); err != nil {
@@ -115,42 +113,6 @@ type Options struct {
 	FeastClientRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
 	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"1000"` // How long, in milliseconds, to wait after a circuit opens before testing for recovery
 	FeastClientErrorPercentThreshold  int           `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
-}
-
-func (o Options) IsFeastConfigUsingCorrectSource(featureTableCfg *spec.FeatureTable) bool {
-	// user doesn't specify source
-	// need to check whether the servingURL is valid
-	if featureTableCfg.Source == spec.ServingSource_UNKNOWN {
-		servingURL := featureTableCfg.ServingUrl
-		// user using default serving url
-		if servingURL == "" {
-			return true
-		}
-		// check serving url based on storage configs
-		for _, storageConfig := range o.StorageConfigs {
-			switch storageConfig.Storage.(type) {
-			case *spec.OnlineStorage_RedisCluster:
-				if storageConfig.GetRedisCluster().FeastServingUrl == servingURL {
-					return true
-				}
-			case *spec.OnlineStorage_Redis:
-				if storageConfig.GetRedis().FeastServingUrl == servingURL {
-					return true
-				}
-			case *spec.OnlineStorage_Bigtable:
-				if storageConfig.GetBigtable().FeastServingUrl == servingURL {
-					return true
-				}
-			}
-		}
-		return false
-	}
-
-	if storageCfg := o.StorageConfigs[featureTableCfg.Source]; storageCfg != nil {
-		return true
-	}
-
-	return false
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {

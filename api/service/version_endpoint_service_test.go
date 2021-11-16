@@ -1270,7 +1270,7 @@ func TestDeployEndpoint_StandardTransformer(t *testing.T) {
 						RedisAddresses: []string{"10.1.1.2", "10.1.1.3"},
 						PoolSize:       5,
 					},
-					FeastBigTableConfig: &config.FeastBigTableConfig{
+					FeastBigtableConfig: &config.FeastBigtableConfig{
 						ServingURL: "localhost:6567",
 					},
 				},

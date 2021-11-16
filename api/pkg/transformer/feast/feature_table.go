@@ -9,14 +9,17 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
+// GetAllFeatureTableMetadata retrieves all metadata for feature tables
+// that specified in feast transformer or pipeline (preprocess or postprocess)
 func GetAllFeatureTableMetadata(ctx context.Context, coreClient core.CoreServiceClient, standardTransformerConfig *spec.StandardTransformerConfig) ([]*spec.FeatureTableMetadata, error) {
-	configs := getFeatureTableConfigs(standardTransformerConfig)
-	if len(configs) == 0 {
+	featureTableSpecs := getFeatureTableSpecs(standardTransformerConfig)
+	if len(featureTableSpecs) == 0 {
 		return nil, nil
 	}
-	return getFeatureTables(ctx, coreClient, configs)
+	return getFeatureTablesMetadata(ctx, coreClient, featureTableSpecs)
 }
 
+// UpdateFeatureTableSource will update feature table spec source in standard transformer
 func UpdateFeatureTableSource(standardTransformerConfig *spec.StandardTransformerConfig, sourceByURLMap map[string]spec.ServingSource, defaultSource spec.ServingSource) {
 	if featureTableCfgs := standardTransformerConfig.TransformerConfig.Feast; featureTableCfgs != nil {
 		updateFeatureTableSource(featureTableCfgs, sourceByURLMap, defaultSource)
@@ -56,16 +59,16 @@ func updateFeatureTableSource(featureTableSpecs []*spec.FeatureTable, sourceByUR
 	}
 }
 
-func getFeatureTables(ctx context.Context, coreClient core.CoreServiceClient, featureTables []*spec.FeatureTable) ([]*spec.FeatureTableMetadata, error) {
-	featureTableSpecMap := make(map[string]*spec.FeatureTableMetadata)
-	for _, featureTable := range featureTables {
+func getFeatureTablesMetadata(ctx context.Context, coreClient core.CoreServiceClient, featureTableSpecs []*spec.FeatureTable) ([]*spec.FeatureTableMetadata, error) {
+	featureTableMetadataMap := make(map[string]*spec.FeatureTableMetadata)
+	for _, featureTable := range featureTableSpecs {
 		project := featureTable.Project
 		for _, featureRef := range featureTable.Features {
 			// check whether feature table spec already fetched
 			// skip if already there
 			featureTableName := getFeatureTableFromFeatureRef(featureRef.Name)
 			featureTableKeyName := fmt.Sprintf("%s-%s", project, featureTableName)
-			if _, featureTableExist := featureTableSpecMap[featureTableKeyName]; featureTableExist {
+			if _, featureTableExist := featureTableMetadataMap[featureTableKeyName]; featureTableExist {
 				continue
 			}
 			featureTableResp, err := coreClient.GetFeatureTable(ctx, &core.GetFeatureTableRequest{
@@ -82,15 +85,15 @@ func getFeatureTables(ctx context.Context, coreClient core.CoreServiceClient, fe
 					Project: project,
 					MaxAge:  featureTableSpec.MaxAge,
 				}
-				featureTableSpecMap[featureTableKeyName] = featureTableMetadata
+				featureTableMetadataMap[featureTableKeyName] = featureTableMetadata
 			}
 		}
 	}
-	featureTableSpecs := make([]*spec.FeatureTableMetadata, 0, len(featureTableSpecMap))
-	for _, spec := range featureTableSpecMap {
-		featureTableSpecs = append(featureTableSpecs, spec)
+	featureTableMetadata := make([]*spec.FeatureTableMetadata, 0, len(featureTableMetadataMap))
+	for _, spec := range featureTableMetadataMap {
+		featureTableMetadata = append(featureTableMetadata, spec)
 	}
-	return featureTableSpecs, nil
+	return featureTableMetadata, nil
 }
 
 func getFeatureTableFromFeatureRef(ref string) string {

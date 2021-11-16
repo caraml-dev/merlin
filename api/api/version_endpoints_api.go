@@ -407,15 +407,8 @@ func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Cont
 		return err
 	}
 
-	feastStorageConfig := feast.FeastStorageConfig{}
-	if c.StandardTransformerConfig.FeastRedisConfig != nil {
-		feastStorageConfig[spec.ServingSource_REDIS] = c.StandardTransformerConfig.FeastRedisConfig.ToFeastStorage()
-	}
-	if c.StandardTransformerConfig.FeastBigTableConfig != nil {
-		feastStorageConfig[spec.ServingSource_BIGTABLE] = c.StandardTransformerConfig.FeastBigTableConfig.ToFeastStorage()
-	}
 	feastOptions := &feast.Options{
-		StorageConfigs: feastStorageConfig,
+		StorageConfigs: c.StandardTransformerConfig.ToFeastStorageConfigs(),
 	}
 
 	return pipeline.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig, feastOptions)

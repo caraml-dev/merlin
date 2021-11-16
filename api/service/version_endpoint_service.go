@@ -125,6 +125,9 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 		}
 
 		if newEndpoint.Transformer.TransformerType == models.StandardTransformerType {
+			// update standard transformer config
+			// 1. Add feature table metadata variables to transformer
+			// 2. Update feature table source if empty
 			updatedStandardTransformer, err := k.reconfigureStandardTransformer(newEndpoint.Transformer)
 			if err != nil {
 				return nil, err
@@ -229,7 +232,7 @@ func (k *endpointService) reconfigureStandardTransformer(standardTransformer *mo
 
 func (k *endpointService) updateFeatureTableSource(standardTransformer *models.Transformer, standardTransformerConfig *spec.StandardTransformerConfig) (*models.Transformer, error) {
 	sourceFromServingURL := make(map[string]spec.ServingSource)
-	if bigTableCfg := k.standardTransformerConfig.FeastBigTableConfig; bigTableCfg != nil {
+	if bigTableCfg := k.standardTransformerConfig.FeastBigtableConfig; bigTableCfg != nil {
 		sourceFromServingURL[bigTableCfg.ServingURL] = spec.ServingSource_BIGTABLE
 	}
 	if redisCfg := k.standardTransformerConfig.FeastRedisConfig; redisCfg != nil {
