@@ -101,7 +101,13 @@ export const FeastInputCard = ({
             <FeastServingUrlSelect
               servingUrl={table.servingUrl}
               servingSource={table.source}
-              onChange={onChange}
+              onChange={servingConf =>
+                onChangeHandler({
+                  ...table,
+                  servingUrl: servingConf.host,
+                  source: servingConf.source_type
+                })
+              }
               isInvalid={!!get(errors, "servingUrl")}
             />
           </EuiFormRow>

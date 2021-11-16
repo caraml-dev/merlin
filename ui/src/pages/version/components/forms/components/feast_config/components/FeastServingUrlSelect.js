@@ -63,10 +63,7 @@ export const FeastServingUrlSelect = ({
     <EuiSuperSelect
       options={options}
       valueOfSelected={confBySource[servingSource] || {}}
-      onChange={servingConf => {
-        onChange("servingUrl", servingConf.host);
-        onChange("source", servingConf.source_type);
-      }}
+      onChange={onChange}
       placeholder="Select Feast Serving Url"
       isInvalid={isInvalid}
       hasDividers
