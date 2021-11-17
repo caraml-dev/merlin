@@ -23,6 +23,25 @@ import {
 
 const objectAssignDeep = require(`object-assign-deep`);
 
+export const FEAST_SOURCE_BY_URL = appConfig.feastServingUrls.reduce(
+  (res, val) => ({ ...res, [val.host]: val.source_type }),
+  {}
+);
+
+export const getFeastSource = feastConfig => {
+  if (!feastConfig.source || feastConfig.source === "") {
+    if (feastConfig.servingUrl === "") {
+      return appConfig.defaultFeastSource;
+    }
+    var source = FEAST_SOURCE_BY_URL[feastConfig.servingUrl];
+    if (!source) {
+      source = appConfig.defaultFeastSource;
+    }
+    return source;
+  }
+  return feastConfig.source;
+};
+
 export const STANDARD_TRANSFORMER_CONFIG_ENV_NAME =
   "STANDARD_TRANSFORMER_CONFIG";
 
@@ -88,13 +107,7 @@ export class TransformerConfig {
     // For backward compatibilty with Feast Enricher transformer
     transformerConfig.feast &&
       transformerConfig.feast.forEach(feast => {
-        if (
-          (!feast.servingUrl || feast.servingUrl === "") &&
-          (!feast.source || feast.source === "")
-        ) {
-          feast.source = appConfig.defaultFeastSource;
-        }
-
+        feast.source = getFeastSource(feast);
         feast.entities &&
           feast.entities.forEach(entity => {
             if (entity.udf) {
@@ -165,13 +178,7 @@ export class Pipeline {
     pipeline.inputs.forEach(input => {
       input.feast &&
         input.feast.forEach(feast => {
-          if (
-            (!feast.servingUrl || feast.servingUrl === "") &&
-            (!feast.source || feast.source === "")
-          ) {
-            feast.source = appConfig.defaultFeastSource;
-          }
-
+          feast.source = getFeastSource(feast);
           feast.entities &&
             feast.entities.forEach(entity => {
               if (entity.udf) {
