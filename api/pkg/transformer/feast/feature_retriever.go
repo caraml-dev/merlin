@@ -86,15 +86,6 @@ func NewFeastRetriever(
 	}
 }
 
-func (storageCfg *FeastStorageConfig) Decode(value string) error {
-	var cfg FeastStorageConfig
-	if err := json.Unmarshal([]byte(value), &cfg); err != nil {
-		return err
-	}
-	*storageCfg = cfg
-	return nil
-}
-
 // Options for the Feast transformer.
 type Options struct {
 	StorageConfigs     FeastStorageConfig `envconfig:"FEAST_STORAGE_CONFIGS" required:"true"`

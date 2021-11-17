@@ -1,6 +1,7 @@
 package feast
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -8,6 +9,15 @@ import (
 )
 
 type FeastStorageConfig map[spec.ServingSource]*spec.OnlineStorage
+
+func (storageCfg *FeastStorageConfig) Decode(value string) error {
+	var cfg FeastStorageConfig
+	if err := json.Unmarshal([]byte(value), &cfg); err != nil {
+		return err
+	}
+	*storageCfg = cfg
+	return nil
+}
 
 // RedisOverwriteConfig is redis configuration that will overwrite existing storage config that specify by merlin API
 type RedisOverwriteConfig struct {
