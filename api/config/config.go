@@ -23,6 +23,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	internalValidator "github.com/gojek/merlin/pkg/validator"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 )
@@ -206,10 +207,14 @@ type StandardTransformerConfig struct {
 
 func (stc *StandardTransformerConfig) ToFeastStorageConfigs() feast.FeastStorageConfig {
 	feastStorageConfig := feast.FeastStorageConfig{}
-	if stc.FeastRedisConfig != nil {
+	validate := internalValidator.NewValidator()
+
+	// need to validate redis and big table config, because of `FeastRedisConfig` and `FeastBigtableConfig` wont be null when environment variables not set
+	// this is due to bug in envconfig library https://github.com/kelseyhightower/envconfig/issues/113
+	if stc.FeastRedisConfig != nil && validate.Struct(stc.FeastRedisConfig) == nil {
 		feastStorageConfig[spec.ServingSource_REDIS] = stc.FeastRedisConfig.ToFeastStorage()
 	}
-	if stc.FeastBigtableConfig != nil {
+	if stc.FeastBigtableConfig != nil && validate.Struct(stc.FeastBigtableConfig) == nil {
 		feastStorageConfig[spec.ServingSource_BIGTABLE] = stc.FeastBigtableConfig.ToFeastStorage()
 	}
 	return feastStorageConfig

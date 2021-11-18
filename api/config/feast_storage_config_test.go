@@ -278,6 +278,5 @@ func setRequiredEnvironmentVariables() {
 	os.Setenv("FEAST_SERVING_URLS", `[]`)
 	os.Setenv("FEAST_CORE_URL", "localhost")
 	os.Setenv("FEAST_CORE_AUTH_AUDIENCE", "true")
-	os.Setenv("FEAST_BIG_TABLE_CONFIG", `{"serving_url":"10.1.1.3"}`)
 	os.Setenv("DEFAULT_FEAST_SOURCE", "BIGTABLE")
 }
