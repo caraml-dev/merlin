@@ -2,8 +2,10 @@ package transformer
 
 const (
 	StandardTransformerConfigEnvName = "STANDARD_TRANSFORMER_CONFIG"
-	DefaultFeastServingURLEnvName    = "DEFAULT_FEAST_SERVING_URL"
 	FeastServingURLsEnvName          = "FEAST_SERVING_URLS"
+	FeastFeatureTableSpecsJSON       = "FEAST_FEATURE_TABLE_SPECS_JSONS"
+	FeastStorageConfigs              = "FEAST_STORAGE_CONFIGS"
+	DefaultFeastSource               = "DEFAULT_FEAST_SOURCE"
 
 	FeastFeatureJSONField = "feast_features"
 

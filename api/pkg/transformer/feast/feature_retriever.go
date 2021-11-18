@@ -38,7 +38,7 @@ type StorageClient interface {
 
 type (
 	URL     string
-	Clients map[URL]StorageClient
+	Clients map[spec.ServingSource]StorageClient
 )
 
 type FeatureRetriever interface {
@@ -88,8 +88,8 @@ func NewFeastRetriever(
 
 // Options for the Feast transformer.
 type Options struct {
-	DefaultServingURL string   `envconfig:"DEFAULT_FEAST_SERVING_URL" required:"true"`
-	ServingURLs       []string `envconfig:"FEAST_SERVING_URLS" required:"true"`
+	StorageConfigs     FeastStorageConfig `envconfig:"FEAST_STORAGE_CONFIGS" required:"true"`
+	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" required:"true"`
 
 	StatusMonitoringEnabled bool          `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
 	ValueMonitoringEnabled  bool          `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
@@ -104,15 +104,6 @@ type Options struct {
 	FeastClientRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
 	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"1000"` // How long, in milliseconds, to wait after a circuit opens before testing for recovery
 	FeastClientErrorPercentThreshold  int           `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
-}
-
-func (o Options) IsServingURLSupported(url string) bool {
-	for _, supportedURL := range o.ServingURLs {
-		if supportedURL == url {
-			return true
-		}
-	}
-	return false
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {
@@ -218,7 +209,7 @@ func (fr *FeastRetriever) buildEntityRows(symbolRegistry symbol.Registry, config
 }
 
 func (fr *FeastRetriever) newCall(featureTableSpec *spec.FeatureTable, columns []string, entitySet map[string]bool) (*call, error) {
-	feastClient, err := fr.getFeastClient(featureTableSpec.ServingUrl)
+	feastClient, err := fr.getFeastClient(featureTableSpec.Source)
 	if err != nil {
 		return nil, err
 	}
@@ -229,8 +220,8 @@ func (fr *FeastRetriever) newCall(featureTableSpec *spec.FeatureTable, columns [
 		columns:          columns,
 		entitySet:        entitySet,
 
-		feastClient: feastClient,
-		feastURL:    fr.getFeastURL(featureTableSpec.ServingUrl),
+		feastClient:   feastClient,
+		servingSource: featureTableSpec.Source,
 
 		logger: fr.logger,
 
@@ -239,24 +230,18 @@ func (fr *FeastRetriever) newCall(featureTableSpec *spec.FeatureTable, columns [
 	}, nil
 }
 
-func (fr *FeastRetriever) getFeastClient(url string) (StorageClient, error) {
-	if url == "" {
-		return fr.feastClients[DefaultClientURLKey], nil
+func (fr *FeastRetriever) getFeastClient(source spec.ServingSource) (StorageClient, error) {
+	servingSource := source
+	if servingSource == spec.ServingSource_UNKNOWN {
+		servingSource = fr.options.DefaultFeastSource
 	}
 
-	client, ok := fr.feastClients[URL(url)]
+	client, ok := fr.feastClients[servingSource]
 	if ok {
 		return client, nil
 	}
 
 	return nil, errors.New("invalid feast serving url")
-}
-
-func (fr *FeastRetriever) getFeastURL(url string) string {
-	if url == "" {
-		return fr.options.DefaultServingURL
-	}
-	return url
 }
 
 func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.Row, featureTableSpec *spec.FeatureTable) (*internalFeatureTable, error) {

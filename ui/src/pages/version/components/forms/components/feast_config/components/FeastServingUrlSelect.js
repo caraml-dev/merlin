@@ -15,10 +15,33 @@ const logoMaps = {
   bigtable: logoBigtable
 };
 
-export const FeastServingUrlSelect = ({ servingUrl, onChange, isInvalid }) => {
+export const FeastServingUrlSelect = ({
+  servingUrl,
+  servingSource,
+  onChange,
+  isInvalid
+}) => {
+  const confByUrl = appConfig.feastServingUrls.reduce(
+    (res, val) => ({ ...res, [val.host]: val }),
+    {}
+  );
+  const confBySource = appConfig.feastServingUrls.reduce(
+    (res, val) => ({ ...res, [val.source_type]: val }),
+    {}
+  );
+
+  // find serving source if it is not set before
+  if (!servingSource || servingSource === "") {
+    if (servingUrl !== "") {
+      servingSource = confByUrl[servingUrl].source_type;
+    } else {
+      servingSource = appConfig.defaultFeastSource;
+    }
+  }
+
   const options = appConfig.feastServingUrls.map(url => {
     return {
-      value: url.host,
+      value: url,
       inputDisplay: `${url.label} (${url.host})`,
       dropdownDisplay: (
         <EuiFlexGroup alignItems="center" gutterSize="m">
@@ -39,7 +62,7 @@ export const FeastServingUrlSelect = ({ servingUrl, onChange, isInvalid }) => {
   return (
     <EuiSuperSelect
       options={options}
-      valueOfSelected={servingUrl || ""}
+      valueOfSelected={confBySource[servingSource] || {}}
       onChange={onChange}
       placeholder="Select Feast Serving Url"
       isInvalid={isInvalid}

@@ -67,6 +67,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "default",
+						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 
 							{
@@ -150,6 +151,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "default",
+						Source:  spec.ServingSource_BIGTABLE,
 						Entities: []*spec.Entity{
 							{
 								Name:      "driver_id",
@@ -231,6 +233,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "default",
+						Source:  spec.ServingSource_BIGTABLE,
 						Entities: []*spec.Entity{
 							{
 								Name:      "driver_id",
@@ -328,6 +331,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "default",
+						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 							{
 								Name:      "driver_id",
@@ -422,6 +426,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "default",
+						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 							{
 								Name:      "driver_id",
@@ -518,6 +523,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "driver_id",
+						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 							{
 								Name:      "driver_id",
@@ -537,6 +543,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					},
 					{
 						Project: "customer_id",
+						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 							{
 								Name:      "customer_id",
@@ -662,6 +669,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "geohash",
+						Source:  spec.ServingSource_BIGTABLE,
 						Entities: []*spec.Entity{
 							{
 								Name:      "geohash",
@@ -726,6 +734,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "jsonextract",
+						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 							{
 								Name:      "jsonextract",
@@ -807,6 +816,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "s2id",
+						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 							{
 								Name:      "s2id",
@@ -889,6 +899,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					{
 						Project:   "s2id",
 						TableName: "s2id_tables",
+						Source:    spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 							{
 								Name:      "s2id",
@@ -970,6 +981,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "default",
+						Source:  spec.ServingSource_BIGTABLE,
 						Entities: []*spec.Entity{
 							{
 								Name:      "driver_id",
@@ -1067,6 +1079,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				featureTableSpecs: []*spec.FeatureTable{
 					{
 						Project: "default",
+						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 
 							{
@@ -1150,6 +1163,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					{
 						Project:    "default",
 						ServingUrl: mockRedisServingURL,
+						Source:     spec.ServingSource_BIGTABLE,
 						Entities: []*spec.Entity{
 
 							{
@@ -1171,6 +1185,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					{
 						Project:    "default",
 						ServingUrl: mockBigtableServingURL,
+						Source:     spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
 
 							{
@@ -1277,12 +1292,12 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "unsupported serving url",
+			name: "unsupported serving source",
 			fields: fields{
 				featureTableSpecs: []*spec.FeatureTable{
 					{
-						Project:    "default",
-						ServingUrl: "this-is-unsupported-serving-url:8080",
+						Project: "default",
+						Source:  spec.ServingSource_UNKNOWN,
 						Entities: []*spec.Entity{
 
 							{
@@ -1316,9 +1331,8 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
 			feastClients := Clients{}
-			feastClients[DefaultClientURLKey] = mockFeast
-			feastClients[URL(mockRedisServingURL)] = mockFeast
-			feastClients[URL(mockBigtableServingURL)] = mockFeast
+			feastClients[spec.ServingSource_BIGTABLE] = mockFeast
+			feastClients[spec.ServingSource_REDIS] = mockFeast
 
 			for _, m := range tt.mockFeastCalls {
 				project := m.request.Project
@@ -1372,7 +1386,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 
 			assert.ElementsMatch(t, got, tt.want)
 
-			//validate cache is populated
+			// validate cache is populated
 			for _, exp := range tt.wantCache {
 				cacheContent, missedEntity := fr.featureCache.fetchFeatureTable(exp.table.entities, exp.table.columnNames, exp.project)
 				assert.Nil(t, missedEntity)
@@ -1391,6 +1405,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_Batching(t *testing.T
 		{
 			TableName: "my-table",
 			Project:   "default",
+			Source:    spec.ServingSource_BIGTABLE,
 			Entities: []*spec.Entity{
 
 				{
@@ -1463,9 +1478,8 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_Batching(t *testing.T
 	for batchSize := 1; batchSize < numberOfEntity; batchSize++ {
 		mockFeastClient := &mocks.Client{}
 		feastClients := Clients{}
-		feastClients[DefaultClientURLKey] = mockFeastClient
-		feastClients[URL(mockRedisServingURL)] = mockFeastClient
-		feastClients[URL(mockBigtableServingURL)] = mockFeastClient
+		feastClients[spec.ServingSource_REDIS] = mockFeastClient
+		feastClients[spec.ServingSource_BIGTABLE] = mockFeastClient
 
 		mockFeastCalls := make([]mockFeastCall, 0)
 		for entityId := 0; entityId < numberOfEntity; {
@@ -2053,7 +2067,7 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockFeast := &mocks.Client{}
 			feastClients := Clients{}
-			feastClients[DefaultClientURLKey] = mockFeast
+			feastClients[spec.ServingSource_BIGTABLE] = mockFeast
 
 			logger, _ := zap.NewDevelopment()
 
@@ -2131,6 +2145,7 @@ var (
 	defaultFeatureTableSpecs = []*spec.FeatureTable{
 		{
 			Project: "default",
+			Source:  spec.ServingSource_REDIS,
 			Entities: []*spec.Entity{
 
 				{
@@ -2155,7 +2170,7 @@ var (
 func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	mockFeast := &mocks.Client{}
 	feastClients := Clients{}
-	feastClients[DefaultClientURLKey] = mockFeast
+	feastClients[spec.ServingSource_REDIS] = mockFeast
 
 	for i := 0; i < 3; i++ {
 		mockFeast.On("GetOnlineFeatures", mock.Anything, mock.Anything).
@@ -2182,6 +2197,29 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 
 		FeastClientHystrixCommandName:    "TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent",
 		FeastClientMaxConcurrentRequests: 2,
+
+		DefaultFeastSource: spec.ServingSource_BIGTABLE,
+
+		StorageConfigs: FeastStorageConfig{
+			spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+				Storage: &spec.OnlineStorage_Bigtable{
+					Bigtable: &spec.BigTableStorage{
+						FeastServingUrl: "localhost:6866",
+					},
+				},
+			},
+			spec.ServingSource_REDIS: &spec.OnlineStorage{
+				Storage: &spec.OnlineStorage_RedisCluster{
+					RedisCluster: &spec.RedisClusterStorage{
+						FeastServingUrl: "localhost:6867",
+						RedisAddress:    []string{"10.1.1.2", "10.1.1.3"},
+						Option: &spec.RedisOption{
+							PoolSize: 5,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	logger, _ := zap.NewDevelopment()
@@ -2197,6 +2235,7 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		go func() {
 			_, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
+			fmt.Println(err)
 			if err != nil {
 				atomic.AddUint32(&bad, 1)
 			} else {

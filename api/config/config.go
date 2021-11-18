@@ -21,6 +21,9 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/gojek/merlin/pkg/transformer/feast"
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	internalValidator "github.com/gojek/merlin/pkg/validator"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 )
@@ -191,21 +194,39 @@ type MlpAPIConfig struct {
 }
 
 type StandardTransformerConfig struct {
-	ImageName              string           `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
-	DefaultFeastServingURL string           `envconfig:"DEFAULT_FEAST_SERVING_URL" required:"true"`
-	FeastServingURLs       FeastServingURLs `envconfig:"FEAST_SERVING_URLS" required:"true"`
-	FeastCoreURL           string           `envconfig:"FEAST_CORE_URL" required:"true"`
-	FeastCoreAuthAudience  string           `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
-	EnableAuth             bool             `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
-	Jaeger                 JaegerConfig
+	ImageName             string               `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
+	FeastServingURLs      FeastServingURLs     `envconfig:"FEAST_SERVING_URLS" required:"true"`
+	FeastCoreURL          string               `envconfig:"FEAST_CORE_URL" required:"true"`
+	FeastCoreAuthAudience string               `envconfig:"FEAST_CORE_AUTH_AUDIENCE" required:"true"`
+	EnableAuth            bool                 `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
+	FeastRedisConfig      *FeastRedisConfig    `envconfig:"FEAST_REDIS_CONFIG"`
+	FeastBigtableConfig   *FeastBigtableConfig `envconfig:"FEAST_BIG_TABLE_CONFIG"`
+	DefaultFeastSource    spec.ServingSource   `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
+	Jaeger                JaegerConfig
+}
+
+func (stc *StandardTransformerConfig) ToFeastStorageConfigs() feast.FeastStorageConfig {
+	feastStorageConfig := feast.FeastStorageConfig{}
+	validate := internalValidator.NewValidator()
+
+	// need to validate redis and big table config, because of `FeastRedisConfig` and `FeastBigtableConfig` wont be null when environment variables not set
+	// this is due to bug in envconfig library https://github.com/kelseyhightower/envconfig/issues/113
+	if stc.FeastRedisConfig != nil && validate.Struct(stc.FeastRedisConfig) == nil {
+		feastStorageConfig[spec.ServingSource_REDIS] = stc.FeastRedisConfig.ToFeastStorage()
+	}
+	if stc.FeastBigtableConfig != nil && validate.Struct(stc.FeastBigtableConfig) == nil {
+		feastStorageConfig[spec.ServingSource_BIGTABLE] = stc.FeastBigtableConfig.ToFeastStorage()
+	}
+	return feastStorageConfig
 }
 
 type FeastServingURLs []FeastServingURL
 
 type FeastServingURL struct {
-	Host  string `json:"host"`
-	Label string `json:"label"`
-	Icon  string `json:"icon"`
+	Host       string `json:"host"`
+	Label      string `json:"label"`
+	Icon       string `json:"icon"`
+	SourceType string `json:"source_type"`
 }
 
 func (u *FeastServingURLs) Decode(value string) error {

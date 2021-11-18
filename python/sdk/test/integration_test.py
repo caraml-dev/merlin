@@ -826,8 +826,8 @@ def test_standard_transformer_with_multiple_feast(
     endpoint = merlin.deploy(v, transformer=transformer)
     request_json = {
         "drivers": [
-            {"id": "1234", "name": "driver-1"},
-            {"id": "5678", "name": "driver-2"},
+            {"id": "driver_1", "name": "driver-1"},
+            {"id": "driver_2", "name": "driver-2"},
         ],
         "customer": {"id": 1111},
     }
@@ -838,16 +838,124 @@ def test_standard_transformer_with_multiple_feast(
     exp_resp = {
         "instances": {
             "columns": [
-                "rank",
-                "driver_id",
-                "customer_id",
-                "merlin_test_driver_features:test_int32",
-                "merlin_test_driver_features:test_float",
-                "merlin_test_driver_features:test_double",
+            "rank",
+            "driver_id",
+            "customer_id",
+            "merlin_test_redis_driver_features:completion_rate",
+            "merlin_test_redis_driver_features:cancellation_rate",
+            "merlin_test_bt_driver_features:rating"
             ],
-            "data": [[0, "1234", 1111, -1, 0, 0], [1, "5678", 1111, -1, 0, 0]],
+            "data": [
+            [
+                0,
+                "driver_1",
+                1111,
+                0.85,
+                0.15,
+                4.2
+            ],
+            [
+                1,
+                "driver_2",
+                1111,
+                0.6,
+                0.4,
+                4.2
+            ]
+            ]
         }
     }
+
+
+    assert resp.json()["instances"] == exp_resp["instances"]
+    merlin.undeploy(v)
+
+@pytest.mark.feast
+@pytest.mark.integration
+def test_standard_transformer_with_multiple_feast_with_source(
+    integration_test_url,
+    project_name,
+    use_google_oauth,
+    feast_serving_bigtable_url,
+):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("std-trf-feasts-source", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        v.log_pyfunc_model(
+            model_instance=EchoModel(),
+            conda_env="test/pyfunc/env.yaml",
+            code_dir=["test"],
+            artifacts={},
+        )
+
+    config_template_file_path = os.path.join(
+        "test/transformer", "standard_transformer_feast_with_source.yaml.tmpl"
+    )
+    config_file_path = os.path.join(
+        "test/transformer", "standard_transformer_multiple_feast.yaml"
+    )
+
+    from string import Template
+
+    config_template_file = open(config_template_file_path, "rt")
+    t = Template(config_template_file.read())
+    rendered_config = t.substitute(
+        {
+            "feast_serving_bigtable_url": feast_serving_bigtable_url,
+        }
+    )
+    config_file = open(config_file_path, "wt")
+    config_file.write(rendered_config)
+    config_file.close()
+
+    transformer = StandardTransformer(config_file=config_file_path, enabled=True)
+
+    endpoint = merlin.deploy(v, transformer=transformer)
+    request_json = {
+        "drivers": [
+            {"id": "driver_1", "name": "driver-1"},
+            {"id": "driver_2", "name": "driver-2"},
+        ],
+        "customer": {"id": 1111},
+    }
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    exp_resp = {
+        "instances": {
+            "columns": [
+            "rank",
+            "driver_id",
+            "customer_id",
+            "merlin_test_redis_driver_features:completion_rate",
+            "merlin_test_redis_driver_features:cancellation_rate",
+            "merlin_test_bt_driver_features:rating"
+            ],
+            "data": [
+            [
+                0,
+                "driver_1",
+                1111,
+                0.85,
+                0.15,
+                4.2
+            ],
+            [
+                1,
+                "driver_2",
+                1111,
+                0.6,
+                0.4,
+                4.2
+            ]
+            ]
+        }
+    }
+
 
     assert resp.json()["instances"] == exp_resp["instances"]
     merlin.undeploy(v)

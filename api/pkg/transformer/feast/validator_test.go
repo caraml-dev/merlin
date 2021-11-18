@@ -3,6 +3,7 @@ package feast
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
@@ -543,6 +544,177 @@ func TestValidateTransformerConfig(t *testing.T) {
 				},
 			},
 			nil,
+		},
+		{
+			"success specifying valid feast sources",
+			&spec.StandardTransformerConfig{
+				TransformerConfig: &spec.TransformerConfig{
+					Feast: []*spec.FeatureTable{
+						{
+							Project: "default",
+							Source:  spec.ServingSource_BIGTABLE,
+							Entities: []*spec.Entity{
+								{
+									Name: "customer_id",
+									Extractor: &spec.Entity_JsonPath{
+										JsonPath: "$.customer_id",
+									},
+									ValueType: "STRING",
+								},
+								{
+									Name: "hour_of_day",
+									Extractor: &spec.Entity_JsonPath{
+										JsonPath: "$.hour_of_day",
+									},
+									ValueType: "INT32",
+								},
+							},
+							Features: []*spec.Feature{
+								{
+									Name:      "customer_feature_table:total_booking",
+									ValueType: "INT32",
+								},
+							},
+						},
+					},
+				},
+			},
+			&Options{
+				StorageConfigs: FeastStorageConfig{
+					spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+						Storage: &spec.OnlineStorage_Bigtable{
+							Bigtable: &spec.BigTableStorage{
+								FeastServingUrl: "10.1.1.2",
+							},
+						},
+					},
+				},
+			},
+			&core.ListEntitiesResponse{
+				Entities: []*core.Entity{
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "customer_id",
+							ValueType: types.ValueType_STRING,
+						},
+					},
+					{
+						Spec: &core.EntitySpecV2{
+							Name:      "hour_of_day",
+							ValueType: types.ValueType_INT32,
+						},
+					},
+				},
+			},
+			[]*core.ListFeaturesResponse{
+				{
+					Features: map[string]*core.FeatureSpecV2{
+						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+							Name:      "total_booking",
+							ValueType: types.ValueType_INT32,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"invalid feast source",
+			&spec.StandardTransformerConfig{
+				TransformerConfig: &spec.TransformerConfig{
+					Feast: []*spec.FeatureTable{
+						{
+							Project: "default",
+							Source:  spec.ServingSource(5),
+							Entities: []*spec.Entity{
+								{
+									Name: "customer_id",
+									Extractor: &spec.Entity_JsonPath{
+										JsonPath: "$.customer_id",
+									},
+									ValueType: "STRING",
+								},
+								{
+									Name: "hour_of_day",
+									Extractor: &spec.Entity_JsonPath{
+										JsonPath: "$.hour_of_day",
+									},
+									ValueType: "INT32",
+								},
+							},
+							Features: []*spec.Feature{
+								{
+									Name:      "customer_feature_table:total_booking",
+									ValueType: "INT32",
+								},
+							},
+						},
+					},
+				},
+			},
+			&Options{
+				StorageConfigs: FeastStorageConfig{
+					spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+						Storage: &spec.OnlineStorage_Bigtable{
+							Bigtable: &spec.BigTableStorage{
+								FeastServingUrl: "10.1.1.2",
+							},
+						},
+					},
+				},
+			},
+			&core.ListEntitiesResponse{},
+			[]*core.ListFeaturesResponse{},
+			fmt.Errorf("feast source configuration is not valid, servingURL:  source: 5"),
+		},
+		{
+			"using not registered source",
+			&spec.StandardTransformerConfig{
+				TransformerConfig: &spec.TransformerConfig{
+					Feast: []*spec.FeatureTable{
+						{
+							Project: "default",
+							Source:  spec.ServingSource_REDIS,
+							Entities: []*spec.Entity{
+								{
+									Name: "customer_id",
+									Extractor: &spec.Entity_JsonPath{
+										JsonPath: "$.customer_id",
+									},
+									ValueType: "STRING",
+								},
+								{
+									Name: "hour_of_day",
+									Extractor: &spec.Entity_JsonPath{
+										JsonPath: "$.hour_of_day",
+									},
+									ValueType: "INT32",
+								},
+							},
+							Features: []*spec.Feature{
+								{
+									Name:      "customer_feature_table:total_booking",
+									ValueType: "INT32",
+								},
+							},
+						},
+					},
+				},
+			},
+			&Options{
+				StorageConfigs: FeastStorageConfig{
+					spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+						Storage: &spec.OnlineStorage_Bigtable{
+							Bigtable: &spec.BigTableStorage{
+								FeastServingUrl: "10.1.1.2",
+							},
+						},
+					},
+				},
+			},
+			&core.ListEntitiesResponse{},
+			[]*core.ListFeaturesResponse{},
+			fmt.Errorf("feast source configuration is not valid, servingURL:  source: REDIS"),
 		},
 		{
 			name: "invalid udf expression",

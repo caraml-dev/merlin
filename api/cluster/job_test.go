@@ -123,7 +123,6 @@ func Test_controller_DeleteJob(t *testing.T) {
 
 	err = ctl.DeleteJob(namespace, "batch-image-builder-1", nil)
 	assert.Nil(t, err)
-
 }
 
 func Test_controller_DeleteJobs(t *testing.T) {
