@@ -247,7 +247,7 @@ func (k *endpointService) updateFeatureTableSource(standardTransformer *models.T
 		return nil, err
 	}
 	envVars := standardTransformer.EnvVars
-	models.MergeEnvVars(envVars, models.EnvVars{
+	envVars = models.MergeEnvVars(envVars, models.EnvVars{
 		{
 			Name:  transformer.StandardTransformerConfigEnvName,
 			Value: transformerCfgString,
@@ -271,7 +271,14 @@ func (k *endpointService) addFeatureTableMetadata(standardTransformer *models.Tr
 		return nil, err
 	}
 
-	envVars := append(standardTransformer.EnvVars, models.EnvVar{Name: transformer.FeastFeatureTableSpecsJSON, Value: string(featureTableSpecsJSON)})
+	envVars := standardTransformer.EnvVars
+	// to make sure doesn't create duplicate env vars with the same name
+	envVars = models.MergeEnvVars(envVars, models.EnvVars{
+		{
+			Name:  transformer.FeastFeatureTableSpecsJSON,
+			Value: string(featureTableSpecsJSON),
+		},
+	})
 	standardTransformer.EnvVars = envVars
 	return standardTransformer, nil
 }

@@ -996,6 +996,298 @@ func TestDeployEndpoint_StandardTransformer(t *testing.T) {
 			},
 		},
 		{
+			desc:        "Success: transformer with preprocess and postprocess - FEAST_FEATURE_TABLE_SPECS_JSONS env exist",
+			environment: env,
+			model:       model,
+			version:     version,
+			endpoint: &models.VersionEndpoint{
+				VersionID:            version.ID,
+				Status:               models.EndpointPending,
+				InferenceServiceName: iSvcName,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					TransformerType: models.StandardTransformerType,
+					Image:           "std-transformer:v1",
+					EnvVars: models.EnvVars{
+						{
+							Name: transformer.StandardTransformerConfigEnvName,
+							Value: `{
+								"transformerConfig": {
+								  "preprocess": {
+									"inputs": [
+									  {
+										"feast": [
+										  {
+											"tableName": "driver_feature_table",
+											"project": "merlin",
+											"entities": [
+											  {
+												"name": "merlin_test_driver_id",
+												"valueType": "STRING",
+												"jsonPath": "$.drivers[*].id"
+											  }
+											],
+											"features": [
+											  {
+												"name": "driver_table:test_int32",
+												"valueType": "INT32",
+												"defaultValue": "-1"
+											  }
+											]
+										  },
+										  {
+											"tableName": "driver_feature_table",
+											"project": "merlin",
+											"servingUrl": "localhost:6566",
+											"entities": [
+											  {
+												"name": "merlin_test_driver_id",
+												"valueType": "STRING",
+												"jsonPath": "$.drivers[*].id"
+											  }
+											],
+											"features": [
+											  {
+												"name": "driver_table:test_int32",
+												"valueType": "INT32",
+												"defaultValue": "-1"
+											  }
+											]
+										  },
+										  {
+											"tableName": "driver_feature_table",
+											"project": "merlin",
+											"servingUrl": "localhost:6567",
+											"entities": [
+											  {
+												"name": "merlin_test_driver_id",
+												"valueType": "STRING",
+												"jsonPath": "$.drivers[*].id"
+											  }
+											],
+											"features": [
+											  {
+												"name": "driver_table:test_int32",
+												"valueType": "INT32",
+												"defaultValue": "-1"
+											  }
+											]
+										  }
+										]
+									  }
+									]
+								  },
+								  "postprocess": {
+									"inputs": [
+									  {
+										"feast": [
+										  {
+											"tableName": "driver_feature_table",
+											"project": "merlin",
+											"source": "REDIS",
+											"entities": [
+											  {
+												"name": "merlin_test_driver_id",
+												"valueType": "STRING",
+												"jsonPath": "$.drivers[*].id"
+											  }
+											],
+											"features": [
+											  {
+												"name": "driver_appraisal:driver_rating",
+												"valueType": "DOUBLE",
+												"defaultValue": "0"
+											  }
+											]
+										  }
+										]
+									  }
+									]
+								  }
+								}
+							  }`,
+						},
+						{
+							Name:  transformer.FeastFeatureTableSpecsJSON,
+							Value: `[{"name":"merlin_test_bt_driver_features","project":"merlin","maxAge":"0s"}]`,
+						},
+					},
+				},
+			},
+			feastCoreMock: func() *feastmocks.CoreServiceClient {
+				client := &feastmocks.CoreServiceClient{}
+				client.On("GetFeatureTable", mock.Anything, &core.GetFeatureTableRequest{
+					Project: "merlin",
+					Name:    "driver_table",
+				}).
+					Return(&core.GetFeatureTableResponse{
+						Table: &core.FeatureTable{
+							Spec: &core.FeatureTableSpec{
+								Name: "driver_table",
+								Entities: []string{
+									"merlin_test_driver_id",
+								},
+								Features: []*core.FeatureSpecV2{
+									{
+										Name:      "driver_table:test_int32",
+										ValueType: types.ValueType_INT32,
+									},
+								},
+								MaxAge: durationpb.New(time.Hour * 24),
+							},
+						},
+					}, nil)
+
+				client.On("GetFeatureTable", mock.Anything, &core.GetFeatureTableRequest{
+					Project: "merlin",
+					Name:    "driver_appraisal",
+				}).
+					Return(&core.GetFeatureTableResponse{
+						Table: &core.FeatureTable{
+							Spec: &core.FeatureTableSpec{
+								Name: "driver_appraisal",
+								Entities: []string{
+									"merlin_test_driver_id",
+								},
+								Features: []*core.FeatureSpecV2{
+									{
+										Name:      "driver_appraisal:driver_rating",
+										ValueType: types.ValueType_DOUBLE,
+									},
+								},
+								MaxAge: durationpb.New(time.Hour * 22),
+							},
+						},
+					}, nil)
+				return client
+			},
+			expectedStandardTransformerConfig: &spec.StandardTransformerConfig{
+				TransformerConfig: &spec.TransformerConfig{
+					Preprocess: &spec.Pipeline{
+						Inputs: []*spec.Input{
+							{
+								Feast: []*spec.FeatureTable{
+									{
+										TableName: "driver_feature_table",
+										Project:   "merlin",
+										Source:    spec.ServingSource_BIGTABLE,
+										Entities: []*spec.Entity{
+											{
+												Name:      "merlin_test_driver_id",
+												ValueType: "STRING",
+												Extractor: &spec.Entity_JsonPath{
+													JsonPath: "$.drivers[*].id",
+												},
+											},
+										},
+										Features: []*spec.Feature{
+											{
+												Name:         "driver_table:test_int32",
+												ValueType:    "INT32",
+												DefaultValue: "-1",
+											},
+										},
+									},
+									{
+										TableName:  "driver_feature_table",
+										Project:    "merlin",
+										ServingUrl: "localhost:6566",
+										Source:     spec.ServingSource_REDIS,
+										Entities: []*spec.Entity{
+											{
+												Name:      "merlin_test_driver_id",
+												ValueType: "STRING",
+												Extractor: &spec.Entity_JsonPath{
+													JsonPath: "$.drivers[*].id",
+												},
+											},
+										},
+										Features: []*spec.Feature{
+											{
+												Name:         "driver_table:test_int32",
+												ValueType:    "INT32",
+												DefaultValue: "-1",
+											},
+										},
+									},
+									{
+										TableName:  "driver_feature_table",
+										Project:    "merlin",
+										ServingUrl: "localhost:6567",
+										Source:     spec.ServingSource_BIGTABLE,
+										Entities: []*spec.Entity{
+											{
+												Name:      "merlin_test_driver_id",
+												ValueType: "STRING",
+												Extractor: &spec.Entity_JsonPath{
+													JsonPath: "$.drivers[*].id",
+												},
+											},
+										},
+										Features: []*spec.Feature{
+											{
+												Name:         "driver_table:test_int32",
+												ValueType:    "INT32",
+												DefaultValue: "-1",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					Postprocess: &spec.Pipeline{
+						Inputs: []*spec.Input{
+							{
+								Feast: []*spec.FeatureTable{
+									{
+										TableName:  "driver_feature_table",
+										Project:    "merlin",
+										ServingUrl: "",
+										Source:     spec.ServingSource_REDIS,
+										Entities: []*spec.Entity{
+											{
+												Name:      "merlin_test_driver_id",
+												ValueType: "STRING",
+												Extractor: &spec.Entity_JsonPath{
+													JsonPath: "$.drivers[*].id",
+												},
+											},
+										},
+										Features: []*spec.Feature{
+											{
+												Name:         "driver_appraisal:driver_rating",
+												ValueType:    "DOUBLE",
+												DefaultValue: "0",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedFeatureTableMetadata: []*spec.FeatureTableMetadata{
+				{
+					Name:    "driver_table",
+					Project: "merlin",
+					MaxAge:  durationpb.New(time.Hour * 24),
+				},
+				{
+					Name:    "driver_appraisal",
+					Project: "merlin",
+					MaxAge:  durationpb.New(time.Hour * 22),
+				},
+			},
+		},
+		{
 			desc:        "Failed: transformer with preprocess and postprocess, error when fetching feature table specs",
 			environment: env,
 			model:       model,
@@ -1304,6 +1596,14 @@ func TestDeployEndpoint_StandardTransformer(t *testing.T) {
 					assert.True(t, proto.Equal(tC.expectedStandardTransformerConfig, stdTransformer))
 				}
 				if len(tC.expectedFeatureTableMetadata) > 0 {
+					// check number of env variable that has `FEAST_FEATURE_TABLE_SPECS_JSONS` key
+					numOfFeatureTableSpecEnv := 0
+					for _, envVar := range envVars {
+						if envVar.Name == transformer.FeastFeatureTableSpecsJSON {
+							numOfFeatureTableSpecEnv = numOfFeatureTableSpecEnv + 1
+						}
+					}
+					assert.Equal(t, 1, numOfFeatureTableSpecEnv)
 					featureTableMetadataStr := envVarMap[transformer.FeastFeatureTableSpecsJSON]
 					var featureTableMetadata []*spec.FeatureTableMetadata
 					err := json.Unmarshal([]byte(featureTableMetadataStr), &featureTableMetadata)
