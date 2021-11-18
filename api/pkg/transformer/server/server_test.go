@@ -472,7 +472,8 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 
 			mockFeast := &mocks.Client{}
 			feastClients := feast.Clients{}
-			feastClients[feast.DefaultClientURLKey] = mockFeast
+			feastClients[spec.ServingSource_BIGTABLE] = mockFeast
+			feastClients[spec.ServingSource_REDIS] = mockFeast
 
 			for _, m := range tt.mockFeasts {
 				project := m.request.Project
@@ -529,9 +530,30 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 	}
 
 	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClients, &feast.Options{
-		CacheEnabled:  true,
-		CacheSizeInMB: 100,
-		BatchSize:     100,
+		CacheEnabled:       true,
+		CacheSizeInMB:      100,
+		BatchSize:          100,
+		DefaultFeastSource: spec.ServingSource_BIGTABLE,
+		StorageConfigs: feast.FeastStorageConfig{
+			spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+				Storage: &spec.OnlineStorage_Bigtable{
+					Bigtable: &spec.BigTableStorage{
+						FeastServingUrl: "localhost:6866",
+					},
+				},
+			},
+			spec.ServingSource_REDIS: &spec.OnlineStorage{
+				Storage: &spec.OnlineStorage_RedisCluster{
+					RedisCluster: &spec.RedisClusterStorage{
+						FeastServingUrl: "localhost:6867",
+						RedisAddress:    []string{"10.1.1.2", "10.1.1.3"},
+						Option: &spec.RedisOption{
+							PoolSize: 5,
+						},
+					},
+				},
+			},
+		},
 	}, logger)
 	compiledPipeline, err := compiler.Compile(&transformerConfig)
 	if err != nil {

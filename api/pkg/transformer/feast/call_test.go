@@ -33,6 +33,7 @@ func TestCall_do(t *testing.T) {
 		logger                  *zap.Logger
 		statusMonitoringEnabled bool
 		valueMonitoringEnabled  bool
+		servingSource           spec.ServingSource
 	}
 
 	type args struct {
@@ -73,6 +74,7 @@ func TestCall_do(t *testing.T) {
 		},
 		TableName:  "my-table",
 		ServingUrl: "localhost:6565",
+		Source:     spec.ServingSource_BIGTABLE,
 	}
 
 	columns := []string{
@@ -472,7 +474,7 @@ func TestCall_do(t *testing.T) {
 				entitySet:               tt.fields.entitySet,
 				defaultValues:           tt.fields.defaultValues,
 				feastClient:             tt.fields.feastClient,
-				feastURL:                tt.fields.feastURL,
+				servingSource:           tt.fields.servingSource,
 				logger:                  tt.fields.logger,
 				statusMonitoringEnabled: tt.fields.statusMonitoringEnabled,
 				valueMonitoringEnabled:  tt.fields.valueMonitoringEnabled,

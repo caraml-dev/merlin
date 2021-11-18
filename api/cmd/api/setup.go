@@ -480,15 +480,17 @@ func initClusterControllers(cfg *config.Config, vaultClient vault.Client) map[st
 	return controllers
 }
 
-func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBuilder, controllers map[string]cluster.Controller, db *gorm.DB, producer queue.Producer) service.EndpointsService {
+func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBuilder, controllers map[string]cluster.Controller, db *gorm.DB, feastCoreClient core.CoreServiceClient, producer queue.Producer) service.EndpointsService {
 	return service.NewEndpointService(service.EndpointServiceParams{
-		ClusterControllers:   controllers,
-		ImageBuilder:         builder,
-		Storage:              storage.NewVersionEndpointStorage(db),
-		DeploymentStorage:    storage.NewDeploymentStorage(db),
-		MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
-		LoggerDestinationURL: cfg.LoggerDestinationURL,
-		JobProducer:          producer,
+		ClusterControllers:        controllers,
+		ImageBuilder:              builder,
+		Storage:                   storage.NewVersionEndpointStorage(db),
+		DeploymentStorage:         storage.NewDeploymentStorage(db),
+		MonitoringConfig:          cfg.FeatureToggleConfig.MonitoringConfig,
+		LoggerDestinationURL:      cfg.LoggerDestinationURL,
+		JobProducer:               producer,
+		FeastCoreClient:           feastCoreClient,
+		StandardTransformerConfig: cfg.StandardTransformerConfig,
 	})
 }
 

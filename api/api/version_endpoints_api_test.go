@@ -1950,10 +1950,286 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringBaseURL: "http://grafana",
 			},
 			standardTransformerConfig: config.StandardTransformerConfig{
-				DefaultFeastServingURL: "localhost:6566",
-				FeastServingURLs: config.FeastServingURLs{
-					{Host: "localhost:6566"},
-					{Host: "localhost:6567"},
+				FeastBigtableConfig: &config.FeastBigtableConfig{
+					ServingURL: "localhost:6567",
+				},
+				FeastRedisConfig: &config.FeastRedisConfig{
+					ServingURL: "localhost:6566",
+					RedisAddresses: []string{
+						"10.1.1.2", "10.1.1.3",
+					},
+					PoolSize: 5,
+				},
+			},
+			feastCoreMock: func() *feastmocks.CoreServiceClient {
+				client := &feastmocks.CoreServiceClient{}
+				client.On("ListEntities", mock.Anything, mock.Anything).
+					Return(&core.ListEntitiesResponse{
+						Entities: []*core.Entity{
+							{
+								Spec: &core.EntitySpecV2{
+									Name:      "merlin_test_driver_id",
+									ValueType: types.ValueType_STRING,
+								},
+							},
+						},
+					}, nil)
+				client.On("ListFeatures", mock.Anything, mock.Anything).
+					Return(&core.ListFeaturesResponse{
+						Features: map[string]*core.FeatureSpecV2{
+							"merlin_test_driver_features:test_int32": {
+								Name:      "test_int32",
+								ValueType: types.ValueType_INT32,
+							},
+						},
+					}, nil)
+				return client
+			},
+			expected: &Response{
+				code: http.StatusCreated,
+				data: &models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointRunning,
+					URL:                  "http://endpoint.svc",
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					},
+					EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					CreatedUpdated: models.CreatedUpdated{},
+				},
+			},
+		},
+		{
+			desc: "Should success create endpoint with transformer - source set but not serving url",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionEndpoint{
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
+				ServiceName:     "sample",
+				Namespace:       "sample",
+				EnvironmentName: "dev",
+				Message:         "",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    1,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				EnvVars: models.EnvVars([]models.EnvVar{
+					{
+						Name:  "WORKER",
+						Value: "1",
+					},
+				}),
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					TransformerType: models.StandardTransformerType,
+					EnvVars: models.EnvVars{
+						{
+							Name: transformer.StandardTransformerConfigEnvName,
+							Value: `{
+								"transformerConfig": {
+								  "preprocess": {
+									"inputs": [
+									  {
+										"feast": [
+										  {
+											"tableName": "driver_feature_table",
+											"project": "merlin",
+											"entities": [
+											  {
+												"name": "merlin_test_driver_id",
+												"valueType": "STRING",
+												"jsonPath": "$.drivers[*].id"
+											  }
+											],
+											"features": [
+											  {
+												"name": "merlin_test_driver_features:test_int32",
+												"valueType": "INT32",
+												"defaultValue": "-1"
+											  }
+											]
+										  },
+										  {
+											"tableName": "driver_feature_table",
+											"project": "merlin",
+											"source": "REDIS",
+											"entities": [
+											  {
+												"name": "merlin_test_driver_id",
+												"valueType": "STRING",
+												"jsonPath": "$.drivers[*].id"
+											  }
+											],
+											"features": [
+											  {
+												"name": "merlin_test_driver_features:test_int32",
+												"valueType": "INT32",
+												"defaultValue": "-1"
+											  }
+											]
+										  },
+										  {
+											"tableName": "driver_feature_table",
+											"project": "merlin",
+											"source": "BIGTABLE",
+											"entities": [
+											  {
+												"name": "merlin_test_driver_id",
+												"valueType": "STRING",
+												"jsonPath": "$.drivers[*].id"
+											  }
+											],
+											"features": [
+											  {
+												"name": "merlin_test_driver_features:test_int32",
+												"valueType": "INT32",
+												"defaultValue": "-1"
+											  }
+											]
+										  }
+										]
+									  }
+									]
+								  }
+								}
+							  }`,
+						},
+					},
+				},
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
+					Name:         "model-1",
+					ProjectID:    models.ID(1),
+					Project:      mlp.Project{},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "",
+						Endpoints:    nil,
+					},
+				}, nil)
+				return svc
+			},
+			envService: func() *mocks.EnvironmentService {
+				svc := &mocks.EnvironmentService{}
+				svc.On("GetDefaultEnvironment").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				svc.On("GetEnvironment", "dev").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
+				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointRunning,
+					URL:                  "http://endpoint.svc",
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					},
+					EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					CreatedUpdated: models.CreatedUpdated{},
+				}, nil)
+				return svc
+			},
+			monitoringConfig: config.MonitoringConfig{
+				MonitoringEnabled: true,
+				MonitoringBaseURL: "http://grafana",
+			},
+			standardTransformerConfig: config.StandardTransformerConfig{
+				FeastBigtableConfig: &config.FeastBigtableConfig{
+					ServingURL: "localhost:6567",
+				},
+				FeastRedisConfig: &config.FeastRedisConfig{
+					ServingURL: "localhost:6566",
+					RedisAddresses: []string{
+						"10.1.1.2", "10.1.1.3",
+					},
+					PoolSize: 5,
 				},
 			},
 			feastCoreMock: func() *feastmocks.CoreServiceClient {
@@ -2179,10 +2455,15 @@ func TestCreateEndpoint(t *testing.T) {
 				MonitoringBaseURL: "http://grafana",
 			},
 			standardTransformerConfig: config.StandardTransformerConfig{
-				DefaultFeastServingURL: "localhost:6566",
-				FeastServingURLs: config.FeastServingURLs{
-					{Host: "localhost:6566"},
-					{Host: "localhost:6567"},
+				FeastBigtableConfig: &config.FeastBigtableConfig{
+					ServingURL: "localhost:6567",
+				},
+				FeastRedisConfig: &config.FeastRedisConfig{
+					ServingURL: "localhost:6566",
+					RedisAddresses: []string{
+						"10.1.1.2", "10.1.1.3",
+					},
+					PoolSize: 5,
 				},
 			},
 			feastCoreMock: func() *feastmocks.CoreServiceClient {
@@ -2190,7 +2471,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "serving url not supported: localhost:6565"},
+				data: Error{Message: "feast source configuration is not valid, servingURL: localhost:6565 source: UNKNOWN"},
 			},
 		},
 	}

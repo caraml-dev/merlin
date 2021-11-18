@@ -408,8 +408,7 @@ func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Cont
 	}
 
 	feastOptions := &feast.Options{
-		DefaultServingURL: c.StandardTransformerConfig.DefaultFeastServingURL,
-		ServingURLs:       c.StandardTransformerConfig.FeastServingURLs.URLs(),
+		StorageConfigs: c.StandardTransformerConfig.ToFeastStorageConfigs(),
 	}
 
 	return pipeline.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig, feastOptions)

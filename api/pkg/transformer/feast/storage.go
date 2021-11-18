@@ -6,24 +6,23 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 	"time"
 
-	"github.com/feast-dev/feast/sdk/go"
-	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
+	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/storage"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/go-redis/redis/v8"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/golang/protobuf/proto"
 	"github.com/spaolacci/murmur3"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewDirectStorageClient(storage *OnlineStorage, featureTables []*core.FeatureTableSpec) (StorageClient, error) {
+func NewDirectStorageClient(storage *spec.OnlineStorage, featureTablesMetadata []*spec.FeatureTableMetadata) (StorageClient, error) {
 	switch storage.Storage.(type) {
-	case *OnlineStorage_Redis:
+	case *spec.OnlineStorage_Redis:
 		option := storage.GetRedis().GetOption()
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:               storage.GetRedis().GetRedisAddress(),
@@ -40,13 +39,13 @@ func NewDirectStorageClient(storage *OnlineStorage, featureTables []*core.Featur
 			IdleCheckFrequency: getNullableDuration(option.IdleCheckFrequency),
 		})
 		return RedisClient{
-			encoder:   NewRedisEncoder(featureTables),
+			encoder:   NewRedisEncoder(featureTablesMetadata),
 			pipeliner: redisClient.Pipeline(),
 		}, nil
-	case *OnlineStorage_RedisCluster:
+	case *spec.OnlineStorage_RedisCluster:
 		option := storage.GetRedis().GetOption()
 		if option == nil {
-			option = &RedisOption{}
+			option = &spec.RedisOption{}
 		}
 		redisClient := redis.NewClusterClient(&redis.ClusterOptions{
 			Addrs:              storage.GetRedisCluster().GetRedisAddress(),
@@ -63,7 +62,7 @@ func NewDirectStorageClient(storage *OnlineStorage, featureTables []*core.Featur
 			IdleCheckFrequency: getNullableDuration(option.IdleCheckFrequency),
 		})
 		return RedisClient{
-			encoder:   NewRedisEncoder(featureTables),
+			encoder:   NewRedisEncoder(featureTablesMetadata),
 			pipeliner: redisClient.Pipeline(),
 		}, nil
 	}
@@ -83,16 +82,25 @@ type RedisClient struct {
 	pipeliner redis.Pipeliner
 }
 
-func NewRedisEncoder(featureTables []*core.FeatureTableSpec) RedisEncoder {
-	specs := make(map[string]*core.FeatureTableSpec)
-	for _, featureTable := range featureTables {
-		specs[featureTable.Name] = featureTable
+func getMetadataKey(metadata *spec.FeatureTableMetadata) string {
+	return metadataCompositeKey(metadata.Name, metadata.Project)
+}
+
+func metadataCompositeKey(featureTableName, project string) string {
+	return fmt.Sprintf("%s-%s", project, featureTableName)
+}
+
+func NewRedisEncoder(featureTablesMetadata []*spec.FeatureTableMetadata) RedisEncoder {
+	specs := make(map[string]*spec.FeatureTableMetadata)
+	for _, metadata := range featureTablesMetadata {
+		key := getMetadataKey(metadata)
+		specs[key] = metadata
 	}
 	return RedisEncoder{specs: specs}
 }
 
 type RedisEncoder struct {
-	specs map[string]*core.FeatureTableSpec
+	specs map[string]*spec.FeatureTableMetadata
 }
 
 type EncodedFeatureRequest struct {
@@ -114,10 +122,6 @@ func (e RedisEncoder) EncodeFeatureRequest(req *feast.OnlineFeaturesRequest) (En
 		EncodedEntities: encodedEntities,
 		EncodedFeatures: encodedFeatures,
 	}, nil
-}
-
-func (e RedisEncoder) getFeatureTableFromFeatureRef(ref string) string {
-	return strings.Split(ref, ":")[0]
 }
 
 func (e RedisEncoder) encodeEntity(project string, entity feast.Row) (string, error) {
@@ -176,7 +180,7 @@ func (e RedisEncoder) getSortedFeatureTableSet(featureReferences []string) []str
 	featureTableSet := make(map[string]bool)
 	sortedFeatureTables := make([]string, 0)
 	for _, featureReference := range featureReferences {
-		featureTable := e.getFeatureTableFromFeatureRef(featureReference)
+		featureTable := getFeatureTableFromFeatureRef(featureReference)
 		if _, exists := featureTableSet[featureTable]; !exists {
 			sortedFeatureTables = append(sortedFeatureTables, featureTable)
 		}
@@ -185,7 +189,12 @@ func (e RedisEncoder) getSortedFeatureTableSet(featureReferences []string) []str
 	return sortedFeatureTables
 }
 
-func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[string]*types.Value, eventTimestamps map[string]*timestamppb.Timestamp) *serving.GetOnlineFeaturesResponse_FieldValues {
+func (e RedisEncoder) getFeatureTableMaxAge(featureTable, project string) int64 {
+	lookupKey := metadataCompositeKey(featureTable, project)
+	return e.specs[lookupKey].MaxAge.GetSeconds()
+}
+
+func (e RedisEncoder) buildFieldValues(entity feast.Row, project string, featureValues map[string]*types.Value, eventTimestamps map[string]*timestamppb.Timestamp) *serving.GetOnlineFeaturesResponse_FieldValues {
 	entityFeatureValue := make(map[string]*types.Value)
 	status := make(map[string]serving.GetOnlineFeaturesResponse_FieldStatus)
 	for entityName, entityValue := range entity {
@@ -194,9 +203,10 @@ func (e RedisEncoder) buildFieldValues(entity feast.Row, featureValues map[strin
 	}
 	for featureReference, featureValue := range featureValues {
 		entityFeatureValue[featureReference] = featureValue
-		featureTable := e.getFeatureTableFromFeatureRef(featureReference)
+		featureTable := getFeatureTableFromFeatureRef(featureReference)
 		eventTimestamp := eventTimestamps[featureTable]
-		maxAge := e.specs[featureTable].MaxAge.GetSeconds()
+		maxAge := e.getFeatureTableMaxAge(featureTable, project)
+
 		if proto.Equal(featureValue, &types.Value{}) {
 			status[featureReference] = serving.GetOnlineFeaturesResponse_NOT_FOUND
 		} else if maxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(maxAge)*time.Second).Before(time.Now()) {
@@ -219,7 +229,7 @@ func (e RedisEncoder) DecodeStoredRedisValue(redisHashMaps [][]interface{}, req 
 		if err != nil {
 			return nil, err
 		}
-		fieldValues[index] = e.buildFieldValues(req.Entities[index], decodedHashMap, eventTimestamps)
+		fieldValues[index] = e.buildFieldValues(req.Entities[index], req.Project, decodedHashMap, eventTimestamps)
 	}
 	return &feast.OnlineFeaturesResponse{
 		RawResponse: &serving.GetOnlineFeaturesResponse{

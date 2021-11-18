@@ -24,7 +24,7 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 	b.StopTimer()
 	mockFeast := &mocks.Client{}
 	feastClients := Clients{}
-	feastClients[DefaultClientURLKey] = mockFeast
+	feastClients[spec.ServingSource_BIGTABLE] = mockFeast
 
 	logger, _ := zap.NewDevelopment()
 

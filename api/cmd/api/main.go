@@ -118,9 +118,9 @@ func main() {
 		DockerRegistries:  reactConfig.DockerRegistries,
 		MaxAllowedReplica: reactConfig.MaxAllowedReplica,
 
-		DefaultFeastServingURL: cfg.StandardTransformerConfig.DefaultFeastServingURL,
-		FeastServingURLs:       cfg.StandardTransformerConfig.FeastServingURLs,
-		FeastCoreURL:           reactConfig.FeastCoreURL,
+		DefaultFeastServingSource: cfg.StandardTransformerConfig.DefaultFeastSource.String(),
+		FeastServingURLs:          cfg.StandardTransformerConfig.FeastServingURLs,
+		FeastCoreURL:              reactConfig.FeastCoreURL,
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
@@ -221,7 +221,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 
 	clusterControllers := initClusterControllers(cfg, vaultClient)
 	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db)
-	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, dispatcher)
+	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, coreClient, dispatcher)
 
 	batchControllers := initBatchControllers(cfg, vaultClient, db, mlpAPIClient)
 	batchDeployment := initBatchDeployment(cfg, db, batchControllers, predJobBuilder)

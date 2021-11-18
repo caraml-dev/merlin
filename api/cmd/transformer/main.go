@@ -4,12 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"net"
-	"strconv"
 
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
-	feastSdk "github.com/feast-dev/feast/sdk/go"
-	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/kelseyhightower/envconfig"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -44,6 +40,7 @@ type AppConfig struct {
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
 	FeatureTableSpecJsons         string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
 	LogLevel                      string `envconfig:"LOG_LEVEL"`
+	RedisOverwriteConfig          feast.RedisOverwriteConfig
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
@@ -83,7 +80,7 @@ func main() {
 		logger.Fatal("Unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
-	featureSpecs := make([]*core.FeatureTableSpec, 0)
+	featureSpecs := make([]*spec.FeatureTableMetadata, 0)
 	if appConfig.FeatureTableSpecJsons != "" {
 		featureTableSpecJsons := make([]map[string]interface{}, 0)
 		if err := json.Unmarshal([]byte(appConfig.FeatureTableSpecJsons), &featureTableSpecJsons); err != nil {
@@ -94,7 +91,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			featureSpec := &core.FeatureTableSpec{}
+			featureSpec := &spec.FeatureTableMetadata{}
 			err = jsonpb.UnmarshalString(string(s), featureSpec)
 			if err != nil {
 				return
@@ -106,7 +103,11 @@ func main() {
 			featureSpecs = append(featureSpecs, featureSpec)
 		}
 	}
-	feastServingClients, err := initFeastServingClients(appConfig.Feast, featureSpecs, logger)
+
+	feastOpts := feast.OverwriteFeastOptionsConfig(appConfig.Feast, appConfig.RedisOverwriteConfig)
+	logger.Info("feast options", zap.Any("val", feastOpts))
+
+	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureSpecs, transformerConfig, logger)
 	if err != nil {
 		logger.Fatal("Unable to initialize Feast Clients", zap.Error(err))
 	}
@@ -122,7 +123,7 @@ func main() {
 		s.PreprocessHandler = feastTransformer.Enrich
 	} else {
 		// Standard Enricher
-		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &appConfig.Feast, logger)
+		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger)
 		compiledPipeline, err := compiler.Compile(transformerConfig)
 		if err != nil {
 			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
@@ -135,49 +136,6 @@ func main() {
 	}
 
 	s.Run()
-}
-
-func initFeastServingClients(feastOptions feast.Options, specs []*core.FeatureTableSpec, logger *zap.Logger) (feast.Clients, error) {
-	clients := feast.Clients{}
-
-	// Default Feast gRPC client. Used if user does not specify serving url
-	// on standard transformer config.
-	client, err := newFeastGrpcClient(feastOptions.DefaultServingURL)
-	if err != nil {
-		return nil, err
-	}
-	clients[feast.URL(feast.DefaultClientURLKey)] = client
-	logger.Info("Default Feast gRPC client initialized", zap.String("url", feastOptions.DefaultServingURL))
-
-	for _, url := range feastOptions.ServingURLs {
-		client, err := newFeastGrpcClient(url)
-		if err != nil {
-			return nil, err
-		}
-		clients[feast.URL(url)] = client
-		logger.Info("Feast gRPC client initialized", zap.String("url", url))
-	}
-
-	return clients, nil
-}
-
-func newFeastGrpcClient(url string) (*feastSdk.GrpcClient, error) {
-	host, port, err := net.SplitHostPort(url)
-	if err != nil {
-		return nil, errors.Errorf("Unable to parse Feast Serving host (%s): %s", url, err)
-	}
-
-	portInt, err := strconv.Atoi(port)
-	if err != nil {
-		return nil, errors.Errorf("Unable to parse Feast Serving port (%s): %s", url, err)
-	}
-
-	client, err := feastSdk.NewGrpcClient(host, portInt)
-	if err != nil {
-		return nil, errors.Errorf("Unable to initialize a Feast gRPC client: %s", err)
-	}
-
-	return client, nil
 }
 
 func initFeastTransformer(appCfg AppConfig,

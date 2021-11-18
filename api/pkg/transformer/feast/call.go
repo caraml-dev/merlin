@@ -22,8 +22,8 @@ type call struct {
 	entitySet        map[string]bool
 	defaultValues    defaultValues
 
-	feastClient StorageClient
-	feastURL    string
+	feastClient   StorageClient
+	servingSource spec.ServingSource
 
 	logger *zap.Logger
 
@@ -35,8 +35,9 @@ type call struct {
 func (fc *call) do(ctx context.Context, entityList []feast.Row, features []string) callResult {
 	tableName := GetTableName(fc.featureTableSpec)
 
+	feastSource := spec.ServingSource_name[int32(fc.servingSource)]
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.doBatchCall")
-	span.SetTag("feast.url", fc.feastURL)
+	span.SetTag("feast.source", feastSource)
 	span.SetTag("table", tableName)
 	defer span.Finish()
 
@@ -50,12 +51,12 @@ func (fc *call) do(ctx context.Context, entityList []feast.Row, features []strin
 	feastResponse, err := fc.feastClient.GetOnlineFeatures(ctx, &feastRequest)
 	durationMs := time.Now().Sub(startTime).Milliseconds()
 	if err != nil {
-		feastLatency.WithLabelValues("error", fc.feastURL).Observe(float64(durationMs))
-		feastError.WithLabelValues(fc.feastURL).Inc()
+		feastLatency.WithLabelValues("error", feastSource).Observe(float64(durationMs))
+		feastError.WithLabelValues(feastSource).Inc()
 
 		return callResult{featureTable: nil, err: err}
 	}
-	feastLatency.WithLabelValues("success", fc.feastURL).Observe(float64(durationMs))
+	feastLatency.WithLabelValues("success", feastSource).Observe(float64(durationMs))
 
 	featureTable, err := fc.processResponse(feastResponse)
 	if err != nil {
