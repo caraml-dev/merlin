@@ -119,17 +119,23 @@ merlin:
             icon: "bigtable",
           },
         ]
-      redisStorage:
-        serving_url: "online-serving-redis.feast.dev"
-        redis_addresses: 
-          - 10.1.1.2
-          - 10.1.1.3
-        pool_size: 5
-        max_retries: 0
-        read_timeout: "1s"
-        write_timeout: "1s"
-      bigtableStorage:
-        serving_url: "online-serving-bigtable.feast.dev"
+      ## Redis storage configuration for feast retrieval
+      ##
+      # redisStorage:
+      #   serving_url: "online-serving-redis.feast.dev"
+      #   redis_addresses: 
+      #     - 10.1.1.2
+      #     - 10.1.1.3
+      #   pool_size: 5
+      #   max_retries: 0
+      #   read_timeout: "1s"
+      #   write_timeout: "1s"
+
+      ## Bigtable storage configuration for feast retrieval
+      ##
+      # bigtableStorage:
+      #   serving_url: "online-serving-bigtable.feast.dev"
+      
       defaultFeastSource: BIGTABLE
       coreURL: core.feast.dev
       coreAuthAudience: core.feast.dev
