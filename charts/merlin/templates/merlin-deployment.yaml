@@ -157,10 +157,14 @@ spec:
             value: "{{ .Values.merlin.transformer.feast.defaultServingURL }}"
           - name: FEAST_SERVING_URLS
             value: {{ .Values.merlin.transformer.feast.servingURLs | toJson | quote }}
+          {{- if .Values.merlin.transformer.feast.redisStorage }}
           - name: FEAST_REDIS_CONFIG
             value: {{ .Values.merlin.transformer.feast.redisStorage | toJson | quote }}
+          {{- end }}
+          {{- if .Values.merlin.transformer.feast.bigtableStorage }}
           - name: FEAST_BIG_TABLE_CONFIG
             value: {{ .Values.merlin.transformer.feast.bigtableStorage | toJson | quote }}
+          {{- end }}
           - name: DEFAULT_FEAST_SOURCE
             value: {{ .Values.merlin.transformer.feast.defaultFeastSource}}
           - name: FEAST_CORE_URL
