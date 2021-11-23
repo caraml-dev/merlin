@@ -417,7 +417,8 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 	}{
 		{
 			"should be able to extract value from JSON string",
-			args{"$.details",
+			args{
+				"$.details",
 				"$.merchant_id",
 			},
 			float64(9001),
@@ -426,7 +427,8 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 		},
 		{
 			"should be able to extract value using nested key from JSON string",
-			args{"$.nested",
+			args{
+				"$.nested",
 				"$.child_node.grandchild_node",
 			},
 			"gen-z",
@@ -435,7 +437,8 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 		},
 		{
 			"should be able to extract array value using nested key from JSON string",
-			args{"$.array",
+			args{
+				"$.array",
 				"$.child_node.array[*]",
 			},
 			[]interface{}{float64(1), float64(2)},
@@ -444,7 +447,8 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 		},
 		{
 			"should throw error when value specified by key does not exist in nested JSON",
-			args{"$.nested",
+			args{
+				"$.nested",
 				"$.child_node.does_not_exist_node",
 			},
 			nil,
@@ -453,7 +457,8 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 		},
 		{
 			"should throw error when value obtained by key is not valid json",
-			args{"$.not_json",
+			args{
+				"$.not_json",
 				"$.not_exist",
 			},
 			nil,
@@ -462,7 +467,8 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 		},
 		{
 			"should throw error when value obtained by key is not string",
-			args{"$.not_string",
+			args{
+				"$.not_string",
 				"$.not_exist",
 			},
 			nil,
@@ -487,7 +493,6 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 }
 
 func TestSymbolRegistry_HaversineDistance(t *testing.T) {
-
 	type arguments struct {
 		lat1 interface{}
 		lon1 interface{}
@@ -905,6 +910,329 @@ func TestSymbolRegistry_ParseTimestamp(t *testing.T) {
 
 			got := sr.ParseTimestamp(tC.timestamp)
 			assert.Equal(t, tC.expectedValue, got)
+		})
+	}
+}
+
+func TestSymbolRegistry_IsWeekend(t *testing.T) {
+	testCases := []struct {
+		desc          string
+		timestamp     interface{}
+		timezone      string
+		requestJSON   []byte
+		responseJSON  []byte
+		expectedValue interface{}
+	}{
+		{
+			desc:          "single value timestamp, if timezone not specified using UTC by default (Saturday, November 20, 2021 9:50:44 PM GMT)",
+			timestamp:     1637445044,
+			timezone:      "",
+			expectedValue: 1,
+		},
+		{
+			desc:          "single value timestamp, falls in weekend (Sunday, November 21, 2021 4:50:44 AM GMT+07:00)",
+			timestamp:     1637445044,
+			timezone:      "Asia/Jakarta",
+			expectedValue: 1,
+		},
+		{
+			desc:      "multiple value timestamps",
+			timestamp: series.New([]interface{}{1637441444, 1637527844}, series.Int, "timestamp"),
+			timezone:  "Asia/Jakarta",
+			expectedValue: []interface{}{
+				1, 0,
+			},
+		},
+		{
+			desc:      "multiple value timestamps using UTC",
+			timestamp: series.New([]interface{}{1637441444, 1637527844}, series.Int, "timestamp"),
+			timezone:  "UTC",
+			expectedValue: []interface{}{
+				1, 1,
+			},
+		},
+		{
+			desc:      "Using single value request jsonPath for timestamp",
+			timestamp: "$.timestamp",
+			requestJSON: []byte(`{
+				"timestamp": 1637445044
+			}`),
+			timezone:      "UTC",
+			expectedValue: 1,
+		},
+		{
+			desc:      "Using multiple value request jsonPath for timestamp",
+			timestamp: "$.timestamps",
+			requestJSON: []byte(`{
+				"timestamps": [1637441444,1637527844]
+			}`),
+			timezone: "Asia/Jakarta",
+			expectedValue: []interface{}{
+				1, 0,
+			},
+		},
+		{
+			desc:      "Using single value response jsonPath for timestamp",
+			timestamp: "$.model_response.timestamp",
+			responseJSON: []byte(`{
+				"timestamp": 1637445044
+			}`),
+			timezone:      "UTC",
+			expectedValue: 1,
+		},
+		{
+			desc:      "Using multiple value response jsonPath for timestamp",
+			timestamp: "$.model_response.timestamps",
+			responseJSON: []byte(`{
+				"timestamps": [1637441444,1637527844]
+			}`),
+			timezone: "Asia/Jakarta",
+			expectedValue: []interface{}{
+				1, 0,
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
+
+			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
+			if requestJSONObj != nil {
+				sr.SetRawRequestJSON(requestJSONObj)
+			}
+			if responseJSONObj != nil {
+				sr.SetModelResponseJSON(responseJSONObj)
+			}
+
+			got := sr.IsWeekend(tC.timestamp, tC.timezone)
+			assert.Equal(t, tC.expectedValue, got)
+		})
+	}
+}
+
+func TestSymbolRegistry_ParseTimeStampsWithFormat(t *testing.T) {
+	testCases := []struct {
+		desc          string
+		timestamp     interface{}
+		format        string
+		timezone      string
+		requestJSON   []byte
+		responseJSON  []byte
+		expectedValue interface{}
+	}{
+		{
+			desc:          "Using ANSIC Format",
+			timestamp:     1637691859,
+			format:        time.ANSIC,
+			timezone:      "Asia/Jakarta",
+			expectedValue: "Wed Nov 24 01:24:19 2021",
+		},
+		{
+			desc:          "Using RFC1123 Format",
+			timestamp:     1637691859,
+			format:        time.RFC1123,
+			timezone:      "Asia/Jakarta",
+			expectedValue: "Wed, 24 Nov 2021 01:24:19 WIB",
+		},
+		{
+			desc:          "Using RFC1123Z Format",
+			timestamp:     1637691859,
+			format:        time.RFC1123Z,
+			timezone:      "Asia/Jakarta",
+			expectedValue: "Wed, 24 Nov 2021 01:24:19 +0700",
+		},
+		{
+			desc:          "Using custom Format",
+			timestamp:     1637691859,
+			format:        "2006-01-02",
+			timezone:      "Asia/Jakarta",
+			expectedValue: "2021-11-24",
+		},
+		{
+			desc:      "Multiple timestamps from request jsonpath",
+			timestamp: "$.timestamps",
+			requestJSON: []byte(`{
+				"timestamps":[1637441444,1637527844]
+			}`),
+			format:   "2006-01-02",
+			timezone: "Asia/Jakarta",
+			expectedValue: []interface{}{
+				"2021-11-21", "2021-11-22",
+			},
+		},
+		{
+			desc:      "Multiple timestamps from response jsonpath",
+			timestamp: "$.model_response.timestamps",
+			responseJSON: []byte(`{
+				"timestamps":[1637441444,1637527844]
+			}`),
+			format:   "2006-01-02",
+			timezone: "Asia/Jakarta",
+			expectedValue: []interface{}{
+				"2021-11-21", "2021-11-22",
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
+
+			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
+			if requestJSONObj != nil {
+				sr.SetRawRequestJSON(requestJSONObj)
+			}
+			if responseJSONObj != nil {
+				sr.SetModelResponseJSON(responseJSONObj)
+			}
+
+			got := sr.ParseTimeStampsWithFormat(tC.timestamp, tC.timezone, tC.format)
+			assert.Equal(t, tC.expectedValue, got)
+		})
+	}
+}
+
+func TestSymbolRegistry_DayOfWeek(t *testing.T) {
+	testCases := []struct {
+		desc          string
+		timestamp     interface{}
+		timezone      string
+		requestJSON   []byte
+		responseJSON  []byte
+		expectedValue interface{}
+	}{
+		{
+			desc:          "single value timestamp (Monday UTC)",
+			timestamp:     1637605459,
+			timezone:      "",
+			expectedValue: 1,
+		},
+		{
+			desc:          "single value timestamp (Tuesday in Asia/Jakarta)",
+			timestamp:     1637605459,
+			timezone:      "Asia/Jakarta",
+			expectedValue: 2,
+		},
+		{
+			desc:      "multiple value timestamps",
+			timestamp: series.New([]interface{}{1637441444, 1637691859}, series.Int, "timestamp"),
+			timezone:  "Asia/Jakarta",
+			expectedValue: []interface{}{
+				0, 3,
+			},
+		},
+		{
+			desc:      "multiple value timestamps using UTC",
+			timestamp: series.New([]interface{}{1637441444, 1637691859}, series.Int, "timestamp"),
+			timezone:  "UTC",
+			expectedValue: []interface{}{
+				6, 2,
+			},
+		},
+		{
+			desc:      "Using single value request jsonPath for timestamp",
+			timestamp: "$.timestamp",
+			requestJSON: []byte(`{
+				"timestamp": 1637445044
+			}`),
+			timezone:      "UTC",
+			expectedValue: 6,
+		},
+		{
+			desc:      "Using multiple value request jsonPath for timestamp",
+			timestamp: "$.timestamps",
+			requestJSON: []byte(`{
+				"timestamps": [1637441444,1637691859]
+			}`),
+			timezone: "Asia/Jakarta",
+			expectedValue: []interface{}{
+				0, 3,
+			},
+		},
+		{
+			desc:      "Using single value response jsonPath for timestamp",
+			timestamp: "$.model_response.timestamp",
+			responseJSON: []byte(`{
+				"timestamp": 1637445044
+			}`),
+			timezone:      "UTC",
+			expectedValue: 6,
+		},
+		{
+			desc:      "Using multiple value response jsonPath for timestamp",
+			timestamp: "$.model_response.timestamps",
+			responseJSON: []byte(`{
+				"timestamps": [1637441444,1637691859]
+			}`),
+			timezone: "Asia/Jakarta",
+			expectedValue: []interface{}{
+				0, 3,
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
+
+			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
+			if requestJSONObj != nil {
+				sr.SetRawRequestJSON(requestJSONObj)
+			}
+			if responseJSONObj != nil {
+				sr.SetModelResponseJSON(responseJSONObj)
+			}
+
+			got := sr.DayOfWeek(tC.timestamp, tC.timezone)
+			assert.Equal(t, tC.expectedValue, got)
+		})
+	}
+}
+
+func TestSymbolRegistry_CumulativeValue(t *testing.T) {
+	testCases := []struct {
+		desc     string
+		values   interface{}
+		expected []float64
+	}{
+		{
+			desc: "All values are integer",
+			values: []interface{}{
+				1, 2, 3,
+			},
+			expected: []float64{
+				1, 3, 6,
+			},
+		},
+		{
+			desc: "Values mixed of integer and float64",
+			values: []interface{}{
+				1, 2.3, 3.5,
+			},
+			expected: []float64{
+				1, 3.3, 6.8,
+			},
+		},
+		{
+			desc: "Values mixed of integer, float64 and string",
+			values: []interface{}{
+				1, 2.3, "3.5",
+			},
+			expected: []float64{
+				1, 3.3, 6.8,
+			},
+		},
+		{
+			desc:   "Values mixed of integer, float64 and string series",
+			values: series.New([]interface{}{1, 2.3, 3.5}, series.Float, "timestamp"),
+			expected: []float64{
+				1, 3.3, 6.8,
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
+			got := sr.CumulativeValue(tC.values)
+			assert.Equal(t, tC.expected, got)
 		})
 	}
 }

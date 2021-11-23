@@ -418,8 +418,8 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				},
 				body: []byte(`{
 					"drivers" : [
-						{"id": 1, "name": "driver-1"},
-						{"id": 2, "name": "driver-2"}
+						{"id": 1, "name": "driver-1", "eta": 1637650722, "fare": 100},
+						{"id": 2, "name": "driver-2", "eta": 1637996322, "fare": 200}
 					]
 				}`),
 			},
@@ -429,10 +429,10 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				},
 				body: []byte(`{
 					"instances": {
-						"columns": ["rank", "driver_id", "name", "driver_feature_1", "driver_feature_2", "driver_feature_3"],
+						"columns": ["rank", "driver_id", "name", "driver_feature_1", "driver_feature_2", "driver_feature_3", "is_weekend", "day_of_week", "pretty_date", "cumulative_fare"],
 						"data": [
-							[0, 1, "driver-1", 1, 2, 3],
-							[1, 2, "driver-2", 10, 20, 30]
+							[0, 1, "driver-1", 1, 2, 3, 0, 2,  "2021-11-23", 100],
+							[1, 2, "driver-2", 10, 20, 30, 1, 6, "2021-11-27", 300]
 						]
 					}
 				}`),

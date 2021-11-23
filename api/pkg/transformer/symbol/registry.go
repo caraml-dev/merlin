@@ -195,7 +195,52 @@ func (sr Registry) PolarAngle(latitude1 interface{}, longitude1 interface{}, lat
 
 // ParseTimeStamp convert timestamp value into time
 func (sr Registry) ParseTimestamp(timestamp interface{}) interface{} {
-	ts, err := sr.evalArg(timestamp)
+	timeFn := func(ts int64, tz *time.Location) interface{} {
+		return time.Unix(ts, 0).In(tz)
+	}
+	// empty timezone mean using UTC
+	return sr.processTimestampFunction(timestamp, "", timeFn)
+}
+
+// IsWeekend check wheter given timestamps falls in weekend, given timestamp and timezone
+// timestamp can be:
+// - Json path string
+// - Slice / gota.Series
+// - int64 value
+func (sr Registry) IsWeekend(timestamp interface{}, timezone string) interface{} {
+	timeFn := func(ts int64, tz *time.Location) interface{} {
+		return function.IsWeekend(ts, tz)
+	}
+	return sr.processTimestampFunction(timestamp, timezone, timeFn)
+}
+
+func (sr Registry) ParseTimeStampsWithFormat(timestamp interface{}, timezone, format string) interface{} {
+	timeFn := func(ts int64, tz *time.Location) interface{} {
+		return function.ParseTimestampIntoFormattedString(ts, tz, format)
+	}
+	return sr.processTimestampFunction(timestamp, timezone, timeFn)
+}
+
+// DayOfWeek will return number represent day in a week, given timestamp and timezone
+// SUNDAY(0), MONDAY(1), TUESDAY(2), WEDNESDAY(3), THURSDAY(4), FRIDAY(5), SATURDAY(6)
+// timestamp can be:
+// - Json path string
+// - Slice / gota.Series
+// - int64 value
+func (sr Registry) DayOfWeek(timestamp interface{}, timezone string) interface{} {
+	timeFn := func(ts int64, tz *time.Location) interface{} {
+		return function.DayOfWeek(ts, tz)
+	}
+	return sr.processTimestampFunction(timestamp, timezone, timeFn)
+}
+
+func (sr Registry) processTimestampFunction(timestamps interface{}, timezone string, timeTransformerFn func(timestamp int64, tz *time.Location) interface{}) interface{} {
+	timeLocation, err := time.LoadLocation(timezone)
+	if err != nil {
+		panic(err)
+	}
+
+	ts, err := sr.evalArg(timestamps)
 	if err != nil {
 		panic(err)
 	}
@@ -209,7 +254,7 @@ func (sr Registry) ParseTimestamp(timestamp interface{}) interface{} {
 			if err != nil {
 				panic(err)
 			}
-			values = append(values, time.Unix(tsInt64, 0).UTC())
+			values = append(values, timeTransformerFn(tsInt64, timeLocation))
 		}
 		return values
 	default:
@@ -217,7 +262,37 @@ func (sr Registry) ParseTimestamp(timestamp interface{}) interface{} {
 		if err != nil {
 			panic(err)
 		}
-		return time.Unix(tsInt64, 0).UTC()
+		return timeTransformerFn(tsInt64, timeLocation)
+	}
+}
+
+// CumulativeValue is function that accumulate values based on the index
+// e.g values [1,2,3] => [1, 1+2, 1+2+3] => [1, 3, 6]
+// values should be in array format
+func (sr Registry) CumulativeValue(values interface{}) []float64 {
+	evalValues, err := sr.evalArg(values)
+	if err != nil {
+		panic(err)
+	}
+	vals := reflect.ValueOf(evalValues)
+	switch vals.Kind() {
+	case reflect.Slice:
+		values := make([]float64, 0, vals.Len())
+		for idx := 0; idx < vals.Len(); idx++ {
+			val := vals.Index(idx)
+			floatVal, err := converter.ToFloat64(val.Interface())
+			if err != nil {
+				panic(err)
+			}
+			prevCumulativeVal := float64(0)
+			if idx > 0 {
+				prevCumulativeVal = values[idx-1]
+			}
+			values = append(values, prevCumulativeVal+floatVal)
+		}
+		return values
+	default:
+		panic("the values should in array format")
 	}
 }
 
