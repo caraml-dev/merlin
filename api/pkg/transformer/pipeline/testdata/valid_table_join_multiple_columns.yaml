@@ -54,7 +54,7 @@ transformerConfig:
               - column: day_of_week
                 expression: DayOfWeek(driver_table.Col('eta'), 'Asia/Jakarta')
               - column: pretty_date
-                expression: ParseTimeStampsWithFormat(driver_table.Col('eta'), 'Asia/Jakarta', '2006-01-02')
+                expression: FormatTimestamp(driver_table.Col('eta'), 'Asia/Jakarta', '2006-01-02')
               - column: cumulative_fare
                 expression: CumulativeValue(driver_table.Col('fare'))
       - tableTransformation:

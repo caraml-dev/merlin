@@ -1010,7 +1010,7 @@ func TestSymbolRegistry_IsWeekend(t *testing.T) {
 	}
 }
 
-func TestSymbolRegistry_ParseTimeStampsWithFormat(t *testing.T) {
+func TestSymbolRegistry_FormatTimestamp(t *testing.T) {
 	testCases := []struct {
 		desc          string
 		timestamp     interface{}
@@ -1085,7 +1085,7 @@ func TestSymbolRegistry_ParseTimeStampsWithFormat(t *testing.T) {
 				sr.SetModelResponseJSON(responseJSONObj)
 			}
 
-			got := sr.ParseTimeStampsWithFormat(tC.timestamp, tC.timezone, tC.format)
+			got := sr.FormatTimestamp(tC.timestamp, tC.timezone, tC.format)
 			assert.Equal(t, tC.expectedValue, got)
 		})
 	}

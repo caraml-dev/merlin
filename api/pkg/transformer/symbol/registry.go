@@ -214,7 +214,12 @@ func (sr Registry) IsWeekend(timestamp interface{}, timezone string) interface{}
 	return sr.processTimestampFunction(timestamp, timezone, timeFn)
 }
 
-func (sr Registry) ParseTimeStampsWithFormat(timestamp interface{}, timezone, format string) interface{} {
+// FormatTimestamp will convert timestamp into formatted date string
+// timestamp can be:
+// - Json path string
+// - Slice / gota.Series
+// - int64 value
+func (sr Registry) FormatTimestamp(timestamp interface{}, timezone, format string) interface{} {
 	timeFn := func(ts int64, tz *time.Location) interface{} {
 		return function.ParseTimestampIntoFormattedString(ts, tz, format)
 	}
