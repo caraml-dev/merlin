@@ -12,14 +12,15 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/sdk
         run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        working-directory: ./python/sdk
+        run: |
           tag=$(git describe --tags --always --first-parent)
           sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag//v}"`\"|g" ./merlin/version.py
-          cat ./merlin/version.py
-      # - name: Build and publish
-      #   env:
-      #     TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-      #     TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      #   working-directory: ./python/sdk
-      #   run: |
-      #     python setup.py sdist bdist_wheel
-      #     twine upload dist/*
+          python setup.py sdist bdist_wheel
+          twine upload dist/*
