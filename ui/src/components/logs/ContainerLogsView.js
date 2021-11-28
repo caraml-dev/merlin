@@ -46,6 +46,8 @@ export const ContainerLogsView = ({
     tail_lines: "1000"
   });
 
+  const [containerHaveBeenLoaded, setContainerHaveBeenLoaded] = useState(false);
+
   const [
     { data: containers, isLoaded: containersLoaded },
     getContainers
@@ -65,6 +67,9 @@ export const ContainerLogsView = ({
 
   useEffect(
     () => {
+      if (!containerHaveBeenLoaded) {
+        setContainerHaveBeenLoaded(containersLoaded);
+      }
       if (containersLoaded && params.component_type === "") {
         if (
           containers.find(
@@ -176,7 +181,9 @@ export const ContainerLogsView = ({
       </EuiTitle>
 
       <EuiPageContent>
-        {componentTypes && componentTypes.length === 0 ? (
+        {!containerHaveBeenLoaded &&
+        componentTypes &&
+        componentTypes.length === 0 ? (
           <EuiLoadingContent lines={4} />
         ) : logUrl && stackdriverUrl ? (
           <EuiFlexGroup direction="column" gutterSize="none">
