@@ -32,6 +32,6 @@ func (sr Registry) CumulativeValue(values interface{}) []float64 {
 		}
 		return values
 	default:
-		panic("the values should in array format")
+		panic("the values should be in array format")
 	}
 }
