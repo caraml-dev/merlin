@@ -3,6 +3,10 @@ module github.com/gojek/merlin
 go 1.13
 
 require (
+	cloud.google.com/go/bigtable v1.11.0
+	cloud.google.com/go/container v1.0.0 // indirect
+	cloud.google.com/go/monitoring v1.1.0 // indirect
+	cloud.google.com/go/trace v1.0.0 // indirect
 	github.com/DATA-DOG/go-sqlmock v1.3.3
 	github.com/GoogleCloudPlatform/spark-on-k8s-operator v0.0.0-20200424034326-7cd886c7ec44
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
@@ -30,7 +34,7 @@ require (
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-containerregistry v0.0.0-20191009212737-d753c5604768
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/schema v1.1.0
 	github.com/hashicorp/go-retryablehttp v0.6.6 // indirect
@@ -40,6 +44,7 @@ require (
 	github.com/jinzhu/gorm v1.9.11
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kubeflow/kfserving v0.4.1
+	github.com/linkedin/goavro/v2 v2.10.1
 	github.com/mmcloughlin/geohash v0.10.0
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/opentracing-contrib/go-stdlib v1.0.0
@@ -59,10 +64,10 @@ require (
 	github.com/xanzy/go-gitlab v0.31.0
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/zap v1.13.0
-	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
+	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
-	google.golang.org/grpc v1.31.0
-	google.golang.org/protobuf v1.26.0
+	google.golang.org/grpc v1.40.0
+	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	istio.io/api v0.0.0-20191115173247-e1a1952e5b81
