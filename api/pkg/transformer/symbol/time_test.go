@@ -264,7 +264,7 @@ func TestSymbolRegistry_FormatTimestamp(t *testing.T) {
 				sr.SetModelResponseJSON(responseJSONObj)
 			}
 
-			got := sr.FormatTimestamp(tC.timestamp, tC.timezone, tC.format)
+			got := sr.FormatTimestamp(tC.timestamp, tC.format, tC.timezone)
 			assert.Equal(t, tC.expectedValue, got)
 		})
 	}

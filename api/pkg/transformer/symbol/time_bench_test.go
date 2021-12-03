@@ -120,7 +120,7 @@ func (sr Registry) FormatTimestampFull(timestamp interface{}, timezone, format s
 			if err != nil {
 				panic(err)
 			}
-			values = append(values, function.ParseTimestampIntoFormattedString(tsInt64, timeLocation, format))
+			values = append(values, function.FormatTimestamp(tsInt64, format, timeLocation))
 		}
 		return values
 	default:
@@ -128,7 +128,7 @@ func (sr Registry) FormatTimestampFull(timestamp interface{}, timezone, format s
 		if err != nil {
 			panic(err)
 		}
-		return function.ParseTimestampIntoFormattedString(tsInt64, timeLocation, format)
+		return function.FormatTimestamp(tsInt64, format, timeLocation)
 	}
 }
 

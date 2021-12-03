@@ -21,7 +21,7 @@ func DayOfWeek(timestamp int64, location *time.Location) int {
 }
 
 // FormatTimestamp parses the timestamp and returns a date time string in a given format.
-func FormatTimestamp(timestamp int64, location *time.Location, format string) string {
+func FormatTimestamp(timestamp int64, format string, location *time.Location) string {
 	timeFromTs := time.Unix(timestamp, 0).In(location)
 	return timeFromTs.Format(format)
 }

@@ -78,7 +78,7 @@ func TestDayOfWeek(t *testing.T) {
 	}
 }
 
-func TestParseTimestampIntoFormattedString(t *testing.T) {
+func TestFormatTimestamp(t *testing.T) {
 	testCases := []struct {
 		desc      string
 		timestamp int64
@@ -105,7 +105,7 @@ func TestParseTimestampIntoFormattedString(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			location, err := time.LoadLocation(tC.timezone)
 			require.NoError(t, err)
-			got := ParseTimestampIntoFormattedString(tC.timestamp, location, tC.format)
+			got := FormatTimestamp(tC.timestamp, tC.format, location)
 			assert.Equal(t, tC.expected, got)
 		})
 	}

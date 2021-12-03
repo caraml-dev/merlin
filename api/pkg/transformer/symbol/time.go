@@ -40,9 +40,9 @@ func (sr Registry) IsWeekend(timestamp interface{}, timezone string) interface{}
 // - Json path string
 // - Slice / gota.Series
 // - int64 value
-func (sr Registry) FormatTimestamp(timestamp interface{}, timezone, format string) interface{} {
+func (sr Registry) FormatTimestamp(timestamp interface{}, format, timezone string) interface{} {
 	timeFn := func(ts int64, tz *time.Location) interface{} {
-		return function.FormatTimestamp(ts, tz, format)
+		return function.FormatTimestamp(ts, format, tz)
 	}
 	return sr.processTimestampFunction(timestamp, timezone, timeFn)
 }
@@ -96,20 +96,11 @@ func (sr Registry) processTimestampFunction(timestamps interface{}, timezone str
 // It uses Golang provided time format layout (https://pkg.go.dev/time#pkg-constants).
 //
 // Examples:
-// Request JSON: {"booking_time": "2021-12-01 11:30:00"}
-// Expression: ParseDateTime($.booking_time, "2006-01-02 15:04:05")
-// Output: 2021-12-01 11:30:00 UTC
-//
 // Request JSON: {"booking_time": "2021-12-01 11:30:00", "timezone": "Asia/Jakarta"}
 // Expression: ParseDateTime($.booking_time, "2006-01-02 15:04:05", $.timezone)
 // Output: 2021-12-01 11:30:00 +07:00
-func (sr Registry) ParseDateTime(datetime interface{}, format string, timezone ...string) interface{} {
-	locationName := ""
-	if len(timezone) > 0 {
-		locationName = timezone[0]
-	}
-
-	timeLocation, err := time.LoadLocation(locationName)
+func (sr Registry) ParseDateTime(datetime interface{}, format, timezone string) interface{} {
+	timeLocation, err := time.LoadLocation(timezone)
 	if err != nil {
 		panic(err)
 	}
