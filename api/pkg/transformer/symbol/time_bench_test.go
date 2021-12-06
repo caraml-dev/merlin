@@ -92,7 +92,7 @@ func Benchmark_IsWeekend2_SingleValue(b *testing.B) {
 func Benchmark_FormatTimestamp_SingleValue(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
-		isWeekend := sr.FormatTimestamp(1637691859, "Asia/Jakarta", "2006-01-02")
+		isWeekend := sr.FormatTimestamp(1637691859, "2006-01-02", "Asia/Jakarta")
 		if isWeekend != "2021-11-24" {
 			panic("isWeekend should be 1")
 		}
@@ -120,7 +120,7 @@ func (sr Registry) FormatTimestampFull(timestamp interface{}, timezone, format s
 			if err != nil {
 				panic(err)
 			}
-			values = append(values, function.FormatTimestamp(tsInt64, format, timeLocation))
+			values = append(values, function.FormatTimestamp(tsInt64, timeLocation, format))
 		}
 		return values
 	default:
@@ -128,7 +128,7 @@ func (sr Registry) FormatTimestampFull(timestamp interface{}, timezone, format s
 		if err != nil {
 			panic(err)
 		}
-		return function.FormatTimestamp(tsInt64, format, timeLocation)
+		return function.FormatTimestamp(tsInt64, timeLocation, format)
 	}
 }
 

@@ -37,7 +37,7 @@ transformerConfig:
                   order: ASC
             - renameColumns:
                 row_number: rank
-                id: driver_id            
+                id: driver_id
       - tableJoin:
           leftTable: driver_table
           rightTable: driver_feature_table
@@ -49,14 +49,16 @@ transformerConfig:
           outputTable: result_table
           steps:
             - updateColumns:
-              - column: is_weekend
-                expression: IsWeekend(driver_table.Col('eta'), 'Asia/Jakarta')
-              - column: day_of_week
-                expression: DayOfWeek(driver_table.Col('eta'), 'Asia/Jakarta')
-              - column: pretty_date
-                expression: FormatTimestamp(driver_table.Col('eta'), 'Asia/Jakarta', '2006-01-02')
-              - column: cumulative_fare
-                expression: CumulativeValue(driver_table.Col('fare'))
+                - column: is_weekend
+                  expression: IsWeekend(driver_table.Col('eta'), 'Asia/Jakarta')
+                - column: day_of_week
+                  expression: DayOfWeek(driver_table.Col('eta'), 'Asia/Jakarta')
+                - column: pretty_date
+                  expression: FormatTimestamp(driver_table.Col('eta'), 'Asia/Jakarta', '2006-01-02')
+                - column: datetime_parsed
+                  expression: ParseDateTime(driver_table.Col('pickup_time'), driver_table.Col('pickup_timezone'), '2006-01-02 15:04:05')
+                - column: cumulative_fare
+                  expression: CumulativeValue(driver_table.Col('fare'))
       - tableTransformation:
           inputTable: result_table
           outputTable: result_table
@@ -75,7 +77,8 @@ transformerConfig:
                   is_weekend,
                   day_of_week,
                   pretty_date,
-                  cumulative_fare
+                  datetime_parsed,
+                  cumulative_fare,
                 ]
     outputs:
       - jsonOutput:

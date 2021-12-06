@@ -24,11 +24,11 @@ func (sr Registry) ParseTimestamp(timestamp interface{}) interface{} {
 }
 
 // IsWeekend check wheter given timestamps falls in weekend, given timestamp and timezone
-// timestamp can be:
+// timestamp ana timezone can be:
 // - Json path string
 // - Slice / gota.Series
 // - int64 value
-func (sr Registry) IsWeekend(timestamp interface{}, timezone string) interface{} {
+func (sr Registry) IsWeekend(timestamp, timezone interface{}) interface{} {
 	timeFn := func(ts int64, tz *time.Location) interface{} {
 		return function.IsWeekend(ts, tz)
 	}
@@ -40,9 +40,9 @@ func (sr Registry) IsWeekend(timestamp interface{}, timezone string) interface{}
 // - Json path string
 // - Slice / gota.Series
 // - int64 value
-func (sr Registry) FormatTimestamp(timestamp interface{}, format, timezone string) interface{} {
+func (sr Registry) FormatTimestamp(timestamp, timezone interface{}, format string) interface{} {
 	timeFn := func(ts int64, tz *time.Location) interface{} {
-		return function.FormatTimestamp(ts, format, tz)
+		return function.FormatTimestamp(ts, tz, format)
 	}
 	return sr.processTimestampFunction(timestamp, timezone, timeFn)
 }
@@ -53,26 +53,50 @@ func (sr Registry) FormatTimestamp(timestamp interface{}, format, timezone strin
 // - Json path string
 // - Slice / gota.Series
 // - int64 value
-func (sr Registry) DayOfWeek(timestamp interface{}, timezone string) interface{} {
+func (sr Registry) DayOfWeek(timestamp, timezone interface{}) interface{} {
 	timeFn := func(ts int64, tz *time.Location) interface{} {
 		return function.DayOfWeek(ts, tz)
 	}
 	return sr.processTimestampFunction(timestamp, timezone, timeFn)
 }
 
-func (sr Registry) processTimestampFunction(timestamps interface{}, timezone string, timeTransformerFn func(timestamp int64, tz *time.Location) interface{}) interface{} {
-	timeLocation, err := time.LoadLocation(timezone)
-	if err != nil {
-		panic(err)
-	}
-
+func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, timeTransformerFn func(timestamp int64, tz *time.Location) interface{}) interface{} {
 	ts, err := sr.evalArg(timestamps)
 	if err != nil {
 		panic(err)
 	}
+
+	tz, err := sr.evalArg(timezone)
+	if err != nil {
+		panic(err)
+	}
+
 	timestampVals := reflect.ValueOf(ts)
+	timezoneVals := reflect.ValueOf(tz)
+
 	switch timestampVals.Kind() {
 	case reflect.Slice:
+		if timestampVals.Len() == 0 {
+			panic("empty array of timestamp provided")
+		}
+
+		location := &time.Location{}
+		if timezoneVals.Kind() == reflect.Slice {
+			if timezoneVals.Len() == 0 {
+				panic("empty array of timezone provided")
+			}
+
+			if timestampVals.Len() != timezoneVals.Len() {
+				panic("both timestamp and timezone arrays must have the same length")
+			}
+		} else {
+			timeLocation, err := time.LoadLocation(fmt.Sprintf("%s", tz))
+			if err != nil {
+				panic(err)
+			}
+			location = timeLocation
+		}
+
 		var values []interface{}
 		for idx := 0; idx < timestampVals.Len(); idx++ {
 			val := timestampVals.Index(idx)
@@ -80,7 +104,16 @@ func (sr Registry) processTimestampFunction(timestamps interface{}, timezone str
 			if err != nil {
 				panic(err)
 			}
-			values = append(values, timeTransformerFn(tsInt64, timeLocation))
+
+			if timezoneVals.Kind() == reflect.Slice {
+				timeLocation, err := time.LoadLocation(fmt.Sprint(timezoneVals.Index(idx)))
+				if err != nil {
+					panic(err)
+				}
+				location = timeLocation
+			}
+
+			values = append(values, timeTransformerFn(tsInt64, location))
 		}
 		return values
 	default:
@@ -88,6 +121,12 @@ func (sr Registry) processTimestampFunction(timestamps interface{}, timezone str
 		if err != nil {
 			panic(err)
 		}
+
+		timeLocation, err := time.LoadLocation(fmt.Sprintf("%s", tz))
+		if err != nil {
+			panic(err)
+		}
+
 		return timeTransformerFn(tsInt64, timeLocation)
 	}
 }
@@ -97,14 +136,9 @@ func (sr Registry) processTimestampFunction(timestamps interface{}, timezone str
 //
 // Examples:
 // Request JSON: {"booking_time": "2021-12-01 11:30:00", "timezone": "Asia/Jakarta"}
-// Expression: ParseDateTime($.booking_time, "2006-01-02 15:04:05", $.timezone)
+// Expression: ParseDateTime($.booking_time, $.timezone, "2006-01-02 15:04:05")
 // Output: 2021-12-01 11:30:00 +07:00
-func (sr Registry) ParseDateTime(datetime interface{}, format, timezone string) interface{} {
-	timeLocation, err := time.LoadLocation(timezone)
-	if err != nil {
-		panic(err)
-	}
-
+func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) interface{} {
 	if format == "" {
 		panic("datetime format must be specified")
 	}
@@ -114,24 +148,68 @@ func (sr Registry) ParseDateTime(datetime interface{}, format, timezone string) 
 		panic(err)
 	}
 
+	tz, err := sr.evalArg(timezone)
+	if err != nil {
+		panic(err)
+	}
+
 	dateTimeVals := reflect.ValueOf(dt)
+	timezoneVals := reflect.ValueOf(tz)
+
 	switch dateTimeVals.Kind() {
 	case reflect.Slice:
-		var values []interface{}
-		for idx := 0; idx < dateTimeVals.Len(); idx++ {
-			val := dateTimeVals.Index(idx)
-			dateTime, err := time.ParseInLocation(format, fmt.Sprintf("%v", val), timeLocation)
+		if dateTimeVals.Len() == 0 {
+			panic("empty array of timestamp provided")
+		}
+
+		location := &time.Location{}
+		if timezoneVals.Kind() == reflect.Slice {
+			if timezoneVals.Len() == 0 {
+				panic("empty array of timezone provided")
+			}
+
+			if dateTimeVals.Len() != timezoneVals.Len() {
+				panic("both date time and timezone arrays must have the same length")
+			}
+		} else {
+			timeLocation, err := time.LoadLocation(fmt.Sprintf("%s", tz))
 			if err != nil {
 				panic(err)
 			}
+			location = timeLocation
+		}
+
+		var values []interface{}
+		for idx := 0; idx < dateTimeVals.Len(); idx++ {
+			dt := dateTimeVals.Index(idx)
+
+			if timezoneVals.Kind() == reflect.Slice {
+				timeLocation, err := time.LoadLocation(fmt.Sprint(timezoneVals.Index(idx)))
+				if err != nil {
+					panic(err)
+				}
+				location = timeLocation
+			}
+
+			dateTime, err := time.ParseInLocation(fmt.Sprintf("%v", format), fmt.Sprintf("%v", dt), location)
+			if err != nil {
+				panic(err)
+			}
+
 			values = append(values, dateTime)
 		}
 		return values
 	default:
-		dateTime, err := time.ParseInLocation(format, fmt.Sprintf("%v", dt), timeLocation)
+		timeLocation, err := time.LoadLocation(fmt.Sprintf("%v", timezone))
 		if err != nil {
 			panic(err)
 		}
+
+		dateTime, err := time.ParseInLocation(fmt.Sprintf("%v", format), fmt.Sprintf("%v", dt), timeLocation)
+		if err != nil {
+			panic(err)
+		}
+
 		return dateTime
 	}
 }
