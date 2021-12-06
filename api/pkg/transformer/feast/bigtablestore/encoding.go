@@ -20,6 +20,7 @@ import (
 	"github.com/linkedin/goavro/v2"
 )
 
+// Encoder is used to encode OnlineFeaturesRequest into RowQuery
 type Encoder struct {
 	registry        CodecRegistry
 	featureSpecs    map[featureTableKey]*spec.FeatureTable
@@ -160,6 +161,7 @@ func avroToValueConversion(avroValue interface{}, featureType string) (*types.Va
 	}
 }
 
+// NewEncoder instantiates new instance of Encoder
 func NewEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) *Encoder {
 	tableByKey := make(map[featureTableKey]*spec.FeatureTable)
 	for _, tbl := range tables {
@@ -182,6 +184,8 @@ func NewEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []
 	}
 }
 
+// RowQuery contains all information necessary to retrieve bigtable rows
+// corresponding to list of entity rows and feature table(s).
 type RowQuery struct {
 	table      string
 	entityKeys []*spec.Entity
@@ -212,6 +216,12 @@ func (e *Encoder) extractCommonEntityKeys(project string, featureTables []string
 	return entityKeysPerTable[0], nil
 }
 
+// Encode parse the request into RowQuery based on the following rules:
+// - All feature tables having the same entity keys are stored in the
+// same BigTable, in the form of <project>__<1st entity key>__<2nd entity key>...
+// - The row keys of the BigTable are in the form of  <entity key value_1>#<entity key value 2>...
+// - Feature values from the same feature table are stored in the same column in
+// the same BigTable table.
 func (e *Encoder) Encode(req *feast.OnlineFeaturesRequest) (RowQuery, error) {
 	featureTables, err := UniqueFeatureTablesFromFeatureRef(req.Features)
 	if err != nil {
@@ -268,6 +278,9 @@ func (e *Encoder) decodeAvro(ctx context.Context, row bigtable.Row, project stri
 	return featureValues, featureTimestamps, nil
 }
 
+// Decode decodes given BigTable rows into Feast feature values, based on
+// the assumption that the column values are stored as the concatenation of
+// schema reference hash (4 bytes) and feature values serialized in Avro format.
 func (e *Encoder) Decode(ctx context.Context, rows []bigtable.Row, req *feast.OnlineFeaturesRequest, entityKeys []*spec.Entity) (*feast.OnlineFeaturesResponse, error) {
 	avroValueByKey := make(map[string]map[featureTableKey]map[string]interface{})
 	timestampByKey := make(map[string]map[featureTableKey]time.Time)
@@ -363,16 +376,22 @@ func (e *Encoder) Decode(ctx context.Context, rows []bigtable.Row, req *feast.On
 	}, nil
 }
 
+// CodecRegistry returns an Avro codec given a schema reference hash in byte array
 type CodecRegistry interface {
 	GetCodec(ctx context.Context, schemaRef []byte, project string, entityKeys []*spec.Entity) (*goavro.Codec, error)
 }
 
+// CachedCodecRegistry instantiates an Avro codec by retrieving the schema from
+// BigTable. The Avro schema corresponds to a FeatureTable is always stored as
+// a row within the same BigTable, where the key is the schema reference hash. The
+// codec is cached to avoid repeated calls to BigTable.
 type CachedCodecRegistry struct {
 	codecs map[string]*goavro.Codec
 	tables map[string]*bigtable.Table
 	sync.RWMutex
 }
 
+// NewCachedCodecRegistry instantiates a new CachedCodecRegistry
 func NewCachedCodecRegistry(tables map[string]*bigtable.Table) *CachedCodecRegistry {
 	return &CachedCodecRegistry{
 		codecs: make(map[string]*goavro.Codec),
@@ -380,10 +399,15 @@ func NewCachedCodecRegistry(tables map[string]*bigtable.Table) *CachedCodecRegis
 	}
 }
 
+// GetCodec returns an Avro codec, either from the in-memory cache or built
+// from the Avro schema specification.
 func (r *CachedCodecRegistry) GetCodec(ctx context.Context, schemaRef []byte, project string, entityKeys []*spec.Entity) (*goavro.Codec, error) {
+	r.RLock()
 	if codec, exists := r.codecs[string(schemaRef)]; exists {
+		r.Unlock()
 		return codec, nil
 	}
+	r.Unlock()
 	tableName := entityKeysToBigTable(project, entityKeys)
 	schemaKey := fmt.Sprintf("schema#%s", string(schemaRef))
 	schemaValue, err := r.tables[tableName].ReadRow(ctx, schemaKey)
@@ -394,6 +418,8 @@ func (r *CachedCodecRegistry) GetCodec(ctx context.Context, schemaRef []byte, pr
 	if err != nil {
 		return nil, err
 	}
+	r.Lock()
 	r.codecs[string(schemaRef)] = codec
+	r.Unlock()
 	return codec, nil
 }

@@ -9,11 +9,14 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
+// BigTableClient provides the means of retrieving Feast features directly from
+// BigTable without going through Feast Serving.
 type BigTableClient struct {
 	encoder *Encoder
 	tables  map[string]*bigtable.Table
 }
 
+// NewClient instantiate new instance of BigTableClient
 func NewClient(client *bigtable.Client, project string, featureSpecs []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) *BigTableClient {
 	tables := make(map[string]*bigtable.Table)
 	for _, featureSpec := range featureSpecs {
@@ -30,6 +33,10 @@ func NewClient(client *bigtable.Client, project string, featureSpecs []*spec.Fea
 	}
 }
 
+// GetOnlineFeatures will first convert the request to RowQuery, which contains all
+// information needed to perform a query to BigTable to retrieve the Feast features,
+// stored in Avro format. The retrieved BigTable rows are then decoded back into
+// the Feast feature values again.
 func (b BigTableClient) GetOnlineFeatures(ctx context.Context, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error) {
 	query, err := b.encoder.Encode(req)
 	if err != nil {
