@@ -3,6 +3,7 @@ package symbol
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/gojek/merlin/pkg/transformer/symbol/function"
@@ -90,7 +91,7 @@ func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, ti
 				panic("both timestamp and timezone arrays must have the same length")
 			}
 		} else {
-			timeLocation, err := time.LoadLocation(fmt.Sprintf("%s", tz))
+			timeLocation, err := LoadLocationCached(fmt.Sprintf("%s", tz))
 			if err != nil {
 				panic(err)
 			}
@@ -106,7 +107,7 @@ func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, ti
 			}
 
 			if timezoneVals.Kind() == reflect.Slice {
-				timeLocation, err := time.LoadLocation(fmt.Sprint(timezoneVals.Index(idx)))
+				timeLocation, err := LoadLocationCached(fmt.Sprint(timezoneVals.Index(idx)))
 				if err != nil {
 					panic(err)
 				}
@@ -122,7 +123,7 @@ func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, ti
 			panic(err)
 		}
 
-		timeLocation, err := time.LoadLocation(fmt.Sprintf("%s", tz))
+		timeLocation, err := LoadLocationCached(fmt.Sprintf("%s", tz))
 		if err != nil {
 			panic(err)
 		}
@@ -172,7 +173,7 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 				panic("both date time and timezone arrays must have the same length")
 			}
 		} else {
-			timeLocation, err := time.LoadLocation(fmt.Sprintf("%s", tz))
+			timeLocation, err := LoadLocationCached(fmt.Sprintf("%s", tz))
 			if err != nil {
 				panic(err)
 			}
@@ -184,7 +185,7 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 			dt := dateTimeVals.Index(idx)
 
 			if timezoneVals.Kind() == reflect.Slice {
-				timeLocation, err := time.LoadLocation(fmt.Sprint(timezoneVals.Index(idx)))
+				timeLocation, err := LoadLocationCached(fmt.Sprint(timezoneVals.Index(idx)))
 				if err != nil {
 					panic(err)
 				}
@@ -200,7 +201,7 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 		}
 		return values
 	default:
-		timeLocation, err := time.LoadLocation(fmt.Sprintf("%v", timezone))
+		timeLocation, err := LoadLocationCached(fmt.Sprintf("%v", timezone))
 		if err != nil {
 			panic(err)
 		}
@@ -212,4 +213,29 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 
 		return dateTime
 	}
+}
+
+type LocationCache map[string]*time.Location
+
+var (
+	locationCache     = LocationCache{}
+	locationCacheLock = sync.Mutex{}
+)
+
+func LoadLocationCached(name string) (*time.Location, error) {
+	locationCacheLock.Lock()
+	defer locationCacheLock.Unlock()
+
+	location := locationCache[name]
+	if location == nil {
+		loc, err := time.LoadLocation(name)
+		if err != nil {
+			return nil, err
+		}
+
+		locationCache[name] = loc
+		location = loc
+	}
+
+	return location, nil
 }

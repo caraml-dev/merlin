@@ -105,7 +105,7 @@ func TestFormatTimestamp(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			location, err := time.LoadLocation(tC.timezone)
 			require.NoError(t, err)
-			got := FormatTimestamp(tC.timestamp, tC.format, location)
+			got := FormatTimestamp(tC.timestamp, location, tC.format)
 			assert.Equal(t, tC.expected, got)
 		})
 	}
