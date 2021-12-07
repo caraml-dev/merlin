@@ -15,13 +15,17 @@ func (sr Registry) Now() time.Time {
 	return time.Now()
 }
 
-// ParseTimeStamp convert timestamp value into time
-func (sr Registry) ParseTimestamp(timestamp interface{}) interface{} {
+// DayOfWeek will return number represent day in a week, given timestamp and timezone
+// SUNDAY(0), MONDAY(1), TUESDAY(2), WEDNESDAY(3), THURSDAY(4), FRIDAY(5), SATURDAY(6)
+// timestamp can be:
+// - Json path string
+// - Slice / gota.Series
+// - int64 value
+func (sr Registry) DayOfWeek(timestamp, timezone interface{}) interface{} {
 	timeFn := func(ts int64, tz *time.Location) interface{} {
-		return time.Unix(ts, 0).In(tz)
+		return function.DayOfWeek(ts, tz)
 	}
-	// empty timezone mean using UTC
-	return sr.processTimestampFunction(timestamp, "", timeFn)
+	return sr.processTimestampFunction(timestamp, timezone, timeFn)
 }
 
 // IsWeekend check wheter given timestamps falls in weekend, given timestamp and timezone
@@ -48,17 +52,13 @@ func (sr Registry) FormatTimestamp(timestamp, timezone interface{}, format strin
 	return sr.processTimestampFunction(timestamp, timezone, timeFn)
 }
 
-// DayOfWeek will return number represent day in a week, given timestamp and timezone
-// SUNDAY(0), MONDAY(1), TUESDAY(2), WEDNESDAY(3), THURSDAY(4), FRIDAY(5), SATURDAY(6)
-// timestamp can be:
-// - Json path string
-// - Slice / gota.Series
-// - int64 value
-func (sr Registry) DayOfWeek(timestamp, timezone interface{}) interface{} {
+// ParseTimeStamp convert timestamp value into time
+func (sr Registry) ParseTimestamp(timestamp interface{}) interface{} {
 	timeFn := func(ts int64, tz *time.Location) interface{} {
-		return function.DayOfWeek(ts, tz)
+		return time.Unix(ts, 0).In(tz)
 	}
-	return sr.processTimestampFunction(timestamp, timezone, timeFn)
+	// empty timezone mean using UTC
+	return sr.processTimestampFunction(timestamp, "", timeFn)
 }
 
 func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, timeTransformerFn func(timestamp int64, tz *time.Location) interface{}) interface{} {
