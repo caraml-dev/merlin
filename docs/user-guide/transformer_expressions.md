@@ -1,4 +1,4 @@
-# Standard Transformer UDFs
+# Standard Transformer Expressions
 
 Standard Transformer provides several built-in functions that are useful for common ML use-cases. These built-in functions are accessible from within expression context.
 
@@ -9,6 +9,7 @@ Standard Transformer provides several built-in functions that are useful for com
 | Geospatial | [HaversineDistance](#haversinedistance) |
 | Geospatial | [PolarAngle](#polarangle)               |
 | JSON       | [JsonExtract](#jsonextract)             |
+| Statistics | [CumulativeValue](#cumulativevalue)     |
 | Time       | [Now](#now)                             |
 | Time       | [DayOfWeek](#dayofweek)                 |
 | Time       | [IsWeekend](#isweekend)                 |
@@ -194,6 +195,38 @@ variables:
 Output: `"9001"`
 ```
 
+## Statistics
+
+### CumulativeValue
+
+CumulativeValue is a function that accumulates values based on the index and its predecessors. E.g., `[1, 2, 3] => [1, 1+2, 1+2+3] => [1, 3, 6]`.
+
+#### Input
+
+| Name   | Description       |
+| ------ | ----------------- |
+| Values | Array of numbers. |
+
+#### Output
+
+`Array of cumulative values.`
+
+#### Example
+
+```
+Input:
+{
+  "fares": [10000, 20000, 50000]
+}
+
+Standard Transformer Config:
+variables:
+- name: cumulative_fares
+  expression: CumulativeValue($.fares)
+
+Output: `[10000, 30000, 80000]`
+```
+
 ## Time
 
 ### Now
@@ -237,6 +270,7 @@ SUNDAY(0), MONDAY(1), TUESDAY(2), WEDNESDAY(3), THURSDAY(4), FRIDAY(5), SATURDAY
 #### Example
 
 ```
+Input:
 {
   "timestamp": "1637605459"
 }
@@ -267,6 +301,7 @@ Return 1 if given timestamp is weekend (Saturday or Sunday), otherwise 0.
 #### Example
 
 ```
+Input:
 {
   "timestamp": "1637445044",
   "timezone": "Asia/Jakarta"

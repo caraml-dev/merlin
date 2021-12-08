@@ -80,8 +80,7 @@ transformerConfig:
           valueType: STRING # the entity value type. please refer to feast for it
           jsonPath: $.merchants_id # JSON Path syntax on how to parse the entity value from the request
         - name: geohash # the entity name
-          valueType: STRING # the entity value type
-          udf: Geohash("$.bid.from.latitude", "$.bid.from.longitude", 7) # using the geohash udf. A list of supported UDFs is documented in later section
+          expression: Geohash("$.bid.from.latitude", "$.bid.from.longitude", 7) # using the geohash expression. A list of supported expressions is documented in later section
       features: # list of features to be retrieved
         - name: merchant_t1_discovery:t1_estimate # feature name. make sure to include feature set
           valueType: DOUBLE # feature value type
@@ -90,9 +89,9 @@ transformerConfig:
 
 > To learn more about JSON Path syntax, please go to [this link](https://goessner.net/articles/JsonPath/), [this](https://restfulapi.net/json-jsonpath/) or [this](https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html).
 
-### List of Supported UDFs
+### List of Supported Expressions
 
-For full list of standard transformer built-in function, please check [Transformer UDF](./transformer_udf).
+For full list of standard transformer built-in function, please check [Transformer Expressions](./transformer_expressions).
 
 ### Standard Transformer Response Output
 
