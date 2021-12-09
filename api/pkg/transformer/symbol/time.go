@@ -91,7 +91,7 @@ func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, ti
 				panic("both timestamp and timezone arrays must have the same length")
 			}
 		} else {
-			timeLocation, err := LoadLocationCached(fmt.Sprintf("%s", tz))
+			timeLocation, err := loadLocationCached(fmt.Sprintf("%s", tz))
 			if err != nil {
 				panic(err)
 			}
@@ -107,7 +107,7 @@ func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, ti
 			}
 
 			if timezoneVals.Kind() == reflect.Slice {
-				timeLocation, err := LoadLocationCached(fmt.Sprint(timezoneVals.Index(idx)))
+				timeLocation, err := loadLocationCached(fmt.Sprint(timezoneVals.Index(idx)))
 				if err != nil {
 					panic(err)
 				}
@@ -118,12 +118,16 @@ func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, ti
 		}
 		return values
 	default:
+		if timezoneVals.Kind() == reflect.Slice {
+			panic("timezone should not be an array but single value")
+		}
+
 		tsInt64, err := converter.ToInt64(ts)
 		if err != nil {
 			panic(err)
 		}
 
-		timeLocation, err := LoadLocationCached(fmt.Sprintf("%s", tz))
+		timeLocation, err := loadLocationCached(fmt.Sprintf("%s", tz))
 		if err != nil {
 			panic(err)
 		}
@@ -173,7 +177,7 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 				panic("both date time and timezone arrays must have the same length")
 			}
 		} else {
-			timeLocation, err := LoadLocationCached(fmt.Sprintf("%s", tz))
+			timeLocation, err := loadLocationCached(fmt.Sprintf("%s", tz))
 			if err != nil {
 				panic(err)
 			}
@@ -185,7 +189,7 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 			dt := dateTimeVals.Index(idx)
 
 			if timezoneVals.Kind() == reflect.Slice {
-				timeLocation, err := LoadLocationCached(fmt.Sprint(timezoneVals.Index(idx)))
+				timeLocation, err := loadLocationCached(fmt.Sprint(timezoneVals.Index(idx)))
 				if err != nil {
 					panic(err)
 				}
@@ -201,7 +205,11 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 		}
 		return values
 	default:
-		timeLocation, err := LoadLocationCached(fmt.Sprintf("%v", timezone))
+		if timezoneVals.Kind() == reflect.Slice {
+			panic("timezone should not be an array but single value")
+		}
+
+		timeLocation, err := loadLocationCached(fmt.Sprintf("%v", timezone))
 		if err != nil {
 			panic(err)
 		}
@@ -215,27 +223,18 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 	}
 }
 
-type LocationCache map[string]*time.Location
+var locationCacheMap sync.Map
 
-var (
-	locationCache     = LocationCache{}
-	locationCacheLock = sync.Mutex{}
-)
-
-func LoadLocationCached(name string) (*time.Location, error) {
-	locationCacheLock.Lock()
-	defer locationCacheLock.Unlock()
-
-	location := locationCache[name]
-	if location == nil {
-		loc, err := time.LoadLocation(name)
-		if err != nil {
-			return nil, err
-		}
-
-		locationCache[name] = loc
-		location = loc
+func loadLocationCached(name string) (*time.Location, error) {
+	if location, ok := locationCacheMap.Load(name); ok {
+		return location.(*time.Location), nil
 	}
 
-	return location, nil
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		return nil, err
+	}
+
+	locationCacheMap.Store(name, loc)
+	return loc, nil
 }
