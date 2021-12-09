@@ -77,20 +77,12 @@ func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, ti
 
 	switch timestampVals.Kind() {
 	case reflect.Slice:
-		if timestampVals.Len() == 0 {
-			panic("empty array of timestamp provided")
+		if err := validateTimeAndTimezoneSeries(timestampVals, timezoneVals); err != nil {
+			panic(err)
 		}
 
 		location := &time.Location{}
-		if timezoneVals.Kind() == reflect.Slice {
-			if timezoneVals.Len() == 0 {
-				panic("empty array of timezone provided")
-			}
-
-			if timestampVals.Len() != timezoneVals.Len() {
-				panic("both timestamp and timezone arrays must have the same length")
-			}
-		} else {
+		if timezoneVals.Kind() != reflect.Slice {
 			timeLocation, err := loadLocationCached(fmt.Sprintf("%s", tz))
 			if err != nil {
 				panic(err)
@@ -163,20 +155,12 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 
 	switch dateTimeVals.Kind() {
 	case reflect.Slice:
-		if dateTimeVals.Len() == 0 {
-			panic("empty array of timestamp provided")
+		if err := validateTimeAndTimezoneSeries(dateTimeVals, timezoneVals); err != nil {
+			panic(err)
 		}
 
 		location := &time.Location{}
-		if timezoneVals.Kind() == reflect.Slice {
-			if timezoneVals.Len() == 0 {
-				panic("empty array of timezone provided")
-			}
-
-			if dateTimeVals.Len() != timezoneVals.Len() {
-				panic("both date time and timezone arrays must have the same length")
-			}
-		} else {
+		if timezoneVals.Kind() != reflect.Slice {
 			timeLocation, err := loadLocationCached(fmt.Sprintf("%s", tz))
 			if err != nil {
 				panic(err)
@@ -221,6 +205,24 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 
 		return dateTime
 	}
+}
+
+func validateTimeAndTimezoneSeries(time, timezone reflect.Value) error {
+	if time.Len() == 0 {
+		return fmt.Errorf("empty array of time data provided")
+	}
+
+	if timezone.Kind() == reflect.Slice {
+		if timezone.Len() == 0 {
+			return fmt.Errorf("empty array of timezone data provided")
+		}
+
+		if time.Len() != timezone.Len() {
+			panic("both time and timezone arrays must have the same length")
+		}
+	}
+
+	return nil
 }
 
 var locationCacheMap sync.Map
