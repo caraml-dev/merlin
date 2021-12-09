@@ -80,81 +80,18 @@ transformerConfig:
           valueType: STRING # the entity value type. please refer to feast for it
           jsonPath: $.merchants_id # JSON Path syntax on how to parse the entity value from the request
         - name: geohash # the entity name
-          valueType: STRING # the entity value type
-          udf: Geohash("$.bid.from.latitude", "$.bid.from.longitude", 7) # using the geohash udf. A list of supported UDFs is documented in later section
+          expression: Geohash("$.bid.from.latitude", "$.bid.from.longitude", 7) # using the geohash expression. A list of supported expressions is documented in later section
       features: # list of features to be retrieved
         - name: merchant_t1_discovery:t1_estimate # feature name. make sure to include feature set
           valueType: DOUBLE # feature value type
-          defaultValue: '0' # default value if feature value not exist
+          defaultValue: "0" # default value if feature value not exist
 ```
 
 > To learn more about JSON Path syntax, please go to [this link](https://goessner.net/articles/JsonPath/), [this](https://restfulapi.net/json-jsonpath/) or [this](https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html).
 
-### List of Supported UDFs
-#### Geohash
-Takes in JsonPath to latitude and longitude, and an additional precision parameter to generate the geohash
+### List of Supported Expressions
 
-##### Example
-
-Input
-```json
-{
-  "latitude":1.0,
-  "longitude":2.0
-}
-```
-
-Config
-```yaml
-- name: geohash
-  valueType: STRING
-  udf: Geohash("$.latitude", "$.longitude", 12)
-```
-
-Output: `"s01mtw037ms0"`
-
-#### JsonExtract
-Used to extract value from JSON string
-
-##### Example
-
-Input
-```json
-{
-  "details": "{\"merchant_id\": 9001}"
-}
-```
-
-Config
-```yaml
-- name: merchant_id
-  valueType: STRING
-  udf: JsonExtract("$.details", "$.merchant_id")
-```
-
-Output: `"9001"`
-
-#### S2ID
-Takes in JsonPath to latitude and longitude, and an additional level parameter to generate the s2id
-
-##### Example
-
-Input
-```json
-{
-  "latitude":1.0,
-  "longitude":2.0
-}
-```
-
-Config
-```yaml
-- name: s2id
-  valueType: STRING
-  udf: S2ID("$.latitude", "$.longitude", 12)
-```
-
-Output: `"1154732743855177728"`
+For full list of standard transformer built-in function, please check [Transformer Expressions](./transformer_expressions).
 
 ### Standard Transformer Response Output
 
@@ -211,21 +148,21 @@ def infer():
 
 That logically translates to the following Pandas DataFrame:
 
-merchant_id | merchant_t1_discovery:t1_estimate | merchant_t2_discovery:t2_discovery
-------------|-----------------------------------|-----------------------------------
-1111 | 100 | 10
-2222 | 200 | 20
-3333 | 300 | 30
+| merchant_id | merchant_t1_discovery:t1_estimate | merchant_t2_discovery:t2_discovery |
+| ----------- | --------------------------------- | ---------------------------------- |
+| 1111        | 100                               | 10                                 |
+| 2222        | 200                               | 20                                 |
+| 3333        | 300                               | 30                                 |
 
 ### Standard Transformer Environment Variables
 
 Below are supported environment variables to configure your Transformer.
 
-Name | Description | Default Value
------|-------------|--------------
-`LOG_LEVEL` | Set the logging level for internal system. It doesn’t effect the request-response logging. Supported value: DEBUG, INFO, WARNING, ERROR. | INFO
-`FEAST_FEATURE_STATUS_MONITORING_ENABLED` | Enable metrics for the status of each retrieved feature. | false
-`FEAST_FEATURE_VALUE_MONITORING_ENABLED` | Enable metrics for the summary value of each retrieved feature. | false
+| Name                                      | Description                                                                                                                              | Default Value |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `LOG_LEVEL`                               | Set the logging level for internal system. It doesn’t effect the request-response logging. Supported value: DEBUG, INFO, WARNING, ERROR. | INFO          |
+| `FEAST_FEATURE_STATUS_MONITORING_ENABLED` | Enable metrics for the status of each retrieved feature.                                                                                 | false         |
+| `FEAST_FEATURE_VALUE_MONITORING_ENABLED`  | Enable metrics for the summary value of each retrieved feature.                                                                          | false         |
 
 ## Custom Transformer
 

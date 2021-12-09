@@ -70,7 +70,7 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 				columnName := updateSpec.Column
 				result, err := evalExpression(env, updateSpec.Expression)
 				if err != nil {
-					return fmt.Errorf("error evaluating expression for column %s: %v", columnName, updateSpec.Expression)
+					return fmt.Errorf("error evaluating expression for column %s: %v. Err: %s", columnName, updateSpec.Expression, err)
 				}
 				columnValues[columnName] = result
 			}
