@@ -114,12 +114,12 @@ func (sr Registry) processTimestampFunction(timestamps, timezone interface{}, ti
 			panic("timezone should not be an array but single value")
 		}
 
-		tsInt64, err := converter.ToInt64(ts)
+		timeLocation, err := loadLocationCached(fmt.Sprintf("%s", tz))
 		if err != nil {
 			panic(err)
 		}
 
-		timeLocation, err := loadLocationCached(fmt.Sprintf("%s", tz))
+		tsInt64, err := converter.ToInt64(ts)
 		if err != nil {
 			panic(err)
 		}
@@ -193,7 +193,7 @@ func (sr Registry) ParseDateTime(datetime, timezone interface{}, format string) 
 			panic("timezone should not be an array but single value")
 		}
 
-		timeLocation, err := loadLocationCached(fmt.Sprintf("%v", timezone))
+		timeLocation, err := loadLocationCached(fmt.Sprintf("%v", tz))
 		if err != nil {
 			panic(err)
 		}
