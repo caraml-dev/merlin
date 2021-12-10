@@ -30,8 +30,8 @@ COPY python/batch-predictor ../python/batch-predictor
 
 RUN go build -o bin/transformer \
     -ldflags="-X github.com/prometheus/common/version.Branch=${BRANCH} \
-                -X github.com/prometheus/common/version.Revision=${REVISION} \
-                -X github.com/prometheus/common/version.Version=${VERSION}" \
+    -X github.com/prometheus/common/version.Revision=${REVISION} \
+    -X github.com/prometheus/common/version.Version=${VERSION}" \
     ./cmd/transformer/main.go
 
 # ============================================================
@@ -40,5 +40,8 @@ RUN go build -o bin/transformer \
 FROM alpine:3.12
 
 COPY --from=go-builder /src/api/bin/transformer /usr/bin/transformer
+COPY --from=go-builder /usr/local/go/lib/time/zoneinfo.zip /zoneinfo.zip
+
+ENV ZONEINFO=/zoneinfo.zip
 
 ENTRYPOINT ["transformer"]
