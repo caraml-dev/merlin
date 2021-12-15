@@ -72,14 +72,14 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 			nil,
 		},
 		{
-			"should throw error when value specified by key does not exist in nested JSON",
+			"should not throw error when value specified by key does not exist in nested JSON",
 			args{
 				"$.nested",
 				"$.child_node.does_not_exist_node",
 			},
 			nil,
-			true,
-			fmt.Errorf("key error: does_not_exist_node not found in object"),
+			false,
+			nil,
 		},
 		{
 			"should throw error when value obtained by key is not valid json",
