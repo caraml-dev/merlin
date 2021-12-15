@@ -40,6 +40,11 @@ func TestCreateTableOp_Execute(t *testing.T) {
 		"$.array_float_2":    jsonpath.MustCompileJsonPath("$.array_float_2"),
 		"$.int":              jsonpath.MustCompileJsonPath("$.int"),
 		"$.unknown_field":    jsonpath.MustCompileJsonPath("$.unknown_field"),
+		"$.missing_vals": jsonpath.MustCompileJsonPathWithOption(jsonpath.JsonPathOption{
+			JsonPath:     "$.missing_vals",
+			DefaultValue: "0.1",
+			TargetType:   spec.ValueType_FLOAT,
+		}),
 	})
 
 	var rawRequestJSON types.JSONObject
@@ -233,6 +238,51 @@ func TestCreateTableOp_Execute(t *testing.T) {
 				"my_table": table.New(
 					series.New([]interface{}{1.1, 2.2, 3.3, 4.4}, series.Float, "array_float"),
 					series.New([]interface{}{1, 2, 3, 4}, series.Float, "array_int"),
+				),
+			},
+			wantErr: false,
+		},
+		{
+			name: "create table from column definition using jsonPath pointing to 2 array same length and using one missing field",
+			tableSpecs: []*spec.Table{
+				{
+					Name: "my_table",
+					Columns: []*spec.Column{
+						{
+							Name: "array_int",
+							ColumnValue: &spec.Column_FromJson{
+								FromJson: &spec.FromJson{
+									JsonPath: "$.array_int",
+								},
+							},
+						},
+						{
+							Name: "array_float",
+							ColumnValue: &spec.Column_FromJson{
+								FromJson: &spec.FromJson{
+									JsonPath: "$.array_float",
+								},
+							},
+						},
+						{
+							Name: "default_vals",
+							ColumnValue: &spec.Column_FromJson{
+								FromJson: &spec.FromJson{
+									JsonPath:     "$.missing_vals",
+									DefaultValue: "0.1",
+									ValueType:    spec.ValueType_FLOAT,
+								},
+							},
+						},
+					},
+				},
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"my_table": table.New(
+					series.New([]interface{}{1.1, 2.2, 3.3, 4.4}, series.Float, "array_float"),
+					series.New([]interface{}{1, 2, 3, 4}, series.Float, "array_int"),
+					series.New([]interface{}{0.1, 0.1, 0.1, 0.1}, series.Float, "default_vals"),
 				),
 			},
 			wantErr: false,
@@ -523,7 +573,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 			},
 			env:          env,
 			wantErr:      true,
-			errorPattern: "unable to create base table for my_table: key error: unknown_field not found in object",
+			errorPattern: `unable to create base table for my_table: invalid json pointed by \$\.unknown_field: not an array`,
 		},
 		{
 			name: "create table from json path: not an array",

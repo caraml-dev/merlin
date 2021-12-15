@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/oliveagle/jsonpath"
+	"github.com/gojekfarm/jsonpath"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -93,7 +93,6 @@ func TestCompileJsonPath(t *testing.T) {
 }
 
 func TestMustCompileJsonPath(t *testing.T) {
-
 	tests := []struct {
 		name     string
 		jsonPath string
@@ -136,7 +135,6 @@ func TestMustCompileJsonPath(t *testing.T) {
 }
 
 func TestCompiled_Lookup(t *testing.T) {
-
 	var rawRequestData types.JSONObject
 	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
 

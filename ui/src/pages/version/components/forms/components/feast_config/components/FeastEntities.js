@@ -7,6 +7,8 @@ import {
   EuiToolTip
 } from "@elastic/eui";
 import { get, InMemoryTableForm } from "@gojek/mlp-ui";
+import { JsonPathConfigInput } from "../../transformer/JsonPathConfigInput";
+import "../../transformer/RowCell.scss";
 
 const getSelectedOption = value => (value ? [{ label: value }] : []);
 
@@ -108,10 +110,15 @@ export const FeastEntities = ({
   };
 
   const onChangeRow = (idx, field) => {
-    return e => {
-      items[idx] = { ...items[idx], [field]: e.target.value };
-      updateItems(items);
+    return e => onVariableChange(idx, field, e.target.value);
+  };
+
+  const onVariableChange = (idx, field, value) => {
+    items[idx] = {
+      ...items[idx],
+      [field]: value
     };
+    updateItems(items);
   };
 
   const onEntityChange = (idx, field) => {
@@ -210,16 +217,27 @@ export const FeastEntities = ({
       ),
       field: "field",
       width: "30%",
-      render: (value, item) => (
-        <EuiFieldText
-          controlOnly
-          fullWidth
-          placeholder="Value"
-          value={value || ""}
-          onChange={onChangeRow(item.idx, "field")}
-          isInvalid={!!get(errors, `${item.idx}.field`)}
-        />
-      )
+      render: (value, item) => {
+        if (item.fieldType === "JSONPath") {
+          return (
+            <JsonPathConfigInput
+              jsonPathConfig={value}
+              identifier={`entities-${item.idx}`}
+              onChangeHandler={val => onVariableChange(item.idx, "field", val)}
+            />
+          );
+        }
+        return (
+          <EuiFieldText
+            controlOnly
+            fullWidth
+            placeholder="Value"
+            value={value || ""}
+            onChange={onChangeRow(item.idx, "field")}
+            isInvalid={!!get(errors, `${item.idx}.field`)}
+          />
+        );
+      }
     },
     {
       width: "5%",

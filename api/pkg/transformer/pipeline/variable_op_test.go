@@ -193,6 +193,33 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"variables declaration using json path config",
+			fields{
+				[]*spec.Variable{
+					{
+						Name: "signature_name",
+						Value: &spec.Variable_JsonPathConfig{
+							JsonPathConfig: &spec.FromJson{
+								JsonPath: "$.signature_name",
+							},
+						},
+					},
+				},
+			},
+
+			&Environment{
+				symbolRegistry: symbolRegistry,
+				compiledPipeline: &CompiledPipeline{
+					compiledJsonpath: compiledJsonPath,
+				},
+				logger: logger,
+			},
+			map[string]interface{}{
+				"signature_name": "predict",
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

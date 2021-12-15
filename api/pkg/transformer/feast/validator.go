@@ -6,7 +6,7 @@ import (
 
 	"github.com/antonmedv/expr"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
-	"github.com/oliveagle/jsonpath"
+	"github.com/gojekfarm/jsonpath"
 	"github.com/pkg/errors"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"

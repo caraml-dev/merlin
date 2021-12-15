@@ -2,13 +2,13 @@ package feast
 
 import (
 	"encoding/json"
-	"errors"
 	"testing"
 
 	"github.com/antonmedv/expr"
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/mmcloughlin/geohash"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
@@ -80,6 +80,24 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 			},
 			expValues: []*feastType.Value{
 				feast.Int64Val(1234),
+			},
+			expError: nil,
+		},
+		{
+			name: "integer to int64 -- jsonpath not found key",
+			entityConfig: &spec.Entity{
+				Name:      "my_entity",
+				ValueType: "INT64",
+				Extractor: &spec.Entity_JsonPathConfig{
+					JsonPathConfig: &spec.FromJson{
+						JsonPath:     "$.not_found_key",
+						DefaultValue: "2",
+						ValueType:    spec.ValueType_INT,
+					},
+				},
+			},
+			expValues: []*feastType.Value{
+				feast.Int64Val(2),
 			},
 			expError: nil,
 		},
@@ -606,6 +624,13 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 			case *spec.Entity_JsonPath:
 				compiledJsonPath, _ := jsonpath.Compile(test.entityConfig.GetJsonPath())
 				compiledJsonPaths.Set(test.entityConfig.GetJsonPath(), compiledJsonPath)
+			case *spec.Entity_JsonPathConfig:
+				compiledJsonPath, _ := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+					JsonPath:     test.entityConfig.GetJsonPathConfig().JsonPath,
+					DefaultValue: test.entityConfig.GetJsonPathConfig().DefaultValue,
+					TargetType:   test.entityConfig.GetJsonPathConfig().ValueType,
+				})
+				compiledJsonPaths.Set(test.entityConfig.GetJsonPathConfig().GetJsonPath(), compiledJsonPath)
 			case *spec.Entity_Udf:
 				compiledUdf, _ := expr.Compile(test.entityConfig.GetUdf(), expr.Env(sr), expr.AllowUndefinedVariables())
 				compiledExpressions.Set(test.entityConfig.GetUdf(), compiledUdf)
@@ -762,8 +787,9 @@ func doRunBenchmark(b *testing.B, entityConfig *spec.Entity) {
 	}
 }
 
-var Result []*feastType.Value
-var benchData = []byte(`{
+var (
+	Result    []*feastType.Value
+	benchData = []byte(`{
 "string": "string_value",
 "integer" : 1234,
 "float" : 1234.111,
@@ -1272,3 +1298,4 @@ var benchData = []byte(`{
   }
 ]
 }`)
+)

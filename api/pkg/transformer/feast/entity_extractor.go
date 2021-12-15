@@ -45,6 +45,17 @@ func (er *EntityExtractor) ExtractValuesFromSymbolRegistry(symbolRegistry symbol
 			return nil, err
 		}
 		entityVal = entityValFromJsonPath
+	case *spec.Entity_JsonPathConfig:
+		compiledJsonPath := er.compiledJsonPath.Get(entitySpec.GetJsonPathConfig().GetJsonPath())
+		if compiledJsonPath == nil {
+			return nil, fmt.Errorf("jsonpath %s in entity %s is not found", entitySpec.GetJsonPathConfig().GetJsonPath(), entitySpec.Name)
+		}
+
+		entityValFromJsonPath, err := compiledJsonPath.LookupFromContainer(symbolRegistry.JSONContainer())
+		if err != nil {
+			return nil, err
+		}
+		entityVal = entityValFromJsonPath
 	case *spec.Entity_Udf, *spec.Entity_Expression:
 		exp := getExpressionExtractor(entitySpec)
 		compiledExpression := er.compiledExpression.Get(exp)
