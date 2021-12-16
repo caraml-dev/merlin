@@ -12,28 +12,8 @@ export const JsonPathConfigInput = ({
   jsonPathConfig,
   identifier,
   onChangeHandler,
-  title,
   errors = {}
 }) => {
-  const [showDefaultValueOpt, setShowDefaultValueOpt] = useState(
-    jsonPathConfig !== undefined && jsonPathConfig.defaultValue !== ""
-  );
-  const onChange = (field, value) => {
-    onChangeHandler({
-      ...jsonPathConfig,
-      [field]: value
-    });
-  };
-
-  const setShowingDefaultValue = checked => {
-    setShowDefaultValueOpt(checked);
-    if (jsonPathConfig) {
-      delete jsonPathConfig["defaultValue"];
-      delete jsonPathConfig["valueType"];
-      onChangeHandler(jsonPathConfig);
-    }
-  };
-
   const getDefaultValue = () => {
     if (jsonPathConfig === undefined) {
       return "";
@@ -52,6 +32,24 @@ export const JsonPathConfigInput = ({
       return "";
     }
     return jsonPathConfig.valueType;
+  };
+  const [showDefaultValueOpt, setShowDefaultValueOpt] = useState(
+    getDefaultValue() !== ""
+  );
+  const onChange = (field, value) => {
+    onChangeHandler({
+      ...jsonPathConfig,
+      [field]: value
+    });
+  };
+
+  const setShowingDefaultValue = checked => {
+    setShowDefaultValueOpt(checked);
+    if (jsonPathConfig) {
+      delete jsonPathConfig["defaultValue"];
+      delete jsonPathConfig["valueType"];
+      onChangeHandler(jsonPathConfig);
+    }
   };
 
   return (

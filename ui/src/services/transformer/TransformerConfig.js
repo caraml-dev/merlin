@@ -207,7 +207,7 @@ export class Pipeline {
             table.columns.forEach(column => {
               if (column.fromJson) {
                 column["type"] = "jsonpath";
-                column["value"] = column.fromJson.jsonPath;
+                column["value"] = column.fromJson;
               } else if (column.expression) {
                 column["type"] = "expression";
                 column["value"] = column.expression;

@@ -2,6 +2,7 @@ package jsonpath
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 
 	"github.com/gojekfarm/jsonpath"
@@ -20,6 +21,7 @@ const (
 
 var sourceJsonPattern = regexp.MustCompile("\\$\\.raw_request|\\$\\.model_response")
 
+// JsonPathOption holds information about the required jsonpath value and the optional default value
 type JsonPathOption struct {
 	JsonPath     string
 	DefaultValue string
@@ -57,6 +59,8 @@ func Compile(jsonPath string) (*Compiled, error) {
 	}, nil
 }
 
+// CompileWithOption compiles JsonPathOption into a jsonpath.Compiled instance
+// JsonPathOption allow setting default value when existing value of given jsonpath is nil
 func CompileWithOption(option JsonPathOption) (*Compiled, error) {
 	compiled, err := Compile(option.JsonPath)
 	if err != nil {
@@ -105,6 +109,14 @@ func (c *Compiled) Lookup(jsonObj types.JSONObject) (interface{}, error) {
 	if val == nil {
 		val = c.defaultValue
 	}
+
+	if reflectVal := reflect.ValueOf(val); reflectVal.Kind() == reflect.Slice {
+		// set to default value if val that found is empty array
+		if reflectVal.Len() == 0 {
+			return c.defaultValue, nil
+		}
+	}
+
 	return val, nil
 }
 
