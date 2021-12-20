@@ -111,10 +111,18 @@ func (c *Compiled) Lookup(jsonObj types.JSONObject) (interface{}, error) {
 	}
 
 	if reflectVal := reflect.ValueOf(val); reflectVal.Kind() == reflect.Slice {
-		// set to default value if val that found is empty array
-		if reflectVal.Len() == 0 {
-			return c.defaultValue, nil
+		if reflectVal.Len() == 0 && c.defaultValue != nil {
+			return []interface{}{c.defaultValue}, nil
 		}
+
+		sliceVal, _ := val.([]interface{})
+		for idx, v := range sliceVal {
+			if v == nil {
+				sliceVal[idx] = c.defaultValue
+			}
+		}
+
+		return sliceVal, nil
 	}
 
 	return val, nil

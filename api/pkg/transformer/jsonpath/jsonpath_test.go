@@ -22,8 +22,13 @@ const (
 			{"sepal_length":2.8, "sepal_width":1.0, "petal_length":6.8, "petal_width":0.4},
 			{"sepal_length":0.1, "sepal_width":0.5, "petal_length":1.8, "petal_width":2.4}
 		  ],
+		  "instances_with_null": [
+			{"sepal_length":2.8, "sepal_width":1.0, "petal_length":6.8, "petal_width":0.4},
+			{"sepal_length":0.1, "sepal_width":0.5, "petal_length":1.8, "petal_width":null},
+            {"sepal_length":0.1, "sepal_width":0.5, "petal_length":1.8, "petal_width":0.5}
+		  ],
 		  "empty_array": [],
-		  "null_array": null,
+		  "null_key": null,
 		  "array_object": [
 			  {"exist_key":1},
 			  {"exist_key":2}
@@ -239,9 +244,9 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc: "null array with default value",
+			desc: "null key in jsonpath with default value",
 			opt: JsonPathOption{
-				JsonPath:     "$.null_array",
+				JsonPath:     "$.null_key",
 				DefaultValue: "default",
 				TargetType:   spec.ValueType_STRING,
 			},
@@ -258,7 +263,19 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 				TargetType:   spec.ValueType_BOOL,
 			},
 			sourceJSONs: jsonContainer,
-			want:        true,
+			want:        []interface{}{true},
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			desc: "array with null value",
+			opt: JsonPathOption{
+				JsonPath:     "$.instances_with_null[*].petal_width",
+				DefaultValue: "-1",
+				TargetType:   spec.ValueType_FLOAT,
+			},
+			sourceJSONs: jsonContainer,
+			want:        []interface{}{0.4, float64(-1), 0.5},
 			wantErr:     false,
 			err:         nil,
 		},
