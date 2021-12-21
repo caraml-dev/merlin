@@ -3,10 +3,12 @@ package bigtablestore
 import (
 	"context"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/bigtable"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
@@ -14,7 +16,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/golang/protobuf/proto"
 	"github.com/linkedin/goavro/v2"
-	"google.golang.org/protobuf/types/known/durationpb"
+	"github.com/stretchr/testify/assert"
 )
 
 type InMemoryRegistry struct {
@@ -147,7 +149,7 @@ func TestEncoder_Encode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			registry := InMemoryRegistry{}
+			registry := &CachedCodecRegistry{}
 			encoder := NewEncoder(registry, tt.featureTables, tt.metadata)
 			rowQuery, err := encoder.Encode(tt.req)
 			if err != nil {
@@ -444,7 +446,7 @@ func TestEncoder_Decode(t *testing.T) {
 			codecs := map[string]*goavro.Codec{
 				string(schemaRefBytes): codec,
 			}
-			registry := InMemoryRegistry{registry: codecs}
+			registry := &CachedCodecRegistry{codecs: codecs}
 			encoder := NewEncoder(registry, featureTable, tt.metadata)
 			response, err := encoder.Decode(context.Background(), tt.rows, tt.req, entityKeys)
 			if err != nil {
@@ -453,6 +455,352 @@ func TestEncoder_Decode(t *testing.T) {
 			if !proto.Equal(response.RawResponse, tt.want.RawResponse) {
 				t.Errorf("expected %s, actual %s", tt.want.RawResponse, response.RawResponse)
 			}
+		})
+	}
+}
+
+func TestAvroToValueConversion(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		avroValue   interface{}
+		featureType string
+		wantValue   *types.Value
+		err         error
+	}{
+		{
+			desc: "string type",
+			avroValue: map[string]interface{}{
+				"string": "OTP",
+			},
+			featureType: types.ValueType_STRING.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_StringVal{
+					StringVal: "OTP",
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type string, but avro value in int format",
+			avroValue: map[string]interface{}{
+				"string": 1000,
+			},
+			featureType: types.ValueType_STRING.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_StringVal{
+					StringVal: "1000",
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "int type",
+			avroValue: map[string]interface{}{
+				"int": 32,
+			},
+			featureType: types.ValueType_INT32.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_Int32Val{
+					Int32Val: 32,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type int32, but avro value in numeric string",
+			avroValue: map[string]interface{}{
+				"int": "2200",
+			},
+			featureType: types.ValueType_INT32.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_Int32Val{
+					Int32Val: 2200,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type int32, but avro value in non-numeric string",
+			avroValue: map[string]interface{}{
+				"int": "randomVal",
+			},
+			featureType: types.ValueType_INT32.String(),
+			wantValue:   nil,
+			err: &strconv.NumError{
+				Func: "Atoi",
+				Num:  "randomVal",
+				Err:  strconv.ErrSyntax,
+			},
+		},
+		{
+			desc: "int64 type",
+			avroValue: map[string]interface{}{
+				"long": 100000000000,
+			},
+			featureType: types.ValueType_INT64.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_Int64Val{
+					Int64Val: 100000000000,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type int64, avro value in numeric string",
+			avroValue: map[string]interface{}{
+				"long": "100000000000",
+			},
+			featureType: types.ValueType_INT64.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_Int64Val{
+					Int64Val: 100000000000,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type int64, avro value in non-numeric string",
+			avroValue: map[string]interface{}{
+				"long": "nonnumeric",
+			},
+			featureType: types.ValueType_INT64.String(),
+			wantValue:   nil,
+			err: &strconv.NumError{
+				Func: "ParseInt",
+				Num:  "nonnumeric",
+				Err:  strconv.ErrSyntax,
+			},
+		},
+		{
+			desc: "bool type",
+			avroValue: map[string]interface{}{
+				"boolean": true,
+			},
+			featureType: types.ValueType_BOOL.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_BoolVal{
+					BoolVal: true,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "float type",
+			avroValue: map[string]interface{}{
+				"float": float32(1.2),
+			},
+			featureType: types.ValueType_FLOAT.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_FloatVal{
+					FloatVal: 1.2,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type float, avro type is int",
+			avroValue: map[string]interface{}{
+				"float": 2000,
+			},
+			featureType: types.ValueType_FLOAT.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_FloatVal{
+					FloatVal: 2000,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type float, avro type is numeric string",
+			avroValue: map[string]interface{}{
+				"float": "0.5",
+			},
+			featureType: types.ValueType_FLOAT.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_FloatVal{
+					FloatVal: 0.5,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type float, avro type is non-numeric string",
+			avroValue: map[string]interface{}{
+				"float": "string",
+			},
+			featureType: types.ValueType_FLOAT.String(),
+			wantValue:   nil,
+			err: &strconv.NumError{
+				Func: "ParseFloat",
+				Num:  "string",
+				Err:  strconv.ErrSyntax,
+			},
+		},
+		{
+			desc: "double type",
+			avroValue: map[string]interface{}{
+				"double": float64(1.2),
+			},
+			featureType: types.ValueType_DOUBLE.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_DoubleVal{
+					DoubleVal: 1.2,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type double, avro value is numeric string",
+			avroValue: map[string]interface{}{
+				"double": "1.2",
+			},
+			featureType: types.ValueType_DOUBLE.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_DoubleVal{
+					DoubleVal: 1.2,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "feature type double, avro value is non-numeric string",
+			avroValue: map[string]interface{}{
+				"double": "string",
+			},
+			featureType: types.ValueType_DOUBLE.String(),
+			wantValue:   nil,
+			err: &strconv.NumError{
+				Func: "ParseFloat",
+				Num:  "string",
+				Err:  strconv.ErrSyntax,
+			},
+		},
+		{
+			desc: "string list type",
+			avroValue: map[string]interface{}{
+				"array": []interface{}{
+					map[string]interface{}{
+						"string": "var1",
+					},
+					map[string]interface{}{
+						"string": "var2",
+					},
+				},
+			},
+			featureType: types.ValueType_STRING_LIST.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_StringListVal{
+					StringListVal: &types.StringList{
+						Val: []string{
+							"var1", "var2",
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "int32 list type",
+			avroValue: map[string]interface{}{
+				"array": []interface{}{
+					map[string]interface{}{
+						"int": int32(1),
+					},
+					map[string]interface{}{
+						"int": int32(2),
+					},
+				},
+			},
+			featureType: types.ValueType_INT32_LIST.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_Int32ListVal{
+					Int32ListVal: &types.Int32List{
+						Val: []int32{
+							1, 2,
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "int64 list type",
+			avroValue: map[string]interface{}{
+				"array": []interface{}{
+					map[string]interface{}{
+						"long": int64(10000000000),
+					},
+					map[string]interface{}{
+						"long": int64(10000000000),
+					},
+				},
+			},
+			featureType: types.ValueType_INT64_LIST.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_Int64ListVal{
+					Int64ListVal: &types.Int64List{
+						Val: []int64{
+							10000000000, 10000000000,
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "float list type",
+			avroValue: map[string]interface{}{
+				"array": []interface{}{
+					map[string]interface{}{
+						"float": float32(0.1),
+					},
+					map[string]interface{}{
+						"float": float32(0.2),
+					},
+				},
+			},
+			featureType: types.ValueType_FLOAT_LIST.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_FloatListVal{
+					FloatListVal: &types.FloatList{
+						Val: []float32{
+							0.1, 0.2,
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "double list type",
+			avroValue: map[string]interface{}{
+				"array": []interface{}{
+					map[string]interface{}{
+						"double": float64(0.1),
+					},
+					map[string]interface{}{
+						"double": float64(0.2),
+					},
+				},
+			},
+			featureType: types.ValueType_DOUBLE_LIST.String(),
+			wantValue: &types.Value{
+				Val: &types.Value_DoubleListVal{
+					DoubleListVal: &types.DoubleList{
+						Val: []float64{
+							0.1, 0.2,
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			got, err := avroToValueConversion(tC.avroValue, tC.featureType)
+			assert.Equal(t, tC.err, err)
+			assert.Equal(t, tC.wantValue, got)
 		})
 	}
 }

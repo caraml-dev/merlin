@@ -16,6 +16,7 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/converter"
 	"github.com/golang/protobuf/proto"
 	"github.com/linkedin/goavro/v2"
 )
@@ -94,18 +95,23 @@ func avroToValueConversion(avroValue interface{}, featureType string) (*types.Va
 	}
 	switch strings.ToUpper(featureType) {
 	case types.ValueType_STRING.String():
-		return feast.StrVal(avroValue.(map[string]interface{})["string"].(string)), nil
+		return converter.ToFeastValue(avroValue.(map[string]interface{})["string"], types.ValueType_STRING)
 	case types.ValueType_INT32.String():
-		return feast.Int32Val(avroValue.(map[string]interface{})["int"].(int32)), nil
+		return converter.ToFeastValue(avroValue.(map[string]interface{})["int"], types.ValueType_INT32)
 	case types.ValueType_INT64.String():
-		return feast.Int64Val(avroValue.(map[string]interface{})["long"].(int64)), nil
+		return converter.ToFeastValue(avroValue.(map[string]interface{})["long"], types.ValueType_INT64)
+	case types.ValueType_FLOAT.String():
+		return converter.ToFeastValue(avroValue.(map[string]interface{})["float"], types.ValueType_FLOAT)
+	case types.ValueType_DOUBLE.String():
+		return converter.ToFeastValue(avroValue.(map[string]interface{})["double"], types.ValueType_DOUBLE)
 	case types.ValueType_BOOL.String():
-		return feast.BoolVal(avroValue.(map[string]interface{})["boolean"].(bool)), nil
+		return converter.ToFeastValue(avroValue.(map[string]interface{})["boolean"], types.ValueType_BOOL)
 	case types.ValueType_STRING_LIST.String():
 		avroRecords := avroValue.(map[string]interface{})["array"].([]interface{})
 		recordValues := make([]string, len(avroRecords))
 		for i, r := range avroRecords {
-			recordValues[i] = r.(map[string]interface{})["string"].(string)
+			stringVal, _ := converter.ToString(r.(map[string]interface{})["string"])
+			recordValues[i] = stringVal
 		}
 		return &types.Value{Val: &types.Value_StringListVal{
 			StringListVal: &types.StringList{
@@ -116,7 +122,11 @@ func avroToValueConversion(avroValue interface{}, featureType string) (*types.Va
 		avroRecords := avroValue.(map[string]interface{})["array"].([]interface{})
 		recordValues := make([]int32, len(avroRecords))
 		for i, r := range avroRecords {
-			recordValues[i] = r.(map[string]interface{})["int"].(int32)
+			intVal, err := converter.ToInt32(r.(map[string]interface{})["int"])
+			if err != nil {
+				return nil, err
+			}
+			recordValues[i] = intVal
 		}
 		return &types.Value{Val: &types.Value_Int32ListVal{
 			Int32ListVal: &types.Int32List{
@@ -127,7 +137,11 @@ func avroToValueConversion(avroValue interface{}, featureType string) (*types.Va
 		avroRecords := avroValue.(map[string]interface{})["array"].([]interface{})
 		recordValues := make([]int64, len(avroRecords))
 		for i, r := range avroRecords {
-			recordValues[i] = r.(map[string]interface{})["long"].(int64)
+			int64Val, err := converter.ToInt64(r.(map[string]interface{})["long"])
+			if err != nil {
+				return nil, err
+			}
+			recordValues[i] = int64Val
 		}
 		return &types.Value{Val: &types.Value_Int64ListVal{
 			Int64ListVal: &types.Int64List{
@@ -138,7 +152,11 @@ func avroToValueConversion(avroValue interface{}, featureType string) (*types.Va
 		avroRecords := avroValue.(map[string]interface{})["array"].([]interface{})
 		recordValues := make([]float32, len(avroRecords))
 		for i, r := range avroRecords {
-			recordValues[i] = r.(map[string]interface{})["float"].(float32)
+			floatVal, err := converter.ToFloat32(r.(map[string]interface{})["float"])
+			if err != nil {
+				return nil, err
+			}
+			recordValues[i] = floatVal
 		}
 		return &types.Value{Val: &types.Value_FloatListVal{
 			FloatListVal: &types.FloatList{
@@ -149,7 +167,11 @@ func avroToValueConversion(avroValue interface{}, featureType string) (*types.Va
 		avroRecords := avroValue.(map[string]interface{})["array"].([]interface{})
 		recordValues := make([]float64, len(avroRecords))
 		for i, r := range avroRecords {
-			recordValues[i] = r.(map[string]interface{})["double"].(float64)
+			doubleVal, err := converter.ToFloat64(r.(map[string]interface{})["double"])
+			if err != nil {
+				return nil, err
+			}
+			recordValues[i] = doubleVal
 		}
 		return &types.Value{Val: &types.Value_DoubleListVal{
 			DoubleListVal: &types.DoubleList{
@@ -404,10 +426,10 @@ func NewCachedCodecRegistry(tables map[string]*bigtable.Table) *CachedCodecRegis
 func (r *CachedCodecRegistry) GetCodec(ctx context.Context, schemaRef []byte, project string, entityKeys []*spec.Entity) (*goavro.Codec, error) {
 	r.RLock()
 	if codec, exists := r.codecs[string(schemaRef)]; exists {
-		r.Unlock()
+		r.RUnlock()
 		return codec, nil
 	}
-	r.Unlock()
+	r.RUnlock()
 	tableName := entityKeysToBigTable(project, entityKeys)
 	schemaKey := fmt.Sprintf("schema#%s", string(schemaRef))
 	schemaValue, err := r.tables[tableName].ReadRow(ctx, schemaKey)
