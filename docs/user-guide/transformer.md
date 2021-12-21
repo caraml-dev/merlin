@@ -6,7 +6,7 @@ Currently, Merlin has two types of Transformer: Standard and Custom Transformer.
 
 ## Standard Transformer
 
-For detail information about standard transformer, please check [Standard Transformer](./standard_transformer)
+For detail information about standard transformer, please check [Standard Transformer](./standard_transformer.md)
 
 ## Custom Transformer
 

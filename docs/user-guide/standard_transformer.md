@@ -99,6 +99,11 @@ For example, if we have incoming request
 ```
 
 * Result of jsonpath is nil
+  There are cases when `jsonpath` value is nil:
+  * Value in JSON is nil
+  * There is no such key in JSON
+
+Example:
   ```
     fromJson:
         jsonPath: $.null_key
