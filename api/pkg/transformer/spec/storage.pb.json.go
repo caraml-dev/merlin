@@ -4,97 +4,85 @@
 package spec
 
 import (
-	"bytes"
-
-	"github.com/golang/protobuf/jsonpb"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // MarshalJSON implements json.Marshaler
 func (msg *OnlineStorage) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
+	return protojson.MarshalOptions{
+		UseEnumNumbers:  false,
+		EmitUnpopulated: false,
+		UseProtoNames:   false,
+	}.Marshal(msg)
 }
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *OnlineStorage) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
+	return protojson.UnmarshalOptions{
+		DiscardUnknown: false,
+	}.Unmarshal(b, msg)
 }
 
 // MarshalJSON implements json.Marshaler
 func (msg *BigTableStorage) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
+	return protojson.MarshalOptions{
+		UseEnumNumbers:  false,
+		EmitUnpopulated: false,
+		UseProtoNames:   false,
+	}.Marshal(msg)
 }
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *BigTableStorage) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
+	return protojson.UnmarshalOptions{
+		DiscardUnknown: false,
+	}.Unmarshal(b, msg)
 }
 
 // MarshalJSON implements json.Marshaler
 func (msg *RedisStorage) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
+	return protojson.MarshalOptions{
+		UseEnumNumbers:  false,
+		EmitUnpopulated: false,
+		UseProtoNames:   false,
+	}.Marshal(msg)
 }
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *RedisStorage) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
+	return protojson.UnmarshalOptions{
+		DiscardUnknown: false,
+	}.Unmarshal(b, msg)
 }
 
 // MarshalJSON implements json.Marshaler
 func (msg *RedisClusterStorage) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
+	return protojson.MarshalOptions{
+		UseEnumNumbers:  false,
+		EmitUnpopulated: false,
+		UseProtoNames:   false,
+	}.Marshal(msg)
 }
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *RedisClusterStorage) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
+	return protojson.UnmarshalOptions{
+		DiscardUnknown: false,
+	}.Unmarshal(b, msg)
 }
 
 // MarshalJSON implements json.Marshaler
 func (msg *RedisOption) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
+	return protojson.MarshalOptions{
+		UseEnumNumbers:  false,
+		EmitUnpopulated: false,
+		UseProtoNames:   false,
+	}.Marshal(msg)
 }
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *RedisOption) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
+	return protojson.UnmarshalOptions{
+		DiscardUnknown: false,
+	}.Unmarshal(b, msg)
 }

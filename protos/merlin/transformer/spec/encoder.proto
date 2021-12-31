@@ -8,6 +8,7 @@ message Encoder {
   string name = 1;
   oneof encoderConfig {
     OrdinalEncoderConfig ordinalEncoderConfig = 2;
+    CyclicalEncoderConfig cyclicalEncoderConfig = 3;
   }
 }
 
@@ -15,6 +16,32 @@ message OrdinalEncoderConfig {
   string defaultValue = 1;
   ValueType targetValueType = 2;
   map<string,string> mapping = 3;
+}
+
+message CyclicalEncoderConfig {
+  oneof encodeBy {
+    ByEpochTime byEpochTime = 1;
+    ByRange byRange = 2;
+  }
+}
+
+message ByEpochTime {
+  PeriodType period = 1;
+}
+
+message ByRange {
+  int64 min = 1;
+  int64 max = 2;
+}
+
+enum PeriodType {
+  HOUR = 0;
+  DAY = 1;
+  WEEK = 2;
+  MONTH = 3;
+  QUARTER = 4;
+  HALF = 5;
+  YEAR = 6;
 }
 
 enum ValueType {
