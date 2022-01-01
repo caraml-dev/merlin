@@ -30,8 +30,8 @@ message ByEpochTime {
 }
 
 message ByRange {
-  int64 min = 1;
-  int64 max = 2;
+  double min = 1;
+  double max = 2;
 }
 
 enum PeriodType {
