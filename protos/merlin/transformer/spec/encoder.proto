@@ -35,13 +35,14 @@ message ByRange {
 }
 
 enum PeriodType {
-  HOUR = 0;
-  DAY = 1;
-  WEEK = 2;
-  MONTH = 3;
-  QUARTER = 4;
-  HALF = 5;
-  YEAR = 6;
+  UNDEFINED = 0; //default when field not defined in config
+  HOUR = 1;
+  DAY = 2;
+  WEEK = 3;
+  MONTH = 4;
+  QUARTER = 5;
+  HALF = 6;
+  YEAR = 7;
 }
 
 enum ValueType {
