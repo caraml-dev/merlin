@@ -19,14 +19,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type InMemoryRegistry struct {
-	registry map[string]*goavro.Codec
-}
-
-func (i InMemoryRegistry) GetCodec(ctx context.Context, schemaRef []byte, project string, entityKeys []*spec.Entity) (*goavro.Codec, error) {
-	return i.registry[string(schemaRef)], nil
-}
-
 func TestEncoder_Encode(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -71,7 +63,7 @@ func TestEncoder_Encode(t *testing.T) {
 					},
 					Features: []*spec.Feature{
 						{
-							Name:      "trips_today",
+							Name:      "driver_trips:trips_today",
 							ValueType: types.ValueType_INT32.String(),
 						},
 					},
@@ -131,7 +123,7 @@ func TestEncoder_Encode(t *testing.T) {
 					},
 					Features: []*spec.Feature{
 						{
-							Name:      "rating",
+							Name:      "driver_customer_interaction:rating",
 							ValueType: types.ValueType_INT32.String(),
 						},
 					},
@@ -182,11 +174,11 @@ func TestEncoder_Decode(t *testing.T) {
 		},
 		Features: []*spec.Feature{
 			{
-				Name:      "login_type",
+				Name:      "login_requests:login_type",
 				ValueType: types.ValueType_STRING.String(),
 			},
 			{
-				Name:      "lats",
+				Name:      "login_requests:lats",
 				ValueType: types.ValueType_DOUBLE_LIST.String(),
 			},
 		},

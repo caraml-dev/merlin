@@ -33,7 +33,11 @@ func NewClient(bigtableStorage *spec.BigTableStorage, featureSpecs []*spec.Featu
 		}
 	}
 	registry := newCachedCodecRegistry(tables)
-	encoder := newEncoder(registry, featureSpecs, metadata)
+	encoder, err := newEncoder(registry, featureSpecs, metadata)
+	if err != nil {
+		return nil, err
+	}
+
 	return &BigTableClient{
 		encoder: encoder,
 		tables:  tables,

@@ -184,13 +184,19 @@ func avroToValueConversion(avroValue interface{}, featureType string) (*types.Va
 }
 
 // NewEncoder instantiates new instance of Encoder
-func newEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) *Encoder {
+func newEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) (*Encoder, error) {
 	tableByKey := make(map[featureTableKey]*spec.FeatureTable)
 	for _, tbl := range tables {
-		tableByKey[featureTableKey{
-			project: tbl.Project,
-			table:   tbl.TableName,
-		}] = tbl
+		for _, feature := range tbl.Features {
+			featureTable, err := ParseFeatureRef(feature.Name)
+			if err != nil {
+				return nil, err
+			}
+			featureTableKey := featureTableKey{project: tbl.Project, table: featureTable.FeatureTable}
+			if _, ok := tableByKey[featureTableKey]; !ok {
+				tableByKey[featureTableKey] = tbl
+			}
+		}
 	}
 	metadataByKey := make(map[featureTableKey]*spec.FeatureTableMetadata)
 	for _, m := range metadata {
@@ -203,7 +209,7 @@ func newEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []
 		registry:        registry,
 		featureSpecs:    tableByKey,
 		featureMetadata: metadataByKey,
-	}
+	}, nil
 }
 
 // RowQuery contains all information necessary to retrieve bigtable rows
@@ -374,7 +380,7 @@ func (e *Encoder) Decode(ctx context.Context, rows []bigtable.Row, req *feast.On
 				table:   featureRef.FeatureTable,
 			}]
 
-			featureType, err := getFeatureType(featureSpec, featureRef.Feature)
+			featureType, err := getFeatureType(featureSpec, fr)
 			if err != nil {
 				return nil, err
 			}
