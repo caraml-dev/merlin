@@ -254,6 +254,188 @@ func TestNewCyclicalEncoder(t *testing.T) {
 	}
 }
 
+func TestCyclicalEncode(t *testing.T) {
+	column := "col"
+	columnX := "col_x"
+	columnY := "col_y"
+	testCases := []struct {
+		desc            string
+		cyclicalEncoder *CyclicalEncoder
+		reqValues       []interface{}
+		expectedResult  map[string]interface{}
+		expectedError   error
+	}{
+		{
+			desc: "Should fail: Fix period (by range): Missing value",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: nil,
+				Min:    0,
+				Max:    86400,
+			},
+			reqValues: []interface{}{
+				1640995200, //3 Jan 2022, 00:00:00
+				1640995201, //3 Jan 2022, 00:00:01
+				nil,
+				1641060000, //3 Jan 2022, 18:00:00
+			},
+			expectedResult: nil,
+			expectedError:  fmt.Errorf("missing value"),
+		},
+		{
+			desc: "Should fail: By Epoch time: Missing value",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: spec.PeriodType_MONTH,
+				Min:    0,
+				Max:    0,
+			},
+			reqValues: []interface{}{
+				1640995200, //3 Jan 2022, 00:00:00
+				1640995201, //3 Jan 2022, 00:00:01
+				nil,
+				1641060000, //3 Jan 2022, 18:00:00
+			},
+			expectedResult: nil,
+			expectedError:  fmt.Errorf("missing value"),
+		},
+		{
+			desc: "Should fail: Invalid value",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: nil,
+				Min:    0,
+				Max:    86400,
+			},
+			reqValues: []interface{}{
+				1640995200, //3 Jan 2022, 00:00:00
+				"hello",
+				1641038400, //3 Jan 2022, 12:00:00
+				1641060000, //3 Jan 2022, 18:00:00
+			},
+			expectedResult: nil,
+			expectedError:  fmt.Errorf("strconv.ParseFloat: parsing \"hello\": invalid syntax"),
+		},
+		{
+			desc: "Should succeed: Fixed period (by range)",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: nil,
+				Min:    1,
+				Max:    8,
+			},
+			reqValues: []interface{}{
+				0, 1, 4.5, 8, 9.75,
+			},
+			expectedResult: map[string]interface{}{
+				columnX: []interface{}{
+					0.623489801, 1, -1, 1, 0,
+				},
+				columnY: []interface{}{
+					-0.781831482, 0, 0, 0, 1,
+				},
+			},
+		},
+		{
+			desc: "Should succeed: Fixed period (by range): with negative range",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: nil,
+				Min:    -4,
+				Max:    3,
+			},
+			reqValues: []interface{}{
+				-5, -4, -0.5, 3, 4.75,
+			},
+			expectedResult: map[string]interface{}{
+				columnX: []interface{}{
+					0.623489801, 1, -1, 1, 0,
+				},
+				columnY: []interface{}{
+					-0.781831482, 0, 0, 0, 1,
+				},
+			},
+		},
+		{
+			desc: "Should succeed: EpochTime, HOUR",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: nil,
+				Min:    0,
+				Max:    3600,
+			},
+			reqValues: []interface{}{
+				1640995200, //1 Jan 2022, 00:00:00
+				1640995201, //1 Jan 2022, 00:00:01
+				1641039300, //1 Jan 2022, 12:15:00
+				1641054600, //1 Jan 2022, 16:30:00
+				1641060000, //1 Jan 2022, 18:00:00
+			},
+			expectedResult: map[string]interface{}{
+				columnX: []interface{}{
+					1, 0.999998476, 0, -1, 1,
+				},
+				columnY: []interface{}{
+					0, 0.001745328, 1, 0, 0,
+				},
+			},
+		},
+		{
+			desc: "Should succeed: EpochTime, DAY",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: nil,
+				Min:    0,
+				Max:    86400,
+			},
+			reqValues: []interface{}{
+				1640995200, //1 Jan 2022, 00:00:00
+				1640995201, //1 Jan 2022, 00:00:01
+				1641038400, //1 Jan 2022, 12:00:00
+				1641060000, //1 Jan 2022, 18:00:00
+			},
+			expectedResult: map[string]interface{}{
+				columnX: []interface{}{
+					1, 0.999999997, -1, 0,
+				},
+				columnY: []interface{}{
+					0, 0.000072717, 0, -1,
+				},
+			},
+		},
+		{
+			desc: "Should succeed: EpochTime, WEEK",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: nil,
+				Min:    0,
+				Max:    604800,
+			},
+			reqValues: []interface{}{ //NOTE: Epoch time starts from Thursday, hence 0 on Thurs
+				1641427200, //6 Jan 2022, 00:00:00, Thursday
+				1641578400, //5 Jan 2022, 18:00:00, Friday
+				1641729600, //9 Jan 2022, 12:00:00, Sunday
+				1641880800, //11 Jan 2022, 06:00:00, Tuesday
+				1642032000, //13 Jan 2022, 0:00:00, Thursday
+			},
+			expectedResult: map[string]interface{}{
+				columnX: []interface{}{
+					1, 0, -1, 0, 1,
+				},
+				columnY: []interface{}{
+					0, 1, 0, -1, 0,
+				},
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			got, err := tC.cyclicalEncoder.Encode(tC.reqValues, column)
+			if tC.expectedError != nil {
+				assert.EqualError(t, err, tC.expectedError.Error())
+			} else {
+				fmt.Println(tC.expectedResult)
+				fmt.Println(got)
+				assert.Equal(t, len(tC.expectedResult), len(got))
+				assert.InDeltaSlice(t, tC.expectedResult[columnX], got[columnX], 0.00000001)
+				assert.InDeltaSlice(t, tC.expectedResult[columnY], got[columnY], 0.00000001)
+			}
+		})
+	}
+}
+
 func TestGetCycleTime(t *testing.T) {
 	testCases := []struct {
 		desc              string
