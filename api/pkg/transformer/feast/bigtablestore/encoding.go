@@ -184,7 +184,7 @@ func avroToValueConversion(avroValue interface{}, featureType string) (*types.Va
 }
 
 // NewEncoder instantiates new instance of Encoder
-func NewEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) *Encoder {
+func newEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) *Encoder {
 	tableByKey := make(map[featureTableKey]*spec.FeatureTable)
 	for _, tbl := range tables {
 		tableByKey[featureTableKey{
@@ -413,8 +413,8 @@ type CachedCodecRegistry struct {
 	sync.RWMutex
 }
 
-// NewCachedCodecRegistry instantiates a new CachedCodecRegistry
-func NewCachedCodecRegistry(tables map[string]*bigtable.Table) *CachedCodecRegistry {
+// newCachedCodecRegistry instantiates a new CachedCodecRegistry
+func newCachedCodecRegistry(tables map[string]*bigtable.Table) *CachedCodecRegistry {
 	return &CachedCodecRegistry{
 		codecs: make(map[string]*goavro.Codec),
 		tables: tables,

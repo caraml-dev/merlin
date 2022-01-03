@@ -57,6 +57,7 @@ type FeastRedisConfig struct {
 	PoolTimeout          *Duration `json:"pool_timeout"`
 	IdleTimeout          *Duration `json:"idle_timeout"`
 	IdleCheckFrequency   *Duration `json:"idle_check_frequency"`
+	MinIdleConn          int32     `json:"min_idle_conn"`
 }
 
 func (redisCfg *FeastRedisConfig) Decode(value string) error {
@@ -90,6 +91,7 @@ func (redisCfg *FeastRedisConfig) ToFeastStorage() *spec.OnlineStorage {
 		PoolTimeout:        getDurationProtoFromTime(redisCfg.PoolTimeout),
 		IdleTimeout:        getDurationProtoFromTime(redisCfg.IdleTimeout),
 		IdleCheckFrequency: getDurationProtoFromTime(redisCfg.IdleCheckFrequency),
+		MinIdleConnections: redisCfg.MinIdleConn,
 	}
 	if redisCfg.IsRedisCluster {
 		return &spec.OnlineStorage{
@@ -118,8 +120,14 @@ func (redisCfg *FeastRedisConfig) ToFeastStorage() *spec.OnlineStorage {
 
 // FeastBigtableConfig is bigtable storage configuration for standard transformer
 type FeastBigtableConfig struct {
-	IsUsingDirectStorage bool   `json:"is_using_direct_storage" default:"false"`
-	ServingURL           string `json:"serving_url" validate:"required"`
+	IsUsingDirectStorage bool      `json:"is_using_direct_storage" default:"false"`
+	ServingURL           string    `json:"serving_url" validate:"required"`
+	Project              string    `json:"project" validate:"required"`
+	Instance             string    `json:"instance" validate:"required"`
+	AppProfile           string    `json:"app_profile"`
+	PoolSize             int32     `json:"pool_size" validate:"gt=0"`
+	KeepAliveInterval    *Duration `json:"keep_alive_interval"`
+	KeepAliveTimeout     *Duration `json:"keep_alive_timeout"`
 }
 
 func (bigtableCfg *FeastBigtableConfig) Decode(value string) error {
@@ -146,6 +154,14 @@ func (bigtableCfg *FeastBigtableConfig) ToFeastStorage() *spec.OnlineStorage {
 		Storage: &spec.OnlineStorage_Bigtable{
 			Bigtable: &spec.BigTableStorage{
 				FeastServingUrl: bigtableCfg.ServingURL,
+				Project:         bigtableCfg.Project,
+				Instance:        bigtableCfg.Instance,
+				AppProfile:      bigtableCfg.AppProfile,
+				Option: &spec.BigTableOption{
+					GrpcConnectionPool: bigtableCfg.PoolSize,
+					KeepAliveInterval:  getDurationProtoFromTime(bigtableCfg.KeepAliveInterval),
+					KeepAliveTimeout:   getDurationProtoFromTime(bigtableCfg.KeepAliveTimeout),
+				},
 			},
 		},
 	}

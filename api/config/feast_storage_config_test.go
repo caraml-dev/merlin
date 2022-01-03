@@ -35,7 +35,7 @@ func TestFeastRedisConfig(t *testing.T) {
 		},
 		{
 			desc:              "Success: valid redis cluster config",
-			redisConfigString: `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`,
+			redisConfigString: `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s","min_idle_conn":2}`,
 			expectedRedisConfig: &FeastRedisConfig{
 				IsRedisCluster: true,
 				ServingURL:     "online-storage.merlin.dev",
@@ -45,6 +45,7 @@ func TestFeastRedisConfig(t *testing.T) {
 				PoolSize:    4,
 				MaxRetries:  1,
 				DialTimeout: &tenSecDuration,
+				MinIdleConn: 2,
 			},
 		},
 		{
@@ -53,12 +54,12 @@ func TestFeastRedisConfig(t *testing.T) {
 			err:               fmt.Errorf(`envconfig.Process: assigning FEAST_REDIS_CONFIG to FeastRedisConfig: converting '{"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 0,"max_retries": 1,"dial_timeout": "10s"}' to type config.FeastRedisConfig. details: Key: 'FeastRedisConfig.PoolSize' Error:Field validation for 'PoolSize' failed on the 'gt' tag`),
 		},
 		{
-			desc:              "Invalid: serving_url is not ser",
+			desc:              "Invalid: serving_url is not set",
 			redisConfigString: `{"serving_url":"","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`,
 			err:               fmt.Errorf(`envconfig.Process: assigning FEAST_REDIS_CONFIG to FeastRedisConfig: converting '{"serving_url":"","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}' to type config.FeastRedisConfig. details: ServingURL is required`),
 		},
 		{
-			desc:              "Invalid: redis_addresses is not ser",
+			desc:              "Invalid: redis_addresses is not set",
 			redisConfigString: `{"serving_url":"online-storage.merlin.dev","redis_addresses":[],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`,
 			err:               fmt.Errorf(`envconfig.Process: assigning FEAST_REDIS_CONFIG to FeastRedisConfig: converting '{"serving_url":"online-storage.merlin.dev","redis_addresses":[],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}' to type config.FeastRedisConfig. details: Key: 'FeastRedisConfig.RedisAddresses' Error:Field validation for 'RedisAddresses' failed on the 'gt' tag`),
 		},
@@ -80,6 +81,8 @@ func TestFeastRedisConfig(t *testing.T) {
 }
 
 func TestFeastBigtableConfig(t *testing.T) {
+	oneMinuteDuration := Duration(time.Minute * 1)
+	twoMinuteDuration := Duration(time.Minute * 2)
 	testCases := []struct {
 		desc                   string
 		bigtableString         string
@@ -88,15 +91,36 @@ func TestFeastBigtableConfig(t *testing.T) {
 	}{
 		{
 			desc:           "Success: valid env variable",
-			bigtableString: `{"serving_url":"10.1.1.3"}`,
+			bigtableString: `{"serving_url":"10.1.1.3","project":"sample","instance":"bt-instance","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`,
 			expectedBigTableConfig: &FeastBigtableConfig{
-				ServingURL: "10.1.1.3",
+				ServingURL:        "10.1.1.3",
+				Project:           "sample",
+				Instance:          "bt-instance",
+				AppProfile:        "slave",
+				PoolSize:          4,
+				KeepAliveInterval: &twoMinuteDuration,
+				KeepAliveTimeout:  &oneMinuteDuration,
 			},
 		},
 		{
 			desc:           "Fail: serving_url is not set",
 			bigtableString: `{"serving_url":""}`,
 			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigtableConfig: converting '{"serving_url":""}' to type config.FeastBigtableConfig. details: ServingURL is required`),
+		},
+		{
+			desc:           "Fail: project is not set",
+			bigtableString: `{"serving_url":"10.1.1.3","project":"","instance":"bt-instance","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`,
+			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigtableConfig: converting '{"serving_url":"10.1.1.3","project":"","instance":"bt-instance","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}' to type config.FeastBigtableConfig. details: Project is required`),
+		},
+		{
+			desc:           "Fail: instance is not set",
+			bigtableString: `{"serving_url":"10.1.1.3","project":"sample","instance":"","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`,
+			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigtableConfig: converting '{"serving_url":"10.1.1.3","project":"sample","instance":"","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}' to type config.FeastBigtableConfig. details: Instance is required`),
+		},
+		{
+			desc:           "Fail: pool size is 0",
+			bigtableString: `{"serving_url":"10.1.1.3","project":"sample","instance":"bt-instance","app_profile":"slave","pool_size":0,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`,
+			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigtableConfig: converting '{"serving_url":"10.1.1.3","project":"sample","instance":"bt-instance","app_profile":"slave","pool_size":0,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}' to type config.FeastBigtableConfig. details: Key: 'FeastBigtableConfig.PoolSize' Error:Field validation for 'PoolSize' failed on the 'gt' tag`),
 		},
 	}
 	for _, tC := range testCases {
@@ -243,6 +267,8 @@ func TestRedisConfig_ToFeastStorage(t *testing.T) {
 }
 
 func TestBigtableConfig_ToFeastConfig(t *testing.T) {
+	oneMinuteDuration := Duration(time.Minute * 1)
+	twoMinuteDuration := Duration(time.Minute * 2)
 	testCases := []struct {
 		desc                   string
 		bigtableConfig         *FeastBigtableConfig
@@ -253,12 +279,53 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 			bigtableConfig: &FeastBigtableConfig{
 				IsUsingDirectStorage: true,
 				ServingURL:           "localhost",
+				Project:              "gcp-project",
+				Instance:             "instance",
+				AppProfile:           "default",
+				PoolSize:             3,
+				KeepAliveInterval:    &twoMinuteDuration,
+				KeepAliveTimeout:     &oneMinuteDuration,
 			},
 			expectedBigTableConfig: &spec.OnlineStorage{
 				ServingType: spec.ServingType_DIRECT_STORAGE,
 				Storage: &spec.OnlineStorage_Bigtable{
 					Bigtable: &spec.BigTableStorage{
 						FeastServingUrl: "localhost",
+						Project:         "gcp-project",
+						Instance:        "instance",
+						AppProfile:      "default",
+						Option: &spec.BigTableOption{
+							GrpcConnectionPool: 3,
+							KeepAliveInterval:  durationpb.New(time.Duration(twoMinuteDuration)),
+							KeepAliveTimeout:   durationpb.New(time.Duration(oneMinuteDuration)),
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "Success: not using direct storage, and keep alive configurations are not set",
+			bigtableConfig: &FeastBigtableConfig{
+				IsUsingDirectStorage: false,
+				ServingURL:           "localhost",
+				Project:              "gcp-project",
+				Instance:             "instance",
+				AppProfile:           "default",
+				PoolSize:             3,
+			},
+			expectedBigTableConfig: &spec.OnlineStorage{
+				ServingType: spec.ServingType_FEAST_GRPC,
+				Storage: &spec.OnlineStorage_Bigtable{
+					Bigtable: &spec.BigTableStorage{
+						FeastServingUrl: "localhost",
+						Project:         "gcp-project",
+						Instance:        "instance",
+						AppProfile:      "default",
+						Option: &spec.BigTableOption{
+							GrpcConnectionPool: 3,
+							KeepAliveInterval:  nil,
+							KeepAliveTimeout:   nil,
+						},
 					},
 				},
 			},

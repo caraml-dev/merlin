@@ -7,6 +7,9 @@ import (
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
 // BigTableClient provides the means of retrieving Feast features directly from
@@ -17,20 +20,45 @@ type BigTableClient struct {
 }
 
 // NewClient instantiate new instance of BigTableClient
-func NewClient(client *bigtable.Client, project string, featureSpecs []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) *BigTableClient {
+func NewClient(bigtableStorage *spec.BigTableStorage, featureSpecs []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) (*BigTableClient, error) {
 	tables := make(map[string]*bigtable.Table)
+	client, err := newBigtableClient(bigtableStorage)
+	if err != nil {
+		return nil, err
+	}
 	for _, featureSpec := range featureSpecs {
-		btn := entityKeysToBigTable(project, featureSpec.Entities)
+		btn := entityKeysToBigTable(featureSpec.Project, featureSpec.Entities)
 		if _, exists := tables[btn]; !exists {
 			tables[btn] = client.Open(btn)
 		}
 	}
-	registry := NewCachedCodecRegistry(tables)
-	encoder := NewEncoder(registry, featureSpecs, metadata)
+	registry := newCachedCodecRegistry(tables)
+	encoder := newEncoder(registry, featureSpecs, metadata)
 	return &BigTableClient{
 		encoder: encoder,
 		tables:  tables,
+	}, nil
+}
+
+func newBigtableClient(storage *spec.BigTableStorage) (*bigtable.Client, error) {
+	opt := storage.Option
+	btConfig := bigtable.ClientConfig{AppProfile: storage.AppProfile}
+	var clientOpts []option.ClientOption
+	clientOpts = append(clientOpts, option.WithGRPCConnectionPool(int(opt.GrpcConnectionPool)))
+
+	keepAliveParams := keepalive.ClientParameters{}
+	if opt.KeepAliveInterval != nil {
+		keepAliveParams.Time = opt.KeepAliveInterval.AsDuration()
 	}
+	if opt.KeepAliveTimeout != nil {
+		keepAliveParams.Timeout = opt.KeepAliveTimeout.AsDuration()
+	}
+	clientOpts = append(clientOpts, option.WithGRPCDialOption(grpc.WithKeepaliveParams(keepAliveParams)))
+	client, err := bigtable.NewClientWithConfig(context.Background(), storage.Project, storage.Instance, btConfig, clientOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 // GetOnlineFeatures will first convert the request to RowQuery, which contains all

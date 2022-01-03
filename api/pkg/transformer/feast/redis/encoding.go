@@ -1,96 +1,23 @@
-package feast
+package redis
 
 import (
-	"context"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/storage"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/go-redis/redis/v8"
 	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/golang/protobuf/proto"
 	"github.com/spaolacci/murmur3"
-	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewDirectStorageClient(storage *spec.OnlineStorage, featureTablesMetadata []*spec.FeatureTableMetadata) (StorageClient, error) {
-	switch storage.Storage.(type) {
-	case *spec.OnlineStorage_Redis:
-		option := storage.GetRedis().GetOption()
-		redisClient := redis.NewClient(&redis.Options{
-			Addr:               storage.GetRedis().GetRedisAddress(),
-			MaxRetries:         int(option.MaxRetries),
-			MinRetryBackoff:    getNullableDuration(option.MinRetryBackoff),
-			MaxRetryBackoff:    getNullableDuration(option.MinRetryBackoff),
-			DialTimeout:        getNullableDuration(option.DialTimeout),
-			ReadTimeout:        getNullableDuration(option.ReadTimeout),
-			WriteTimeout:       getNullableDuration(option.WriteTimeout),
-			PoolSize:           int(option.PoolSize),
-			MaxConnAge:         getNullableDuration(option.MaxConnAge),
-			PoolTimeout:        getNullableDuration(option.PoolTimeout),
-			IdleTimeout:        getNullableDuration(option.IdleTimeout),
-			IdleCheckFrequency: getNullableDuration(option.IdleCheckFrequency),
-		})
-		return RedisClient{
-			encoder:   NewRedisEncoder(featureTablesMetadata),
-			pipeliner: redisClient.Pipeline(),
-		}, nil
-	case *spec.OnlineStorage_RedisCluster:
-		option := storage.GetRedis().GetOption()
-		if option == nil {
-			option = &spec.RedisOption{}
-		}
-		redisClient := redis.NewClusterClient(&redis.ClusterOptions{
-			Addrs:              storage.GetRedisCluster().GetRedisAddress(),
-			MaxRetries:         int(option.MaxRetries),
-			MinRetryBackoff:    getNullableDuration(option.MinRetryBackoff),
-			MaxRetryBackoff:    getNullableDuration(option.MinRetryBackoff),
-			DialTimeout:        getNullableDuration(option.DialTimeout),
-			ReadTimeout:        getNullableDuration(option.ReadTimeout),
-			WriteTimeout:       getNullableDuration(option.WriteTimeout),
-			PoolSize:           int(option.PoolSize),
-			MaxConnAge:         getNullableDuration(option.MaxConnAge),
-			PoolTimeout:        getNullableDuration(option.PoolTimeout),
-			IdleTimeout:        getNullableDuration(option.IdleTimeout),
-			IdleCheckFrequency: getNullableDuration(option.IdleCheckFrequency),
-		})
-		return RedisClient{
-			encoder:   NewRedisEncoder(featureTablesMetadata),
-			pipeliner: redisClient.Pipeline(),
-		}, nil
-	}
-
-	return nil, errors.New("unrecognized storage option")
-}
-
-func getNullableDuration(duration *durationpb.Duration) time.Duration {
-	if duration == nil {
-		return 0
-	}
-	return duration.AsDuration()
-}
-
-type RedisClient struct {
-	encoder   RedisEncoder
-	pipeliner redis.Pipeliner
-}
-
-func getMetadataKey(metadata *spec.FeatureTableMetadata) string {
-	return metadataCompositeKey(metadata.Name, metadata.Project)
-}
-
-func metadataCompositeKey(featureTableName, project string) string {
-	return fmt.Sprintf("%s-%s", project, featureTableName)
-}
-
-func NewRedisEncoder(featureTablesMetadata []*spec.FeatureTableMetadata) RedisEncoder {
+func newRedisEncoder(featureTablesMetadata []*spec.FeatureTableMetadata) RedisEncoder {
 	specs := make(map[string]*spec.FeatureTableMetadata)
 	for _, metadata := range featureTablesMetadata {
 		key := getMetadataKey(metadata)
@@ -99,8 +26,12 @@ func NewRedisEncoder(featureTablesMetadata []*spec.FeatureTableMetadata) RedisEn
 	return RedisEncoder{specs: specs}
 }
 
-type RedisEncoder struct {
-	specs map[string]*spec.FeatureTableMetadata
+func getMetadataKey(metadata *spec.FeatureTableMetadata) string {
+	return metadataCompositeKey(metadata.Name, metadata.Project)
+}
+
+func metadataCompositeKey(featureTableName, project string) string {
+	return fmt.Sprintf("%s-%s", project, featureTableName)
 }
 
 type EncodedFeatureRequest struct {
@@ -284,33 +215,6 @@ func (e RedisEncoder) decodeHashMap(encodedHashMap []interface{}, featureReferen
 	return featureValues, eventTimestamps, nil
 }
 
-func (r RedisClient) GetOnlineFeatures(ctx context.Context, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error) {
-	encodedFeatureRequest, err := r.encoder.EncodeFeatureRequest(req)
-	encodedEntities := encodedFeatureRequest.EncodedEntities
-	encodedFeatures := encodedFeatureRequest.EncodedFeatures
-	if err != nil {
-		return nil, err
-	}
-	hmGetResults := make([]*redis.SliceCmd, len(encodedEntities))
-	pipeline := r.pipeliner.Pipeline()
-	for index, encodedEntity := range encodedEntities {
-		hmGetResults[index] = pipeline.HMGet(ctx, encodedEntity, encodedFeatures...)
-	}
-	_, err = pipeline.Exec(ctx)
-	if err != nil {
-		return nil, err
-	}
-	redisHashMaps := make([][]interface{}, len(hmGetResults))
-	for index, result := range hmGetResults {
-		redisHashMap, err := result.Result()
-		if err != nil {
-			return nil, err
-		}
-		redisHashMaps[index] = redisHashMap
-	}
-	response, err := r.encoder.DecodeStoredRedisValue(redisHashMaps, req)
-	if err != nil {
-		return nil, err
-	}
-	return response, nil
+func getFeatureTableFromFeatureRef(ref string) string {
+	return strings.Split(ref, ":")[0]
 }

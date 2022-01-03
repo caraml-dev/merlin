@@ -150,7 +150,7 @@ func TestEncoder_Encode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			registry := &CachedCodecRegistry{}
-			encoder := NewEncoder(registry, tt.featureTables, tt.metadata)
+			encoder := newEncoder(registry, tt.featureTables, tt.metadata)
 			rowQuery, err := encoder.Encode(tt.req)
 			if err != nil {
 				panic(err)
@@ -447,7 +447,7 @@ func TestEncoder_Decode(t *testing.T) {
 				string(schemaRefBytes): codec,
 			}
 			registry := &CachedCodecRegistry{codecs: codecs}
-			encoder := NewEncoder(registry, featureTable, tt.metadata)
+			encoder := newEncoder(registry, featureTable, tt.metadata)
 			response, err := encoder.Decode(context.Background(), tt.rows, tt.req, entityKeys)
 			if err != nil {
 				panic(err)

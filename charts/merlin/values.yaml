@@ -122,6 +122,8 @@ merlin:
       ## Redis storage configuration for feast retrieval
       ##
       # redisStorage:
+      #   is_using_direct_storage: false
+      #   is_redis_cluster: true
       #   serving_url: "online-serving-redis.feast.dev"
       #   redis_addresses: 
       #     - 10.1.1.2
@@ -130,11 +132,19 @@ merlin:
       #   max_retries: 0
       #   read_timeout: "1s"
       #   write_timeout: "1s"
+      #   min_idle_conn: 2
 
       ## Bigtable storage configuration for feast retrieval
       ##
       # bigtableStorage:
       #   serving_url: "online-serving-bigtable.feast.dev"
+      #   is_using_direct_storage: false
+      #   project: "gcp-project"
+      #   instance: instance
+      #   app_profile: default
+      #   pool_size: 5
+      #   keep_alive_interval: "2m"
+      #   keep_alive_timeout: "1m"
       
       defaultFeastSource: BIGTABLE
       coreURL: core.feast.dev
