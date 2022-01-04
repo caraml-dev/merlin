@@ -26,11 +26,17 @@ type Encoder struct {
 	registry        CodecRegistry
 	featureSpecs    map[featureTableKey]*spec.FeatureTable
 	featureMetadata map[featureTableKey]*spec.FeatureTableMetadata
+	featureTypes    map[featureNameKey]string
 }
 
 type featureTableKey struct {
 	project string
 	table   string
+}
+
+type featureNameKey struct {
+	project string
+	feature string
 }
 
 func entityKeysToBigTable(project string, entityKeys []*spec.Entity) string {
@@ -80,11 +86,9 @@ func compareEntityKeys(entityKeys1 []*spec.Entity, entityKeys2 []*spec.Entity) b
 	return true
 }
 
-func getFeatureType(featureSpec *spec.FeatureTable, featureName string) (string, error) {
-	for _, f := range featureSpec.Features {
-		if f.Name == featureName {
-			return f.ValueType, nil
-		}
+func getFeatureType(featureTypes map[featureNameKey]string, project, featureName string) (string, error) {
+	if gotType, found := featureTypes[featureNameKey{project: project, feature: featureName}]; found {
+		return gotType, nil
 	}
 	return "", fmt.Errorf("feature %s is not part of specification", featureName)
 }
@@ -186,6 +190,7 @@ func avroToValueConversion(avroValue interface{}, featureType string) (*types.Va
 // NewEncoder instantiates new instance of Encoder
 func newEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) (*Encoder, error) {
 	tableByKey := make(map[featureTableKey]*spec.FeatureTable)
+	featureTypeByKey := make(map[featureNameKey]string)
 	for _, tbl := range tables {
 		for _, feature := range tbl.Features {
 			featureTable, err := ParseFeatureRef(feature.Name)
@@ -196,6 +201,9 @@ func newEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []
 			if _, ok := tableByKey[featureTableKey]; !ok {
 				tableByKey[featureTableKey] = tbl
 			}
+
+			featureNameKey := featureNameKey{project: tbl.Project, feature: feature.Name}
+			featureTypeByKey[featureNameKey] = feature.ValueType
 		}
 	}
 	metadataByKey := make(map[featureTableKey]*spec.FeatureTableMetadata)
@@ -208,6 +216,7 @@ func newEncoder(registry CodecRegistry, tables []*spec.FeatureTable, metadata []
 	return &Encoder{
 		registry:        registry,
 		featureSpecs:    tableByKey,
+		featureTypes:    featureTypeByKey,
 		featureMetadata: metadataByKey,
 	}, nil
 }
@@ -380,7 +389,7 @@ func (e *Encoder) Decode(ctx context.Context, rows []bigtable.Row, req *feast.On
 				table:   featureRef.FeatureTable,
 			}]
 
-			featureType, err := getFeatureType(featureSpec, fr)
+			featureType, err := getFeatureType(e.featureTypes, featureSpec.Project, fr)
 			if err != nil {
 				return nil, err
 			}
