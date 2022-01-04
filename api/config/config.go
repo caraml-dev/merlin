@@ -201,9 +201,10 @@ type StandardTransformerConfig struct {
 	EnableAuth            bool                 `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
 	FeastRedisConfig      *FeastRedisConfig    `envconfig:"FEAST_REDIS_CONFIG"`
 	FeastBigtableConfig   *FeastBigtableConfig `envconfig:"FEAST_BIG_TABLE_CONFIG"`
-	BigtableCredential    string               `envconfig:"FEAST_BIGTABLE_CREDENTIAL"`
-	DefaultFeastSource    spec.ServingSource   `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
-	Jaeger                JaegerConfig
+	// Base64 Service Account
+	BigtableCredential string             `envconfig:"FEAST_BIGTABLE_CREDENTIAL"`
+	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
+	Jaeger             JaegerConfig
 }
 
 func (stc *StandardTransformerConfig) ToFeastStorageConfigs() feast.FeastStorageConfig {

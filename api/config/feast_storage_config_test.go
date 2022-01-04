@@ -287,7 +287,7 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 				KeepAliveInterval:    &twoMinuteDuration,
 				KeepAliveTimeout:     &oneMinuteDuration,
 			},
-			bigtableCredential: `{"key":"value"}`,
+			bigtableCredential: `eyJrZXkiOiJ2YWx1ZSJ9`,
 			expectedBigTableConfig: &spec.OnlineStorage{
 				ServingType: spec.ServingType_DIRECT_STORAGE,
 				Storage: &spec.OnlineStorage_Bigtable{

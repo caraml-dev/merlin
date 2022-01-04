@@ -99,7 +99,7 @@ func TestStandardTransfomer_ToFeastStorageConfigs(t *testing.T) {
 					},
 				},
 			},
-			bigtableCredential: `{"key":"value"}`,
+			bigtableCredential: `eyJrZXkiOiJ2YWx1ZSJ9`,
 		},
 		{
 			desc:        "redis config set and big table config not set",

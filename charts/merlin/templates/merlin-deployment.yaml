@@ -166,7 +166,7 @@ spec:
             value: {{ .Values.merlin.transformer.feast.bigtableStorage | toJson | quote }}
           {{- end }}
           - name: FEAST_BIGTABLE_CREDENTIAL
-            value: {{ .Values.merlin.transformer.feast.bigtableCredential | quote}}
+            value: {{ .Values.merlin.transformer.feast.bigtableCredential}}
           - name: DEFAULT_FEAST_SOURCE
             value: {{ .Values.merlin.transformer.feast.defaultFeastSource}}
           - name: FEAST_CORE_URL

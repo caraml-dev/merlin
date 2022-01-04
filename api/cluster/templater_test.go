@@ -116,7 +116,7 @@ var (
 			KeepAliveInterval: &twoMinuteDuration,
 			KeepAliveTimeout:  &oneMinuteDuration,
 		},
-		BigtableCredential: `{"key":"value"}`,
+		BigtableCredential: "eyJrZXkiOiJ2YWx1ZSJ9",
 	}
 )
 

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -151,10 +150,6 @@ func (bigtableCfg *FeastBigtableConfig) ToFeastStorageWithCredential(credential 
 		servingType = spec.ServingType_DIRECT_STORAGE
 	}
 
-	var credentialJSON string
-	if credential != "" {
-		credentialJSON = base64.StdEncoding.EncodeToString([]byte(credential))
-	}
 	return &spec.OnlineStorage{
 		ServingType: servingType,
 		Storage: &spec.OnlineStorage_Bigtable{
@@ -167,7 +162,7 @@ func (bigtableCfg *FeastBigtableConfig) ToFeastStorageWithCredential(credential 
 					GrpcConnectionPool: bigtableCfg.PoolSize,
 					KeepAliveInterval:  getDurationProtoFromTime(bigtableCfg.KeepAliveInterval),
 					KeepAliveTimeout:   getDurationProtoFromTime(bigtableCfg.KeepAliveTimeout),
-					CredentialJson:     credentialJSON,
+					CredentialJson:     credential,
 				},
 			},
 		},
