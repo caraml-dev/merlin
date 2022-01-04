@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -128,6 +129,7 @@ type FeastBigtableConfig struct {
 	PoolSize             int32     `json:"pool_size" validate:"gt=0"`
 	KeepAliveInterval    *Duration `json:"keep_alive_interval"`
 	KeepAliveTimeout     *Duration `json:"keep_alive_timeout"`
+	CredentialJSON       string    `json:"credential"`
 }
 
 func (bigtableCfg *FeastBigtableConfig) Decode(value string) error {
@@ -149,6 +151,11 @@ func (bigtableCfg *FeastBigtableConfig) ToFeastStorage() *spec.OnlineStorage {
 	if bigtableCfg.IsUsingDirectStorage {
 		servingType = spec.ServingType_DIRECT_STORAGE
 	}
+
+	var credentialJSON string
+	if bigtableCfg.CredentialJSON != "" {
+		credentialJSON = base64.StdEncoding.EncodeToString([]byte(bigtableCfg.CredentialJSON))
+	}
 	return &spec.OnlineStorage{
 		ServingType: servingType,
 		Storage: &spec.OnlineStorage_Bigtable{
@@ -161,6 +168,7 @@ func (bigtableCfg *FeastBigtableConfig) ToFeastStorage() *spec.OnlineStorage {
 					GrpcConnectionPool: bigtableCfg.PoolSize,
 					KeepAliveInterval:  getDurationProtoFromTime(bigtableCfg.KeepAliveInterval),
 					KeepAliveTimeout:   getDurationProtoFromTime(bigtableCfg.KeepAliveTimeout),
+					CredentialJson:     credentialJSON,
 				},
 			},
 		},

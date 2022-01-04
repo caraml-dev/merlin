@@ -33,6 +33,7 @@ message BigTableOption {
   int32 grpcConnectionPool = 1; // Number of grpc connection pool
   google.protobuf.Duration keepAliveInterval = 2; // Interval of keep alive pings server to check whether the connection still alive
   google.protobuf.Duration keepAliveTimeout = 3; // Duration of timeout, the connection will be closed if no activity is seen
+  string credentialJson = 4; // Base64 Encoded credential that later will be used as authentication of bigtable
 }
 
 message RedisStorage {

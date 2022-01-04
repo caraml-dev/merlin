@@ -2,6 +2,7 @@ package bigtablestore
 
 import (
 	"context"
+	"encoding/base64"
 
 	"cloud.google.com/go/bigtable"
 
@@ -58,6 +59,14 @@ func newBigtableClient(storage *spec.BigTableStorage) (*bigtable.Client, error) 
 		keepAliveParams.Timeout = opt.KeepAliveTimeout.AsDuration()
 	}
 	clientOpts = append(clientOpts, option.WithGRPCDialOption(grpc.WithKeepaliveParams(keepAliveParams)))
+
+	if opt.CredentialJson != "" {
+		credsByte, err := base64.StdEncoding.DecodeString(opt.CredentialJson)
+		if err != nil {
+			return nil, err
+		}
+		clientOpts = append(clientOpts, option.WithCredentialsJSON(credsByte))
+	}
 	client, err := bigtable.NewClientWithConfig(context.Background(), storage.Project, storage.Instance, btConfig, clientOpts...)
 	if err != nil {
 		return nil, err

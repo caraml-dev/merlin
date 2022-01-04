@@ -115,6 +115,7 @@ var (
 			PoolSize:          4,
 			KeepAliveInterval: &twoMinuteDuration,
 			KeepAliveTimeout:  &oneMinuteDuration,
+			CredentialJSON:    `{"key":"value"}`,
 		},
 	}
 )
@@ -840,7 +841,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										},
 										{
 											Name:  transformer.FeastStorageConfigs,
-											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s"}}}}`,
+											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 										},
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
@@ -1792,7 +1793,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 							{Name: transformer.DefaultFeastSource, Value: standardTransformerConfig.DefaultFeastSource.String()},
 							{
 								Name:  transformer.FeastStorageConfigs,
-								Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s"}}}}`,
+								Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 							},
 							{Name: envTransformerPort, Value: defaultTransformerPort},
 							{Name: envTransformerModelName, Value: "test-1"},

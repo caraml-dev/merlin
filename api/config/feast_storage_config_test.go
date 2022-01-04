@@ -285,6 +285,7 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 				PoolSize:             3,
 				KeepAliveInterval:    &twoMinuteDuration,
 				KeepAliveTimeout:     &oneMinuteDuration,
+				CredentialJSON:       `{"key":"value"}`,
 			},
 			expectedBigTableConfig: &spec.OnlineStorage{
 				ServingType: spec.ServingType_DIRECT_STORAGE,
@@ -298,6 +299,7 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 							GrpcConnectionPool: 3,
 							KeepAliveInterval:  durationpb.New(time.Duration(twoMinuteDuration)),
 							KeepAliveTimeout:   durationpb.New(time.Duration(oneMinuteDuration)),
+							CredentialJson:     "eyJrZXkiOiJ2YWx1ZSJ9",
 						},
 					},
 				},
