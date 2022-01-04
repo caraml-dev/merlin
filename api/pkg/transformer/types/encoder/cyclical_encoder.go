@@ -166,7 +166,7 @@ func (oe *CyclicalEncoder) Encode(values []interface{}, column string) (map[stri
 			}
 
 			//convert epoch time to golang datetime
-			t := time.Unix(valInt, 0)
+			t := time.Unix(valInt, 0).In(time.UTC)
 			shareOfPeriod, err := getCycleTime(oe.Period, t)
 			if err != nil {
 				return nil, err

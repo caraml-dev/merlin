@@ -419,6 +419,110 @@ func TestCyclicalEncode(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "Should succeed: EpochTime, MONTH",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: spec.PeriodType_MONTH,
+				Min:    0,
+				Max:    0,
+			},
+			reqValues: []interface{}{
+				1640995200, //1 Jan 2022, 00:00:00
+				1643673599, //31 Jan 2022, 23:59:59
+				1642334400, //16 Jan 2022, 12:00:00
+				1644883200, //15 Feb 2022, 00:00:00
+				1581768000, //15 Feb 2020, 12:00:00
+			},
+			expectedResult: map[string]interface{}{
+				columnX: []interface{}{
+					1, 0.999999999, -1, -1, -1,
+				},
+				columnY: []interface{}{
+					0, -0.000002345, 0, 0, 0,
+				},
+			},
+		},
+		{
+			desc: "Should succeed: EpochTime, QUARTER",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: spec.PeriodType_QUARTER,
+				Min:    0,
+				Max:    0,
+			},
+			reqValues: []interface{}{
+				1640995200, //1 Jan 2022, 00:00:00 - Q1
+				1648771200, //1 Apr 2022, 00:00:00 - Q2
+				1585699200, //1 Apr 2020, 00:00:00 - Q2 Leap
+				1656633600, //1 Jul 2022, 00:00:00 - Q3
+				1664582400, //1 Oct 2022, 00:00:00 - Q4
+				1644883200, //15 Feb 2022, 00:00:00 - Mid Q1
+				1581768000, //15 Feb 2020, 12:00:00 - Mid Q1 Leap
+				1589630400, //16 May 2020, 12:00:00 - Mid Q2
+				1599523200, //8 Sep 2020, 00:00:00 - 3/4 Q3
+				1603497600, //24 Oct 2002, 00:00:00 - 1/4 Q4
+			},
+			expectedResult: map[string]interface{}{
+				columnX: []interface{}{
+					1, 1, 1, 1, 1, -1, -1, -1, 0, 0,
+				},
+				columnY: []interface{}{
+					0, 0, 0, 0, 0, 0, 0, 0, -1, 1,
+				},
+			},
+		},
+		{
+			desc: "Should succeed: EpochTime, HALF",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: spec.PeriodType_HALF,
+				Min:    0,
+				Max:    0,
+			},
+			reqValues: []interface{}{
+				1640995200, //1 Jan 2022, 00:00:00 - H1
+				1656633600, //1 Jul 2022, 00:00:00 - H2
+				1648814400, //1 Apr 2022, 12:00:00 - Mid H1
+				1652724000, //16 May 2022, 18:00:00 - 3/4 H1
+				1585699200, //1 Apr 2020, 00:00:00 - Mid H1 Leap
+				1664582400, //1 Oct 2022, 00:00:00 - Mid H2
+				1601510400, //1 Oct 2020, 00:00:00 - Mid H2 Leap
+				1668556800, //16 Nov 2022, 00:00:00 - 3/4 H2
+				1597536000, //16 Aug 2002, 00:00:00 - 1/4 H2 Leap
+			},
+			expectedResult: map[string]interface{}{
+				columnX: []interface{}{
+					1, 1, -1, 0, -1, -1, -1, 0, 0,
+				},
+				columnY: []interface{}{
+					0, 0, 0, -1, 0, 0, 0, -1, 1,
+				},
+			},
+		},
+		{
+			desc: "Should succeed: EpochTime, YEAR",
+			cyclicalEncoder: &CyclicalEncoder{
+				Period: spec.PeriodType_YEAR,
+				Min:    0,
+				Max:    0,
+			},
+			reqValues: []interface{}{
+				1514764800, //1 Jan 2018, 00:00:00 - Start
+				1522648800, //2 Apr 2018, 06:00:00 - 1/4
+				1530532800, //1 Apr 2018, 12:00:00 - 1/2
+				1538416800, //1 Oct 2018, 18:00:00 - 3/4
+				1451606400, //1 Jan 2016, 00:00:00 - Start Leap
+				1459512000, //1 Apr 2016, 12:00:00 - 1/4 Leap
+				1467417600, //2 Jul 2016, 00:00:00 - 1/2 Leap
+				1475323200, //1 Oct 2016, 12:00:00 - 3/4 Leap
+			},
+			expectedResult: map[string]interface{}{
+				columnX: []interface{}{
+					1, 0, -1, 0, 1, 0, -1, 0,
+				},
+				columnY: []interface{}{
+					0, 1, 0, -1, 0, 1, 0, -1,
+				},
+			},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
@@ -428,6 +532,7 @@ func TestCyclicalEncode(t *testing.T) {
 			} else {
 				fmt.Println(tC.expectedResult)
 				fmt.Println(got)
+				fmt.Println(time.Unix(1640995200, 0).In(time.UTC).Clock())
 				assert.Equal(t, len(tC.expectedResult), len(got))
 				assert.InDeltaSlice(t, tC.expectedResult[columnX], got[columnX], 0.00000001)
 				assert.InDeltaSlice(t, tC.expectedResult[columnY], got[columnY], 0.00000001)
