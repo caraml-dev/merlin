@@ -115,8 +115,8 @@ var (
 			PoolSize:          4,
 			KeepAliveInterval: &twoMinuteDuration,
 			KeepAliveTimeout:  &oneMinuteDuration,
-			CredentialJSON:    `{"key":"value"}`,
 		},
+		BigtableCredential: `{"key":"value"}`,
 	}
 )
 

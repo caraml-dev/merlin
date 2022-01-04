@@ -147,6 +147,7 @@ merlin:
       #   keep_alive_timeout: "1m"
       
       defaultFeastSource: BIGTABLE
+      bigtableCredential: 
       coreURL: core.feast.dev
       coreAuthAudience: core.feast.dev
       authEnabled: false

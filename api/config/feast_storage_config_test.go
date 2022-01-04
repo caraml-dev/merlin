@@ -272,6 +272,7 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 	testCases := []struct {
 		desc                   string
 		bigtableConfig         *FeastBigtableConfig
+		bigtableCredential     string
 		expectedBigTableConfig *spec.OnlineStorage
 	}{
 		{
@@ -285,8 +286,8 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 				PoolSize:             3,
 				KeepAliveInterval:    &twoMinuteDuration,
 				KeepAliveTimeout:     &oneMinuteDuration,
-				CredentialJSON:       `{"key":"value"}`,
 			},
+			bigtableCredential: `{"key":"value"}`,
 			expectedBigTableConfig: &spec.OnlineStorage{
 				ServingType: spec.ServingType_DIRECT_STORAGE,
 				Storage: &spec.OnlineStorage_Bigtable{
@@ -335,7 +336,7 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			got := tC.bigtableConfig.ToFeastStorage()
+			got := tC.bigtableConfig.ToFeastStorageWithCredential(tC.bigtableCredential)
 			assert.Equal(t, tC.expectedBigTableConfig, got)
 		})
 	}
