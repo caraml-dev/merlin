@@ -30,7 +30,7 @@ func CompileJSONPaths(featureTableSpecs []*spec.FeatureTable) (map[string]*jsonp
 					TargetType:   jsonPathCfg.ValueType,
 				})
 				if err != nil {
-					return nil, fmt.Errorf("unable to compile jsonpath config for entity %s: %s", configEntity.Name, jsonPathCfg)
+					return nil, fmt.Errorf("unable to compile jsonpath config for entity %s: %s. err: %s", configEntity.Name, jsonPathCfg, err.Error())
 				}
 				compiledJsonPath[jsonPathCfg.JsonPath] = c
 			default:

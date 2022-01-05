@@ -150,6 +150,8 @@ Expression can be used for updating column value
     expression: getS2ID(df.Col('lat'), df.Col('lon'))
 ```
 
+For full list of standard transformer built-in function, please check [Transformer Expressions](./transformer_expressions.md).
+
 ## Input Stage
 
 ### Variable
