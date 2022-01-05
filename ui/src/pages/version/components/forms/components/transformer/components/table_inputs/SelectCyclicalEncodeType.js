@@ -2,8 +2,8 @@ import React from "react";
 import { EuiForm, EuiFormRow, EuiSuperSelect } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 
-export const SelectEncoder = ({
-  encoderConfig, //current encoder config (if any)
+export const SelectCyclicalEncodeType = ({
+  cyclicType, //type of input to be encoded
   onChangeHandler,
   errors = {}
 }) => {
@@ -11,42 +11,42 @@ export const SelectEncoder = ({
 
   const setValue = value => {
     //set new value only if there is changes
-    if (encoderConfig[value] === undefined) {
-      let newEncoder = {
-        name: encoderConfig.name || ""
-      };
+    if (cyclicType[value] === undefined) {
+      let newEncodeType = {};
 
       switch (value) {
-        case "ordinalEncoderConfig":
-          newEncoder[value] = {
-            mapping: {},
-            targetValueType: "INT"
+        case "byEpochTime":
+          newEncodeType[value] = {
+            period: "DAY"
           };
           break;
-        case "cyclicalEncoderConfig":
-          newEncoder[value] = {};
+        case "byRange":
+          newEncodeType[value] = {
+            min: 0,
+            max: 8
+          };
           break;
         default:
           break;
       }
-      onChange()(newEncoder);
+      onChange()(newEncodeType);
     }
   };
 
   const options = [
     {
-      value: "ordinalEncoderConfig",
-      inputDisplay: "Ordinal Encoder"
+      value: "byEpochTime",
+      inputDisplay: "Epoch Time"
     },
     {
-      value: "cyclicalEncoderConfig",
-      inputDisplay: "Cyclical Encoder"
+      value: "byRange",
+      inputDisplay: "Range"
     }
   ];
 
   const selectedOption = options.find(option =>
-    encoderConfig !== undefined
-      ? encoderConfig[option.value] !== undefined
+    cyclicType !== undefined
+      ? cyclicType[option.value] !== undefined
       : option.value === ""
   );
 
@@ -56,12 +56,12 @@ export const SelectEncoder = ({
         fullWidth
         label={
           <FormLabelWithToolTip
-            label="Encoder Type *"
-            content="Choose an encoder type"
+            label="Encode by *"
+            content="Choose input type to encode"
           />
         }
-        isInvalid={!!errors.encoderConfig}
-        error={errors.encoderConfig}
+        isInvalid={!!errors.cyclicType}
+        error={errors.cyclicType}
         display="columnCompressed">
         <EuiSuperSelect
           fullWidth
@@ -70,7 +70,7 @@ export const SelectEncoder = ({
           onChange={value => setValue(value)}
           itemLayoutAlign="top"
           hasDividers
-          isInvalid={!!errors.encoderConfig}
+          isInvalid={!!errors.cyclicType}
         />
       </EuiFormRow>
     </EuiForm>
