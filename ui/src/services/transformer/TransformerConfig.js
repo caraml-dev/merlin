@@ -194,6 +194,7 @@ export class Pipeline {
               } else if (entity.jsonPath) {
                 entity["fieldType"] = "JSONPath";
                 entity["field"] = { jsonPath: entity.jsonPath };
+                delete entity["jsonPath"]; // Delete this since all jsonPath will be converted to jsonPathConfig
               } else if (entity.jsonPathConfig) {
                 entity["fieldType"] = "JSONPath";
                 entity["field"] = entity.jsonPathConfig;
@@ -234,6 +235,8 @@ export class Pipeline {
           if (variable.jsonPath !== undefined && variable.jsonPath !== "") {
             variable["type"] = "jsonpath";
             variable["value"] = { jsonPath: variable.jsonPath };
+            variable["jsonPathConfig"] = { jsonPath: variable.jsonPath };
+            delete variable["jsonPath"]; // Delete this since all jsonPath will be converted to jsonPathConfig
           } else if (variable.jsonPathConfig !== undefined) {
             variable["type"] = "jsonpath";
             variable["value"] = variable.jsonPathConfig;
