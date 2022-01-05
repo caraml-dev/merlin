@@ -273,13 +273,10 @@ type Entity_Udf struct {
 
 type Entity_Expression struct {
 	Expression string `protobuf:"bytes,5,opt,name=expression,proto3,oneof"` // Entity value fetced from expression
-<<<<<<< HEAD
 }
 
 type Entity_JsonPathConfig struct {
 	JsonPathConfig *FromJson `protobuf:"bytes,6,opt,name=jsonPathConfig,proto3,oneof"` // Entity value fetched from jsonpath with capability so specify defaultValue
-=======
->>>>>>> Add merlin integration for bigtable direct storage
 }
 
 func (*Entity_JsonPath) isEntity_Extractor() {}

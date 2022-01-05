@@ -180,15 +180,11 @@ type BigTableStorage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-<<<<<<< HEAD
-	FeastServingUrl string `protobuf:"bytes,1,opt,name=feastServingUrl,proto3" json:"feastServingUrl,omitempty"` // Feast GRPC URL
-=======
 	FeastServingUrl string          `protobuf:"bytes,1,opt,name=feastServingUrl,proto3" json:"feastServingUrl,omitempty"` // Feast GRPC URL
 	Project         string          `protobuf:"bytes,2,opt,name=project,proto3" json:"project,omitempty"`                 // GCP where the bigtable located
 	Instance        string          `protobuf:"bytes,3,opt,name=instance,proto3" json:"instance,omitempty"`               // Bigtable instance name
 	AppProfile      string          `protobuf:"bytes,4,opt,name=appProfile,proto3" json:"appProfile,omitempty"`           // ID of app profile
 	Option          *BigTableOption `protobuf:"bytes,5,opt,name=option,proto3" json:"option,omitempty"`                   // Optional configuration for bigtable
->>>>>>> Add merlin integration for bigtable direct storage
 }
 
 func (x *BigTableStorage) Reset() {
