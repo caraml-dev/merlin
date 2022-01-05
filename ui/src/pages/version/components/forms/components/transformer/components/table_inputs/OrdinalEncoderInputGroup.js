@@ -8,7 +8,7 @@ import {
   EuiSpacer
 } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
-import { SelectOrdinalValueType } from "./SelectOrdinalValueType";
+import { SelectValueType } from "./SelectValueType";
 import { OrdinalEncoderMapper } from "./OrdinalEncoderMapper";
 
 export const OrdinalEncoderInputGroup = ({
@@ -48,11 +48,11 @@ export const OrdinalEncoderInputGroup = ({
             </EuiFormRow>
           </EuiFlexItem>
           <EuiFlexItem>
-            <SelectOrdinalValueType
-              defaultValue={ordinalEncoderConfig.defaultValue}
+            <SelectValueType
               valueType={ordinalEncoderConfig.targetValueType}
-              mapping={ordinalEncoderConfig.mapping}
-              onChangeHandler={onChange("ordinalEncoderConfig")}
+              onChangeHandler={value =>
+                onChange("ordinalEncoderConfig.targetValueType")(value)
+              }
               errors={errors}
             />
           </EuiFlexItem>

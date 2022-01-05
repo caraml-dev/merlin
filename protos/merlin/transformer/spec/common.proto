@@ -19,4 +19,13 @@ message FromTable {
 message FromJson {
   string jsonPath = 1;
   bool addRowNumber = 2;
+  string defaultValue = 3;
+  ValueType valueType = 4;
+}
+
+enum ValueType {
+  STRING = 0;
+  INT = 1;
+  FLOAT = 2;
+  BOOL = 3;
 }

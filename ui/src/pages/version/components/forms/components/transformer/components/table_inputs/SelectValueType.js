@@ -1,29 +1,13 @@
 import React from "react";
 import { EuiForm, EuiFormRow, EuiSuperSelect } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip } from "@gojek/mlp-ui";
 
-export const SelectOrdinalValueType = ({
-  defaultValue,
-  mapping,
+export const SelectValueType = ({
   valueType, //current selected value type (if any)
   onChangeHandler,
+  displayInColumn = true,
   errors = {}
 }) => {
-  const { onChange } = useOnChangeHandler(onChangeHandler);
-
-  const setValue = value => {
-    //set new value only if there is changes
-    if (value !== valueType) {
-      let newValueType = {
-        defaultValue: defaultValue || "",
-        targetValueType: value,
-        mapping: mapping || {}
-      };
-
-      onChange()(newValueType);
-    }
-  };
-
   const options = [
     {
       value: "INT",
@@ -59,12 +43,12 @@ export const SelectOrdinalValueType = ({
         }
         isInvalid={!!errors.valueType}
         error={errors.valueType}
-        display="columnCompressed">
+        display={displayInColumn ? "columnCompressed" : "rowCompressed"}>
         <EuiSuperSelect
           fullWidth
           options={options}
           valueOfSelected={selectedOption ? selectedOption.value : ""}
-          onChange={value => setValue(value)}
+          onChange={onChangeHandler}
           itemLayoutAlign="top"
           hasDividers
           isInvalid={!!errors.valueType}

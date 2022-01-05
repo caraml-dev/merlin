@@ -6,6 +6,8 @@ option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
 import "google/protobuf/duration.proto";
 
+import "transformer/spec/common.proto";
+
 // ServingSource indicates type of storage that used for feature retrieval
 enum ServingSource {
   UNKNOWN = 0;
@@ -28,6 +30,7 @@ message Entity {
     string jsonPath = 3; // Entity value fetched from jsonpath
     string udf = 4; // Entity value fetched from expression
     string expression = 5; // Entity value fetced from expression
+    FromJson jsonPathConfig = 6; // Entity value fetched from jsonpath with capability so specify defaultValue
   };
 }
 

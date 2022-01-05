@@ -48,6 +48,12 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 				return nil
 			}
 			env.SetSymbol(varDef.Name, result)
+		case *spec.Variable_JsonPathConfig:
+			result, err := evalJSONPath(env, v.JsonPathConfig.JsonPath)
+			if err != nil {
+				return nil
+			}
+			env.SetSymbol(varDef.Name, result)
 		default:
 			return fmt.Errorf("Variable.Value has unexpected type %T", v)
 		}

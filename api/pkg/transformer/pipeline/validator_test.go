@@ -132,8 +132,10 @@ func TestValidateTransformerConfig(t *testing.T) {
 											Entities: []*spec.Entity{
 												{
 													Name: "customer_id",
-													Extractor: &spec.Entity_JsonPath{
-														JsonPath: "$.customer_id",
+													Extractor: &spec.Entity_JsonPathConfig{
+														JsonPathConfig: &spec.FromJson{
+															JsonPath: "$.customer_id",
+														},
 													},
 													ValueType: "STRING",
 												},

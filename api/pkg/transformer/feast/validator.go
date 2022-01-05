@@ -6,7 +6,7 @@ import (
 
 	"github.com/antonmedv/expr"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
-	"github.com/oliveagle/jsonpath"
+	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/pkg/errors"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -62,6 +62,19 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 					return fmt.Errorf("json path for %s is not specified", entity.Name)
 				}
 				_, err = jsonpath.Compile(entity.GetJsonPath())
+				if err != nil {
+					return fmt.Errorf("jsonpath compilation failed: %v", err)
+				}
+			case *spec.Entity_JsonPathConfig:
+				jsonpathConfig := entity.GetJsonPathConfig()
+				if len(jsonpathConfig.JsonPath) == 0 {
+					return fmt.Errorf("json path for %s is not specified", entity.Name)
+				}
+				_, err := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+					JsonPath:     jsonpathConfig.JsonPath,
+					DefaultValue: jsonpathConfig.DefaultValue,
+					TargetType:   jsonpathConfig.ValueType,
+				})
 				if err != nil {
 					return fmt.Errorf("jsonpath compilation failed: %v", err)
 				}
