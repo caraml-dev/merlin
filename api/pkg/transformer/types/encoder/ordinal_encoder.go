@@ -1,7 +1,6 @@
 package encoder
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -18,7 +17,7 @@ func NewOrdinalEncoder(config *spec.OrdinalEncoderConfig) (*OrdinalEncoder, erro
 	trimmedDefaultValue := strings.TrimSpace(config.DefaultValue)
 	var defaultValue interface{}
 	if trimmedDefaultValue != "" {
-		val, err := convertToTargetType(trimmedDefaultValue, config.TargetValueType)
+		val, err := converter.ToTargetType(trimmedDefaultValue, config.TargetValueType)
 		if err != nil {
 			return nil, err
 		}
@@ -29,7 +28,7 @@ func NewOrdinalEncoder(config *spec.OrdinalEncoderConfig) (*OrdinalEncoder, erro
 	mapping := make(map[string]interface{}, len(config.Mapping))
 	for originalValue, targetValue := range mappingSpec {
 		trimmedTargetValue := strings.TrimSpace(targetValue)
-		tVal, err := convertToTargetType(trimmedTargetValue, config.TargetValueType)
+		tVal, err := converter.ToTargetType(trimmedTargetValue, config.TargetValueType)
 		if err != nil {
 			return nil, err
 		}
@@ -40,24 +39,6 @@ func NewOrdinalEncoder(config *spec.OrdinalEncoderConfig) (*OrdinalEncoder, erro
 		DefaultValue: defaultValue,
 		Mapping:      mapping,
 	}, nil
-}
-
-func convertToTargetType(val interface{}, targetType spec.ValueType) (interface{}, error) {
-	var value interface{}
-	var err error
-	switch targetType {
-	case spec.ValueType_STRING:
-		value, err = converter.ToString(val)
-	case spec.ValueType_INT:
-		value, err = converter.ToInt(val)
-	case spec.ValueType_FLOAT:
-		value, err = converter.ToFloat64(val)
-	case spec.ValueType_BOOL:
-		value, err = converter.ToBool(val)
-	default:
-		return nil, fmt.Errorf("targetType is not recognized %d", targetType)
-	}
-	return value, err
 }
 
 func (oe *OrdinalEncoder) Encode(values []interface{}, column string) (map[string]interface{}, error) {

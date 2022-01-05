@@ -1,6 +1,8 @@
 import React from "react";
 import { EuiButtonIcon, EuiFieldText, EuiSuperSelect } from "@elastic/eui";
 import { get, InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
+import { JsonPathConfigInput } from "../../JsonPathConfigInput";
+import "../../RowCell.scss";
 
 export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
@@ -38,7 +40,7 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
 
     switch (newItem.type) {
       case "jsonpath":
-        newItem["jsonPath"] = newItem.value;
+        newItem["jsonPathConfig"] = newItem.value;
         break;
       case "expression":
         newItem["expression"] = newItem.value;
@@ -107,14 +109,25 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
       name: "Value",
       field: "value",
       width: "30%",
-      render: (value, item) => (
-        <EuiFieldText
-          placeholder="Value"
-          value={value || ""}
-          onChange={e => onVariableChange(item.idx, "value", e.target.value)}
-          isInvalid={!!get(errors, `${item.idx}.value`)}
-        />
-      )
+      render: (value, item) => {
+        if (item.type === "jsonpath") {
+          return (
+            <JsonPathConfigInput
+              jsonPathConfig={value}
+              identifier={`variables-${item.idx}`}
+              onChangeHandler={val => onVariableChange(item.idx, "value", val)}
+            />
+          );
+        }
+        return (
+          <EuiFieldText
+            placeholder="Value"
+            value={value || ""}
+            onChange={e => onVariableChange(item.idx, "value", e.target.value)}
+            isInvalid={!!get(errors, `${item.idx}.value`)}
+          />
+        );
+      }
     },
     {
       width: "10%",

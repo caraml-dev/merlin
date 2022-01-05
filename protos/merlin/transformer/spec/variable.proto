@@ -4,6 +4,7 @@ package merlin.transformer;
 
 option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
+import "transformer/spec/common.proto";
 
 message Variable {
   string name = 1 ;
@@ -11,6 +12,7 @@ message Variable {
     Literal literal = 2;
     string expression = 3;
     string jsonPath = 4;
+    FromJson jsonPathConfig = 5;
   }
 }
 

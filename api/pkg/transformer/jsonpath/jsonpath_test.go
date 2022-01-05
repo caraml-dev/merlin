@@ -6,8 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/oliveagle/jsonpath"
+	"github.com/gojekfarm/jsonpath"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
@@ -20,6 +21,17 @@ const (
 		  "instances": [
 			{"sepal_length":2.8, "sepal_width":1.0, "petal_length":6.8, "petal_width":0.4},
 			{"sepal_length":0.1, "sepal_width":0.5, "petal_length":1.8, "petal_width":2.4}
+		  ],
+		  "instances_with_null": [
+			{"sepal_length":2.8, "sepal_width":1.0, "petal_length":6.8, "petal_width":0.4},
+			{"sepal_length":0.1, "sepal_width":0.5, "petal_length":1.8, "petal_width":null},
+            {"sepal_length":0.1, "sepal_width":0.5, "petal_length":1.8, "petal_width":0.5}
+		  ],
+		  "empty_array": [],
+		  "null_key": null,
+		  "array_object": [
+			  {"exist_key":1},
+			  {"exist_key":2}
 		  ]
 		}
 		`
@@ -93,7 +105,6 @@ func TestCompileJsonPath(t *testing.T) {
 }
 
 func TestMustCompileJsonPath(t *testing.T) {
-
 	tests := []struct {
 		name     string
 		jsonPath string
@@ -136,7 +147,6 @@ func TestMustCompileJsonPath(t *testing.T) {
 }
 
 func TestCompiled_Lookup(t *testing.T) {
-
 	var rawRequestData types.JSONObject
 	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
 
@@ -178,6 +188,110 @@ func TestCompiled_Lookup(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("Lookup() got = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
+	var rawRequestData types.JSONObject
+	var modelResponseData types.JSONObject
+
+	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
+	json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
+
+	jsonContainer := types.JSONObjectContainer{
+		spec.JsonType_RAW_REQUEST:    rawRequestData,
+		spec.JsonType_MODEL_RESPONSE: modelResponseData,
+	}
+	testCases := []struct {
+		desc        string
+		opt         JsonPathOption
+		sourceJSONs types.JSONObjectContainer
+		want        interface{}
+		wantErr     bool
+		err         error
+	}{
+		{
+			desc: "without default value",
+			opt: JsonPathOption{
+				JsonPath: "$.signature_name",
+			},
+			sourceJSONs: jsonContainer,
+			want:        "predict",
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			desc: "not exist key without default value",
+			opt: JsonPathOption{
+				JsonPath: "$.not_exist_key",
+			},
+			sourceJSONs: jsonContainer,
+			want:        nil,
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			desc: "not exist key with default value",
+			opt: JsonPathOption{
+				JsonPath:     "$.not_exist_key",
+				DefaultValue: "4.4",
+				TargetType:   spec.ValueType_FLOAT,
+			},
+			sourceJSONs: jsonContainer,
+			want:        4.4,
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			desc: "null key in jsonpath with default value",
+			opt: JsonPathOption{
+				JsonPath:     "$.null_key",
+				DefaultValue: "default",
+				TargetType:   spec.ValueType_STRING,
+			},
+			sourceJSONs: jsonContainer,
+			want:        "default",
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			desc: "empty array with default value",
+			opt: JsonPathOption{
+				JsonPath:     "$.empty_array",
+				DefaultValue: "true",
+				TargetType:   spec.ValueType_BOOL,
+			},
+			sourceJSONs: jsonContainer,
+			want:        []interface{}{true},
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			desc: "array with null value",
+			opt: JsonPathOption{
+				JsonPath:     "$.instances_with_null[*].petal_width",
+				DefaultValue: "-1",
+				TargetType:   spec.ValueType_FLOAT,
+			},
+			sourceJSONs: jsonContainer,
+			want:        []interface{}{0.4, float64(-1), 0.5},
+			wantErr:     false,
+			err:         nil,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			cpl, err := CompileWithOption(tC.opt)
+			require.NoError(t, err)
+
+			got, err := cpl.LookupFromContainer(tC.sourceJSONs)
+			if (err != nil) != tC.wantErr {
+				t.Errorf("LookupFromContainer() error = %v, wantErr %v", err, tC.wantErr)
+				return
+			}
+			assert.Equal(t, tC.err, err)
+			assert.Equal(t, tC.want, got)
 		})
 	}
 }

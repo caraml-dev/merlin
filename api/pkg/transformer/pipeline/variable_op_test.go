@@ -75,6 +75,11 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 	compiledJsonPath := jsonpath.NewStorage()
 	compiledJsonPath.AddAll(map[string]*jsonpath.Compiled{
 		"$.signature_name": jsonpath.MustCompileJsonPath("$.signature_name"),
+		"$.not_exist_key": jsonpath.MustCompileJsonPathWithOption(jsonpath.JsonPathOption{
+			JsonPath:     "$.not_exist_key",
+			DefaultValue: "2.2",
+			TargetType:   spec.ValueType_FLOAT,
+		}),
 	})
 
 	var rawRequestJSON types.JSONObject
@@ -190,6 +195,44 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 			},
 			map[string]interface{}{
 				"signature_name": "predict",
+			},
+			false,
+		},
+		{
+			"variables declaration using json path config",
+			fields{
+				[]*spec.Variable{
+					{
+						Name: "signature_name",
+						Value: &spec.Variable_JsonPathConfig{
+							JsonPathConfig: &spec.FromJson{
+								JsonPath: "$.signature_name",
+							},
+						},
+					},
+					{
+						Name: "value",
+						Value: &spec.Variable_JsonPathConfig{
+							JsonPathConfig: &spec.FromJson{
+								JsonPath:     "$.not_exist_key",
+								DefaultValue: "2.2",
+								ValueType:    spec.ValueType_FLOAT,
+							},
+						},
+					},
+				},
+			},
+
+			&Environment{
+				symbolRegistry: symbolRegistry,
+				compiledPipeline: &CompiledPipeline{
+					compiledJsonpath: compiledJsonPath,
+				},
+				logger: logger,
+			},
+			map[string]interface{}{
+				"signature_name": "predict",
+				"value":          2.2,
 			},
 			false,
 		},
