@@ -22,8 +22,8 @@ export const SelectCyclicalEncodeType = ({
           break;
         case "byRange":
           newEncodeType[value] = {
-            min: 0,
-            max: 8
+            min: "0", //str to make it appear on UI, it will be converted to float later
+            max: 7
           };
           break;
         default:

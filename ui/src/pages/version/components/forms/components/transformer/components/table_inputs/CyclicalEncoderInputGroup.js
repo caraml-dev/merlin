@@ -1,8 +1,13 @@
 import React from "react";
-import { EuiFlexGroup, EuiFlexItem, EuiText, EuiSpacer } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import {
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiSpacer,
+  EuiFieldNumber,
+  EuiFormRow
+} from "@elastic/eui";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 import { SelectCyclicalEncodeType } from "./SelectCyclicalEncodeType";
-import { OrdinalEncoderMapper } from "./OrdinalEncoderMapper";
 import { SelectPeriodType } from "./SelectPeriodType";
 
 export const CyclicalEncoderInputGroup = ({
@@ -12,6 +17,7 @@ export const CyclicalEncoderInputGroup = ({
   errors = {}
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
+  console.log(cyclicalEncoderConfig);
 
   return (
     <EuiFlexGroup direction="column" gutterSize="s">
@@ -38,23 +44,60 @@ export const CyclicalEncoderInputGroup = ({
 
       <EuiSpacer size="s" />
 
-      {cyclicalEncoderConfig.targetValueType && (
+      {cyclicalEncoderConfig["byRange"] !== undefined && (
         <EuiFlexItem>
-          <EuiFlexGroup direction="column" gutterSize="s">
+          <EuiFlexGroup direction="row">
             <EuiFlexItem>
-              <EuiText size="xs">
-                <h4>Mapping *</h4>
-              </EuiText>
+              <EuiFormRow
+                label={
+                  <FormLabelWithToolTip
+                    label="Min *"
+                    content="Min of range (inclusive)"
+                  />
+                }
+                isInvalid={!!errors.min}
+                error={errors.min}
+                display="columnCompressed"
+                fullWidth>
+                <EuiFieldNumber
+                  placeholder="min (inclusive)"
+                  value={cyclicalEncoderConfig["byRange"].min || ""}
+                  onChange={e =>
+                    onChange("cyclicalEncoderConfig.byRange.min")(
+                      e.target.value
+                    )
+                  }
+                  isInvalid={!!errors.min}
+                  name={`min-${index}`}
+                  fullWidth
+                />
+              </EuiFormRow>
             </EuiFlexItem>
             <EuiFlexItem>
-              <EuiFlexGroup direction="row">
-                <EuiFlexItem>
-                  <OrdinalEncoderMapper
-                    mappings={cyclicalEncoderConfig.mapping}
-                    onChangeHandler={onChange("cyclicalEncoderConfig")}
+              <EuiFormRow
+                label={
+                  <FormLabelWithToolTip
+                    label="Max *"
+                    content="Max of range (exclusive)"
                   />
-                </EuiFlexItem>
-              </EuiFlexGroup>
+                }
+                isInvalid={!!errors.max}
+                error={errors.max}
+                display="columnCompressed"
+                fullWidth>
+                <EuiFieldNumber
+                  placeholder="max (exclusive)"
+                  value={cyclicalEncoderConfig["byRange"].max || ""}
+                  onChange={e =>
+                    onChange("cyclicalEncoderConfig.byRange.max")(
+                      e.target.value
+                    )
+                  }
+                  isInvalid={!!errors.max}
+                  name={`max-${index}`}
+                  fullWidth
+                />
+              </EuiFormRow>
             </EuiFlexItem>
           </EuiFlexGroup>
         </EuiFlexItem>
