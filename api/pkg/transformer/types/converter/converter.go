@@ -7,6 +7,7 @@ import (
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 func ToString(val interface{}) (string, error) {
@@ -118,6 +119,24 @@ func ToBool(v interface{}) (bool, error) {
 	default:
 		return false, fmt.Errorf("unsupported conversion from %T to bool", v)
 	}
+}
+
+func ToTargetType(val interface{}, targetType spec.ValueType) (interface{}, error) {
+	var value interface{}
+	var err error
+	switch targetType {
+	case spec.ValueType_STRING:
+		value, err = ToString(val)
+	case spec.ValueType_INT:
+		value, err = ToInt(val)
+	case spec.ValueType_FLOAT:
+		value, err = ToFloat64(val)
+	case spec.ValueType_BOOL:
+		value, err = ToBool(val)
+	default:
+		return nil, fmt.Errorf("targetType is not recognized %d", targetType)
+	}
+	return value, err
 }
 
 func ToFeastValue(v interface{}, valueType feastType.ValueType_Enum) (*feastType.Value, error) {

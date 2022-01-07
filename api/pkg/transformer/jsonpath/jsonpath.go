@@ -2,12 +2,14 @@ package jsonpath
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 
-	"github.com/oliveagle/jsonpath"
+	"github.com/gojekfarm/jsonpath"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
 const (
@@ -17,9 +19,14 @@ const (
 	ModelResponsePrefix = "$.model_response"
 )
 
-var (
-	sourceJsonPattern = regexp.MustCompile("\\$\\.raw_request|\\$\\.model_response")
-)
+var sourceJsonPattern = regexp.MustCompile("\\$\\.raw_request|\\$\\.model_response")
+
+// JsonPathOption holds information about the required jsonpath value and the optional default value
+type JsonPathOption struct {
+	JsonPath     string
+	DefaultValue string
+	TargetType   spec.ValueType
+}
 
 // Compile compile a jsonPath string into a jsonpath.Compiled instance
 // jsonPath string should follow format specified in http://goessner.net/articles/JsonPath/
@@ -52,6 +59,26 @@ func Compile(jsonPath string) (*Compiled, error) {
 	}, nil
 }
 
+// CompileWithOption compiles JsonPathOption into a jsonpath.Compiled instance
+// JsonPathOption allow setting default value when existing value of given jsonpath is nil
+func CompileWithOption(option JsonPathOption) (*Compiled, error) {
+	compiled, err := Compile(option.JsonPath)
+	if err != nil {
+		return nil, err
+	}
+	if option.DefaultValue == "" {
+		return compiled, nil
+	}
+
+	defaultValue, err := converter.ToTargetType(option.DefaultValue, option.TargetType)
+	if err != nil {
+		return nil, err
+	}
+
+	compiled.defaultValue = defaultValue
+	return compiled, nil
+}
+
 func MustCompileJsonPath(jsonPath string) *Compiled {
 	cpl, err := Compile(jsonPath)
 	if err != nil {
@@ -60,13 +87,45 @@ func MustCompileJsonPath(jsonPath string) *Compiled {
 	return cpl
 }
 
+func MustCompileJsonPathWithOption(option JsonPathOption) *Compiled {
+	cpl, err := CompileWithOption(option)
+	if err != nil {
+		panic(err)
+	}
+	return cpl
+}
+
 type Compiled struct {
-	cpl    *jsonpath.Compiled
-	source spec.JsonType
+	cpl          *jsonpath.Compiled
+	source       spec.JsonType
+	defaultValue interface{}
 }
 
 func (c *Compiled) Lookup(jsonObj types.JSONObject) (interface{}, error) {
-	return c.cpl.Lookup(jsonObj)
+	val, err := c.cpl.Lookup(jsonObj)
+	if err != nil {
+		return nil, err
+	}
+	if val == nil {
+		val = c.defaultValue
+	}
+
+	if reflectVal := reflect.ValueOf(val); reflectVal.Kind() == reflect.Slice {
+		if reflectVal.Len() == 0 && c.defaultValue != nil {
+			return []interface{}{c.defaultValue}, nil
+		}
+
+		sliceVal, _ := val.([]interface{})
+		for idx, v := range sliceVal {
+			if v == nil {
+				sliceVal[idx] = c.defaultValue
+			}
+		}
+
+		return sliceVal, nil
+	}
+
+	return val, nil
 }
 
 func (c *Compiled) LookupFromContainer(container types.JSONObjectContainer) (interface{}, error) {
@@ -75,5 +134,5 @@ func (c *Compiled) LookupFromContainer(container types.JSONObjectContainer) (int
 		return nil, fmt.Errorf("container json is not set: %s", c.source.String())
 	}
 
-	return c.cpl.Lookup(sourceJson)
+	return c.Lookup(sourceJson)
 }

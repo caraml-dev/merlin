@@ -119,7 +119,10 @@ export class TransformerConfig {
               entity["field"] = entity.expression;
             } else if (entity.jsonPath) {
               entity["fieldType"] = "JSONPath";
-              entity["field"] = entity.jsonPath;
+              entity["field"] = { jsonPath: entity.jsonPath };
+            } else if (entity.jsonPathConfig) {
+              entity["fieldType"] = "JSONPath";
+              entity["field"] = entity.jsonPathConfig;
             }
           });
       });
@@ -152,7 +155,7 @@ export class TransformerConfig {
             } else if (entity.fieldType === "Expression") {
               entity["expression"] = entity.field;
             } else {
-              entity["jsonPath"] = entity.field;
+              entity["jsonPathConfig"] = entity.field;
             }
             delete entity["fieldType"];
             delete entity["field"];
@@ -190,7 +193,11 @@ export class Pipeline {
                 entity["field"] = entity.expression;
               } else if (entity.jsonPath) {
                 entity["fieldType"] = "JSONPath";
-                entity["field"] = entity.jsonPath;
+                entity["field"] = { jsonPath: entity.jsonPath };
+                delete entity["jsonPath"]; // Delete this since all jsonPath will be converted to jsonPathConfig
+              } else if (entity.jsonPathConfig) {
+                entity["fieldType"] = "JSONPath";
+                entity["field"] = entity.jsonPathConfig;
               }
             });
         });
@@ -201,7 +208,7 @@ export class Pipeline {
             table.columns.forEach(column => {
               if (column.fromJson) {
                 column["type"] = "jsonpath";
-                column["value"] = column.fromJson.jsonPath;
+                column["value"] = column.fromJson;
               } else if (column.expression) {
                 column["type"] = "expression";
                 column["value"] = column.expression;
@@ -227,7 +234,12 @@ export class Pipeline {
         input.variables.forEach(variable => {
           if (variable.jsonPath !== undefined && variable.jsonPath !== "") {
             variable["type"] = "jsonpath";
-            variable["value"] = variable.jsonPath;
+            variable["value"] = { jsonPath: variable.jsonPath };
+            variable["jsonPathConfig"] = { jsonPath: variable.jsonPath };
+            delete variable["jsonPath"]; // Delete this since all jsonPath will be converted to jsonPathConfig
+          } else if (variable.jsonPathConfig !== undefined) {
+            variable["type"] = "jsonpath";
+            variable["value"] = variable.jsonPathConfig;
           } else if (
             variable.expression !== undefined &&
             variable.expression !== ""
@@ -312,7 +324,7 @@ export class Pipeline {
                 } else if (entity.fieldType === "Expression") {
                   entity["expression"] = entity.field;
                 } else {
-                  entity["jsonPath"] = entity.field;
+                  entity["jsonPathConfig"] = entity.field;
                 }
                 delete entity["fieldType"];
                 delete entity["field"];

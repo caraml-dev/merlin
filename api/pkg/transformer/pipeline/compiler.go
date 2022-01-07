@@ -159,6 +159,17 @@ func (c *Compiler) parseVariablesSpec(variables []*spec.Variable, compiledJsonPa
 				return nil, nil
 			}
 			compiledJsonPaths.Set(v.JsonPath, compiledJsonPath)
+		case *spec.Variable_JsonPathConfig:
+			jsonPathCfg := v.JsonPathConfig
+			compiledJsonPath, err := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+				JsonPath:     jsonPathCfg.JsonPath,
+				DefaultValue: jsonPathCfg.DefaultValue,
+				TargetType:   jsonPathCfg.ValueType,
+			})
+			if err != nil {
+				return nil, nil
+			}
+			compiledJsonPaths.Set(jsonPathCfg.JsonPath, compiledJsonPath)
 
 		default:
 			return nil, nil
@@ -195,7 +206,11 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 		if tableSpec.BaseTable != nil {
 			switch bt := tableSpec.BaseTable.BaseTable.(type) {
 			case *spec.BaseTable_FromJson:
-				compiledJsonPath, err := jsonpath.Compile(bt.FromJson.JsonPath)
+				compiledJsonPath, err := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+					JsonPath:     bt.FromJson.JsonPath,
+					DefaultValue: bt.FromJson.DefaultValue,
+					TargetType:   bt.FromJson.ValueType,
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -213,7 +228,11 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 					}
 					compiledExpressions.Set(cv.Expression, compiledExpression)
 				case *spec.Column_FromJson:
-					compiledJsonPath, err := jsonpath.Compile(cv.FromJson.JsonPath)
+					compiledJsonPath, err := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+						JsonPath:     cv.FromJson.JsonPath,
+						DefaultValue: cv.FromJson.DefaultValue,
+						TargetType:   cv.FromJson.ValueType,
+					})
 					if err != nil {
 						return nil, err
 					}

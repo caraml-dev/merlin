@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package merlin.transformer;
 
+import "transformer/spec/common.proto";
+
 option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
 message Encoder {
@@ -43,11 +45,4 @@ enum PeriodType {
   QUARTER = 5;
   HALF = 6;
   YEAR = 7;
-}
-
-enum ValueType {
-  STRING = 0;
-  INT = 1;
-  FLOAT = 2;
-  BOOL = 3;
 }
