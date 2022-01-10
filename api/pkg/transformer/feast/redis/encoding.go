@@ -9,7 +9,7 @@ import (
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
-	"github.com/feast-dev/feast/sdk/go/protos/feast/storage"
+	feastStorage "github.com/feast-dev/feast/sdk/go/protos/feast/storage"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/spaolacci/murmur3"
@@ -66,7 +66,7 @@ func (e RedisEncoder) encodeEntity(project string, entity feast.Row) (string, er
 		entityValues[indexEntityName] = entity[entityName]
 	}
 
-	key := &storage.RedisKeyV2{
+	key := &feastStorage.RedisKeyV2{
 		Project:      project,
 		EntityNames:  entityNames,
 		EntityValues: entityValues,

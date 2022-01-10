@@ -424,12 +424,12 @@ type CodecRegistry interface {
 // codec is cached to avoid repeated calls to BigTable.
 type CachedCodecRegistry struct {
 	codecs map[string]*goavro.Codec
-	tables map[string]*bigtable.Table
+	tables map[string]storage
 	sync.RWMutex
 }
 
 // newCachedCodecRegistry instantiates a new CachedCodecRegistry
-func newCachedCodecRegistry(tables map[string]*bigtable.Table) *CachedCodecRegistry {
+func newCachedCodecRegistry(tables map[string]storage) *CachedCodecRegistry {
 	return &CachedCodecRegistry{
 		codecs: make(map[string]*goavro.Codec),
 		tables: tables,
@@ -447,7 +447,7 @@ func (r *CachedCodecRegistry) GetCodec(ctx context.Context, schemaRef []byte, pr
 	r.RUnlock()
 	tableName := entityKeysToBigTable(project, entityKeys)
 	schemaKey := fmt.Sprintf("schema#%s", string(schemaRef))
-	schemaValue, err := r.tables[tableName].ReadRow(ctx, schemaKey)
+	schemaValue, err := r.tables[tableName].readRow(ctx, schemaKey)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package bigtablestore
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
@@ -17,6 +18,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/linkedin/goavro/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestEncoder_Encode(t *testing.T) {
@@ -234,14 +236,20 @@ func TestEncoder_Decode(t *testing.T) {
 		panic(err)
 	}
 
+	defaultCodecs := map[string]*goavro.Codec{
+		string(schemaRefBytes): codec,
+	}
+
 	tests := []struct {
 		name              string
 		want              *feast.OnlineFeaturesResponse
 		req               *feast.OnlineFeaturesRequest
 		rows              []bigtable.Row
+		registryFn        func() *CachedCodecRegistry
 		featureValues     []map[string]interface{}
 		featureTimestamps []map[string]time.Time
 		metadata          []*spec.FeatureTableMetadata
+		err               string
 	}{
 		{
 			name: "features with non null values",
@@ -287,6 +295,110 @@ func TestEncoder_Decode(t *testing.T) {
 						},
 					},
 				},
+			},
+			registryFn: func() *CachedCodecRegistry {
+				return &CachedCodecRegistry{codecs: defaultCodecs}
+			},
+			metadata: []*spec.FeatureTableMetadata{{
+				Name:    "login_requests",
+				Project: "project",
+				MaxAge:  nil,
+			}},
+		},
+		{
+			name: "features with non null values - registry doesn't have codec yet",
+			want: &feast.OnlineFeaturesResponse{
+				RawResponse: &serving.GetOnlineFeaturesResponse{
+					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+						{
+							Fields: map[string]*types.Value{
+								"customer_phone":            feast.StrVal("1234"),
+								"resource_type":             feast.Int64Val(1),
+								"login_requests:login_type": feast.StrVal("OTP"),
+								"login_requests:lats": {Val: &types.Value_DoubleListVal{
+									DoubleListVal: &types.DoubleList{Val: []float64{2.0, 1.0}},
+								}},
+							},
+							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+								"customer_phone":            serving.GetOnlineFeaturesResponse_PRESENT,
+								"resource_type":             serving.GetOnlineFeaturesResponse_PRESENT,
+								"login_requests:login_type": serving.GetOnlineFeaturesResponse_PRESENT,
+								"login_requests:lats":       serving.GetOnlineFeaturesResponse_PRESENT,
+							},
+						},
+					},
+				},
+			},
+			req: &feast.OnlineFeaturesRequest{
+				Features: []string{"login_requests:login_type", "login_requests:lats"},
+				Entities: []feast.Row{
+					{
+						"customer_phone": feast.StrVal("1234"),
+						"resource_type":  feast.Int64Val(1),
+					},
+				},
+				Project: "project",
+			},
+			rows: []bigtable.Row{
+				{
+					"login_requests": []bigtable.ReadItem{
+						{
+							Row:       "1234#1",
+							Timestamp: bigtable.Time(time.Now()),
+							Value:     append(schemaRefBytes, avroValue...),
+						},
+					},
+				},
+			},
+			registryFn: func() *CachedCodecRegistry {
+				loginRequestStorage := &storageMock{}
+				schema := bigtable.Row{"metadata": []bigtable.ReadItem{
+					{
+						Value: []byte(avroSchema),
+					},
+				}}
+				loginRequestStorage.On("readRow", mock.Anything, fmt.Sprintf("schema#%s", schemaRefBytes)).Return(schema, nil)
+
+				tables := map[string]storage{"project__customer_phone__resource_type": loginRequestStorage}
+				return newCachedCodecRegistry(tables)
+			},
+			metadata: []*spec.FeatureTableMetadata{{
+				Name:    "login_requests",
+				Project: "project",
+				MaxAge:  nil,
+			}},
+		},
+		{
+			name: "features with non null values - registry doesn't have codec yet got error when fetching schema metadata",
+			want: nil,
+			err:  "bigtable is down",
+			req: &feast.OnlineFeaturesRequest{
+				Features: []string{"login_requests:login_type", "login_requests:lats"},
+				Entities: []feast.Row{
+					{
+						"customer_phone": feast.StrVal("1234"),
+						"resource_type":  feast.Int64Val(1),
+					},
+				},
+				Project: "project",
+			},
+			rows: []bigtable.Row{
+				{
+					"login_requests": []bigtable.ReadItem{
+						{
+							Row:       "1234#1",
+							Timestamp: bigtable.Time(time.Now()),
+							Value:     append(schemaRefBytes, avroValue...),
+						},
+					},
+				},
+			},
+			registryFn: func() *CachedCodecRegistry {
+				loginRequestStorage := &storageMock{}
+				loginRequestStorage.On("readRow", mock.Anything, fmt.Sprintf("schema#%s", schemaRefBytes)).Return(nil, fmt.Errorf("bigtable is down"))
+
+				tables := map[string]storage{"project__customer_phone__resource_type": loginRequestStorage}
+				return newCachedCodecRegistry(tables)
 			},
 			metadata: []*spec.FeatureTableMetadata{{
 				Name:    "login_requests",
@@ -337,6 +449,9 @@ func TestEncoder_Decode(t *testing.T) {
 					},
 				},
 			},
+			registryFn: func() *CachedCodecRegistry {
+				return &CachedCodecRegistry{codecs: defaultCodecs}
+			},
 			metadata: []*spec.FeatureTableMetadata{{
 				Name:    "login_requests",
 				Project: "project",
@@ -376,6 +491,9 @@ func TestEncoder_Decode(t *testing.T) {
 				Project: "project",
 			},
 			rows: []bigtable.Row{},
+			registryFn: func() *CachedCodecRegistry {
+				return &CachedCodecRegistry{codecs: defaultCodecs}
+			},
 			metadata: []*spec.FeatureTableMetadata{{
 				Name:    "login_requests",
 				Project: "project",
@@ -425,6 +543,9 @@ func TestEncoder_Decode(t *testing.T) {
 					},
 				},
 			},
+			registryFn: func() *CachedCodecRegistry {
+				return &CachedCodecRegistry{codecs: defaultCodecs}
+			},
 			metadata: []*spec.FeatureTableMetadata{{
 				Name:    "login_requests",
 				Project: "project",
@@ -435,17 +556,15 @@ func TestEncoder_Decode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			codecs := map[string]*goavro.Codec{
-				string(schemaRefBytes): codec,
-			}
-			registry := &CachedCodecRegistry{codecs: codecs}
+			registry := tt.registryFn()
 			encoder, _ := newEncoder(registry, featureTable, tt.metadata)
 			response, err := encoder.Decode(context.Background(), tt.rows, tt.req, entityKeys)
 			if err != nil {
-				panic(err)
-			}
-			if !proto.Equal(response.RawResponse, tt.want.RawResponse) {
-				t.Errorf("expected %s, actual %s", tt.want.RawResponse, response.RawResponse)
+				assert.EqualError(t, err, tt.err)
+			} else {
+				if !proto.Equal(response.RawResponse, tt.want.RawResponse) {
+					t.Errorf("expected %s, actual %s", tt.want.RawResponse, response.RawResponse)
+				}
 			}
 		})
 	}

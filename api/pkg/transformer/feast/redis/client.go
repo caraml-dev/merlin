@@ -37,10 +37,7 @@ func NewRedisClient(redisStorage *spec.RedisStorage, featureTablesMetadata []*sp
 		MinIdleConns:       int(option.MinIdleConnections),
 	})
 
-	return RedisClient{
-		encoder:   newRedisEncoder(featureTablesMetadata),
-		pipeliner: redisClient.Pipeline(),
-	}, nil
+	return newClient(redisClient.Pipeline(), featureTablesMetadata)
 }
 
 func NewRedisClusterClient(redisClusterStorage *spec.RedisClusterStorage, featureTablesMetadata []*spec.FeatureTableMetadata) (RedisClient, error) {
@@ -61,9 +58,13 @@ func NewRedisClusterClient(redisClusterStorage *spec.RedisClusterStorage, featur
 		MinIdleConns:       int(option.MinIdleConnections),
 	})
 
+	return newClient(redisClient.Pipeline(), featureTablesMetadata)
+}
+
+func newClient(pipeliner redis.Pipeliner, featureTablesMetadata []*spec.FeatureTableMetadata) (RedisClient, error) {
 	return RedisClient{
 		encoder:   newRedisEncoder(featureTablesMetadata),
-		pipeliner: redisClient.Pipeline(),
+		pipeliner: pipeliner,
 	}, nil
 }
 
@@ -75,7 +76,8 @@ func (r RedisClient) GetOnlineFeatures(ctx context.Context, req *feast.OnlineFea
 		return nil, err
 	}
 	hmGetResults := make([]*redis.SliceCmd, len(encodedEntities))
-	pipeline := r.pipeliner.Pipeline()
+	pipeline := r.pipeliner
+
 	for index, encodedEntity := range encodedEntities {
 		hmGetResults[index] = pipeline.HMGet(ctx, encodedEntity, encodedFeatures...)
 	}

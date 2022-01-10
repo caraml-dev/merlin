@@ -17,12 +17,12 @@ import (
 // BigTable without going through Feast Serving.
 type BigTableClient struct {
 	encoder *Encoder
-	tables  map[string]*bigtable.Table
+	tables  map[string]storage
 }
 
 // NewClient instantiate new instance of BigTableClient
 func NewClient(bigtableStorage *spec.BigTableStorage, featureSpecs []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) (*BigTableClient, error) {
-	tables := make(map[string]*bigtable.Table)
+	tables := make(map[string]storage)
 	client, err := newBigtableClient(bigtableStorage)
 	if err != nil {
 		return nil, err
@@ -30,9 +30,15 @@ func NewClient(bigtableStorage *spec.BigTableStorage, featureSpecs []*spec.Featu
 	for _, featureSpec := range featureSpecs {
 		btn := entityKeysToBigTable(featureSpec.Project, featureSpec.Entities)
 		if _, exists := tables[btn]; !exists {
-			tables[btn] = client.Open(btn)
+			btTable := client.Open(btn)
+			tableStorage := &btStorage{table: btTable}
+			tables[btn] = tableStorage
 		}
 	}
+	return newClient(tables, featureSpecs, metadata)
+}
+
+func newClient(tables map[string]storage, featureSpecs []*spec.FeatureTable, metadata []*spec.FeatureTableMetadata) (*BigTableClient, error) {
 	registry := newCachedCodecRegistry(tables)
 	encoder, err := newEncoder(registry, featureSpecs, metadata)
 	if err != nil {
@@ -83,12 +89,8 @@ func (b BigTableClient) GetOnlineFeatures(ctx context.Context, req *feast.Online
 	if err != nil {
 		return nil, err
 	}
-	rows := make([]bigtable.Row, 0)
 
-	err = b.tables[query.table].ReadRows(ctx, query.rowList, func(row bigtable.Row) bool {
-		rows = append(rows, row)
-		return true
-	}, bigtable.RowFilter(query.rowFilter))
+	rows, err := b.tables[query.table].readRows(ctx, query.rowList, query.rowFilter)
 	if err != nil {
 		return nil, err
 	}
