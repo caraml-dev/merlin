@@ -6,6 +6,8 @@ import (
 	"strconv"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
+	"github.com/gojek/merlin/pkg/transformer/feast/bigtablestore"
+	"github.com/gojek/merlin/pkg/transformer/feast/redis"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -16,7 +18,7 @@ func InitFeastServingClients(feastOptions Options, featureTableMetadata []*spec.
 
 	clients := Clients{}
 	for _, source := range servingSources {
-		feastClient, err := createFeastServingClient(feastOptions, featureTableMetadata, source)
+		feastClient, err := createFeastServingClient(feastOptions, featureTableMetadata, source, standardTransformerConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -25,14 +27,14 @@ func InitFeastServingClients(feastOptions Options, featureTableMetadata []*spec.
 	return clients, nil
 }
 
-func createFeastServingClient(feastOptions Options, featureTableMetadata []*spec.FeatureTableMetadata, feastSource spec.ServingSource) (StorageClient, error) {
+func createFeastServingClient(feastOptions Options, featureTableMetadata []*spec.FeatureTableMetadata, feastSource spec.ServingSource, standardTransformerConfig *spec.StandardTransformerConfig) (StorageClient, error) {
 	storageConfig, ok := feastOptions.StorageConfigs[feastSource]
 	if !ok {
 		return nil, fmt.Errorf("not found storage for %s source", feastSource)
 	}
 
 	if storageConfig.ServingType == spec.ServingType_DIRECT_STORAGE {
-		return NewDirectStorageClient(storageConfig, featureTableMetadata)
+		return newDirectStorageClient(storageConfig, featureTableMetadata, standardTransformerConfig)
 	}
 
 	var servingURL string
@@ -66,4 +68,20 @@ func newFeastGrpcClient(url string) (*feastSdk.GrpcClient, error) {
 	}
 
 	return client, nil
+}
+
+func newDirectStorageClient(storage *spec.OnlineStorage, featureTablesMetadata []*spec.FeatureTableMetadata, standardTransformerConfig *spec.StandardTransformerConfig) (StorageClient, error) {
+	switch storage.Storage.(type) {
+	case *spec.OnlineStorage_Redis:
+		redisStorage := storage.GetRedis()
+		return redis.NewRedisClient(redisStorage, featureTablesMetadata)
+	case *spec.OnlineStorage_RedisCluster:
+		redisClusterStorage := storage.GetRedisCluster()
+		return redis.NewRedisClusterClient(redisClusterStorage, featureTablesMetadata)
+	case *spec.OnlineStorage_Bigtable:
+		bigtableStorage := storage.GetBigtable()
+		featureTables := getFeatureTableSpecs(standardTransformerConfig)
+		return bigtablestore.NewClient(bigtableStorage, featureTables, featureTablesMetadata)
+	}
+	return nil, errors.New("unrecognized storage option")
 }

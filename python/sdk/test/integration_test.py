@@ -911,7 +911,15 @@ def test_standard_transformer_with_multiple_feast_with_source(
     config_file.write(rendered_config)
     config_file.close()
 
-    transformer = StandardTransformer(config_file=config_file_path, enabled=True)
+    env_vars={
+        "FEAST_REDIS_DIRECT_STORAGE_ENABLED": True, 
+        "FEAST_REDIS_POOL_SIZE": 1, 
+        "FEAST_BIGTABLE_DIRECT_STORAGE_ENABLED": True,
+        "FEAST_BIGTABLE_POOL_SIZE": 1,
+        "FEAST_BIGTABLE_KEEP_ALIVE_INTERVAL": "2m",
+        "FEAST_BIGTABLE_KEEP_ALIVE_TIMEOUT": "15s"
+        }
+    transformer = StandardTransformer(config_file=config_file_path, enabled=True, env_vars=env_vars)
 
     endpoint = merlin.deploy(v, transformer=transformer)
     request_json = {

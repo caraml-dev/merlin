@@ -87,6 +87,33 @@ func ToInt32(v interface{}) (int32, error) {
 	}
 }
 
+func ToFloat32(v interface{}) (float32, error) {
+	switch v := v.(type) {
+	case float64:
+		return float32(v), nil
+	case float32:
+		return v, nil
+	case int:
+		return float32(v), nil
+	case int8:
+		return float32(v), nil
+	case int16:
+		return float32(v), nil
+	case int32:
+		return float32(v), nil
+	case int64:
+		return float32(v), nil
+	case string:
+		floatVal, err := strconv.ParseFloat(v, 32)
+		if err != nil {
+			return 0, err
+		}
+		return float32(floatVal), nil
+	default:
+		return 0, fmt.Errorf("unsupported conversion from %T to float32", v)
+	}
+}
+
 func ToFloat64(v interface{}) (float64, error) {
 	switch v := v.(type) {
 	case float64:

@@ -7,12 +7,11 @@
 package spec
 
 import (
-	reflect "reflect"
-	sync "sync"
-
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	sync "sync"
 )
 
 const (
@@ -1011,30 +1010,27 @@ func file_transformer_spec_table_proto_rawDescGZIP() []byte {
 	return file_transformer_spec_table_proto_rawDescData
 }
 
-var (
-	file_transformer_spec_table_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-	file_transformer_spec_table_proto_msgTypes  = make([]protoimpl.MessageInfo, 11)
-	file_transformer_spec_table_proto_goTypes   = []interface{}{
-		(SortOrder)(0),               // 0: merlin.transformer.SortOrder
-		(JoinMethod)(0),              // 1: merlin.transformer.JoinMethod
-		(*Table)(nil),                // 2: merlin.transformer.Table
-		(*BaseTable)(nil),            // 3: merlin.transformer.BaseTable
-		(*Column)(nil),               // 4: merlin.transformer.Column
-		(*TableTransformation)(nil),  // 5: merlin.transformer.TableTransformation
-		(*TransformationStep)(nil),   // 6: merlin.transformer.TransformationStep
-		(*SortColumnRule)(nil),       // 7: merlin.transformer.SortColumnRule
-		(*UpdateColumn)(nil),         // 8: merlin.transformer.UpdateColumn
-		(*TableJoin)(nil),            // 9: merlin.transformer.TableJoin
-		(*ScaleColumn)(nil),          // 10: merlin.transformer.ScaleColumn
-		(*EncodeColumn)(nil),         // 11: merlin.transformer.EncodeColumn
-		nil,                          // 12: merlin.transformer.TransformationStep.RenameColumnsEntry
-		(*FromJson)(nil),             // 13: merlin.transformer.FromJson
-		(*FromTable)(nil),            // 14: merlin.transformer.FromTable
-		(*StandardScalerConfig)(nil), // 15: merlin.transformer.StandardScalerConfig
-		(*MinMaxScalerConfig)(nil),   // 16: merlin.transformer.MinMaxScalerConfig
-	}
-)
-
+var file_transformer_spec_table_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_transformer_spec_table_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_transformer_spec_table_proto_goTypes = []interface{}{
+	(SortOrder)(0),               // 0: merlin.transformer.SortOrder
+	(JoinMethod)(0),              // 1: merlin.transformer.JoinMethod
+	(*Table)(nil),                // 2: merlin.transformer.Table
+	(*BaseTable)(nil),            // 3: merlin.transformer.BaseTable
+	(*Column)(nil),               // 4: merlin.transformer.Column
+	(*TableTransformation)(nil),  // 5: merlin.transformer.TableTransformation
+	(*TransformationStep)(nil),   // 6: merlin.transformer.TransformationStep
+	(*SortColumnRule)(nil),       // 7: merlin.transformer.SortColumnRule
+	(*UpdateColumn)(nil),         // 8: merlin.transformer.UpdateColumn
+	(*TableJoin)(nil),            // 9: merlin.transformer.TableJoin
+	(*ScaleColumn)(nil),          // 10: merlin.transformer.ScaleColumn
+	(*EncodeColumn)(nil),         // 11: merlin.transformer.EncodeColumn
+	nil,                          // 12: merlin.transformer.TransformationStep.RenameColumnsEntry
+	(*FromJson)(nil),             // 13: merlin.transformer.FromJson
+	(*FromTable)(nil),            // 14: merlin.transformer.FromTable
+	(*StandardScalerConfig)(nil), // 15: merlin.transformer.StandardScalerConfig
+	(*MinMaxScalerConfig)(nil),   // 16: merlin.transformer.MinMaxScalerConfig
+}
 var file_transformer_spec_table_proto_depIdxs = []int32{
 	3,  // 0: merlin.transformer.Table.baseTable:type_name -> merlin.transformer.BaseTable
 	4,  // 1: merlin.transformer.Table.columns:type_name -> merlin.transformer.Column

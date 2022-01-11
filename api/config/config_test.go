@@ -54,12 +54,13 @@ func TestFeastServingURLs_URLs(t *testing.T) {
 
 func TestStandardTransfomer_ToFeastStorageConfigs(t *testing.T) {
 	redisCfg := `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`
-	bigtableCfg := `{"serving_url":"10.1.1.3"}`
+	bigtableCfg := `{"serving_url":"10.1.1.3","project":"gcp-project","is_using_direct_storage":true,"instance":"instance","app_profile":"default","pool_size":3,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`
 	testCases := []struct {
-		desc            string
-		redisConfig     *string
-		bigtableConfig  *string
-		feastStorageCfg feast.FeastStorageConfig
+		desc               string
+		redisConfig        *string
+		bigtableConfig     *string
+		feastStorageCfg    feast.FeastStorageConfig
+		bigtableCredential string
 	}{
 		{
 			desc:           "redis config and big table config set",
@@ -81,14 +82,24 @@ func TestStandardTransfomer_ToFeastStorageConfigs(t *testing.T) {
 					},
 				},
 				spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
-					ServingType: spec.ServingType_FEAST_GRPC,
+					ServingType: spec.ServingType_DIRECT_STORAGE,
 					Storage: &spec.OnlineStorage_Bigtable{
 						Bigtable: &spec.BigTableStorage{
 							FeastServingUrl: "10.1.1.3",
+							Project:         "gcp-project",
+							Instance:        "instance",
+							AppProfile:      "default",
+							Option: &spec.BigTableOption{
+								GrpcConnectionPool: 3,
+								KeepAliveInterval:  durationpb.New(time.Minute * 2),
+								KeepAliveTimeout:   durationpb.New(time.Minute * 1),
+								CredentialJson:     "eyJrZXkiOiJ2YWx1ZSJ9",
+							},
 						},
 					},
 				},
 			},
+			bigtableCredential: `eyJrZXkiOiJ2YWx1ZSJ9`,
 		},
 		{
 			desc:        "redis config set and big table config not set",
@@ -115,10 +126,18 @@ func TestStandardTransfomer_ToFeastStorageConfigs(t *testing.T) {
 			bigtableConfig: &bigtableCfg,
 			feastStorageCfg: feast.FeastStorageConfig{
 				spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
-					ServingType: spec.ServingType_FEAST_GRPC,
+					ServingType: spec.ServingType_DIRECT_STORAGE,
 					Storage: &spec.OnlineStorage_Bigtable{
 						Bigtable: &spec.BigTableStorage{
 							FeastServingUrl: "10.1.1.3",
+							Project:         "gcp-project",
+							Instance:        "instance",
+							AppProfile:      "default",
+							Option: &spec.BigTableOption{
+								GrpcConnectionPool: 3,
+								KeepAliveInterval:  durationpb.New(time.Minute * 2),
+								KeepAliveTimeout:   durationpb.New(time.Minute * 1),
+							},
 						},
 					},
 				},
@@ -139,6 +158,7 @@ func TestStandardTransfomer_ToFeastStorageConfigs(t *testing.T) {
 			if tC.bigtableConfig != nil {
 				os.Setenv("FEAST_BIG_TABLE_CONFIG", *tC.bigtableConfig)
 			}
+			os.Setenv("FEAST_BIGTABLE_CREDENTIAL", tC.bigtableCredential)
 
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
