@@ -262,6 +262,15 @@ Variable declaration is used for assigning literal value or result of a function
                 defaultValue: '90909'
   ```
 
+  There are two ways to get/retrieve features from feast in merlin standard transformer:
+    * Getting the features values from feast GRPC URL
+    * By direcly querying from feast storage (Bigtable or Redis). For this, you need to add extra environment variables in standard transformer
+      * REDIS. Set `FEAST_REDIS_DIRECT_STORAGE_ENABLED` value to true
+      * BIGTABLE. Set `FEAST_BIGTABLE_DIRECT_STORAGE_ENABLED` value to true
+  
+  \
+  For detail explanation of environment variables in standard transformer, you can look [this section](#standard-transformer-environment-variables)
+
   ### Table
   This step is generic table creation that allows users to define one or more tables based on value from either JSON payload, result of built-in expressions, or an existing table. Following is the syntax for table input:
   ```
@@ -788,4 +797,11 @@ Below are supported environment variables to configure your Transformer.
 | `FEAST_CACHE_ENABLED` | Enable cache response of feast request | true |
 | `FEAST_CACHE_TTL` | Time to live cached features, if TTL is reached the cached will be expired. The value has format like this [$number][$unit] e.g 60s, 10s, 1m, 1h | 60s|
 | `CACHE_SIZE_IN_MB` | Maximum capacity of cache from allocated memory. Size is in MB | 100 | 
+| `FEAST_REDIS_DIRECT_STORAGE_ENABLED` | Enable features retrieval by querying direcly from redis | false |
+| `FEAST_REDIS_POOL_SIZE` | Number of redis connection established in one replica of standard transformer | 10 |
+| `FEAST_REDIS_READ_TIMEOUT` | Timeout for read commands from redis. If reached commands will fails | 3s |
+| `FEAST_REDIS_WRITE_TIMEOUT` | Timeout for write commands to redis. If reached commands will fails | 3s |
+| `FEAST_BIGTABLE_DIRECT_STORAGE_ENABLED` | Enable features retrieval by querying direcly from bigtable | false | 
+| `FEAST_BIGTABLE_POOL_SIZE` | Number of bigtable grpc connections established in one replica of standard transformer |  |
+
 

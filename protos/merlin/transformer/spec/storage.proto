@@ -23,6 +23,17 @@ message OnlineStorage {
 
 message BigTableStorage {
   string feastServingUrl = 1; // Feast GRPC URL
+  string project = 2; // GCP where the bigtable located
+  string instance = 3; // Bigtable instance name
+  string appProfile = 4; // ID of app profile
+  BigTableOption option = 5; // Optional configuration for bigtable
+}
+
+message BigTableOption {
+  int32 grpcConnectionPool = 1; // Number of grpc connection pool
+  google.protobuf.Duration keepAliveInterval = 2; // Interval of keep alive pings server to check whether the connection still alive
+  google.protobuf.Duration keepAliveTimeout = 3; // Duration of timeout, the connection will be closed if no activity is seen
+  string credentialJson = 4; // Base64 Encoded credential that later will be used as authentication of bigtable
 }
 
 message RedisStorage {
@@ -49,4 +60,5 @@ message RedisOption {
   google.protobuf.Duration poolTimeout = 8; // amount of time clients wait for connection if all connection are busy before returning error
   google.protobuf.Duration idleTimeout = 9; // amount of time after which client closes idle connections
   google.protobuf.Duration idleCheckFrequency = 10; // frequency of idle check
+  int32 minIdleConnections = 11; // minimum number of idle connections
 }

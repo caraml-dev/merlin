@@ -27,8 +27,15 @@ type RedisOverwriteConfig struct {
 	WriteTimeout              *time.Duration `envconfig:"FEAST_REDIS_WRITE_TIMEOUT"`
 }
 
+type BigtableOverwriteConfig struct {
+	BigtableDirectStorageEnabled *bool          `envconfig:"FEAST_BIGTABLE_DIRECT_STORAGE_ENABLED"`
+	PoolSize                     *int32         `envconfig:"FEAST_BIGTABLE_POOL_SIZE"`
+	KeepAliveInterval            *time.Duration `envconfig:"FEAST_BIGTABLE_KEEP_ALIVE_INTERVAL"`
+	KeepAliveTimeout             *time.Duration `envconfig:"FEAST_BIGTABLE_KEEP_ALIVE_TIMEOUT"`
+}
+
 // overwrite feast options with values that specified by user through transformer environment variables
-func OverwriteFeastOptionsConfig(opts Options, redisConfig RedisOverwriteConfig) Options {
+func OverwriteFeastOptionsConfig(opts Options, redisConfig RedisOverwriteConfig, bigtableConfig BigtableOverwriteConfig) Options {
 	feastOpts := opts
 	for _, storage := range opts.StorageConfigs {
 		switch storage.Storage.(type) {
@@ -40,6 +47,10 @@ func OverwriteFeastOptionsConfig(opts Options, redisConfig RedisOverwriteConfig)
 			storage.ServingType = getServingType(redisConfig.RedisDirectStorageEnabled, storage.ServingType)
 			redisClusterStorage := storage.GetRedisCluster()
 			overwriteRedisOption(redisClusterStorage.Option, redisConfig)
+		case *spec.OnlineStorage_Bigtable:
+			storage.ServingType = getServingType(bigtableConfig.BigtableDirectStorageEnabled, storage.ServingType)
+			bigtableStorage := storage.GetBigtable()
+			overwriteBigtableOption(bigtableStorage.Option, bigtableConfig)
 		}
 	}
 	return feastOpts
@@ -64,5 +75,17 @@ func overwriteRedisOption(opts *spec.RedisOption, redisOverwriteConfig RedisOver
 	}
 	if redisOverwriteConfig.WriteTimeout != nil {
 		opts.WriteTimeout = durationpb.New(*redisOverwriteConfig.WriteTimeout)
+	}
+}
+
+func overwriteBigtableOption(opts *spec.BigTableOption, bigtableConfig BigtableOverwriteConfig) {
+	if bigtableConfig.PoolSize != nil {
+		opts.GrpcConnectionPool = *bigtableConfig.PoolSize
+	}
+	if bigtableConfig.KeepAliveInterval != nil {
+		opts.KeepAliveInterval = durationpb.New(*bigtableConfig.KeepAliveInterval)
+	}
+	if bigtableConfig.KeepAliveTimeout != nil {
+		opts.KeepAliveTimeout = durationpb.New(*bigtableConfig.KeepAliveTimeout)
 	}
 }
