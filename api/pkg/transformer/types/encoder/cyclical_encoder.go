@@ -72,7 +72,7 @@ var MonthInSec = map[int]float64{
 }
 
 type CyclicalEncoder struct {
-	Period interface{}
+	Period spec.PeriodType
 	Min    float64
 	Max    float64
 }
@@ -86,7 +86,7 @@ func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, e
 		}
 
 		return &CyclicalEncoder{
-			Period: nil,
+			Period: spec.PeriodType_UNDEFINED,
 			Min:    byRange.Min,
 			Max:    byRange.Max,
 		}, nil
@@ -95,18 +95,18 @@ func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, e
 	// by epoch time
 	byEpochTime := config.GetByEpochTime()
 	var min, max float64 = 0, 0
-	var period interface{}
+	var period spec.PeriodType
 
 	if byEpochTime != nil {
 		switch byEpochTime.Period {
 		case spec.PeriodType_HOUR:
-			period = nil
+			period = spec.PeriodType_UNDEFINED
 			max = HourInSec
 		case spec.PeriodType_DAY:
-			period = nil
+			period = spec.PeriodType_UNDEFINED
 			max = DayInSec
 		case spec.PeriodType_WEEK:
-			period = nil
+			period = spec.PeriodType_UNDEFINED
 			max = WeekInSec
 		case spec.PeriodType_MONTH, spec.PeriodType_QUARTER, spec.PeriodType_HALF, spec.PeriodType_YEAR:
 			period = byEpochTime.Period
@@ -130,7 +130,7 @@ func (oe *CyclicalEncoder) Encode(values []interface{}, column string) (map[stri
 	encodedSin := make([]interface{}, 0, len(values))
 
 	// config with fixed range
-	if oe.Period == nil {
+	if oe.Period == spec.PeriodType_UNDEFINED {
 		period := oe.Max - oe.Min
 		unitAngle := completeAngle / period
 

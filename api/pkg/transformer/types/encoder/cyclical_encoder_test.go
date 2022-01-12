@@ -27,7 +27,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    0,
 				Max:    7,
 			},
@@ -43,7 +43,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    -2,
 				Max:    -1,
 			},
@@ -59,7 +59,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    3.66,
 				Max:    7.0,
 			},
@@ -75,7 +75,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    -2,
 				Max:    1.8,
 			},
@@ -116,7 +116,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    0,
 				Max:    HourInSec,
 			},
@@ -131,7 +131,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    0,
 				Max:    DayInSec,
 			},
@@ -146,7 +146,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    0,
 				Max:    WeekInSec,
 			},
@@ -268,7 +268,7 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should fail: Fix period (by range): Missing value",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    0,
 				Max:    86400,
 			},
@@ -300,7 +300,7 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should fail: Invalid value",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    0,
 				Max:    86400,
 			},
@@ -316,7 +316,7 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: Fixed period (by range)",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    1,
 				Max:    8,
 			},
@@ -335,7 +335,7 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: Fixed period (by range): with negative range",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    -4,
 				Max:    3,
 			},
@@ -354,7 +354,7 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, HOUR",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    0,
 				Max:    3600,
 			},
@@ -377,7 +377,7 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, DAY",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    0,
 				Max:    86400,
 			},
@@ -399,7 +399,7 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, WEEK",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: nil,
+				Period: spec.PeriodType_UNDEFINED,
 				Min:    0,
 				Max:    604800,
 			},
