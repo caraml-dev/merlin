@@ -57,7 +57,7 @@ export const SelectCyclicalEncodeType = ({
         label={
           <FormLabelWithToolTip
             label="Encode by *"
-            content="Choose input type to encode"
+            content="Choose input type to encode. Epoch time: unix epoch time; Range: Range of input values for representing 1 period"
           />
         }
         isInvalid={!!errors.cyclicType}

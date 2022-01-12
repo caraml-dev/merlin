@@ -17,7 +17,6 @@ export const CyclicalEncoderInputGroup = ({
   errors = {}
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
-  console.log(cyclicalEncoderConfig);
 
   return (
     <EuiFlexGroup direction="column" gutterSize="s">
