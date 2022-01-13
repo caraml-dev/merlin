@@ -364,13 +364,16 @@ func TestCyclicalEncode(t *testing.T) {
 				1641039300, //1 Jan 2022, 12:15:00
 				1641054600, //1 Jan 2022, 16:30:00
 				1641060000, //1 Jan 2022, 18:00:00
+				1641063600, //1 Jan 2022, 19:00:00
+				1641064500, //1 Jan 2022, 19:15:00
+				1641065400, //1 Jan 2022, 19:30:00
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
-					1, 0.999998476, 0, -1, 1,
+					1, 0.999998476, 0, -1, 1, 1, 0, -1,
 				},
 				columnY: []interface{}{
-					0, 0.001745328, 1, 0, 0,
+					0, 0.001745328, 1, 0, 0, 0, 1, 0,
 				},
 			},
 		},
@@ -382,16 +385,24 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    86400,
 			},
 			reqValues: []interface{}{
+				//1 Jan cycle
 				1640995200, //1 Jan 2022, 00:00:00
 				1640995201, //1 Jan 2022, 00:00:01
 				1641038400, //1 Jan 2022, 12:00:00
 				1641060000, //1 Jan 2022, 18:00:00
+				//2 Jan Cycle
+				1641081600, //2 Jan 2022, 00:00:00
+				1641081601, //2 Jan 2022, 00:00:01
+				1641124800, //2 Jan 2022, 12:00:00
+				1641146400, //2 Jan 2022, 18:00:00
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
 					1, 0.999999997, -1, 0,
+					1, 0.999999997, -1, 0,
 				},
 				columnY: []interface{}{
+					0, 0.000072717, 0, -1,
 					0, 0.000072717, 0, -1,
 				},
 			},
@@ -404,18 +415,25 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    604800,
 			},
 			reqValues: []interface{}{ //NOTE: Epoch time starts from Thursday, hence 0 on Thurs
+				//Thursday, Friday, Sunday, Tuesday cycle 1
 				1641427200, //6 Jan 2022, 00:00:00, Thursday
 				1641578400, //5 Jan 2022, 18:00:00, Friday
 				1641729600, //9 Jan 2022, 12:00:00, Sunday
 				1641880800, //11 Jan 2022, 06:00:00, Tuesday
+				//Thursday, Friday, Sunday, Tuesday cycle 2
 				1642032000, //13 Jan 2022, 0:00:00, Thursday
+				1642183200, //14 Jan 2022, 18:00:00, Friday
+				1642334400, //16 Jan 2022, 12:00:00, Sunday
+				1642485600, //18 Jan 2022, 06:00:00, Tuesday
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
-					1, 0, -1, 0, 1,
+					1, 0, -1, 0,
+					1, 0, -1, 0,
 				},
 				columnY: []interface{}{
-					0, 1, 0, -1, 0,
+					0, 1, 0, -1,
+					0, 1, 0, -1,
 				},
 			},
 		},
@@ -427,18 +445,29 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    0,
 			},
 			reqValues: []interface{}{
+				//Start, mid, end of Jan
 				1640995200, //1 Jan 2022, 00:00:00
-				1643673599, //31 Jan 2022, 23:59:59
 				1642334400, //16 Jan 2022, 12:00:00
+				1643673599, //31 Jan 2022, 23:59:59
+				//Start, mid, end of Feb
+				1643673600, //1 Feb 2022, 00:00:00
 				1644883200, //15 Feb 2022, 00:00:00
+				1646092799, //28 Feb 2022, 23:59:59
+				//Start, mid, end of Feb (leap)
+				1580515200, //1 Feb 2020, 00:00:00
 				1581768000, //15 Feb 2020, 12:00:00
+				1583020799, //29 Feb 2022, 23:59:59
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
-					1, 0.999999999, -1, -1, -1,
+					1, -1, 0.999999999,
+					1, -1, 0.999999999,
+					1, -1, 0.999999999,
 				},
 				columnY: []interface{}{
-					0, -0.000002345, 0, 0, 0,
+					0, 0, -0.000002345,
+					0, 0, -0.000002597,
+					0, 0, -0.000002507,
 				},
 			},
 		},
@@ -530,9 +559,6 @@ func TestCyclicalEncode(t *testing.T) {
 			if tC.expectedError != nil {
 				assert.EqualError(t, err, tC.expectedError.Error())
 			} else {
-				fmt.Println(tC.expectedResult)
-				fmt.Println(got)
-				fmt.Println(time.Unix(1640995200, 0).In(time.UTC).Clock())
 				assert.Equal(t, len(tC.expectedResult), len(got))
 				assert.InDeltaSlice(t, tC.expectedResult[columnX], got[columnX], 0.00000001)
 				assert.InDeltaSlice(t, tC.expectedResult[columnY], got[columnY], 0.00000001)
