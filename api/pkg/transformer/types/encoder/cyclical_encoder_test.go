@@ -456,7 +456,7 @@ func TestCyclicalEncode(t *testing.T) {
 				//Start, mid, end of Feb (leap)
 				1580515200, //1 Feb 2020, 00:00:00
 				1581768000, //15 Feb 2020, 12:00:00
-				1583020799, //29 Feb 2022, 23:59:59
+				1583020799, //29 Feb 2020, 23:59:59
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
