@@ -343,18 +343,19 @@ export class Pipeline {
 
         input.encoders &&
           input.encoders.forEach(encoder => {
-            if (encoder.cyclicalEncoderConfig) {
-              if (encoder.cyclicalEncoderConfig.byRange) {
-                if (encoder.cyclicalEncoderConfig.byRange.min) {
-                  encoder.cyclicalEncoderConfig.byRange.min = parseFloat(
-                    encoder.cyclicalEncoderConfig.byRange.min
-                  );
-                }
-                if (encoder.cyclicalEncoderConfig.byRange.max) {
-                  encoder.cyclicalEncoderConfig.byRange.max = parseFloat(
-                    encoder.cyclicalEncoderConfig.byRange.max
-                  );
-                }
+            if (
+              encoder.cyclicalEncoderConfig &&
+              encoder.cyclicalEncoderConfig.byRange
+            ) {
+              if (encoder.cyclicalEncoderConfig.byRange.min) {
+                encoder.cyclicalEncoderConfig.byRange.min = parseFloat(
+                  encoder.cyclicalEncoderConfig.byRange.min
+                );
+              }
+              if (encoder.cyclicalEncoderConfig.byRange.max) {
+                encoder.cyclicalEncoderConfig.byRange.max = parseFloat(
+                  encoder.cyclicalEncoderConfig.byRange.max
+                );
               }
             }
           });

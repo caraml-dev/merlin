@@ -273,10 +273,10 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    86400,
 			},
 			reqValues: []interface{}{
-				1640995200, //3 Jan 2022, 00:00:00
-				1640995201, //3 Jan 2022, 00:00:01
+				1640995200, // 3 Jan 2022, 00:00:00
+				1640995201, // 3 Jan 2022, 00:00:01
 				nil,
-				1641060000, //3 Jan 2022, 18:00:00
+				1641060000, // 3 Jan 2022, 18:00:00
 			},
 			expectedResult: nil,
 			expectedError:  fmt.Errorf("missing value"),
@@ -289,10 +289,10 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    0,
 			},
 			reqValues: []interface{}{
-				1640995200, //3 Jan 2022, 00:00:00
-				1640995201, //3 Jan 2022, 00:00:01
+				1640995200, // 3 Jan 2022, 00:00:00
+				1640995201, // 3 Jan 2022, 00:00:01
 				nil,
-				1641060000, //3 Jan 2022, 18:00:00
+				1641060000, // 3 Jan 2022, 18:00:00
 			},
 			expectedResult: nil,
 			expectedError:  fmt.Errorf("missing value"),
@@ -305,10 +305,10 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    86400,
 			},
 			reqValues: []interface{}{
-				1640995200, //3 Jan 2022, 00:00:00
+				1640995200, // 3 Jan 2022, 00:00:00
 				"hello",
-				1641038400, //3 Jan 2022, 12:00:00
-				1641060000, //3 Jan 2022, 18:00:00
+				1641038400, // 3 Jan 2022, 12:00:00
+				1641060000, // 3 Jan 2022, 18:00:00
 			},
 			expectedResult: nil,
 			expectedError:  fmt.Errorf("strconv.ParseFloat: parsing \"hello\": invalid syntax"),
@@ -359,14 +359,14 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    3600,
 			},
 			reqValues: []interface{}{
-				1640995200, //1 Jan 2022, 00:00:00
-				1640995201, //1 Jan 2022, 00:00:01
-				1641039300, //1 Jan 2022, 12:15:00
-				1641054600, //1 Jan 2022, 16:30:00
-				1641060000, //1 Jan 2022, 18:00:00
-				1641063600, //1 Jan 2022, 19:00:00
-				1641064500, //1 Jan 2022, 19:15:00
-				1641065400, //1 Jan 2022, 19:30:00
+				1640995200, // 1 Jan 2022, 00:00:00
+				1640995201, // 1 Jan 2022, 00:00:01
+				1641039300, // 1 Jan 2022, 12:15:00
+				1641054600, // 1 Jan 2022, 16:30:00
+				1641060000, // 1 Jan 2022, 18:00:00
+				1641063600, // 1 Jan 2022, 19:00:00
+				1641064500, // 1 Jan 2022, 19:15:00
+				1641065400, // 1 Jan 2022, 19:30:00
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
@@ -385,16 +385,16 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    86400,
 			},
 			reqValues: []interface{}{
-				//1 Jan cycle
-				1640995200, //1 Jan 2022, 00:00:00
-				1640995201, //1 Jan 2022, 00:00:01
-				1641038400, //1 Jan 2022, 12:00:00
-				1641060000, //1 Jan 2022, 18:00:00
-				//2 Jan Cycle
-				1641081600, //2 Jan 2022, 00:00:00
-				1641081601, //2 Jan 2022, 00:00:01
-				1641124800, //2 Jan 2022, 12:00:00
-				1641146400, //2 Jan 2022, 18:00:00
+				// 1 Jan cycle
+				1640995200, // 1 Jan 2022, 00:00:00
+				1640995201, // 1 Jan 2022, 00:00:01
+				1641038400, // 1 Jan 2022, 12:00:00
+				1641060000, // 1 Jan 2022, 18:00:00
+				// 2 Jan Cycle
+				1641081600, // 2 Jan 2022, 00:00:00
+				1641081601, // 2 Jan 2022, 00:00:01
+				1641124800, // 2 Jan 2022, 12:00:00
+				1641146400, // 2 Jan 2022, 18:00:00
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
@@ -414,17 +414,17 @@ func TestCyclicalEncode(t *testing.T) {
 				Min:    0,
 				Max:    604800,
 			},
-			reqValues: []interface{}{ //NOTE: Epoch time starts from Thursday, hence 0 on Thurs
-				//Thursday, Friday, Sunday, Tuesday cycle 1
-				1641427200, //6 Jan 2022, 00:00:00, Thursday
-				1641578400, //5 Jan 2022, 18:00:00, Friday
-				1641729600, //9 Jan 2022, 12:00:00, Sunday
-				1641880800, //11 Jan 2022, 06:00:00, Tuesday
-				//Thursday, Friday, Sunday, Tuesday cycle 2
-				1642032000, //13 Jan 2022, 0:00:00, Thursday
-				1642183200, //14 Jan 2022, 18:00:00, Friday
-				1642334400, //16 Jan 2022, 12:00:00, Sunday
-				1642485600, //18 Jan 2022, 06:00:00, Tuesday
+			reqValues: []interface{}{ // NOTE: Epoch time starts from Thursday, hence 0 on Thurs
+				// Thursday, Friday, Sunday, Tuesday cycle 1
+				1641427200, // 6 Jan 2022, 00:00:00, Thursday
+				1641578400, // 5 Jan 2022, 18:00:00, Friday
+				1641729600, // 9 Jan 2022, 12:00:00, Sunday
+				1641880800, // 11 Jan 2022, 06:00:00, Tuesday
+				// Thursday, Friday, Sunday, Tuesday cycle 2
+				1642032000, // 13 Jan 2022, 0:00:00, Thursday
+				1642183200, // 14 Jan 2022, 18:00:00, Friday
+				1642334400, // 16 Jan 2022, 12:00:00, Sunday
+				1642485600, // 18 Jan 2022, 06:00:00, Tuesday
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
@@ -445,18 +445,18 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    0,
 			},
 			reqValues: []interface{}{
-				//Start, mid, end of Jan
-				1640995200, //1 Jan 2022, 00:00:00
-				1642334400, //16 Jan 2022, 12:00:00
-				1643673599, //31 Jan 2022, 23:59:59
-				//Start, mid, end of Feb
-				1643673600, //1 Feb 2022, 00:00:00
-				1644883200, //15 Feb 2022, 00:00:00
-				1646092799, //28 Feb 2022, 23:59:59
-				//Start, mid, end of Feb (leap)
-				1580515200, //1 Feb 2020, 00:00:00
-				1581768000, //15 Feb 2020, 12:00:00
-				1583020799, //29 Feb 2020, 23:59:59
+				// Start, mid, end of Jan
+				1640995200, // 1 Jan 2022, 00:00:00
+				1642334400, // 16 Jan 2022, 12:00:00
+				1643673599, // 31 Jan 2022, 23:59:59
+				// Start, mid, end of Feb
+				1643673600, // 1 Feb 2022, 00:00:00
+				1644883200, // 15 Feb 2022, 00:00:00
+				1646092799, // 28 Feb 2022, 23:59:59
+				// Start, mid, end of Feb (leap)
+				1580515200, // 1 Feb 2020, 00:00:00
+				1581768000, // 15 Feb 2020, 12:00:00
+				1583020799, // 29 Feb 2020, 23:59:59
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
@@ -479,16 +479,16 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    0,
 			},
 			reqValues: []interface{}{
-				1640995200, //1 Jan 2022, 00:00:00 - Q1
-				1648771200, //1 Apr 2022, 00:00:00 - Q2
-				1585699200, //1 Apr 2020, 00:00:00 - Q2 Leap
-				1656633600, //1 Jul 2022, 00:00:00 - Q3
-				1664582400, //1 Oct 2022, 00:00:00 - Q4
-				1644883200, //15 Feb 2022, 00:00:00 - Mid Q1
-				1581768000, //15 Feb 2020, 12:00:00 - Mid Q1 Leap
-				1589630400, //16 May 2020, 12:00:00 - Mid Q2
-				1599523200, //8 Sep 2020, 00:00:00 - 3/4 Q3
-				1603497600, //24 Oct 2002, 00:00:00 - 1/4 Q4
+				1640995200, // 1 Jan 2022, 00:00:00 - Q1
+				1648771200, // 1 Apr 2022, 00:00:00 - Q2
+				1585699200, // 1 Apr 2020, 00:00:00 - Q2 Leap
+				1656633600, // 1 Jul 2022, 00:00:00 - Q3
+				1664582400, // 1 Oct 2022, 00:00:00 - Q4
+				1644883200, // 15 Feb 2022, 00:00:00 - Mid Q1
+				1581768000, // 15 Feb 2020, 12:00:00 - Mid Q1 Leap
+				1589630400, // 16 May 2020, 12:00:00 - Mid Q2
+				1599523200, // 8 Sep 2020, 00:00:00 - 3/4 Q3
+				1603497600, // 24 Oct 2002, 00:00:00 - 1/4 Q4
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
@@ -507,15 +507,15 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    0,
 			},
 			reqValues: []interface{}{
-				1640995200, //1 Jan 2022, 00:00:00 - H1
-				1656633600, //1 Jul 2022, 00:00:00 - H2
-				1648814400, //1 Apr 2022, 12:00:00 - Mid H1
-				1652724000, //16 May 2022, 18:00:00 - 3/4 H1
-				1585699200, //1 Apr 2020, 00:00:00 - Mid H1 Leap
-				1664582400, //1 Oct 2022, 00:00:00 - Mid H2
-				1601510400, //1 Oct 2020, 00:00:00 - Mid H2 Leap
-				1668556800, //16 Nov 2022, 00:00:00 - 3/4 H2
-				1597536000, //16 Aug 2002, 00:00:00 - 1/4 H2 Leap
+				1640995200, // 1 Jan 2022, 00:00:00 - H1
+				1656633600, // 1 Jul 2022, 00:00:00 - H2
+				1648814400, // 1 Apr 2022, 12:00:00 - Mid H1
+				1652724000, // 16 May 2022, 18:00:00 - 3/4 H1
+				1585699200, // 1 Apr 2020, 00:00:00 - Mid H1 Leap
+				1664582400, // 1 Oct 2022, 00:00:00 - Mid H2
+				1601510400, // 1 Oct 2020, 00:00:00 - Mid H2 Leap
+				1668556800, // 16 Nov 2022, 00:00:00 - 3/4 H2
+				1597536000, // 16 Aug 2002, 00:00:00 - 1/4 H2 Leap
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
@@ -534,14 +534,14 @@ func TestCyclicalEncode(t *testing.T) {
 				Max:    0,
 			},
 			reqValues: []interface{}{
-				1514764800, //1 Jan 2018, 00:00:00 - Start
-				1522648800, //2 Apr 2018, 06:00:00 - 1/4
-				1530532800, //1 Apr 2018, 12:00:00 - 1/2
-				1538416800, //1 Oct 2018, 18:00:00 - 3/4
-				1451606400, //1 Jan 2016, 00:00:00 - Start Leap
-				1459512000, //1 Apr 2016, 12:00:00 - 1/4 Leap
-				1467417600, //2 Jul 2016, 00:00:00 - 1/2 Leap
-				1475323200, //1 Oct 2016, 12:00:00 - 3/4 Leap
+				1514764800, // 1 Jan 2018, 00:00:00 - Start
+				1522648800, // 2 Apr 2018, 06:00:00 - 1/4
+				1530532800, // 1 Apr 2018, 12:00:00 - 1/2
+				1538416800, // 1 Oct 2018, 18:00:00 - 3/4
+				1451606400, // 1 Jan 2016, 00:00:00 - Start Leap
+				1459512000, // 1 Apr 2016, 12:00:00 - 1/4 Leap
+				1467417600, // 2 Jul 2016, 00:00:00 - 1/2 Leap
+				1475323200, // 1 Oct 2016, 12:00:00 - 3/4 Leap
 			},
 			expectedResult: map[string]interface{}{
 				columnX: []interface{}{
@@ -570,9 +570,9 @@ func TestCyclicalEncode(t *testing.T) {
 func TestGetCycleTime(t *testing.T) {
 	testCases := []struct {
 		desc              string
-		periodType        interface{}
+		periodType        spec.PeriodType
 		epochTime         time.Time
-		expectedCycleTime float64
+		expectedCycleTime int
 		expectedErr       error
 	}{
 		{
@@ -580,7 +580,7 @@ func TestGetCycleTime(t *testing.T) {
 			periodType:        123,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedCycleTime: 0,
-			expectedErr:       fmt.Errorf("invalid type for periodType"),
+			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should fail - Period: HOUR",
@@ -750,10 +750,68 @@ func TestGetCycleTime(t *testing.T) {
 	}
 }
 
+func TestGetElapsedSec(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		daysElapsed    int
+		hr             int
+		min            int
+		sec            int
+		expectedResult int
+	}{
+		{
+			desc:           "Should succeed - days only",
+			daysElapsed:    30,
+			hr:             0,
+			min:            0,
+			sec:            0,
+			expectedResult: 2592000,
+		},
+		{
+			desc:           "Should succeed - hours only",
+			daysElapsed:    0,
+			hr:             15,
+			min:            0,
+			sec:            0,
+			expectedResult: 54000,
+		},
+		{
+			desc:           "Should succeed - min only",
+			daysElapsed:    0,
+			hr:             0,
+			min:            28,
+			sec:            0,
+			expectedResult: 1680,
+		},
+		{
+			desc:           "Should succeed - sec only",
+			daysElapsed:    0,
+			hr:             0,
+			min:            0,
+			sec:            45,
+			expectedResult: 45,
+		},
+		{
+			desc:           "Should succeed - mix",
+			daysElapsed:    23,
+			hr:             2,
+			min:            50,
+			sec:            43,
+			expectedResult: 1997443,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			result := getElapsedSec(tC.daysElapsed, tC.hr, tC.min, tC.sec)
+			assert.Equal(t, result, tC.expectedResult)
+		})
+	}
+}
+
 func TestGetUnitAngle(t *testing.T) {
 	testCases := []struct {
 		desc              string
-		periodType        interface{}
+		periodType        spec.PeriodType
 		epochTime         time.Time
 		expectedUnitAngle float64
 		expectedErr       error
@@ -763,7 +821,7 @@ func TestGetUnitAngle(t *testing.T) {
 			periodType:        123,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedUnitAngle: 0,
-			expectedErr:       fmt.Errorf("invalid type for periodType"),
+			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should fail - Period: HOUR",
