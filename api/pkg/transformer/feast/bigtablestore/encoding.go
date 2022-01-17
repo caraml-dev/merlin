@@ -397,10 +397,23 @@ func (e *Encoder) Decode(ctx context.Context, rows []bigtable.Row, req *feast.On
 				project: req.Project,
 				table:   featureRef.FeatureTable,
 			}].MaxAge
-			if maxAge != nil && maxAge.GetSeconds() > 0 && timestamp[featureTableKey{
+
+			ts, found := timestamp[featureTableKey{
 				project: req.Project,
 				table:   featureRef.FeatureTable,
-			}].Add(time.Duration(maxAge.GetSeconds())*time.Second).Before(time.Now()) {
+			}]
+
+			// if no timestamp row are retrieved from bigtable, we treated this as NOT_FOUND
+			if !found {
+				fields[fr] = &types.Value{}
+				status[fr] = serving.GetOnlineFeaturesResponse_NOT_FOUND
+				fieldValues[i] = &serving.GetOnlineFeaturesResponse_FieldValues{
+					Fields:   fields,
+					Statuses: status,
+				}
+				continue
+			}
+			if maxAge != nil && maxAge.GetSeconds() > 0 && ts.Add(time.Duration(maxAge.GetSeconds())*time.Second).Before(time.Now()) {
 				fields[fr] = &types.Value{}
 				status[fr] = serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE
 				fieldValues[i] = &serving.GetOnlineFeaturesResponse_FieldValues{
@@ -415,6 +428,13 @@ func (e *Encoder) Decode(ctx context.Context, rows []bigtable.Row, req *feast.On
 				table:   featureRef.FeatureTable,
 			}][featureRef.Feature]
 
+			// if avroValue is nil, the status of that feature is NULL
+			if avroValue == nil {
+				fields[fr] = &types.Value{}
+				status[fr] = serving.GetOnlineFeaturesResponse_NULL_VALUE
+				continue
+			}
+
 			featureSpec := e.featureSpecs[featureTableKey{
 				project: req.Project,
 				table:   featureRef.FeatureTable,
@@ -428,6 +448,7 @@ func (e *Encoder) Decode(ctx context.Context, rows []bigtable.Row, req *feast.On
 			if err != nil {
 				return nil, err
 			}
+
 			fields[fr] = val
 			status[fr] = serving.GetOnlineFeaturesResponse_PRESENT
 		}
