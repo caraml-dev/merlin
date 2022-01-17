@@ -75,7 +75,7 @@ Value Type
 | Float    | FLOAT       |
 | Boolean  | BOOL        |
 | String   | STRING      |
- 
+
 For example, if we have incoming request 
 ```
 {
@@ -178,7 +178,7 @@ Variable declaration is used for assigning literal value or result of a function
         - name: var_4
           literal:
             stringValue: stringVal
-
+  
   ```
 * Jsonpath
   Value of variable is obtained from request/model response payload by specifying jsonpath value, e.g
@@ -208,35 +208,34 @@ Variable declaration is used for assigning literal value or result of a function
   ```
     feast:
         - tableName:       # Specify the output table name
-
+  
           project:          # Name of project in feast where the features located
-
+  
           source:           # Source for feast (REDIS or BIGTABLE)
-
+  
           entities:        # List of entities
-
+  
             - name:          # Entity Id
-
+  
               valueType:     # Entity Value Type
              
               # The entity value will be retrieved either using jsonPath or expression configuration below:  
               jsonPathConfig: 
-
+  
                 jsonPath:       # Json path in the incoming request container the entity value
-
+  
                 defaultValue:   # (Optional) Default value if value for the jsonPath is nil or empty 
-
+  
                 valueType:      # Type of default value, mandatory to specify if default value is exist
-
-
+  
               jsonPath:      # Json path in the incoming request containing the entity value (Deprecated)
-
+  
               expression:    # Expression provided by user which return entity values
-
+  
           features:        # List of features to be retrieved
-
+  
             - name:          # feature name
-
+  
               defaultValue:  # default value if the feature is not available
   ```
   below is the sample of feast input:
@@ -266,39 +265,37 @@ Variable declaration is used for assigning literal value or result of a function
   This step is generic table creation that allows users to define one or more tables based on value from either JSON payload, result of built-in expressions, or an existing table. Following is the syntax for table input:
   ```
     tables:
-
+  
         - name:         # Table name
-
+  
           baseTable:         # create a base table either from a JSON array of object or from existing table
-
+  
             fromJson:        # create a table based on an array of objects within JSON payload, the object key will be column name.
-
+  
                 jsonPath:       # JSONPath to array of object in the JSON payload
-
+  
                 defaultValue:   # Fallback value if value for jsonpath is nil or empty   
-
+  
                 addRowNumber:   # True/false, add column called "row_number" which contains row number
-
+  
             fromTable:       # Create base table from an existing table
-
+  
                 tableName:     # Source table name
-
+  
             columns:          # List of columns to be added in the table, it's possible to have 0 columns. The columns will override existing column defined in the baseTable
-
+  
                             # The number of row in the first column determines the table size so put the longest column first
-
+  
                 - name:           # Column name
-
+  
                   fromJson:        # Get column values from json path
-
+  
                     jsonPath:       # JSONPath to array of object in the JSON payload
-
+  
                     defaultValue:   # Fallback value if value for jsonpath is nil or empty    
-
-
-
+  
                   expression:      # Assign result from expression to the column value
-
+  
   ```
   sample:
 
@@ -324,7 +321,7 @@ Variable declaration is used for assigning literal value or result of a function
                     jsonPath: $.drivers[*].id
               - name: col_2
                 expression: table.Col('rating')
-
+  
   ```
 
 ### Encoders
@@ -343,7 +340,11 @@ The syntax of encoder declaration is as follows:
       <encoder 2 specs>
 ```
 
-At the moment only 1 type of encoder is available: An ordinal encoder
+There are 2 types of encoder currently available: 
+
+Ordinal encoder: For mapping column values from one type to another
+
+Cyclical encoder: For mapping column values that have a cyclical significance.  For example, Wind directions, time of day, days of week
 
 #### Ordinal Encoder Specification
 The syntax to define an ordinal encoder is as follows:
@@ -386,6 +387,64 @@ See below for a complete example on how to declare an ordinal encoder
             sedan: '2'
 ```
 
+#### Cyclical Encoder Specification
+Cyclical encoder are useful for encoding columns that has cyclical significance. By encoding such columns cyclically, you can ensure that the values representing the end of a cycle and the start of the next cycle does not jump abruptly. Some examples of such data are:
+
+- Hours of the day
+- Days of the week
+- Months in a year
+- Wind direction
+- Seasons
+- Navigation Directions
+
+The syntax to define an cyclical encoder is as follows:
+```
+cyclicalEncoderConfig:
+  <Encode By>
+```
+
+There are 2 ways to encode the column:
+
+1. By epoch time: Unix Epoch time is the number of seconds that have elapsed since January 1, 1970 (midnight UTC/GMT). By using this option, we assume that the time zone to encode in will be UTC. In order to use this option you only need to define the period of your cycle to encode.
+
+1. By range: This defines the base range of floating point values representing a cycle. For example, one might define wind directions to be in the range of 0 to 360 degrees, although the actual value may be >360 or <0.
+
+To encode by **epoch time**, use the following syntax:
+```
+cyclicalEncoderConfig:
+  byEpochTime:
+    period: HOUR #HOUR, DAY, WEEK, MONTH, QUARTER, HALF, YEAR
+```
+
+To encode by **range**, use the following syntax:
+```
+cyclicalEncoderConfig:
+  byRange:
+    min: FLOAT
+    max: FLOAT
+```
+Do note that the min and max values are Float. The range is inclusive for the min and exclusive for the max, since in a cycle min and max will represent the same phase. For example, you can encode the days of a week in the range of [1, 8), where 8 and 1 both represents the starting point of a cycle. You can then represent Monday 12am as 1 and Sunday 12pm as 7.5 and so on.
+
+See below for complete examples on how to declare a cyclical encoder:
+
+*By epoch time:*
+```
+-encoders: 
+  -name: payday_trend
+   cyclicalEncoderConfig:
+     byEpochTime:
+       period: MONTH
+```
+
+*By range:*
+```
+-encoders: 
+  -name: wind_dir 
+   cyclicalEncoderConfig:
+      byRange:
+        min: 0
+        max: 360
+```
 
 ## Transformation Stage
 
