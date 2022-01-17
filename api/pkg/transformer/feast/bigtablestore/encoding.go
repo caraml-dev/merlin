@@ -2,6 +2,7 @@ package bigtablestore
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"sort"
@@ -19,6 +20,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
 	"github.com/golang/protobuf/proto"
 	"github.com/linkedin/goavro/v2"
+	"github.com/spaolacci/murmur3"
 )
 
 // Encoder is used to encode OnlineFeaturesRequest into RowQuery
@@ -39,12 +41,41 @@ type featureNameKey struct {
 	feature string
 }
 
+const (
+	maxTableNameLength = 50
+	suffixHashLength   = 8
+)
+
 func entityKeysToBigTable(project string, entityKeys []*spec.Entity) string {
 	keyNames := make([]string, len(entityKeys))
 	for i, e := range entityKeys {
 		keyNames[i] = e.Name
 	}
-	return project + "__" + strings.Join(keyNames, "__")
+
+	fullTableName := project + "__" + strings.Join(keyNames, "__")
+	if len(fullTableName) <= maxTableNameLength {
+		return fullTableName
+	}
+
+	maxPrefixLength := maxTableNameLength - suffixHashLength
+	prefixTableName := fullTableName[:maxPrefixLength]
+	suffixHash := hashString(fullTableName[maxPrefixLength:])
+
+	return prefixTableName + suffixHash
+}
+
+func hashString(value string) string {
+	murmurSum := murmur3.Sum32([]byte(value))
+	arr := make([]byte, 4)
+	binary.LittleEndian.PutUint32(arr, murmurSum)
+	// arr byte contains decimal
+	// needs to convert to hex
+	// and concat the hex value into one string
+	hexValues := make([]string, 4)
+	for i, decimal := range arr {
+		hexValues[i] = strconv.FormatUint(uint64(decimal), 16)
+	}
+	return strings.Join(hexValues, "")
 }
 
 func feastValueToStringRepr(val *types.Value) (string, error) {

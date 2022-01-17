@@ -915,3 +915,45 @@ func TestAvroToValueConversion(t *testing.T) {
 		})
 	}
 }
+
+func TestEntityKeysToBigTable(t *testing.T) {
+	testCases := []struct {
+		desc       string
+		project    string
+		entityKeys []*spec.Entity
+		want       string
+	}{
+		{
+			desc:    "concatenation string of project and entityKeys less than 50 characters",
+			project: "default",
+			entityKeys: []*spec.Entity{
+				{
+					Name: "driver_id",
+				},
+				{
+					Name: "geohash",
+				},
+			},
+			want: "default__driver_id__geohash",
+		},
+		{
+			desc:    "concatenation string of project and entityKeys more than 50 characters",
+			project: "default-project-mobility-nationwide",
+			entityKeys: []*spec.Entity{
+				{
+					Name: "driver_geohash",
+				},
+				{
+					Name: "driver_id",
+				},
+			},
+			want: "default-project-mobility-nationwide__drivede1619bb",
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			got := entityKeysToBigTable(tC.project, tC.entityKeys)
+			assert.Equal(t, tC.want, got)
+		})
+	}
+}
