@@ -421,8 +421,8 @@ func TestEncoder_Decode(t *testing.T) {
 							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 								"customer_phone":            serving.GetOnlineFeaturesResponse_PRESENT,
 								"resource_type":             serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:login_type": serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:lats":       serving.GetOnlineFeaturesResponse_PRESENT,
+								"login_requests:login_type": serving.GetOnlineFeaturesResponse_NULL_VALUE,
+								"login_requests:lats":       serving.GetOnlineFeaturesResponse_NULL_VALUE,
 							},
 						},
 					},
@@ -551,6 +551,69 @@ func TestEncoder_Decode(t *testing.T) {
 				Project: "project",
 				MaxAge:  durationpb.New(1 * time.Second),
 			}},
+		},
+		{
+			name: "features some of feature table doesn't have record in bigtable",
+			want: &feast.OnlineFeaturesResponse{
+				RawResponse: &serving.GetOnlineFeaturesResponse{
+					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+						{
+							Fields: map[string]*types.Value{
+								"customer_phone":            feast.StrVal("1234"),
+								"resource_type":             feast.Int64Val(1),
+								"login_requests:login_type": feast.StrVal("OTP"),
+								"login_requests:lats": {Val: &types.Value_DoubleListVal{
+									DoubleListVal: &types.DoubleList{Val: []float64{2.0, 1.0}},
+								}},
+								"user_stat:num_force_logout": {},
+							},
+							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+								"customer_phone":             serving.GetOnlineFeaturesResponse_PRESENT,
+								"resource_type":              serving.GetOnlineFeaturesResponse_PRESENT,
+								"login_requests:login_type":  serving.GetOnlineFeaturesResponse_PRESENT,
+								"login_requests:lats":        serving.GetOnlineFeaturesResponse_PRESENT,
+								"user_stat:num_force_logout": serving.GetOnlineFeaturesResponse_NOT_FOUND,
+							},
+						},
+					},
+				},
+			},
+			req: &feast.OnlineFeaturesRequest{
+				Features: []string{"login_requests:login_type", "login_requests:lats", "user_stat:num_force_logout"},
+				Entities: []feast.Row{
+					{
+						"customer_phone": feast.StrVal("1234"),
+						"resource_type":  feast.Int64Val(1),
+					},
+				},
+				Project: "project",
+			},
+			rows: []bigtable.Row{
+				{
+					"login_requests": []bigtable.ReadItem{
+						{
+							Row:       "1234#1",
+							Timestamp: bigtable.Time(time.Now()),
+							Value:     append(schemaRefBytes, avroValue...),
+						},
+					},
+				},
+			},
+			registryFn: func() *CachedCodecRegistry {
+				return &CachedCodecRegistry{codecs: defaultCodecs}
+			},
+			metadata: []*spec.FeatureTableMetadata{
+				{
+					Name:    "login_requests",
+					Project: "project",
+					MaxAge:  nil,
+				},
+				{
+					Name:    "user_stat",
+					Project: "project",
+					MaxAge:  nil,
+				},
+			},
 		},
 	}
 
@@ -912,6 +975,48 @@ func TestAvroToValueConversion(t *testing.T) {
 			got, err := avroToValueConversion(tC.avroValue, tC.featureType)
 			assert.Equal(t, tC.err, err)
 			assert.Equal(t, tC.wantValue, got)
+		})
+	}
+}
+
+func TestEntityKeysToBigTable(t *testing.T) {
+	testCases := []struct {
+		desc       string
+		project    string
+		entityKeys []*spec.Entity
+		want       string
+	}{
+		{
+			desc:    "concatenation string of project and entityKeys less than 50 characters",
+			project: "default",
+			entityKeys: []*spec.Entity{
+				{
+					Name: "driver_id",
+				},
+				{
+					Name: "geohash",
+				},
+			},
+			want: "default__driver_id__geohash",
+		},
+		{
+			desc:    "concatenation string of project and entityKeys more than 50 characters",
+			project: "default-project-mobility-nationwide",
+			entityKeys: []*spec.Entity{
+				{
+					Name: "driver_geohash",
+				},
+				{
+					Name: "driver_id",
+				},
+			},
+			want: "default-project-mobility-nationwide__drivede1619bb",
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			got := entityKeysToBigTable(tC.project, tC.entityKeys)
+			assert.Equal(t, tC.want, got)
 		})
 	}
 }
