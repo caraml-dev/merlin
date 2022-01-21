@@ -10,6 +10,18 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
+const (
+	hitConnStats     = "hits"
+	missConnStats    = "misses"
+	timeoutConnStats = "timeouts"
+	idleConnStats    = "idle_conns"
+	staleConnStats   = "stale_conns"
+	totalConnStats   = "total_conns"
+
+	success = "success"
+	fail    = "fail"
+)
+
 var (
 	redisNewConn = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: transformer.PromNamespace,
@@ -35,16 +47,6 @@ var (
 		Name:      "redis_conn_stats",
 		Help:      "Redis connection stats",
 	}, []string{"stat"})
-
-	hitConnStats     = "hits"
-	missConnStats    = "misses"
-	timeoutConnStats = "timeouts"
-	idleConnStats    = "idle_conns"
-	staleConnStats   = "stale_conns"
-	totalConnStats   = "total_conns"
-
-	success = "success"
-	fail    = "fail"
 )
 
 type redisHook struct{}
