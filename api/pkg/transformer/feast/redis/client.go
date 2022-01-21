@@ -35,7 +35,14 @@ func NewRedisClient(redisStorage *spec.RedisStorage, featureTablesMetadata []*sp
 		IdleTimeout:        getNullableDuration(option.IdleTimeout),
 		IdleCheckFrequency: getNullableDuration(option.IdleCheckFrequency),
 		MinIdleConns:       int(option.MinIdleConnections),
+		OnConnect: func(_ context.Context, _ *redis.Conn) error {
+			redisNewConn.WithLabelValues().Inc()
+			return nil
+		},
 	})
+
+	redisClient.AddHook(&redisHook{})
+	go recordRedisConnMetric(redisClient, nil)
 
 	return newClient(redisClient.Pipeline(), featureTablesMetadata)
 }
@@ -56,9 +63,40 @@ func NewRedisClusterClient(redisClusterStorage *spec.RedisClusterStorage, featur
 		IdleTimeout:        getNullableDuration(option.IdleTimeout),
 		IdleCheckFrequency: getNullableDuration(option.IdleCheckFrequency),
 		MinIdleConns:       int(option.MinIdleConnections),
+		OnConnect: func(_ context.Context, _ *redis.Conn) error {
+			redisNewConn.WithLabelValues().Inc()
+			return nil
+		},
 	})
 
+	redisClient.AddHook(&redisHook{})
+	go recordRedisConnMetric(nil, redisClient)
+
 	return newClient(redisClient.Pipeline(), featureTablesMetadata)
+}
+
+func recordRedisConnMetric(client *redis.Client, clusterClient *redis.ClusterClient) {
+	ctx := context.Background()
+	ticker := time.NewTicker(5 * time.Second)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			var poolStats *redis.PoolStats
+			if client != nil {
+				poolStats = client.PoolStats()
+			} else {
+				poolStats = clusterClient.PoolStats()
+			}
+			redisConnPoolStats.WithLabelValues(hitConnStats).Set(float64(poolStats.Hits))
+			redisConnPoolStats.WithLabelValues(missConnStats).Set(float64(poolStats.Misses))
+			redisConnPoolStats.WithLabelValues(timeoutConnStats).Set(float64(poolStats.Timeouts))
+			redisConnPoolStats.WithLabelValues(idleConnStats).Set(float64(poolStats.IdleConns))
+			redisConnPoolStats.WithLabelValues(staleConnStats).Set(float64(poolStats.StaleConns))
+			redisConnPoolStats.WithLabelValues(totalConnStats).Set(float64(poolStats.TotalConns))
+		}
+	}
 }
 
 func newClient(pipeliner redis.Pipeliner, featureTablesMetadata []*spec.FeatureTableMetadata) (RedisClient, error) {
