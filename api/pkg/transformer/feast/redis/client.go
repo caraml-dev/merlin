@@ -89,6 +89,11 @@ func recordRedisConnMetric(client *redis.Client, clusterClient *redis.ClusterCli
 			} else {
 				poolStats = clusterClient.PoolStats()
 			}
+
+			if poolStats == nil {
+				continue
+			}
+
 			redisConnPoolStats.WithLabelValues(hitConnStats).Set(float64(poolStats.Hits))
 			redisConnPoolStats.WithLabelValues(missConnStats).Set(float64(poolStats.Misses))
 			redisConnPoolStats.WithLabelValues(timeoutConnStats).Set(float64(poolStats.Timeouts))
