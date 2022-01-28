@@ -20,7 +20,7 @@ require (
 	github.com/fatih/color v1.7.0
 	github.com/feast-dev/feast/sdk/go v0.9.2
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-gota/gota v0.10.1
+	github.com/go-gota/gota v0.0.0-00010101000000-000000000000
 	github.com/go-openapi/spec v0.19.9 // indirect
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
@@ -82,6 +82,7 @@ require (
 )
 
 replace (
+	github.com/go-gota/gota => /Users/ariefrahmansyah/go/src/github.com/gojekfarm/gota
 	github.com/gojek/merlin-pyspark-app => ../python/batch-predictor
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
 	k8s.io/api => k8s.io/api v0.16.6

@@ -67,6 +67,15 @@ func TestSeries_NewInferType(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "string list",
+			args: args{
+				values:     [][]string{{"1111", "2222"}, {"AAAA", "BBBB"}},
+				seriesName: "string_list_series",
+			},
+			want:    New([]interface{}{[]string{"1111", "2222"}, []string{"AAAA", "BBBB"}}, StringList, "string_list_series"),
+			wantErr: false,
+		},
+		{
 			name: "single value int",
 			args: args{
 				values:     int64(1),
@@ -100,6 +109,15 @@ func TestSeries_NewInferType(t *testing.T) {
 				seriesName: "int_series",
 			},
 			want:    New([]interface{}{11, 2222, 3333, 4444, nil}, Int, "int_series"),
+			wantErr: false,
+		},
+		{
+			name: "int list",
+			args: args{
+				values:     [][]int{{1111, 2222}, {3333, 4444}},
+				seriesName: "int_list_series",
+			},
+			want:    New([]interface{}{[]int{1111, 2222}, []int{3333, 4444}}, IntList, "int_list_series"),
 			wantErr: false,
 		},
 		{
@@ -139,6 +157,15 @@ func TestSeries_NewInferType(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "double list",
+			args: args{
+				values:     [][]float64{{0.201, 3.14}, {4.56, 7.89}},
+				seriesName: "double_list_series",
+			},
+			want:    New([]interface{}{[]float64{0.201, 3.14}, []float64{4.56, 7.89}}, FloatList, "double_list_series"),
+			wantErr: false,
+		},
+		{
 			name: "single value bool",
 			args: args{
 				values:     true,
@@ -163,6 +190,15 @@ func TestSeries_NewInferType(t *testing.T) {
 				seriesName: "bool_series",
 			},
 			want:    New([]interface{}{true, false, nil}, Bool, "bool_series"),
+			wantErr: false,
+		},
+		{
+			name: "bool list",
+			args: args{
+				values:     [][]bool{{true, true}, {false, false}},
+				seriesName: "bool_list_series",
+			},
+			want:    New([]interface{}{[]bool{true, true}, []bool{false, false}}, BoolList, "bool_list_series"),
 			wantErr: false,
 		},
 	}

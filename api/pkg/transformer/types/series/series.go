@@ -12,10 +12,14 @@ import (
 type Type string
 
 const (
-	String Type = "string"
-	Int    Type = "int"
-	Float  Type = "float"
-	Bool   Type = "bool"
+	String     Type = "string"
+	Int        Type = "int"
+	Float      Type = "float"
+	Bool       Type = "bool"
+	StringList Type = "string_list"
+	IntList    Type = "int_list"
+	FloatList  Type = "float_list"
+	BoolList   Type = "bool_list"
 )
 
 var numericTypes = []Type{Int, Float}
@@ -29,6 +33,11 @@ type contentType struct {
 	hasInt    bool
 	hasBool   bool
 	hasString bool
+
+	hasFloatList  bool
+	hasIntList    bool
+	hasBoolList   bool
+	hasStringList bool
 }
 
 func NewSeries(s *series.Series) *Series {
@@ -113,6 +122,14 @@ func detectType(values interface{}) Type {
 		return Float
 	case contentType.hasInt:
 		return Int
+	case contentType.hasStringList:
+		return StringList
+	case contentType.hasBoolList:
+		return BoolList
+	case contentType.hasFloatList:
+		return FloatList
+	case contentType.hasIntList:
+		return IntList
 	default:
 		return String
 	}
@@ -126,6 +143,16 @@ func hasType(value interface{}, contentType *contentType) *contentType {
 		contentType.hasInt = true
 	case bool:
 		contentType.hasBool = true
+	case string:
+		contentType.hasString = true
+	case []float64, []float32:
+		contentType.hasFloatList = true
+	case []int, []int8, []int16, []int32, []int64:
+		contentType.hasIntList = true
+	case []bool:
+		contentType.hasBoolList = true
+	case []string:
+		contentType.hasStringList = true
 	default:
 		contentType.hasString = true
 	}
@@ -179,6 +206,14 @@ func castValue(singleValue interface{}, seriesType Type) (interface{}, error) {
 		return converter.ToBool(singleValue)
 	case String:
 		return converter.ToString(singleValue)
+	case IntList:
+		return converter.ToIntList(singleValue)
+	case FloatList:
+		return converter.ToFloat64List(singleValue)
+	case BoolList:
+		return converter.ToBoolList(singleValue)
+	case StringList:
+		return converter.ToStringList(singleValue)
 	default:
 		return nil, fmt.Errorf("unknown series type %s", seriesType)
 	}

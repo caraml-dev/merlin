@@ -599,6 +599,25 @@ func TestTable_NewRaw(t *testing.T) {
 			),
 		},
 		{
+			name: "basic test - list value type",
+			columnValues: map[string]interface{}{
+				"string_list_col": [][]string{{"1111", "1111"}, {"2222", "2222"}},
+				// "int32_col":   []int{1111, 2222},
+				// "int64_col":   []int{1111111111, 2222222222},
+				// "float32_col": []float64{1111, 2222},
+				// "float64_col": []float64{11111111111.1111, 22222222222.2222},
+				// "bool_col":    []bool{true, false},
+			},
+			want: New(
+				// series.New([]bool{true, false}, series.Bool, "bool_col"),
+				// series.New([]float64{1111, 2222}, series.Float, "float32_col"),
+				// series.New([]float64{11111111111.1111, 22222222222.2222}, series.Float, "float64_col"),
+				// series.New([]int{1111, 2222}, series.Int, "int32_col"),
+				// series.New([]int{1111111111, 2222222222}, series.Int, "int64_col"),
+				series.New([][]string{{"1111", "1111"}, {"2222", "2222"}}, series.StringList, "string_list_col"),
+			),
+		},
+		{
 			name: "table from series",
 			columnValues: map[string]interface{}{
 				"string_col":  series.New([]string{"1111", "2222"}, series.String, "string_col"),

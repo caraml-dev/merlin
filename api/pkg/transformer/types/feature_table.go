@@ -52,7 +52,19 @@ func convertValue(val interface{}, typeEnum types.ValueType_Enum) (interface{}, 
 	case types.ValueType_INT32:
 		return converter.ToInt(val)
 	case types.ValueType_INT64:
-		return converter.ToInt(val)
+		return converter.ToInt64(val)
+	case types.ValueType_STRING:
+		return converter.ToString(val)
+	case types.ValueType_BOOL_LIST:
+		return converter.ToBoolList(val)
+	case types.ValueType_DOUBLE_LIST, types.ValueType_FLOAT_LIST:
+		return converter.ToFloat64List(val)
+	case types.ValueType_INT32_LIST:
+		return converter.ToInt32List(val)
+	case types.ValueType_INT64_LIST:
+		return converter.ToInt64List(val)
+	case types.ValueType_STRING_LIST:
+		return converter.ToStringList(val)
 	default:
 		return converter.ToString(val)
 	}
@@ -70,6 +82,20 @@ func getSeriesType(typeEnum types.ValueType_Enum) series.Type {
 		return series.Float
 	case types.ValueType_BOOL:
 		return series.Bool
+	case types.ValueType_STRING:
+		return series.String
+	case types.ValueType_INT32_LIST:
+		return series.IntList
+	case types.ValueType_INT64_LIST:
+		return series.IntList
+	case types.ValueType_DOUBLE_LIST:
+		return series.FloatList
+	case types.ValueType_FLOAT_LIST:
+		return series.FloatList
+	case types.ValueType_BOOL_LIST:
+		return series.BoolList
+	case types.ValueType_STRING_LIST:
+		return series.StringList
 	default:
 		return series.String
 	}
