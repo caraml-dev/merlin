@@ -8,7 +8,6 @@ import (
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/gojek/merlin/pkg/transformer/spec"
-	grpcProm "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -68,8 +67,6 @@ func newBigtableClient(storage *spec.BigTableStorage) (*bigtable.Client, error) 
 
 	clientOpts = append(clientOpts,
 		option.WithGRPCDialOption(grpc.WithKeepaliveParams(keepAliveParams)),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(grpcProm.UnaryClientInterceptor)),
-		option.WithGRPCDialOption(grpc.WithStreamInterceptor(grpcProm.StreamClientInterceptor)),
 	)
 
 	if opt.CredentialJson != "" {
