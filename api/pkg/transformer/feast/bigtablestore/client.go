@@ -64,7 +64,10 @@ func newBigtableClient(storage *spec.BigTableStorage) (*bigtable.Client, error) 
 	if opt.KeepAliveTimeout != nil {
 		keepAliveParams.Timeout = opt.KeepAliveTimeout.AsDuration()
 	}
-	clientOpts = append(clientOpts, option.WithGRPCDialOption(grpc.WithKeepaliveParams(keepAliveParams)))
+
+	clientOpts = append(clientOpts,
+		option.WithGRPCDialOption(grpc.WithKeepaliveParams(keepAliveParams)),
+	)
 
 	if opt.CredentialJson != "" {
 		credsByte, err := base64.StdEncoding.DecodeString(opt.CredentialJson)
