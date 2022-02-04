@@ -314,11 +314,19 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 										"driver_id":        feastSdk.Int64Val(1),
 										"driver_feature_1": feastSdk.DoubleVal(1111),
 										"driver_feature_2": feastSdk.DoubleVal(2222),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"A", "B", "C"},
+												},
+											},
+										},
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
 										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
 										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 								{
@@ -326,11 +334,19 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 										"driver_id":        feastSdk.Int64Val(2),
 										"driver_feature_1": feastSdk.DoubleVal(3333),
 										"driver_feature_2": feastSdk.DoubleVal(4444),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"X", "Y", "Z"},
+												},
+											},
+										},
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
 										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
 										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 							},
@@ -348,7 +364,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body: []byte(`{"instances": {"columns": ["rank", "driver_id", "customer_id", "driver_feature_1", "driver_feature_2" ], "data":[[0, 1, 1111, 1111, 2222], [1, 2, 1111, 3333, 4444]]}}`),
+				body: []byte(`{"instances": {"columns": ["rank", "driver_id", "customer_id", "driver_feature_1", "driver_feature_2", "driver_feature_3"], "data":[[0, 1, 1111, 1111, 2222, ["A", "B", "C"]], [1, 2, 1111, 3333, 4444, ["X", "Y", "Z"]]]}}`),
 			},
 			modelResponse: response{
 				headers: map[string]string{
