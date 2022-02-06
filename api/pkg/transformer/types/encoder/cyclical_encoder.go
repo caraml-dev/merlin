@@ -9,93 +9,93 @@ import (
 )
 
 const (
-	FloatZero   = 0.0000000001
-	Q1LastMonth = 3
-	Q2LastMonth = 6
-	Q3LastMonth = 9
-	H1LastMonth = 6
-	February    = 2
+	floatZero   = 0.0000000001
+	q1LastMonth = 3
+	q2LastMonth = 6
+	q3LastMonth = 9
+	h1LastMonth = 6
+	february    = 2
 
-	MinInSec  = 60
-	HourInSec = 3600
-	DayInSec  = 86400
-	WeekInSec = 604800
+	minInSec  = 60
+	hourInSec = 3600
+	dayInSec  = 86400
+	weekInSec = 604800
 
-	DaysInSec31 = 2678400
-	DaysInSec30 = 2592000
-	DaysInSec29 = 2505600
-	DaysInSec28 = 2419200
+	daysInSec31 = 2678400
+	daysInSec30 = 2592000
+	daysInSec29 = 2505600
+	daysInSec28 = 2419200
 
-	Q1InSec     = 7776000
-	Q1LeapInSec = 7862400
-	Q2InSec     = 7862400
-	Q3InSec     = 7948800
-	Q4InSec     = 7948800
+	q1InSec     = 7776000
+	q1LeapInSec = 7862400
+	q2InSec     = 7862400
+	q3InSec     = 7948800
+	q4InSec     = 7948800
 
-	H1InSec     = 15638400
-	H1LeapInSec = 15724800
-	H2InSec     = 15897600
+	h1InSec     = 15638400
+	h1LeapInSec = 15724800
+	h2InSec     = 15897600
 
-	YearInSec     = 31536000
-	LeapYearInSec = 31622400
+	yearInSec     = 31536000
+	leapYearInSec = 31622400
 
 	completeAngle = 2 * math.Pi
 
 	// Unit angles for variable periods
-	UnitDaysInSec31 = completeAngle / DaysInSec31
-	UnitDaysInSec30 = completeAngle / DaysInSec30
-	UnitDaysInSec29 = completeAngle / DaysInSec29
-	UnitDaysInSec28 = completeAngle / DaysInSec28
+	unitDaysInSec31 = completeAngle / daysInSec31
+	unitDaysInSec30 = completeAngle / daysInSec30
+	unitDaysInSec29 = completeAngle / daysInSec29
+	unitDaysInSec28 = completeAngle / daysInSec28
 
-	UnitQ1InSec     = completeAngle / Q1InSec
-	UnitQ1LeapInSec = completeAngle / Q1LeapInSec
-	UnitQ2InSec     = completeAngle / Q2InSec
-	UnitQ3InSec     = completeAngle / Q3InSec
-	UnitQ4InSec     = completeAngle / Q4InSec
+	unitQ1InSec     = completeAngle / q1InSec
+	unitQ1LeapInSec = completeAngle / q1LeapInSec
+	unitQ2InSec     = completeAngle / q2InSec
+	unitQ3InSec     = completeAngle / q3InSec
+	unitQ4InSec     = completeAngle / q4InSec
 
-	UnitH1InSec     = completeAngle / H1InSec
-	UnitH1LeapInSec = completeAngle / H1LeapInSec
-	UnitH2InSec     = completeAngle / H2InSec
+	unitH1InSec     = completeAngle / h1InSec
+	unitH1LeapInSec = completeAngle / h1LeapInSec
+	unitH2InSec     = completeAngle / h2InSec
 
-	UnitYearInSec     = completeAngle / YearInSec
-	UnitLeapYearInSec = completeAngle / LeapYearInSec
+	unitYearInSec     = completeAngle / yearInSec
+	unitLeapYearInSec = completeAngle / leapYearInSec
 )
 
 // Unit angles for variable periods for each month
-var MonthInSec = map[int]float64{
-	1:  UnitDaysInSec31,
-	2:  UnitDaysInSec28,
-	3:  UnitDaysInSec31,
-	4:  UnitDaysInSec30,
-	5:  UnitDaysInSec31,
-	6:  UnitDaysInSec30,
-	7:  UnitDaysInSec31,
-	8:  UnitDaysInSec31,
-	9:  UnitDaysInSec30,
-	10: UnitDaysInSec31,
-	11: UnitDaysInSec30,
-	12: UnitDaysInSec31,
-	13: UnitDaysInSec29, // Leap year Feb
+var monthInSec = map[int]float64{
+	1:  unitDaysInSec31,
+	2:  unitDaysInSec28,
+	3:  unitDaysInSec31,
+	4:  unitDaysInSec30,
+	5:  unitDaysInSec31,
+	6:  unitDaysInSec30,
+	7:  unitDaysInSec31,
+	8:  unitDaysInSec31,
+	9:  unitDaysInSec30,
+	10: unitDaysInSec31,
+	11: unitDaysInSec30,
+	12: unitDaysInSec31,
+	13: unitDaysInSec29, // Leap year Feb
 }
 
 type CyclicalEncoder struct {
-	Period spec.PeriodType
-	Min    float64
-	Max    float64
+	PeriodType spec.PeriodType
+	Min        float64
+	Max        float64
 }
 
 func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, error) {
 	// by range
 	byRange := config.GetByRange()
 	if byRange != nil {
-		if (byRange.Max - byRange.Min) < FloatZero {
+		if (byRange.Max - byRange.Min) < floatZero {
 			return nil, fmt.Errorf("max of cyclical range must be larger than min")
 		}
 
 		return &CyclicalEncoder{
-			Period: spec.PeriodType_UNDEFINED,
-			Min:    byRange.Min,
-			Max:    byRange.Max,
+			PeriodType: spec.PeriodType_UNDEFINED,
+			Min:        byRange.Min,
+			Max:        byRange.Max,
 		}, nil
 	}
 
@@ -108,13 +108,13 @@ func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, e
 		switch byEpochTime.Period {
 		case spec.PeriodType_HOUR:
 			period = spec.PeriodType_UNDEFINED
-			max = HourInSec
+			max = hourInSec
 		case spec.PeriodType_DAY:
 			period = spec.PeriodType_UNDEFINED
-			max = DayInSec
+			max = dayInSec
 		case spec.PeriodType_WEEK:
 			period = spec.PeriodType_UNDEFINED
-			max = WeekInSec
+			max = weekInSec
 		case spec.PeriodType_MONTH, spec.PeriodType_QUARTER, spec.PeriodType_HALF, spec.PeriodType_YEAR:
 			period = byEpochTime.Period
 			max = 0
@@ -123,9 +123,9 @@ func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, e
 		}
 
 		return &CyclicalEncoder{
-			Period: period,
-			Min:    min,
-			Max:    max,
+			PeriodType: period,
+			Min:        min,
+			Max:        max,
 		}, nil
 	}
 
@@ -137,7 +137,7 @@ func (oe *CyclicalEncoder) Encode(values []interface{}, column string) (map[stri
 	encodedSin := make([]interface{}, 0, len(values))
 
 	// config with fixed range
-	if oe.Period == spec.PeriodType_UNDEFINED {
+	if oe.PeriodType == spec.PeriodType_UNDEFINED {
 		period := oe.Max - oe.Min
 		unitAngle := completeAngle / period
 
@@ -174,11 +174,11 @@ func (oe *CyclicalEncoder) Encode(values []interface{}, column string) (map[stri
 
 			// convert epoch time to golang datetime
 			t := time.Unix(valInt, 0).In(time.UTC)
-			shareOfPeriod, err := getCycleTime(oe.Period, t)
+			shareOfPeriod, err := getCycleTime(oe.PeriodType, t)
 			if err != nil {
 				return nil, err
 			}
-			unitAngle, err := getUnitAngle(oe.Period, t)
+			unitAngle, err := getUnitAngle(oe.PeriodType, t)
 			if err != nil {
 				return nil, err
 			}
@@ -215,18 +215,18 @@ func getCycleTime(periodType spec.PeriodType, t time.Time) (int, error) {
 		elapsed := getElapsedSec(dayElapsed, hr, min, sec)
 		var cycleTime int
 
-		if t.Month() <= Q1LastMonth {
+		if t.Month() <= q1LastMonth {
 			return elapsed, nil
-		} else if t.Month() <= Q2LastMonth {
-			cycleTime = elapsed - Q1InSec
-		} else if t.Month() <= Q3LastMonth {
-			cycleTime = elapsed - H1InSec
+		} else if t.Month() <= q2LastMonth {
+			cycleTime = elapsed - q1InSec
+		} else if t.Month() <= q3LastMonth {
+			cycleTime = elapsed - h1InSec
 		} else {
-			cycleTime = elapsed - H1InSec - Q3InSec
+			cycleTime = elapsed - h1InSec - q3InSec
 		}
 
 		if isLeapYear(t.Year()) {
-			cycleTime -= DayInSec //minus extra day from leap year
+			cycleTime -= dayInSec //minus extra day from leap year
 		}
 
 		return cycleTime, nil
@@ -241,9 +241,9 @@ func getCycleTime(periodType spec.PeriodType, t time.Time) (int, error) {
 		}
 
 		if isLeapYear(t.Year()) {
-			return elapsed - H1LeapInSec, nil
+			return elapsed - h1LeapInSec, nil
 		}
-		return elapsed - H1InSec, nil
+		return elapsed - h1InSec, nil
 
 	case spec.PeriodType_YEAR:
 		dayElapsed := t.YearDay() - 1
@@ -257,7 +257,7 @@ func getCycleTime(periodType spec.PeriodType, t time.Time) (int, error) {
 
 // Convert time duration in days, hour, min, sec to number of seconds
 func getElapsedSec(dayElapsed int, hr int, min int, sec int) int {
-	elapsed := dayElapsed*DayInSec + hr*HourInSec + min*MinInSec + sec
+	elapsed := dayElapsed*dayInSec + hr*hourInSec + min*minInSec + sec
 
 	return elapsed
 }
@@ -272,35 +272,35 @@ func getElapsedSec(dayElapsed int, hr int, min int, sec int) int {
 func getUnitAngle(periodType spec.PeriodType, t time.Time) (float64, error) {
 	switch periodType {
 	case spec.PeriodType_MONTH:
-		if t.Month() == February && isLeapYear(t.Year()) {
-			return MonthInSec[13], nil
+		if t.Month() == february && isLeapYear(t.Year()) {
+			return monthInSec[13], nil
 		}
-		return MonthInSec[int(t.Month())], nil
+		return monthInSec[int(t.Month())], nil
 	case spec.PeriodType_QUARTER:
-		if t.Month() <= Q1LastMonth {
+		if t.Month() <= q1LastMonth {
 			if isLeapYear(t.Year()) {
-				return UnitQ1LeapInSec, nil
+				return unitQ1LeapInSec, nil
 			}
-			return UnitQ1InSec, nil
-		} else if t.Month() <= Q2LastMonth {
-			return UnitQ2InSec, nil
-		} else if t.Month() <= Q3LastMonth {
-			return UnitQ3InSec, nil
+			return unitQ1InSec, nil
+		} else if t.Month() <= q2LastMonth {
+			return unitQ2InSec, nil
+		} else if t.Month() <= q3LastMonth {
+			return unitQ3InSec, nil
 		}
-		return UnitQ4InSec, nil
+		return unitQ4InSec, nil
 	case spec.PeriodType_HALF:
-		if t.Month() <= H1LastMonth {
+		if t.Month() <= h1LastMonth {
 			if isLeapYear(t.Year()) {
-				return UnitH1LeapInSec, nil
+				return unitH1LeapInSec, nil
 			}
-			return UnitH1InSec, nil
+			return unitH1InSec, nil
 		}
-		return UnitH2InSec, nil
+		return unitH2InSec, nil
 	case spec.PeriodType_YEAR:
 		if isLeapYear(t.Year()) {
-			return UnitLeapYearInSec, nil
+			return unitLeapYearInSec, nil
 		}
-		return UnitYearInSec, nil
+		return unitYearInSec, nil
 	}
 
 	return 0, fmt.Errorf("period type is undefined for this use case")
