@@ -158,7 +158,17 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
               <AddButton
                 title="+ Add Encoders"
                 description="Define an encoder for encoding input columns at transformation step"
-                onClick={() => onAddInput("encoders", [{ name: "" }])}
+                onClick={() =>
+                  onAddInput("encoders", [
+                    {
+                      name: "",
+                      ordinalEncoderConfig: {
+                        mapping: {},
+                        targetValueType: "INT"
+                      }
+                    }
+                  ])
+                }
               />
             </EuiFlexItem>
           </EuiFlexGroup>

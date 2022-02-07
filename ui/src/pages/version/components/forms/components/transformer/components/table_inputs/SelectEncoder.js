@@ -24,7 +24,11 @@ export const SelectEncoder = ({
           };
           break;
         case "cyclicalEncoderConfig":
-          newEncoder[value] = {};
+          newEncoder[value] = {
+            byEpochTime: {
+              period: "DAY"
+            }
+          };
           break;
         default:
           break;

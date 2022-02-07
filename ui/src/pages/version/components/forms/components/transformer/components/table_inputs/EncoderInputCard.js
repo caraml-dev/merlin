@@ -81,7 +81,7 @@ export const EncoderInputCard = ({
               index={index}
               ordinalEncoderConfig={encoder.ordinalEncoderConfig}
               onChangeHandler={onChangeHandler}
-              errors={errors}
+              errors={errors.ordinalEncoderConfig}
             />
           )}
 
@@ -90,7 +90,7 @@ export const EncoderInputCard = ({
               index={index}
               cyclicalEncoderConfig={encoder.cyclicalEncoderConfig}
               onChangeHandler={onChangeHandler}
-              errors={errors}
+              errors={errors.cyclicalEncoderConfig}
             />
           )}
         </EuiFlexItem>
