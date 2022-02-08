@@ -34,8 +34,8 @@ const (
 	throughputSliExprFormat = "round(sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])), 0.001)"
 	latencySliExprFormat    = "histogram_quantile(%f, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
 	errorRateSliExprFormat  = "(100 * sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",response_code_class!=\"2xx\",revision_name=~\".*%s.*\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
-	cpuSliExprFormat        = "(100 * sum(rate(container_cpu_usage_seconds_total{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\"}))"
-	memorySliExprFormat     = "(100 * sum(container_memory_usage_bytes{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\"}))"
+	cpuSliExprFormat        = "(100 * sum(rate(container_cpu_usage_seconds_total{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}))"
+	memorySliExprFormat     = "(100 * sum(container_memory_usage_bytes{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}))"
 )
 
 const (
