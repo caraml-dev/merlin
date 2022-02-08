@@ -446,6 +446,32 @@ See below for complete examples on how to declare a cyclical encoder:
         max: 360
 ```
 
+**Input/Output Examples**  
+By epoch time: Period of a day  
+
+| col        | col_x | col_y | remarks                 |
+|------------|-------|-------|-------------------------|
+| 1644278400 |  1    |  0    | 8 Feb 2022 00:00:00 UTC |
+| 1644300000 |  0    |  1    | 8 Feb 2022 06:00:00 UTC |
+| 1644451200 | -1    |  0    | 8 Feb 2022 12:00:00 UTC |
+| 1644343200 |  0    | -1    | 8 Feb 2022 18:00:00 UTC |
+| 1644364800 |  1    |  0    | 9 Feb 2022 00:00:00 UTC |
+| 1644451200 |  1    |  0    | 10 Feb 2022 00:00:00 UTC|
+
+By range: 0 to 360 (For example wind directions)
+
+| col    | col_x | col_y |
+|--------|-------|-------|
+|  0     |  1    |  0    |
+|  90    |  0    |  1    |
+|  180   | -1    |  0    |
+|  270   |  0    | -1    |
+|  360   |  1    |  0    |
+|  420   |  0    |  1    |
+|  -90   |  0    | -1    |
+
+To learn more about cyclical encoding, you may find this page useful: [Cyclical Encoding](https://towardsdatascience.com/cyclical-features-encoding-its-about-time-ce23581845ca)
+
 ## Transformation Stage
 
   In this stage, the standard transformers perform transformation to the tables created in the input stage so that its structure is suitable for the output. In the transformation stage, users operate mainly on tables and are provided with 2 transformation types: single table transformation and table join. Each transformation declared in this stage will be executed sequentially and all output/side effects from each transformation can be used in subsequent transformations. There are two types of transformations in standard transformer:

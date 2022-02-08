@@ -19,6 +19,10 @@ transformerConfig:
               suv: "1"
               sedan: "2"
               mpv: "3"
+        - name: "daily_cycle"
+          cyclicalEncoderConfig:
+            byEpochTime:
+              period: "DAY"
     transformations:
       - tableTransformation:
           inputTable: driver_table
@@ -48,7 +52,10 @@ transformerConfig:
                   - vehicle
                   - previous_vehicle
                 encoder: vehicle_mapping
-            - selectColumns: ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle"]
+              - columns:
+                  - ep_time
+                encoder: daily_cycle
+            - selectColumns: ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle", "ep_time_x", "ep_time_y"]
     outputs:
       - jsonOutput:
           jsonTemplate:
