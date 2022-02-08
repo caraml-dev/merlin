@@ -76,9 +76,9 @@ func TestEncoderOp_Execute(t *testing.T) {
 			},
 			expEncoder: map[string]interface{}{
 				"cyclicalEncoder": &encoder.CyclicalEncoder{
-					Period: spec.PeriodType_MONTH,
-					Min:    0,
-					Max:    0,
+					PeriodType: spec.PeriodType_MONTH,
+					Min:        0,
+					Max:        0,
 				},
 			},
 		},

@@ -27,9 +27,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    0,
-				Max:    7,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        0,
+				Max:        7,
 			},
 		},
 		{
@@ -43,9 +43,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    -2,
-				Max:    -1,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        -2,
+				Max:        -1,
 			},
 		},
 		{
@@ -59,9 +59,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    3.66,
-				Max:    7.0,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        3.66,
+				Max:        7.0,
 			},
 		},
 		{
@@ -75,9 +75,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    -2,
-				Max:    1.8,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        -2,
+				Max:        1.8,
 			},
 		},
 		{
@@ -116,9 +116,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    0,
-				Max:    HourInSec,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        0,
+				Max:        hourInSec,
 			},
 		},
 		{
@@ -131,9 +131,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    0,
-				Max:    DayInSec,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        0,
+				Max:        dayInSec,
 			},
 		},
 		{
@@ -146,9 +146,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    0,
-				Max:    WeekInSec,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        0,
+				Max:        weekInSec,
 			},
 		},
 		{
@@ -161,9 +161,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_MONTH,
-				Min:    0,
-				Max:    0,
+				PeriodType: spec.PeriodType_MONTH,
+				Min:        0,
+				Max:        0,
 			},
 		},
 		{
@@ -176,9 +176,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_QUARTER,
-				Min:    0,
-				Max:    0,
+				PeriodType: spec.PeriodType_QUARTER,
+				Min:        0,
+				Max:        0,
 			},
 		},
 		{
@@ -191,9 +191,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_HALF,
-				Min:    0,
-				Max:    0,
+				PeriodType: spec.PeriodType_HALF,
+				Min:        0,
+				Max:        0,
 			},
 		},
 		{
@@ -206,9 +206,9 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_YEAR,
-				Min:    0,
-				Max:    0,
+				PeriodType: spec.PeriodType_YEAR,
+				Min:        0,
+				Max:        0,
 			},
 		},
 		{
@@ -268,9 +268,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should fail: Fix period (by range): Missing value",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    0,
-				Max:    86400,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        0,
+				Max:        86400,
 			},
 			reqValues: []interface{}{
 				1640995200, // 3 Jan 2022, 00:00:00
@@ -284,9 +284,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should fail: By Epoch time: Missing value",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_MONTH,
-				Min:    0,
-				Max:    0,
+				PeriodType: spec.PeriodType_MONTH,
+				Min:        0,
+				Max:        0,
 			},
 			reqValues: []interface{}{
 				1640995200, // 3 Jan 2022, 00:00:00
@@ -300,9 +300,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should fail: Invalid value",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    0,
-				Max:    86400,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        0,
+				Max:        86400,
 			},
 			reqValues: []interface{}{
 				1640995200, // 3 Jan 2022, 00:00:00
@@ -316,9 +316,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: Fixed period (by range)",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    1,
-				Max:    8,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        1,
+				Max:        8,
 			},
 			reqValues: []interface{}{
 				0, 1, 4.5, 8, 9.75,
@@ -335,9 +335,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: Fixed period (by range): with negative range",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    -4,
-				Max:    3,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        -4,
+				Max:        3,
 			},
 			reqValues: []interface{}{
 				-5, -4, -0.5, 3, 4.75,
@@ -354,9 +354,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, HOUR",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    0,
-				Max:    3600,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        0,
+				Max:        3600,
 			},
 			reqValues: []interface{}{
 				1640995200, // 1 Jan 2022, 00:00:00
@@ -380,9 +380,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, DAY",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    0,
-				Max:    86400,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        0,
+				Max:        86400,
 			},
 			reqValues: []interface{}{
 				// 1 Jan cycle
@@ -410,9 +410,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, WEEK",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_UNDEFINED,
-				Min:    0,
-				Max:    604800,
+				PeriodType: spec.PeriodType_UNDEFINED,
+				Min:        0,
+				Max:        604800,
 			},
 			reqValues: []interface{}{ // NOTE: Epoch time starts from Thursday, hence 0 on Thurs
 				// Thursday, Friday, Sunday, Tuesday cycle 1
@@ -440,9 +440,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, MONTH",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_MONTH,
-				Min:    0,
-				Max:    0,
+				PeriodType: spec.PeriodType_MONTH,
+				Min:        0,
+				Max:        0,
 			},
 			reqValues: []interface{}{
 				// Start, mid, end of Jan
@@ -474,9 +474,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, QUARTER",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_QUARTER,
-				Min:    0,
-				Max:    0,
+				PeriodType: spec.PeriodType_QUARTER,
+				Min:        0,
+				Max:        0,
 			},
 			reqValues: []interface{}{
 				1640995200, // 1 Jan 2022, 00:00:00 - Q1
@@ -502,9 +502,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, HALF",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_HALF,
-				Min:    0,
-				Max:    0,
+				PeriodType: spec.PeriodType_HALF,
+				Min:        0,
+				Max:        0,
 			},
 			reqValues: []interface{}{
 				1640995200, // 1 Jan 2022, 00:00:00 - H1
@@ -529,9 +529,9 @@ func TestCyclicalEncode(t *testing.T) {
 		{
 			desc: "Should succeed: EpochTime, YEAR",
 			cyclicalEncoder: &CyclicalEncoder{
-				Period: spec.PeriodType_YEAR,
-				Min:    0,
-				Max:    0,
+				PeriodType: spec.PeriodType_YEAR,
+				Min:        0,
+				Max:        0,
 			},
 			reqValues: []interface{}{
 				1514764800, // 1 Jan 2018, 00:00:00 - Start
@@ -583,154 +583,154 @@ func TestGetCycleTime(t *testing.T) {
 			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
-			desc:              "Should fail - Period: HOUR",
+			desc:              "Should fail - PeriodType: HOUR",
 			periodType:        spec.PeriodType_HOUR,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedCycleTime: 0,
 			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
-			desc:              "Should fail - Period: DAY",
+			desc:              "Should fail - PeriodType: DAY",
 			periodType:        spec.PeriodType_DAY,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedCycleTime: 0,
 			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
-			desc:              "Should fail - Period: WEEK",
+			desc:              "Should fail - PeriodType: WEEK",
 			periodType:        spec.PeriodType_WEEK,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedCycleTime: 0,
 			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, leap",
+			desc:              "Should succeed - PeriodType: MONTH, leap",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 2, 29, 23, 59, 59, 0, time.UTC),
 			expectedCycleTime: 2505599,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, leap 2",
+			desc:              "Should succeed - PeriodType: MONTH, leap 2",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 6, 29, 23, 59, 59, 0, time.UTC),
 			expectedCycleTime: 2505599,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, non-leap",
+			desc:              "Should succeed - PeriodType: MONTH, non-leap",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2017, 2, 28, 23, 59, 59, 0, time.UTC),
 			expectedCycleTime: 2419199,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, non-leap 2",
+			desc:              "Should succeed - PeriodType: MONTH, non-leap 2",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2017, 9, 28, 23, 59, 59, 0, time.UTC),
 			expectedCycleTime: 2419199,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, edge: beginning of month",
+			desc:              "Should succeed - PeriodType: MONTH, edge: beginning of month",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2017, 9, 1, 0, 0, 0, 0, time.UTC),
 			expectedCycleTime: 0,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q1 Non-leap",
+			desc:              "Should succeed - PeriodType: QUARTER, Q1 Non-leap",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2017, 3, 15, 6, 44, 38, 0, time.UTC),
 			expectedCycleTime: 6331478,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q1 Leap",
+			desc:              "Should succeed - PeriodType: QUARTER, Q1 Leap",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2016, 3, 15, 6, 44, 38, 0, time.UTC),
 			expectedCycleTime: 6417878,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q2 Non-leap",
+			desc:              "Should succeed - PeriodType: QUARTER, Q2 Non-leap",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2017, 4, 15, 6, 44, 38, 0, time.UTC),
 			expectedCycleTime: 1233878,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q2 Leap",
+			desc:              "Should succeed - PeriodType: QUARTER, Q2 Leap",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2016, 5, 1, 0, 0, 0, 0, time.UTC),
 			expectedCycleTime: 2592000,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q3 Non-leap",
+			desc:              "Should succeed - PeriodType: QUARTER, Q3 Non-leap",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2017, 7, 15, 6, 44, 38, 0, time.UTC),
 			expectedCycleTime: 1233878,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q3 Leap",
+			desc:              "Should succeed - PeriodType: QUARTER, Q3 Leap",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2016, 9, 5, 0, 0, 0, 0, time.UTC),
 			expectedCycleTime: 5702400,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q4 Non-leap",
+			desc:              "Should succeed - PeriodType: QUARTER, Q4 Non-leap",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2013, 11, 15, 6, 44, 38, 0, time.UTC),
 			expectedCycleTime: 3912278,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q4 Leap",
+			desc:              "Should succeed - PeriodType: QUARTER, Q4 Leap",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2020, 12, 5, 0, 0, 0, 0, time.UTC),
 			expectedCycleTime: 5616000,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: HALF, H1 Non-leap",
+			desc:              "Should succeed - PeriodType: HALF, H1 Non-leap",
 			periodType:        spec.PeriodType_HALF,
 			epochTime:         time.Date(2021, 6, 30, 23, 59, 59, 0, time.UTC),
 			expectedCycleTime: 15638399,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: HALF, H1 Leap",
+			desc:              "Should succeed - PeriodType: HALF, H1 Leap",
 			periodType:        spec.PeriodType_HALF,
 			epochTime:         time.Date(2016, 6, 30, 23, 59, 59, 0, time.UTC),
 			expectedCycleTime: 15724799,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: HALF, H2 Non-leap",
+			desc:              "Should succeed - PeriodType: HALF, H2 Non-leap",
 			periodType:        spec.PeriodType_HALF,
 			epochTime:         time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 			expectedCycleTime: 0,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: HALF, H2 Leap",
+			desc:              "Should succeed - PeriodType: HALF, H2 Leap",
 			periodType:        spec.PeriodType_HALF,
 			epochTime:         time.Date(2016, 7, 1, 0, 0, 0, 0, time.UTC),
 			expectedCycleTime: 0,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: YEAR, Non-leap",
+			desc:              "Should succeed - PeriodType: YEAR, Non-leap",
 			periodType:        spec.PeriodType_YEAR,
 			epochTime:         time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 			expectedCycleTime: 15638400,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: YEAR, Leap",
+			desc:              "Should succeed - PeriodType: YEAR, Leap",
 			periodType:        spec.PeriodType_YEAR,
 			epochTime:         time.Date(2016, 7, 1, 0, 0, 0, 0, time.UTC),
 			expectedCycleTime: 15724800,
@@ -824,182 +824,182 @@ func TestGetUnitAngle(t *testing.T) {
 			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
-			desc:              "Should fail - Period: HOUR",
+			desc:              "Should fail - PeriodType: HOUR",
 			periodType:        spec.PeriodType_HOUR,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedUnitAngle: 0,
 			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
-			desc:              "Should fail - Period: DAY",
+			desc:              "Should fail - PeriodType: DAY",
 			periodType:        spec.PeriodType_DAY,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedUnitAngle: 0,
 			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
-			desc:              "Should fail - Period: WEEK",
+			desc:              "Should fail - PeriodType: WEEK",
 			periodType:        spec.PeriodType_WEEK,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedUnitAngle: 0,
 			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Jan",
+			desc:              "Should succeed - PeriodType: MONTH, Jan",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 1, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002345,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Feb",
+			desc:              "Should succeed - PeriodType: MONTH, Feb",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2013, 2, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002597,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, leap Feb",
+			desc:              "Should succeed - PeriodType: MONTH, leap Feb",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 2, 29, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002507,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Mar",
+			desc:              "Should succeed - PeriodType: MONTH, Mar",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 3, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002345,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Apr",
+			desc:              "Should succeed - PeriodType: MONTH, Apr",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 4, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002424,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, May",
+			desc:              "Should succeed - PeriodType: MONTH, May",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 5, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002345,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Jun",
+			desc:              "Should succeed - PeriodType: MONTH, Jun",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 6, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002424,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Jul",
+			desc:              "Should succeed - PeriodType: MONTH, Jul",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 7, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002345,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Aug",
+			desc:              "Should succeed - PeriodType: MONTH, Aug",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 8, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002345,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Sep",
+			desc:              "Should succeed - PeriodType: MONTH, Sep",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 9, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002424,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Oct",
+			desc:              "Should succeed - PeriodType: MONTH, Oct",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 10, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002345,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Nov",
+			desc:              "Should succeed - PeriodType: MONTH, Nov",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 11, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002424,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: MONTH, Dec",
+			desc:              "Should succeed - PeriodType: MONTH, Dec",
 			periodType:        spec.PeriodType_MONTH,
 			epochTime:         time.Date(2016, 12, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000002345,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q1",
+			desc:              "Should succeed - PeriodType: QUARTER, Q1",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2013, 2, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000000808,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q1 Leap",
+			desc:              "Should succeed - PeriodType: QUARTER, Q1 Leap",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2016, 2, 28, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000000799,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q2",
+			desc:              "Should succeed - PeriodType: QUARTER, Q2",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2013, 4, 1, 0, 0, 0, 0, time.UTC),
 			expectedUnitAngle: 0.000000799,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q3",
+			desc:              "Should succeed - PeriodType: QUARTER, Q3",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2013, 7, 1, 0, 0, 0, 0, time.UTC),
 			expectedUnitAngle: 0.00000079,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: QUARTER, Q4",
+			desc:              "Should succeed - PeriodType: QUARTER, Q4",
 			periodType:        spec.PeriodType_QUARTER,
 			epochTime:         time.Date(2013, 12, 31, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.00000079,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: HALF, H1",
+			desc:              "Should succeed - PeriodType: HALF, H1",
 			periodType:        spec.PeriodType_HALF,
 			epochTime:         time.Date(2013, 1, 1, 0, 0, 0, 0, time.UTC),
 			expectedUnitAngle: 0.000000401,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: HALF, H1 Leap",
+			desc:              "Should succeed - PeriodType: HALF, H1 Leap",
 			periodType:        spec.PeriodType_HALF,
 			epochTime:         time.Date(2016, 6, 30, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000000399,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: HALF, H2",
+			desc:              "Should succeed - PeriodType: HALF, H2",
 			periodType:        spec.PeriodType_HALF,
 			epochTime:         time.Date(2013, 7, 1, 0, 0, 0, 0, time.UTC),
 			expectedUnitAngle: 0.000000395,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: YEAR, Non-Leap",
+			desc:              "Should succeed - PeriodType: YEAR, Non-Leap",
 			periodType:        spec.PeriodType_YEAR,
 			epochTime:         time.Date(2013, 1, 1, 0, 0, 0, 0, time.UTC),
 			expectedUnitAngle: 0.000000199,
 			expectedErr:       nil,
 		},
 		{
-			desc:              "Should succeed - Period: Year, Leap",
+			desc:              "Should succeed - PeriodType: Year, Leap",
 			periodType:        spec.PeriodType_YEAR,
 			epochTime:         time.Date(2016, 12, 31, 23, 59, 59, 0, time.UTC),
 			expectedUnitAngle: 0.000000198,
