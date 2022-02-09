@@ -1,4 +1,3 @@
-import { string } from "prop-types";
 import * as yup from "yup";
 import { appConfig } from "../../../../../config";
 
