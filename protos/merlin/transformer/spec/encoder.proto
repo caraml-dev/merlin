@@ -10,6 +10,7 @@ message Encoder {
   string name = 1;
   oneof encoderConfig {
     OrdinalEncoderConfig ordinalEncoderConfig = 2;
+    CyclicalEncoderConfig cyclicalEncoderConfig = 3;
   }
 }
 
@@ -17,4 +18,31 @@ message OrdinalEncoderConfig {
   string defaultValue = 1;
   ValueType targetValueType = 2;
   map<string,string> mapping = 3;
+}
+
+message CyclicalEncoderConfig {
+  oneof encodeBy {
+    ByEpochTime byEpochTime = 1;
+    ByRange byRange = 2;
+  }
+}
+
+message ByEpochTime {
+  PeriodType periodType = 1;
+}
+
+message ByRange {
+  double min = 1;
+  double max = 2;
+}
+
+enum PeriodType {
+  UNDEFINED = 0; //default when field not defined in config
+  HOUR = 1;
+  DAY = 2;
+  WEEK = 3;
+  MONTH = 4;
+  QUARTER = 5;
+  HALF = 6;
+  YEAR = 7;
 }

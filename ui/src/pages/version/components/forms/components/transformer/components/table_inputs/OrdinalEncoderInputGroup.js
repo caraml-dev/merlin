@@ -1,7 +1,7 @@
 import React from "react";
 import {
   EuiFormRow,
-  EuiFieldNumber,
+  EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
   EuiText,
@@ -35,7 +35,7 @@ export const OrdinalEncoderInputGroup = ({
               error={errors.defaultValue}
               display="columnCompressed"
               fullWidth>
-              <EuiFieldNumber
+              <EuiFieldText
                 placeholder="Default value"
                 value={ordinalEncoderConfig.defaultValue || ""}
                 onChange={e =>

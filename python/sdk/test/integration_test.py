@@ -705,8 +705,10 @@ def test_standard_transformer_without_feast(
     endpoint = merlin.deploy(v, transformer=transformer)
     request_json = {
         "drivers": [
-            {"id": 1, "name": "driver-1", "vehicle": "motorcycle", "previous_vehicle": "suv","rating": 4}, 
-            {"id": 2, "name": "driver-2", "vehicle": "sedan", "previous_vehicle": "mpv", "rating": 3}],
+            # 1 Feb 2022, 18:00:00 
+            {"id": 1, "name": "driver-1", "vehicle": "motorcycle", "previous_vehicle": "suv","rating": 4, "ep_time": 1643709600}, 
+            # 30 Jan 2022, 06:00:00
+            {"id": 2, "name": "driver-2", "vehicle": "sedan", "previous_vehicle": "mpv", "rating": 3, "ep_time": 1643493600}],
         "customer": {"id": 1111},
     }
     resp = requests.post(f"{endpoint.url}", json=request_json)
@@ -715,10 +717,10 @@ def test_standard_transformer_without_feast(
     assert resp.json() is not None
     exp_resp = {
         "instances": {
-            "columns": ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle"],
+            "columns": ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle", "ep_time_x", "ep_time_y"],
             "data": [
-                [1111, "driver-2", 2.5, 0.5, 2, 3], 
-                [1111, "driver-1", -2.5, 0.75, 0, 1]],
+                [1111, "driver-2", 2.5, 0.5, 2, 3, 0, 0], 
+                [1111, "driver-1", -2.5, 0.75, 0, 1, -1, 1]],
         }
     }
 

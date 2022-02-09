@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -273,13 +274,13 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body: []byte(`{"drivers":[{"id":1,"name":"driver-1","vehicle":"motorcycle","previous_vehicle":"suv","rating":4},{"id":2,"name":"driver-2","vehicle":"sedan","previous_vehicle":"mpv","rating":3}],"customer":{"id":1111}}`),
+				body: []byte(`{"drivers":[{"id":1,"name":"driver-1","vehicle":"motorcycle","previous_vehicle":"suv","rating":4,"test_time":90},{"id":2,"name":"driver-2","vehicle":"sedan","previous_vehicle":"mpv","rating":3, "test_time": 15}],"customer":{"id":1111}}`),
 			},
 			expTransformedRequest: request{
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body: []byte(`{"instances":{"columns":["customer_id","name","rank","rating","vehicle","previous_vehicle"],"data":[[1111,"driver-2",2.5,0.5,2,3],[1111,"driver-1",-2.5,0.75,0,1]]}}`),
+				body: []byte(`{"instances":{"columns":["customer_id","name","rank","rating","vehicle","previous_vehicle", "test_time_x", "test_time_y"],"data":[[1111,"driver-2",2.5,0.5,2,3,0,1],[1111,"driver-1",-2.5,0.75,0,1,-1,0]]}}`),
 			},
 			modelResponse: response{
 				headers: map[string]string{
@@ -461,7 +462,10 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 
 				assert.Nil(t, err)
 
-				assert.JSONEq(t, string(tt.expTransformedRequest.body), string(body))
+				var expectedMap, actualMap map[string]interface{}
+				json.Unmarshal(tt.expTransformedRequest.body, &expectedMap)
+				json.Unmarshal(body, &actualMap)
+				assertJSONEqWithFloat(t, expectedMap, actualMap, 0.00000001)
 				assertHasHeaders(t, tt.expTransformedRequest.headers, r.Header)
 
 				w.Header().Add("Content-Type", "application/json")
@@ -504,6 +508,36 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			assert.Equal(t, tt.expTransformedResponse.statusCode, rr.Code)
 			assertHasHeaders(t, tt.expTransformedResponse.headers, rr.Header())
 		})
+	}
+}
+
+//Function to assert that 2 JSONs are the same, with considerations of delta in float values
+//inputs are map[string]interface{} converted from json, and delta which is th tolerance of error for the float
+//function will first confirm that the number of items in map are same
+//then it will iterate through each element in the map. If element is a map, it will work call itself recursively
+//if it is a slice or an array, it will call itself for each element by first converting each into a map
+//otherwise, if element is a basic type like float, int, string etc it will do the comparison to make sure they are the same
+//For float type, a tolerance in differences "delta" is checked
+func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, actualMap map[string]interface{}, delta float64) {
+
+	assert.Equal(t, len(expectedMap), len(actualMap))
+	for key, value := range expectedMap {
+		switch value.(type) {
+		case float64:
+			assert.InDelta(t, expectedMap[key], actualMap[key], delta)
+		case map[string]interface{}:
+			assertJSONEqWithFloat(t, expectedMap[key].(map[string]interface{}), actualMap[key].(map[string]interface{}), delta)
+		case []interface{}:
+			for i, v := range value.([]interface{}) {
+				exp := make(map[string]interface{})
+				act := make(map[string]interface{})
+				exp["v"] = v
+				act["v"] = actualMap[key].([]interface{})[i]
+				assertJSONEqWithFloat(t, exp, act, delta)
+			}
+		default:
+			assert.Equal(t, expectedMap[key], actualMap[key])
+		}
 	}
 }
 
