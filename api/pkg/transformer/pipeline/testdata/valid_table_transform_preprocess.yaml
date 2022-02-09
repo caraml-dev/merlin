@@ -19,6 +19,11 @@ transformerConfig:
               suv: "1"
               sedan: "2"
               mpv: "3"
+        - name: "hourly_encode"
+          cyclicalEncoderConfig:
+            byRange:
+              min: 0
+              max: 60
     transformations:
       - tableTransformation:
           inputTable: driver_table
@@ -48,7 +53,10 @@ transformerConfig:
                   - vehicle
                   - previous_vehicle
                 encoder: vehicle_mapping
-            - selectColumns: ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle"]
+              - columns:
+                  - test_time
+                encoder: hourly_encode
+            - selectColumns: ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle", "test_time_x", "test_time_y"]
     outputs:
       - jsonOutput:
           jsonTemplate:

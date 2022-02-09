@@ -34,6 +34,12 @@ func (e *EncoderOp) Execute(ctx context.Context, env *Environment) error {
 				return err
 			}
 			encoderImpl = ordinalEncoder
+		case *spec.Encoder_CyclicalEncoderConfig:
+			cyclicalEncoder, err := enc.NewCyclicalEncoder(encoderCfg.CyclicalEncoderConfig)
+			if err != nil {
+				return err
+			}
+			encoderImpl = cyclicalEncoder
 		default:
 			return fmt.Errorf("encoder spec have unexpected type %T", encoderCfg)
 		}

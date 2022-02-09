@@ -12,6 +12,7 @@ import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 import { DraggableHeader } from "../../../DraggableHeader";
 import { SelectEncoder } from "./SelectEncoder";
 import { OrdinalEncoderInputGroup } from "./OrdinalEncoderInputGroup";
+import { CyclicalEncoderInputGroup } from "./CyclicalEncoderInputGroup";
 
 export const EncoderInputCard = ({
   index = 0,
@@ -80,7 +81,16 @@ export const EncoderInputCard = ({
               index={index}
               ordinalEncoderConfig={encoder.ordinalEncoderConfig}
               onChangeHandler={onChangeHandler}
-              errors={errors}
+              errors={errors.ordinalEncoderConfig}
+            />
+          )}
+
+          {encoder["cyclicalEncoderConfig"] !== undefined && (
+            <CyclicalEncoderInputGroup
+              index={index}
+              cyclicalEncoderConfig={encoder.cyclicalEncoderConfig}
+              onChangeHandler={onChangeHandler}
+              errors={errors.cyclicalEncoderConfig}
             />
           )}
         </EuiFlexItem>

@@ -218,26 +218,19 @@ func (t *Table) Sort(sortRules []*spec.SortColumnRule) error {
 
 // UpdateColumnsRaw add or update existing column with values specified in columnValues map
 func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
-	origColumns := t.Columns()
+	df := t.DataFrame()
 
-	newColumns, err := createSeries(columnValues, t.NRow())
-	if err != nil {
-		return err
-	}
-
-	combinedColumns := make([]*series.Series, 0)
-	combinedColumns = append(combinedColumns, newColumns...)
-	for _, origColumn := range origColumns {
-		origColumnName := origColumn.Series().Name
-		_, ok := columnValues[origColumnName]
-		if ok {
-			continue
+	for colName, values := range columnValues {
+		colSeries, err := series.NewInferType(values, colName)
+		if err != nil {
+			return err
 		}
-		combinedColumns = append(combinedColumns, origColumn)
+
+		*df = df.Mutate(colSeries.Series().Copy())
 	}
 
-	newT := New(combinedColumns...)
-	t.dataFrame = newT.dataFrame
+	t.dataFrame = df
+
 	return nil
 }
 
@@ -354,7 +347,7 @@ func broadcastScalar(colMap map[string]interface{}, length int) map[string]inter
 }
 
 func createSeries(columnValues map[string]interface{}, maxLength int) ([]*series.Series, error) {
-	// ensure all values in columnValues has length either 1 or maxLenght
+	// ensure all values in columnValues has length either 1 or maxLength
 	for k, v := range columnValues {
 		valueLength := getLength(v)
 		// check that length is either 1 or maxLength

@@ -483,6 +483,95 @@ func TestTable_Sort(t *testing.T) {
 	}
 }
 
+func TestTable_UpdateColumnsRaw(t *testing.T) {
+	type args struct {
+		columnValues map[string]interface{}
+	}
+	tests := []struct {
+		name      string
+		srcTable  *Table
+		args      args
+		expTable  *Table
+		wantError bool
+		expError  error
+	}{
+		{
+			name: "success: update column inplace",
+			srcTable: New(
+				series.New([]int{1, 2, 3}, series.Int, "col1"),
+				series.New([]int{11, 22, 33}, series.Int, "col2"),
+				series.New([]int{111, 222, 333}, series.Int, "col3"),
+			),
+			args: args{
+				columnValues: map[string]interface{}{
+					"col2": []int{2, 4, 6},
+				},
+			},
+			expTable: New(
+				series.New([]int{1, 2, 3}, series.Int, "col1"),
+				series.New([]int{2, 4, 6}, series.Int, "col2"),
+				series.New([]int{111, 222, 333}, series.Int, "col3"),
+			),
+			wantError: false,
+		},
+		{
+			name: "success: append new col to end",
+			srcTable: New(
+				series.New([]int{1, 2, 3}, series.Int, "col1"),
+				series.New([]int{11, 22, 33}, series.Int, "col2"),
+				series.New([]int{111, 222, 333}, series.Int, "col3"),
+			),
+			args: args{
+				columnValues: map[string]interface{}{
+					"col4": []int{12, 14, 16},
+				},
+			},
+			expTable: New(
+				series.New([]int{1, 2, 3}, series.Int, "col1"),
+				series.New([]int{11, 22, 33}, series.Int, "col2"),
+				series.New([]int{111, 222, 333}, series.Int, "col3"),
+				series.New([]int{12, 14, 16}, series.Int, "col4"),
+			),
+			wantError: false,
+		},
+		{
+			name: "success: append new col to end and update existing",
+			srcTable: New(
+				series.New([]int{1, 2, 3}, series.Int, "col1"),
+				series.New([]int{11, 22, 33}, series.Int, "col2"),
+				series.New([]int{111, 222, 333}, series.Int, "col3"),
+			),
+			args: args{
+				columnValues: map[string]interface{}{
+					"col4": []int{12, 14, 16},
+					"col2": []int{58, 55, 5},
+					"col5": []float64{3.14, 4.26, 9.88},
+					"col1": []int{88, 168, -222},
+				},
+			},
+			expTable: New(
+				series.New([]int{88, 168, -222}, series.Int, "col1"),
+				series.New([]int{58, 55, 5}, series.Int, "col2"),
+				series.New([]int{111, 222, 333}, series.Int, "col3"),
+				series.New([]int{12, 14, 16}, series.Int, "col4"),
+				series.New([]float64{3.14, 4.26, 9.88}, series.Float, "col5"),
+			),
+			wantError: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.srcTable.UpdateColumnsRaw(tt.args.columnValues)
+			if tt.wantError {
+				assert.EqualError(t, err, tt.expError.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expTable, tt.srcTable)
+		})
+	}
+}
+
 func TestTable_NewRaw(t *testing.T) {
 	tests := []struct {
 		name         string

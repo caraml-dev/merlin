@@ -55,6 +55,34 @@ func TestEncoderOp_Execute(t *testing.T) {
 			},
 		},
 		{
+			desc: "cyclical encoder config",
+			specs: []*spec.Encoder{
+				{
+					Name: "cyclicalEncoder",
+					EncoderConfig: &spec.Encoder_CyclicalEncoderConfig{
+						CyclicalEncoderConfig: &spec.CyclicalEncoderConfig{
+							EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
+								ByEpochTime: &spec.ByEpochTime{
+									Period: spec.PeriodType_MONTH,
+								},
+							},
+						},
+					},
+				},
+			},
+			env: &Environment{
+				symbolRegistry: symbol.NewRegistry(),
+				logger:         logger,
+			},
+			expEncoder: map[string]interface{}{
+				"cyclicalEncoder": &encoder.CyclicalEncoder{
+					PeriodType: spec.PeriodType_MONTH,
+					Min:        0,
+					Max:        0,
+				},
+			},
+		},
+		{
 			desc: "multiple ordinal encoder config",
 			specs: []*spec.Encoder{
 				{

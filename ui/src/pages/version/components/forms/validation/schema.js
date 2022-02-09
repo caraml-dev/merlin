@@ -1,3 +1,4 @@
+import { string } from "prop-types";
 import * as yup from "yup";
 import { appConfig } from "../../../../../config";
 
@@ -120,10 +121,22 @@ const tablesInputSchema = yup.object().shape({
     })
 });
 
+const encodersInputSchema = yup.object().shape({
+  name: yup.string().required("Encoder Name is required"),
+  ordinalEncoderConfig: yup
+    .object()
+    .nullable()
+    .default(undefined)
+    .shape({
+      defaultValue: yup.string().required("Default value required")
+    })
+});
+
 const inputPipelineSchema = yup.object().shape({
   feast: yup.array(feastInputSchema),
   tables: yup.array(tablesInputSchema),
-  variables: yup.array(variableInputSchema)
+  variables: yup.array(variableInputSchema),
+  encoders: yup.array(encodersInputSchema)
 });
 
 const tableTransformationStep = yup.object().shape({
