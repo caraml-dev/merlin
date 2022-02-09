@@ -17,10 +17,11 @@ func TestOverwriteFeastOptionsConfig(t *testing.T) {
 	fourMinutes := time.Minute * 4
 
 	testCases := []struct {
-		desc         string
-		opts         Options
-		redisConfig  RedisOverwriteConfig
-		expectedOpts Options
+		desc           string
+		opts           Options
+		redisConfig    RedisOverwriteConfig
+		bigtableConfig BigtableOverwriteConfig
+		expectedOpts   Options
 	}{
 		{
 			desc: "Redis cluster do not overwrite",
@@ -366,10 +367,104 @@ func TestOverwriteFeastOptionsConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "Bigtable overwrite serving type, pool size",
+			opts: Options{
+				StorageConfigs: FeastStorageConfig{
+					spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+						ServingType: spec.ServingType_FEAST_GRPC,
+						Storage: &spec.OnlineStorage_Bigtable{
+							Bigtable: &spec.BigTableStorage{
+								FeastServingUrl: "localhost:6866",
+								Project:         "gcp-project",
+								Instance:        "instance",
+								AppProfile:      "default",
+								Option: &spec.BigTableOption{
+									GrpcConnectionPool: 2,
+									KeepAliveInterval:  durationpb.New(time.Minute * 2),
+									KeepAliveTimeout:   durationpb.New(time.Minute * 1),
+								},
+							},
+						},
+					},
+				},
+			},
+			bigtableConfig: BigtableOverwriteConfig{
+				BigtableDirectStorageEnabled: &boolTrue,
+				PoolSize:                     &poolSize,
+			},
+			expectedOpts: Options{
+				StorageConfigs: FeastStorageConfig{
+					spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+						ServingType: spec.ServingType_DIRECT_STORAGE,
+						Storage: &spec.OnlineStorage_Bigtable{
+							Bigtable: &spec.BigTableStorage{
+								FeastServingUrl: "localhost:6866",
+								Project:         "gcp-project",
+								Instance:        "instance",
+								AppProfile:      "default",
+								Option: &spec.BigTableOption{
+									GrpcConnectionPool: 4,
+									KeepAliveInterval:  durationpb.New(time.Minute * 2),
+									KeepAliveTimeout:   durationpb.New(time.Minute * 1),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "Bigtable overwrite keep alive interval and timeout",
+			opts: Options{
+				StorageConfigs: FeastStorageConfig{
+					spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+						ServingType: spec.ServingType_FEAST_GRPC,
+						Storage: &spec.OnlineStorage_Bigtable{
+							Bigtable: &spec.BigTableStorage{
+								FeastServingUrl: "localhost:6866",
+								Project:         "gcp-project",
+								Instance:        "instance",
+								AppProfile:      "default",
+								Option: &spec.BigTableOption{
+									GrpcConnectionPool: 2,
+									KeepAliveInterval:  durationpb.New(time.Minute * 2),
+									KeepAliveTimeout:   durationpb.New(time.Minute * 1),
+								},
+							},
+						},
+					},
+				},
+			},
+			bigtableConfig: BigtableOverwriteConfig{
+				KeepAliveInterval: &fourMinutes,
+				KeepAliveTimeout:  &twoMinutes,
+			},
+			expectedOpts: Options{
+				StorageConfigs: FeastStorageConfig{
+					spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+						ServingType: spec.ServingType_FEAST_GRPC,
+						Storage: &spec.OnlineStorage_Bigtable{
+							Bigtable: &spec.BigTableStorage{
+								FeastServingUrl: "localhost:6866",
+								Project:         "gcp-project",
+								Instance:        "instance",
+								AppProfile:      "default",
+								Option: &spec.BigTableOption{
+									GrpcConnectionPool: 2,
+									KeepAliveInterval:  durationpb.New(time.Minute * 4),
+									KeepAliveTimeout:   durationpb.New(time.Minute * 2),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			got := OverwriteFeastOptionsConfig(tC.opts, tC.redisConfig)
+			got := OverwriteFeastOptionsConfig(tC.opts, tC.redisConfig, tC.bigtableConfig)
 			assert.Equal(t, tC.expectedOpts, got)
 		})
 	}

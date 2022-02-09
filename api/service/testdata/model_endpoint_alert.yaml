@@ -99,7 +99,7 @@ groups:
             summary: Error rate of model-1 model in env-1 is higher than 8.00%. Current value is {{ $value }}%.
         - alert: "[merlin] model-1: Cpu warning"
           expr: |-
-            (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",namespace="project-1",pod_name=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name="cluster-1",namespace="project-1",pod=~".*model-1.*"})) > 9
+            (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"})) > 9
           for: 5m
           labels:
             owner: team-1
@@ -111,7 +111,7 @@ groups:
             summary: CPU usage of model-1 model in env-1 is higher than 9.00%. Current value is {{ $value }}%.
         - alert: "[merlin] model-1: Cpu critical"
           expr: |-
-            (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",namespace="project-1",pod_name=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name="cluster-1",namespace="project-1",pod=~".*model-1.*"})) > 10
+            (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"})) > 10
           for: 5m
           labels:
             owner: team-1
@@ -123,7 +123,7 @@ groups:
             summary: CPU usage of model-1 model in env-1 is higher than 10.00%. Current value is {{ $value }}%.
         - alert: "[merlin] model-1: Memory warning"
           expr: |-
-            (100 * sum(container_memory_usage_bytes{cluster_name="cluster-1",namespace="project-1",pod_name=~".*model-1.*"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name="cluster-1",namespace="project-1",pod=~".*model-1.*"})) > 11
+            (100 * sum(container_memory_usage_bytes{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"})) > 11
           for: 5m
           labels:
             owner: team-1
@@ -135,7 +135,7 @@ groups:
             summary: Memory usage of model-1 model in env-1 is higher than 11.00%. Current value is {{ $value }}%.
         - alert: "[merlin] model-1: Memory critical"
           expr: |-
-            (100 * sum(container_memory_usage_bytes{cluster_name="cluster-1",namespace="project-1",pod_name=~".*model-1.*"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name="cluster-1",namespace="project-1",pod=~".*model-1.*"})) > 12
+            (100 * sum(container_memory_usage_bytes{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"})) > 12
           for: 5m
           labels:
             owner: team-1

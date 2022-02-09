@@ -1,4 +1,4 @@
-package feast
+package redis
 
 import (
 	"reflect"
@@ -72,7 +72,7 @@ func TestRedisEncoder_EncodeFeatureRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			encoder := NewRedisEncoder(tt.featureTables)
+			encoder := newRedisEncoder(tt.featureTables)
 			encodedFeatureRequest, err := encoder.EncodeFeatureRequest(tt.req)
 			if err != nil {
 				panic(err)
@@ -219,7 +219,7 @@ func TestRedisEncoder_DecodeStoredRedisValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			encoder := NewRedisEncoder(tt.featureTables)
+			encoder := newRedisEncoder(tt.featureTables)
 			response, err := encoder.DecodeStoredRedisValue(tt.storedRedisValues, tt.req)
 			if err != nil {
 				panic(err)

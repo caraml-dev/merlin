@@ -7,6 +7,7 @@ import {
   EuiCheckbox
 } from "@elastic/eui";
 import { SelectValueType } from "./components/table_inputs/SelectValueType";
+import _uniqueId from "lodash/uniqueId";
 
 export const JsonPathConfigInput = ({
   jsonPathConfig,
@@ -14,6 +15,8 @@ export const JsonPathConfigInput = ({
   onChangeHandler,
   errors = {}
 }) => {
+  const [checkBoxId] = useState(_uniqueId(`${identifier}-`));
+
   const getDefaultValue = () => {
     if (jsonPathConfig === undefined) {
       return "";
@@ -65,7 +68,7 @@ export const JsonPathConfigInput = ({
 
         <EuiFlexItem>
           <EuiCheckbox
-            id={`addDefaultValue-${identifier}`}
+            id={`addDefaultValue-${checkBoxId}`}
             label="Add default value"
             color="subdued"
             checked={showDefaultValueOpt}

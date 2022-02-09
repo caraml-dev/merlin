@@ -1952,6 +1952,10 @@ func TestCreateEndpoint(t *testing.T) {
 			standardTransformerConfig: config.StandardTransformerConfig{
 				FeastBigtableConfig: &config.FeastBigtableConfig{
 					ServingURL: "localhost:6567",
+					Project:    "gcp-project",
+					Instance:   "instance",
+					AppProfile: "default",
+					PoolSize:   3,
 				},
 				FeastRedisConfig: &config.FeastRedisConfig{
 					ServingURL: "localhost:6566",
@@ -2223,6 +2227,10 @@ func TestCreateEndpoint(t *testing.T) {
 			standardTransformerConfig: config.StandardTransformerConfig{
 				FeastBigtableConfig: &config.FeastBigtableConfig{
 					ServingURL: "localhost:6567",
+					Project:    "gcp-project",
+					Instance:   "instance",
+					AppProfile: "default",
+					PoolSize:   4,
 				},
 				FeastRedisConfig: &config.FeastRedisConfig{
 					ServingURL: "localhost:6566",

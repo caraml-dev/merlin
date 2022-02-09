@@ -17,6 +17,7 @@ package cluster
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
 	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
@@ -87,6 +88,8 @@ var (
 		},
 	}
 
+	oneMinuteDuration         = config.Duration(time.Minute * 1)
+	twoMinuteDuration         = config.Duration(time.Minute * 2)
 	standardTransformerConfig = config.StandardTransformerConfig{
 		ImageName:    "merlin-standard-transformer",
 		FeastCoreURL: "core.feast.dev:8081",
@@ -102,10 +105,18 @@ var (
 			ServingURL:     "localhost:6866",
 			RedisAddresses: []string{"10.1.1.2", "10.1.1.3"},
 			PoolSize:       5,
+			MinIdleConn:    2,
 		},
 		FeastBigtableConfig: &config.FeastBigtableConfig{
-			ServingURL: "localhost:6867",
+			ServingURL:        "localhost:6867",
+			Project:           "gcp-project",
+			Instance:          "instance",
+			AppProfile:        "default",
+			PoolSize:          4,
+			KeepAliveInterval: &twoMinuteDuration,
+			KeepAliveTimeout:  &oneMinuteDuration,
 		},
+		BigtableCredential: "eyJrZXkiOiJ2YWx1ZSJ9",
 	}
 )
 
@@ -830,7 +841,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										},
 										{
 											Name:  transformer.FeastStorageConfigs,
-											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867"}}}`,
+											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 										},
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
@@ -1782,7 +1793,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 							{Name: transformer.DefaultFeastSource, Value: standardTransformerConfig.DefaultFeastSource.String()},
 							{
 								Name:  transformer.FeastStorageConfigs,
-								Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867"}}}`,
+								Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 							},
 							{Name: envTransformerPort, Value: defaultTransformerPort},
 							{Name: envTransformerModelName, Value: "test-1"},
