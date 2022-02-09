@@ -17,7 +17,7 @@ export const SelectCyclicalEncodeType = ({
       switch (value) {
         case "byEpochTime":
           newEncodeType[value] = {
-            period: "DAY"
+            periodType: "DAY"
           };
           break;
         case "byRange":

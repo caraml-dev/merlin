@@ -413,7 +413,7 @@ To encode by **epoch time**, use the following syntax:
 ```
 cyclicalEncoderConfig:
   byEpochTime:
-    period: HOUR #HOUR, DAY, WEEK, MONTH, QUARTER, HALF, YEAR
+    periodType: HOUR #HOUR, DAY, WEEK, MONTH, QUARTER, HALF, YEAR
 ```
 
 To encode by **range**, use the following syntax:
@@ -433,7 +433,7 @@ See below for complete examples on how to declare a cyclical encoder:
   -name: payday_trend
    cyclicalEncoderConfig:
      byEpochTime:
-       period: MONTH
+       periodType: MONTH
 ```
 
 *By range:*

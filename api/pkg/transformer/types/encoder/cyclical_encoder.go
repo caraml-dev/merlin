@@ -105,7 +105,7 @@ func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, e
 	var period spec.PeriodType
 
 	if byEpochTime != nil {
-		switch byEpochTime.Period {
+		switch byEpochTime.PeriodType {
 		case spec.PeriodType_HOUR:
 			period = spec.PeriodType_UNDEFINED
 			max = hourInSec
@@ -116,7 +116,7 @@ func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, e
 			period = spec.PeriodType_UNDEFINED
 			max = weekInSec
 		case spec.PeriodType_MONTH, spec.PeriodType_QUARTER, spec.PeriodType_HALF, spec.PeriodType_YEAR:
-			period = byEpochTime.Period
+			period = byEpochTime.PeriodType
 			max = 0
 		default:
 			return nil, fmt.Errorf("invalid or unspported cycle period")

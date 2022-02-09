@@ -111,7 +111,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 			config: &spec.CyclicalEncoderConfig{
 				EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
 					ByEpochTime: &spec.ByEpochTime{
-						Period: spec.PeriodType_HOUR,
+						PeriodType: spec.PeriodType_HOUR,
 					},
 				},
 			},
@@ -126,7 +126,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 			config: &spec.CyclicalEncoderConfig{
 				EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
 					ByEpochTime: &spec.ByEpochTime{
-						Period: spec.PeriodType_DAY,
+						PeriodType: spec.PeriodType_DAY,
 					},
 				},
 			},
@@ -141,7 +141,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 			config: &spec.CyclicalEncoderConfig{
 				EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
 					ByEpochTime: &spec.ByEpochTime{
-						Period: spec.PeriodType_WEEK,
+						PeriodType: spec.PeriodType_WEEK,
 					},
 				},
 			},
@@ -156,7 +156,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 			config: &spec.CyclicalEncoderConfig{
 				EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
 					ByEpochTime: &spec.ByEpochTime{
-						Period: spec.PeriodType_MONTH,
+						PeriodType: spec.PeriodType_MONTH,
 					},
 				},
 			},
@@ -171,7 +171,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 			config: &spec.CyclicalEncoderConfig{
 				EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
 					ByEpochTime: &spec.ByEpochTime{
-						Period: spec.PeriodType_QUARTER,
+						PeriodType: spec.PeriodType_QUARTER,
 					},
 				},
 			},
@@ -186,7 +186,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 			config: &spec.CyclicalEncoderConfig{
 				EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
 					ByEpochTime: &spec.ByEpochTime{
-						Period: spec.PeriodType_HALF,
+						PeriodType: spec.PeriodType_HALF,
 					},
 				},
 			},
@@ -201,7 +201,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 			config: &spec.CyclicalEncoderConfig{
 				EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
 					ByEpochTime: &spec.ByEpochTime{
-						Period: spec.PeriodType_YEAR,
+						PeriodType: spec.PeriodType_YEAR,
 					},
 				},
 			},
@@ -216,7 +216,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 			config: &spec.CyclicalEncoderConfig{
 				EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
 					ByEpochTime: &spec.ByEpochTime{
-						Period: 8,
+						PeriodType: 8,
 					},
 				},
 			},

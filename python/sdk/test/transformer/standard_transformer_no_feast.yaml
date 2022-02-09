@@ -22,7 +22,7 @@ transformerConfig:
         - name: "daily_cycle"
           cyclicalEncoderConfig:
             byEpochTime:
-              period: "DAY"
+              periodType: "DAY"
     transformations:
       - tableTransformation:
           inputTable: driver_table

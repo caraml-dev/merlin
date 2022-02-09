@@ -14,7 +14,7 @@ export const SelectPeriodType = ({
     if (periodType[value] === undefined) {
       let newPeriodType = {};
 
-      newPeriodType["period"] = value;
+      newPeriodType["periodType"] = value;
       onChange()(newPeriodType);
     }
   };
@@ -52,7 +52,7 @@ export const SelectPeriodType = ({
 
   const selectedOption = options.find(option =>
     periodType !== undefined
-      ? periodType["period"] === option.value
+      ? periodType["periodType"] === option.value
       : option.value === ""
   );
 
@@ -62,8 +62,8 @@ export const SelectPeriodType = ({
         fullWidth
         label={
           <FormLabelWithToolTip
-            label="Period *"
-            content="Choose a cycle period"
+            label="Period Type *"
+            content="Choose a cycle period type"
           />
         }
         isInvalid={!!errors.periodType}

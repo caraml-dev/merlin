@@ -26,7 +26,7 @@ export const SelectEncoder = ({
         case "cyclicalEncoderConfig":
           newEncoder[value] = {
             byEpochTime: {
-              period: "DAY"
+              periodType: "DAY"
             }
           };
           break;

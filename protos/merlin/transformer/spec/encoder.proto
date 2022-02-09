@@ -28,7 +28,7 @@ message CyclicalEncoderConfig {
 }
 
 message ByEpochTime {
-  PeriodType period = 1;
+  PeriodType periodType = 1;
 }
 
 message ByRange {
