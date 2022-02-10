@@ -218,18 +218,60 @@ func (t *Table) Sort(sortRules []*spec.SortColumnRule) error {
 
 // UpdateColumnsRaw add or update existing column with values specified in columnValues map
 func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
-	df := t.DataFrame()
+	origColumns := t.Columns()
+	updateCol := map[string]bool{} //name of col that are updates
+	combinedColumns := make([]*series.Series, 0)
 
-	for colName, values := range columnValues {
-		colSeries, err := series.NewInferType(values, colName)
+	columnValues = broadcastScalar(columnValues, t.NRow())
+
+	//Check through all original columns for updates
+	for _, origColumn := range origColumns {
+		origColumnName := origColumn.Series().Name
+		val, update := columnValues[origColumnName]
+
+		if update {
+			// Update original column
+			colSeries, err := series.NewInferType(val, origColumnName)
+			if err != nil {
+				return err
+			}
+			combinedColumns = append(combinedColumns, colSeries)
+
+			// Record down columns that are updates
+			updateCol[origColumnName] = true
+		} else {
+			// Use original column
+			combinedColumns = append(combinedColumns, origColumn)
+		}
+	}
+
+	// Get all column name in colMap as slice
+	colNames := make([]string, len(columnValues))
+
+	i := 0
+	for k := range columnValues {
+		colNames[i] = k
+		i++
+	}
+
+	sort.Strings(colNames) //to ensure predictability of appended new columns
+
+	// Append new columns
+	for _, colName := range colNames {
+		_, isNotNew := updateCol[colName]
+		if isNotNew {
+			continue
+		}
+
+		colSeries, err := series.NewInferType(columnValues[colName], colName)
 		if err != nil {
 			return err
 		}
-
-		*df = df.Mutate(colSeries.Series().Copy())
+		combinedColumns = append(combinedColumns, colSeries)
 	}
 
-	t.dataFrame = df
+	newT := New(combinedColumns...)
+	t.dataFrame = newT.dataFrame
 
 	return nil
 }
