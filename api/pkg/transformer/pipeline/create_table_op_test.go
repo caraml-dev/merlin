@@ -425,12 +425,12 @@ func TestCreateTableOp_Execute(t *testing.T) {
 			env: env,
 			expVariables: map[string]interface{}{
 				"my_table": table.New(
-					series.New([]interface{}{1, 2, 3, 4}, series.Float, "array_int"),
-					series.New([]interface{}{1234, 1234, 1234, 1234}, series.Float, "int"),
 					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
 					series.New([]interface{}{1111, 2222, 3333, nil}, series.Int, "int_col"),
 					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
 					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
+					series.New([]interface{}{1, 2, 3, 4}, series.Float, "array_int"),
+					series.New([]interface{}{1234, 1234, 1234, 1234}, series.Float, "int"),
 				),
 			},
 			wantErr: false,
@@ -470,11 +470,11 @@ func TestCreateTableOp_Execute(t *testing.T) {
 			env: env,
 			expVariables: map[string]interface{}{
 				"my_table": table.New(
-					series.New([]interface{}{1, 2, 3, 4}, series.Float, "array_int"),
-					series.New([]interface{}{1234, 1234, 1234, 1234}, series.Float, "int_col"),
 					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col"),
+					series.New([]interface{}{1234, 1234, 1234, 1234}, series.Float, "int_col"),
 					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
 					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
+					series.New([]interface{}{1, 2, 3, 4}, series.Float, "array_int"),
 				),
 			},
 			wantErr: false,
