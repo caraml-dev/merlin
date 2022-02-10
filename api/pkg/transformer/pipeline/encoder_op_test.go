@@ -63,7 +63,7 @@ func TestEncoderOp_Execute(t *testing.T) {
 						CyclicalEncoderConfig: &spec.CyclicalEncoderConfig{
 							EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{
 								ByEpochTime: &spec.ByEpochTime{
-									Period: spec.PeriodType_MONTH,
+									PeriodType: spec.PeriodType_MONTH,
 								},
 							},
 						},
