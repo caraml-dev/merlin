@@ -705,10 +705,10 @@ def test_standard_transformer_without_feast(
     endpoint = merlin.deploy(v, transformer=transformer)
     request_json = {
         "drivers": [
-            # 1 Feb 2022, 18:00:00 
-            {"id": 1, "name": "driver-1", "vehicle": "motorcycle", "previous_vehicle": "suv","rating": 4, "ep_time": 1643738400},
-            # 30 Jan 2022, 06:00:00
-            {"id": 2, "name": "driver-2", "vehicle": "sedan", "previous_vehicle": "mpv", "rating": 3, "ep_time": 1643522400}],
+            # 1 Feb 2022, 00:00:00
+            {"id": 1, "name": "driver-1", "vehicle": "motorcycle", "previous_vehicle": "suv","rating": 4, "ep_time": 1643673600},
+            # 30 Jan 2022, 00:00:00
+            {"id": 2, "name": "driver-2", "vehicle": "sedan", "previous_vehicle": "mpv", "rating": 3, "ep_time": 1643500800}],
         "customer": {"id": 1111},
     }
     resp = requests.post(f"{endpoint.url}", json=request_json)
