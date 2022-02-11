@@ -224,25 +224,26 @@ func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 
 	columnValues = broadcastScalar(columnValues, t.NRow())
 
-	//Check through all original columns for updates
+	// Check through all original columns for updates
 	for _, origColumn := range origColumns {
 		origColumnName := origColumn.Series().Name
 		val, update := columnValues[origColumnName]
 
+		updatedColumn := origColumn
 		if update {
 			// Update original column
 			colSeries, err := series.NewInferType(val, origColumnName)
 			if err != nil {
 				return err
 			}
-			combinedColumns = append(combinedColumns, colSeries)
+			updatedColumn = colSeries
 
 			// Record down columns that are updates
 			updateCol[origColumnName] = true
-		} else {
-			// Use original column
-			combinedColumns = append(combinedColumns, origColumn)
 		}
+
+		// Add column, either the origColumn or the updated one
+		combinedColumns = append(combinedColumns, updatedColumn)
 	}
 
 	// Get all column name in colMap as slice
