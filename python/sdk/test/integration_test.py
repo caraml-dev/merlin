@@ -725,7 +725,7 @@ def test_standard_transformer_without_feast(
         }
     }
 
-    assert recursive_eq(resp.json()["instances"], exp_resp["instances"], abs_tol= 1e-09)
+    assert recursive_eq(resp.json()["instances"], exp_resp["instances"], abs_tol= 1e-09) == None
     merlin.undeploy(v)
 
 
