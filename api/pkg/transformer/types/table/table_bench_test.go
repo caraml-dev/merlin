@@ -34,10 +34,10 @@ func (t *Table) oldUpdateColumnsRaw(columnValues map[string]interface{}) error {
 // goos: darwin
 // goarch: amd64
 // pkg: github.com/gojek/merlin/pkg/transformer/types/table
-// Benchmark_oldUpdateColumnsRaw-12    	  162448	      6826 ns/op
-// Benchmark_UpdateColumnsRaw-12       	  133695	      8947 ns/op
+// Benchmark_oldUpdateColumnsRaw-12    	  175756	      6568 ns/op
+// Benchmark_UpdateColumnsRaw-12       	  181879	      6454 ns/op
 // PASS
-// ok  	github.com/gojek/merlin/pkg/transformer/types/table	2.940s
+// ok  	github.com/gojek/merlin/pkg/transformer/types/table	2.728s
 // Add two new benchmark functions. For the old one and new one
 func Benchmark_oldUpdateColumnsRaw(b *testing.B) { // old
 	table := New(
