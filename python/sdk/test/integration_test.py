@@ -22,6 +22,7 @@ import xgboost as xgb
 from joblib import dump
 from sklearn import svm
 from sklearn.datasets import load_iris
+from recursive_diff import recursive_eq
 
 import merlin
 from merlin.endpoint import Status
@@ -705,10 +706,10 @@ def test_standard_transformer_without_feast(
     endpoint = merlin.deploy(v, transformer=transformer)
     request_json = {
         "drivers": [
-            # 1 Feb 2022, 18:00:00 
-            {"id": 1, "name": "driver-1", "vehicle": "motorcycle", "previous_vehicle": "suv","rating": 4, "ep_time": 1643738400},
-            # 30 Jan 2022, 06:00:00
-            {"id": 2, "name": "driver-2", "vehicle": "sedan", "previous_vehicle": "mpv", "rating": 3, "ep_time": 1643522400}],
+            # 1 Feb 2022, 00:00:00
+            {"id": 1, "name": "driver-1", "vehicle": "motorcycle", "previous_vehicle": "suv","rating": 4, "ep_time": 1643673600},
+            # 30 Jan 2022, 00:00:00
+            {"id": 2, "name": "driver-2", "vehicle": "sedan", "previous_vehicle": "mpv", "rating": 3, "ep_time": 1643500800}],
         "customer": {"id": 1111},
     }
     resp = requests.post(f"{endpoint.url}", json=request_json)
@@ -719,12 +720,12 @@ def test_standard_transformer_without_feast(
         "instances": {
             "columns": ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle", "ep_time_x", "ep_time_y"],
             "data": [
-                [1111, "driver-2", 2.5, 0.5, 2, 3, 0, 0], 
-                [1111, "driver-1", -2.5, 0.75, 0, 1, -1, 1]],
+                [1111, "driver-2", 2.5, 0.5, 2, 3, 1, 0],
+                [1111, "driver-1", -2.5, 0.75, 0, 1, 1, 0]],
         }
     }
 
-    assert resp.json()["instances"] == exp_resp["instances"]
+    recursive_eq(resp.json()["instances"], exp_resp["instances"], abs_tol= 1e-09) #asserts lhs = rhs, with tolerance
     merlin.undeploy(v)
 
 
