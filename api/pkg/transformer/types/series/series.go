@@ -97,15 +97,22 @@ func (s *Series) Get(index int) interface{} {
 	return s.series.Elem(index).Val()
 }
 
-// func (s *Series) Append(values interface{}) {
-// 	s.series.Append(values)
-// }
+// Append adds new elements to the end of the Series. When using Append, the
+// Series is modified in place.
+func (s *Series) Append(values interface{}) {
+	s.series.Append(values)
+}
 
-// func (s *Series) Concat(x Series) *Series {
-// 	concat := s.series.Concat(*x.series)
-// 	return &Series{&concat}
-// }
+// Concat concatenates two series together. It will return a new Series with the
+// combined elements of both Series.
+func (s *Series) Concat(x Series) *Series {
+	concat := s.series.Concat(*x.series)
+	return &Series{&concat}
+}
 
+// Order returns an sorted Series. NaN or nil elements are pushed to the
+// end by order of appearance. Empty elements are pushed to the beginning by order of
+// appearance. If reverse==true, the order is descending.
 func (s *Series) Order(reverse bool) *Series {
 	orderedIndex := s.series.Order(reverse)
 	newOrder := make([]interface{}, s.series.Len())
@@ -115,47 +122,76 @@ func (s *Series) Order(reverse bool) *Series {
 	return New(newOrder, s.Type(), s.series.Name)
 }
 
+// StdDev calculates the standard deviation of a series.
+// If a series is a list element type, flatten the series first.
 func (s *Series) StdDev() float64 {
 	return s.series.StdDev()
 }
 
+// Mean calculates the average value of a series.
+// If a series is a list element type, flatten the series first.
 func (s *Series) Mean() float64 {
 	return s.series.Mean()
 }
 
+// Median calculates the middle or median value, as opposed to
+// mean, and there is less susceptible to being affected by outliers.
+// If a series is a list element type, flatten the series first.
 func (s *Series) Median() float64 {
 	return s.series.Median()
 }
 
+// Max return the biggest element in the series.
+// If a series is a list element type, flatten the series first.
 func (s *Series) Max() float64 {
 	return s.series.Max()
 }
 
+// MaxStr return the biggest element in a series of type String.
+// If a series is a list element type, flatten the series first.
 func (s *Series) MaxStr() string {
 	return s.series.MaxStr()
 }
 
+// Min return the lowest element in the series.
+// If a series is a list element type, flatten the series first.
 func (s *Series) Min() float64 {
 	return s.series.Min()
 }
 
-func (s *Series) Quantile(p float64) float64 {
-	return s.series.Quantile(p)
-}
-
-func (s *Series) Sum() float64 {
-	return s.series.Sum()
-}
-
+// MinStr return the lowest element in a series of type String.
+// If a series is a list element type, flatten the series first.
 func (s *Series) MinStr() string {
 	return s.series.MinStr()
 }
 
+// Quantile returns the sample of x such that x is greater than or
+// equal to the fraction p of samples.
+// Note: gonum/stat panics when called with strings.
+// If a series is a list element type, flatten the series first.
+func (s *Series) Quantile(p float64) float64 {
+	return s.series.Quantile(p)
+}
+
+// Sum calculates the sum value of a series.
+// If a series is a list element type, flatten the series first.
+func (s *Series) Sum() float64 {
+	return s.series.Sum()
+}
+
+// Flatten returns the flattened elements of series. If the series is list type (2D), it returns the standard type (1D).
+// Examples:
+// - Strings([]string{"A", "B", "C"}) -> Strings([]string{"A", "B", "C"})
+// - IntsList([][]int{{1, 11}, {3, 33}}) -> Ints([]int{1, 11, 3, 33})
 func (s *Series) Flatten() *Series {
 	flatten := s.series.Flatten()
 	return &Series{&flatten}
 }
 
+// Unique returns unique values based on a hash table.
+// Examples:
+// - Strings([]string{"A", "B", "C", "A", "B"}) -> Strings([]string{"A", "B", "C"})
+// - IntsList([][]int{{1, 11}, {3, 33}, {3, 33}}) -> IntsList([][]int{{1, 11}, {3, 33}})
 func (s *Series) Unique() *Series {
 	unique := s.series.Unique()
 	return &Series{&unique}

@@ -214,3 +214,109 @@ func TestSeries_NewInferType(t *testing.T) {
 		})
 	}
 }
+
+func TestSeries_Append(t *testing.T) {
+	tests := []struct {
+		name   string
+		series *Series
+		values interface{}
+		want   *Series
+	}{
+		{
+			name:   "strings + strings",
+			series: New([]string{"A", "B", "C"}, String, "string"),
+			values: []interface{}{"X", "Y", "Z"},
+			want:   New([]string{"A", "B", "C", "X", "Y", "Z"}, String, "string"),
+		},
+		{
+			name:   "ints + ints",
+			series: New([]int{1, 2, 3}, Int, "int"),
+			values: []interface{}{7, 8, 9},
+			want:   New([]int{1, 2, 3, 7, 8, 9}, Int, "int"),
+		},
+		{
+			name:   "ints + ints in strings",
+			series: New([]int{1, 2, 3}, Int, "int"),
+			values: []interface{}{"7", "8", "9"},
+			want:   New([]int{1, 2, 3, 7, 8, 9}, Int, "int"),
+		},
+		{
+			name:   "strings list + strings list",
+			series: New([][]string{{"A"}, {"B", "C"}}, StringList, "string_list"),
+			values: []interface{}{[]string{"X", "Y"}, []string{"Z"}},
+			want:   New([][]string{{"A"}, {"B", "C"}, {"X", "Y"}, {"Z"}}, StringList, "string_list"),
+		},
+		{
+			name:   "ints list + ints list",
+			series: New([][]int{{1}, {2, 3}}, IntList, "int_list"),
+			values: []interface{}{[]int{7, 8}, []int{9}},
+			want:   New([][]int{{1}, {2, 3}, {7, 8}, {9}}, IntList, "int_list"),
+		},
+		{
+			name:   "ints + ints in strings",
+			series: New([][]int{{1}, {2, 3}}, IntList, "int_list"),
+			values: []interface{}{[]string{"7", "8"}, []int{9}},
+			want:   New([][]int{{1}, {2, 3}, {7, 8}, {9}}, IntList, "int_list"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := tt.series
+			s.Append(tt.values)
+
+			assert.Equal(t, tt.want, s)
+		})
+	}
+}
+
+func TestSeries_Concat(t *testing.T) {
+	tests := []struct {
+		name    string
+		series1 *Series
+		series2 *Series
+		want    *Series
+	}{
+		{
+			name:    "strings + strings",
+			series1: New([]string{"A", "B", "C"}, String, "string"),
+			series2: New([]string{"X", "Y", "Z"}, String, "string"),
+			want:    New([]string{"A", "B", "C", "X", "Y", "Z"}, String, "string"),
+		},
+		{
+			name:    "ints + ints",
+			series1: New([]int{1, 2, 3}, Int, "int"),
+			series2: New([]int{7, 8, 9}, Int, "int"),
+			want:    New([]int{1, 2, 3, 7, 8, 9}, Int, "int"),
+		},
+		{
+			name:    "ints + ints in strings",
+			series1: New([]int{1, 2, 3}, Int, "int"),
+			series2: New([]string{"7", "8", "9"}, Int, "int"),
+			want:    New([]int{1, 2, 3, 7, 8, 9}, Int, "int"),
+		},
+		{
+			name:    "strings list + strings list",
+			series1: New([][]string{{"A"}, {"B", "C"}}, StringList, "string_list"),
+			series2: New([][]string{{"X", "Y"}, {"Z"}}, StringList, "string_list"),
+			want:    New([][]string{{"A"}, {"B", "C"}, {"X", "Y"}, {"Z"}}, StringList, "string_list"),
+		},
+		{
+			name:    "ints list + ints list",
+			series1: New([][]int{{1}, {2, 3}}, IntList, "int_list"),
+			series2: New([][]int{{7, 8}, {9}}, IntList, "int_list"),
+			want:    New([][]int{{1}, {2, 3}, {7, 8}, {9}}, IntList, "int_list"),
+		},
+		{
+			name:    "ints + ints in strings",
+			series1: New([][]int{{1}, {2, 3}}, IntList, "int_list"),
+			series2: New([][]string{{"7", "8"}, {"9"}}, IntList, "int_list"),
+			want:    New([][]int{{1}, {2, 3}, {7, 8}, {9}}, IntList, "int_list"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.series1.Concat(*tt.series2)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
