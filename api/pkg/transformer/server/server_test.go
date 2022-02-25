@@ -155,8 +155,9 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	}
 
 	type mockFeast struct {
-		request  *feastSdk.OnlineFeaturesRequest
-		response *feastSdk.OnlineFeaturesResponse
+		request         *feastSdk.OnlineFeaturesRequest
+		expectedRequest *feastSdk.OnlineFeaturesRequest
+		response        *feastSdk.OnlineFeaturesResponse
 	}
 
 	tests := []struct {
@@ -533,6 +534,21 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 					request: &feastSdk.OnlineFeaturesRequest{
 						Project: "customer", // used as identifier for mocking. must match config
 					},
+					expectedRequest: &feastSdk.OnlineFeaturesRequest{
+						Project:  "customer",
+						Features: []string{"customer_feature_1"},
+						Entities: []feastSdk.Row{
+							{"customer_id": feastSdk.StrVal("C111")},
+							{"customer_id": feastSdk.StrVal("C222")},
+							{"customer_id": feastSdk.StrVal("C333")},
+							{"customer_id": feastSdk.StrVal("U111")},
+							{"customer_id": feastSdk.StrVal("U222")},
+							{"customer_id": feastSdk.StrVal("U333")},
+							{"customer_id": feastSdk.StrVal("PA11")},
+							{"customer_id": feastSdk.StrVal("PA22")},
+							{"customer_id": feastSdk.StrVal("PA33")},
+						},
+					},
 					response: &feastSdk.OnlineFeaturesResponse{
 						RawResponse: &serving.GetOnlineFeaturesResponse{
 							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
@@ -544,8 +560,6 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"customer_id":        serving.GetOnlineFeaturesResponse_PRESENT,
 										"customer_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"top_customer":       serving.GetOnlineFeaturesResponse_PRESENT,
-										"total_tips":         serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 								{
@@ -556,8 +570,6 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"customer_id":        serving.GetOnlineFeaturesResponse_PRESENT,
 										"customer_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"top_customer":       serving.GetOnlineFeaturesResponse_PRESENT,
-										"total_tips":         serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 								{
@@ -568,8 +580,6 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"customer_id":        serving.GetOnlineFeaturesResponse_PRESENT,
 										"customer_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"top_customer":       serving.GetOnlineFeaturesResponse_PRESENT,
-										"total_tips":         serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 							},
@@ -773,8 +783,14 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 
 			for _, m := range tt.mockFeasts {
 				project := m.request.Project
+				expectedRequest := m.expectedRequest
 				mockFeast.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feastSdk.OnlineFeaturesRequest) bool {
-					// log.Println("GetOnlineFeatures", req.Project, req.Entities)
+					if expectedRequest != nil {
+						expected, _ := json.Marshal(expectedRequest)
+						actual, _ := json.Marshal(req)
+						assert.JSONEq(t, string(expected), string(actual))
+					}
+
 					return req.Project == project
 				})).Return(m.response, nil)
 			}

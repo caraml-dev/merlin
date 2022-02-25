@@ -76,6 +76,15 @@ func TestSeries_NewInferType(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "string list via 1-D interface",
+			args: args{
+				values:     []interface{}{[]string{"1111", "2222"}, []string{"AAAA", "BBBB"}},
+				seriesName: "string_list_series",
+			},
+			want:    New([]interface{}{[]string{"1111", "2222"}, []string{"AAAA", "BBBB"}}, StringList, "string_list_series"),
+			wantErr: false,
+		},
+		{
 			name: "single value int",
 			args: args{
 				values:     int64(1),
@@ -199,6 +208,16 @@ func TestSeries_NewInferType(t *testing.T) {
 				seriesName: "bool_list_series",
 			},
 			want:    New([]interface{}{[]bool{true, true}, []bool{false, false}}, BoolList, "bool_list_series"),
+			wantErr: false,
+		},
+		// because the data type is not explicitly provided by the user, we cannot just guess the correct series type
+		{
+			name: "mixed data type in [][]interface",
+			args: args{
+				values:     [][]interface{}{{1111, 2.222}, {3333, 4444}, {"A", "B"}},
+				seriesName: "string_series",
+			},
+			want:    New([]string{"[1111 2.222]", "[3333 4444]", "[A B]"}, String, "string_series"),
 			wantErr: false,
 		},
 	}
