@@ -82,8 +82,7 @@ require (
 )
 
 replace (
-	// TODO: Uses github.com/gojekfarm/gota after https://github.com/gojekfarm/gota/pull/1 merged
-	github.com/go-gota/gota => github.com/ariefrahmansyah/gota v0.0.0-20220225013448-94087760dea6
+	github.com/go-gota/gota => github.com/gojekfarm/gota v0.0.0-20220225033233-df7cd66a11dc
 	github.com/gojek/merlin-pyspark-app => ../python/batch-predictor
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
 	k8s.io/api => k8s.io/api v0.16.6

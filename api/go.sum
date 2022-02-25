@@ -138,8 +138,6 @@ github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kd
 github.com/antonmedv/expr v1.8.9 h1:O9stiHmHHww9b4ozhPx7T6BK7fXfOCHJ8ybxf0833zw=
 github.com/antonmedv/expr v1.8.9/go.mod h1:5qsM3oLGDND7sDmQGDXHkYfkjYMUX14qsgqmHhwGEk8=
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
-github.com/ariefrahmansyah/gota v0.0.0-20220225013448-94087760dea6 h1:n0ETOpTi0nfQ1/KVL8hL4QkDeH/c1TNamgjMI47gqQI=
-github.com/ariefrahmansyah/gota v0.0.0-20220225013448-94087760dea6/go.mod h1:0N1RwZc60ImjH0LMLUTDCvPWdtxk419HJScoigjR66k=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
@@ -489,6 +487,8 @@ github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8 h1:S0k9mBbISxJGRUYetI+IK
 github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8/go.mod h1:IjQCiAzap7TZRZVZ4r2RdzVTuAzoyR5el2GgEu2X1FM=
 github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf h1:5xRGbUdOmZKoDXkGx5evVLehuCMpuO1hl701bEQqXOM=
 github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf/go.mod h1:QzhUKaYKJmcbTnCYCAVQrroCOY7vOOI8cSQ4NbuhYf0=
+github.com/gojekfarm/gota v0.0.0-20220225033233-df7cd66a11dc h1:txm7LRQmOtmta1u77HJ2vA7kxajmSybqdF/l/Y3+7O8=
+github.com/gojekfarm/gota v0.0.0-20220225033233-df7cd66a11dc/go.mod h1:0N1RwZc60ImjH0LMLUTDCvPWdtxk419HJScoigjR66k=
 github.com/gojekfarm/jsonpath v0.1.0 h1:ofQpGrZiv75uO2mB1gTk5l9BmJLVIMB+uQh4bY2Nq7g=
 github.com/gojekfarm/jsonpath v0.1.0/go.mod h1:1cPoGRnDKrtGXzs4z/IkEPosicPFZ0Drn2prBo7cyHM=
 github.com/golang-migrate/migrate/v4 v4.11.0 h1:uqtd0ysK5WyBQ/T1K2uDIooJV0o2Obt6uPwP062DupQ=
