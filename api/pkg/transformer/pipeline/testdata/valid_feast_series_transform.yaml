@@ -1,0 +1,94 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - variables:
+          - name: customer_id
+            jsonPath: $.customer.id
+      - tables:
+          - name: driver_table
+            baseTable:
+              fromJson:
+                jsonPath: $.drivers[*]
+                addRowNumber: true
+      - feast:
+          - tableName: driver_feature_table
+            project: default
+            entities:
+              - name: driver_id
+                valueType: STRING
+                jsonPath: $.drivers[*].id
+            features:
+              - name: driver_feature_1
+                valueType: INT64
+                defaultValue: "0"
+              - name: driver_feature_2
+                valueType: INT64
+                defaultValue: "0"
+              - name: driver_feature_3
+                valueType: STRING_LIST
+                defaultValue: '["A", "B", "C", "D", "E"]'
+              - name: driver_score
+                valueType: DOUBLE
+                defaultValue: "0"
+    transformations:
+      - tableTransformation:
+          inputTable: driver_table
+          outputTable: driver_table
+          steps:
+            - sort:
+                - column: "row_number"
+                  order: DESC
+            - renameColumns:
+                row_number: rank
+                id: driver_id
+            - updateColumns:
+                - column: customer_id
+                  expression: customer_id
+            - selectColumns: ["customer_id", "driver_id", "name", "rank"]
+      - tableJoin:
+          leftTable: driver_table
+          rightTable: driver_feature_table
+          outputTable: result_table
+          how: LEFT
+          onColumns: [driver_id]
+      - tableTransformation:
+          inputTable: result_table
+          outputTable: result_table
+          steps:
+            - updateColumns:
+                - column: driver_feature_3_flatten
+                  expression: result_table.Col('driver_feature_3').Flatten()
+                - column: stddev_driver_score
+                  expression: result_table.Col('driver_score').StdDev()
+                - column: mean_driver_score
+                  expression: result_table.Col('driver_score').Mean()
+                - column: max_driver_score
+                  expression: result_table.Col('driver_score').Max()
+      - tableTransformation:
+          inputTable: result_table
+          outputTable: result_table
+          steps:
+            - sort:
+                - column: "rank"
+                  order: ASC
+            - selectColumns:
+                [
+                  "rank",
+                  "driver_id",
+                  "customer_id",
+                  "driver_feature_1",
+                  "driver_feature_2",
+                  "driver_feature_3",
+                  "driver_feature_3_flatten",
+                  "stddev_driver_score",
+                  "mean_driver_score",
+                  "max_driver_score",
+                ]
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: result_table
+                  format: "SPLIT"

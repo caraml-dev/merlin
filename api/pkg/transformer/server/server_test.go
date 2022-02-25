@@ -382,6 +382,93 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			},
 		},
 		{
+			name:         "table transformation with feast and series transformation",
+			specYamlPath: "../pipeline/testdata/valid_feast_series_transform.yaml",
+			mockFeasts: []mockFeast{
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(1),
+										"driver_feature_1": feastSdk.DoubleVal(1111),
+										"driver_feature_2": feastSdk.DoubleVal(2222),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"A"},
+												},
+											},
+										},
+										"driver_score": feastSdk.DoubleVal(95.0),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_score":     serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(2),
+										"driver_feature_1": feastSdk.DoubleVal(3333),
+										"driver_feature_2": feastSdk.DoubleVal(4444),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"X"},
+												},
+											},
+										},
+										"driver_score": feastSdk.DoubleVal(98.0),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_score":     serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"drivers" : [{"id": 1,"name": "driver-1"},{"id": 2,"name": "driver-2"}], "customer": {"id": 1111}}`),
+			},
+			expTransformedRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"instances": {"columns": ["rank", "driver_id", "customer_id", "driver_feature_1", "driver_feature_2", "driver_feature_3", "driver_feature_3_flatten", "stddev_driver_score", "mean_driver_score", "max_driver_score"], "data":[[0, 1, 1111, 1111, 2222, ["A"], "A", 2.1213203435596424, 96.5, 98], [1, 2, 1111, 3333, 4444, ["X"], "X", 2.1213203435596424, 96.5, 98]]}}`),
+			},
+			modelResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status": "ok"}`),
+				statusCode: 200,
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status": "ok"}`),
+				statusCode: 200,
+			},
+		},
+		{
 			name:         "multiple columns table join with feast",
 			specYamlPath: "../pipeline/testdata/valid_table_join_multiple_columns.yaml",
 			mockFeasts: []mockFeast{
@@ -527,15 +614,14 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	}
 }
 
-//Function to assert that 2 JSONs are the same, with considerations of delta in float values
-//inputs are map[string]interface{} converted from json, and delta which is th tolerance of error for the float
-//function will first confirm that the number of items in map are same
-//then it will iterate through each element in the map. If element is a map, it will work call itself recursively
-//if it is a slice or an array, it will call itself for each element by first converting each into a map
-//otherwise, if element is a basic type like float, int, string etc it will do the comparison to make sure they are the same
-//For float type, a tolerance in differences "delta" is checked
+// Function to assert that 2 JSONs are the same, with considerations of delta in float values
+// inputs are map[string]interface{} converted from json, and delta which is th tolerance of error for the float
+// function will first confirm that the number of items in map are same
+// then it will iterate through each element in the map. If element is a map, it will work call itself recursively
+// if it is a slice or an array, it will call itself for each element by first converting each into a map
+// otherwise, if element is a basic type like float, int, string etc it will do the comparison to make sure they are the same
+// For float type, a tolerance in differences "delta" is checked
 func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, actualMap map[string]interface{}, delta float64) {
-
 	assert.Equal(t, len(expectedMap), len(actualMap))
 	for key, value := range expectedMap {
 		switch value.(type) {

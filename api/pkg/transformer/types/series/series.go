@@ -97,6 +97,70 @@ func (s *Series) Get(index int) interface{} {
 	return s.series.Elem(index).Val()
 }
 
+// func (s *Series) Append(values interface{}) {
+// 	s.series.Append(values)
+// }
+
+// func (s *Series) Concat(x Series) *Series {
+// 	concat := s.series.Concat(*x.series)
+// 	return &Series{&concat}
+// }
+
+func (s *Series) Order(reverse bool) *Series {
+	orderedIndex := s.series.Order(reverse)
+	newOrder := make([]interface{}, s.series.Len())
+	for i := 0; i < s.series.Len(); i++ {
+		newOrder[i] = s.series.Elem(orderedIndex[i])
+	}
+	return New(newOrder, s.Type(), s.series.Name)
+}
+
+func (s *Series) StdDev() float64 {
+	return s.series.StdDev()
+}
+
+func (s *Series) Mean() float64 {
+	return s.series.Mean()
+}
+
+func (s *Series) Median() float64 {
+	return s.series.Median()
+}
+
+func (s *Series) Max() float64 {
+	return s.series.Max()
+}
+
+func (s *Series) MaxStr() string {
+	return s.series.MaxStr()
+}
+
+func (s *Series) Min() float64 {
+	return s.series.Min()
+}
+
+func (s *Series) Quantile(p float64) float64 {
+	return s.series.Quantile(p)
+}
+
+func (s *Series) Sum() float64 {
+	return s.series.Sum()
+}
+
+func (s *Series) MinStr() string {
+	return s.series.MinStr()
+}
+
+func (s *Series) Flatten() *Series {
+	flatten := s.series.Flatten()
+	return &Series{&flatten}
+}
+
+func (s *Series) Unique() *Series {
+	unique := s.series.Unique()
+	return &Series{&unique}
+}
+
 func detectType(values interface{}) Type {
 	contentType := &contentType{}
 	v := reflect.ValueOf(values)

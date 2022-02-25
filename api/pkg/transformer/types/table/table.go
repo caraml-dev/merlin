@@ -367,7 +367,7 @@ func broadcastScalar(colMap map[string]interface{}, length int) map[string]inter
 				continue
 			}
 
-			val = colValueVal.Index(0)
+			val = colValueVal.Index(0).Interface()
 		default:
 			s, ok := v.(*series.Series)
 			if ok {
