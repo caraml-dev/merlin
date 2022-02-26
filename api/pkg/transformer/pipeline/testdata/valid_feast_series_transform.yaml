@@ -1,0 +1,168 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - variables:
+          - name: customer_id
+            jsonPath: $.customer.id
+      - tables:
+          - name: driver_table
+            baseTable:
+              fromJson:
+                jsonPath: $.drivers[*]
+                addRowNumber: true
+      - feast:
+          - tableName: driver_feature_table
+            project: default
+            entities:
+              - name: driver_id
+                valueType: STRING
+                jsonPath: $.drivers[*].id
+            features:
+              - name: driver_feature_1
+                valueType: INT64
+                defaultValue: "0"
+              - name: driver_feature_2
+                valueType: INT64
+                defaultValue: "0"
+              - name: driver_feature_3
+                valueType: STRING_LIST
+                defaultValue: '["A", "B", "C", "D", "E"]'
+              - name: driver_score
+                valueType: DOUBLE
+                defaultValue: "0"
+      - feast:
+          - tableName: driver_customer_feature_table
+            project: driver_partner
+            entities:
+              - name: driver_id
+                valueType: STRING
+                jsonPath: $.drivers[*].id
+            features:
+              - name: customers_picked_up
+                valueType: STRING_LIST
+                defaultValue: '["C001", "C002", "C003", "C001"]'
+              - name: top_customer
+                valueType: STRING_LIST
+                defaultValue: '["C001"]'
+              - name: total_tips
+                valueType: DOUBLE
+                defaultValue: "100000"
+      - feast:
+          - tableName: customer_feature_table
+            project: customer
+            entities:
+              - name: customer_id
+                valueType: STRING
+                expression: driver_customer_feature_table.Col('customers_picked_up').Flatten().Unique()
+            features:
+              - name: customer_feature_1
+                valueType: INT64
+                defaultValue: "0"
+    transformations:
+      - tableTransformation:
+          inputTable: driver_table
+          outputTable: driver_table
+          steps:
+            - sort:
+                - column: "row_number"
+                  order: DESC
+            - renameColumns:
+                row_number: rank
+                id: driver_id
+            - updateColumns:
+                - column: customer_id
+                  expression: customer_id
+            - selectColumns: ["customer_id", "driver_id", "name", "rank"]
+      - tableJoin:
+          leftTable: driver_table
+          rightTable: driver_feature_table
+          outputTable: result_table
+          how: LEFT
+          onColumns: [driver_id]
+      - tableTransformation:
+          inputTable: result_table
+          outputTable: result_table
+          steps:
+            - updateColumns:
+                - column: driver_feature_3_flatten
+                  expression: result_table.Col('driver_feature_3').Flatten()
+                - column: stddev_driver_score
+                  expression: result_table.Col('driver_score').StdDev()
+                - column: mean_driver_score
+                  expression: result_table.Col('driver_score').Mean()
+                - column: median_driver_score
+                  expression: result_table.Col('driver_score').Median()
+                - column: max_driver_score
+                  expression: result_table.Col('driver_score').Max()
+                - column: maxstr_driver_score
+                  expression: result_table.Col('driver_feature_3').MaxStr()
+                - column: min_driver_score
+                  expression: result_table.Col('driver_score').Min()
+                - column: minstr_driver_score
+                  expression: result_table.Col('driver_feature_3').MinStr()
+                - column: quantile_driver_score
+                  expression: result_table.Col('driver_score').Quantile(1)
+                - column: sum_driver_score
+                  expression: result_table.Col('driver_score').Sum()
+      - tableTransformation:
+          inputTable: result_table
+          outputTable: result_table
+          steps:
+            - sort:
+                - column: "rank"
+                  order: ASC
+            - selectColumns:
+                [
+                  "rank",
+                  "driver_id",
+                  "customer_id",
+                  "driver_feature_1",
+                  "driver_feature_2",
+                  "driver_feature_3",
+                  "driver_feature_3_flatten",
+                  "stddev_driver_score",
+                  "mean_driver_score",
+                  "median_driver_score",
+                  "max_driver_score",
+                  "maxstr_driver_score",
+                  "min_driver_score",
+                  "minstr_driver_score",
+                  "quantile_driver_score",
+                  "sum_driver_score",
+                ]
+      - tableTransformation:
+          inputTable: driver_customer_feature_table
+          outputTable: raw_customers
+          steps:
+            - updateColumns:
+                - column: all_customers
+                  expression: driver_customer_feature_table.Col('customers_picked_up')
+            - selectColumns: ["all_customers"]
+      - tableTransformation:
+          inputTable: driver_customer_feature_table
+          outputTable: flatten_customers
+          steps:
+            - updateColumns:
+                - column: top_customer
+                  expression: driver_customer_feature_table.Col('top_customer').Flatten()
+            - selectColumns: ["top_customer"]
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: result_table
+                  format: "SPLIT"
+              - fieldName: raw_customers
+                fromTable:
+                  tableName: raw_customers
+                  format: "SPLIT"
+              - fieldName: flatten_customers
+                fromTable:
+                  tableName: flatten_customers
+                  format: "SPLIT"
+              - fieldName: customer_feature_table
+                fromTable:
+                  tableName: customer_feature_table
+                  format: "SPLIT"
