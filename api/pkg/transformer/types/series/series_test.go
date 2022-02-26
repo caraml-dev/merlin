@@ -67,6 +67,24 @@ func TestSeries_NewInferType(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "string list",
+			args: args{
+				values:     [][]string{{"1111", "2222"}, {"AAAA", "BBBB"}},
+				seriesName: "string_list_series",
+			},
+			want:    New([]interface{}{[]string{"1111", "2222"}, []string{"AAAA", "BBBB"}}, StringList, "string_list_series"),
+			wantErr: false,
+		},
+		{
+			name: "string list via 1-D interface",
+			args: args{
+				values:     []interface{}{[]string{"1111", "2222"}, []string{"AAAA", "BBBB"}},
+				seriesName: "string_list_series",
+			},
+			want:    New([]interface{}{[]string{"1111", "2222"}, []string{"AAAA", "BBBB"}}, StringList, "string_list_series"),
+			wantErr: false,
+		},
+		{
 			name: "single value int",
 			args: args{
 				values:     int64(1),
@@ -100,6 +118,15 @@ func TestSeries_NewInferType(t *testing.T) {
 				seriesName: "int_series",
 			},
 			want:    New([]interface{}{11, 2222, 3333, 4444, nil}, Int, "int_series"),
+			wantErr: false,
+		},
+		{
+			name: "int list",
+			args: args{
+				values:     [][]int{{1111, 2222}, {3333, 4444}},
+				seriesName: "int_list_series",
+			},
+			want:    New([]interface{}{[]int{1111, 2222}, []int{3333, 4444}}, IntList, "int_list_series"),
 			wantErr: false,
 		},
 		{
@@ -139,6 +166,15 @@ func TestSeries_NewInferType(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "double list",
+			args: args{
+				values:     [][]float64{{0.201, 3.14}, {4.56, 7.89}},
+				seriesName: "double_list_series",
+			},
+			want:    New([]interface{}{[]float64{0.201, 3.14}, []float64{4.56, 7.89}}, FloatList, "double_list_series"),
+			wantErr: false,
+		},
+		{
 			name: "single value bool",
 			args: args{
 				values:     true,
@@ -165,6 +201,25 @@ func TestSeries_NewInferType(t *testing.T) {
 			want:    New([]interface{}{true, false, nil}, Bool, "bool_series"),
 			wantErr: false,
 		},
+		{
+			name: "bool list",
+			args: args{
+				values:     [][]bool{{true, true}, {false, false}},
+				seriesName: "bool_list_series",
+			},
+			want:    New([]interface{}{[]bool{true, true}, []bool{false, false}}, BoolList, "bool_list_series"),
+			wantErr: false,
+		},
+		// because the data type is not explicitly provided by the user, we cannot just guess the correct series type
+		{
+			name: "mixed data type in [][]interface",
+			args: args{
+				values:     [][]interface{}{{1111, 2.222}, {3333, 4444}, {"A", "B"}},
+				seriesName: "string_series",
+			},
+			want:    New([]string{"[1111 2.222]", "[3333 4444]", "[A B]"}, String, "string_series"),
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -174,6 +229,112 @@ func TestSeries_NewInferType(t *testing.T) {
 				return
 			}
 
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestSeries_Append(t *testing.T) {
+	tests := []struct {
+		name   string
+		series *Series
+		values interface{}
+		want   *Series
+	}{
+		{
+			name:   "strings + strings",
+			series: New([]string{"A", "B", "C"}, String, "string"),
+			values: []interface{}{"X", "Y", "Z"},
+			want:   New([]string{"A", "B", "C", "X", "Y", "Z"}, String, "string"),
+		},
+		{
+			name:   "ints + ints",
+			series: New([]int{1, 2, 3}, Int, "int"),
+			values: []interface{}{7, 8, 9},
+			want:   New([]int{1, 2, 3, 7, 8, 9}, Int, "int"),
+		},
+		{
+			name:   "ints + ints in strings",
+			series: New([]int{1, 2, 3}, Int, "int"),
+			values: []interface{}{"7", "8", "9"},
+			want:   New([]int{1, 2, 3, 7, 8, 9}, Int, "int"),
+		},
+		{
+			name:   "strings list + strings list",
+			series: New([][]string{{"A"}, {"B", "C"}}, StringList, "string_list"),
+			values: []interface{}{[]string{"X", "Y"}, []string{"Z"}},
+			want:   New([][]string{{"A"}, {"B", "C"}, {"X", "Y"}, {"Z"}}, StringList, "string_list"),
+		},
+		{
+			name:   "ints list + ints list",
+			series: New([][]int{{1}, {2, 3}}, IntList, "int_list"),
+			values: []interface{}{[]int{7, 8}, []int{9}},
+			want:   New([][]int{{1}, {2, 3}, {7, 8}, {9}}, IntList, "int_list"),
+		},
+		{
+			name:   "ints + ints in strings",
+			series: New([][]int{{1}, {2, 3}}, IntList, "int_list"),
+			values: []interface{}{[]string{"7", "8"}, []int{9}},
+			want:   New([][]int{{1}, {2, 3}, {7, 8}, {9}}, IntList, "int_list"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := tt.series
+			s.Append(tt.values)
+
+			assert.Equal(t, tt.want, s)
+		})
+	}
+}
+
+func TestSeries_Concat(t *testing.T) {
+	tests := []struct {
+		name    string
+		series1 *Series
+		series2 *Series
+		want    *Series
+	}{
+		{
+			name:    "strings + strings",
+			series1: New([]string{"A", "B", "C"}, String, "string"),
+			series2: New([]string{"X", "Y", "Z"}, String, "string"),
+			want:    New([]string{"A", "B", "C", "X", "Y", "Z"}, String, "string"),
+		},
+		{
+			name:    "ints + ints",
+			series1: New([]int{1, 2, 3}, Int, "int"),
+			series2: New([]int{7, 8, 9}, Int, "int"),
+			want:    New([]int{1, 2, 3, 7, 8, 9}, Int, "int"),
+		},
+		{
+			name:    "ints + ints in strings",
+			series1: New([]int{1, 2, 3}, Int, "int"),
+			series2: New([]string{"7", "8", "9"}, Int, "int"),
+			want:    New([]int{1, 2, 3, 7, 8, 9}, Int, "int"),
+		},
+		{
+			name:    "strings list + strings list",
+			series1: New([][]string{{"A"}, {"B", "C"}}, StringList, "string_list"),
+			series2: New([][]string{{"X", "Y"}, {"Z"}}, StringList, "string_list"),
+			want:    New([][]string{{"A"}, {"B", "C"}, {"X", "Y"}, {"Z"}}, StringList, "string_list"),
+		},
+		{
+			name:    "ints list + ints list",
+			series1: New([][]int{{1}, {2, 3}}, IntList, "int_list"),
+			series2: New([][]int{{7, 8}, {9}}, IntList, "int_list"),
+			want:    New([][]int{{1}, {2, 3}, {7, 8}, {9}}, IntList, "int_list"),
+		},
+		{
+			name:    "ints + ints in strings",
+			series1: New([][]int{{1}, {2, 3}}, IntList, "int_list"),
+			series2: New([][]string{{"7", "8"}, {"9"}}, IntList, "int_list"),
+			want:    New([][]int{{1}, {2, 3}, {7, 8}, {9}}, IntList, "int_list"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.series1.Concat(*tt.series2)
 			assert.Equal(t, tt.want, got)
 		})
 	}

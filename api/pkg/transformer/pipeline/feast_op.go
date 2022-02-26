@@ -44,6 +44,7 @@ func (op *FeastOp) Execute(context context.Context, env *Environment) error {
 		if err != nil {
 			return err
 		}
+
 		env.SetSymbol(featureTable.Name, table)
 		env.LogOperation("feast", featureTable.Name)
 	}
