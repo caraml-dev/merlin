@@ -6,10 +6,14 @@ import (
 
 	"github.com/go-gota/gota/series"
 
+	"github.com/gojek/merlin/pkg/transformer/types/comparator"
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
-type Type string
+type (
+	Type       string
+	Comparator string
+)
 
 const (
 	String     Type = "string"
@@ -23,6 +27,16 @@ const (
 )
 
 var numericTypes = []Type{Int, Float}
+
+var comparatorMapping = map[comparator.Comparator]series.Comparator{
+	comparator.Greater:   series.Greater,
+	comparator.GreaterEq: series.GreaterEq,
+	comparator.Less:      series.Less,
+	comparator.LessEq:    series.LessEq,
+	comparator.Eq:        series.Eq,
+	comparator.Neq:       series.Neq,
+	comparator.In:        series.In,
+}
 
 type Series struct {
 	series *series.Series
@@ -82,6 +96,31 @@ func (s *Series) IsNumeric() error {
 		}
 	}
 	return fmt.Errorf("this series type is not numeric but %s", seriesType)
+}
+
+func (s *Series) Compare(comparator comparator.Comparator, comparingValue interface{}) (*Series, error) {
+	seriesComparator := comparatorMapping[comparator]
+	var result series.Series
+	switch cVal := comparingValue.(type) {
+	case Series:
+		result = s.series.Compare(seriesComparator, cVal.series)
+	case *Series:
+		result = s.series.Compare(seriesComparator, cVal.series)
+	default:
+		result = s.series.Compare(seriesComparator, cVal)
+	}
+	if result.Err != nil {
+		return nil, result.Err
+	}
+	return NewSeries(&result), nil
+}
+
+func (s *Series) IsIn(comparingValue interface{}) *Series {
+	result, err := s.Compare(comparator.In, comparingValue)
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 func (s *Series) GetRecords() []interface{} {

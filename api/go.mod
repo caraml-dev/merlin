@@ -218,3 +218,5 @@ replace (
 	k8s.io/sample-cli-plugin => k8s.io/sample-cli-plugin v0.16.6
 	k8s.io/sample-controller => k8s.io/sample-controller v0.16.6
 )
+
+replace github.com/go-gota/gota => /Users/tio.pramayudi/Documents/dsp/gota
