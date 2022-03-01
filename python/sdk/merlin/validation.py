@@ -13,36 +13,70 @@
 # limitations under the License.
 
 from os import listdir
-from os.path import isdir
+from os.path import isdir, isfile, join
 
 
-def validate_model_dir(input_model_type, target_model_type, model_dir):
+def validate_model_dir(model_type, model_dir):
     """
     Validates user-provided model directory based on file structure.
     For tensorflow models, checking is only done on the subdirectory
     with the largest version number.
     
-    :param input_model_type: type of given model
-    :param target_model_type: type of supposed model, dependent on log_<model type>(...)
+    :param model_type: type of given model
     :param model_dir: directory containing serialised model file
     """
     from merlin.model import ModelType
 
-    if target_model_type == None and input_model_type == ModelType.TENSORFLOW:
-        path_isdir = [isdir(f'{model_dir}/{path}') for path in listdir(model_dir)]
-        if len(listdir(model_dir)) > 0 and all(path_isdir):
-            model_dir = f'{model_dir}/{sorted(listdir(model_dir))[-1]}'
+    if not isdir(model_dir):
+        raise ValueError(f"{model_dir} is not a directory")
 
-    if input_model_type != ModelType.PYFUNC and input_model_type != ModelType.PYFUNC_V2 and input_model_type != ModelType.CUSTOM:
-        file_structure_reqs_map = {
-            ModelType.XGBOOST: ['model.bst'],
-            ModelType.TENSORFLOW: ['saved_model.pb', 'variables'],
-            ModelType.SKLEARN: ['model.joblib'],
-            ModelType.PYTORCH: ['model.pt'],
-            ModelType.ONNX: ['model.onnx']
-        }
-        input_structure = listdir(model_dir)
-        file_structure_req = file_structure_reqs_map[input_model_type]
-        if not all([req in input_structure for req in file_structure_req]):
-            raise Exception(
-                f"Provided {input_model_type.name} model directory should contain all of the following: {file_structure_req}")
+    if model_type == ModelType.PYFUNC or \
+            model_type == ModelType.PYFUNC_V2 or \
+            model_type == ModelType.CUSTOM:
+        return
+
+    if model_type == ModelType.TENSORFLOW:
+        # for tensorflow model it must have following structure
+        # <version>
+        # |- variables (directory)
+        # |- saved_model.pb
+        dirs = listdir(model_dir)
+        if len(dirs) != 1:
+            raise ValueError(f"{model_dir} must contain a version directory")
+
+        version_dir = join(model_dir, dirs[0])
+        variable_dir = join(version_dir, "variables")
+        saved_model_path = join(version_dir, "saved_model.pb")
+        if not isdir(variable_dir):
+            raise ValueError(f"{variable_dir} is not found")
+
+        if not isfile(saved_model_path):
+            raise ValueError(f"{saved_model_path} is not found")
+
+        return
+
+    if model_type == ModelType.PYTORCH:
+        # for Pytorch model it must have following structure
+        # |- config
+        # |   |- config.properties
+        # |- model-store
+        #     |- *.mar
+        config_path = join(model_dir, "config", "config.properties")
+        if not isfile(config_path):
+            raise ValueError(f"{config_path} is not found")
+
+        model_store_dir = join(model_dir, "model-store")
+        if not any(fname.endswith('.mar') for fname in listdir(model_store_dir)):
+            raise ValueError(f".mar file is not found in {model_store_dir}")
+
+        return
+
+    model_file_map = {
+        ModelType.XGBOOST: ['model.bst'],
+        ModelType.SKLEARN: ['model.joblib'],
+        ModelType.ONNX: ['model.onnx']
+    }
+    files = listdir(model_dir)
+    if not all([file in files for file in model_file_map[model_type]]):
+        raise ValueError(f"{model_file_map[model_type]} is not found in {model_dir}")
+

@@ -874,7 +874,6 @@ class ModelVersion:
             raise ValueError(
                 "log_pyfunc_model is only for PyFunc and PyFuncV2 model")
 
-        validate_model_dir(self._model.type, ModelType.PYFUNC, None)
         mlflow.pyfunc.log_model(DEFAULT_MODEL_PATH,
                                 python_model=model_instance,
                                 code_path=code_dir,
@@ -906,7 +905,7 @@ class ModelVersion:
         if self._model.type == ModelType.PYFUNC or self._model.type == ModelType.PYFUNC_V2:
             raise ValueError("use log_pyfunc_model to log pyfunc model")
 
-        validate_model_dir(self._model.type, None, model_dir)
+        validate_model_dir(self._model.type, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
     def log_custom_model(self,
@@ -945,7 +944,7 @@ class ModelVersion:
             writer.write(f"command = {command}\n")
             writer.write(f"args = {args}\n")
 
-        validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
+        validate_model_dir(self._model.type, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
         if is_using_temp_dir:
