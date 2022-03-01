@@ -117,7 +117,7 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth):
     model_dir = "test/pytorch-model"
 
     with merlin.new_model_version() as v:
-        merlin.log_pytorch_model(model_dir=model_dir)
+        merlin.log_model(model_dir=model_dir)
 
     port = _get_free_port()
     p = Process(target=v.start_server, kwargs={"port": port, "build_image": True})
