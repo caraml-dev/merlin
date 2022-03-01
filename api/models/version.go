@@ -22,8 +22,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-const PropertyPyTorchClassName = "pytorch_class_name"
-
 type Version struct {
 	ID              ID                 `json:"id" gorm:"primary_key"`
 	ModelID         ID                 `json:"model_id" gorm:"primary_key"`
@@ -133,23 +131,6 @@ type ModelOption struct {
 	PyFuncImageName       string
 	PyTorchModelClassName string
 	CustomPredictor       *CustomPredictor
-}
-
-const DefaultPyTorchClassName = "PyTorchModel"
-
-func NewPyTorchModelOption(version *Version) *ModelOption {
-	// Fallback to default if it's empty
-	clsName, ok := version.Properties[PropertyPyTorchClassName]
-	if !ok {
-		return &ModelOption{PyTorchModelClassName: DefaultPyTorchClassName}
-	}
-
-	// Fallback to default if it's not castable to string
-	clsNameStr, ok := clsName.(string)
-	if !ok {
-		return &ModelOption{PyTorchModelClassName: DefaultPyTorchClassName}
-	}
-	return &ModelOption{PyTorchModelClassName: clsNameStr}
 }
 
 func NewCustomModelOption(version *Version) *ModelOption {

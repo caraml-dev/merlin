@@ -18,9 +18,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-	networkingv1alpha3 "istio.io/client-go/pkg/clientset/versioned/typed/networking/v1alpha3"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	istiov1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
+	networkingv1beta1 "istio.io/client-go/pkg/clientset/versioned/typed/networking/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 )
@@ -39,8 +39,8 @@ type Config struct {
 
 // Client interface.
 type Client interface {
-	CreateVirtualService(ctx context.Context, namespace string, vs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error)
-	PatchVirtualService(ctx context.Context, namespace string, vs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error)
+	CreateVirtualService(ctx context.Context, namespace string, vs *istiov1beta1.VirtualService) (*istiov1beta1.VirtualService, error)
+	PatchVirtualService(ctx context.Context, namespace string, vs *istiov1beta1.VirtualService) (*istiov1beta1.VirtualService, error)
 	DeleteVirtualService(ctx context.Context, namespace, name string) error
 }
 
@@ -56,7 +56,7 @@ func NewClient(config Config) (Client, error) {
 		},
 	}
 
-	networking, err := networkingv1alpha3.NewForConfig(c)
+	networking, err := networkingv1beta1.NewForConfig(c)
 	if err != nil {
 		return nil, err
 	}
@@ -65,28 +65,28 @@ func NewClient(config Config) (Client, error) {
 }
 
 type client struct {
-	networking networkingv1alpha3.NetworkingV1alpha3Interface
+	networking networkingv1beta1.NetworkingV1beta1Interface
 }
 
-func newClient(networking networkingv1alpha3.NetworkingV1alpha3Interface) (*client, error) {
+func newClient(networking networkingv1beta1.NetworkingV1beta1Interface) (*client, error) {
 	return &client{
 		networking: networking,
 	}, nil
 }
 
-func (c *client) CreateVirtualService(ctx context.Context, namespace string, vs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error) {
-	return c.networking.VirtualServices(namespace).Create(vs)
+func (c *client) CreateVirtualService(ctx context.Context, namespace string, vs *istiov1beta1.VirtualService) (*istiov1beta1.VirtualService, error) {
+	return c.networking.VirtualServices(namespace).Create(ctx, vs, metav1.CreateOptions{})
 }
 
 // Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.VirtualService, err error) {
-func (c *client) PatchVirtualService(ctx context.Context, namespace string, vs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error) {
+func (c *client) PatchVirtualService(ctx context.Context, namespace string, vs *istiov1beta1.VirtualService) (*istiov1beta1.VirtualService, error) {
 	vsJSON, err := json.Marshal(vs)
 	if err != nil {
 		return nil, err
 	}
-	return c.networking.VirtualServices(namespace).Patch(vs.ObjectMeta.Name, types.MergePatchType, vsJSON)
+	return c.networking.VirtualServices(namespace).Patch(ctx, vs.ObjectMeta.Name, types.MergePatchType, vsJSON, metav1.PatchOptions{})
 }
 
 func (c *client) DeleteVirtualService(ctx context.Context, namespace, name string) error {
-	return c.networking.VirtualServices(namespace).Delete(name, &v1.DeleteOptions{})
+	return c.networking.VirtualServices(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 }

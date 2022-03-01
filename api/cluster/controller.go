@@ -15,20 +15,21 @@
 package cluster
 
 import (
+	"context"
 	"io"
 	"time"
 
-	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
-	kfservice "github.com/kubeflow/kfserving/pkg/client/clientset/versioned/typed/serving/v1alpha2"
-	"github.com/kubeflow/kfserving/pkg/constants"
+	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
+	kservev1beta1client "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
+
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	typedbatchv1 "k8s.io/client-go/kubernetes/typed/batch/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/rest"
+	batchv1client "k8s.io/client-go/kubernetes/typed/batch/v1"
+	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	restclient "k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gojek/merlin/config"
@@ -37,15 +38,15 @@ import (
 )
 
 type Controller interface {
-	Deploy(modelService *models.Service) (*models.Service, error)
-	Delete(modelService *models.Service) (*models.Service, error)
+	Deploy(ctx context.Context, modelService *models.Service) (*models.Service, error)
+	Delete(ctx context.Context, modelService *models.Service) (*models.Service, error)
 
-	ListPods(namespace, labelSelector string) (*v1.PodList, error)
-	StreamPodLogs(namespace, podName string, opts *v1.PodLogOptions) (io.ReadCloser, error)
+	ListPods(ctx context.Context, namespace, labelSelector string) (*corev1.PodList, error)
+	StreamPodLogs(ctx context.Context, namespace, podName string, opts *corev1.PodLogOptions) (io.ReadCloser, error)
 
-	ListJobs(namespace, labelSelector string) (*batchv1.JobList, error)
-	DeleteJob(namespace, jobName string, options *metav1.DeleteOptions) error
-	DeleteJobs(namespace string, options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
+	ListJobs(ctx context.Context, namespace, labelSelector string) (*batchv1.JobList, error)
+	DeleteJob(ctx context.Context, namespace, jobName string, deleteOptions metav1.DeleteOptions) error
+	DeleteJobs(ctx context.Context, namespace string, deleteOptions metav1.DeleteOptions, listOptions metav1.ListOptions) error
 
 	ContainerFetcher
 }
@@ -73,9 +74,9 @@ const (
 )
 
 type controller struct {
-	servingClient              kfservice.ServingV1alpha2Interface
-	clusterClient              corev1.CoreV1Interface
-	batchClient                typedbatchv1.BatchV1Interface
+	servingClient              kservev1beta1client.ServingV1beta1Interface
+	clusterClient              corev1client.CoreV1Interface
+	batchClient                batchv1client.BatchV1Interface
 	namespaceCreator           NamespaceCreator
 	deploymentConfig           *config.DeploymentConfig
 	kfServingResourceTemplater *KFServingResourceTemplater
@@ -83,9 +84,9 @@ type controller struct {
 }
 
 func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, standardTransformerConfig config.StandardTransformerConfig) (Controller, error) {
-	cfg := &rest.Config{
+	cfg := &restclient.Config{
 		Host: clusterConfig.Host,
-		TLSClientConfig: rest.TLSClientConfig{
+		TLSClientConfig: restclient.TLSClientConfig{
 			Insecure: false,
 			CAData:   []byte(clusterConfig.CACert),
 			CertData: []byte(clusterConfig.ClientCert),
@@ -93,17 +94,17 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 		},
 	}
 
-	servingClient, err := kfservice.NewForConfig(cfg)
+	servingClient, err := kservev1beta1client.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	coreV1Client, err := corev1.NewForConfig(cfg)
+	coreV1Client, err := corev1client.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	batchV1Client, err := typedbatchv1.NewForConfig(cfg)
+	batchV1Client, err := batchv1client.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -117,19 +118,24 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 	return newController(servingClient, coreV1Client, batchV1Client, deployConfig, containerFetcher, kfServingResourceTemplater)
 }
 
-func newController(kfservingClient kfservice.ServingV1alpha2Interface, nsClient corev1.CoreV1Interface, batchV1Client typedbatchv1.BatchV1Interface, deploymentConfig config.DeploymentConfig, containerFetcher ContainerFetcher, templater *KFServingResourceTemplater) (Controller, error) {
+func newController(kfservingClient kservev1beta1client.ServingV1beta1Interface,
+	coreV1Client corev1client.CoreV1Interface,
+	batchV1Client batchv1client.BatchV1Interface,
+	deploymentConfig config.DeploymentConfig,
+	containerFetcher ContainerFetcher,
+	templater *KFServingResourceTemplater) (Controller, error) {
 	return &controller{
 		servingClient:              kfservingClient,
-		clusterClient:              nsClient,
+		clusterClient:              coreV1Client,
 		batchClient:                batchV1Client,
-		namespaceCreator:           NewNamespaceCreator(nsClient, deploymentConfig.NamespaceTimeout),
+		namespaceCreator:           NewNamespaceCreator(coreV1Client, deploymentConfig.NamespaceTimeout),
 		deploymentConfig:           &deploymentConfig,
 		ContainerFetcher:           containerFetcher,
 		kfServingResourceTemplater: templater,
 	}, nil
 }
 
-func (k *controller) Deploy(modelService *models.Service) (*models.Service, error) {
+func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (*models.Service, error) {
 	if modelService.ResourceRequest != nil {
 		cpuRequest, _ := modelService.ResourceRequest.CPURequest.AsInt64()
 		maxCPU, _ := k.deploymentConfig.MaxCPU.AsInt64()
@@ -145,7 +151,7 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 		}
 	}
 
-	_, err := k.namespaceCreator.CreateNamespace(modelService.Namespace)
+	_, err := k.namespaceCreator.CreateNamespace(ctx, modelService.Namespace)
 	if err != nil {
 		log.Errorf("unable to create namespace %s %v", modelService.Namespace, err)
 		return nil, ErrUnableToCreateNamespace
@@ -184,16 +190,16 @@ func (k *controller) Deploy(modelService *models.Service) (*models.Service, erro
 		return nil, err
 	}
 
-	inferenceURL := models.GetValidInferenceURL(s.Status.URL, svcName)
+	inferenceURL := models.GetValidInferenceURL(s.Status.URL.String(), svcName)
 	return &models.Service{
 		Name:        s.Name,
 		Namespace:   s.Namespace,
-		ServiceName: (*s.Status.Default)[constants.Predictor].Hostname,
+		ServiceName: s.Status.URL.Host,
 		URL:         inferenceURL,
 	}, nil
 }
 
-func (k *controller) Delete(modelService *models.Service) (*models.Service, error) {
+func (k *controller) Delete(ctx context.Context, modelService *models.Service) (*models.Service, error) {
 	infSvc, err := k.servingClient.InferenceServices(modelService.Namespace).Get(modelService.Name, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
@@ -216,7 +222,7 @@ func (k *controller) deleteInferenceService(serviceName string, namespace string
 	return nil
 }
 
-func (k *controller) waitInferenceServiceReady(service *kfsv1alpha2.InferenceService) (*kfsv1alpha2.InferenceService, error) {
+func (k *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceService) (*kservev1beta1.InferenceService, error) {
 	timeout := time.After(k.deploymentConfig.DeploymentTimeout)
 	ticker := time.Tick(time.Second * tickDurationSecond)
 
@@ -240,10 +246,10 @@ func (k *controller) waitInferenceServiceReady(service *kfsv1alpha2.InferenceSer
 	}
 }
 
-func (c *controller) ListPods(namespace, labelSelector string) (*v1.PodList, error) {
-	return c.clusterClient.Pods(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+func (c *controller) ListPods(ctx context.Context, namespace, labelSelector string) (*corev1.PodList, error) {
+	return c.clusterClient.Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: labelSelector})
 }
 
-func (c *controller) StreamPodLogs(namespace, podName string, opts *v1.PodLogOptions) (io.ReadCloser, error) {
-	return c.clusterClient.Pods(namespace).GetLogs(podName, opts).Stream()
+func (c *controller) StreamPodLogs(ctx context.Context, namespace, podName string, opts *corev1.PodLogOptions) (io.ReadCloser, error) {
+	return c.clusterClient.Pods(namespace).GetLogs(podName, opts).Stream(ctx)
 }

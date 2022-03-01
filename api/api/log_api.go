@@ -80,7 +80,7 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if err := l.LogService.StreamLogs(logLineCh, stopCh, &query); err != nil {
+	if err := l.LogService.StreamLogs(ctx, logLineCh, stopCh, &query); err != nil {
 		InternalServerError(err.Error()).WriteTo(w)
 		return
 	}

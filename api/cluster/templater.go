@@ -19,8 +19,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
-	v1 "k8s.io/api/core/v1"
+	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
+	"github.com/kserve/kserve/pkg/constants"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gojek/merlin/config"
@@ -61,7 +62,7 @@ func NewKFServingResourceTemplater(standardTransformerConfig config.StandardTran
 	return &KFServingResourceTemplater{standardTransformerConfig: standardTransformerConfig}
 }
 
-func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
+func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) *kservev1beta1.InferenceService {
 	labels := modelService.Metadata.ToLabel()
 
 	objectMeta := metav1.ObjectMeta{
@@ -78,35 +79,33 @@ func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *mo
 		objectMeta.Annotations[annotationPrometheusScrapePort] = prometheusPort
 	}
 
-	inferenceService := &kfsv1alpha2.InferenceService{
+	inferenceService := &kservev1beta1.InferenceService{
 		ObjectMeta: objectMeta,
-		Spec: kfsv1alpha2.InferenceServiceSpec{
-			Default: kfsv1alpha2.EndpointSpec{
-				Predictor: createPredictorSpec(modelService, config),
-			},
+		Spec: kservev1beta1.InferenceServiceSpec{
+			Predictor: createPredictorSpec(modelService, config),
 		},
 	}
 
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		inferenceService.Spec.Default.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		inferenceService.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 	}
 
 	return inferenceService
 }
 
-func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kfsv1alpha2.InferenceService, modelService *models.Service, config *config.DeploymentConfig) *kfsv1alpha2.InferenceService {
+func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) *kservev1beta1.InferenceService {
 	labels := modelService.Metadata.ToLabel()
 	orig.ObjectMeta.Labels = labels
-	orig.Spec.Default.Predictor = createPredictorSpec(modelService, config)
+	orig.Spec.Predictor = createPredictorSpec(modelService, config)
 
-	orig.Spec.Default.Transformer = nil
+	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		orig.Spec.Default.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 	}
 	return orig
 }
 
-func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kfsv1alpha2.PredictorSpec {
+func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
 	if modelService.ResourceRequest == nil {
 		modelService.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.DefaultModelResourceRequests.MinReplica,
@@ -122,94 +121,120 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	memoryLimit := modelService.ResourceRequest.MemoryRequest.DeepCopy()
 	memoryLimit.Add(modelService.ResourceRequest.MemoryRequest)
 
-	Resources := v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			v1.ResourceCPU:    modelService.ResourceRequest.CPURequest,
-			v1.ResourceMemory: modelService.ResourceRequest.MemoryRequest,
+	resources := corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    modelService.ResourceRequest.CPURequest,
+			corev1.ResourceMemory: modelService.ResourceRequest.MemoryRequest,
 		},
-		Limits: v1.ResourceList{
-			v1.ResourceCPU:    cpuLimit,
-			v1.ResourceMemory: memoryLimit,
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuLimit,
+			corev1.ResourceMemory: memoryLimit,
 		},
 	}
 
-	var predictorSpec kfsv1alpha2.PredictorSpec
+	var predictorSpec kservev1beta1.PredictorSpec
 
+	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
 	switch modelService.Type {
 	case models.ModelTypeTensorflow:
-		predictorSpec = kfsv1alpha2.PredictorSpec{
-			Tensorflow: &kfsv1alpha2.TensorflowSpec{
-				StorageURI: utils.CreateModelLocation(modelService.ArtifactURI),
-				Resources:  Resources,
+		predictorSpec = kservev1beta1.PredictorSpec{
+			Tensorflow: &kservev1beta1.TFServingSpec{
+				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+					StorageURI: &storageUri,
+					Container: corev1.Container{
+						Name:      constants.InferenceServiceContainerName,
+						Resources: resources,
+					},
+				},
 			},
 		}
 	case models.ModelTypeOnnx:
-		predictorSpec = kfsv1alpha2.PredictorSpec{
-			ONNX: &kfsv1alpha2.ONNXSpec{
-				StorageURI: utils.CreateModelLocation(modelService.ArtifactURI),
-				Resources:  Resources,
+		predictorSpec = kservev1beta1.PredictorSpec{
+			ONNX: &kservev1beta1.ONNXRuntimeSpec{
+				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+					StorageURI: &storageUri,
+					Container: corev1.Container{
+						Name:      constants.InferenceServiceContainerName,
+						Resources: resources,
+					},
+				},
 			},
 		}
 	case models.ModelTypeSkLearn:
-		predictorSpec = kfsv1alpha2.PredictorSpec{
-			SKLearn: &kfsv1alpha2.SKLearnSpec{
-				StorageURI: utils.CreateModelLocation(modelService.ArtifactURI),
-				Resources:  Resources,
+		predictorSpec = kservev1beta1.PredictorSpec{
+			SKLearn: &kservev1beta1.SKLearnSpec{
+				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+					StorageURI: &storageUri,
+					Container: corev1.Container{
+						Name:      constants.InferenceServiceContainerName,
+						Resources: resources,
+					},
+				},
 			},
 		}
 	case models.ModelTypeXgboost:
-		predictorSpec = kfsv1alpha2.PredictorSpec{
-			XGBoost: &kfsv1alpha2.XGBoostSpec{
-				StorageURI: utils.CreateModelLocation(modelService.ArtifactURI),
-				Resources:  Resources,
+		predictorSpec = kservev1beta1.PredictorSpec{
+			XGBoost: &kservev1beta1.XGBoostSpec{
+				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+					StorageURI: &storageUri,
+					Container: corev1.Container{
+						Name:      constants.InferenceServiceContainerName,
+						Resources: resources,
+					},
+				},
 			},
 		}
 	case models.ModelTypePyTorch:
-		predictorSpec = kfsv1alpha2.PredictorSpec{
-			PyTorch: &kfsv1alpha2.PyTorchSpec{
-				StorageURI:     utils.CreateModelLocation(modelService.ArtifactURI),
-				ModelClassName: modelService.Options.PyTorchModelClassName,
-				Resources:      Resources,
+		predictorSpec = kservev1beta1.PredictorSpec{
+			PyTorch: &kservev1beta1.TorchServeSpec{
+				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+					StorageURI: &storageUri,
+					Container: corev1.Container{
+						Name:      constants.InferenceServiceContainerName,
+						Resources: resources,
+					},
+				},
 			},
 		}
 	case models.ModelTypePyFunc:
-		predictorSpec = kfsv1alpha2.PredictorSpec{
-			Custom: &kfsv1alpha2.CustomSpec{
-				Container: v1.Container{
-					Image:     modelService.Options.PyFuncImageName,
-					Env:       modelService.EnvVars.ToKubernetesEnvVars(),
-					Resources: Resources,
+		predictorSpec = kservev1beta1.PredictorSpec{
+			PodSpec: kservev1beta1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:      constants.InferenceServiceContainerName,
+						Image:     modelService.Options.PyFuncImageName,
+						Env:       modelService.EnvVars.ToKubernetesEnvVars(),
+						Resources: resources,
+					},
 				},
 			},
 		}
 	case models.ModelTypeCustom:
-		predictorSpec = createCustomPredictorSpec(modelService, Resources)
+		predictorSpec = createCustomPredictorSpec(modelService, resources)
 	}
 
-	var loggerSpec *kfsv1alpha2.Logger
+	var loggerSpec *kservev1beta1.LoggerSpec
 	if modelService.Logger != nil && modelService.Logger.Model != nil && modelService.Logger.Model.Enabled {
 		logger := modelService.Logger
 		loggerSpec = createLoggerSpec(logger.DestinationURL, *logger.Model)
 	}
 
-	predictorSpec.DeploymentSpec = kfsv1alpha2.DeploymentSpec{
-		MinReplicas: &(modelService.ResourceRequest.MinReplica),
-		MaxReplicas: modelService.ResourceRequest.MaxReplica,
-		Logger:      loggerSpec,
-	}
+	predictorSpec.MinReplicas = &(modelService.ResourceRequest.MinReplica)
+	predictorSpec.MaxReplicas = modelService.ResourceRequest.MaxReplica
+	predictorSpec.Logger = loggerSpec
 
 	return predictorSpec
 }
 
-func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kfsv1alpha2.Logger {
+func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kservev1beta1.LoggerSpec {
 	loggerMode := models.ToKFServingLoggerMode(loggerConfig.Mode)
-	return &kfsv1alpha2.Logger{
-		Url:  &loggerURL,
+	return &kservev1beta1.LoggerSpec{
+		URL:  &loggerURL,
 		Mode: loggerMode,
 	}
 }
 
-func createCustomPredictorSpec(modelService *models.Service, resources v1.ResourceRequirements) kfsv1alpha2.PredictorSpec {
+func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 	envVars = append(envVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
 	envVars = append(envVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
@@ -232,21 +257,24 @@ func createCustomPredictorSpec(modelService *models.Service, resources v1.Resour
 			containerArgs = args
 		}
 	}
-	return kfsv1alpha2.PredictorSpec{
-		Custom: &kfsv1alpha2.CustomSpec{
-			Container: v1.Container{
-				Image:     customPredictor.Image,
-				Env:       envVars.ToKubernetesEnvVars(),
-				Resources: resources,
-				Command:   containerCommand,
-				Args:      containerArgs,
-				Name:      defaultPredictorContainerName,
+	return kservev1beta1.PredictorSpec{
+		PodSpec: kservev1beta1.PodSpec{
+			Containers: []corev1.Container{
+				{
+
+					Image:     customPredictor.Image,
+					Env:       envVars.ToKubernetesEnvVars(),
+					Resources: resources,
+					Command:   containerCommand,
+					Args:      containerArgs,
+					Name:      constants.InferenceServiceContainerName,
+				},
 			},
 		},
 	}
 }
 
-func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kfsv1alpha2.TransformerSpec {
+func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
 	if transformer.ResourceRequest == nil {
 		transformer.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.DefaultTransformerResourceRequests.MinReplica,
@@ -272,48 +300,54 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	envVars = append(envVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
 
-	var loggerSpec *kfsv1alpha2.Logger
+	var loggerSpec *kservev1beta1.LoggerSpec
 	if modelService.Logger != nil && modelService.Logger.Transformer != nil && modelService.Logger.Transformer.Enabled {
 		logger := modelService.Logger
 		loggerSpec = createLoggerSpec(logger.DestinationURL, *logger.Transformer)
 	}
 
-	transformerSpec := &kfsv1alpha2.TransformerSpec{
-		Custom: &kfsv1alpha2.CustomSpec{
-			Container: v1.Container{
-				Name:  "transformer",
-				Image: transformer.Image,
-				Env:   envVars.ToKubernetesEnvVars(),
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceCPU:    transformer.ResourceRequest.CPURequest,
-						v1.ResourceMemory: transformer.ResourceRequest.MemoryRequest,
-					},
-					Limits: v1.ResourceList{
-						v1.ResourceCPU:    cpuLimit,
-						v1.ResourceMemory: memoryLimit,
-					},
-				},
-			},
-		},
-		DeploymentSpec: kfsv1alpha2.DeploymentSpec{
-			MinReplicas: &(transformer.ResourceRequest.MinReplica),
-			MaxReplicas: transformer.ResourceRequest.MaxReplica,
-			Logger:      loggerSpec,
-		},
-	}
-
+	var transformerCommand []string
+	var transformerArgs []string
 	if transformer.Command != "" {
 		command := strings.Split(transformer.Command, " ")
 		if len(command) > 0 {
-			transformerSpec.Custom.Container.Command = command
+			transformerCommand = command
 		}
 	}
 	if transformer.Args != "" {
 		args := strings.Split(transformer.Args, " ")
 		if len(args) > 0 {
-			transformerSpec.Custom.Container.Args = args
+			transformerArgs = args
 		}
+	}
+
+	transformerSpec := &kservev1beta1.TransformerSpec{
+		PodSpec: kservev1beta1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  "transformer",
+					Image: transformer.Image,
+					Env:   envVars.ToKubernetesEnvVars(),
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    transformer.ResourceRequest.CPURequest,
+							corev1.ResourceMemory: transformer.ResourceRequest.MemoryRequest,
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    cpuLimit,
+							corev1.ResourceMemory: memoryLimit,
+						},
+					},
+					Command: transformerCommand,
+					Args:    transformerArgs,
+				},
+			},
+		},
+		ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+			MinReplicas: &(transformer.ResourceRequest.MinReplica),
+			MaxReplicas: transformer.ResourceRequest.MaxReplica,
+			Logger:      loggerSpec,
+		},
 	}
 
 	return transformerSpec

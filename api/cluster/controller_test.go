@@ -12,21 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build unit
-
 package cluster
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
-	"github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
-	fakeserving "github.com/kubeflow/kfserving/pkg/client/clientset/versioned/fake"
-	fakeservingv1alpha2 "github.com/kubeflow/kfserving/pkg/client/clientset/versioned/typed/serving/v1alpha2/fake"
-	"github.com/kubeflow/kfserving/pkg/constants"
+	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
+	fakekserve "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
+	fakekservev1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,6 +35,8 @@ import (
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	ktesting "k8s.io/client-go/testing"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/network"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/mlp"
@@ -57,15 +58,17 @@ const (
 	namespaceResource = "namespaces"
 	podResource       = "pods"
 	jobResource       = "jobs"
+
+	baseUrl = "example.com"
 )
 
 type namespaceReactor struct {
-	namespace *v1.Namespace
+	namespace *corev1.Namespace
 	err       error
 }
 
 type inferenceServiceReactor struct {
-	isvc *v1alpha2.InferenceService
+	isvc *kservev1beta1.InferenceService
 	err  error
 }
 
@@ -84,12 +87,10 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 		ID: 1,
 	}
 	modelOpt := &models.ModelOption{}
-	svcName := models.CreateInferenceServiceName(model.Name, version.ID.String())
-	status := createServiceReadyStatus(svcName, svcName)
-	isvc := fakeInferenceService(svcName, project.Name, status)
+	isvc := fakeInferenceService(model.Name, version.ID.String(), project.Name)
 
 	modelSvc := &models.Service{
-		Name:      svcName,
+		Name:      isvc.Name,
 		Namespace: project.Name,
 		Options:   modelOpt,
 	}
@@ -109,7 +110,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 				kerrors.NewNotFound(schema.GroupResource{Group: coreGroup, Resource: namespaceResource}, project.Name),
 			},
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
@@ -117,12 +118,12 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 				nil,
 			},
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
-					Status: v1.NamespaceStatus{
-						Phase: v1.NamespaceActive,
+					Status: corev1.NamespaceStatus{
+						Phase: corev1.NamespaceActive,
 					},
 				},
 				nil,
@@ -133,18 +134,18 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 		{
 			"success: namespaceResource exists",
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
-					Status: v1.NamespaceStatus{
-						Phase: v1.NamespaceActive,
+					Status: corev1.NamespaceStatus{
+						Phase: corev1.NamespaceActive,
 					},
 				},
 				nil,
 			},
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
@@ -152,12 +153,12 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 				nil,
 			},
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
-					Status: v1.NamespaceStatus{
-						Phase: v1.NamespaceActive,
+					Status: corev1.NamespaceStatus{
+						Phase: corev1.NamespaceActive,
 					},
 				},
 				nil,
@@ -168,18 +169,18 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 		{
 			"error: namespaceResource terminating",
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
-					Status: v1.NamespaceStatus{
-						Phase: v1.NamespaceTerminating,
+					Status: corev1.NamespaceStatus{
+						Phase: corev1.NamespaceTerminating,
 					},
 				},
 				nil,
 			},
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
@@ -187,12 +188,12 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 				nil,
 			},
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
-					Status: v1.NamespaceStatus{
-						Phase: v1.NamespaceTerminating,
+					Status: corev1.NamespaceStatus{
+						Phase: corev1.NamespaceTerminating,
 					},
 				},
 				nil,
@@ -203,18 +204,18 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 		{
 			"error: namespaceResource terminating",
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
-					Status: v1.NamespaceStatus{
-						Phase: v1.NamespaceTerminating,
+					Status: corev1.NamespaceStatus{
+						Phase: corev1.NamespaceTerminating,
 					},
 				},
 				nil,
 			},
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
@@ -222,12 +223,12 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 				nil,
 			},
 			&namespaceReactor{
-				&v1.Namespace{
+				&corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: project.Name,
 					},
-					Status: v1.NamespaceStatus{
-						Phase: v1.NamespaceTerminating,
+					Status: corev1.NamespaceStatus{
+						Phase: corev1.NamespaceTerminating,
 					},
 				},
 				nil,
@@ -239,12 +240,12 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			kfClient := fakeserving.NewSimpleClientset().ServingV1alpha2().(*fakeservingv1alpha2.FakeServingV1alpha2)
+			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
 			kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 					return true, isvc, nil
 				})
-				return true, nil, kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)
+				return true, nil, kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvc.Name)
 			})
 			kfClient.PrependReactor(createMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, isvc, nil
@@ -270,7 +271,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			ctl, _ := newController(kfClient, v1Client, nil, deployConfig, containerFetcher, nil)
-			iSvc, err := ctl.Deploy(modelSvc)
+			iSvc, err := ctl.Deploy(context.Background(), modelSvc)
 
 			if tt.wantError {
 				assert.Error(t, err)
@@ -295,15 +296,15 @@ func TestController_DeployInferenceService(t *testing.T) {
 		ID: 1,
 	}
 	modelOpt := &models.ModelOption{}
-	svcName := models.CreateInferenceServiceName(model.Name, version.ID.String())
-	statusReady := createServiceReadyStatus(svcName, svcName)
-	namespace := &v1.Namespace{
+	isvcName := models.CreateInferenceServiceName(model.Name, version.ID.String())
+	statusReady := createServiceReadyStatus(isvcName, project.Name, baseUrl)
+	namespace := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{Name: project.Name},
-		Status:     v1.NamespaceStatus{Phase: v1.NamespaceActive},
+		Status:     corev1.NamespaceStatus{Phase: corev1.NamespaceActive},
 	}
 
 	modelSvc := &models.Service{
-		Name:      svcName,
+		Name:      isvcName,
 		Namespace: project.Name,
 		Options:   modelOpt,
 	}
@@ -323,14 +324,14 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName)},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     statusReady},
 				nil,
 			},
@@ -341,15 +342,15 @@ func TestController_DeployInferenceService(t *testing.T) {
 			"success: update inference service",
 			modelSvc,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     statusReady},
 				nil},
 			deployTimeout,
@@ -358,7 +359,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"success: deploying service",
 			&models.Service{
-				Name:      svcName,
+				Name:      isvcName,
 				Namespace: project.Name,
 				Options:   modelOpt,
 				ResourceRequest: &models.ResourceRequest{
@@ -370,14 +371,14 @@ func TestController_DeployInferenceService(t *testing.T) {
 			},
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName)},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     statusReady},
 				nil,
 			},
@@ -391,12 +392,12 @@ func TestController_DeployInferenceService(t *testing.T) {
 				nil,
 				errors.New("error")},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     statusReady},
 				nil},
 			deployTimeout,
@@ -407,14 +408,14 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName)},
 			&inferenceServiceReactor{
 				nil,
 				errors.New("error creating inference service")},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     statusReady},
 				nil},
 			deployTimeout,
@@ -424,15 +425,15 @@ func TestController_DeployInferenceService(t *testing.T) {
 			"error: failed update",
 			modelSvc,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
 				nil,
 				errors.New("error updating inference service")},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     statusReady},
 				nil},
 			deployTimeout,
@@ -443,9 +444,9 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName)},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
@@ -460,14 +461,14 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName)},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     createPredErrorCond()},
 				nil},
 			deployTimeout,
@@ -478,14 +479,14 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName)},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     createRoutesErrorCond()},
 				nil},
 			deployTimeout,
@@ -496,14 +497,14 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName)},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     statusReady},
 				nil,
 			},
@@ -513,7 +514,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: deploying service due to insufficient CPU",
 			&models.Service{
-				Name:      svcName,
+				Name:      isvcName,
 				Namespace: project.Name,
 				Options:   modelOpt,
 				ResourceRequest: &models.ResourceRequest{
@@ -525,14 +526,14 @@ func TestController_DeployInferenceService(t *testing.T) {
 			},
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName)},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     statusReady},
 				nil,
 			},
@@ -542,7 +543,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: deploying service due to insufficient memory",
 			&models.Service{
-				Name:      svcName,
+				Name:      isvcName,
 				Namespace: project.Name,
 				Options:   modelOpt,
 				ResourceRequest: &models.ResourceRequest{
@@ -554,14 +555,14 @@ func TestController_DeployInferenceService(t *testing.T) {
 			},
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName)},
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil},
 			nil,
 			&inferenceServiceReactor{
-				&v1alpha2.InferenceService{
-					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
 					Status:     statusReady},
 				nil,
 			},
@@ -572,7 +573,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			kfClient := fakeserving.NewSimpleClientset().ServingV1alpha2().(*fakeservingv1alpha2.FakeServingV1alpha2)
+			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
 			kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 					return true, tt.checkResult.isvc, tt.checkResult.err
@@ -606,7 +607,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 			ctl, _ := newController(kfClient, v1Client, nil, deployConfig, containerFetcher, nil)
-			iSvc, err := ctl.Deploy(tt.modelService)
+			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
 
 			if tt.wantError {
 				assert.Error(t, err)
@@ -619,80 +620,79 @@ func TestController_DeployInferenceService(t *testing.T) {
 	}
 }
 
-func fakeInferenceService(svcName string, namespace string, status v1alpha2.InferenceServiceStatus) *v1alpha2.InferenceService {
-	return &v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: namespace}, Status: status}
+func fakeInferenceService(model, version, project string) *kservev1beta1.InferenceService {
+	svcName := models.CreateInferenceServiceName(model, version)
+	status := createServiceReadyStatus(svcName, project, baseUrl)
+	return &kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project}, Status: status}
 }
 
-func createServiceReadyStatus(svcUrl, expUrl string) v1alpha2.InferenceServiceStatus {
-	status := v1alpha2.InferenceServiceStatus{}
+func createServiceReadyStatus(iSvcName, namespace, baseUrl string) kservev1beta1.InferenceServiceStatus {
+	status := kservev1beta1.InferenceServiceStatus{}
 	status.InitializeConditions()
-	status.URL = expUrl
-	status.Default = &map[constants.InferenceServiceComponent]v1alpha2.StatusConfigurationSpec{
-		constants.Predictor: v1alpha2.StatusConfigurationSpec{
-			Name:     svcUrl,
-			Hostname: svcUrl,
+
+	url, err := apis.ParseURL(fmt.Sprintf("%s.%s.%s", iSvcName, namespace, baseUrl))
+	if err != nil {
+		panic(err)
+	}
+	status.URL = url
+	status.Address = &duckv1.Addressable{
+		URL: &apis.URL{
+			Host:   network.GetServiceHostname(iSvcName, namespace),
+			Scheme: "http",
 		},
 	}
 	status.SetConditions(apis.Conditions{
 		{
-			Type:   v1alpha2.RoutesReady,
-			Status: v1.ConditionTrue,
-		},
-		{
-			Type:   v1alpha2.DefaultPredictorReady,
-			Status: v1.ConditionTrue,
-		},
-		{
 			Type:   apis.ConditionReady,
-			Status: v1.ConditionTrue,
+			Status: corev1.ConditionTrue,
 		},
 	})
 	return status
 }
 
-func createPredErrorCond() v1alpha2.InferenceServiceStatus {
-	status := v1alpha2.InferenceServiceStatus{}
+func createPredErrorCond() kservev1beta1.InferenceServiceStatus {
+	status := kservev1beta1.InferenceServiceStatus{}
 	status.InitializeConditions()
 	status.SetConditions(apis.Conditions{
 		{
-			Type:   v1alpha2.RoutesReady,
-			Status: v1.ConditionTrue,
+			Type:   kservev1beta1.IngressReady,
+			Status: corev1.ConditionTrue,
 		},
 		{
-			Type:    v1alpha2.DefaultPredictorReady,
-			Status:  v1.ConditionFalse,
+			Type:    kservev1beta1.PredictorReady,
+			Status:  corev1.ConditionFalse,
 			Message: "predictor error",
 		},
 		{
 			Type:   apis.ConditionReady,
-			Status: v1.ConditionFalse,
+			Status: corev1.ConditionFalse,
 		},
 	})
 	return status
 }
 
-func createRoutesErrorCond() v1alpha2.InferenceServiceStatus {
-	status := v1alpha2.InferenceServiceStatus{}
+func createRoutesErrorCond() kservev1beta1.InferenceServiceStatus {
+	status := kservev1beta1.InferenceServiceStatus{}
 	status.InitializeConditions()
 	status.SetConditions(apis.Conditions{
 		{
-			Type:    v1alpha2.RoutesReady,
-			Status:  v1.ConditionFalse,
+			Type:    kservev1beta1.IngressReady,
+			Status:  corev1.ConditionFalse,
 			Message: "routes error",
 		},
 		{
-			Type:   v1alpha2.DefaultPredictorReady,
-			Status: v1.ConditionTrue,
+			Type:   kservev1beta1.PredictorReady,
+			Status: corev1.ConditionTrue,
 		},
 		{
 			Type:   apis.ConditionReady,
-			Status: v1.ConditionFalse,
+			Status: corev1.ConditionFalse,
 		},
 	})
 	return status
 }
 
-func isIn(container v1.Container, containers []*models.Container, podName string) bool {
+func isIn(container corev1.Container, containers []*models.Container, podName string) bool {
 	for _, c := range containers {
 		if container.Name == c.Name && podName == c.PodName {
 			return true
@@ -706,8 +706,8 @@ func Test_controller_ListPods(t *testing.T) {
 
 	v1Client := fake.NewSimpleClientset()
 	v1Client.PrependReactor(listMethod, podResource, func(action ktesting.Action) (bool, runtime.Object, error) {
-		return true, &v1.PodList{
-			Items: []v1.Pod{
+		return true, &corev1.PodList{
+			Items: []corev1.Pod{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "test-model-1-predictor-default-a",
@@ -715,11 +715,11 @@ func Test_controller_ListPods(t *testing.T) {
 							"serving.knative.dev/service": "test-model-1-predictor-default",
 						},
 					},
-					Spec: v1.PodSpec{
-						InitContainers: []v1.Container{
+					Spec: corev1.PodSpec{
+						InitContainers: []corev1.Container{
 							{Name: "storage-initializer"},
 						},
-						Containers: []v1.Container{
+						Containers: []corev1.Container{
 							{Name: "kfserving-container"},
 							{Name: "queue-proxy"},
 							{Name: "inferenceservice-logger"},
@@ -733,11 +733,11 @@ func Test_controller_ListPods(t *testing.T) {
 							"serving.knative.dev/service": "test-model-1-predictor-default",
 						},
 					},
-					Spec: v1.PodSpec{
-						InitContainers: []v1.Container{
+					Spec: corev1.PodSpec{
+						InitContainers: []corev1.Container{
 							{Name: "storage-initializer"},
 						},
-						Containers: []v1.Container{
+						Containers: []corev1.Container{
 							{Name: "kfserving-container"},
 							{Name: "queue-proxy"},
 							{Name: "inferenceservice-logger"},
@@ -751,7 +751,7 @@ func Test_controller_ListPods(t *testing.T) {
 		clusterClient: v1Client.CoreV1(),
 	}
 
-	podList, err := ctl.ListPods(namespace, "serving.knative.dev/service=test-model-1-predictor-default")
+	podList, err := ctl.ListPods(context.Background(), namespace, "serving.knative.dev/service=test-model-1-predictor-default")
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(podList.Items))

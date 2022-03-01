@@ -15,6 +15,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -34,15 +35,15 @@ import (
 
 type PredictionJobService interface {
 	// GetPredictionJob return prediction job with given ID
-	GetPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
+	GetPredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
 	// ListPredictionJobs return all prediction job created in a project
-	ListPredictionJobs(project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, error)
+	ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, error)
 	// CreatePredictionJob creates and start a new prediction job from the given model version
-	CreatePredictionJob(env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) (*models.PredictionJob, error)
+	CreatePredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) (*models.PredictionJob, error)
 	// ListContainers return all containers which used for the given model version
-	ListContainers(env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) ([]*models.Container, error)
+	ListContainers(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) ([]*models.Container, error)
 	// StopPredictionJob deletes the spark application resource and cleans up the resource
-	StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
+	StopPredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error)
 }
 
 // ListPredictionJobQuery represent query string for list prediction job api
@@ -70,12 +71,12 @@ func NewPredictionJobService(batchControllers map[string]batch.Controller, image
 }
 
 // GetPredictionJob return prediction job with given ID
-func (p *predictionJobService) GetPredictionJob(_ *models.Environment, _ *models.Model, _ *models.Version, id models.ID) (*models.PredictionJob, error) {
+func (p *predictionJobService) GetPredictionJob(ctx context.Context, _ *models.Environment, _ *models.Model, _ *models.Version, id models.ID) (*models.PredictionJob, error) {
 	return p.store.Get(id)
 }
 
 // ListPredictionJobs return all prediction job created from the given project filtered by the given query
-func (p *predictionJobService) ListPredictionJobs(project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, error) {
+func (p *predictionJobService) ListPredictionJobs(ctx context.Context, project mlp.Project, query *ListPredictionJobQuery) ([]*models.PredictionJob, error) {
 	predJobQuery := &models.PredictionJob{
 		ID:             query.ID,
 		Name:           query.Name,
@@ -92,7 +93,7 @@ func (p *predictionJobService) ListPredictionJobs(project mlp.Project, query *Li
 // CreatePredictionJob creates and start a new prediction job from the given model version
 // The method directly return a prediction job in pending state and execution happens asynchronously
 // Use GetPredictionJOb / ListPredictionJobs to get the status of the prediction job
-func (p *predictionJobService) CreatePredictionJob(env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) (*models.PredictionJob, error) {
+func (p *predictionJobService) CreatePredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) (*models.PredictionJob, error) {
 	jobName := fmt.Sprintf("%s-%s-%s", model.Name, version.ID, strconv.FormatInt(p.clock.Now().UnixNano(), 10)[:13])
 
 	predictionJob.Name = jobName
@@ -142,21 +143,21 @@ func (p *predictionJobService) CreatePredictionJob(env *models.Environment, mode
 	return predictionJob, nil
 }
 
-func (p *predictionJobService) ListContainers(env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) ([]*models.Container, error) {
+func (p *predictionJobService) ListContainers(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, predictionJob *models.PredictionJob) ([]*models.Container, error) {
 	ctl, ok := p.batchControllers[env.Name]
 	if !ok {
 		return nil, fmt.Errorf("unable to find batch controller for environment %s", env.Name)
 	}
 	containers := make([]*models.Container, 0)
 	if model.Type == models.ModelTypePyFuncV2 {
-		imgBuilderContainers, err := p.imageBuilder.GetContainers(model.Project, model, version)
+		imgBuilderContainers, err := p.imageBuilder.GetContainers(ctx, model.Project, model, version)
 		if err != nil {
 			return nil, err
 		}
 		containers = append(containers, imgBuilderContainers...)
 	}
 
-	modelContainers, err := ctl.GetContainers(model.Project.Name, models.BatchInferencePodLabelSelector(predictionJob.ID.String()))
+	modelContainers, err := ctl.GetContainers(ctx, model.Project.Name, models.BatchInferencePodLabelSelector(predictionJob.ID.String()))
 	if err != nil {
 		return nil, err
 	}
@@ -165,9 +166,9 @@ func (p *predictionJobService) ListContainers(env *models.Environment, model *mo
 	return containers, nil
 }
 
-func (p *predictionJobService) StopPredictionJob(env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error) {
+func (p *predictionJobService) StopPredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, id models.ID) (*models.PredictionJob, error) {
 	project := model.Project
-	job, err := p.GetPredictionJob(env, model, version, id)
+	job, err := p.GetPredictionJob(ctx, env, model, version, id)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +179,7 @@ func (p *predictionJobService) StopPredictionJob(env *models.Environment, model 
 		return nil, fmt.Errorf("environment %s is not found", env.Name)
 	}
 
-	return job, ctl.Stop(job, project.Name)
+	return job, ctl.Stop(ctx, job, project.Name)
 }
 
 func (p *predictionJobService) applyDefaults(env *models.Environment, job *models.PredictionJob) *models.PredictionJob {

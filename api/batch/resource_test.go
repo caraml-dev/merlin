@@ -163,8 +163,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Arguments:           defaultArgument,
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
-						ServiceAccount: &jobName,
-						CoreRequest:    &driverCPURequest,
+						CoreRequest: &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
 							CoreLimit:  &driverCoreLimit,
@@ -176,6 +175,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 							Tolerations: []v12.Toleration{
 								defaultToleration,
 							},
+							ServiceAccount: &jobName,
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{
@@ -241,8 +241,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Arguments:           defaultArgument,
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
-						ServiceAccount: &jobName,
-						CoreRequest:    &fractDriverCPURequest,
+						CoreRequest: &fractDriverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
 							CoreLimit:  &fractDriverCPULimit,
@@ -254,6 +253,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 							Tolerations: []v12.Toleration{
 								defaultToleration,
 							},
+							ServiceAccount: &jobName,
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{
@@ -319,8 +319,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Arguments:           defaultArgument,
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
-						CoreRequest:    &driverCPURequest,
-						ServiceAccount: &jobName,
+						CoreRequest: &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
 							CoreLimit:  &driverCoreLimit,
@@ -332,6 +331,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 							Tolerations: []v12.Toleration{
 								defaultToleration,
 							},
+							ServiceAccount: &jobName,
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{
@@ -397,8 +397,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Arguments:           defaultArgument,
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
-						CoreRequest:    &driverCPURequest,
-						ServiceAccount: &jobName,
+						CoreRequest: &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
 							CoreLimit:  &driverCoreLimit,
@@ -410,6 +409,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 							Tolerations: []v12.Toleration{
 								defaultToleration,
 							},
+							ServiceAccount: &jobName,
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{
@@ -481,8 +481,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 					Arguments:           defaultArgument,
 					HadoopConf:          defaultHadoopConf,
 					Driver: v1beta2.DriverSpec{
-						ServiceAccount: &jobName,
-						CoreRequest:    &driverCPURequest,
+						CoreRequest: &driverCPURequest,
 						SparkPodSpec: v1beta2.SparkPodSpec{
 							Cores:      &driverCore,
 							CoreLimit:  &driverCoreLimit,
@@ -497,6 +496,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 							Tolerations: []v12.Toleration{
 								defaultToleration,
 							},
+							ServiceAccount: &jobName,
 						},
 					},
 					Executor: v1beta2.ExecutorSpec{

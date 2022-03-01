@@ -15,6 +15,7 @@
 package cluster
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -92,7 +93,7 @@ func Test_controller_ListJobs(t *testing.T) {
 		}, nil
 	})
 
-	jobList, err := ctl.ListJobs(namespace, "gojek.com/orchestrator=merlin")
+	jobList, err := ctl.ListJobs(context.Background(), namespace, "gojek.com/orchestrator=merlin")
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(jobList.Items))
@@ -113,7 +114,7 @@ func Test_controller_DeleteJob(t *testing.T) {
 		return false, nil, nil
 	})
 
-	err := ctl.DeleteJob(namespace, "batch-image-builder-1", nil)
+	err := ctl.DeleteJob(context.Background(), namespace, "batch-image-builder-1", metav1.DeleteOptions{})
 	assert.NotNil(t, err)
 
 	// Second reactor simulate success deletion
@@ -121,7 +122,7 @@ func Test_controller_DeleteJob(t *testing.T) {
 		return true, nil, nil
 	})
 
-	err = ctl.DeleteJob(namespace, "batch-image-builder-1", nil)
+	err = ctl.DeleteJob(context.Background(), namespace, "batch-image-builder-1", metav1.DeleteOptions{})
 	assert.Nil(t, err)
 }
 
@@ -137,6 +138,6 @@ func Test_controller_DeleteJobs(t *testing.T) {
 		return true, nil, nil
 	})
 
-	err := ctl.DeleteJobs(namespace, nil, metav1.ListOptions{LabelSelector: "gojek.com/orchestrator=merlin"})
+	err := ctl.DeleteJobs(context.Background(), namespace, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "gojek.com/orchestrator=merlin"})
 	assert.Nil(t, err)
 }

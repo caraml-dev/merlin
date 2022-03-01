@@ -55,7 +55,7 @@ func (c *PredictionJobController) Create(r *http.Request, vars map[string]string
 		return InternalServerError("Unable to find default environment, specify environment target for deployment")
 	}
 
-	predictionJob, err := c.PredictionJobService.CreatePredictionJob(env, model, version, data)
+	predictionJob, err := c.PredictionJobService.CreatePredictionJob(ctx, env, model, version, data)
 	if err != nil {
 		log.Errorf("failed creating prediction job %v", err)
 		return BadRequest(fmt.Sprintf("Failed creating prediction job %s", err))
@@ -84,7 +84,7 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 		VersionID: versionID,
 	}
 
-	jobs, err := c.PredictionJobService.ListPredictionJobs(model.Project, query)
+	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
 	if err != nil {
 		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
 		return InternalServerError("Failed listing prediction job")
@@ -114,7 +114,7 @@ func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _
 		return InternalServerError("Unable to find default environment, specify environment target for deployment")
 	}
 
-	job, err := c.PredictionJobService.GetPredictionJob(env, model, version, id)
+	job, err := c.PredictionJobService.GetPredictionJob(ctx, env, model, version, id)
 	if err != nil {
 		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.ID, err)
 		return InternalServerError("Failed reading prediction job")
@@ -144,7 +144,7 @@ func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, 
 		return InternalServerError("Unable to find default environment, specify environment target for deployment")
 	}
 
-	_, err = c.PredictionJobService.StopPredictionJob(env, model, version, id)
+	_, err = c.PredictionJobService.StopPredictionJob(ctx, env, model, version, id)
 	if err != nil {
 		log.Errorf("failed to stop prediction job %v", err)
 		return BadRequest(fmt.Sprintf("Failed stopping prediction job %s", err))
@@ -174,13 +174,13 @@ func (c *PredictionJobController) ListContainers(r *http.Request, vars map[strin
 		return InternalServerError("Unable to find default environment, specify environment target for deployment")
 	}
 
-	job, err := c.PredictionJobService.GetPredictionJob(env, model, version, id)
+	job, err := c.PredictionJobService.GetPredictionJob(ctx, env, model, version, id)
 	if err != nil {
 		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.ID, err)
 		return InternalServerError("Failed reading prediction job")
 	}
 
-	containers, err := c.PredictionJobService.ListContainers(env, model, version, job)
+	containers, err := c.PredictionJobService.ListContainers(ctx, env, model, version, job)
 	if err != nil {
 		log.Errorf("Error finding containers for model %v, version %v, reason: %v", model, version, err)
 		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint with model %v and version %v", model.ID, version.ID))
@@ -201,7 +201,7 @@ func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[str
 		return NotFound(err.Error())
 	}
 
-	jobs, err := c.PredictionJobService.ListPredictionJobs(project, &query)
+	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query)
 	if err != nil {
 		log.Errorf("failed to list all prediction job for model ")
 		return InternalServerError("Failed listing prediction job")
