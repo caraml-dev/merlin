@@ -46,13 +46,16 @@ const (
 	suffixHashLength   = 8
 )
 
-func entityKeysToBigTable(project string, entityKeys []*spec.Entity) string {
-	keyNames := make([]string, len(entityKeys))
-	for i, e := range entityKeys {
-		keyNames[i] = e.Name
+func entitiesToEntityNames(entities []*spec.Entity) []string {
+	entityNames := make([]string, len(entities))
+	for i, e := range entities {
+		entityNames[i] = e.Name
 	}
+	return entityNames
+}
 
-	fullTableName := project + "__" + strings.Join(keyNames, "__")
+func entityKeysToBigTable(project string, entityNames []string) string {
+	fullTableName := project + "__" + strings.Join(entityNames, "__")
 	if len(fullTableName) <= maxTableNameLength {
 		return fullTableName
 	}
@@ -310,7 +313,7 @@ func (e *Encoder) Encode(req *feast.OnlineFeaturesRequest) (RowQuery, error) {
 	}
 
 	return RowQuery{
-		table:      entityKeysToBigTable(req.Project, entityKeys),
+		table:      entityKeysToBigTable(req.Project, entitiesToEntityNames(entityKeys)),
 		entityKeys: entityKeys,
 		rowList:    &encodedEntities,
 		rowFilter:  bigtable.FamilyFilter(strings.Join(featureTables, "|")),
@@ -497,7 +500,7 @@ func (r *CachedCodecRegistry) GetCodec(ctx context.Context, schemaRef []byte, pr
 		return codec, nil
 	}
 	r.RUnlock()
-	tableName := entityKeysToBigTable(project, entityKeys)
+	tableName := entityKeysToBigTable(project, entitiesToEntityNames(entityKeys))
 	schemaKey := fmt.Sprintf("schema#%s", string(schemaRef))
 	schemaValue, err := r.tables[tableName].readRow(ctx, schemaKey)
 	if err != nil {
