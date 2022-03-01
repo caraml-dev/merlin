@@ -3,15 +3,41 @@ package converter
 import (
 	"encoding/base64"
 	"fmt"
+	"reflect"
 	"strconv"
+	"strings"
 
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
+
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	feastType2 "github.com/gojek/merlin/pkg/transformer/types/feast"
 )
 
 func ToString(val interface{}) (string, error) {
 	return fmt.Sprintf("%v", val), nil
+}
+
+func ToStringList(val interface{}) ([]string, error) {
+	switch v := val.(type) {
+	case string:
+		return []string{v}, nil
+	case []string:
+		return v, nil
+	default:
+		switch reflect.TypeOf(val).Kind() {
+		case reflect.Slice:
+			v := reflect.ValueOf(val)
+			l := v.Len()
+			out := make([]string, l)
+			for i := 0; i < l; i++ {
+				out[i] = fmt.Sprintf("%v", v.Index(i))
+			}
+			return out, nil
+		default:
+			return []string{fmt.Sprintf("%v", val)}, nil
+		}
+	}
 }
 
 func ToInt(v interface{}) (int, error) {
@@ -34,6 +60,70 @@ func ToInt(v interface{}) (int, error) {
 		return strconv.Atoi(v)
 	default:
 		return 0, fmt.Errorf("unsupported conversion from %T to int", v)
+	}
+}
+
+func ToIntList(val interface{}) ([]int, error) {
+	switch v := val.(type) {
+	case int, int8, int16, int32, int64:
+		i := reflect.ValueOf(v)
+		return []int{int(i.Int())}, nil
+	case []int, []int8, []int16, []int32, []int64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]int, l)
+		for i := 0; i < l; i++ {
+			out[i] = int(list.Index(i).Int())
+		}
+		return out, nil
+	case float32, float64:
+		val := reflect.ValueOf(v)
+		return []int{int(val.Float())}, nil
+	case []float32, []float64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]int, l)
+		for i := 0; i < l; i++ {
+			out[i] = int(list.Index(i).Float())
+		}
+		return out, nil
+	case bool:
+		if v {
+			return []int{1}, nil
+		} else {
+			return []int{0}, nil
+		}
+	case []bool:
+		l := len(v)
+		out := make([]int, l)
+		for i := 0; i < l; i++ {
+			if v[i] {
+				out[i] = 1
+			} else {
+				out[i] = 0
+			}
+		}
+		return out, nil
+	case string:
+		d, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, err
+		}
+		return []int{d}, nil
+	case []string:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]int, l)
+		for i := 0; i < l; i++ {
+			d, err := strconv.Atoi(list.Index(i).String())
+			if err != nil {
+				return nil, err
+			}
+			out[i] = d
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("unsupported conversion from %T to []int", v)
 	}
 }
 
@@ -87,6 +177,134 @@ func ToInt32(v interface{}) (int32, error) {
 	}
 }
 
+func ToInt32List(val interface{}) ([]int32, error) {
+	switch v := val.(type) {
+	case int, int8, int16, int32, int64:
+		i := reflect.ValueOf(v)
+		return []int32{int32(i.Int())}, nil
+	case []int, []int8, []int16, []int32, []int64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]int32, l)
+		for i := 0; i < l; i++ {
+			out[i] = int32(list.Index(i).Int())
+		}
+		return out, nil
+	case float32, float64:
+		val := reflect.ValueOf(v)
+		return []int32{int32(val.Float())}, nil
+	case []float32, []float64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]int32, l)
+		for i := 0; i < l; i++ {
+			out[i] = int32(list.Index(i).Float())
+		}
+		return out, nil
+	case bool:
+		if v {
+			return []int32{1}, nil
+		} else {
+			return []int32{0}, nil
+		}
+	case []bool:
+		l := len(v)
+		out := make([]int32, l)
+		for i := 0; i < l; i++ {
+			if v[i] {
+				out[i] = 1
+			} else {
+				out[i] = 0
+			}
+		}
+		return out, nil
+	case string:
+		d, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		return []int32{int32(d)}, nil
+	case []string:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]int32, l)
+		for i := 0; i < l; i++ {
+			d, err := strconv.ParseInt(list.Index(i).String(), 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			out[i] = int32(d)
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("unsupported conversion from %T to []int32", v)
+	}
+}
+
+func ToInt64List(val interface{}) ([]int64, error) {
+	switch v := val.(type) {
+	case int, int8, int16, int32, int64:
+		i := reflect.ValueOf(v)
+		return []int64{int64(i.Int())}, nil
+	case []int, []int8, []int16, []int32, []int64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]int64, l)
+		for i := 0; i < l; i++ {
+			out[i] = list.Index(i).Int()
+		}
+		return out, nil
+	case float32, float64:
+		val := reflect.ValueOf(v)
+		return []int64{int64(val.Float())}, nil
+	case []float32, []float64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]int64, l)
+		for i := 0; i < l; i++ {
+			out[i] = int64(list.Index(i).Float())
+		}
+		return out, nil
+	case bool:
+		if v {
+			return []int64{1}, nil
+		} else {
+			return []int64{0}, nil
+		}
+	case []bool:
+		l := len(v)
+		out := make([]int64, l)
+		for i := 0; i < l; i++ {
+			if v[i] {
+				out[i] = 1
+			} else {
+				out[i] = 0
+			}
+		}
+		return out, nil
+	case string:
+		d, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		return []int64{d}, nil
+	case []string:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]int64, l)
+		for i := 0; i < l; i++ {
+			d, err := strconv.ParseInt(list.Index(i).String(), 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			out[i] = d
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("unsupported conversion from %T to []int64", v)
+	}
+}
+
 func ToFloat32(v interface{}) (float32, error) {
 	switch v := v.(type) {
 	case float64:
@@ -137,6 +355,134 @@ func ToFloat64(v interface{}) (float64, error) {
 	}
 }
 
+func ToFloat32List(val interface{}) ([]float32, error) {
+	switch v := val.(type) {
+	case int, int8, int16, int32, int64:
+		i := reflect.ValueOf(v)
+		return []float32{float32(i.Int())}, nil
+	case []int, []int8, []int16, []int32, []int64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]float32, l)
+		for i := 0; i < l; i++ {
+			out[i] = float32(list.Index(i).Int())
+		}
+		return out, nil
+	case float32, float64:
+		val := reflect.ValueOf(v)
+		return []float32{float32(val.Float())}, nil
+	case []float32, []float64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]float32, l)
+		for i := 0; i < l; i++ {
+			out[i] = float32(list.Index(i).Float())
+		}
+		return out, nil
+	case bool:
+		if v {
+			return []float32{1}, nil
+		} else {
+			return []float32{0}, nil
+		}
+	case []bool:
+		l := len(v)
+		out := make([]float32, l)
+		for i := 0; i < l; i++ {
+			if v[i] {
+				out[i] = 1
+			} else {
+				out[i] = 0
+			}
+		}
+		return out, nil
+	case string:
+		d, err := strconv.ParseFloat(v, 32)
+		if err != nil {
+			return nil, err
+		}
+		return []float32{float32(d)}, nil
+	case []string:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]float32, l)
+		for i := 0; i < l; i++ {
+			d, err := strconv.ParseFloat(list.Index(i).String(), 32)
+			if err != nil {
+				return nil, err
+			}
+			out[i] = float32(d)
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("unsupported conversion from %T to []float32", v)
+	}
+}
+
+func ToFloat64List(val interface{}) ([]float64, error) {
+	switch v := val.(type) {
+	case int, int8, int16, int32, int64:
+		i := reflect.ValueOf(v)
+		return []float64{float64(i.Int())}, nil
+	case []int, []int8, []int16, []int32, []int64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]float64, l)
+		for i := 0; i < l; i++ {
+			out[i] = float64(list.Index(i).Int())
+		}
+		return out, nil
+	case float32, float64:
+		val := reflect.ValueOf(v)
+		return []float64{val.Float()}, nil
+	case []float32, []float64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]float64, l)
+		for i := 0; i < l; i++ {
+			out[i] = list.Index(i).Float()
+		}
+		return out, nil
+	case bool:
+		if v {
+			return []float64{1}, nil
+		} else {
+			return []float64{0}, nil
+		}
+	case []bool:
+		l := len(v)
+		out := make([]float64, l)
+		for i := 0; i < l; i++ {
+			if v[i] {
+				out[i] = 1
+			} else {
+				out[i] = 0
+			}
+		}
+		return out, nil
+	case string:
+		d, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil, err
+		}
+		return []float64{d}, nil
+	case []string:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]float64, l)
+		for i := 0; i < l; i++ {
+			d, err := strconv.ParseFloat(list.Index(i).String(), 64)
+			if err != nil {
+				return nil, err
+			}
+			out[i] = d
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("unsupported conversion from %T to []float64", v)
+	}
+}
+
 func ToBool(v interface{}) (bool, error) {
 	switch v := v.(type) {
 	case bool:
@@ -145,6 +491,79 @@ func ToBool(v interface{}) (bool, error) {
 		return strconv.ParseBool(v)
 	default:
 		return false, fmt.Errorf("unsupported conversion from %T to bool", v)
+	}
+}
+
+func ToBoolList(val interface{}) ([]bool, error) {
+	switch v := val.(type) {
+	case bool:
+		return []bool{v}, nil
+	case []bool:
+		return v, nil
+	case int, int8, int16, int32, int64:
+		i := reflect.ValueOf(v)
+		if i.Int() == 1 {
+			return []bool{true}, nil
+		} else if i.Int() == 0 {
+			return []bool{false}, nil
+		}
+		return nil, fmt.Errorf("error parsing %v to bool", v)
+	case []int, []int8, []int16, []int32, []int64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]bool, l)
+		for i := 0; i < l; i++ {
+			if list.Index(i).Int() == 1 {
+				out[i] = true
+			} else if list.Index(i).Int() == 0 {
+				out[i] = false
+			} else {
+				return nil, fmt.Errorf("error parsing %v to bool", v)
+			}
+		}
+		return out, nil
+	case float32, float64:
+		i := reflect.ValueOf(v)
+		if i.Float() == 1 {
+			return []bool{true}, nil
+		} else if i.Float() == 0 {
+			return []bool{false}, nil
+		} else {
+			return nil, fmt.Errorf("error parsing %v to bool", v)
+		}
+	case []float32, []float64:
+		list := reflect.ValueOf(v)
+		l := list.Len()
+		out := make([]bool, l)
+		for i := 0; i < l; i++ {
+			if list.Index(i).Float() == 1 {
+				out[i] = true
+			} else if list.Index(i).Float() == 0 {
+				out[i] = false
+			} else {
+				return nil, fmt.Errorf("error parsing %v to bool", v)
+			}
+		}
+		return out, nil
+	case string:
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, err
+		}
+		return []bool{b}, nil
+	case []string:
+		l := len(v)
+		out := make([]bool, l)
+		for i := 0; i < l; i++ {
+			b, err := strconv.ParseBool(v[i])
+			if err != nil {
+				return nil, err
+			}
+			out[i] = b
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("unsupported conversion from %T to []bool", v)
 	}
 }
 
@@ -160,6 +579,14 @@ func ToTargetType(val interface{}, targetType spec.ValueType) (interface{}, erro
 		value, err = ToFloat64(val)
 	case spec.ValueType_BOOL:
 		value, err = ToBool(val)
+	case spec.ValueType_STRING_LIST:
+		value, err = ToStringList(val)
+	case spec.ValueType_INT_LIST:
+		value, err = ToIntList(val)
+	case spec.ValueType_FLOAT_LIST:
+		value, err = ToFloat64List(val)
+	case spec.ValueType_BOOL_LIST:
+		value, err = ToBoolList(val)
 	default:
 		return nil, fmt.Errorf("targetType is not recognized %d", targetType)
 	}
@@ -174,7 +601,6 @@ func ToFeastValue(v interface{}, valueType feastType.ValueType_Enum) (*feastType
 			return nil, err
 		}
 		return feast.Int32Val(int32(val)), nil
-
 	case feastType.ValueType_INT64:
 		val, err := ToInt64(v)
 		if err != nil {
@@ -211,9 +637,107 @@ func ToFeastValue(v interface{}, valueType feastType.ValueType_Enum) (*feastType
 			}
 			return feast.StrVal(val), nil
 		}
+	case feastType.ValueType_INT32_LIST:
+		switch v.(type) {
+		case string:
+			arr, err := extractArrayFromString(v, ",")
+			if err != nil {
+				return nil, err
+			}
+			v = arr
+		}
+		val, err := ToInt32List(v)
+		if err != nil {
+			return nil, err
+		}
+		return feastType2.Int32ListVal(val), nil
+	case feastType.ValueType_INT64_LIST:
+		switch v.(type) {
+		case string:
+			arr, err := extractArrayFromString(v, ",")
+			if err != nil {
+				return nil, err
+			}
+			v = arr
+		}
+		val, err := ToInt64List(v)
+		if err != nil {
+			return nil, err
+		}
+		return feastType2.Int64ListVal(val), nil
+	case feastType.ValueType_FLOAT_LIST:
+		switch v.(type) {
+		case string:
+			arr, err := extractArrayFromString(v, ",")
+			if err != nil {
+				return nil, err
+			}
+			v = arr
+		}
+		val, err := ToFloat32List(v)
+		if err != nil {
+			return nil, err
+		}
+		return feastType2.FloatListVal(val), nil
+	case feastType.ValueType_DOUBLE_LIST:
+		switch v.(type) {
+		case string:
+			arr, err := extractArrayFromString(v, ",")
+			if err != nil {
+				return nil, err
+			}
+			v = arr
+		}
+		val, err := ToFloat64List(v)
+		if err != nil {
+			return nil, err
+		}
+		return feastType2.DoubleListVal(val), nil
+	case feastType.ValueType_BOOL_LIST:
+		switch v.(type) {
+		case string:
+			arr, err := extractArrayFromString(v, ",")
+			if err != nil {
+				return nil, err
+			}
+			v = arr
+		}
+		val, err := ToBoolList(v)
+		if err != nil {
+			return nil, err
+		}
+		return feastType2.BoolListVal(val), nil
+	case feastType.ValueType_STRING_LIST:
+		switch v.(type) {
+		case string:
+			arr, err := extractArrayFromString(v, ",")
+			if err != nil {
+				return nil, err
+			}
+			v = arr
+		}
+		val, err := ToStringList(v)
+		if err != nil {
+			return nil, err
+		}
+		return feastType2.StrListVal(val), nil
 	default:
 		return nil, fmt.Errorf("unsupported type %s", valueType.String())
 	}
+}
+
+func extractArrayFromString(str interface{}, delimiter string) (interface{}, error) {
+	val, err := ToString(str)
+	if err != nil {
+		return nil, err
+	}
+	l := len(val)
+	v := val
+	if val[0] == '[' && val[l-1] == ']' {
+		v = val[1 : l-1]
+	}
+	v = strings.ReplaceAll(v, " ", "")
+	return strings.Split(v, delimiter), nil
 }
 
 func ExtractFeastValue(val *feastType.Value) (interface{}, feastType.ValueType_Enum, error) {

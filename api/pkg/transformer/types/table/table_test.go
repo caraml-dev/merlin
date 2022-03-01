@@ -599,6 +599,25 @@ func TestTable_NewRaw(t *testing.T) {
 			),
 		},
 		{
+			name: "basic test - list value type",
+			columnValues: map[string]interface{}{
+				"string_list_col":  [][]string{{"1111", "1111"}, {"2222", "2222"}},
+				"int32_list_col":   [][]int{{1111, 1111}, {2222, 2222}},
+				"int64_list_col":   [][]int64{{1111111111, 1111111111}, {2222222222, 2222222222}},
+				"float32_list_col": [][]float32{{1111, 1111}, {2222, 2222}},
+				"float64_list_col": [][]float64{{11111111111.1111, 11111111111.1111}, {22222222222.2222, 22222222222.2222}},
+				"bool_list_col":    [][]bool{{true, true}, {false, false}},
+			},
+			want: New(
+				series.New([][]bool{{true, true}, {false, false}}, series.BoolList, "bool_list_col"),
+				series.New([][]float32{{1111, 1111}, {2222, 2222}}, series.FloatList, "float32_list_col"),
+				series.New([][]float64{{11111111111.1111, 11111111111.1111}, {22222222222.2222, 22222222222.2222}}, series.FloatList, "float64_list_col"),
+				series.New([][]int{{1111, 1111}, {2222, 2222}}, series.IntList, "int32_list_col"),
+				series.New([][]int64{{1111111111, 1111111111}, {2222222222, 2222222222}}, series.IntList, "int64_list_col"),
+				series.New([][]string{{"1111", "1111"}, {"2222", "2222"}}, series.StringList, "string_list_col"),
+			),
+		},
+		{
 			name: "table from series",
 			columnValues: map[string]interface{}{
 				"string_col":  series.New([]string{"1111", "2222"}, series.String, "string_col"),
@@ -618,6 +637,25 @@ func TestTable_NewRaw(t *testing.T) {
 			),
 		},
 		{
+			name: "table from series of list elements",
+			columnValues: map[string]interface{}{
+				"string_list_col":  series.New([][]string{{"1111", "1111"}, {"2222", "2222"}}, series.StringList, "string_list_col"),
+				"int32_list_col":   series.New([][]int{{1111, 1111}, {2222, 2222}}, series.IntList, "int32_list_col"),
+				"int64_list_col":   series.New([][]int64{{1111111111, 1111111111}, {2222222222, 2222222222}}, series.IntList, "int64_list_col"),
+				"float32_list_col": series.New([][]float32{{1111, 1111}, {2222, 2222}}, series.FloatList, "float32_list_col"),
+				"float64_list_col": series.New([][]float64{{11111111111.1111, 11111111111.1111}, {22222222222.2222, 22222222222.2222}}, series.FloatList, "float64_list_col"),
+				"bool_list_col":    series.New([][]bool{{true, true}, {false, false}}, series.BoolList, "bool_list_col"),
+			},
+			want: New(
+				series.New([][]bool{{true, true}, {false, false}}, series.BoolList, "bool_list_col"),
+				series.New([][]float32{{1111, 1111}, {2222, 2222}}, series.FloatList, "float32_list_col"),
+				series.New([][]float64{{11111111111.1111, 11111111111.1111}, {22222222222.2222, 22222222222.2222}}, series.FloatList, "float64_list_col"),
+				series.New([][]int{{1111, 1111}, {2222, 2222}}, series.IntList, "int32_list_col"),
+				series.New([][]int64{{1111111111, 1111111111}, {2222222222, 2222222222}}, series.IntList, "int64_list_col"),
+				series.New([][]string{{"1111", "1111"}, {"2222", "2222"}}, series.StringList, "string_list_col"),
+			),
+		},
+		{
 			name: "test with null values",
 			columnValues: map[string]interface{}{
 				"string_col": []interface{}{"1111", nil},
@@ -631,6 +669,19 @@ func TestTable_NewRaw(t *testing.T) {
 			),
 		},
 		{
+			name: "test with null values - series list elements",
+			columnValues: map[string]interface{}{
+				"string_list_col": []interface{}{[]string{"1111", "2222"}, []string{"2222", "3333"}, nil},
+				"int32_list_col":  []interface{}{[]int32{1111, 2222}, nil, []int32{1, 2}},
+				"int64_list_col":  []interface{}{[]int64{1111111111, 2222222222}, nil, []int64{3, 4}},
+			},
+			want: New(
+				series.New([][]interface{}{{1111, 2222}, nil, {1, 2}}, series.IntList, "int32_list_col"),
+				series.New([][]interface{}{{1111111111, 2222222222}, nil, {3, 4}}, series.IntList, "int64_list_col"),
+				series.New([][]interface{}{{"1111", "2222"}, {"2222", "3333"}, nil}, series.StringList, "string_list_col"),
+			),
+		},
+		{
 			name: "test broadcast array",
 			columnValues: map[string]interface{}{
 				"string_col": []interface{}{"1111"},
@@ -641,6 +692,32 @@ func TestTable_NewRaw(t *testing.T) {
 				series.New([]interface{}{nil, 2222}, series.Int, "int32_col"),
 				series.New([]interface{}{nil, 2222222222}, series.Int, "int64_col"),
 				series.New([]interface{}{"1111", "1111"}, series.String, "string_col"),
+			),
+		},
+		{
+			name: "test broadcast array - series list to series single",
+			columnValues: map[string]interface{}{
+				"string_list_col": [][]string{{"1111", "1111"}},
+				"int32_col":       []int32{1111, 2222},
+				"int64_col":       []int64{1111111111, 2222222222},
+			},
+			want: New(
+				series.New([]interface{}{1111, 2222}, series.Int, "int32_col"),
+				series.New([]interface{}{1111111111, 2222222222}, series.Int, "int64_col"),
+				series.New([][]string{{"1111", "1111"}, {"1111", "1111"}}, series.StringList, "string_list_col"),
+			),
+		},
+		{
+			name: "test broadcast array - series list to series list",
+			columnValues: map[string]interface{}{
+				"string_list_col": [][]string{{"1111", "1111"}},
+				"int32_list_col":  [][]int{{1, 2}, {3, 4}, {5, 6}},
+				"int64_list_col":  [][]int{{10, 100}, {200, 2000}, {333, 444}},
+			},
+			want: New(
+				series.New([][]interface{}{{1, 2}, {3, 4}, {5, 6}}, series.IntList, "int32_list_col"),
+				series.New([][]interface{}{{10, 100}, {200, 2000}, {333, 444}}, series.IntList, "int64_list_col"),
+				series.New([]interface{}{[]string{"1111", "1111"}, []string{"1111", "1111"}, []string{"1111", "1111"}}, series.StringList, "string_list_col"),
 			),
 		},
 		{
@@ -669,6 +746,19 @@ func TestTable_NewRaw(t *testing.T) {
 				series.New([]interface{}{"1111", "1111"}, series.String, "string_col"),
 			),
 		},
+		{
+			name: "test broadcast series - list elements",
+			columnValues: map[string]interface{}{
+				"string_list_col": series.New([][]string{{"1111", "2222"}}, series.StringList, "string_list_col"),
+				"int32_col":       []interface{}{nil, 2222},
+				"int64_col":       []interface{}{nil, 2222222222},
+			},
+			want: New(
+				series.New([]interface{}{nil, 2222}, series.Int, "int32_col"),
+				series.New([]interface{}{nil, 2222222222}, series.Int, "int64_col"),
+				series.New([][]string{{"1111", "2222"}, {"1111", "2222"}}, series.StringList, "string_list_col"),
+			),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -677,7 +767,6 @@ func TestTable_NewRaw(t *testing.T) {
 				t.Errorf("NewRaw() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-
 			assert.Equal(t, tt.want.DataFrame(), got.DataFrame())
 		})
 	}

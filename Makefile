@@ -60,6 +60,8 @@ test-ui:
 	@echo "> UI unit testing ..."
 	@cd ${UI_PATH} && yarn test-ci
 
+# Added -gcflags=all=-d=checkptr=0 flag to disable unsafe.Pointer checking (https://go.dev/doc/go1.14#compiler).
+# This is a workaround to avoid error from murmur3 library (https://github.com/pingcap/tidb/issues/29086#issuecomment-951787585)
 .PHONY: test-api
 test-api: init-dep-api
 	@echo "> API unit testing ..."

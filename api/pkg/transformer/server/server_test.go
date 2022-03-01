@@ -155,8 +155,9 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	}
 
 	type mockFeast struct {
-		request  *feastSdk.OnlineFeaturesRequest
-		response *feastSdk.OnlineFeaturesResponse
+		request         *feastSdk.OnlineFeaturesRequest
+		expectedRequest *feastSdk.OnlineFeaturesRequest
+		response        *feastSdk.OnlineFeaturesResponse
 	}
 
 	tests := []struct {
@@ -314,11 +315,19 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 										"driver_id":        feastSdk.Int64Val(1),
 										"driver_feature_1": feastSdk.DoubleVal(1111),
 										"driver_feature_2": feastSdk.DoubleVal(2222),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"A", "B", "C"},
+												},
+											},
+										},
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
 										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
 										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 								{
@@ -326,11 +335,19 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 										"driver_id":        feastSdk.Int64Val(2),
 										"driver_feature_1": feastSdk.DoubleVal(3333),
 										"driver_feature_2": feastSdk.DoubleVal(4444),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"X", "Y", "Z"},
+												},
+											},
+										},
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
 										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
 										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 							},
@@ -348,7 +365,292 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body: []byte(`{"instances": {"columns": ["rank", "driver_id", "customer_id", "driver_feature_1", "driver_feature_2" ], "data":[[0, 1, 1111, 1111, 2222], [1, 2, 1111, 3333, 4444]]}}`),
+				body: []byte(`{"instances": {"columns": ["rank", "driver_id", "customer_id", "driver_feature_1", "driver_feature_2", "driver_feature_3"], "data":[[0, 1, 1111, 1111, 2222, ["A", "B", "C"]], [1, 2, 1111, 3333, 4444, ["X", "Y", "Z"]]]}}`),
+			},
+			modelResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status": "ok"}`),
+				statusCode: 200,
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status": "ok"}`),
+				statusCode: 200,
+			},
+		},
+		{
+			name:         "table transformation with feast and series transformation",
+			specYamlPath: "../pipeline/testdata/valid_feast_series_transform.yaml",
+			mockFeasts: []mockFeast{
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(1),
+										"driver_feature_1": feastSdk.DoubleVal(1111),
+										"driver_feature_2": feastSdk.DoubleVal(2222),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"A"},
+												},
+											},
+										},
+										"driver_score": feastSdk.DoubleVal(95.0),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_score":     serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(2),
+										"driver_feature_1": feastSdk.DoubleVal(3333),
+										"driver_feature_2": feastSdk.DoubleVal(4444),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"X"},
+												},
+											},
+										},
+										"driver_score": feastSdk.DoubleVal(98.0),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_score":     serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "driver_partner", // used as identifier for mocking. must match config
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id": feastSdk.Int64Val(1),
+										"customers_picked_up": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"C111", "C222", "C222", "C333"},
+												},
+											},
+										},
+										"top_customer": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"C233"},
+												},
+											},
+										},
+										"total_tips": feastSdk.DoubleVal(1000000),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+										"customers_picked_up": serving.GetOnlineFeaturesResponse_PRESENT,
+										"top_customer":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"total_tips":          serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id": feastSdk.Int64Val(2),
+										"customers_picked_up": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"U111", "U222", "U222", "U333"},
+												},
+											},
+										},
+										"top_customer": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"U309"},
+												},
+											},
+										},
+										"total_tips": feastSdk.DoubleVal(1000000),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+										"customers_picked_up": serving.GetOnlineFeaturesResponse_PRESENT,
+										"top_customer":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"total_tips":          serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id": feastSdk.Int64Val(3),
+										"customers_picked_up": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"PA11", "PA22", "PA22", "PA33"},
+												},
+											},
+										},
+										"top_customer": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"PA22"},
+												},
+											},
+										},
+										"total_tips": feastSdk.DoubleVal(5000000),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+										"customers_picked_up": serving.GetOnlineFeaturesResponse_PRESENT,
+										"top_customer":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"total_tips":          serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "customer", // used as identifier for mocking. must match config
+					},
+					expectedRequest: &feastSdk.OnlineFeaturesRequest{
+						Project:  "customer",
+						Features: []string{"customer_feature_1"},
+						Entities: []feastSdk.Row{
+							{"customer_id": feastSdk.StrVal("C111")},
+							{"customer_id": feastSdk.StrVal("C222")},
+							{"customer_id": feastSdk.StrVal("C333")},
+							{"customer_id": feastSdk.StrVal("U111")},
+							{"customer_id": feastSdk.StrVal("U222")},
+							{"customer_id": feastSdk.StrVal("U333")},
+							{"customer_id": feastSdk.StrVal("PA11")},
+							{"customer_id": feastSdk.StrVal("PA22")},
+							{"customer_id": feastSdk.StrVal("PA33")},
+						},
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"customer_id":        feastSdk.StrVal("C111"),
+										"customer_feature_1": feastSdk.DoubleVal(111),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"customer_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"customer_id":        feastSdk.StrVal("C222"),
+										"customer_feature_1": feastSdk.DoubleVal(222),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"customer_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"customer_id":        feastSdk.StrVal("C333"),
+										"customer_feature_1": feastSdk.DoubleVal(333),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"customer_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"drivers" : [{"id": 1,"name": "driver-1"},{"id": 2,"name": "driver-2"}], "customer": {"id": 1111}}`),
+			},
+			expTransformedRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{
+					"instances": {
+						"columns": [
+							"rank",
+							"driver_id",
+							"customer_id",
+							"driver_feature_1",
+							"driver_feature_2",
+							"driver_feature_3",
+							"driver_feature_3_flatten",
+							"stddev_driver_score",
+							"mean_driver_score",
+							"median_driver_score",
+							"max_driver_score",
+							"maxstr_driver_score",
+							"min_driver_score",
+							"minstr_driver_score",
+							"quantile_driver_score",
+							"sum_driver_score"
+						],
+						"data": [
+							[0, 1, 1111, 1111, 2222, ["A"], "A", 2.1213203435596424, 96.5, 96.5, 98, "X", 95, "A", 98, 193],
+							[1, 2, 1111, 3333, 4444, ["X"], "X", 2.1213203435596424, 96.5, 96.5, 98, "X", 95, "A", 98, 193]
+						]
+					},
+					"raw_customers": {
+						"columns": [
+							"all_customers"
+						],
+						"data": [
+							[["C111", "C222", "C222", "C333"]],
+							[["U111", "U222", "U222", "U333"]],
+							[["PA11", "PA22", "PA22", "PA33"]]
+						]
+					},
+					"flatten_customers": {
+						"columns": [
+							"top_customer"
+						],
+						"data": [
+							["C233"],
+							["U309"],
+							["PA22"]
+						]
+					},
+					"customer_feature_table": {
+						"columns": ["customer_id","customer_feature_1"],
+						"data": [
+							["C111",111],
+							["C222",222],
+							["C333",333]
+						]
+					}
+				}`),
 			},
 			modelResponse: response{
 				headers: map[string]string{
@@ -481,7 +783,14 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 
 			for _, m := range tt.mockFeasts {
 				project := m.request.Project
+				expectedRequest := m.expectedRequest
 				mockFeast.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feastSdk.OnlineFeaturesRequest) bool {
+					if expectedRequest != nil {
+						expected, _ := json.Marshal(expectedRequest)
+						actual, _ := json.Marshal(req)
+						assert.JSONEq(t, string(expected), string(actual))
+					}
+
 					return req.Project == project
 				})).Return(m.response, nil)
 			}
@@ -511,15 +820,14 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	}
 }
 
-//Function to assert that 2 JSONs are the same, with considerations of delta in float values
-//inputs are map[string]interface{} converted from json, and delta which is th tolerance of error for the float
-//function will first confirm that the number of items in map are same
-//then it will iterate through each element in the map. If element is a map, it will work call itself recursively
-//if it is a slice or an array, it will call itself for each element by first converting each into a map
-//otherwise, if element is a basic type like float, int, string etc it will do the comparison to make sure they are the same
-//For float type, a tolerance in differences "delta" is checked
+// Function to assert that 2 JSONs are the same, with considerations of delta in float values
+// inputs are map[string]interface{} converted from json, and delta which is th tolerance of error for the float
+// function will first confirm that the number of items in map are same
+// then it will iterate through each element in the map. If element is a map, it will work call itself recursively
+// if it is a slice or an array, it will call itself for each element by first converting each into a map
+// otherwise, if element is a basic type like float, int, string etc it will do the comparison to make sure they are the same
+// For float type, a tolerance in differences "delta" is checked
 func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, actualMap map[string]interface{}, delta float64) {
-
 	assert.Equal(t, len(expectedMap), len(actualMap))
 	for key, value := range expectedMap {
 		switch value.(type) {

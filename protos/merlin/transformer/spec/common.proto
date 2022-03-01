@@ -28,4 +28,8 @@ enum ValueType {
   INT = 1;
   FLOAT = 2;
   BOOL = 3;
+  STRING_LIST = 4;
+  INT_LIST = 5;
+  FLOAT_LIST = 6;
+  BOOL_LIST = 7;
 }

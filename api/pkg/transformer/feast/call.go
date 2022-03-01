@@ -57,7 +57,6 @@ func (fc *call) do(ctx context.Context, entityList []feast.Row, features []strin
 		return callResult{featureTable: nil, err: err}
 	}
 	feastLatency.WithLabelValues("success", feastSource).Observe(float64(durationMs))
-
 	featureTable, err := fc.processResponse(feastResponse)
 	if err != nil {
 		return callResult{featureTable: nil, err: err}
@@ -100,7 +99,7 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 				}
 				rawValue = defVal
 			default:
-				return nil, fmt.Errorf("unsupported feature retrieval status: %s", featureStatus)
+				return nil, fmt.Errorf("unsupported feature retrieval status for column %s: %s", column, featureStatus)
 			}
 
 			val, valType, err := converter.ExtractFeastValue(rawValue)
