@@ -71,13 +71,13 @@ test-api: init-dep-api
 .PHONY: it-test-api-local
 it-test-api-local: local-db
 	@echo "> API integration testing locally ..."
-	@cd ${API_PATH} && gotest -race -short -cover -coverprofile cover.out -tags unit,integration_local ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && gotest -race -short -cover -coverprofile cover.out -tags unit,integration_local ${API_ALL_PACKAGES} -gcflags=all=-d=checkptr=0
 	@cd ${API_PATH} && go tool cover -func cover.out
 
 .PHONY: it-test-api-ci
 it-test-api-ci:
 	@echo "> API integration testing ..."
-	@cd ${API_PATH} && gotest -race -short -cover -coverprofile cover.out -tags unit,integration ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && gotest -race -short -cover -coverprofile cover.out -tags unit,integration ${API_ALL_PACKAGES} -gcflags=all=-d=checkptr=0
 	@cd ${API_PATH} && go tool cover -func cover.out
 
 .PHONY:
