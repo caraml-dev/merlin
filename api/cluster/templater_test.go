@@ -145,9 +145,10 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 	queueResourcePercentage := "2"
 
 	tests := []struct {
-		name     string
-		modelSvc *models.Service
-		exp      *v1alpha2.InferenceService
+		name               string
+		modelSvc           *models.Service
+		resourcePercentage string
+		exp                *v1alpha2.InferenceService
 	}{
 		{
 			name: "tensorflow spec",
@@ -159,6 +160,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -166,6 +168,46 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
 					},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: v1alpha2.InferenceServiceSpec{
+					Default: v1alpha2.EndpointSpec{
+						Predictor: v1alpha2.PredictorSpec{
+							Tensorflow: &v1alpha2.TensorflowSpec{
+								StorageURI: fmt.Sprintf("%s/model", model.ArtifactURI),
+								Resources:  expDefaultModelResourceRequests,
+							},
+							DeploymentSpec: v1alpha2.DeploymentSpec{
+								MinReplicas: &defaultModelResourceRequests.MinReplica,
+								MaxReplicas: defaultModelResourceRequests.MaxReplica,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "tensorflow spec without queue resource percentage",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeTensorflow,
+				Options:     &models.ModelOption{},
+				Metadata:    model.Metadata,
+			},
+			resourcePercentage: "",
+			exp: &v1alpha2.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
 						"gojek.com/orchestrator": "merlin",
@@ -201,6 +243,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -243,6 +286,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -287,6 +331,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				},
 				Metadata: model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -330,6 +375,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -375,6 +421,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				EnvVars:  models.PyfuncDefaultEnvVars(models.Model{Name: model.Name}, models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI}, defaultModelResourceRequests.CPURequest.Value()),
 				Metadata: model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -423,6 +470,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Metadata:        model.Metadata,
 				ResourceRequest: userResourceRequests,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -472,6 +520,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Metadata:        model.Metadata,
 				ResourceRequest: userResourceRequests,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -534,6 +583,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				},
 				Metadata: model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -584,7 +634,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			deployConfig := &config.DeploymentConfig{
 				DefaultModelResourceRequests:       defaultModelResourceRequests,
 				DefaultTransformerResourceRequests: defaultTransformerResourceRequests,
-				QueueResourcePercentage:            queueResourcePercentage,
+				QueueResourcePercentage:            tt.resourcePercentage,
 			}
 
 			tpl := NewKFServingResourceTemplater(standardTransformerConfig)
