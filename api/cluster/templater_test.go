@@ -146,9 +146,10 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", model.ArtifactURI)
 
 	tests := []struct {
-		name     string
-		modelSvc *models.Service
-		exp      *kservev1beta1.InferenceService
+		name               string
+		modelSvc           *models.Service
+		resourcePercentage string
+		exp                *kservev1beta1.InferenceService
 	}{
 		{
 			name: "tensorflow spec",
@@ -160,6 +161,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -205,6 +207,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
+			resourcePercentage: "",
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -250,6 +253,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -294,6 +298,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypePyTorch,
 				Metadata:    model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -340,6 +345,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -388,6 +394,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				EnvVars:  models.PyfuncDefaultEnvVars(models.Model{Name: model.Name}, models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI}, defaultModelResourceRequests.CPURequest.Value()),
 				Metadata: model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -437,6 +444,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Metadata:        model.Metadata,
 				ResourceRequest: userResourceRequests,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -486,6 +494,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				},
 				Metadata: model.Metadata,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -544,6 +553,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Metadata:        model.Metadata,
 				ResourceRequest: userResourceRequests,
 			},
+			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),

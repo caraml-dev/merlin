@@ -68,10 +68,13 @@ func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *mo
 	objectMeta := metav1.ObjectMeta{
 		Name:      modelService.Name,
 		Namespace: modelService.Namespace,
-		Annotations: map[string]string{
+		Labels:    labels,
+	}
+
+	if config.QueueResourcePercentage != "" {
+		objectMeta.Annotations = map[string]string{
 			annotationQueueProxyResource: config.QueueResourcePercentage,
-		},
-		Labels: labels,
+		}
 	}
 
 	if modelService.Type == models.ModelTypePyFunc {
