@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build unit
-
 package cluster
 
 import (
@@ -323,15 +321,18 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     statusReady},
+					Status:     statusReady,
+				},
 				nil,
 			},
 			deployTimeout,
@@ -342,16 +343,20 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
-				nil},
+				nil,
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     statusReady},
-				nil},
+					Status:     statusReady,
+				},
+				nil,
+			},
 			deployTimeout,
 			false,
 		},
@@ -370,15 +375,18 @@ func TestController_DeployInferenceService(t *testing.T) {
 			},
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     statusReady},
+					Status:     statusReady,
+				},
 				nil,
 			},
 			deployTimeout,
@@ -389,16 +397,20 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				errors.New("error")},
+				errors.New("error"),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     statusReady},
-				nil},
+					Status:     statusReady,
+				},
+				nil,
+			},
 			deployTimeout,
 			true,
 		},
@@ -407,16 +419,20 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName),
+			},
 			&inferenceServiceReactor{
 				nil,
-				errors.New("error creating inference service")},
+				errors.New("error creating inference service"),
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     statusReady},
-				nil},
+					Status:     statusReady,
+				},
+				nil,
+			},
 			deployTimeout,
 			true,
 		},
@@ -425,16 +441,20 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				nil,
-				errors.New("error updating inference service")},
+				errors.New("error updating inference service"),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     statusReady},
-				nil},
+					Status:     statusReady,
+				},
+				nil,
+			},
 			deployTimeout,
 			true,
 		},
@@ -443,10 +463,12 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				nil,
@@ -460,16 +482,20 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     createPredErrorCond()},
-				nil},
+					Status:     createPredErrorCond(),
+				},
+				nil,
+			},
 			deployTimeout,
 			true,
 		},
@@ -478,16 +504,20 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, svcName),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     createRoutesErrorCond()},
-				nil},
+					Status:     createRoutesErrorCond(),
+				},
+				nil,
+			},
 			deployTimeout,
 			true,
 		},
@@ -496,15 +526,18 @@ func TestController_DeployInferenceService(t *testing.T) {
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     statusReady},
+					Status:     statusReady,
+				},
 				nil,
 			},
 			1 * time.Millisecond,
@@ -525,15 +558,18 @@ func TestController_DeployInferenceService(t *testing.T) {
 			},
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     statusReady},
+					Status:     statusReady,
+				},
 				nil,
 			},
 			deployTimeout,
@@ -554,15 +590,18 @@ func TestController_DeployInferenceService(t *testing.T) {
 			},
 			&inferenceServiceReactor{
 				nil,
-				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName)},
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, svcName),
+			},
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name}},
-				nil},
+				nil,
+			},
 			nil,
 			&inferenceServiceReactor{
 				&v1alpha2.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: svcName, Namespace: project.Name},
-					Status:     statusReady},
+					Status:     statusReady,
+				},
 				nil,
 			},
 			deployTimeout,
@@ -744,7 +783,8 @@ func Test_controller_ListPods(t *testing.T) {
 						},
 					},
 				},
-			}}, nil
+			},
+		}, nil
 	})
 
 	ctl := &controller{
