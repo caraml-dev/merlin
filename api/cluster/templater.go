@@ -65,9 +65,10 @@ func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *mo
 	labels := modelService.Metadata.ToLabel()
 
 	objectMeta := metav1.ObjectMeta{
-		Name:      modelService.Name,
-		Namespace: modelService.Namespace,
-		Labels:    labels,
+		Name:        modelService.Name,
+		Namespace:   modelService.Namespace,
+		Labels:      labels,
+		Annotations: map[string]string{},
 	}
 
 	if config.QueueResourcePercentage != "" {
