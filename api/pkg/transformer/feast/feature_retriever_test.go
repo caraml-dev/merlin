@@ -1150,7 +1150,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						columnNames: []string{"driver_id", "double_list_feature"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE_LIST},
 						valueRows: transTypes.ValueRows{
-							transTypes.ValueRow{"1001", []interface{}{111.1111, 222.2222}},
+							transTypes.ValueRow{"1001", []float64{111.1111, 222.2222}},
 						},
 					},
 				},
@@ -1285,8 +1285,135 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						columnNames: []string{"driver_id", "double_list_feature"},
 						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE_LIST},
 						valueRows: transTypes.ValueRows{
-							transTypes.ValueRow{"1001", []interface{}{111.1111, 222.2222}},
+							transTypes.ValueRow{"1001", []float64{111.1111, 222.2222}},
 						},
+					},
+				},
+			},
+		},
+		{
+			name: "calls redis and bigtable serving -- returns list types but uses default",
+			fields: fields{
+				featureTableSpecs: []*spec.FeatureTable{
+					{
+						Project:    "default_redis",
+						ServingUrl: mockRedisServingURL,
+						Source:     spec.ServingSource_BIGTABLE,
+						Entities: []*spec.Entity{
+
+							{
+								Name:      "driver_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.driver_id",
+								},
+							},
+						},
+						Features: []*spec.Feature{
+							{
+								Name:         "double_list_feature",
+								DefaultValue: "[6.25, 1.23]",
+								ValueType:    "DOUBLE_LIST",
+							},
+						},
+					},
+					{
+						Project:    "default_bt",
+						ServingUrl: mockBigtableServingURL,
+						Source:     spec.ServingSource_REDIS,
+						Entities: []*spec.Entity{
+
+							{
+								Name:      "driver_id",
+								ValueType: "STRING",
+								Extractor: &spec.Entity_JsonPath{
+									JsonPath: "$.driver_id",
+								},
+							},
+						},
+						Features: []*spec.Feature{
+							{
+								Name:         "double_list_feature",
+								DefaultValue: "[3.14, 0.25]",
+								ValueType:    "DOUBLE_LIST",
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				ctx:     context.Background(),
+				request: []byte(`{"driver_id":"1001"}`),
+			},
+			mockFeastCalls: []mockFeastCalls{
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default_redis", // used as identifier for mocking. must match config
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"double_list_feature": nil,
+										"driver_id":           feast.StrVal("1001"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"double_list_feature": serving.GetOnlineFeaturesResponse_NULL_VALUE,
+										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feast.OnlineFeaturesRequest{
+						Project: "default_bt", // used as identifier for mocking. must match config
+					},
+					response: &feast.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"double_list_feature": nil,
+										"driver_id":           feast.StrVal("1002"),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"double_list_feature": serving.GetOnlineFeaturesResponse_NULL_VALUE,
+										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []*transTypes.FeatureTable{
+				{
+					Name:    "default_redis_driver_id",
+					Columns: []string{"driver_id", "double_list_feature"},
+					Data: transTypes.ValueRows{
+						transTypes.ValueRow{"1001", []float64{6.25, 1.23}},
+					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE_LIST},
+				},
+				{
+					Name:    "default_bt_driver_id",
+					Columns: []string{"driver_id", "double_list_feature"},
+					Data: transTypes.ValueRows{
+						transTypes.ValueRow{"1002", []float64{3.14, 0.25}},
+					},
+					ColumnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_DOUBLE_LIST},
+				},
+			},
+			wantErr: false,
+			wantCache: []cacheExpectation{
+				{
+					project: "default",
+					table: &internalFeatureTable{
+						columnNames: []string{"driver_id", "double_list_feature"},
+						columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INVALID, feastTypes.ValueType_INVALID},
 					},
 				},
 			},
