@@ -203,11 +203,11 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
-			resourcePercentage: "",
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
-					Namespace: project.Name,
+					Name:        fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace:   project.Name,
+					Annotations: map[string]string{},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
 						"gojek.com/orchestrator": "merlin",
@@ -460,6 +460,55 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
+			name: "pyfunc spec without queue resource percentage",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypePyFunc,
+				Options: &models.ModelOption{
+					PyFuncImageName: "gojek/project-model:1",
+				},
+				EnvVars:  models.PyfuncDefaultEnvVars(models.Model{Name: model.Name}, models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI}, defaultModelResourceRequests.CPURequest.Value()),
+				Metadata: model.Metadata,
+			},
+			exp: &v1alpha2.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						"prometheus.io/scrape": "true",
+						"prometheus.io/port":   "8080",
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: v1alpha2.InferenceServiceSpec{
+					Default: v1alpha2.EndpointSpec{
+						Predictor: v1alpha2.PredictorSpec{
+							Custom: &v1alpha2.CustomSpec{
+								Container: v1.Container{
+									Image:     "gojek/project-model:1",
+									Env:       models.PyfuncDefaultEnvVars(models.Model{Name: model.Name}, models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI}, defaultModelResourceRequests.CPURequest.Value()).ToKubernetesEnvVars(),
+									Resources: expDefaultModelResourceRequests,
+								},
+							},
+							DeploymentSpec: v1alpha2.DeploymentSpec{
+								MinReplicas: &defaultModelResourceRequests.MinReplica,
+								MaxReplicas: defaultModelResourceRequests.MaxReplica,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "tensorflow spec with user resource request",
 			modelSvc: &models.Service{
 				Name:            models.CreateInferenceServiceName(model.Name, "1"),
@@ -583,14 +632,11 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				},
 				Metadata: model.Metadata,
 			},
-			resourcePercentage: queueResourcePercentage,
 			exp: &v1alpha2.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
-					},
+					Name:        fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace:   project.Name,
+					Annotations: map[string]string{},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
 						"gojek.com/orchestrator": "merlin",
