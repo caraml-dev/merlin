@@ -198,6 +198,49 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
+			name: "tensorflow spec without queue resource percentage",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeTensorflow,
+				Options:     &models.ModelOption{},
+				Metadata:    model.Metadata,
+			},
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace:   project.Name,
+					Annotations: map[string]string{},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						Tensorflow: &kservev1beta1.TFServingSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:      constants.InferenceServiceContainerName,
+									Resources: expDefaultModelResourceRequests,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "xgboost spec",
 			modelSvc: &models.Service{
 				Name:        models.CreateInferenceServiceName(model.Name, "1"),
@@ -207,7 +250,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
 			},
-			resourcePercentage: "",
+			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
@@ -609,7 +652,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			deployConfig := &config.DeploymentConfig{
 				DefaultModelResourceRequests:       defaultModelResourceRequests,
 				DefaultTransformerResourceRequests: defaultTransformerResourceRequests,
-				QueueResourcePercentage:            queueResourcePercentage,
+				QueueResourcePercentage:            tt.resourcePercentage,
 			}
 
 			tpl := NewKFServingResourceTemplater(standardTransformerConfig)

@@ -536,7 +536,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 					},
 					expectedRequest: &feastSdk.OnlineFeaturesRequest{
 						Project:  "customer",
-						Features: []string{"customer_feature_1"},
+						Features: []string{"customer_name", "customer_phones"},
 						Entities: []feastSdk.Row{
 							{"customer_id": feastSdk.StrVal("C111")},
 							{"customer_id": feastSdk.StrVal("C222")},
@@ -554,32 +554,56 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
 								{
 									Fields: map[string]*feastTypes.Value{
-										"customer_id":        feastSdk.StrVal("C111"),
-										"customer_feature_1": feastSdk.DoubleVal(111),
+										"customer_id":   feastSdk.StrVal("C111"),
+										"customer_name": feastSdk.StrVal("Customer 1"),
+										"customer_phones": {
+											Val: &feastTypes.Value_DoubleListVal{
+												DoubleListVal: &feastTypes.DoubleList{
+													Val: []float64{111111, 100001},
+												},
+											},
+										},
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 								{
 									Fields: map[string]*feastTypes.Value{
-										"customer_id":        feastSdk.StrVal("C222"),
-										"customer_feature_1": feastSdk.DoubleVal(222),
+										"customer_id":   feastSdk.StrVal("C222"),
+										"customer_name": feastSdk.StrVal("Customer 2"),
+										"customer_phones": {
+											Val: &feastTypes.Value_DoubleListVal{
+												DoubleListVal: &feastTypes.DoubleList{
+													Val: []float64{222222, 200002},
+												},
+											},
+										},
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 								{
 									Fields: map[string]*feastTypes.Value{
-										"customer_id":        feastSdk.StrVal("C333"),
-										"customer_feature_1": feastSdk.DoubleVal(333),
+										"customer_id":   feastSdk.StrVal("C333"),
+										"customer_name": feastSdk.StrVal("Customer 3"),
+										"customer_phones": {
+											Val: &feastTypes.Value_DoubleListVal{
+												DoubleListVal: &feastTypes.DoubleList{
+													Val: []float64{333333, 300003},
+												},
+											},
+										},
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
 							},
@@ -643,11 +667,11 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 						]
 					},
 					"customer_feature_table": {
-						"columns": ["customer_id","customer_feature_1"],
+						"columns": ["customer_id","customer_name","customer_phones"],
 						"data": [
-							["C111",111],
-							["C222",222],
-							["C333",333]
+							["C111","Customer 1",[111111, 100001]],
+							["C222","Customer 2",[222222, 200002]],
+							["C333","Customer 3",[333333, 300003]]
 						]
 					}
 				}`),
@@ -786,11 +810,16 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				expectedRequest := m.expectedRequest
 				mockFeast.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feastSdk.OnlineFeaturesRequest) bool {
 					if expectedRequest != nil {
-						expected, _ := json.Marshal(expectedRequest)
-						actual, _ := json.Marshal(req)
-						assert.JSONEq(t, string(expected), string(actual))
-					}
+						// Some of entitiy might be cached that's why we check that request coming to feast
+						// is subset of expected request
+						for _, reqEntity := range req.Entities {
+							expectedReq, _ := json.Marshal(expectedRequest)
+							actualReq, _ := json.Marshal(reqEntity)
+							assert.Contains(t, string(expectedReq), string(actualReq))
+						}
 
+						assert.Equal(t, expectedRequest.Features, req.Features)
+					}
 					return req.Project == project
 				})).Return(m.response, nil)
 			}
@@ -801,21 +830,24 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			transformerServer, err := createTransformerServer(tt.specYamlPath, feastClients, options)
 			assert.NoError(t, err)
 
-			reqBody := bytes.NewBuffer(tt.rawRequest.body)
-			req, err := http.NewRequest("POST", modelServer.URL, reqBody)
-			assert.NoError(t, err)
-			for k, v := range tt.rawRequest.headers {
-				req.Header.Set(k, v)
+			// Send request twice to test caching feast caching.
+			for i := 0; i < 2; i++ {
+				rr := httptest.NewRecorder()
+
+				reqBody := bytes.NewBuffer(tt.rawRequest.body)
+				req, err := http.NewRequest("POST", modelServer.URL, reqBody)
+				assert.NoError(t, err)
+				for k, v := range tt.rawRequest.headers {
+					req.Header.Set(k, v)
+				}
+				transformerServer.PredictHandler(rr, req)
+
+				responseBody, err := ioutil.ReadAll(rr.Body)
+				assert.NoError(t, err)
+				assert.JSONEq(t, string(tt.expTransformedResponse.body), string(responseBody))
+				assert.Equal(t, tt.expTransformedResponse.statusCode, rr.Code)
+				assertHasHeaders(t, tt.expTransformedResponse.headers, rr.Header())
 			}
-
-			rr := httptest.NewRecorder()
-			transformerServer.PredictHandler(rr, req)
-
-			responseBody, err := ioutil.ReadAll(rr.Body)
-			assert.NoError(t, err)
-			assert.JSONEq(t, string(tt.expTransformedResponse.body), string(responseBody))
-			assert.Equal(t, tt.expTransformedResponse.statusCode, rr.Code)
-			assertHasHeaders(t, tt.expTransformedResponse.headers, rr.Header())
 		})
 	}
 }
@@ -866,15 +898,17 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 		return nil, err
 	}
 
-	logger, err := zap.NewDevelopment()
+	logger, err := zap.NewProduction()
 	if err != nil {
 		return nil, err
 	}
 
 	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClients, &feast.Options{
-		CacheEnabled:       true,
-		CacheSizeInMB:      100,
-		BatchSize:          100,
+		CacheEnabled:  true,
+		CacheSizeInMB: 100,
+		CacheTTL:      60 * time.Second,
+		BatchSize:     100,
+
 		DefaultFeastSource: spec.ServingSource_BIGTABLE,
 		StorageConfigs: feast.FeastStorageConfig{
 			spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
