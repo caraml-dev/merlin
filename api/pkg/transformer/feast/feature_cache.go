@@ -145,7 +145,7 @@ func (fc *featureCache) insertFeaturesOfEntity(entity feast.Row, columnNames []s
 
 func castValueRow(row types.ValueRow, columnTypes []feastTypes.ValueType_Enum) (types.ValueRow, error) {
 	for idx, val := range row {
-		castedVal, err := castIntValue(val, columnTypes[idx])
+		castedVal, err := castValue(val, columnTypes[idx])
 		if err != nil {
 			return row, err
 		}
@@ -154,14 +154,38 @@ func castValueRow(row types.ValueRow, columnTypes []feastTypes.ValueType_Enum) (
 	return row, nil
 }
 
-// castIntValue cast cache value of integer type to its correct type
-// It's necessary since we store value as json and any integer value will be converted to float64
-func castIntValue(val interface{}, valType feastTypes.ValueType_Enum) (interface{}, error) {
+// castValue cast cache value of interface type to its correct type
+// It's necessary since we store value as json
+func castValue(val interface{}, valType feastTypes.ValueType_Enum) (interface{}, error) {
+	if val == nil {
+		return val, nil
+	}
+
 	switch valType {
-	case feastTypes.ValueType_INT64:
-		return converter.ToInt64(val)
 	case feastTypes.ValueType_INT32:
 		return converter.ToInt32(val)
+	case feastTypes.ValueType_INT64:
+		return converter.ToInt64(val)
+	case feastTypes.ValueType_FLOAT:
+		return converter.ToFloat32(val)
+	case feastTypes.ValueType_DOUBLE:
+		return converter.ToFloat64(val)
+	case feastTypes.ValueType_BOOL:
+		return converter.ToBool(val)
+	case feastTypes.ValueType_STRING:
+		return converter.ToString(val)
+	case feastTypes.ValueType_INT32_LIST:
+		return converter.ToInt32List(val)
+	case feastTypes.ValueType_INT64_LIST:
+		return converter.ToInt64List(val)
+	case feastTypes.ValueType_FLOAT_LIST:
+		return converter.ToFloat32List(val)
+	case feastTypes.ValueType_DOUBLE_LIST:
+		return converter.ToFloat64List(val)
+	case feastTypes.ValueType_BOOL_LIST:
+		return converter.ToBoolList(val)
+	case feastTypes.ValueType_STRING_LIST:
+		return converter.ToStringList(val)
 	default:
 		return val, nil
 	}
