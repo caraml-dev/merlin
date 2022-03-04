@@ -3,6 +3,7 @@ package converter
 import (
 	"encoding/base64"
 	"reflect"
+	"strings"
 	"testing"
 
 	feast "github.com/feast-dev/feast/sdk/go"
@@ -37,12 +38,52 @@ func TestToBool(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from int",
+			args: args{
+				v: 0,
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "from int",
+			args: args{
+				v: 1,
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "from int",
+			args: args{
+				v: 3,
+			},
+			want:    false,
+			wantErr: true,
+		},
+		{
 			name: "from float",
 			args: args{
 				v: 1.1,
 			},
 			want:    false,
 			wantErr: true,
+		},
+		{
+			name: "from float",
+			args: args{
+				v: float64(1.0),
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "from float",
+			args: args{
+				v: float64(0.0),
+			},
+			want:    false,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -53,7 +94,119 @@ func TestToBool(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, got, tt.want)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestToFloat32(t *testing.T) {
+	type args struct {
+		v interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    float32
+		wantErr bool
+	}{
+		{
+			name: "from float64",
+			args: args{
+				v: float64(11.111),
+			},
+			want:    float32(11.111),
+			wantErr: false,
+		},
+		{
+			name: "from float32",
+			args: args{
+				v: float32(11.111),
+			},
+			want:    float32(11.111),
+			wantErr: false,
+		},
+		{
+			name: "from float32",
+			args: args{
+				v: float32(11.111),
+			},
+			want:    float32(11.111),
+			wantErr: false,
+		},
+		{
+			name: "from int",
+			args: args{
+				v: int(1111),
+			},
+			want:    float32(1111),
+			wantErr: false,
+		},
+		{
+			name: "from int8",
+			args: args{
+				v: int8(111),
+			},
+			want:    float32(111),
+			wantErr: false,
+		},
+		{
+			name: "from int16",
+			args: args{
+				v: int16(11111),
+			},
+			want:    float32(11111),
+			wantErr: false,
+		},
+		{
+			name: "from int32",
+			args: args{
+				v: int32(11111),
+			},
+			want:    float32(11111),
+			wantErr: false,
+		},
+		{
+			name: "from int64",
+			args: args{
+				v: int64(11111),
+			},
+			want:    float32(11111),
+			wantErr: false,
+		},
+		{
+			name: "from string",
+			args: args{
+				v: "1111.1111",
+			},
+			want:    float32(1111.1111),
+			wantErr: false,
+		},
+		{
+			name: "from string - invalid",
+			args: args{
+				v: "asd",
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "from bool",
+			args: args{
+				v: false,
+			},
+			want:    0,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ToFloat32(tt.args.v)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+
+			assert.InEpsilon(t, tt.want, got, 0.0001)
 		})
 	}
 }
@@ -1002,12 +1155,28 @@ func TestToIntList(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from string - invalid",
+			args: args{
+				val: "asd",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "from []string",
 			args: args{
 				val: []string{"23", "30"},
 			},
 			want:    []int{23, 30},
 			wantErr: false,
+		},
+		{
+			name: "from []string - invalid",
+			args: args{
+				val: []string{"asd", "qwe"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "from bool: true",
@@ -1032,6 +1201,22 @@ func TestToIntList(t *testing.T) {
 			},
 			want:    []int{1, 0},
 			wantErr: false,
+		},
+		{
+			name: "from []interface",
+			args: args{
+				val: []interface{}{0, 1, 10},
+			},
+			want:    []int{0, 1, 10},
+			wantErr: false,
+		},
+		{
+			name: "from []interface - invalid",
+			args: args{
+				val: []interface{}{0, 1, 10, "asd'"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -1147,12 +1332,28 @@ func TestToInt32List(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from string - invalid",
+			args: args{
+				val: "asd",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "from []string",
 			args: args{
 				val: []string{"23", "30"},
 			},
 			want:    []int32{23, 30},
 			wantErr: false,
+		},
+		{
+			name: "from []string - invalid",
+			args: args{
+				val: []string{"23", "30", "asd"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "from bool: true",
@@ -1177,6 +1378,22 @@ func TestToInt32List(t *testing.T) {
 			},
 			want:    []int32{1, 0},
 			wantErr: false,
+		},
+		{
+			name: "from []interface",
+			args: args{
+				val: []interface{}{0, 1, 10},
+			},
+			want:    []int32{0, 1, 10},
+			wantErr: false,
+		},
+		{
+			name: "from []interface - invalid",
+			args: args{
+				val: []interface{}{0, 1, 10, "asd'"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -1292,12 +1509,28 @@ func TestToInt64List(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from string - invalid",
+			args: args{
+				val: "asd",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "from []string",
 			args: args{
 				val: []string{"23", "30"},
 			},
 			want:    []int64{23, 30},
 			wantErr: false,
+		},
+		{
+			name: "from []string - invalid",
+			args: args{
+				val: []string{"23", "30", "asd"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "from bool: true",
@@ -1322,6 +1555,22 @@ func TestToInt64List(t *testing.T) {
 			},
 			want:    []int64{1, 0},
 			wantErr: false,
+		},
+		{
+			name: "from []interface",
+			args: args{
+				val: []interface{}{0, 1, 10},
+			},
+			want:    []int64{0, 1, 10},
+			wantErr: false,
+		},
+		{
+			name: "from []interface - invalid",
+			args: args{
+				val: []interface{}{0, 1, 10, "asd'"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -1437,12 +1686,28 @@ func TestToFloat32List(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from string - invalid",
+			args: args{
+				val: "asd",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "from []string",
 			args: args{
 				val: []string{"23.3", "30.09"},
 			},
 			want:    []float32{23.3, 30.09},
 			wantErr: false,
+		},
+		{
+			name: "from []string - invalid",
+			args: args{
+				val: []string{"23.3", "30.09", "asd"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "from bool: true",
@@ -1467,6 +1732,22 @@ func TestToFloat32List(t *testing.T) {
 			},
 			want:    []float32{1, 0},
 			wantErr: false,
+		},
+		{
+			name: "from []interface",
+			args: args{
+				val: []interface{}{0, 1, 10},
+			},
+			want:    []float32{0, 1, 10},
+			wantErr: false,
+		},
+		{
+			name: "from []interface - invalid",
+			args: args{
+				val: []interface{}{0, 1, 10, "asd'"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -1542,11 +1823,11 @@ func TestToFloat64List(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "from float32",
+			name: "from float64",
 			args: args{
-				val: float32(3.1415),
+				val: float64(3.14),
 			},
-			want:    []float64{3.1415},
+			want:    []float64{3.14},
 			wantErr: false,
 		},
 		{
@@ -1558,9 +1839,9 @@ func TestToFloat64List(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "from []float32",
+			name: "from []float64",
 			args: args{
-				val: []float32{float32(3.14), float32(4.56)},
+				val: []float64{float64(3.14), float64(4.56)},
 			},
 			want:    []float64{3.14, 4.56},
 			wantErr: false,
@@ -1582,12 +1863,68 @@ func TestToFloat64List(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from string - invalid",
+			args: args{
+				val: "asd",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "from []string",
 			args: args{
 				val: []string{"23.3", "30.09"},
 			},
 			want:    []float64{23.3, 30.09},
 			wantErr: false,
+		},
+		{
+			name: "from []string - invalid",
+			args: args{
+				val: []string{"23.3", "30.09", "asd"},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "from bool: true",
+			args: args{
+				val: true,
+			},
+			want:    []float64{1},
+			wantErr: false,
+		},
+		{
+			name: "from bool: false",
+			args: args{
+				val: false,
+			},
+			want:    []float64{0},
+			wantErr: false,
+		},
+		{
+			name: "from []bool",
+			args: args{
+				val: []bool{true, false},
+			},
+			want:    []float64{1, 0},
+			wantErr: false,
+		},
+		{
+			name: "from []interface",
+			args: args{
+				val: []interface{}{3.14, 1, 10},
+			},
+			want:    []float64{3.14, 1, 10},
+			wantErr: false,
+		},
+		{
+			name: "from []interface - invalid",
+			args: args{
+				val: []interface{}{3.14, 1, 10, "asd'"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -1597,6 +1934,14 @@ func TestToFloat64List(t *testing.T) {
 				t.Errorf("ToFloat64List() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			// for boolean case we use assert.Equal because the array contains 0 value
+			// assert.InEpsilonSlice expects all element in array to be greater than 0
+			if strings.Contains(tt.name, "bool") {
+				assert.Equal(t, tt.want, got)
+				return
+			}
+
 			assert.InEpsilonSlice(t, tt.want, got, 0.0001)
 		})
 	}
@@ -1618,6 +1963,14 @@ func TestToBoolList(t *testing.T) {
 				val: int(1),
 			},
 			want:    []bool{true},
+			wantErr: false,
+		},
+		{
+			name: "from int",
+			args: args{
+				val: int(0),
+			},
+			want:    []bool{false},
 			wantErr: false,
 		},
 		{
@@ -1653,6 +2006,14 @@ func TestToBoolList(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from []int, but neither 0 or 1",
+			args: args{
+				val: []int{int(2), int(3)},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "from []int32",
 			args: args{
 				val: []int32{int32(1), int32(0)},
@@ -1675,6 +2036,22 @@ func TestToBoolList(t *testing.T) {
 			},
 			want:    []bool{true},
 			wantErr: false,
+		},
+		{
+			name: "from float32",
+			args: args{
+				val: float32(0),
+			},
+			want:    []bool{false},
+			wantErr: false,
+		},
+		{
+			name: "from float32 - invalid",
+			args: args{
+				val: float32(100),
+			},
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "from float64",
@@ -1701,6 +2078,14 @@ func TestToBoolList(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from []float64, neither 0 or 1",
+			args: args{
+				val: []float64{float64(2), float64(3)},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "from string",
 			args: args{
 				val: "t",
@@ -1709,12 +2094,28 @@ func TestToBoolList(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from string",
+			args: args{
+				val: "benar",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "from []string",
 			args: args{
 				val: []string{"1", "t", "T", "true", "TRUE", "True"},
 			},
 			want:    []bool{true, true, true, true, true, true},
 			wantErr: false,
+		},
+		{
+			name: "from []string - invalid",
+			args: args{
+				val: []string{"1", "t", "T", "true", "TRUE", "True", "ASD"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "from bool: true",
@@ -1739,6 +2140,30 @@ func TestToBoolList(t *testing.T) {
 			},
 			want:    []bool{true, false},
 			wantErr: false,
+		},
+		{
+			name: "from []interface - valid bool",
+			args: args{
+				val: []interface{}{true},
+			},
+			want:    []bool{true},
+			wantErr: false,
+		},
+		{
+			name: "from []interface - valid bool",
+			args: args{
+				val: []interface{}{true, "true", 1, 0, "f", "FALSE"},
+			},
+			want:    []bool{true, true, true, false, false, false},
+			wantErr: false,
+		},
+		{
+			name: "from []interface - invalid",
+			args: args{
+				val: []interface{}{"QWE", "ASD"},
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

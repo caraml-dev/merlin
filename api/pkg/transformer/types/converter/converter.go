@@ -122,6 +122,27 @@ func ToIntList(val interface{}) ([]int, error) {
 			out[i] = d
 		}
 		return out, nil
+	case interface{}:
+		switch reflect.TypeOf(val).Kind() {
+		case reflect.Slice:
+			list := reflect.ValueOf(v)
+			l := list.Len()
+			out := make([]int, l)
+			for i := 0; i < l; i++ {
+				d, err := ToInt(list.Index(i).Interface())
+				if err != nil {
+					return nil, err
+				}
+				out[i] = d
+			}
+			return out, nil
+		default:
+			d, err := ToInt(v)
+			if err != nil {
+				return nil, err
+			}
+			return []int{d}, nil
+		}
 	default:
 		return nil, fmt.Errorf("unsupported conversion from %T to []int", v)
 	}
@@ -236,6 +257,27 @@ func ToInt32List(val interface{}) ([]int32, error) {
 			out[i] = int32(d)
 		}
 		return out, nil
+	case interface{}:
+		switch reflect.TypeOf(val).Kind() {
+		case reflect.Slice:
+			list := reflect.ValueOf(v)
+			l := list.Len()
+			out := make([]int32, l)
+			for i := 0; i < l; i++ {
+				d, err := ToInt32(list.Index(i).Interface())
+				if err != nil {
+					return nil, err
+				}
+				out[i] = d
+			}
+			return out, nil
+		default:
+			d, err := ToInt32(v)
+			if err != nil {
+				return nil, err
+			}
+			return []int32{d}, nil
+		}
 	default:
 		return nil, fmt.Errorf("unsupported conversion from %T to []int32", v)
 	}
@@ -300,6 +342,27 @@ func ToInt64List(val interface{}) ([]int64, error) {
 			out[i] = d
 		}
 		return out, nil
+	case interface{}:
+		switch reflect.TypeOf(val).Kind() {
+		case reflect.Slice:
+			list := reflect.ValueOf(v)
+			l := list.Len()
+			out := make([]int64, l)
+			for i := 0; i < l; i++ {
+				d, err := ToInt64(list.Index(i).Interface())
+				if err != nil {
+					return nil, err
+				}
+				out[i] = d
+			}
+			return out, nil
+		default:
+			d, err := ToInt64(v)
+			if err != nil {
+				return nil, err
+			}
+			return []int64{d}, nil
+		}
 	default:
 		return nil, fmt.Errorf("unsupported conversion from %T to []int64", v)
 	}
@@ -414,6 +477,27 @@ func ToFloat32List(val interface{}) ([]float32, error) {
 			out[i] = float32(d)
 		}
 		return out, nil
+	case interface{}:
+		switch reflect.TypeOf(val).Kind() {
+		case reflect.Slice:
+			list := reflect.ValueOf(v)
+			l := list.Len()
+			out := make([]float32, l)
+			for i := 0; i < l; i++ {
+				d, err := ToFloat32(list.Index(i).Interface())
+				if err != nil {
+					return nil, err
+				}
+				out[i] = d
+			}
+			return out, nil
+		default:
+			d, err := ToFloat32(v)
+			if err != nil {
+				return nil, err
+			}
+			return []float32{d}, nil
+		}
 	default:
 		return nil, fmt.Errorf("unsupported conversion from %T to []float32", v)
 	}
@@ -478,6 +562,27 @@ func ToFloat64List(val interface{}) ([]float64, error) {
 			out[i] = d
 		}
 		return out, nil
+	case interface{}:
+		switch reflect.TypeOf(val).Kind() {
+		case reflect.Slice:
+			list := reflect.ValueOf(v)
+			l := list.Len()
+			out := make([]float64, l)
+			for i := 0; i < l; i++ {
+				d, err := ToFloat64(list.Index(i).Interface())
+				if err != nil {
+					return nil, err
+				}
+				out[i] = d
+			}
+			return out, nil
+		default:
+			d, err := ToFloat64(v)
+			if err != nil {
+				return nil, err
+			}
+			return []float64{d}, nil
+		}
 	default:
 		return nil, fmt.Errorf("unsupported conversion from %T to []float64", v)
 	}
@@ -487,6 +592,22 @@ func ToBool(v interface{}) (bool, error) {
 	switch v := v.(type) {
 	case bool:
 		return v, nil
+	case int, int8, int16, int32, int64:
+		i := reflect.ValueOf(v).Int()
+		if i == 1 {
+			return true, nil
+		} else if i == 0 {
+			return false, nil
+		}
+		return false, fmt.Errorf("error parsing %v to bool", v)
+	case float32, float64:
+		i := reflect.ValueOf(v).Float()
+		if i == float64(1) {
+			return true, nil
+		} else if i == float64(0) {
+			return false, nil
+		}
+		return false, fmt.Errorf("error parsing %v to bool", v)
 	case string:
 		return strconv.ParseBool(v)
 	default:
@@ -562,6 +683,27 @@ func ToBoolList(val interface{}) ([]bool, error) {
 			out[i] = b
 		}
 		return out, nil
+	case interface{}:
+		switch reflect.TypeOf(val).Kind() {
+		case reflect.Slice:
+			list := reflect.ValueOf(v)
+			l := list.Len()
+			out := make([]bool, l)
+			for i := 0; i < l; i++ {
+				d, err := ToBool(list.Index(i).Interface())
+				if err != nil {
+					return nil, err
+				}
+				out[i] = d
+			}
+			return out, nil
+		default:
+			d, err := ToBool(v)
+			if err != nil {
+				return nil, err
+			}
+			return []bool{d}, nil
+		}
 	default:
 		return nil, fmt.Errorf("unsupported conversion from %T to []bool", v)
 	}

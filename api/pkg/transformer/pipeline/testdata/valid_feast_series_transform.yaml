@@ -55,9 +55,11 @@ transformerConfig:
                 valueType: STRING
                 expression: driver_customer_feature_table.Col('customers_picked_up').Flatten().Unique()
             features:
-              - name: customer_feature_1
-                valueType: INT64
-                defaultValue: "0"
+              - name: customer_name
+                valueType: STRING
+              - name: customer_phones
+                valueType: DOUBLE_LIST
+                defaultValue: "[123456, 456789]"
     transformations:
       - tableTransformation:
           inputTable: driver_table
