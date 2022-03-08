@@ -43,9 +43,17 @@ type VersionEndpoint struct {
 	EnvVars              EnvVars          `json:"env_vars" gorm:"column:env_vars"`
 	Transformer          *Transformer     `json:"transformer,omitempty" gorm:"foreignKey:VersionEndpointID"`
 	Logger               *Logger          `json:"logger,omitempty" gorm:"logger"`
+	DeploymentType       DeploymentMode   `json:"deployment_mode" gorm:"deployment_mode"`
 
 	CreatedUpdated
 }
+
+type DeploymentMode string
+
+const (
+	ServerlessDeploymentMode = "serverless"
+	RawDeploymentMode        = "raw_deployment"
+)
 
 func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, version *Version, monitoringConfig config.MonitoringConfig) *VersionEndpoint {
 	id := uuid.New()

@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
-	"github.com/kserve/kserve/pkg/constants"
+	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -43,7 +43,6 @@ const (
 
 	defaultPredictorArtifactLocation = "/mnt/models"
 	defaultPredictorPort             = "8080"
-	defaultPredictorContainerName    = "kfserving-container"
 
 	defaultTransformerPort = "8080"
 
@@ -69,19 +68,19 @@ func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *mo
 		Name:        modelService.Name,
 		Namespace:   modelService.Namespace,
 		Labels:      labels,
-		Annotations: map[string]string{},
+		Annotations: make(map[string]string),
 	}
 
 	if config.QueueResourcePercentage != "" {
-		objectMeta.Annotations = map[string]string{
-			annotationQueueProxyResource: config.QueueResourcePercentage,
-		}
+		objectMeta.Annotations[annotationQueueProxyResource] = config.QueueResourcePercentage
 	}
 
 	if modelService.Type == models.ModelTypePyFunc {
 		objectMeta.Annotations[annotationPrometheusScrapeFlag] = "true"
 		objectMeta.Annotations[annotationPrometheusScrapePort] = prometheusPort
 	}
+
+	objectMeta.Annotations[kserveconstant.DeploymentMode] = string(toKServeDeploymentMode(modelService.DeploymentMode))
 
 	inferenceService := &kservev1beta1.InferenceService{
 		ObjectMeta: objectMeta,
@@ -146,7 +145,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:      constants.InferenceServiceContainerName,
+						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
 					},
 				},
@@ -158,7 +157,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:      constants.InferenceServiceContainerName,
+						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
 					},
 				},
@@ -170,7 +169,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:      constants.InferenceServiceContainerName,
+						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
 					},
 				},
@@ -182,7 +181,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:      constants.InferenceServiceContainerName,
+						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
 					},
 				},
@@ -194,7 +193,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:      constants.InferenceServiceContainerName,
+						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
 					},
 				},
@@ -205,7 +204,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			PodSpec: kservev1beta1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name:      constants.InferenceServiceContainerName,
+						Name:      kserveconstant.InferenceServiceContainerName,
 						Image:     modelService.Options.PyFuncImageName,
 						Env:       modelService.EnvVars.ToKubernetesEnvVars(),
 						Resources: resources,
@@ -271,7 +270,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 					Resources: resources,
 					Command:   containerCommand,
 					Args:      containerArgs,
-					Name:      constants.InferenceServiceContainerName,
+					Name:      kserveconstant.InferenceServiceContainerName,
 				},
 			},
 		},
@@ -397,4 +396,13 @@ func (t *KFServingResourceTemplater) enrichStandardTransformerEnvVars(envVars mo
 
 func createPredictURL(modelService *models.Service) string {
 	return modelService.Name + "-predictor-default." + modelService.Namespace
+}
+
+func toKServeDeploymentMode(deploymentType models.DeploymentMode) kserveconstant.DeploymentModeType {
+	if deploymentType == models.RawDeploymentMode {
+		return kserveconstant.RawDeployment
+	}
+
+	// Default to serverless
+	return kserveconstant.Serverless
 }

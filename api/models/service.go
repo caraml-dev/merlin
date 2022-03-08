@@ -32,9 +32,10 @@ type Service struct {
 	Metadata        Metadata
 	Transformer     *Transformer
 	Logger          *Logger
+	DeploymentMode  DeploymentMode
 }
 
-func NewService(model *Model, version *Version, modelOpt *ModelOption, resource *ResourceRequest, envVars EnvVars, environment string, transformer *Transformer, logger *Logger) *Service {
+func NewService(model *Model, version *Version, modelOpt *ModelOption, resource *ResourceRequest, envVars EnvVars, environment string, transformer *Transformer, logger *Logger, deploymentType DeploymentMode) *Service {
 	return &Service{
 		Name:            CreateInferenceServiceName(model.Name, version.ID.String()),
 		Namespace:       model.Project.Name,
@@ -50,8 +51,9 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, resource 
 			Environment: environment,
 			Labels:      model.Project.Labels,
 		},
-		Transformer: transformer,
-		Logger:      logger,
+		Transformer:    transformer,
+		Logger:         logger,
+		DeploymentMode: deploymentType,
 	}
 }
 

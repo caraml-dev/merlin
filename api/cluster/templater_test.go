@@ -168,6 +168,103 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						Tensorflow: &kservev1beta1.TFServingSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:      constants.InferenceServiceContainerName,
+									Resources: expDefaultModelResourceRequests,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "tensorflow spec as raw deployment",
+			modelSvc: &models.Service{
+				Name:           models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:      project.Name,
+				ArtifactURI:    model.ArtifactURI,
+				Type:           models.ModelTypeTensorflow,
+				Options:        &models.ModelOption{},
+				Metadata:       model.Metadata,
+				DeploymentMode: models.RawDeploymentMode,
+			},
+			resourcePercentage: queueResourcePercentage,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.RawDeployment),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						Tensorflow: &kservev1beta1.TFServingSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:      constants.InferenceServiceContainerName,
+									Resources: expDefaultModelResourceRequests,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "tensorflow spec as serverless",
+			modelSvc: &models.Service{
+				Name:           models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:      project.Name,
+				ArtifactURI:    model.ArtifactURI,
+				Type:           models.ModelTypeTensorflow,
+				Options:        &models.ModelOption{},
+				Metadata:       model.Metadata,
+				DeploymentMode: models.ServerlessDeploymentMode,
+			},
+			resourcePercentage: queueResourcePercentage,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -209,9 +306,11 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:        fmt.Sprintf("%s-%d", model.Name, versionID),
-					Namespace:   project.Name,
-					Annotations: map[string]string{},
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						constants.DeploymentMode: string(constants.Serverless),
+					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
 						"gojek.com/orchestrator": "merlin",
@@ -257,6 +356,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -303,6 +403,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -348,6 +449,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -395,6 +497,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -446,6 +549,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
 						"prometheus.io/scrape":                                 "true",
 						"prometheus.io/port":                                   "8080",
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -494,6 +598,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -544,6 +649,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -603,6 +709,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -715,6 +822,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -796,6 +904,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -880,6 +989,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1014,6 +1124,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1076,6 +1187,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1160,6 +1272,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1240,6 +1353,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1324,6 +1438,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1460,6 +1575,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 				},
 				Spec: kservev1beta1.InferenceServiceSpec{
@@ -1486,6 +1602,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1543,6 +1660,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 				},
 				Spec: kservev1beta1.InferenceServiceSpec{
@@ -1569,6 +1687,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1648,6 +1767,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 				},
 				Spec: kservev1beta1.InferenceServiceSpec{
@@ -1705,6 +1825,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1758,6 +1879,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
@@ -1805,6 +1927,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Namespace: project.Name,
 					Annotations: map[string]string{
 						"queue.sidecar.serving.knative.dev/resourcePercentage": queueResourcePercentage,
+						constants.DeploymentMode:                               string(constants.Serverless),
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          model.Metadata.App,
