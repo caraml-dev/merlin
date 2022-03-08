@@ -15,6 +15,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -81,7 +82,7 @@ func TestList(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("ListPredictionJobs", mock.Anything, &service.ListPredictionJobQuery{
+				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
 				}).Return([]*models.PredictionJob{
@@ -174,7 +175,7 @@ func TestList(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("ListPredictionJobs", mock.Anything, &service.ListPredictionJobQuery{
+				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					ModelID:   models.ID(1),
 					VersionID: models.ID(1),
 				}).Return(nil, fmt.Errorf("Connection refused"))
@@ -274,7 +275,7 @@ func TestGet(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
+				svc.On("GetPredictionJob", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
 					ID:              models.ID(1),
 					Name:            "prediction-job-1",
 					ProjectID:       models.ID(1),
@@ -430,7 +431,7 @@ func TestGet(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
+				svc.On("GetPredictionJob", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
 			expected: &Response{
@@ -529,7 +530,7 @@ func TestStop(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("StopPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
+				svc.On("StopPredictionJob", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
 					ID:              models.ID(1),
 					Name:            "prediction-job-1",
 					ProjectID:       models.ID(1),
@@ -677,7 +678,7 @@ func TestStop(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("StopPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
+				svc.On("StopPredictionJob", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
 			expected: &Response{
@@ -777,7 +778,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
+				svc.On("GetPredictionJob", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
 					ID:              models.ID(1),
 					Name:            "prediction-job-1",
 					ProjectID:       models.ID(1),
@@ -785,7 +786,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 					VersionModelID:  models.ID(1),
 					EnvironmentName: "dev",
 				}, nil)
-				svc.On("ListContainers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]*models.Container{
+				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]*models.Container{
 					{
 						Name:              "pod-1",
 						PodName:           "pod-1-1",
@@ -945,7 +946,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
+				svc.On("GetPredictionJob", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
 			expected: &Response{
@@ -1007,7 +1008,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("GetPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
+				svc.On("GetPredictionJob", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
 					ID:              models.ID(1),
 					Name:            "prediction-job-1",
 					ProjectID:       models.ID(1),
@@ -1015,7 +1016,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 					VersionModelID:  models.ID(1),
 					EnvironmentName: "dev",
 				}, nil)
-				svc.On("ListContainers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
+				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
 			expected: &Response{
@@ -1122,7 +1123,7 @@ func TestCreate(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("CreatePredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
+				svc.On("CreatePredictionJob", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.PredictionJob{
 					ID:              models.ID(1),
 					Name:            "prediction-job-1",
 					ProjectID:       models.ID(1),
@@ -1290,7 +1291,7 @@ func TestCreate(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("CreatePredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
+				svc.On("CreatePredictionJob", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
 			expected: &Response{
@@ -1409,7 +1410,7 @@ func TestListAllInProject(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("ListPredictionJobs", mock.Anything, &service.ListPredictionJobQuery{
+				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					Name:    "prediction-job",
 					ModelID: models.ID(1),
 				}).Return([]*models.PredictionJob{
@@ -1481,7 +1482,7 @@ func TestListAllInProject(t *testing.T) {
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
 				svc := &mocks.PredictionJobService{}
-				svc.On("ListPredictionJobs", mock.Anything, &service.ListPredictionJobQuery{
+				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					Name:    "prediction-job",
 					ModelID: models.ID(1),
 				}).Return(nil, fmt.Errorf("DB is down"))

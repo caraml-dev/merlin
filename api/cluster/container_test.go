@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build unit
-
 package cluster
 
 import (
+	"context"
 	"testing"
 
-	fakeserving "github.com/kubeflow/kfserving/pkg/client/clientset/versioned/fake"
-	fakeservingv1alpha2 "github.com/kubeflow/kfserving/pkg/client/clientset/versioned/typed/serving/v1alpha2/fake"
+	kserveclifake "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
+	kservev1beta1fake "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -77,7 +76,7 @@ func TestContainer_GetContainers(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		kfClient := fakeserving.NewSimpleClientset().ServingV1alpha2().(*fakeservingv1alpha2.FakeServingV1alpha2)
+		kfClient := kserveclifake.NewSimpleClientset().ServingV1beta1().(*kservev1beta1fake.FakeServingV1beta1)
 		v1Client := fake.NewSimpleClientset().CoreV1()
 		fakePodCtl := v1Client.Pods(tt.args.namespace).(*fakecorev1.FakePods)
 		fakePodCtl.Fake.PrependReactor(listMethod, podResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
@@ -88,7 +87,7 @@ func TestContainer_GetContainers(t *testing.T) {
 
 		containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
 		ctl, _ := newController(kfClient, v1Client, nil, config.DeploymentConfig{}, containerFetcher, nil)
-		containers, err := ctl.GetContainers(tt.args.namespace, tt.args.labelSelector)
+		containers, err := ctl.GetContainers(context.Background(), tt.args.namespace, tt.args.labelSelector)
 		if !tt.wantError {
 			assert.NoErrorf(t, err, "expected no error got %v", err)
 		} else {

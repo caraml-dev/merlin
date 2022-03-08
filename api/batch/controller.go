@@ -25,7 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/informers/externalversions"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -81,9 +81,12 @@ func init() {
 // Every time that Spark application has a new status, it will be added to the queue to be processed by processNextItem().
 // processNextItem() will do necessary jobs for updated Spark application (saving, cleaning)
 type Controller interface {
-	Submit(predictionJob *models.PredictionJob, namespace string) error
+	// Submit submit a prediction job to kubernetes in the given namespace
+	Submit(ctx context.Context, predictionJob *models.PredictionJob, namespace string) error
+	// Stop stop an existing prediction job in the given namespace
+	Stop(ctx context.Context, predictionJob *models.PredictionJob, namespace string) error
+	// Run run batch prediction controller loop
 	Run(stopCh <-chan struct{})
-	Stop(predictionJob *models.PredictionJob, namespace string) error
 	cluster.ContainerFetcher
 }
 
@@ -124,23 +127,21 @@ func NewController(store storage.PredictionJobStorage, mlpAPIClient mlp.APIClien
 	return controller
 }
 
-func (c *controller) Submit(predictionJob *models.PredictionJob, namespace string) error {
-	ctx := context.Background()
-
+func (c *controller) Submit(ctx context.Context, predictionJob *models.PredictionJob, namespace string) error {
 	var err error
 	defer func() {
 		if err != nil {
 			// Directly cleanup if error happens during submission
-			c.cleanup(predictionJob, namespace)
+			c.cleanup(ctx, predictionJob, namespace)
 		}
 	}()
 
-	_, err = c.namespaceCreator.CreateNamespace(namespace)
+	_, err = c.namespaceCreator.CreateNamespace(ctx, namespace)
 	if err != nil {
 		return fmt.Errorf("failed creating namespace %s: %v", namespace, err)
 	}
 
-	driverServiceAccount, err := c.manifestManager.CreateDriverAuthorization(namespace)
+	driverServiceAccount, err := c.manifestManager.CreateDriverAuthorization(ctx, namespace)
 	if err != nil {
 		return fmt.Errorf("failed creating spark driver authorization in namespace %s: %v", namespace, err)
 	}
@@ -150,12 +151,12 @@ func (c *controller) Submit(predictionJob *models.PredictionJob, namespace strin
 		return fmt.Errorf("service account %s is not found within %s project: %s", predictionJob.Config.ServiceAccountName, namespace, err)
 	}
 
-	_, err = c.manifestManager.CreateSecret(predictionJob.Name, namespace, secret.Data)
+	_, err = c.manifestManager.CreateSecret(ctx, predictionJob.Name, namespace, secret.Data)
 	if err != nil {
 		return fmt.Errorf("failed creating secret for job %s in namespace %s: %v", predictionJob.Name, namespace, err)
 	}
 
-	_, err = c.manifestManager.CreateJobSpec(predictionJob.Name, namespace, predictionJob.Config.JobConfig)
+	_, err = c.manifestManager.CreateJobSpec(ctx, predictionJob.Name, namespace, predictionJob.Config.JobConfig)
 	if err != nil {
 		return fmt.Errorf("failed creating job specification configmap for job %s in namespace %s: %v", predictionJob.Name, namespace, err)
 	}
@@ -166,7 +167,7 @@ func (c *controller) Submit(predictionJob *models.PredictionJob, namespace strin
 	}
 
 	sparkResource.Spec.Driver.ServiceAccount = &driverServiceAccount
-	_, err = c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).Create(sparkResource)
+	_, err = c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).Create(ctx, sparkResource, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed submitting spark application to spark controller for job %s in namespace %s: %v", predictionJob.Name, namespace, err)
 	}
@@ -187,8 +188,8 @@ func (c *controller) Run(stopCh <-chan struct{}) {
 	wait.Until(c.runWorker, time.Second, stopCh)
 }
 
-func (c *controller) Stop(predictionJob *models.PredictionJob, namespace string) error {
-	sparkResources, _ := c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).List(v1.ListOptions{
+func (c *controller) Stop(ctx context.Context, predictionJob *models.PredictionJob, namespace string) error {
+	sparkResources, _ := c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", labelPredictionJobID, predictionJob.ID.String()),
 	})
 
@@ -197,25 +198,25 @@ func (c *controller) Stop(predictionJob *models.PredictionJob, namespace string)
 	}
 
 	for _, resource := range sparkResources.Items {
-		err := c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).Delete(resource.Name, v1.NewDeleteOptions(0))
+		err := c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).Delete(ctx, resource.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to delete spark application resource %s for job %s in namespace %s: %v", resource.Name, predictionJob.Name, namespace, err)
 		}
 	}
 
-	c.cleanup(predictionJob, namespace)
+	c.cleanup(ctx, predictionJob, namespace)
 	predictionJob.Status = models.JobTerminated
 
 	return c.store.Save(predictionJob)
 }
 
-func (c *controller) cleanup(job *models.PredictionJob, namespace string) {
-	err := c.manifestManager.DeleteSecret(job.Name, namespace)
+func (c *controller) cleanup(ctx context.Context, job *models.PredictionJob, namespace string) {
+	err := c.manifestManager.DeleteSecret(ctx, job.Name, namespace)
 	if err != nil {
 		log.Warnf("failed deleting secret %s in namespace %s: %v", job.Name, namespace, err)
 	}
 
-	err = c.manifestManager.DeleteJobSpec(job.Name, namespace)
+	err = c.manifestManager.DeleteJobSpec(ctx, job.Name, namespace)
 	if err != nil {
 		log.Warnf("failed deleting job spec %s in namespace %s: %v", job.Name, namespace, err)
 	}
@@ -240,7 +241,7 @@ func (c *controller) processNextItem() bool {
 		return false
 	}
 	defer c.queue.Done(key)
-	err := c.syncStatus(key.(string))
+	err := c.syncStatus(context.Background(), key.(string))
 	if err == nil {
 		// No error, reset the ratelimit counters
 		c.queue.Forget(key)
@@ -257,7 +258,7 @@ func (c *controller) processNextItem() bool {
 	return true
 }
 
-func (c *controller) syncStatus(key string) error {
+func (c *controller) syncStatus(ctx context.Context, key string) error {
 	obj, _, err := c.informer.GetIndexer().GetByKey(key)
 	if err != nil {
 		return fmt.Errorf("error fetching object with key %s from store: %v", key, err)
@@ -279,7 +280,7 @@ func (c *controller) syncStatus(key string) error {
 	}
 
 	if predictionJob.Status.IsTerminal() {
-		c.cleanup(predictionJob, sparkApp.Namespace)
+		c.cleanup(ctx, predictionJob, sparkApp.Namespace)
 		modelName := getModelName(predictionJob.Name)
 		BatchCounter.WithLabelValues(sparkApp.Namespace, modelName, string(predictionJob.Status)).Inc()
 	}

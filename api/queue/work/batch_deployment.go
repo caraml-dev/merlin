@@ -1,6 +1,7 @@
 package work
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -59,7 +60,7 @@ func (depl *BatchDeployment) Deploy(job *queue.Job) error {
 
 	defer batch.BatchCounter.WithLabelValues(model.Project.Name, model.Name, string(predictionJob.Status)).Inc()
 
-	err = depl.doCreatePredictionJob(env, model, version, predictionJob)
+	err = depl.doCreatePredictionJob(context.Background(), env, model, version, predictionJob)
 	if err != nil {
 		batch.BatchCounter.WithLabelValues(model.Project.Name, model.Name, string(models.JobFailedSubmission)).Inc()
 		predictionJob.Status = models.JobFailedSubmission
@@ -73,11 +74,11 @@ func (depl *BatchDeployment) Deploy(job *queue.Job) error {
 	return nil
 }
 
-func (depl *BatchDeployment) doCreatePredictionJob(env *models.Environment, model *models.Model, version *models.Version, job *models.PredictionJob) error {
+func (depl *BatchDeployment) doCreatePredictionJob(ctx context.Context, env *models.Environment, model *models.Model, version *models.Version, job *models.PredictionJob) error {
 	project := model.Project
 
 	// build image
-	imageRef, err := depl.ImageBuilder.BuildImage(project, model, version)
+	imageRef, err := depl.ImageBuilder.BuildImage(ctx, project, model, version)
 	if err != nil {
 		return err
 	}
@@ -90,5 +91,5 @@ func (depl *BatchDeployment) doCreatePredictionJob(env *models.Environment, mode
 	}
 
 	// submit spark application
-	return ctl.Submit(job, project.Name)
+	return ctl.Submit(ctx, job, project.Name)
 }

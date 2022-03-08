@@ -15,6 +15,7 @@
 package service
 
 import (
+	"context"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -149,7 +150,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 		"test-cluster": mockController,
 	}
 
-	mockController.On("ListPods", "test-namespace", "serving.knative.dev/service=test-model-1-predictor-default").
+	mockController.On("ListPods", context.Background(), "test-namespace", "serving.knative.dev/service=test-model-1-predictor-default").
 		Return(&v1.PodList{
 			Items: []v1.Pod{
 				{
@@ -199,7 +200,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 			r := ioutil.NopCloser(strings.NewReader(nowRFC3339 + " log from " + pod + "/" + container))
 
 			c := container
-			mockController.On("StreamPodLogs", "test-namespace", pod, mock.MatchedBy(func(opts *v1.PodLogOptions) bool {
+			mockController.On("StreamPodLogs", context.Background(), "test-namespace", pod, mock.MatchedBy(func(opts *v1.PodLogOptions) bool {
 				return opts.Container == c
 			})).
 				Return(r, nil)
@@ -219,7 +220,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 	}()
 
 	l := NewLogService(mockControllers)
-	err := l.StreamLogs(logLineCh, stopCh, options)
+	err := l.StreamLogs(context.Background(), logLineCh, stopCh, options)
 	assert.Nil(t, err)
 	assert.Equal(t, 6, len(got))
 }

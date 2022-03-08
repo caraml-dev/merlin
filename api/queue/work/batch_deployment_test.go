@@ -1,6 +1,7 @@
 package work
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -123,10 +124,10 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 			desc:      "Success",
 			deployErr: nil,
 			controllerMock: func(ctrl *mocks.Controller) {
-				ctrl.On("Submit", savedJob, project.Name).Return(nil)
+				ctrl.On("Submit", context.Background(), savedJob, project.Name).Return(nil)
 			},
 			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
-				imgBuilder.On("BuildImage", project, model, version).Return(imageRef, nil)
+				imgBuilder.On("BuildImage", context.Background(), project, model, version).Return(imageRef, nil)
 			},
 			mockStorage: func(st *storageMock.PredictionJobStorage) {
 				st.On("Get", savedJob.ID).Return(savedJob, nil)
@@ -137,7 +138,7 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 			deployErr:      fmt.Errorf("failed building image"),
 			controllerMock: func(ctrl *mocks.Controller) {},
 			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
-				imgBuilder.On("BuildImage", project, model, version).Return("", fmt.Errorf("failed building image"))
+				imgBuilder.On("BuildImage", context.Background(), project, model, version).Return("", fmt.Errorf("failed building image"))
 			},
 			mockStorage: func(st *storageMock.PredictionJobStorage) {
 				st.On("Get", savedJob.ID).Return(savedJob, nil)
@@ -148,10 +149,10 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 			desc:      "Failed: submit job failed",
 			deployErr: fmt.Errorf("failed submit job"),
 			controllerMock: func(ctrl *mocks.Controller) {
-				ctrl.On("Submit", savedJob, project.Name).Return(fmt.Errorf("failed submit job"))
+				ctrl.On("Submit", context.Background(), savedJob, project.Name).Return(fmt.Errorf("failed submit job"))
 			},
 			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
-				imgBuilder.On("BuildImage", project, model, version).Return(imageRef, nil)
+				imgBuilder.On("BuildImage", context.Background(), project, model, version).Return(imageRef, nil)
 			},
 			mockStorage: func(st *storageMock.PredictionJobStorage) {
 				st.On("Get", savedJob.ID).Return(savedJob, nil)

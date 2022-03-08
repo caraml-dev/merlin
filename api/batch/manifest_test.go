@@ -15,6 +15,7 @@
 package batch
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -173,7 +174,7 @@ version: v1
 			}
 
 			manifestManager := NewManifestManager(fakeClient)
-			cmName, err := manifestManager.CreateJobSpec(test.spec.Name, defaultNamespace, test.spec)
+			cmName, err := manifestManager.CreateJobSpec(context.Background(), test.spec.Name, defaultNamespace, test.spec)
 			if test.wantError {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())
@@ -228,7 +229,7 @@ func TestDeleteJobSpecConfigMap(t *testing.T) {
 			}
 
 			manifestManager := NewManifestManager(fakeClient)
-			err := manifestManager.DeleteJobSpec(test.configMapName, defaultNamespace)
+			err := manifestManager.DeleteJobSpec(context.Background(), test.configMapName, defaultNamespace)
 			if test.wantError {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())
@@ -296,7 +297,7 @@ func TestCreateSecret(t *testing.T) {
 			}
 
 			manifestManager := NewManifestManager(fakeClient)
-			secretName, err := manifestManager.CreateSecret(test.jobName, defaultNamespace, test.data)
+			secretName, err := manifestManager.CreateSecret(context.Background(), test.jobName, defaultNamespace, test.data)
 			if test.wantError {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())
@@ -349,7 +350,7 @@ func TestDeleteSecret(t *testing.T) {
 			}
 
 			manifestManager := NewManifestManager(fakeClient)
-			err := manifestManager.DeleteSecret(test.secretName, defaultNamespace)
+			err := manifestManager.DeleteSecret(context.Background(), test.secretName, defaultNamespace)
 			if test.wantError {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())
@@ -454,7 +455,7 @@ func TestCreateDriverAuthorization(t *testing.T) {
 			mockDriverAuthorizationCreation(fakeSaClient, fakeRoleClient, fakeRoleBindingClient, test.authResourceExists)
 
 			manifestManager := NewManifestManager(fakeClient)
-			_, err := manifestManager.CreateDriverAuthorization(test.namespace)
+			_, err := manifestManager.CreateDriverAuthorization(context.Background(), test.namespace)
 			assert.NoError(t, err)
 
 			expNumberOfAction := 3
@@ -519,7 +520,7 @@ func TestDeleteDriverAuthorization(t *testing.T) {
 			fakeSaClient, fakeRoleClient, fakeRoleBindingClient := createAuthorizationFakes(fakeClient, test.namespace)
 			mockDriverAuthorizationDeletion(fakeSaClient, fakeRoleClient, fakeRoleBindingClient)
 			manifestManager := NewManifestManager(fakeClient)
-			err := manifestManager.DeleteDriverAuthorization(test.namespace)
+			err := manifestManager.DeleteDriverAuthorization(context.Background(), test.namespace)
 			if test.wantError {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())

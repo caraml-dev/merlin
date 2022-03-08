@@ -1,6 +1,7 @@
 package work
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -96,52 +97,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 		},
 		{
-			name:  "Success: Pytorch Model",
-			model: &models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
-			version: &models.Version{ID: 1, Properties: models.KV{
-				models.PropertyPyTorchClassName: "MyModel",
-			}},
-			endpoint: &models.VersionEndpoint{
-				EnvironmentName: env.Name,
-				ResourceRequest: env.DefaultResourceRequest,
-				VersionID:       version.ID,
-			},
-			deploymentStorage: func() *mocks.DeploymentStorage {
-				mockStorage := &mocks.DeploymentStorage{}
-				mockStorage.On("Save", mock.Anything).Return(nil, nil)
-				return mockStorage
-			},
-			storage: func() *mocks.VersionEndpointStorage {
-				mockStorage := &mocks.VersionEndpointStorage{}
-				mockStorage.On("Save", mock.Anything).Return(nil)
-				mockStorage.On("Get", mock.Anything).Return(&models.VersionEndpoint{
-					Environment:          env,
-					EnvironmentName:      env.Name,
-					ResourceRequest:      env.DefaultResourceRequest,
-					VersionID:            version.ID,
-					Namespace:            project.Name,
-					InferenceServiceName: iSvcName,
-				}, nil)
-				return mockStorage
-			},
-			controller: func() *clusterMock.Controller {
-				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
-					Return(&models.Service{
-						Name:        iSvcName,
-						Namespace:   project.Name,
-						ServiceName: svcName,
-						URL:         url,
-					}, nil)
-				return ctrl
-			},
-			imageBuilder: func() *imageBuilderMock.ImageBuilder {
-				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				return mockImgBuilder
-			},
-		},
-		{
-			name:    "Success: empty pytorch class name will fallback to PyTorchModel",
+			name:    "Success: Pytorch Model",
 			model:   &models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
 			version: &models.Version{ID: 1},
 			endpoint: &models.VersionEndpoint{
@@ -212,7 +168,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", context.Background(), mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -223,17 +179,15 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				mockImgBuilder.On("BuildImage", project, mock.Anything, mock.Anything).
+				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything).
 					Return(fmt.Sprintf("gojek/mymodel-1:latest"), nil)
 				return mockImgBuilder
 			},
 		},
 		{
-			name:  "Success: pytorch model with transformer",
-			model: &models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
-			version: &models.Version{ID: 1, Properties: models.KV{
-				models.PropertyPyTorchClassName: "MyModel",
-			}},
+			name:    "Success: pytorch model with transformer",
+			model:   &models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
+			version: &models.Version{ID: 1},
 			endpoint: &models.VersionEndpoint{
 				EnvironmentName: env.Name,
 				ResourceRequest: env.DefaultResourceRequest,
@@ -259,7 +213,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			controller: func() *clusterMock.Controller {
 				ctrl := &clusterMock.Controller{}
-				ctrl.On("Deploy", mock.Anything, mock.Anything).
+				ctrl.On("Deploy", context.Background(), mock.Anything, mock.Anything).
 					Return(&models.Service{
 						Name:        iSvcName,
 						Namespace:   project.Name,
@@ -270,7 +224,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				mockImgBuilder.On("BuildImage", project, mock.Anything, mock.Anything).
+				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything).
 					Return(fmt.Sprintf("gojek/mymodel-1:latest"), nil)
 				return mockImgBuilder
 			},
@@ -348,7 +302,7 @@ func TestExecuteDeployment(t *testing.T) {
 			},
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
-				mockImgBuilder.On("BuildImage", mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("Failed to build image"))
+				mockImgBuilder.On("BuildImage", context.Background(), mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("Failed to build image"))
 				return mockImgBuilder
 			},
 		},

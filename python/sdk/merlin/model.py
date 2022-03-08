@@ -17,6 +17,7 @@ import pathlib
 import re
 import urllib.parse
 import shutil
+import warnings
 
 from abc import abstractmethod
 from datetime import datetime
@@ -873,7 +874,6 @@ class ModelVersion:
             raise ValueError(
                 "log_pyfunc_model is only for PyFunc and PyFuncV2 model")
 
-        validate_model_dir(self._model.type, ModelType.PYFUNC, None)
         mlflow.pyfunc.log_model(DEFAULT_MODEL_PATH,
                                 python_model=model_instance,
                                 code_path=code_dir,
@@ -890,15 +890,9 @@ class ModelVersion:
         if self._model.type != ModelType.PYTORCH:
             raise ValueError("log_pytorch_model is only for PyTorch model")
 
-        validate_model_dir(self._model.type, ModelType.PYTORCH, model_dir)
-        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
-        if model_class_name is not None:
-            version_api = VersionApi(self._api_client)
-            version_api.models_model_id_versions_version_id_patch(
-                int(self.model.id), int(self.id), body={"properties": {
-                    "pytorch_class_name": model_class_name
-                }
-                })
+        warnings.warn("'log_pytorch_model' is deprecated, use 'log_model' instead",
+                      DeprecationWarning)
+        self.log_model(model_dir)
 
     def log_model(self, model_dir=None):
         """
@@ -911,10 +905,7 @@ class ModelVersion:
         if self._model.type == ModelType.PYFUNC or self._model.type == ModelType.PYFUNC_V2:
             raise ValueError("use log_pyfunc_model to log pyfunc model")
 
-        if self._model.type == ModelType.PYTORCH:
-            raise ValueError("use log_pytorch_model to log pytorch model")
-
-        validate_model_dir(self._model.type, None, model_dir)
+        validate_model_dir(self._model.type, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
     def log_custom_model(self,
@@ -953,7 +944,7 @@ class ModelVersion:
             writer.write(f"command = {command}\n")
             writer.write(f"args = {args}\n")
 
-        validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
+        validate_model_dir(self._model.type, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
         if is_using_temp_dir:

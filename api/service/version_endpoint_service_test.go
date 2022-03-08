@@ -15,6 +15,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -124,9 +125,7 @@ func TestDeployEndpoint(t *testing.T) {
 			args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
-				&models.Version{ID: 1, Properties: models.KV{
-					models.PropertyPyTorchClassName: "MyModel",
-				}},
+				&models.Version{ID: 1},
 				&models.VersionEndpoint{},
 				&models.VersionEndpoint{},
 			},
@@ -227,9 +226,7 @@ func TestDeployEndpoint(t *testing.T) {
 			args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
-				&models.Version{ID: 1, Properties: models.KV{
-					models.PropertyPyTorchClassName: "MyModel",
-				}},
+				&models.Version{ID: 1},
 				&models.VersionEndpoint{
 					Transformer: &models.Transformer{
 						Enabled:         true,
@@ -453,7 +450,7 @@ func TestDeployEndpoint(t *testing.T) {
 				LoggerDestinationURL: loggerDestinationURL,
 				JobProducer:          mockQueueProducer,
 			})
-			errRaised, err := endpointSvc.DeployEndpoint(tt.args.environment, tt.args.model, tt.args.version, tt.args.endpoint)
+			errRaised, err := endpointSvc.DeployEndpoint(context.Background(), tt.args.environment, tt.args.model, tt.args.version, tt.args.endpoint)
 
 			// delay to make second save happen before checking
 			// time.Sleep(20 * time.Millisecond)
@@ -1582,7 +1579,7 @@ func TestDeployEndpoint_StandardTransformer(t *testing.T) {
 				StandardTransformerConfig: mockCfg.StandardTransformerConfig,
 				FeastCoreClient:           mockFeastCore,
 			})
-			createdEndpoint, err := endpointSvc.DeployEndpoint(tC.environment, tC.model, tC.version, tC.endpoint)
+			createdEndpoint, err := endpointSvc.DeployEndpoint(context.Background(), tC.environment, tC.model, tC.version, tC.endpoint)
 			if err != nil {
 				assert.EqualError(t, tC.err, err.Error())
 			} else {
@@ -1735,7 +1732,7 @@ func TestListContainers(t *testing.T) {
 			Return(tt.mock.imageBuilderContainer, nil)
 
 		envController := &clusterMock.Controller{}
-		envController.On("GetContainers", "my-project", "serving.kubeflow.org/inferenceservice=model-1").
+		envController.On("GetContainers", context.Background(), "my-project", "serving.kubeflow.org/inferenceservice=model-1").
 			Return(tt.mock.modelContainers, nil)
 
 		controllers := map[string]cluster.Controller{env.Name: envController}
@@ -1755,7 +1752,7 @@ func TestListContainers(t *testing.T) {
 			MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
 			LoggerDestinationURL: loggerDestinationURL,
 		})
-		containers, err := endpointSvc.ListContainers(tt.args.model, tt.args.version, tt.args.id)
+		containers, err := endpointSvc.ListContainers(context.Background(), tt.args.model, tt.args.version, tt.args.id)
 		if !tt.wantError {
 			assert.Nil(t, err, "unwanted error %v", err)
 		} else {

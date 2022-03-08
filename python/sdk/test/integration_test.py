@@ -152,15 +152,15 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth):
 def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("mlflow-tracking", ModelType.PYTORCH)
+    merlin.set_model("mlflow-test", ModelType.XGBOOST)
 
-    model_dir = "test/pytorch-model"
+    model_dir = "test/xgboost-model"
 
     undeploy_all_version()
 
     with merlin.new_model_version() as v:
-        merlin.log_pytorch_model(model_dir=model_dir)
-        merlin.log_param("model_type", "pytorch")
+        merlin.log_model(model_dir=model_dir)
+        merlin.log_param("model_type", "xgboost")
         merlin.log_param("iteration", 5)
 
         merlin.set_tag("version", "v1.0")
@@ -169,7 +169,7 @@ def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth):
 
         merlin.log_metric("model_loaded", 10.23)
 
-        assert merlin.get_param("model_type") == "pytorch"
+        assert merlin.get_param("model_type") == "xgboost"
         # Stringify value which is integer originally
         assert merlin.get_param("iteration") == "5"
         assert merlin.get_param("random_key") is None
@@ -242,12 +242,12 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth):
     merlin.set_project(project_name)
     merlin.set_model("pytorch-sample", ModelType.PYTORCH)
 
-    model_dir = "test/pytorch-model"
+    model_dir = "test/pytorch-model/pytorch-sample"
 
     undeploy_all_version()
 
     with merlin.new_model_version() as v:
-        merlin.log_pytorch_model(model_dir=model_dir)
+        merlin.log_model(model_dir=model_dir)
         endpoint = merlin.deploy()
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
@@ -507,46 +507,54 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth):
 
 
 @pytest.mark.integration
-def test_pytorch_logger(integration_test_url, project_name, use_google_oauth):
+def test_logger(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("pytorch-logger", ModelType.PYTORCH)
-
-    model_dir = "test/pytorch-model"
+    merlin.set_model("logger", ModelType.TENSORFLOW)
+    model_dir = "test/tensorflow-model"
 
     undeploy_all_version()
 
     logger = Logger(model=LoggerConfig(enabled=True, mode=LoggerMode.REQUEST))
     with merlin.new_model_version() as v:
-        merlin.log_pytorch_model(model_dir=model_dir)
-        endpoint = merlin.deploy(logger=logger)
+        merlin.log_model(model_dir=model_dir)
 
-    model_config = endpoint.logger.model
-    assert model_config is not None
-    assert model_config.enabled
-    assert model_config.mode == LoggerMode.REQUEST
-
-    transformer_config = endpoint.logger.transformer
-    assert transformer_config is None
-
+    endpoint = merlin.deploy(logger=logger)
+    request_json = {
+        "signature_name": "predict",
+        "instances": [
+            {
+                "sepal_length": 2.8,
+                "sepal_width": 1.0,
+                "petal_length": 6.8,
+                "petal_width": 0.4,
+            },
+            {
+                "sepal_length": 0.1,
+                "sepal_width": 0.5,
+                "petal_length": 1.8,
+                "petal_width": 2.4,
+            },
+        ],
+    }
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
-    undeploy_all_version()
+    merlin.undeploy(v)
 
 
 @pytest.mark.integration
-def test_trasformer_pytorch_logger(
+def test_custom_transformer(
     integration_test_url, project_name, use_google_oauth
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("transformer-logger", ModelType.PYTORCH)
+    merlin.set_model("custom-transformer", ModelType.PYTORCH)
 
-    model_dir = "test/transformer"
+    model_dir = "test/transformer/custom-transformer"
 
     undeploy_all_version()
 
@@ -561,7 +569,7 @@ def test_trasformer_pytorch_logger(
         transformer=LoggerConfig(enabled=True, mode=LoggerMode.ALL),
     )
     with merlin.new_model_version() as v:
-        merlin.log_pytorch_model(model_dir=model_dir)
+        merlin.log_model(model_dir=model_dir)
         endpoint = merlin.deploy(transformer=transformer, logger=logger)
 
     assert endpoint.logger is not None
@@ -575,53 +583,6 @@ def test_trasformer_pytorch_logger(
     assert transformer_config is not None
     assert transformer_config.enabled
     assert transformer_config.mode == LoggerMode.ALL
-
-    with open(os.path.join("test/transformer", "input.json"), "r") as f:
-        req = json.load(f)
-
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=req)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(req["instances"])
-
-    model_endpoint = merlin.serve_traffic({endpoint: 100})
-    sleep(5)
-    resp = requests.post(f"{model_endpoint.url}", json=req)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(req["instances"])
-
-    # Try to undeploy serving model version. It must be fail
-    with pytest.raises(Exception):
-        assert merlin.undeploy(v)
-
-    # Undeploy other running model version endpoints
-    undeploy_all_version()
-
-
-@pytest.mark.integration
-def test_transformer_pytorch(integration_test_url, project_name, use_google_oauth):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
-    merlin.set_project(project_name)
-    merlin.set_model("transformer-pytorch", ModelType.PYTORCH)
-
-    model_dir = "test/transformer"
-
-    undeploy_all_version()
-
-    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
-    transformer = Transformer(
-        "gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
-        resource_request=resource_request,
-    )
-    print("transformer test", transformer)
-
-    with merlin.new_model_version() as v:
-        merlin.log_pytorch_model(model_dir=model_dir)
-        endpoint = merlin.deploy(transformer=transformer)
 
     with open(os.path.join("test/transformer", "input.json"), "r") as f:
         req = json.load(f)
@@ -915,8 +876,8 @@ def test_standard_transformer_with_multiple_feast_with_source(
     config_file.close()
 
     env_vars={
-        "FEAST_REDIS_DIRECT_STORAGE_ENABLED": True, 
-        "FEAST_REDIS_POOL_SIZE": 1, 
+        "FEAST_REDIS_DIRECT_STORAGE_ENABLED": True,
+        "FEAST_REDIS_POOL_SIZE": 1,
         "FEAST_BIGTABLE_DIRECT_STORAGE_ENABLED": True,
         "FEAST_BIGTABLE_POOL_SIZE": 1,
         "FEAST_BIGTABLE_KEEP_ALIVE_INTERVAL": "2m",

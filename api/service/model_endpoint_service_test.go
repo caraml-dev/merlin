@@ -22,14 +22,15 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-	networking "istio.io/api/networking/v1alpha3"
+	"github.com/stretchr/testify/assert"
+	networking "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gojek/merlin/istio"
 	"github.com/gojek/merlin/istio/mocks"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 )
 
 var (
@@ -132,7 +133,7 @@ func Test_createVirtualService(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    *v1alpha3.VirtualService
+		want    *v1beta1.VirtualService
 		wantErr bool
 	}{
 		{
@@ -143,7 +144,7 @@ func Test_createVirtualService(t *testing.T) {
 				model:        model1,
 				environment:  "staging",
 			},
-			&v1alpha3.VirtualService{
+			&v1beta1.VirtualService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      model1.Name,
 					Namespace: model1.Project.Name,
@@ -203,9 +204,7 @@ func Test_createVirtualService(t *testing.T) {
 				t.Errorf("modelEndpointsService.DeployEndpoint() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(vs, tt.want) {
-				t.Errorf(`modelEndpointsService.DeployEndpoint() = %v, want %v`, vs, tt.want)
-			}
+			assert.Equal(t, tt.want, vs)
 		})
 	}
 }

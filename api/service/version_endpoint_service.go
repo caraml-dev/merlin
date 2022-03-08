@@ -37,12 +37,12 @@ import (
 )
 
 type EndpointsService interface {
-	ListEndpoints(model *models.Model, version *models.Version) ([]*models.VersionEndpoint, error)
-	FindByID(uuid2 uuid.UUID) (*models.VersionEndpoint, error)
-	DeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
-	UndeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
-	CountEndpoints(environment *models.Environment, model *models.Model) (int, error)
-	ListContainers(model *models.Model, version *models.Version, id uuid.UUID) ([]*models.Container, error)
+	ListEndpoints(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, error)
+	FindByID(ctx context.Context, uuid2 uuid.UUID) (*models.VersionEndpoint, error)
+	DeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
+	UndeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
+	CountEndpoints(ctx context.Context, environment *models.Environment, model *models.Model) (int, error)
+	ListContainers(ctx context.Context, model *models.Model, version *models.Version, id uuid.UUID) ([]*models.Container, error)
 }
 
 const defaultWorkers = 1
@@ -88,7 +88,7 @@ func NewEndpointService(params EndpointServiceParams) EndpointsService {
 	}
 }
 
-func (k *endpointService) ListEndpoints(model *models.Model, version *models.Version) ([]*models.VersionEndpoint, error) {
+func (k *endpointService) ListEndpoints(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, error) {
 	endpoints, err := k.storage.ListEndpoints(model, version)
 	if err != nil {
 		return nil, err
@@ -97,11 +97,11 @@ func (k *endpointService) ListEndpoints(model *models.Model, version *models.Ver
 	return endpoints, nil
 }
 
-func (k *endpointService) FindByID(uuid uuid.UUID) (*models.VersionEndpoint, error) {
+func (k *endpointService) FindByID(ctx context.Context, uuid uuid.UUID) (*models.VersionEndpoint, error) {
 	return k.storage.Get(uuid)
 }
 
-func (k *endpointService) DeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, newEndpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
+func (k *endpointService) DeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, newEndpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
 	endpoint, _ := version.GetEndpointByEnvironmentName(environment.Name)
 	if endpoint == nil {
 		endpoint = models.NewVersionEndpoint(environment, model.Project, model, version, k.monitoringConfig)
@@ -206,6 +206,71 @@ func (k *endpointService) DeployEndpoint(environment *models.Environment, model 
 	return endpoint, nil
 }
 
+func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
+	ctl, ok := k.clusterControllers[environment.Name]
+	if !ok {
+		return nil, fmt.Errorf("unable to find cluster controller for environment %s", environment.Name)
+	}
+
+	modelService := &models.Service{
+		Name:      models.CreateInferenceServiceName(model.Name, version.ID.String()),
+		Namespace: model.Project.Name,
+	}
+
+	_, err := ctl.Delete(ctx, modelService)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint.Status = models.EndpointTerminated
+	err = k.storage.Save(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	return endpoint, nil
+}
+
+// CountEndpoints count number of running/pending version endpoint of a model within an environment
+func (k *endpointService) CountEndpoints(ctx context.Context, environment *models.Environment, model *models.Model) (int, error) {
+	return k.storage.CountEndpoints(environment, model)
+}
+
+// ListContainers list all containers belong to the given version endpoint
+func (k *endpointService) ListContainers(ctx context.Context, model *models.Model, version *models.Version, id uuid.UUID) ([]*models.Container, error) {
+	ve, err := k.storage.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	ctl, ok := k.clusterControllers[ve.EnvironmentName]
+	if !ok {
+		return nil, fmt.Errorf("unable to find cluster controller for environment %s", ve.EnvironmentName)
+	}
+
+	containers := make([]*models.Container, 0)
+	if model.Type == models.ModelTypePyFunc {
+		imgBuilderContainers, err := k.imageBuilder.GetContainers(ctx, model.Project, model, version)
+		if err != nil {
+			return nil, err
+		}
+
+		containers = append(containers, imgBuilderContainers...)
+	}
+
+	modelContainers, err := ctl.GetContainers(ctx, model.Project.Name, models.OnlineInferencePodLabelSelector(model.Name, version.ID.String()))
+	if err != nil {
+		return nil, err
+	}
+	containers = append(containers, modelContainers...)
+
+	for _, container := range containers {
+		container.VersionEndpointID = id
+	}
+
+	return containers, nil
+}
+
 func (k *endpointService) reconfigureStandardTransformer(standardTransformer *models.Transformer) (*models.Transformer, error) {
 	envVars := standardTransformer.EnvVars
 	envVarsMap := envVars.ToMap()
@@ -281,69 +346,4 @@ func (k *endpointService) addFeatureTableMetadata(standardTransformer *models.Tr
 	})
 	standardTransformer.EnvVars = envVars
 	return standardTransformer, nil
-}
-
-func (k *endpointService) UndeployEndpoint(environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
-	ctl, ok := k.clusterControllers[environment.Name]
-	if !ok {
-		return nil, fmt.Errorf("unable to find cluster controller for environment %s", environment.Name)
-	}
-
-	modelService := &models.Service{
-		Name:      models.CreateInferenceServiceName(model.Name, version.ID.String()),
-		Namespace: model.Project.Name,
-	}
-
-	_, err := ctl.Delete(modelService)
-	if err != nil {
-		return nil, err
-	}
-
-	endpoint.Status = models.EndpointTerminated
-	err = k.storage.Save(endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	return endpoint, nil
-}
-
-// CountEndpoints count number of running/pending version endpoint of a model within an environment
-func (k *endpointService) CountEndpoints(environment *models.Environment, model *models.Model) (int, error) {
-	return k.storage.CountEndpoints(environment, model)
-}
-
-// ListContainers list all containers belong to the given version endpoint
-func (k *endpointService) ListContainers(model *models.Model, version *models.Version, id uuid.UUID) ([]*models.Container, error) {
-	ve, err := k.storage.Get(id)
-	if err != nil {
-		return nil, err
-	}
-
-	ctl, ok := k.clusterControllers[ve.EnvironmentName]
-	if !ok {
-		return nil, fmt.Errorf("unable to find cluster controller for environment %s", ve.EnvironmentName)
-	}
-
-	containers := make([]*models.Container, 0)
-	if model.Type == models.ModelTypePyFunc {
-		imgBuilderContainers, err := k.imageBuilder.GetContainers(model.Project, model, version)
-		if err != nil {
-			return nil, err
-		}
-
-		containers = append(containers, imgBuilderContainers...)
-	}
-
-	modelContainers, err := ctl.GetContainers(model.Project.Name, models.OnlineInferencePodLabelSelector(model.Name, version.ID.String()))
-	if err != nil {
-		return nil, err
-	}
-	containers = append(containers, modelContainers...)
-
-	for _, container := range containers {
-		container.VersionEndpointID = id
-	}
-
-	return containers, nil
 }

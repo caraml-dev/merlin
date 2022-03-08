@@ -15,13 +15,15 @@
 package cluster
 
 import (
+	"context"
+
 	"github.com/gojek/merlin/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 type ContainerFetcher interface {
-	GetContainers(namespace string, labelSelector string) ([]*models.Container, error)
+	GetContainers(ctx context.Context, namespace string, labelSelector string) ([]*models.Container, error)
 }
 
 type Metadata struct {
@@ -41,9 +43,9 @@ func NewContainerFetcher(clusterClient corev1.CoreV1Interface, metadata Metadata
 	}
 }
 
-func (cf *containerFetcher) GetContainers(namespace string, labelSelector string) ([]*models.Container, error) {
+func (cf *containerFetcher) GetContainers(ctx context.Context, namespace string, labelSelector string) ([]*models.Container, error) {
 	podCtl := cf.clusterClient.Pods(namespace)
-	podList, err := podCtl.List(metav1.ListOptions{
+	podList, err := podCtl.List(ctx, metav1.ListOptions{
 		LabelSelector: labelSelector,
 		FieldSelector: "status.phase!=Pending",
 	})
