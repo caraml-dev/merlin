@@ -115,6 +115,10 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		endpoint.ResourceRequest = newEndpoint.ResourceRequest
 	}
 
+	if newEndpoint.DeploymentMode == "" {
+		endpoint.DeploymentMode = models.ServerlessDeploymentMode
+	}
+
 	if newEndpoint.Transformer != nil {
 		if newEndpoint.Transformer.ResourceRequest == nil {
 			newEndpoint.Transformer.ResourceRequest = environment.DefaultTransformerResourceRequest
@@ -137,7 +141,6 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 
 		endpoint.Transformer = newEndpoint.Transformer
 		endpoint.Transformer.VersionEndpointID = endpoint.ID
-
 	}
 
 	if newEndpoint.Logger != nil {

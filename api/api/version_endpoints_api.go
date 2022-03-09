@@ -37,6 +37,7 @@ type EndpointsController struct {
 	*AppContext
 }
 
+// ListEndpoint list all endpoints created from certain model version
 func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
@@ -71,6 +72,7 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 	return Ok(endpoints)
 }
 
+// GetEndpoint get model endpoint with certain ID
 func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
@@ -109,6 +111,8 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 	return Ok(endpoint)
 }
 
+// CreateEndpoint create new endpoint from a model version and deploy to certain environment as specified by request
+// If target environment is not set then fallback to default environment
 func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
@@ -171,7 +175,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	// check that the model version quota
 	deployedModelVersionCount, err := c.EndpointsService.CountEndpoints(ctx, env, model)
 	if deployedModelVersionCount >= config.MaxDeployedVersion {
-		return BadRequest(fmt.Sprintf("Max deployed endpoint reached. Max: %d Current: %d ", config.MaxDeployedVersion, deployedModelVersionCount))
+		return BadRequest(fmt.Sprintf("Max deployed endpoint reached. Max: %d Current: %d, undeploy existing endpoint before continuing", config.MaxDeployedVersion, deployedModelVersionCount))
 	}
 
 	// validate transformer
@@ -191,6 +195,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	return Created(endpoint)
 }
 
+// UpdateEndpoint update a an existing endpoint i.e. trigger redeployment
 func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
@@ -249,6 +254,11 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 				log.Errorf("error validating transformer config: %v", err)
 				return BadRequest(err.Error())
 			}
+		}
+
+		// Should not allow redeploying a "serving" model and changing its deployment type since we can't guaratee graceful deployment
+		if endpoint.IsServing() && newEndpoint.DeploymentMode != endpoint.DeploymentMode {
+			return BadRequest("Changing deployment type of a serving model is not allowed")
 		}
 
 		endpoint, err = c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)

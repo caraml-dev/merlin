@@ -1251,6 +1251,8 @@ definitions:
         $ref: "#/definitions/Transformer"
       logger:
         $ref: "#/definitions/Logger"
+      deployment_mode:
+        $ref: "#/definitions/DeploymentMode"
       created_at:
         type: "string"
         format: "date-time"
@@ -1306,6 +1308,13 @@ definitions:
       updated_at:
         type: "string"
         format: "date-time"
+
+  DeploymentMode:
+    type: string
+    enum:
+      - serverless
+      - raw_deployment
+    default: serverless  
 
   Container:
     type: "object"
