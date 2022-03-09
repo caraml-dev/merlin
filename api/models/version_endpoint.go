@@ -51,8 +51,8 @@ type VersionEndpoint struct {
 type DeploymentMode string
 
 const (
-	ServerlessDeploymentMode = "serverless"
-	RawDeploymentMode        = "raw_deployment"
+	ServerlessDeploymentMode DeploymentMode = "serverless"
+	RawDeploymentMode        DeploymentMode = "raw_deployment"
 )
 
 func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, version *Version, monitoringConfig config.MonitoringConfig) *VersionEndpoint {
