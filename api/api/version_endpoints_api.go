@@ -257,7 +257,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 		}
 
 		// Should not allow redeploying a "serving" model and changing its deployment type since we can't guaratee graceful deployment
-		if endpoint.IsServing() && newEndpoint.DeploymentType != endpoint.DeploymentType {
+		if endpoint.IsServing() && newEndpoint.DeploymentMode != endpoint.DeploymentMode {
 			return BadRequest("Changing deployment type of a serving model is not allowed")
 		}
 

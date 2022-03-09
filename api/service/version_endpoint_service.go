@@ -115,8 +115,8 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		endpoint.ResourceRequest = newEndpoint.ResourceRequest
 	}
 
-	if newEndpoint.DeploymentType == "" {
-		endpoint.DeploymentType = models.ServerlessDeploymentMode
+	if newEndpoint.DeploymentMode == "" {
+		endpoint.DeploymentMode = models.ServerlessDeploymentMode
 	}
 
 	if newEndpoint.Transformer != nil {
@@ -141,7 +141,6 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 
 		endpoint.Transformer = newEndpoint.Transformer
 		endpoint.Transformer.VersionEndpointID = endpoint.ID
-
 	}
 
 	if newEndpoint.Logger != nil {

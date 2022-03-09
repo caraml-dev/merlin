@@ -43,7 +43,7 @@ type VersionEndpoint struct {
 	EnvVars              EnvVars          `json:"env_vars" gorm:"column:env_vars"`
 	Transformer          *Transformer     `json:"transformer,omitempty" gorm:"foreignKey:VersionEndpointID"`
 	Logger               *Logger          `json:"logger,omitempty" gorm:"logger"`
-	DeploymentType       DeploymentMode   `json:"deployment_mode" gorm:"deployment_mode"`
+	DeploymentMode       DeploymentMode   `json:"deployment_mode" gorm:"deployment_mode"`
 
 	CreatedUpdated
 }
