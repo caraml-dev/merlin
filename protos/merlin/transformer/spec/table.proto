@@ -43,6 +43,17 @@ message TransformationStep {
   repeated UpdateColumn updateColumns = 5;
   repeated ScaleColumn scaleColumns = 6;
   repeated EncodeColumn encodeColumns = 7;
+  FilterRow filterRow = 8;
+  SliceRow sliceRow = 9;
+}
+
+message FilterRow {
+  string condition = 1;
+}
+
+message SliceRow {
+  int64 start = 1;
+  int64 end = 2;
 }
 
 message SortColumnRule {
@@ -58,6 +69,17 @@ enum SortOrder {
 message UpdateColumn {
   string column = 1;
   string expression = 2;
+  repeated ColumnCondition conditions = 3; 
+}
+
+message ColumnCondition {
+  string if = 1;
+  string expression = 2;
+  DefaultColumnValue default = 3;
+}
+
+message DefaultColumnValue {
+  string expression = 1;
 }
 
 message TableJoin {

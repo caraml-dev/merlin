@@ -164,7 +164,7 @@ func (t *Table) RenameColumns(columnMap map[string]string) error {
 	renamedSeries := make([]gota.Series, len(columns))
 
 	// check all column in columnMap exists in the original table
-	for colName, _ := range columnMap {
+	for colName := range columnMap {
 		found := false
 		for _, origCol := range columns {
 			if colName == origCol {
@@ -219,7 +219,7 @@ func (t *Table) Sort(sortRules []*spec.SortColumnRule) error {
 // UpdateColumnsRaw add or update existing column with values specified in columnValues map
 func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 	origColumns := t.Columns()
-	updateCol := map[string]bool{} //name of col that are updates
+	updateCol := map[string]bool{} // name of col that are updates
 	combinedColumns := make([]*series.Series, 0)
 
 	columnValues = broadcastScalar(columnValues, t.NRow())
@@ -255,7 +255,7 @@ func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 		i++
 	}
 
-	sort.Strings(colNames) //to ensure predictability of appended new columns
+	sort.Strings(colNames) // to ensure predictability of appended new columns
 
 	// Append new columns
 	for _, colName := range colNames {
@@ -274,6 +274,106 @@ func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 	newT := New(combinedColumns...)
 	t.dataFrame = newT.dataFrame
 
+	return nil
+}
+
+// SliceRow will slice all columns in a table based on supplied start and end index
+func (t *Table) SliceRow(start, end int) error {
+	df := t.dataFrame
+	newDf := df.Slice(start, end)
+	if newDf.Err != nil {
+		return newDf.Err
+	}
+	t.dataFrame = &newDf
+	return nil
+}
+
+// FilterRow will select subset of table based on the supplied indexes
+func (t *Table) FilterRow(indexes *series.Series) error {
+	df := t.dataFrame
+	var idxs interface{}
+	if indexes != nil {
+		idxs = *(indexes.Series())
+	}
+	newDf := df.Subset(idxs)
+	if newDf.Err != nil {
+		return newDf.Err
+	}
+	t.dataFrame = &newDf
+	return nil
+}
+
+func (t *Table) FilterRowWithCondition(conditionSatisfied bool) error {
+	if conditionSatisfied {
+		return nil
+	}
+	// if condition not satisfied there is no indexes that selected
+	// it means indexes values all are false
+	boolVals := make([]bool, t.NRow())
+	indexes := series.New(boolVals, series.Bool, "")
+	return t.FilterRow(indexes)
+}
+
+type ColumnValueRule struct {
+	Indexes *series.Series
+	Values  *series.Series
+}
+
+type ConditionalUpdate struct {
+	Rules        []ColumnValueRule
+	DefaultValue *series.Series
+	ColName      string
+}
+
+func (t *Table) UpdateColumns(columnUpdates []ConditionalUpdate) error {
+	df := t.dataFrame
+	columnUpdateRules := make([]dataframe.ColumnUpdateRule, 0, len(columnUpdates))
+
+	sort.Slice(columnUpdates, func(i, j int) bool {
+		return columnUpdates[i].ColName < columnUpdates[j].ColName
+	})
+
+	for _, updateRule := range columnUpdates {
+		colValueRules := make([]dataframe.ColumnValuesPerSubset, 0, len(updateRule.Rules))
+		for _, colValueRule := range updateRule.Rules {
+
+			idx := colValueRule.Indexes
+			if idx == nil {
+				continue
+			}
+
+			colValueRules = append(colValueRules, dataframe.ColumnValuesPerSubset{
+				Values:      *colValueRule.Values.Series(),
+				SubsetIndex: *(idx.Series()),
+			})
+		}
+
+		if updateRule.DefaultValue != nil {
+			// create series of bool, that all of its values is true
+			colVal := map[string]interface{}{updateRule.ColName: true}
+			colVal = broadcastScalar(colVal, t.NRow())
+			indexForDefaultValue := series.New(colVal[updateRule.ColName], series.Bool, "")
+
+			defaultValue := updateRule.DefaultValue
+			colValueRules = append(colValueRules, dataframe.ColumnValuesPerSubset{
+				Values:      *defaultValue.Series(),
+				SubsetIndex: *indexForDefaultValue.Series(),
+			})
+		}
+
+		columnUpdateRule := dataframe.ColumnUpdateRule{
+			ColName:      updateRule.ColName,
+			ColumnValues: colValueRules,
+		}
+
+		columnUpdateRules = append(columnUpdateRules, columnUpdateRule)
+	}
+
+	newDf := df.UpdateColumns(columnUpdateRules)
+	if newDf.Err != nil {
+		return newDf.Err
+	}
+	t.dataFrame = &newDf
 	return nil
 }
 

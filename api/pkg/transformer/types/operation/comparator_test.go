@@ -1,14 +1,16 @@
-package comparator
+package operation
 
 import (
 	"testing"
+
+	"github.com/gojek/merlin/pkg/transformer/types/operator"
 )
 
 func TestCompareInt64(t *testing.T) {
 	type args struct {
 		lValue     interface{}
 		rValue     interface{}
-		comparator Comparator
+		comparator operator.Comparator
 	}
 	tests := []struct {
 		name    string
@@ -21,7 +23,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     7,
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want: true,
 		},
@@ -30,7 +32,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     9,
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want: false,
 		},
@@ -39,7 +41,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     8,
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want: false,
 		},
@@ -48,7 +50,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     7,
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want: true,
 		},
@@ -57,7 +59,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     9,
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want: false,
 		},
@@ -66,7 +68,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     8,
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want: true,
 		},
@@ -75,7 +77,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     7,
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want: false,
 		},
@@ -84,7 +86,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     9,
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want: true,
 		},
@@ -93,7 +95,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     8,
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want: false,
 		},
@@ -102,7 +104,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     7,
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want: false,
 		},
@@ -111,7 +113,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     9,
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want: true,
 		},
@@ -120,7 +122,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     8,
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want: true,
 		},
@@ -129,7 +131,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     7,
-				comparator: Eq,
+				comparator: operator.Eq,
 			},
 			want: false,
 		},
@@ -138,7 +140,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     8,
-				comparator: Eq,
+				comparator: operator.Eq,
 			},
 			want: true,
 		},
@@ -147,7 +149,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     7,
-				comparator: Neq,
+				comparator: operator.Neq,
 			},
 			want: true,
 		},
@@ -156,7 +158,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     8,
-				comparator: Neq,
+				comparator: operator.Neq,
 			},
 			want: false,
 		},
@@ -165,7 +167,7 @@ func TestCompareInt64(t *testing.T) {
 			args: args{
 				lValue:     8,
 				rValue:     8,
-				comparator: In,
+				comparator: operator.In,
 			},
 			want:    false,
 			wantErr: true,
@@ -173,7 +175,7 @@ func TestCompareInt64(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CompareInt64(tt.args.lValue, tt.args.rValue, tt.args.comparator)
+			got, err := compareInt64(tt.args.lValue, tt.args.rValue, tt.args.comparator)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CompareInt64() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -189,7 +191,7 @@ func TestCompareFloat64(t *testing.T) {
 	type args struct {
 		lValue     interface{}
 		rValue     interface{}
-		comparator Comparator
+		comparator operator.Comparator
 	}
 	tests := []struct {
 		name    string
@@ -202,7 +204,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     7.0,
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want: true,
 		},
@@ -211,7 +213,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     9.0,
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want: false,
 		},
@@ -220,7 +222,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     8.0,
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want: false,
 		},
@@ -229,7 +231,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     7.0,
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want: true,
 		},
@@ -238,7 +240,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     9.0,
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want: false,
 		},
@@ -247,7 +249,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     8.0,
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want: true,
 		},
@@ -256,7 +258,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     7.0,
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want: false,
 		},
@@ -265,7 +267,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     9.0,
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want: true,
 		},
@@ -274,7 +276,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     8.0,
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want: false,
 		},
@@ -283,7 +285,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     7.0,
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want: false,
 		},
@@ -292,7 +294,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     9.0,
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want: true,
 		},
@@ -301,7 +303,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     8.0,
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want: true,
 		},
@@ -310,7 +312,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     7.0,
-				comparator: Eq,
+				comparator: operator.Eq,
 			},
 			want: false,
 		},
@@ -319,7 +321,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     8.0,
-				comparator: Eq,
+				comparator: operator.Eq,
 			},
 			want: true,
 		},
@@ -328,7 +330,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     7.0,
-				comparator: Neq,
+				comparator: operator.Neq,
 			},
 			want: true,
 		},
@@ -337,7 +339,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     8.0,
-				comparator: Neq,
+				comparator: operator.Neq,
 			},
 			want: false,
 		},
@@ -346,7 +348,7 @@ func TestCompareFloat64(t *testing.T) {
 			args: args{
 				lValue:     8.0,
 				rValue:     8.0,
-				comparator: In,
+				comparator: operator.In,
 			},
 			want:    false,
 			wantErr: true,
@@ -354,7 +356,7 @@ func TestCompareFloat64(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CompareFloat64(tt.args.lValue, tt.args.rValue, tt.args.comparator)
+			got, err := compareFloat64(tt.args.lValue, tt.args.rValue, tt.args.comparator)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CompareFloat64() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -370,7 +372,7 @@ func TestCompareString(t *testing.T) {
 	type args struct {
 		lValue     interface{}
 		rValue     interface{}
-		comparator Comparator
+		comparator operator.Comparator
 	}
 	tests := []struct {
 		name    string
@@ -383,7 +385,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "aa",
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want: true,
 		},
@@ -392,7 +394,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "a",
 				rValue:     "ab",
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want: false,
 		},
@@ -401,7 +403,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "ab",
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want: false,
 		},
@@ -410,7 +412,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "aa",
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want: true,
 		},
@@ -419,7 +421,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "a",
 				rValue:     "ab",
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want: false,
 		},
@@ -428,7 +430,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "ab",
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want: true,
 		},
@@ -437,7 +439,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "aa",
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want: false,
 		},
@@ -446,7 +448,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "a",
 				rValue:     "ab",
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want: true,
 		},
@@ -455,7 +457,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "ab",
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want: false,
 		},
@@ -464,7 +466,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "aa",
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want: false,
 		},
@@ -473,7 +475,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "a",
 				rValue:     "ab",
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want: true,
 		},
@@ -482,7 +484,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "ab",
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want: true,
 		},
@@ -491,7 +493,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "aa",
-				comparator: Eq,
+				comparator: operator.Eq,
 			},
 			want: false,
 		},
@@ -500,7 +502,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "ab",
-				comparator: Eq,
+				comparator: operator.Eq,
 			},
 			want: true,
 		},
@@ -509,7 +511,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "ab",
-				comparator: Neq,
+				comparator: operator.Neq,
 			},
 			want: false,
 		},
@@ -518,7 +520,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "ac",
-				comparator: Neq,
+				comparator: operator.Neq,
 			},
 			want: true,
 		},
@@ -527,7 +529,7 @@ func TestCompareString(t *testing.T) {
 			args: args{
 				lValue:     "ab",
 				rValue:     "ac",
-				comparator: In,
+				comparator: operator.In,
 			},
 			want:    false,
 			wantErr: true,
@@ -535,7 +537,7 @@ func TestCompareString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CompareString(tt.args.lValue, tt.args.rValue, tt.args.comparator)
+			got, err := compareString(tt.args.lValue, tt.args.rValue, tt.args.comparator)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CompareString() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -551,7 +553,7 @@ func TestCompareBool(t *testing.T) {
 	type args struct {
 		lValue     interface{}
 		rValue     interface{}
-		comparator Comparator
+		comparator operator.Comparator
 	}
 	tests := []struct {
 		name    string
@@ -564,7 +566,7 @@ func TestCompareBool(t *testing.T) {
 			args: args{
 				lValue:     true,
 				rValue:     true,
-				comparator: Eq,
+				comparator: operator.Eq,
 			},
 			want: true,
 		},
@@ -573,7 +575,7 @@ func TestCompareBool(t *testing.T) {
 			args: args{
 				lValue:     true,
 				rValue:     false,
-				comparator: Eq,
+				comparator: operator.Eq,
 			},
 			want: false,
 		},
@@ -582,7 +584,7 @@ func TestCompareBool(t *testing.T) {
 			args: args{
 				lValue:     true,
 				rValue:     false,
-				comparator: Neq,
+				comparator: operator.Neq,
 			},
 			want: true,
 		},
@@ -591,7 +593,7 @@ func TestCompareBool(t *testing.T) {
 			args: args{
 				lValue:     true,
 				rValue:     true,
-				comparator: Neq,
+				comparator: operator.Neq,
 			},
 			want: false,
 		},
@@ -600,7 +602,7 @@ func TestCompareBool(t *testing.T) {
 			args: args{
 				lValue:     true,
 				rValue:     true,
-				comparator: Greater,
+				comparator: operator.Greater,
 			},
 			want:    false,
 			wantErr: true,
@@ -610,7 +612,7 @@ func TestCompareBool(t *testing.T) {
 			args: args{
 				lValue:     true,
 				rValue:     true,
-				comparator: GreaterEq,
+				comparator: operator.GreaterEq,
 			},
 			want:    false,
 			wantErr: true,
@@ -620,7 +622,7 @@ func TestCompareBool(t *testing.T) {
 			args: args{
 				lValue:     true,
 				rValue:     true,
-				comparator: Less,
+				comparator: operator.Less,
 			},
 			want:    false,
 			wantErr: true,
@@ -630,7 +632,7 @@ func TestCompareBool(t *testing.T) {
 			args: args{
 				lValue:     true,
 				rValue:     true,
-				comparator: LessEq,
+				comparator: operator.LessEq,
 			},
 			want:    false,
 			wantErr: true,
@@ -638,7 +640,7 @@ func TestCompareBool(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CompareBool(tt.args.lValue, tt.args.rValue, tt.args.comparator)
+			got, err := compareBool(tt.args.lValue, tt.args.rValue, tt.args.comparator)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CompareBool() error = %v, wantErr %v", err, tt.wantErr)
 				return

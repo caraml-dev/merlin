@@ -1,0 +1,46 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - variables:
+          - name: customer_id
+            jsonPath: $.customer.id
+          - name: zero
+            literal:
+              intValue: 0
+      - tables:
+          - name: driver_table
+            baseTable:
+              fromJson:
+                jsonPath: $.drivers[*]
+    transformations:
+      - tableTransformation:
+          inputTable: driver_table
+          outputTable: transformed_driver_table
+          steps:
+            - updateColumns:
+              - column: customer_id
+                expression: customer_id
+              - column: driver_performa
+                conditions:
+                  - if: driver_table.Col("rating") * 2 <= 7
+                    expression: driver_table.Col("rating") * 1
+                  - if: driver_table.Col("rating") * 2 >= 8
+                    expression: driver_table.Col("rating") * 1.5
+                  - default:
+                      expression: zero
+            - filterRow:
+                condition: driver_table.Col("acceptance_rate") > 0.7
+            - sliceRow:
+                start: 0
+                end: 2
+            - renameColumns:
+                id: driver_id
+                
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: transformed_driver_table
+                  format: "SPLIT"

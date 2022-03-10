@@ -19,6 +19,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
@@ -282,6 +283,38 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 					"Content-Type": "application/json",
 				},
 				body: []byte(`{"instances":{"columns":["customer_id","name","rank","rating","vehicle","previous_vehicle", "test_time_x", "test_time_y"],"data":[[1111,"driver-2",2.5,0.5,2,3,0,1],[1111,"driver-1",-2.5,0.75,0,1,-1,0]]}}`),
+			},
+			modelResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status":"ok"}`),
+				statusCode: 200,
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type":   "application/json",
+					"Content-Length": "15",
+				},
+				body:       []byte(`{"status":"ok"}`),
+				statusCode: 200,
+			},
+		},
+		{
+			name:         "table transformation with conditional update, filter row and slice row",
+			specYamlPath: "../pipeline/testdata/valid_table_transform_conditional_filtering.yaml",
+			mockFeasts:   []mockFeast{},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"drivers":[{"id":1,"name":"driver-1","rating":4,"acceptance_rate":0.8},{"id":2,"name":"driver-2","rating":3,"acceptance_rate":0.6},{"id":3,"name":"driver-3","rating":3.5,"acceptance_rate":0.77},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.9},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.88}],"customer":{"id":1111}}`),
+			},
+			expTransformedRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"instances":{"columns":["acceptance_rate","driver_id","name","rating","customer_id","driver_performa"],"data":[[0.8,1,"driver-1",4,1111,6],[0.77,3,"driver-3",3.5,1111,3.5]]}}`),
 			},
 			modelResponse: response{
 				headers: map[string]string{
@@ -789,8 +822,12 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				assert.Nil(t, err)
 
 				var expectedMap, actualMap map[string]interface{}
-				json.Unmarshal(tt.expTransformedRequest.body, &expectedMap)
-				json.Unmarshal(body, &actualMap)
+				err = json.Unmarshal(tt.expTransformedRequest.body, &expectedMap)
+				require.NoError(t, err)
+				err = json.Unmarshal(body, &actualMap)
+				require.NoError(t, err)
+				fmt.Printf("expected value %+v\n", expectedMap)
+				fmt.Printf("actual value %+v\n", actualMap)
 				assertJSONEqWithFloat(t, expectedMap, actualMap, 0.00000001)
 				assertHasHeaders(t, tt.expTransformedRequest.headers, r.Header)
 
@@ -868,11 +905,14 @@ func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, act
 		case map[string]interface{}:
 			assertJSONEqWithFloat(t, expectedMap[key].(map[string]interface{}), actualMap[key].(map[string]interface{}), delta)
 		case []interface{}:
-			for i, v := range value.([]interface{}) {
+			expectedArr := value.([]interface{})
+			actualArr := actualMap[key].([]interface{})
+			assert.Equal(t, len(expectedArr), len(actualArr))
+			for i, v := range expectedArr {
 				exp := make(map[string]interface{})
 				act := make(map[string]interface{})
 				exp["v"] = v
-				act["v"] = actualMap[key].([]interface{})[i]
+				act["v"] = actualArr[i]
 				assertJSONEqWithFloat(t, exp, act, delta)
 			}
 		default:

@@ -6,6 +6,8 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/scaler"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/gojek/merlin/pkg/transformer/types/table"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -65,17 +67,7 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 		}
 
 		if step.UpdateColumns != nil {
-			columnValues := make(map[string]interface{}, len(step.UpdateColumns))
-			for _, updateSpec := range step.UpdateColumns {
-				columnName := updateSpec.Column
-				result, err := evalExpression(env, updateSpec.Expression)
-				if err != nil {
-					return fmt.Errorf("error evaluating expression for column %s: %v. Err: %s", columnName, updateSpec.Expression, err)
-				}
-				columnValues[columnName] = result
-			}
-
-			err := resultTable.UpdateColumnsRaw(columnValues)
+			resultTable, err = updateColumns(env, step.UpdateColumns, resultTable)
 			if err != nil {
 				return err
 			}
@@ -127,6 +119,35 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 				return err
 			}
 		}
+
+		if step.FilterRow != nil {
+			conditionResult, err := evalExpression(env, step.FilterRow.Condition)
+			if err != nil {
+				return fmt.Errorf("error evaluating filter row expresion: %s. Err: %s", step.FilterRow, err)
+			}
+
+			if conditionSatisfied, isBool := conditionResult.(bool); isBool {
+				if err := resultTable.FilterRowWithCondition(conditionSatisfied); err != nil {
+					return err
+				}
+			} else {
+				filterIndex, err := series.NewInferType(conditionResult, "")
+				if err != nil {
+					return fmt.Errorf("error conversion of %v to series with err: %s", conditionResult, err)
+				}
+				if err := resultTable.FilterRow(filterIndex); err != nil {
+					return err
+				}
+			}
+		}
+
+		if step.SliceRow != nil {
+			sliceRow := step.SliceRow
+			err := resultTable.SliceRow(int(sliceRow.Start), int(sliceRow.End))
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	env.SetSymbol(outputTableName, resultTable)
@@ -144,4 +165,81 @@ func getEncoder(env *Environment, encoderName string) (Encoder, error) {
 		return nil, fmt.Errorf("variable %s is not encoder", encoderName)
 	}
 	return encodeImpl, nil
+}
+
+func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *table.Table) (*table.Table, error) {
+	updateColumnRules := make([]table.ConditionalUpdate, 0, len(specs))
+	for _, updateSpec := range specs {
+		columnName := updateSpec.Column
+
+		rule := table.ConditionalUpdate{
+			ColName: columnName,
+		}
+		if len(updateSpec.Conditions) == 0 {
+			result, err := seriesFromExpression(env, updateSpec.Expression)
+			if err != nil {
+				return nil, fmt.Errorf("error evaluating expression for column %s: %v. Err: %s", columnName, updateSpec.Expression, err)
+			}
+
+			rule.DefaultValue = result
+			updateColumnRules = append(updateColumnRules, rule)
+			continue
+		}
+
+		columnValueRules := make([]table.ColumnValueRule, 0, len(updateSpec.Conditions))
+		for _, condition := range updateSpec.Conditions {
+			if condition.Default != nil {
+				defaultValue, err := seriesFromExpression(env, condition.Default.Expression)
+				if err != nil {
+					return nil, fmt.Errorf("error evaluation default value for column %s: %v. Err: %s", columnName, condition.Default.Expression, err)
+				}
+				rule.DefaultValue = defaultValue
+				continue
+			}
+
+			// conditionResult value can be any of this type
+			// Bool or (Converted to)Series
+			conditionResult, err := evalExpression(env, condition.If)
+			if err != nil {
+				return nil, fmt.Errorf("error evaluation column rule for column %s: %v. Err: %s", columnName, condition.If, err)
+			}
+
+			if conditionSatisfied, isBool := conditionResult.(bool); isBool {
+				if !conditionSatisfied {
+					continue
+				}
+				// if true, then treat this as default value
+				colValue, err := seriesFromExpression(env, condition.Expression)
+				if err != nil {
+					return nil, fmt.Errorf("error evaluation value for column %s: %v. Err: %s", columnName, condition.Expression, err)
+				}
+				rule.DefaultValue = colValue
+				break
+			}
+
+			filterIdx, err := series.NewInferType(conditionResult, "")
+			if err != nil {
+				return nil, fmt.Errorf("error creating series with err: %s", err)
+			}
+
+			columnValue, err := subsetSeriesFromExpression(env, condition.Expression, filterIdx)
+			if err != nil {
+				return nil, fmt.Errorf("error evaluation column rule value for column %s: %v. Err: Ts", columnName, condition.Default.Expression)
+			}
+
+			colRuleValue := table.ColumnValueRule{
+				Indexes: filterIdx,
+				Values:  columnValue,
+			}
+			columnValueRules = append(columnValueRules, colRuleValue)
+		}
+		rule.Rules = columnValueRules
+		updateColumnRules = append(updateColumnRules, rule)
+
+	}
+	err := resultTable.UpdateColumns(updateColumnRules)
+	if err != nil {
+		return nil, err
+	}
+	return resultTable, nil
 }

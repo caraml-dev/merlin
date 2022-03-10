@@ -6,10 +6,9 @@ import (
 
 	"github.com/go-gota/gota/dataframe"
 	gotaSeries "github.com/go-gota/gota/series"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTable_New(t *testing.T) {
@@ -768,6 +767,366 @@ func TestTable_NewRaw(t *testing.T) {
 				return
 			}
 			assert.Equal(t, tt.want.DataFrame(), got.DataFrame())
+		})
+	}
+}
+
+func TestTable_SliceRow(t *testing.T) {
+	tests := []struct {
+		name       string
+		inputTable *Table
+		startIdx   int
+		endIdx     int
+		want       *Table
+		wantErr    bool
+		errMessage string
+	}{
+		{
+			name: "start < end, end < table row length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: 1,
+			endIdx:   3,
+			want: New(
+				series.New([]int{2, 3}, series.Int, "A"),
+				series.New([]string{"b", "c"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start < end, end == table row length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: 1,
+			endIdx:   5,
+			want: New(
+				series.New([]int{2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"b", "c", "d", "e"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start < end, end > table row length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   1,
+			endIdx:     6,
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "start > end",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   2,
+			endIdx:     0,
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "start < 0",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   -1,
+			endIdx:     2,
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.inputTable.SliceRow(tt.startIdx, tt.endIdx)
+			if tt.wantErr {
+				assert.EqualError(t, err, tt.errMessage)
+				return
+			}
+			assert.Equal(t, tt.want, tt.inputTable)
+		})
+	}
+}
+
+func TestTable_FilterRow(t *testing.T) {
+	tests := []struct {
+		name       string
+		inputTable *Table
+		subset     *series.Series
+		want       *Table
+		wantErr    bool
+		errorMsg   string
+	}{
+		{
+			name: "Subset length is same with table row",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
+			),
+			subset:  series.New([]bool{false, true, false, true, false}, series.Bool, ""),
+			wantErr: false,
+			want: New(
+				series.New([]int{2, 4}, series.Int, "A"),
+				series.New([]string{"b", "d"}, series.String, "B"),
+				series.New([]float32{2.2, 4.4}, series.Float, "C"),
+			),
+		},
+		{
+			name: "Subset length is less than table row",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
+			),
+			subset:   series.New([]bool{false, true, true}, series.Bool, ""),
+			wantErr:  true,
+			errorMsg: "error on series 0: indexing error: index dimensions mismatch",
+		},
+		{
+			name: "Subset length is more than table row",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
+			),
+			subset:   series.New([]bool{false, true, true, true, true, true, true}, series.Bool, ""),
+			wantErr:  true,
+			errorMsg: "error on series 0: indexing error: index dimensions mismatch",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.inputTable.FilterRow(tt.subset)
+			if tt.wantErr {
+				assert.EqualError(t, err, tt.errorMsg)
+				return
+			}
+			assert.Equal(t, tt.want, tt.inputTable)
+		})
+	}
+}
+
+func TestTable_FilterRowWithCondition(t *testing.T) {
+	type args struct {
+		conditionSatisfied bool
+	}
+	tests := []struct {
+		name       string
+		inputTable *Table
+		args       args
+		want       *Table
+		wantErr    bool
+		errMessage string
+	}{
+		{
+			name: "Condition is satisfied, no change",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
+			),
+			args: args{
+				conditionSatisfied: true,
+			},
+			wantErr: false,
+			want: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
+			),
+		},
+		{
+			name: "Condition is not satisfied, empty table",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
+			),
+			args: args{
+				conditionSatisfied: false,
+			},
+			wantErr: false,
+			want: New(
+				series.New([]int{}, series.Int, "A"),
+				series.New([]string{}, series.String, "B"),
+				series.New([]float32{}, series.Float, "C"),
+			),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.inputTable.FilterRowWithCondition(tt.args.conditionSatisfied)
+			if tt.wantErr {
+				assert.EqualError(t, err, tt.errMessage)
+				return
+			}
+			assert.Equal(t, tt.want, tt.inputTable)
+		})
+	}
+}
+
+func TestTable_UpdateColumns(t *testing.T) {
+	tests := []struct {
+		name           string
+		inputTable     *Table
+		updateColRules []ConditionalUpdate
+		want           *Table
+		wantErr        bool
+		errMessage     string
+	}{
+		{
+			name: "update one existing column, all column value rules are mutually exclusive",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			updateColRules: []ConditionalUpdate{
+				{
+					ColName: "A",
+					Rules: []ColumnValueRule{
+						{
+							Indexes: series.New([]bool{true, true, false, false, false}, series.Bool, ""),
+							Values:  series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+						},
+						{
+							Indexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:  series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+						},
+					},
+					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+				},
+			},
+			want: New(
+				series.New([]int{2, 4, -1, 12, 15}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+		},
+		{
+			name: "update existing one column, all column value rules are not mutually exclusive",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			updateColRules: []ConditionalUpdate{
+				{
+					ColName: "A",
+					Rules: []ColumnValueRule{
+						{
+							Indexes: series.New([]bool{true, true, false, true, false}, series.Bool, ""),
+							Values:  series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+						},
+						{
+							Indexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:  series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+						},
+					},
+					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+				},
+			},
+			want: New(
+				series.New([]int{2, 4, -1, 8, 15}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+		},
+		{
+			name: "update multiple columns",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			updateColRules: []ConditionalUpdate{
+				{
+					ColName: "D",
+					Rules: []ColumnValueRule{
+						{
+							Indexes: series.New([]bool{true, true, false, true, false}, series.Bool, ""),
+							Values:  series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+						},
+						{
+							Indexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:  series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+						},
+					},
+					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+				},
+				{
+					ColName: "C",
+					Rules: []ColumnValueRule{
+						{
+							Indexes: series.New([]bool{true, true, true, true, false}, series.Bool, ""),
+							Values:  series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+						},
+						{
+							Indexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:  series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+						},
+					},
+					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+				},
+			},
+			want: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]int{2, 4, 6, 8, 15}, series.Int, "C"),
+				series.New([]int{2, 4, -1, 8, 15}, series.Int, "D"),
+			),
+		},
+		{
+			name: "update only specified default",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			updateColRules: []ConditionalUpdate{
+				{
+					ColName:      "C",
+					Rules:        []ColumnValueRule{},
+					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+				},
+			},
+			want: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]int{-1, -1, -1, -1, -1}, series.Int, "C"),
+			),
+		},
+		{
+			name: "error when values in column dimension is different with table",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			updateColRules: []ConditionalUpdate{
+				{
+					ColName: "A",
+					Rules: []ColumnValueRule{
+						{
+							Indexes: series.New([]bool{true, true, false, true, false, false}, series.Bool, ""),
+							Values:  series.New([]int{2, 4, 6, 8, 10, 12}, series.Int, ""),
+						},
+					},
+					DefaultValue: series.New([]int{-1, -1, -1, -1, -1, -1}, series.Int, ""),
+				},
+			},
+			wantErr:    true,
+			errMessage: "error on series 0: indexing error: index dimensions mismatch",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.inputTable.UpdateColumns(tt.updateColRules)
+			if tt.wantErr {
+				assert.EqualError(t, err, tt.errMessage)
+				return
+			}
+			assert.Equal(t, tt.want, tt.inputTable)
 		})
 	}
 }
