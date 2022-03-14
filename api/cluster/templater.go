@@ -17,16 +17,20 @@ package cluster
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"strings"
 
+	"github.com/gojek/merlin/config"
+	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/autoscaling"
+	"github.com/gojek/merlin/pkg/deployment"
+	transformerpkg "github.com/gojek/merlin/pkg/transformer"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/models"
-	transformerpkg "github.com/gojek/merlin/pkg/transformer"
+	knautoscaling "knative.dev/serving/pkg/apis/autoscaling"
+	knserving "knative.dev/serving/pkg/apis/serving"
 
 	"github.com/gojek/merlin/utils"
 )
@@ -43,14 +47,27 @@ const (
 
 	defaultPredictorArtifactLocation = "/mnt/models"
 	defaultPredictorPort             = "8080"
+	defaultTransformerPort           = "8080"
 
-	defaultTransformerPort = "8080"
-
-	annotationQueueProxyResource   = "queue.sidecar.serving.knative.dev/resourcePercentage"
 	annotationPrometheusScrapeFlag = "prometheus.io/scrape"
 	annotationPrometheusScrapePort = "prometheus.io/port"
 
 	prometheusPort = "8080"
+)
+
+var (
+	// list of configuration stored as annotations
+	configAnnotationkeys = []string{
+		annotationPrometheusScrapeFlag,
+		annotationPrometheusScrapePort,
+		knserving.QueueSidecarResourcePercentageAnnotationKey,
+		kserveconstant.AutoscalerClass,
+		kserveconstant.AutoscalerMetrics,
+		kserveconstant.TargetUtilizationPercentage,
+		knautoscaling.ClassAnnotationKey,
+		knautoscaling.MetricAnnotationKey,
+		knautoscaling.TargetAnnotationKey,
+	}
 )
 
 type KFServingResourceTemplater struct {
@@ -61,26 +78,18 @@ func NewKFServingResourceTemplater(standardTransformerConfig config.StandardTran
 	return &KFServingResourceTemplater{standardTransformerConfig: standardTransformerConfig}
 }
 
-func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) *kservev1beta1.InferenceService {
-	labels := modelService.Metadata.ToLabel()
+func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+	annotations, err := createAnnotations(modelService, config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
+	}
 
 	objectMeta := metav1.ObjectMeta{
 		Name:        modelService.Name,
 		Namespace:   modelService.Namespace,
-		Labels:      labels,
-		Annotations: make(map[string]string),
+		Labels:      modelService.Metadata.ToLabel(),
+		Annotations: annotations,
 	}
-
-	if config.QueueResourcePercentage != "" {
-		objectMeta.Annotations[annotationQueueProxyResource] = config.QueueResourcePercentage
-	}
-
-	if modelService.Type == models.ModelTypePyFunc {
-		objectMeta.Annotations[annotationPrometheusScrapeFlag] = "true"
-		objectMeta.Annotations[annotationPrometheusScrapePort] = prometheusPort
-	}
-
-	objectMeta.Annotations[kserveconstant.DeploymentMode] = string(toKServeDeploymentMode(modelService.DeploymentMode))
 
 	inferenceService := &kservev1beta1.InferenceService{
 		ObjectMeta: objectMeta,
@@ -93,19 +102,23 @@ func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *mo
 		inferenceService.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 	}
 
-	return inferenceService
+	return inferenceService, nil
 }
 
-func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) *kservev1beta1.InferenceService {
-	labels := modelService.Metadata.ToLabel()
-	orig.ObjectMeta.Labels = labels
+func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
+	annotations, err := createAnnotations(modelService, config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
+	}
+	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationkeys), annotations)
 	orig.Spec.Predictor = createPredictorSpec(modelService, config)
 
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
 		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 	}
-	return orig
+	return orig, nil
 }
 
 func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
@@ -398,11 +411,86 @@ func createPredictURL(modelService *models.Service) string {
 	return modelService.Name + "-predictor-default." + modelService.Namespace
 }
 
-func toKServeDeploymentMode(deploymentType models.DeploymentMode) kserveconstant.DeploymentModeType {
-	if deploymentType == models.RawDeploymentMode {
-		return kserveconstant.RawDeployment
+func createAnnotations(modelService *models.Service, config *config.DeploymentConfig) (map[string]string, error) {
+	annotations := make(map[string]string)
+
+	if config.QueueResourcePercentage != "" {
+		annotations[knserving.QueueSidecarResourcePercentageAnnotationKey] = config.QueueResourcePercentage
 	}
 
-	// Default to serverless
-	return kserveconstant.Serverless
+	if modelService.Type == models.ModelTypePyFunc {
+		annotations[annotationPrometheusScrapeFlag] = "true"
+		annotations[annotationPrometheusScrapePort] = prometheusPort
+	}
+
+	deployMode, err := toKServeDeploymentMode(modelService.DeploymentMode)
+	if err != nil {
+		return nil, err
+	}
+	annotations[kserveconstant.DeploymentMode] = deployMode
+
+	if modelService.AutoscalingTarget != nil {
+		if modelService.DeploymentMode == deployment.RawDeploymentMode {
+			annotations[kserveconstant.AutoscalerClass] = string(kserveconstant.AutoscalerClassHPA)
+			autoscalingMetrics, err := toKServeAutoscalerMetrics(modelService.AutoscalingTarget.MetricsType)
+			if err != nil {
+				return nil, err
+			}
+
+			annotations[kserveconstant.AutoscalerMetrics] = autoscalingMetrics
+			annotations[kserveconstant.TargetUtilizationPercentage] = fmt.Sprintf("%.0f", modelService.AutoscalingTarget.TargetValue)
+		} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
+			if modelService.AutoscalingTarget.MetricsType == autoscaling.CPUUtilization ||
+				modelService.AutoscalingTarget.MetricsType == autoscaling.MemoryUtilization {
+				annotations[knautoscaling.ClassAnnotationKey] = knautoscaling.HPA
+			} else {
+				annotations[knautoscaling.ClassAnnotationKey] = knautoscaling.KPA
+			}
+
+			autoscalingMetrics, err := toKNativeAutoscalerMetrics(modelService.AutoscalingTarget.MetricsType)
+			if err != nil {
+				return nil, err
+			}
+
+			annotations[knautoscaling.MetricAnnotationKey] = autoscalingMetrics
+			annotations[knautoscaling.TargetAnnotationKey] = fmt.Sprintf("%.0f", modelService.AutoscalingTarget.TargetValue)
+		}
+	}
+
+	return annotations, nil
+}
+
+func toKNativeAutoscalerMetrics(metricsType autoscaling.MetricsType) (string, error) {
+	switch metricsType {
+	case autoscaling.CPUUtilization:
+		return knautoscaling.CPU, nil
+	case autoscaling.MemoryUtilization:
+		return knautoscaling.Memory, nil
+	case autoscaling.RPS:
+		return knautoscaling.RPS, nil
+	case autoscaling.Concurrency:
+		return knautoscaling.Concurrency, nil
+	default:
+		return "", fmt.Errorf("unsuppported autoscaler metrics on serverless deployment: %s", metricsType)
+	}
+}
+
+func toKServeAutoscalerMetrics(metricsType autoscaling.MetricsType) (string, error) {
+	switch metricsType {
+	case autoscaling.CPUUtilization:
+		return string(kserveconstant.AutoScalerMetricsCPU), nil
+	default:
+		return "", fmt.Errorf("unsupported autoscaler metrics on raw deployment: %s", metricsType)
+	}
+}
+
+func toKServeDeploymentMode(deploymentMode deployment.Mode) (string, error) {
+	switch deploymentMode {
+	case deployment.RawDeploymentMode:
+		return string(kserveconstant.RawDeployment), nil
+	case deployment.ServerlessDeploymentMode, deployment.EmptyDeploymentMode:
+		return string(kserveconstant.Serverless), nil
+	default:
+		return "", fmt.Errorf("unsupported deployment mode: %s", deploymentMode)
+	}
 }

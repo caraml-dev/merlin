@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 
+	merror "github.com/gojek/merlin/pkg/errors"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
@@ -189,6 +190,10 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 
 	endpoint, err = c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)
 	if err != nil {
+		if errors.Is(err, merror.InvalidInputError) {
+			return BadRequest(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
+		}
+
 		return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
 	}
 
@@ -263,6 +268,10 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 
 		endpoint, err = c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)
 		if err != nil {
+			if errors.Is(err, merror.InvalidInputError) {
+				return BadRequest(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
+			}
+
 			return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
 		}
 	} else if newEndpoint.Status == models.EndpointTerminated {

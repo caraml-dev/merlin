@@ -18,46 +18,60 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/gojek/merlin/pkg/autoscaling"
+	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/google/uuid"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/mlp"
 )
 
+// VersionEndpoint represents the deployment of a model version in certain environment
 type VersionEndpoint struct {
+	// ID unique id of the version endpoint
 	ID uuid.UUID `json:"id" gorm:"type:uuid;primary_key;"`
+	// VersionID model version id from which the version endpoint is created
 	// The field name has to be prefixed with the related struct name
 	// in order for gorm Preload to work with association_foreignkey
-	VersionID            ID               `json:"version_id"`
-	VersionModelID       ID               `json:"model_id"`
-	Status               EndpointStatus   `json:"status"`
-	URL                  string           `json:"url" gorm:"url"`
-	ServiceName          string           `json:"service_name" gorm:"service_name"`
-	InferenceServiceName string           `json:"-" gorm:"inference_service_name"`
-	Namespace            string           `json:"-" gorm:"namespace"`
-	MonitoringURL        string           `json:"monitoring_url,omitempty" gorm:"-"`
-	Environment          *Environment     `json:"environment" gorm:"association_foreignkey:Name;"`
-	EnvironmentName      string           `json:"environment_name"`
-	Message              string           `json:"message"`
-	ResourceRequest      *ResourceRequest `json:"resource_request" gorm:"resource_request"`
-	EnvVars              EnvVars          `json:"env_vars" gorm:"column:env_vars"`
-	Transformer          *Transformer     `json:"transformer,omitempty" gorm:"foreignKey:VersionEndpointID"`
-	Logger               *Logger          `json:"logger,omitempty" gorm:"logger"`
-	DeploymentMode       DeploymentMode   `json:"deployment_mode" gorm:"deployment_mode"`
-
+	VersionID ID `json:"version_id"`
+	// VersionModelID model if from which the version endpoint is created
+	VersionModelID ID `json:"model_id"`
+	// Status status of the version endpoint
+	Status EndpointStatus `json:"status"`
+	// URL url of the version endpoint
+	URL string `json:"url" gorm:"url"`
+	// ServiceName service name
+	ServiceName string `json:"service_name" gorm:"service_name"`
+	// InferenceServiceName name of inference service
+	InferenceServiceName string `json:"-" gorm:"inference_service_name"`
+	// Namespace namespace where the version is deployed at
+	Namespace string `json:"-" gorm:"namespace"`
+	// MonitoringURL URL pointing to the version endpoint's dashboard
+	MonitoringURL string `json:"monitoring_url,omitempty" gorm:"-"`
+	// Environment environment where the version endpoint is deployed
+	Environment *Environment `json:"environment" gorm:"association_foreignkey:Name;"`
+	// EnvironmentName environment name where the version endpoint is deployed
+	EnvironmentName string `json:"environment_name"`
+	// Message message containing the latest deployment result
+	Message string `json:"message" gorm:"message"`
+	// ResourceRequest resource requested by this version endpoint (CPU, Memory, replicas)
+	ResourceRequest *ResourceRequest `json:"resource_request" gorm:"resource_request"`
+	// EnvVars environment variable to be set in the version endpoints'deployment
+	EnvVars EnvVars `json:"env_vars" gorm:"column:env_vars"`
+	// Transformer transformer configuration
+	Transformer *Transformer `json:"transformer,omitempty" gorm:"foreignKey:VersionEndpointID"`
+	// Logger logger configuration
+	Logger *Logger `json:"logger,omitempty" gorm:"logger"`
+	// DeploymentMode deployment mode of the version endpoint, it can be raw_deployment or serverless
+	DeploymentMode deployment.Mode `json:"deployment_mode" gorm:"deployment_mode"`
+	// AutoscalingTarget controls the conditions when autoscaling should be triggered
+	AutoscalingTarget *autoscaling.AutoscalingTarget `json:"autoscaling_target" gorm:"autoscaling_target"`
 	CreatedUpdated
 }
 
-type DeploymentMode string
-
-const (
-	ServerlessDeploymentMode DeploymentMode = "serverless"
-	RawDeploymentMode        DeploymentMode = "raw_deployment"
-)
-
 func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, version *Version, monitoringConfig config.MonitoringConfig) *VersionEndpoint {
 	id := uuid.New()
-	errRaised := &VersionEndpoint{
+	ve := &VersionEndpoint{
 		ID:                   id,
 		VersionID:            version.ID,
 		VersionModelID:       version.ModelID,
@@ -67,28 +81,30 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		EnvironmentName:      env.Name,
 		Environment:          env,
 		ResourceRequest:      env.DefaultResourceRequest,
+		DeploymentMode:       deployment.ServerlessDeploymentMode,
+		AutoscalingTarget:    autoscaling.DefaultServerlessAutoscalingTarget,
 	}
 
 	if monitoringConfig.MonitoringEnabled {
-		errRaised.UpdateMonitoringURL(monitoringConfig.MonitoringBaseURL, EndpointMonitoringURLParams{env.Cluster, project.Name, model.Name, version.ID.String()})
+		ve.UpdateMonitoringURL(monitoringConfig.MonitoringBaseURL, EndpointMonitoringURLParams{env.Cluster, project.Name, model.Name, version.ID.String()})
 	}
-	return errRaised
+	return ve
 }
 
-func (errRaised *VersionEndpoint) IsRunning() bool {
-	return errRaised.Status == EndpointPending || errRaised.Status == EndpointRunning
+func (ve *VersionEndpoint) IsRunning() bool {
+	return ve.Status == EndpointPending || ve.Status == EndpointRunning
 }
 
-func (errRaised *VersionEndpoint) IsServing() bool {
-	return errRaised.Status == EndpointServing
+func (ve *VersionEndpoint) IsServing() bool {
+	return ve.Status == EndpointServing
 }
 
-func (errRaised *VersionEndpoint) HostURL() string {
-	if errRaised.URL == "" {
+func (ve *VersionEndpoint) HostURL() string {
+	if ve.URL == "" {
 		return ""
 	}
 
-	url, err := url.Parse(errRaised.URL)
+	url, err := url.Parse(ve.URL)
 	if err != nil {
 		return ""
 	}
@@ -103,7 +119,7 @@ type EndpointMonitoringURLParams struct {
 	ModelVersion string
 }
 
-func (errRaised *VersionEndpoint) UpdateMonitoringURL(baseURL string, params EndpointMonitoringURLParams) {
+func (ve *VersionEndpoint) UpdateMonitoringURL(baseURL string, params EndpointMonitoringURLParams) {
 	url, _ := url.Parse(baseURL)
 
 	q := url.Query()
@@ -122,5 +138,5 @@ func (errRaised *VersionEndpoint) UpdateMonitoringURL(baseURL string, params End
 
 	url.RawQuery = q.Encode()
 
-	errRaised.MonitoringURL = url.String()
+	ve.MonitoringURL = url.String()
 }

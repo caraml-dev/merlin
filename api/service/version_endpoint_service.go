@@ -20,13 +20,11 @@ import (
 	"fmt"
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/google/uuid"
-
 	"github.com/gojek/merlin/cluster"
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/imagebuilder"
 	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast"
@@ -34,15 +32,23 @@ import (
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/queue/work"
 	"github.com/gojek/merlin/storage"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/google/uuid"
 )
 
 type EndpointsService interface {
+	// ListEndpoints list all endpoint created from a model version
 	ListEndpoints(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, error)
-	FindByID(ctx context.Context, uuid2 uuid.UUID) (*models.VersionEndpoint, error)
+	// FindByID find specific endpoint using the given uuid
+	FindByID(ctx context.Context, endpointUuid uuid.UUID) (*models.VersionEndpoint, error)
+	// DeployEndpoint update or create an endpoint given a model version in the specified deployment environment
 	DeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
+	// UndeployEndpoint delete an endpoint given a model version in the specified deployment environment
 	UndeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error)
+	// CountEndpoints count number of endpoint created from a model in an environment
 	CountEndpoints(ctx context.Context, environment *models.Environment, model *models.Model) (int, error)
-	ListContainers(ctx context.Context, model *models.Model, version *models.Version, id uuid.UUID) ([]*models.Container, error)
+	// ListContainers list all container associated with an endpoint
+	ListContainers(ctx context.Context, model *models.Model, version *models.Version, endpointUuid uuid.UUID) ([]*models.Container, error)
 }
 
 const defaultWorkers = 1
@@ -97,8 +103,8 @@ func (k *endpointService) ListEndpoints(ctx context.Context, model *models.Model
 	return endpoints, nil
 }
 
-func (k *endpointService) FindByID(ctx context.Context, uuid uuid.UUID) (*models.VersionEndpoint, error) {
-	return k.storage.Get(uuid)
+func (k *endpointService) FindByID(ctx context.Context, endpointUuid uuid.UUID) (*models.VersionEndpoint, error) {
+	return k.storage.Get(endpointUuid)
 }
 
 func (k *endpointService) DeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, newEndpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
@@ -107,16 +113,20 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		endpoint = models.NewVersionEndpoint(environment, model.Project, model, version, k.monitoringConfig)
 	}
 
-	if endpoint.ResourceRequest == nil {
-		endpoint.ResourceRequest = environment.DefaultResourceRequest
-	}
-
 	if newEndpoint.ResourceRequest != nil {
 		endpoint.ResourceRequest = newEndpoint.ResourceRequest
 	}
 
-	if newEndpoint.DeploymentMode == "" {
-		endpoint.DeploymentMode = models.ServerlessDeploymentMode
+	if newEndpoint.DeploymentMode != "" {
+		endpoint.DeploymentMode = newEndpoint.DeploymentMode
+	}
+
+	if newEndpoint.AutoscalingTarget != nil {
+		err := autoscaling.ValidateAutoscalingTarget(newEndpoint.AutoscalingTarget, endpoint.DeploymentMode)
+		if err != nil {
+			return nil, err
+		}
+		endpoint.AutoscalingTarget = newEndpoint.AutoscalingTarget
 	}
 
 	if newEndpoint.Transformer != nil {
@@ -175,7 +185,7 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 			}
 			endpoint.EnvVars = models.MergeEnvVars(pyfuncDefaultEnvVars, newEndpoint.EnvVars)
 		}
-	} else if model.Type == models.ModelTypeCustom {
+	} else {
 		endpoint.EnvVars = newEndpoint.EnvVars
 	}
 

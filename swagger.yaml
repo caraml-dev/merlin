@@ -1253,6 +1253,8 @@ definitions:
         $ref: "#/definitions/Logger"
       deployment_mode:
         $ref: "#/definitions/DeploymentMode"
+      autoscaling_target:
+        $ref: "#/definitions/AutoscalingTarget"
       created_at:
         type: "string"
         format: "date-time"
@@ -1352,6 +1354,22 @@ definitions:
         type: "string"
       memory_request:
         type: "string"
+
+
+  AutoscalingTarget:
+    type: "object"
+    properties:
+      metrics_type:
+        type:  "#/definitions/MetricsType"
+      target_value:
+        type: "number"
+
+  MetricsType:
+    enum:
+    - "concurrency"
+    - "cpu_utilization"
+    - "memory_utilization"
+    - "rps"
 
   EnvVar:
     type: "object"
