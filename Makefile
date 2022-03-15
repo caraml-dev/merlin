@@ -18,6 +18,8 @@ setup:
 	@test -x ${GOPATH}/bin/goimports || go get -u golang.org/x/tools/cmd/goimports
 	@test -x ${GOPATH}/bin/golint || go get -u golang.org/x/lint/golint
 	@test -x ${GOPATH}/bin/gotest || go get -u github.com/rakyll/gotest
+	@go install github.com/mitchellh/protoc-gen-go-json@v1.1.0
+	@go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
 
 .PHONY: init-dep
 init-dep: init-dep-ui init-dep-api
@@ -141,8 +143,11 @@ swagger-ui:
 	@docker-compose up -d swagger-ui
 
 # ============================================================
-# Generate client recipes
+# Generate code recipes
 # ============================================================
+.PHONY: generate
+generate: generate-client generate-proto
+
 .PHONY: generate-client
 generate-client: generate-client-go generate-client-python
 
@@ -173,10 +178,13 @@ generate-client-python:
 	@rm -rf ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}
 
 
-.PHONY: gen-proto
-gen-proto:
+.PHONY: generate-proto
+generate-proto:
 	@echo "> Generating specification configuration from Proto file..."
 	@cd protos/merlin && \
-		protoc -I=. --go_out=../../api --go_opt=module=github.com/gojek/merlin \
-		--go-json_out=../../api/pkg \
+		protoc -I=. \
+		--go_out=../../api \
+		--go_opt=module=github.com/gojek/merlin \
+		--go-json_out=../../api \
+		--go-json_opt=module=github.com/gojek/merlin \
 		transformer/**/*.proto
