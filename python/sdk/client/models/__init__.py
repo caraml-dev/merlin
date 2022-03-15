@@ -20,6 +20,7 @@ from client.models.alert_condition_severity import AlertConditionSeverity
 from client.models.config import Config
 from client.models.container import Container
 from client.models.custom_predictor import CustomPredictor
+from client.models.deployment_mode import DeploymentMode
 from client.models.endpoint_status import EndpointStatus
 from client.models.env_var import EnvVar
 from client.models.environment import Environment

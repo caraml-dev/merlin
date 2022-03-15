@@ -27,6 +27,7 @@ type VersionEndpoint struct {
 	EnvVars         []EnvVar         `json:"env_vars,omitempty"`
 	Transformer     *Transformer     `json:"transformer,omitempty"`
 	Logger          *Logger          `json:"logger,omitempty"`
+	DeploymentMode  *DeploymentMode  `json:"deployment_mode,omitempty"`
 	CreatedAt       time.Time        `json:"created_at,omitempty"`
 	UpdatedAt       time.Time        `json:"updated_at,omitempty"`
 }
