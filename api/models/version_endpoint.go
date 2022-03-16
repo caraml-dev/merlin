@@ -34,7 +34,7 @@ type VersionEndpoint struct {
 	// The field name has to be prefixed with the related struct name
 	// in order for gorm Preload to work with association_foreignkey
 	VersionID ID `json:"version_id"`
-	// VersionModelID model if from which the version endpoint is created
+	// VersionModelID model id from which the version endpoint is created
 	VersionModelID ID `json:"model_id"`
 	// Status status of the version endpoint
 	Status EndpointStatus `json:"status"`
