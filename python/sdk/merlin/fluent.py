@@ -16,6 +16,7 @@ from contextlib import contextmanager
 from typing import Optional, List, Any, Dict
 
 from client import PredictionJob
+from merlin.deployment_mode import DeploymentMode
 from merlin.batch.config import PredictionJobConfig
 from merlin.client import MerlinClient
 from merlin.endpoint import ModelEndpoint, VersionEndpoint
@@ -155,7 +156,7 @@ def new_model_version(labels: Dict[str, str] = None):
     """
     Create new model version under currently active model
 
-    :param model:
+    :param labels: dictionary containing the label that will be stored in the new model version
     :return: ModelVersion
     """
     v = None
@@ -347,12 +348,20 @@ def deploy(model_version: ModelVersion = None,
            resource_request: ResourceRequest = None,
            env_vars: Dict[str, str] = None,
            transformer: Transformer = None,
-           logger: Logger = None) -> VersionEndpoint:
+           logger: Logger = None,
+           deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS
+           ) -> VersionEndpoint:
     """
     Deploy a model version.
 
-    :param model_version: If model_version is not given it will deploy active model version
-    :return: VersionEndpoint
+        :param model_version: If model_version is not given it will deploy active model version
+        :param environment_name: target environment to which the model version will be deployed to. If left empty it will deploy to default environment.
+        :param resource_request: The resource requirement and replicas requests for model version endpoint.
+        :param env_vars: List of environment variables to be passed to the model container.
+        :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
+        :param logger: Response/Request logging configuration for model or transformer.
+        :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
+        :return: VersionEndpoint object
     """
     _check_active_client()
     if model_version is None:
@@ -361,14 +370,16 @@ def deploy(model_version: ModelVersion = None,
                                             resource_request,
                                             env_vars,
                                             transformer,
-                                            logger)
+                                            logger,
+                                            deployment_mode)
 
     return _merlin_client.deploy(model_version,  # type: ignore
                                  environment_name,
                                  resource_request,
                                  env_vars,
                                  transformer,
-                                 logger)
+                                 logger,
+                                 deployment_mode)
 
 
 def undeploy(model_version=None,

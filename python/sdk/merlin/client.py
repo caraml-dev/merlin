@@ -17,12 +17,12 @@ from typing import Dict, List, Optional
 import warnings
 import google.auth
 import urllib3
-from client.rest import ApiException
 from google.auth.transport.urllib3 import AuthorizedHttp
 
 from client import ApiClient, Configuration, EndpointApi, EnvironmentApi, \
     ModelsApi, ProjectApi, VersionApi
-from merlin.endpoint import ModelEndpoint, VersionEndpoint
+from merlin.deployment_mode import DeploymentMode
+from merlin.endpoint import VersionEndpoint
 from merlin.environment import Environment
 from merlin.model import Model, ModelType, ModelVersion, Project
 from merlin.resource_request import ResourceRequest
@@ -230,8 +230,9 @@ class MerlinClient:
                resource_request: ResourceRequest = None,
                env_vars: Dict[str, str] = None,
                transformer: Transformer = None,
-               logger: Logger = None) -> VersionEndpoint:
-        return model_version.deploy(environment_name, resource_request, env_vars, transformer, logger)
+               logger: Logger = None,
+               deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS) -> VersionEndpoint:
+        return model_version.deploy(environment_name, resource_request, env_vars, transformer, logger, deployment_mode)
 
     def undeploy(self, model_version: ModelVersion,
                  environment_name: str = None):

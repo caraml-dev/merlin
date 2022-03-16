@@ -15,6 +15,8 @@
 import json
 import types
 import pytest
+
+from merlin import DeploymentMode
 from merlin.model import ModelType
 from urllib3_mock import Responses
 from unittest.mock import patch
@@ -35,6 +37,8 @@ ep1 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
                          env_1.name, env_1, "grafana.com")
 ep2 = cl.VersionEndpoint("4567", 1, "running", "localhost/1", "svc-2",
                          env_2.name, env_2, "grafana.com")
+ep3 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
+                         env_1.name, env_1, "grafana.com", deployment_mode="raw_deployment")
 rule_1 = cl.ModelEndpointRule(destinations=[cl.ModelEndpointRuleDestination(
     ep1.id, weight=100)])
 rule_2 = cl.ModelEndpointRule(destinations=[cl.ModelEndpointRuleDestination(
@@ -228,6 +232,27 @@ class TestModelVersion:
         assert endpoint.environment_name == ep1.environment_name
         assert endpoint.environment.cluster == env_1.cluster
         assert endpoint.environment.name == env_1.name
+        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+
+    @responses.activate
+    def test_deploy_using_raw_deployment_mode(self, version):
+        responses.add("GET", '/v1/environments',
+                      body=json.dumps(
+                          [env_1.to_dict(), env_2.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("POST", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps(ep3.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = version.deploy(environment_name=env_1.name, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
+
+        assert endpoint.id == ep3.id
+        assert endpoint.status.value == ep3.status
+        assert endpoint.environment_name == ep3.environment_name
+        assert endpoint.environment.cluster == env_1.cluster
+        assert endpoint.environment.name == env_1.name
+        assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
 
     @responses.activate
     def test_deploy_default_env(self, version):

@@ -15,7 +15,6 @@
 import os
 import pathlib
 import re
-import urllib.parse
 import shutil
 import warnings
 
@@ -43,11 +42,12 @@ from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
 from merlin.batch.source import BigQuerySource
+from merlin.deployment_mode import DeploymentMode
 from merlin.docker.docker import copy_pyfunc_dockerfile, copy_standard_dockerfile
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.logger import Logger, LoggerConfig, LoggerMode
+from merlin.logger import Logger
 from merlin.util import autostr, download_files_from_gcs, guess_mlp_ui_url, valid_name_check
 from merlin.validation import validate_model_dir
 from merlin.version import VERSION
@@ -979,7 +979,8 @@ class ModelVersion:
                resource_request: ResourceRequest = None,
                env_vars: Dict[str, str] = None,
                transformer: Transformer = None,
-               logger: Logger = None) -> VersionEndpoint:
+               logger: Logger = None,
+               deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
         and log_pyfunc_model has to be called beforehand
@@ -989,6 +990,7 @@ class ModelVersion:
         :param env_vars: List of environment variables to be passed to the model container.
         :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
         :param logger: Response/Request logging configuration for model or transformer.
+        :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
         :return: Endpoint object
         """
 
@@ -1051,7 +1053,8 @@ class ModelVersion:
                                           resource_request=target_resource_request,
                                           env_vars=target_env_vars,
                                           transformer=target_transformer,
-                                          logger=target_logger)
+                                          logger=target_logger,
+                                          deployment_mode=deployment_mode.value)
         endpoint = endpoint_api \
             .models_model_id_versions_version_id_endpoint_post(int(model.id),
                                                                int(self.id),

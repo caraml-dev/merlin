@@ -25,6 +25,7 @@ from sklearn.datasets import load_iris
 from recursive_diff import recursive_eq
 
 import merlin
+from merlin import DeploymentMode
 from merlin.endpoint import Status
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
@@ -34,19 +35,36 @@ from test.utils import undeploy_all_version
 from test.feast_model import EchoModel
 
 request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
+tensorflow_request_json = {
+    "signature_name": "predict",
+    "instances": [
+        {
+            "sepal_length": 2.8,
+            "sepal_width": 1.0,
+            "petal_length": 6.8,
+            "petal_width": 0.4,
+        },
+        {
+            "sepal_length": 0.1,
+            "sepal_width": 0.5,
+            "petal_length": 1.8,
+            "petal_width": 2.4,
+        },
+    ],
+}
 
 
 @pytest.mark.integration
 @pytest.mark.dependency()
 def test_model_version_with_labels(
-    integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("sklearn-labels", ModelType.SKLEARN)
 
     model_dir = "test/sklearn-model"
-    MODEL_FILE = "model.joblib"
+    model_file = "model.joblib"
 
     undeploy_all_version()
 
@@ -55,7 +73,7 @@ def test_model_version_with_labels(
         iris = load_iris()
         X, y = iris.data, iris.target
         clf.fit(X, y)
-        dump(clf, os.path.join(model_dir, MODEL_FILE))
+        dump(clf, os.path.join(model_dir, model_file))
 
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
@@ -81,7 +99,7 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth):
     merlin.set_model("sklearn-sample", ModelType.SKLEARN)
 
     model_dir = "test/sklearn-model"
-    MODEL_FILE = "model.joblib"
+    model_file = "model.joblib"
 
     undeploy_all_version()
 
@@ -90,7 +108,7 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth):
         iris = load_iris()
         X, y = iris.data, iris.target
         clf.fit(X, y)
-        dump(clf, os.path.join(model_dir, MODEL_FILE))
+        dump(clf, os.path.join(model_dir, model_file))
 
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
@@ -113,7 +131,7 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth):
     merlin.set_model("xgboost-sample", ModelType.XGBOOST)
 
     model_dir = "test/xgboost-model"
-    BST_FILE = "model.bst"
+    model_file = "model.bst"
 
     undeploy_all_version()
 
@@ -131,7 +149,7 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth):
             "objective": "multi:softmax",
         }
         xgb_model = xgb.train(params=param, dtrain=dtrain)
-        model_file = os.path.join(model_dir, BST_FILE)
+        model_file = os.path.join(model_dir, model_file)
         xgb_model.save_model(model_file)
 
         # Upload the serialized model to MLP
@@ -209,28 +227,11 @@ def test_tensorflow(integration_test_url, project_name, use_google_oauth):
         merlin.log_model(model_dir=model_dir)
 
     endpoint = merlin.deploy(v)
-    request_json = {
-        "signature_name": "predict",
-        "instances": [
-            {
-                "sepal_length": 2.8,
-                "sepal_width": 1.0,
-                "petal_length": 6.8,
-                "petal_width": 0.4,
-            },
-            {
-                "sepal_length": 0.1,
-                "sepal_width": 0.5,
-                "petal_length": 1.8,
-                "petal_width": 2.4,
-            },
-        ],
-    }
-    resp = requests.post(f"{endpoint.url}", json=request_json)
+    resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(request_json["instances"])
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     merlin.undeploy(v)
 
@@ -266,7 +267,7 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth):
     merlin.set_model("set-traffic-sample", ModelType.SKLEARN)
 
     model_dir = "test/sklearn-model"
-    MODEL_FILE = "model.joblib"
+    model_file = "model.joblib"
 
     undeploy_all_version()
 
@@ -275,7 +276,7 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth):
         iris = load_iris()
         X, y = iris.data, iris.target
         clf.fit(X, y)
-        dump(clf, os.path.join(model_dir, MODEL_FILE))
+        dump(clf, os.path.join(model_dir, model_file))
 
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
@@ -287,13 +288,6 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth):
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
-
-    # Undeploy deployed model version
-    merlin.undeploy(v)
-    sleep(5)
-
-    # Redeploy and set traffic
-    merlin.deploy(v)
 
     endpoint = merlin.set_traffic({v: 100})
     sleep(5)
@@ -318,7 +312,7 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth):
     merlin.set_model("serve-traffic-sample", ModelType.SKLEARN)
 
     model_dir = "test/sklearn-model"
-    MODEL_FILE = "model.joblib"
+    model_file = "model.joblib"
 
     undeploy_all_version()
 
@@ -327,7 +321,7 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth):
         iris = load_iris()
         X, y = iris.data, iris.target
         clf.fit(X, y)
-        dump(clf, os.path.join(model_dir, MODEL_FILE))
+        dump(clf, os.path.join(model_dir, model_file))
 
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
@@ -363,7 +357,7 @@ def test_stop_serving_traffic(integration_test_url, project_name, use_google_oau
     merlin.set_model("stop-serving-traffic", ModelType.SKLEARN)
 
     model_dir = "test/sklearn-model"
-    MODEL_FILE = "model.joblib"
+    model_file = "model.joblib"
 
     undeploy_all_version()
 
@@ -372,7 +366,7 @@ def test_stop_serving_traffic(integration_test_url, project_name, use_google_oau
         iris = load_iris()
         X, y = iris.data, iris.target
         clf.fit(X, y)
-        dump(clf, os.path.join(model_dir, MODEL_FILE))
+        dump(clf, os.path.join(model_dir, model_file))
 
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
@@ -411,7 +405,7 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth):
     merlin.set_model("multi-env", ModelType.XGBOOST)
 
     model_dir = "test/xgboost-model"
-    BST_FILE = "model.bst"
+    bst_file = "model.bst"
 
     envs = merlin.list_environment()
     assert len(envs) >= 1
@@ -435,7 +429,7 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth):
             "objective": "multi:softmax",
         }
         xgb_model = xgb.train(params=param, dtrain=dtrain)
-        model_file = os.path.join(model_dir, BST_FILE)
+        model_file = os.path.join(model_dir, bst_file)
         xgb_model.save_model(model_file)
 
         # Upload the serialized model to MLP
@@ -462,7 +456,7 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth):
     merlin.set_model("resource-request", ModelType.XGBOOST)
 
     model_dir = "test/xgboost-model"
-    BST_FILE = "model.bst"
+    bst_file = "model.bst"
 
     envs = merlin.list_environment()
     assert len(envs) >= 1
@@ -485,7 +479,7 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth):
             "objective": "multi:softmax",
         }
         xgb_model = xgb.train(params=param, dtrain=dtrain)
-        model_file = os.path.join(model_dir, BST_FILE)
+        model_file = os.path.join(model_dir, bst_file)
         xgb_model.save_model(model_file)
 
         # Upload the serialized model to MLP
@@ -520,35 +514,18 @@ def test_logger(integration_test_url, project_name, use_google_oauth):
         merlin.log_model(model_dir=model_dir)
 
     endpoint = merlin.deploy(logger=logger)
-    request_json = {
-        "signature_name": "predict",
-        "instances": [
-            {
-                "sepal_length": 2.8,
-                "sepal_width": 1.0,
-                "petal_length": 6.8,
-                "petal_width": 0.4,
-            },
-            {
-                "sepal_length": 0.1,
-                "sepal_width": 0.5,
-                "petal_length": 1.8,
-                "petal_width": 2.4,
-            },
-        ],
-    }
-    resp = requests.post(f"{endpoint.url}", json=request_json)
+    resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(request_json["instances"])
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     merlin.undeploy(v)
 
 
 @pytest.mark.integration
 def test_custom_transformer(
-    integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -644,7 +621,7 @@ def test_feast_enricher(integration_test_url, project_name, use_google_oauth):
 
 @pytest.mark.integration
 def test_standard_transformer_without_feast(
-    integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -668,9 +645,11 @@ def test_standard_transformer_without_feast(
     request_json = {
         "drivers": [
             # 1 Feb 2022, 00:00:00
-            {"id": 1, "name": "driver-1", "vehicle": "motorcycle", "previous_vehicle": "suv","rating": 4, "ep_time": 1643673600},
+            {"id": 1, "name": "driver-1", "vehicle": "motorcycle", "previous_vehicle": "suv", "rating": 4,
+             "ep_time": 1643673600},
             # 30 Jan 2022, 00:00:00
-            {"id": 2, "name": "driver-2", "vehicle": "sedan", "previous_vehicle": "mpv", "rating": 3, "ep_time": 1643500800}],
+            {"id": 2, "name": "driver-2", "vehicle": "sedan", "previous_vehicle": "mpv", "rating": 3,
+             "ep_time": 1643500800}],
         "customer": {"id": 1111},
     }
     resp = requests.post(f"{endpoint.url}", json=request_json)
@@ -679,21 +658,22 @@ def test_standard_transformer_without_feast(
     assert resp.json() is not None
     exp_resp = {
         "instances": {
-            "columns": ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle", "ep_time_x", "ep_time_y"],
+            "columns": ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle", "ep_time_x",
+                        "ep_time_y"],
             "data": [
                 [1111, "driver-2", 2.5, 0.5, 2, 3, 1, 0],
                 [1111, "driver-1", -2.5, 0.75, 0, 1, 1, 0]],
         }
     }
 
-    recursive_eq(resp.json()["instances"], exp_resp["instances"], abs_tol= 1e-09) #asserts lhs = rhs, with tolerance
+    recursive_eq(resp.json()["instances"], exp_resp["instances"], abs_tol=1e-09)  # asserts lhs = rhs, with tolerance
     merlin.undeploy(v)
 
 
 @pytest.mark.feast
 @pytest.mark.integration
 def test_standard_transformer_with_feast(
-    integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -745,11 +725,11 @@ def test_standard_transformer_with_feast(
 @pytest.mark.feast
 @pytest.mark.integration
 def test_standard_transformer_with_multiple_feast(
-    integration_test_url,
-    project_name,
-    use_google_oauth,
-    feast_serving_redis_url,
-    feast_serving_bigtable_url,
+        integration_test_url,
+        project_name,
+        use_google_oauth,
+        feast_serving_redis_url,
+        feast_serving_bigtable_url,
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -802,45 +782,45 @@ def test_standard_transformer_with_multiple_feast(
     exp_resp = {
         "instances": {
             "columns": [
-            "rank",
-            "driver_id",
-            "customer_id",
-            "merlin_test_redis_driver_features:completion_rate",
-            "merlin_test_redis_driver_features:cancellation_rate",
-            "merlin_test_bt_driver_features:rating"
+                "rank",
+                "driver_id",
+                "customer_id",
+                "merlin_test_redis_driver_features:completion_rate",
+                "merlin_test_redis_driver_features:cancellation_rate",
+                "merlin_test_bt_driver_features:rating"
             ],
             "data": [
-            [
-                0,
-                "driver_1",
-                1111,
-                0.85,
-                0.15,
-                4.2
-            ],
-            [
-                1,
-                "driver_2",
-                1111,
-                0.6,
-                0.4,
-                4.2
-            ]
+                [
+                    0,
+                    "driver_1",
+                    1111,
+                    0.85,
+                    0.15,
+                    4.2
+                ],
+                [
+                    1,
+                    "driver_2",
+                    1111,
+                    0.6,
+                    0.4,
+                    4.2
+                ]
             ]
         }
     }
 
-
     assert resp.json()["instances"] == exp_resp["instances"]
     merlin.undeploy(v)
+
 
 @pytest.mark.feast
 @pytest.mark.integration
 def test_standard_transformer_with_multiple_feast_with_source(
-    integration_test_url,
-    project_name,
-    use_google_oauth,
-    feast_serving_bigtable_url,
+        integration_test_url,
+        project_name,
+        use_google_oauth,
+        feast_serving_bigtable_url,
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -875,14 +855,14 @@ def test_standard_transformer_with_multiple_feast_with_source(
     config_file.write(rendered_config)
     config_file.close()
 
-    env_vars={
+    env_vars = {
         "FEAST_REDIS_DIRECT_STORAGE_ENABLED": True,
         "FEAST_REDIS_POOL_SIZE": 1,
         "FEAST_BIGTABLE_DIRECT_STORAGE_ENABLED": True,
         "FEAST_BIGTABLE_POOL_SIZE": 1,
         "FEAST_BIGTABLE_KEEP_ALIVE_INTERVAL": "2m",
         "FEAST_BIGTABLE_KEEP_ALIVE_TIMEOUT": "15s"
-        }
+    }
     transformer = StandardTransformer(config_file=config_file_path, enabled=True, env_vars=env_vars)
 
     endpoint = merlin.deploy(v, transformer=transformer)
@@ -900,34 +880,33 @@ def test_standard_transformer_with_multiple_feast_with_source(
     exp_resp = {
         "instances": {
             "columns": [
-            "rank",
-            "driver_id",
-            "customer_id",
-            "merlin_test_redis_driver_features:completion_rate",
-            "merlin_test_redis_driver_features:cancellation_rate",
-            "merlin_test_bt_driver_features:rating"
+                "rank",
+                "driver_id",
+                "customer_id",
+                "merlin_test_redis_driver_features:completion_rate",
+                "merlin_test_redis_driver_features:cancellation_rate",
+                "merlin_test_bt_driver_features:rating"
             ],
             "data": [
-            [
-                0,
-                "driver_1",
-                1111,
-                0.85,
-                0.15,
-                4.2
-            ],
-            [
-                1,
-                "driver_2",
-                1111,
-                0.6,
-                0.4,
-                4.2
-            ]
+                [
+                    0,
+                    "driver_1",
+                    1111,
+                    0.85,
+                    0.15,
+                    4.2
+                ],
+                [
+                    1,
+                    "driver_2",
+                    1111,
+                    0.6,
+                    0.4,
+                    4.2
+                ]
             ]
         }
     }
-
 
     assert resp.json()["instances"] == exp_resp["instances"]
     merlin.undeploy(v)
@@ -935,7 +914,7 @@ def test_standard_transformer_with_multiple_feast_with_source(
 
 @pytest.mark.integration
 def test_custom_model_without_artifact(
-    integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -977,7 +956,7 @@ def test_custom_model_without_artifact(
 
 @pytest.mark.integration
 def test_custom_model_with_artifact(
-    integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -1033,4 +1012,124 @@ def test_custom_model_with_artifact(
         assert merlin.undeploy(v)
 
     # Undeploy other running model version endpoints
+    undeploy_all_version()
+
+
+@pytest.mark.integration
+@pytest.mark.dependency()
+def test_deployment_mode(integration_test_url, project_name, use_google_oauth):
+    """
+    Validate that user can redeploy a model version using different deployment mode
+    """
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("deployment-mode", ModelType.TENSORFLOW)
+    model_dir = "test/tensorflow-model"
+
+    undeploy_all_version()
+
+    with merlin.new_model_version() as v:
+        merlin.log_model(model_dir=model_dir)
+
+    # Deploy using serverless
+    initial_endpoint = merlin.deploy(v)
+
+    resp = requests.post(f"{initial_endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Deploy using raw_deployment
+    new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
+
+    assert new_endpoint.url == initial_endpoint.url
+    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Deploy again using serverless
+    new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.SERVERLESS)
+
+    assert new_endpoint.url == initial_endpoint.url
+    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    merlin.undeploy(v)
+
+
+@pytest.mark.integration
+@pytest.mark.dependency()
+def test_deployment_mode_for_serving_model(integration_test_url, project_name, use_google_oauth):
+    """
+    Validate that set traffic is working when switching from different deployment mode
+    """
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("deployment-mode", ModelType.TENSORFLOW)
+    model_dir = "test/tensorflow-model"
+
+    undeploy_all_version()
+
+    # Upload new model version: v1
+    with merlin.new_model_version() as v1:
+        merlin.log_model(model_dir=model_dir)
+
+    # Deploy using serverless
+    endpoint = merlin.deploy(v1)
+
+    resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Set v1 as serving model
+    initial_model_endpoint = merlin.set_traffic({v1: 100})
+    sleep(5)
+    resp = requests.post(f"{initial_model_endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Upload new model version: v2
+    with merlin.new_model_version() as v2:
+        merlin.log_model(model_dir=model_dir)
+
+    # Deploy v2 using raw_deployment
+    new_endpoint = merlin.deploy(v2, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
+
+    assert new_endpoint.url == endpoint.url
+    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Set v2 as serving model
+    model_endpoint = merlin.set_traffic({v2: 100})
+    assert model_endpoint.url == initial_model_endpoint.url
+    sleep(5)
+
+    resp = requests.post(f"{model_endpoint.url}", json=tensorflow_request_json)
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Set v1 back as serving model
+    model_endpoint = merlin.set_traffic({v2: 100})
+    assert model_endpoint.url == initial_model_endpoint.url
+    sleep(5)
+
+    resp = requests.post(f"{model_endpoint.url}", json=tensorflow_request_json)
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
     undeploy_all_version()

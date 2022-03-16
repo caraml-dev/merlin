@@ -16,8 +16,9 @@ from enum import Enum
 from typing import Dict
 
 import client
+from merlin.deployment_mode import DeploymentMode
 from merlin.environment import Environment
-from merlin.logger import Logger, LoggerConfig, LoggerMode
+from merlin.logger import Logger
 from merlin.util import autostr
 
 
@@ -42,6 +43,8 @@ class VersionEndpoint:
         self._environment = Environment(endpoint.environment)
         self._env_vars = endpoint.env_vars
         self._logger = Logger.from_logger_response(endpoint.logger)
+        self._deployment_mode = DeploymentMode.SERVERLESS if endpoint.deployment_mode is None \
+            else DeploymentMode(endpoint.deployment_mode)
         if log_url is not None:
             self._log_url = log_url
 
@@ -79,6 +82,10 @@ class VersionEndpoint:
     @property
     def log_url(self) -> str:
         return self._log_url
+
+    @property
+    def deployment_mode(self) -> DeploymentMode:
+        return self._deployment_mode
 
     def _repr_html_(self):
         return f"""<a href="{self._url}">{self._url}</a>"""

@@ -43,7 +43,7 @@ set_model = merlin.fluent.set_model
 active_model = merlin.fluent.active_model
 
 # Model Version
-new_model_version = merlin.fluent.new_model_version
+new_model_version = merlin.fluent.new_model_version  # type:ignore
 log_param = merlin.fluent.log_param
 log_metric = merlin.fluent.log_metric
 set_tag = merlin.fluent.set_tag
@@ -75,6 +75,7 @@ list_model_endpoints = merlin.fluent.list_model_endpoints
 
 # Definitions
 ResourceRequest = merlin.resource_request.ResourceRequest
+DeploymentMode = merlin.deployment_mode.DeploymentMode
 
 # Batch
 create_prediction_job = merlin.fluent.create_prediction_job
@@ -89,7 +90,7 @@ __all__ = [
     "log_artifact", "log_pyfunc_model", "log_pytorch_model", "log_model",
     "deploy", "undeploy",
     "set_traffic", "serve_traffic",
-    "ResourceRequest",
+    "ResourceRequest", "DeploymentMode",
     "create_prediction_job"
 ]
 
