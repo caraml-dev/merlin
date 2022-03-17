@@ -19,6 +19,7 @@ import (
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/mlp"
+	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,6 +28,7 @@ func TestVersionEndpoint(t *testing.T) {
 		monitoringConfig config.MonitoringConfig
 		isRunning        bool
 		isServing        bool
+		deploymentMode   deployment.Mode
 	}
 	tests := []struct {
 		name string
@@ -61,7 +63,7 @@ func TestVersionEndpoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			errRaised := NewVersionEndpoint(&Environment{}, mlp.Project{}, &Model{}, &Version{}, tt.args.monitoringConfig)
+			errRaised := NewVersionEndpoint(&Environment{}, mlp.Project{}, &Model{}, &Version{}, tt.args.monitoringConfig, tt.args.deploymentMode)
 			assert.NotNil(t, errRaised)
 
 			if tt.args.isRunning {

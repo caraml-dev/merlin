@@ -22,7 +22,6 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/gojek/merlin/cluster"
 	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/imagebuilder"
@@ -110,7 +109,7 @@ func (k *endpointService) FindByID(ctx context.Context, endpointUuid uuid.UUID) 
 func (k *endpointService) DeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, newEndpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
 	endpoint, _ := version.GetEndpointByEnvironmentName(environment.Name)
 	if endpoint == nil {
-		endpoint = models.NewVersionEndpoint(environment, model.Project, model, version, k.monitoringConfig)
+		endpoint = models.NewVersionEndpoint(environment, model.Project, model, version, k.monitoringConfig, newEndpoint.DeploymentMode)
 	}
 
 	if newEndpoint.ResourceRequest != nil {
@@ -189,34 +188,32 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		endpoint.EnvVars = newEndpoint.EnvVars
 	}
 
-	originalEndpoint := *endpoint
-
 	endpoint.Status = models.EndpointPending
-	err := k.storage.Save(endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := k.jobProducer.EnqueueJob(&queue.Job{
+	// Copy to avoid race condition
+	tobeDeployedEndpoint := *endpoint
+	err := k.jobProducer.EnqueueJob(&queue.Job{
 		Name: ModelServiceDeployment,
 		Arguments: queue.Arguments{
 			dataArgKey: work.EndpointJob{
-				Endpoint: &originalEndpoint,
+				Endpoint: &tobeDeployedEndpoint,
 				Version:  version,
 				Model:    model,
 				Project:  model.Project,
 			},
 		},
-	}); err != nil {
+	})
+
+	if err != nil {
 		// if error enqueue job, mark endpoint status to failed
 		endpoint.Status = models.EndpointFailed
-		if err := k.storage.Save(endpoint); err != nil {
-			log.Errorf("error to update endpoint %s status to failed: %v", endpoint.ID, err)
-		}
-		return nil, err
 	}
 
-	return endpoint, nil
+	errSave := k.storage.Save(endpoint)
+	if errSave != nil {
+		return nil, errSave
+	}
+
+	return endpoint, err
 }
 
 func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {

@@ -69,8 +69,18 @@ type VersionEndpoint struct {
 	CreatedUpdated
 }
 
-func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, version *Version, monitoringConfig config.MonitoringConfig) *VersionEndpoint {
+func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, version *Version, monitoringConfig config.MonitoringConfig, deploymentMode deployment.Mode) *VersionEndpoint {
 	id := uuid.New()
+
+	if deploymentMode == deployment.EmptyDeploymentMode {
+		deploymentMode = deployment.ServerlessDeploymentMode
+	}
+
+	autoscalingPolicy := autoscaling.DefaultServerlessAutoscalingPolicy
+	if deploymentMode == deployment.RawDeploymentMode {
+		autoscalingPolicy = autoscaling.DefaultRawDeploymentAutoscalingPolicy
+	}
+
 	ve := &VersionEndpoint{
 		ID:                   id,
 		VersionID:            version.ID,
@@ -81,8 +91,8 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		EnvironmentName:      env.Name,
 		Environment:          env,
 		ResourceRequest:      env.DefaultResourceRequest,
-		DeploymentMode:       deployment.ServerlessDeploymentMode,
-		AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+		DeploymentMode:       deploymentMode,
+		AutoscalingPolicy:    autoscalingPolicy,
 	}
 
 	if monitoringConfig.MonitoringEnabled {
