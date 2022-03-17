@@ -166,14 +166,26 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		}
 
 		// create new resource
-		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(k.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, k.deploymentConfig))
+		spec, err := k.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, k.deploymentConfig)
+		if err != nil {
+			log.Errorf("unable to create inference service spec %s %v", svcName, err)
+			return nil, ErrUnableToCreateInferenceService
+		}
+
+		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(spec)
 		if err != nil {
 			log.Errorf("unable to create inference service %s %v", svcName, err)
 			return nil, ErrUnableToCreateInferenceService
 		}
 	} else {
+		patchedSpec, err := k.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, k.deploymentConfig)
+		if err != nil {
+			log.Errorf("unable to update inference service %s %v", svcName, err)
+			return nil, ErrUnableToUpdateInferenceService
+		}
+
 		// existing resource found, do update
-		s, err = k.servingClient.InferenceServices(modelService.Namespace).Update(k.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, k.deploymentConfig))
+		s, err = k.servingClient.InferenceServices(modelService.Namespace).Update(patchedSpec)
 		if err != nil {
 			log.Errorf("unable to update inference service %s %v", svcName, err)
 			return nil, ErrUnableToUpdateInferenceService

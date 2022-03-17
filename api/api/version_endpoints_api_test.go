@@ -22,6 +22,7 @@ import (
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/gojek/mlp/api/client"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
@@ -3645,7 +3646,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						Value: "1",
 					},
 				}),
-				DeploymentMode: models.RawDeploymentMode,
+				DeploymentMode: deployment.RawDeploymentMode,
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
@@ -3723,7 +3724,7 @@ func TestUpdateEndpoint(t *testing.T) {
 							Value: "1",
 						},
 					}),
-					DeploymentMode: models.ServerlessDeploymentMode,
+					DeploymentMode: deployment.ServerlessDeploymentMode,
 				}, nil)
 				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
@@ -3754,7 +3755,7 @@ func TestUpdateEndpoint(t *testing.T) {
 							Value: "1",
 						},
 					}),
-					DeploymentMode: models.RawDeploymentMode,
+					DeploymentMode: deployment.RawDeploymentMode,
 					CreatedUpdated: models.CreatedUpdated{},
 				}, nil)
 				return svc
@@ -3790,7 +3791,7 @@ func TestUpdateEndpoint(t *testing.T) {
 							Value: "1",
 						},
 					}),
-					DeploymentMode: models.RawDeploymentMode,
+					DeploymentMode: deployment.RawDeploymentMode,
 					CreatedUpdated: models.CreatedUpdated{},
 				},
 			},
@@ -3823,7 +3824,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						Value: "1",
 					},
 				}),
-				DeploymentMode: models.RawDeploymentMode,
+				DeploymentMode: deployment.RawDeploymentMode,
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
@@ -3901,7 +3902,7 @@ func TestUpdateEndpoint(t *testing.T) {
 							Value: "1",
 						},
 					}),
-					DeploymentMode: models.ServerlessDeploymentMode,
+					DeploymentMode: deployment.ServerlessDeploymentMode,
 				}, nil)
 				return svc
 			},
