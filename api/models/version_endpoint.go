@@ -64,8 +64,8 @@ type VersionEndpoint struct {
 	Logger *Logger `json:"logger,omitempty" gorm:"logger"`
 	// DeploymentMode deployment mode of the version endpoint, it can be raw_deployment or serverless
 	DeploymentMode deployment.Mode `json:"deployment_mode" gorm:"deployment_mode"`
-	// AutoscalingTarget controls the conditions when autoscaling should be triggered
-	AutoscalingTarget *autoscaling.AutoscalingTarget `json:"autoscaling_target" gorm:"autoscaling_target"`
+	// AutoscalingPolicy controls the conditions when autoscaling should be triggered
+	AutoscalingPolicy *autoscaling.AutoscalingPolicy `json:"autoscaling_policy" gorm:"autoscaling_policy"`
 	CreatedUpdated
 }
 
@@ -82,7 +82,7 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		Environment:          env,
 		ResourceRequest:      env.DefaultResourceRequest,
 		DeploymentMode:       deployment.ServerlessDeploymentMode,
-		AutoscalingTarget:    autoscaling.DefaultServerlessAutoscalingTarget,
+		AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
 	}
 
 	if monitoringConfig.MonitoringEnabled {

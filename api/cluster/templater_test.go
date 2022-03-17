@@ -767,7 +767,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.RawDeploymentMode,
-				AutoscalingTarget: &autoscaling.AutoscalingTarget{
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
 					MetricsType: autoscaling.CPUUtilization,
 					TargetValue: 30,
 				},
@@ -822,7 +822,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.RawDeploymentMode,
-				AutoscalingTarget: &autoscaling.AutoscalingTarget{
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
 					MetricsType: autoscaling.MemoryUtilization,
 					TargetValue: 30,
 				},
@@ -840,7 +840,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.ServerlessDeploymentMode,
-				AutoscalingTarget: &autoscaling.AutoscalingTarget{
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
 					MetricsType: autoscaling.CPUUtilization,
 					TargetValue: 30,
 				},
@@ -895,7 +895,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.ServerlessDeploymentMode,
-				AutoscalingTarget: &autoscaling.AutoscalingTarget{
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
 					MetricsType: autoscaling.MemoryUtilization,
 					TargetValue: 30,
 				},
@@ -950,7 +950,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.ServerlessDeploymentMode,
-				AutoscalingTarget: &autoscaling.AutoscalingTarget{
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
 					MetricsType: autoscaling.Concurrency,
 					TargetValue: 2,
 				},
@@ -1005,7 +1005,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.ServerlessDeploymentMode,
-				AutoscalingTarget: &autoscaling.AutoscalingTarget{
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
 					MetricsType: autoscaling.RPS,
 					TargetValue: 10,
 				},
@@ -2298,7 +2298,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.RawDeploymentMode,
-				AutoscalingTarget: &autoscaling.AutoscalingTarget{
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
 					MetricsType: autoscaling.CPUUtilization,
 					TargetValue: 30,
 				},
@@ -2379,7 +2379,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.ServerlessDeploymentMode,
-				AutoscalingTarget: &autoscaling.AutoscalingTarget{
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
 					MetricsType: autoscaling.Concurrency,
 					TargetValue: 2,
 				},

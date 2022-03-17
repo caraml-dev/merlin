@@ -121,12 +121,12 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		endpoint.DeploymentMode = newEndpoint.DeploymentMode
 	}
 
-	if newEndpoint.AutoscalingTarget != nil {
-		err := autoscaling.ValidateAutoscalingTarget(newEndpoint.AutoscalingTarget, endpoint.DeploymentMode)
+	if newEndpoint.AutoscalingPolicy != nil {
+		err := autoscaling.ValidateAutoscalingPolicy(newEndpoint.AutoscalingPolicy, endpoint.DeploymentMode)
 		if err != nil {
 			return nil, err
 		}
-		endpoint.AutoscalingTarget = newEndpoint.AutoscalingTarget
+		endpoint.AutoscalingPolicy = newEndpoint.AutoscalingPolicy
 	}
 
 	if newEndpoint.Transformer != nil {

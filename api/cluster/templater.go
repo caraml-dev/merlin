@@ -429,31 +429,31 @@ func createAnnotations(modelService *models.Service, config *config.DeploymentCo
 	}
 	annotations[kserveconstant.DeploymentMode] = deployMode
 
-	if modelService.AutoscalingTarget != nil {
+	if modelService.AutoscalingPolicy != nil {
 		if modelService.DeploymentMode == deployment.RawDeploymentMode {
 			annotations[kserveconstant.AutoscalerClass] = string(kserveconstant.AutoscalerClassHPA)
-			autoscalingMetrics, err := toKServeAutoscalerMetrics(modelService.AutoscalingTarget.MetricsType)
+			autoscalingMetrics, err := toKServeAutoscalerMetrics(modelService.AutoscalingPolicy.MetricsType)
 			if err != nil {
 				return nil, err
 			}
 
 			annotations[kserveconstant.AutoscalerMetrics] = autoscalingMetrics
-			annotations[kserveconstant.TargetUtilizationPercentage] = fmt.Sprintf("%.0f", modelService.AutoscalingTarget.TargetValue)
+			annotations[kserveconstant.TargetUtilizationPercentage] = fmt.Sprintf("%.0f", modelService.AutoscalingPolicy.TargetValue)
 		} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
-			if modelService.AutoscalingTarget.MetricsType == autoscaling.CPUUtilization ||
-				modelService.AutoscalingTarget.MetricsType == autoscaling.MemoryUtilization {
+			if modelService.AutoscalingPolicy.MetricsType == autoscaling.CPUUtilization ||
+				modelService.AutoscalingPolicy.MetricsType == autoscaling.MemoryUtilization {
 				annotations[knautoscaling.ClassAnnotationKey] = knautoscaling.HPA
 			} else {
 				annotations[knautoscaling.ClassAnnotationKey] = knautoscaling.KPA
 			}
 
-			autoscalingMetrics, err := toKNativeAutoscalerMetrics(modelService.AutoscalingTarget.MetricsType)
+			autoscalingMetrics, err := toKNativeAutoscalerMetrics(modelService.AutoscalingPolicy.MetricsType)
 			if err != nil {
 				return nil, err
 			}
 
 			annotations[knautoscaling.MetricAnnotationKey] = autoscalingMetrics
-			annotations[knautoscaling.TargetAnnotationKey] = fmt.Sprintf("%.0f", modelService.AutoscalingTarget.TargetValue)
+			annotations[knautoscaling.TargetAnnotationKey] = fmt.Sprintf("%.0f", modelService.AutoscalingPolicy.TargetValue)
 		}
 	}
 

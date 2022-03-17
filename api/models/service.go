@@ -36,10 +36,10 @@ type Service struct {
 	Transformer       *Transformer
 	Logger            *Logger
 	DeploymentMode    deployment.Mode
-	AutoscalingTarget *autoscaling.AutoscalingTarget
+	AutoscalingPolicy *autoscaling.AutoscalingPolicy
 }
 
-func NewService(model *Model, version *Version, modelOpt *ModelOption, resource *ResourceRequest, envVars EnvVars, environment string, transformer *Transformer, logger *Logger, deploymentMode deployment.Mode, autoscalingTarget *autoscaling.AutoscalingTarget) *Service {
+func NewService(model *Model, version *Version, modelOpt *ModelOption, resource *ResourceRequest, envVars EnvVars, environment string, transformer *Transformer, logger *Logger, deploymentMode deployment.Mode, autoscalingPolicy *autoscaling.AutoscalingPolicy) *Service {
 	return &Service{
 		Name:            CreateInferenceServiceName(model.Name, version.ID.String()),
 		Namespace:       model.Project.Name,
@@ -58,7 +58,7 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, resource 
 		Transformer:       transformer,
 		Logger:            logger,
 		DeploymentMode:    deploymentMode,
-		AutoscalingTarget: autoscalingTarget,
+		AutoscalingPolicy: autoscalingPolicy,
 	}
 }
 

@@ -1253,8 +1253,8 @@ definitions:
         $ref: "#/definitions/Logger"
       deployment_mode:
         $ref: "#/definitions/DeploymentMode"
-      autoscaling_target:
-        $ref: "#/definitions/AutoscalingTarget"
+      autoscaling_policy:
+        $ref: "#/definitions/AutoscalingPolicy"
       created_at:
         type: "string"
         format: "date-time"
@@ -1356,7 +1356,7 @@ definitions:
         type: "string"
 
 
-  AutoscalingTarget:
+  AutoscalingPolicy:
     type: "object"
     properties:
       metrics_type:

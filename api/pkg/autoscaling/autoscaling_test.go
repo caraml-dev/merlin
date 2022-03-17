@@ -6,9 +6,9 @@ import (
 	"github.com/gojek/merlin/pkg/deployment"
 )
 
-func TestValidateAutoscalingTarget(t *testing.T) {
+func TestValidateAutoscalingPolicy(t *testing.T) {
 	type args struct {
-		target *AutoscalingTarget
+		policy *AutoscalingPolicy
 		mode   deployment.Mode
 	}
 	tests := []struct {
@@ -19,7 +19,7 @@ func TestValidateAutoscalingTarget(t *testing.T) {
 		{
 			name: "raw_deployment using cpu",
 			args: args{
-				target: &AutoscalingTarget{
+				policy: &AutoscalingPolicy{
 					MetricsType: CPUUtilization,
 					TargetValue: 10,
 				},
@@ -30,7 +30,7 @@ func TestValidateAutoscalingTarget(t *testing.T) {
 		{
 			name: "raw_deployment using cpu invalid value",
 			args: args{
-				target: &AutoscalingTarget{
+				policy: &AutoscalingPolicy{
 					MetricsType: CPUUtilization,
 					TargetValue: 110,
 				},
@@ -41,7 +41,7 @@ func TestValidateAutoscalingTarget(t *testing.T) {
 		{
 			name: "raw_deployment using memory",
 			args: args{
-				target: &AutoscalingTarget{
+				policy: &AutoscalingPolicy{
 					MetricsType: MemoryUtilization,
 					TargetValue: 10,
 				},
@@ -52,7 +52,7 @@ func TestValidateAutoscalingTarget(t *testing.T) {
 		{
 			name: "serverless using cpu",
 			args: args{
-				target: &AutoscalingTarget{
+				policy: &AutoscalingPolicy{
 					MetricsType: CPUUtilization,
 					TargetValue: 10,
 				},
@@ -63,7 +63,7 @@ func TestValidateAutoscalingTarget(t *testing.T) {
 		{
 			name: "serverless using memory",
 			args: args{
-				target: &AutoscalingTarget{
+				policy: &AutoscalingPolicy{
 					MetricsType: MemoryUtilization,
 					TargetValue: 10,
 				},
@@ -74,7 +74,7 @@ func TestValidateAutoscalingTarget(t *testing.T) {
 		{
 			name: "serverless using rps",
 			args: args{
-				target: &AutoscalingTarget{
+				policy: &AutoscalingPolicy{
 					MetricsType: RPS,
 					TargetValue: 10,
 				},
@@ -85,7 +85,7 @@ func TestValidateAutoscalingTarget(t *testing.T) {
 		{
 			name: "serverless using concurrency",
 			args: args{
-				target: &AutoscalingTarget{
+				policy: &AutoscalingPolicy{
 					MetricsType: Concurrency,
 					TargetValue: 10,
 				},
@@ -94,9 +94,9 @@ func TestValidateAutoscalingTarget(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "serverless using cpu invalid target",
+			name: "serverless using cpu invalid policy",
 			args: args{
-				target: &AutoscalingTarget{
+				policy: &AutoscalingPolicy{
 					MetricsType: CPUUtilization,
 					TargetValue: -1,
 				},
@@ -107,8 +107,8 @@ func TestValidateAutoscalingTarget(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ValidateAutoscalingTarget(tt.args.target, tt.args.mode); (err != nil) != tt.wantErr {
-				t.Errorf("ValidateAutoscalingTarget() error = %v, wantErr %v", err, tt.wantErr)
+			if err := ValidateAutoscalingPolicy(tt.args.policy, tt.args.mode); (err != nil) != tt.wantErr {
+				t.Errorf("ValidateAutoscalingPolicy() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
