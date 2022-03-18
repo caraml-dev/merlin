@@ -17,25 +17,29 @@ package models
 import (
 	"fmt"
 	"strings"
+
+	"github.com/gojek/merlin/pkg/autoscaling"
+	"github.com/gojek/merlin/pkg/deployment"
 )
 
 type Service struct {
-	Name            string
-	Namespace       string
-	ServiceName     string
-	URL             string
-	ArtifactURI     string
-	Type            string
-	Options         *ModelOption
-	ResourceRequest *ResourceRequest
-	EnvVars         EnvVars
-	Metadata        Metadata
-	Transformer     *Transformer
-	Logger          *Logger
-	DeploymentMode  DeploymentMode
+	Name              string
+	Namespace         string
+	ServiceName       string
+	URL               string
+	ArtifactURI       string
+	Type              string
+	Options           *ModelOption
+	ResourceRequest   *ResourceRequest
+	EnvVars           EnvVars
+	Metadata          Metadata
+	Transformer       *Transformer
+	Logger            *Logger
+	DeploymentMode    deployment.Mode
+	AutoscalingPolicy *autoscaling.AutoscalingPolicy
 }
 
-func NewService(model *Model, version *Version, modelOpt *ModelOption, resource *ResourceRequest, envVars EnvVars, environment string, transformer *Transformer, logger *Logger, deploymentType DeploymentMode) *Service {
+func NewService(model *Model, version *Version, modelOpt *ModelOption, resource *ResourceRequest, envVars EnvVars, environment string, transformer *Transformer, logger *Logger, deploymentMode deployment.Mode, autoscalingPolicy *autoscaling.AutoscalingPolicy) *Service {
 	return &Service{
 		Name:            CreateInferenceServiceName(model.Name, version.ID.String()),
 		Namespace:       model.Project.Name,
@@ -51,9 +55,10 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, resource 
 			Environment: environment,
 			Labels:      model.Project.Labels,
 		},
-		Transformer:    transformer,
-		Logger:         logger,
-		DeploymentMode: deploymentType,
+		Transformer:       transformer,
+		Logger:            logger,
+		DeploymentMode:    deploymentMode,
+		AutoscalingPolicy: autoscalingPolicy,
 	}
 }
 

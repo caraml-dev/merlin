@@ -27,7 +27,6 @@ type ResourceRequest struct {
 	MinReplica int `json:"min_replica"`
 	// Maximum number of replica of inference service
 	MaxReplica int `json:"max_replica"`
-
 	// CPU request of inference service
 	CPURequest resource.Quantity `json:"cpu_request"`
 	// Memory request of inference service

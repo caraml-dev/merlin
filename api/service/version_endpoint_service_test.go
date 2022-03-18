@@ -24,6 +24,8 @@ import (
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/gojek/merlin/pkg/autoscaling"
+	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -53,11 +55,10 @@ var (
 
 func TestDeployEndpoint(t *testing.T) {
 	type args struct {
-		environment      *models.Environment
-		model            *models.Model
-		version          *models.Version
-		endpoint         *models.VersionEndpoint
-		expectedEndpoint *models.VersionEndpoint
+		environment *models.Environment
+		model       *models.Model
+		version     *models.Version
+		endpoint    *models.VersionEndpoint
 	}
 
 	env := &models.Environment{
@@ -80,24 +81,33 @@ func TestDeployEndpoint(t *testing.T) {
 	iSvcName := fmt.Sprintf("%s-%d", model.Name, version.ID)
 
 	tests := []struct {
-		name            string
-		args            args
-		wantDeployError bool
+		name             string
+		args             args
+		expectedEndpoint *models.VersionEndpoint
+		wantDeployError  bool
 	}{
 		{
-			"success: new endpoint default resource request",
-			args{
+			name: "success: new endpoint default resource request",
+			args: args{
 				env,
 				model,
 				version,
 				&models.VersionEndpoint{},
-				&models.VersionEndpoint{},
 			},
-			false,
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				ResourceRequest:      env.DefaultResourceRequest,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+			},
+			wantDeployError: false,
 		},
 		{
-			"success: new endpoint non default resource request",
-			args{
+			name: "success: new endpoint non default resource request",
+			args: args{
 				env,
 				model,
 				version,
@@ -109,93 +119,112 @@ func TestDeployEndpoint(t *testing.T) {
 						MemoryRequest: resource.MustParse("1Gi"),
 					},
 				},
-				&models.VersionEndpoint{
-					ResourceRequest: &models.ResourceRequest{
-						MinReplica:    2,
-						MaxReplica:    4,
-						CPURequest:    resource.MustParse("1"),
-						MemoryRequest: resource.MustParse("1Gi"),
-					},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
 				},
 			},
-			false,
+			wantDeployError: false,
 		},
 		{
-			"success: pytorch model",
-			args{
+			name: "success: pytorch model",
+			args: args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
 				&models.Version{ID: 1},
 				&models.VersionEndpoint{},
-				&models.VersionEndpoint{},
 			},
-			false,
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				ResourceRequest:      env.DefaultResourceRequest,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+			},
+			wantDeployError: false,
 		},
 		{
-			"success: empty pytorch class name will fallback to PyTorchModel",
-			args{
+			name: "success: empty pytorch class name will fallback to PyTorchModel",
+			args: args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
 				&models.Version{ID: 1},
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
 				},
-				&models.VersionEndpoint{
-					ResourceRequest: env.DefaultResourceRequest,
-				},
 			},
-			false,
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				ResourceRequest:      env.DefaultResourceRequest,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+			},
+			wantDeployError: false,
 		},
 		{
-			"success: empty pyfunc model",
-			args{
+			name: "success: empty pyfunc model",
+			args: args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyFunc},
 				&models.Version{ID: 1},
 				&models.VersionEndpoint{
 					ResourceRequest: env.DefaultResourceRequest,
 				},
-				&models.VersionEndpoint{
-					ResourceRequest: env.DefaultResourceRequest,
-					EnvVars: models.EnvVars{
-						{
-							Name:  "MODEL_NAME",
-							Value: "model-1",
-						},
-						{
-							Name:  "MODEL_DIR",
-							Value: "/model",
-						},
-						{
-							Name:  "WORKERS",
-							Value: "1",
-						},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				ResourceRequest:      env.DefaultResourceRequest,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				EnvVars: models.EnvVars{
+					{
+						Name:  "MODEL_NAME",
+						Value: "model-1",
+					},
+					{
+						Name:  "MODEL_DIR",
+						Value: "/model",
+					},
+					{
+						Name:  "WORKERS",
+						Value: "1",
 					},
 				},
 			},
-			false,
+			wantDeployError: false,
 		},
 		{
-			"success: empty custom model",
-			args{
+			name: "success: empty custom model",
+			args: args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypeCustom},
 				&models.Version{ID: 1},
 				&models.VersionEndpoint{
-					ResourceRequest: env.DefaultResourceRequest,
-					EnvVars: models.EnvVars{
-						{
-							Name:  "TF_MODEL_NAME",
-							Value: "saved_model.pb",
-						},
-						{
-							Name:  "NUM_OF_ITERATION",
-							Value: "1",
-						},
-					},
-				},
-				&models.VersionEndpoint{
-					ResourceRequest: env.DefaultResourceRequest,
+					InferenceServiceName: iSvcName,
+					DeploymentMode:       deployment.ServerlessDeploymentMode,
+					AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+					ResourceRequest:      env.DefaultResourceRequest,
+					Namespace:            project.Name,
+					URL:                  "",
+					Status:               models.EndpointPending,
 					EnvVars: models.EnvVars{
 						{
 							Name:  "TF_MODEL_NAME",
@@ -208,22 +237,41 @@ func TestDeployEndpoint(t *testing.T) {
 					},
 				},
 			},
-			false,
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				ResourceRequest:      env.DefaultResourceRequest,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				EnvVars: models.EnvVars{
+					{
+						Name:  "TF_MODEL_NAME",
+						Value: "saved_model.pb",
+					},
+					{
+						Name:  "NUM_OF_ITERATION",
+						Value: "1",
+					},
+				},
+			},
+			wantDeployError: false,
 		},
 		{
-			"failed: error deploying",
-			args{
+			name: "failed: error deploying",
+			args: args{
 				env,
 				model,
 				version,
 				&models.VersionEndpoint{},
-				&models.VersionEndpoint{},
 			},
-			true,
+			expectedEndpoint: &models.VersionEndpoint{},
+			wantDeployError:  true,
 		},
 		{
-			"success: pytorch model with transformer",
-			args{
+			name: "success: pytorch model with transformer",
+			args: args{
 				env,
 				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyTorch},
 				&models.Version{ID: 1},
@@ -234,19 +282,26 @@ func TestDeployEndpoint(t *testing.T) {
 						ResourceRequest: env.DefaultResourceRequest,
 					},
 				},
-				&models.VersionEndpoint{
-					Transformer: &models.Transformer{
-						Enabled:         true,
-						Image:           "ghcr.io/gojek/merlin-transformer-test",
-						ResourceRequest: env.DefaultResourceRequest,
-					},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				ResourceRequest:      env.DefaultResourceRequest,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					Image:           "ghcr.io/gojek/merlin-transformer-test",
+					ResourceRequest: env.DefaultResourceRequest,
 				},
 			},
-			false,
+			wantDeployError: false,
 		},
 		{
-			"success: new endpoint - overwrite logger mode if invalid",
-			args{
+			name: "success: new endpoint - overwrite logger mode if invalid",
+			args: args{
 				env,
 				model,
 				version,
@@ -268,31 +323,37 @@ func TestDeployEndpoint(t *testing.T) {
 						},
 					},
 				},
-				&models.VersionEndpoint{
-					ResourceRequest: &models.ResourceRequest{
-						MinReplica:    2,
-						MaxReplica:    4,
-						CPURequest:    resource.MustParse("1"),
-						MemoryRequest: resource.MustParse("1Gi"),
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogAll,
 					},
-					Logger: &models.Logger{
-						DestinationURL: loggerDestinationURL,
-						Model: &models.LoggerConfig{
-							Enabled: true,
-							Mode:    models.LogAll,
-						},
-						Transformer: &models.LoggerConfig{
-							Enabled: false,
-							Mode:    models.LogAll,
-						},
+					Transformer: &models.LoggerConfig{
+						Enabled: false,
+						Mode:    models.LogAll,
 					},
 				},
 			},
-			false,
+			wantDeployError: false,
 		},
 		{
-			"success: new endpoint - only model logger",
-			args{
+			name: "success: new endpoint - only model logger",
+			args: args{
 				env,
 				model,
 				version,
@@ -310,27 +371,33 @@ func TestDeployEndpoint(t *testing.T) {
 						},
 					},
 				},
-				&models.VersionEndpoint{
-					ResourceRequest: &models.ResourceRequest{
-						MinReplica:    2,
-						MaxReplica:    4,
-						CPURequest:    resource.MustParse("1"),
-						MemoryRequest: resource.MustParse("1Gi"),
-					},
-					Logger: &models.Logger{
-						DestinationURL: loggerDestinationURL,
-						Model: &models.LoggerConfig{
-							Enabled: true,
-							Mode:    models.LogRequest,
-						},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogRequest,
 					},
 				},
 			},
-			false,
+			wantDeployError: false,
 		},
 		{
-			"success: new endpoint - only transformer logger",
-			args{
+			name: "success: new endpoint - only transformer logger",
+			args: args{
 				env,
 				model,
 				version,
@@ -348,27 +415,33 @@ func TestDeployEndpoint(t *testing.T) {
 						},
 					},
 				},
-				&models.VersionEndpoint{
-					ResourceRequest: &models.ResourceRequest{
-						MinReplica:    2,
-						MaxReplica:    4,
-						CPURequest:    resource.MustParse("1"),
-						MemoryRequest: resource.MustParse("1Gi"),
-					},
-					Logger: &models.Logger{
-						DestinationURL: loggerDestinationURL,
-						Transformer: &models.LoggerConfig{
-							Enabled: true,
-							Mode:    models.LogResponse,
-						},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogResponse,
 					},
 				},
 			},
-			false,
+			wantDeployError: false,
 		},
 		{
-			"success: new endpoint - both model and transformer specified with valid value",
-			args{
+			name: "success: new endpoint - both model and transformer specified with valid value",
+			args: args{
 				env,
 				model,
 				version,
@@ -390,6 +463,40 @@ func TestDeployEndpoint(t *testing.T) {
 						},
 					},
 				},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogRequest,
+					},
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogResponse,
+					},
+				},
+			},
+			wantDeployError: false,
+		},
+		{
+			name: "success: raw deployment ",
+			args: args{
+				env,
+				model,
+				version,
 				&models.VersionEndpoint{
 					ResourceRequest: &models.ResourceRequest{
 						MinReplica:    2,
@@ -398,7 +505,6 @@ func TestDeployEndpoint(t *testing.T) {
 						MemoryRequest: resource.MustParse("1Gi"),
 					},
 					Logger: &models.Logger{
-						DestinationURL: loggerDestinationURL,
 						Model: &models.LoggerConfig{
 							Enabled: true,
 							Mode:    models.LogRequest,
@@ -408,9 +514,244 @@ func TestDeployEndpoint(t *testing.T) {
 							Mode:    models.LogResponse,
 						},
 					},
+					DeploymentMode: deployment.RawDeploymentMode,
 				},
 			},
-			false,
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogRequest,
+					},
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogResponse,
+					},
+				},
+				DeploymentMode:    deployment.RawDeploymentMode,
+				AutoscalingPolicy: autoscaling.DefaultRawDeploymentAutoscalingPolicy,
+			},
+			wantDeployError: false,
+		},
+		{
+			name: "success: serverless deployment with autoscaling policy",
+			args: args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
+					},
+					DeploymentMode: deployment.ServerlessDeploymentMode,
+					AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+						MetricsType: autoscaling.RPS,
+						TargetValue: 100,
+					},
+				},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogRequest,
+					},
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogResponse,
+					},
+				},
+				DeploymentMode: deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+					MetricsType: autoscaling.RPS,
+					TargetValue: 100,
+				},
+			},
+			wantDeployError: false,
+		},
+		{
+			name: "success: serverless redeployment with autoscaling policy",
+			args: args{
+				env,
+				model,
+				version,
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
+					},
+					DeploymentMode: deployment.ServerlessDeploymentMode,
+					AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+						MetricsType: autoscaling.RPS,
+						TargetValue: 100,
+					},
+				},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogRequest,
+					},
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogResponse,
+					},
+				},
+				DeploymentMode: deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+					MetricsType: autoscaling.RPS,
+					TargetValue: 100,
+				},
+			},
+			wantDeployError: false,
+		},
+		{
+			name: "success: redeployment",
+			args: args{
+				env,
+				model,
+				&models.Version{
+					ID:      1,
+					ModelID: 1,
+					Model:   model,
+					Endpoints: []*models.VersionEndpoint{
+						{
+							ResourceRequest: &models.ResourceRequest{
+								MinReplica:    2,
+								MaxReplica:    4,
+								CPURequest:    resource.MustParse("1"),
+								MemoryRequest: resource.MustParse("1Gi"),
+							},
+							Logger: &models.Logger{
+								Model: &models.LoggerConfig{
+									Enabled: true,
+									Mode:    models.LogRequest,
+								},
+								Transformer: &models.LoggerConfig{
+									Enabled: true,
+									Mode:    models.LogResponse,
+								},
+							},
+							DeploymentMode: deployment.ServerlessDeploymentMode,
+							AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+								MetricsType: autoscaling.CPUUtilization,
+								TargetValue: 50,
+							},
+						},
+					},
+				},
+				&models.VersionEndpoint{
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica:    2,
+						MaxReplica:    4,
+						CPURequest:    resource.MustParse("1"),
+						MemoryRequest: resource.MustParse("1Gi"),
+					},
+					Logger: &models.Logger{
+						Model: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogRequest,
+						},
+						Transformer: &models.LoggerConfig{
+							Enabled: true,
+							Mode:    models.LogResponse,
+						},
+					},
+					DeploymentMode: deployment.RawDeploymentMode,
+					AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+						MetricsType: autoscaling.CPUUtilization,
+						TargetValue: 10,
+					},
+				},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogRequest,
+					},
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogResponse,
+					},
+				},
+				DeploymentMode: deployment.RawDeploymentMode,
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+					MetricsType: autoscaling.CPUUtilization,
+					TargetValue: 10,
+				},
+			},
+			wantDeployError: false,
 		},
 	}
 
@@ -450,33 +791,34 @@ func TestDeployEndpoint(t *testing.T) {
 				LoggerDestinationURL: loggerDestinationURL,
 				JobProducer:          mockQueueProducer,
 			})
-			errRaised, err := endpointSvc.DeployEndpoint(context.Background(), tt.args.environment, tt.args.model, tt.args.version, tt.args.endpoint)
-
-			// delay to make second save happen before checking
-			// time.Sleep(20 * time.Millisecond)
-
+			actualEndpoint, err := endpointSvc.DeployEndpoint(context.Background(), tt.args.environment, tt.args.model, tt.args.version, tt.args.endpoint)
 			if tt.wantDeployError {
-				assert.True(t, err != nil)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, "", errRaised.URL)
-				assert.Equal(t, models.EndpointPending, errRaised.Status)
-				assert.Equal(t, project.Name, errRaised.Namespace)
-				assert.Equal(t, iSvcName, errRaised.InferenceServiceName)
-
-				if tt.args.endpoint.ResourceRequest != nil {
-					assert.Equal(t, errRaised.ResourceRequest, tt.args.expectedEndpoint.ResourceRequest)
-				} else {
-					assert.Equal(t, errRaised.ResourceRequest, tt.args.environment.DefaultResourceRequest)
-				}
-
-				assert.Equal(t, errRaised.EnvVars, tt.args.expectedEndpoint.EnvVars)
-				assert.Equal(t, tt.args.expectedEndpoint.Logger, errRaised.Logger)
-				mockStorage.AssertNumberOfCalls(t, "Save", 1)
+				assert.Error(t, err)
+				return
 			}
 
+			assert.NoError(t, err)
+
+			assert.Equal(t, tt.expectedEndpoint.URL, actualEndpoint.URL)
+			assert.Equal(t, tt.expectedEndpoint.Status, actualEndpoint.Status)
+			assert.Equal(t, tt.expectedEndpoint.Namespace, actualEndpoint.Namespace)
+			assert.Equal(t, tt.expectedEndpoint.InferenceServiceName, actualEndpoint.InferenceServiceName)
+			assert.Equal(t, tt.expectedEndpoint.DeploymentMode, actualEndpoint.DeploymentMode)
+			assert.Equal(t, tt.expectedEndpoint.AutoscalingPolicy, actualEndpoint.AutoscalingPolicy)
+
+			// Resource request will be populated
+			if tt.args.endpoint.ResourceRequest != nil {
+				assert.Equal(t, tt.expectedEndpoint.ResourceRequest, actualEndpoint.ResourceRequest)
+			} else {
+				assert.Equal(t, tt.args.environment.DefaultResourceRequest, actualEndpoint.ResourceRequest)
+			}
+
+			assert.Equal(t, tt.expectedEndpoint.EnvVars, actualEndpoint.EnvVars)
+			assert.Equal(t, tt.expectedEndpoint.Logger, actualEndpoint.Logger)
+			mockStorage.AssertNumberOfCalls(t, "Save", 1)
+
 			if tt.args.endpoint.Transformer != nil {
-				assert.Equal(t, tt.args.endpoint.Transformer.Enabled, errRaised.Transformer.Enabled)
+				assert.Equal(t, tt.args.endpoint.Transformer.Enabled, actualEndpoint.Transformer.Enabled)
 			}
 		})
 	}
