@@ -32,5 +32,5 @@ var (
 		Name:       "feast_feature_value",
 		Help:       "Summary of feature value",
 		AgeBuckets: 1,
-	}, []string{"feature"})
+	}, []string{"feature", "is_default"})
 )

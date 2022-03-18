@@ -79,14 +79,17 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 		// create entity object, for cache key purpose
 		entity := feast.Row{}
 		for colIdx, column := range fc.columns {
-			var rawValue *types.Value
+			var val interface{}
+			var valType types.ValueType_Enum
+			var err error
 
 			featureStatus := responseStatus[rowIdx][column]
-			// put behind feature toggle since it will generate high cardinality metrics
-			if fc.statusMonitoringEnabled {
-				feastFeatureStatus.WithLabelValues(column, featureStatus.String()).Inc()
-			}
 
+			defer func() {
+				fc.recordMetrics(val, column, featureStatus)
+			}()
+
+			var rawValue *types.Value
 			switch featureStatus {
 			case serving.GetOnlineFeaturesResponse_PRESENT:
 				rawValue = feastRow[column]
@@ -107,7 +110,7 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 				return nil, fmt.Errorf("unsupported feature retrieval status for column %s: %s", column, featureStatus)
 			}
 
-			val, valType, err := converter.ExtractFeastValue(rawValue)
+			val, valType, err = converter.ExtractFeastValue(rawValue)
 			if err != nil {
 				return nil, err
 			}
@@ -117,14 +120,6 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 				columnTypes[colIdx] = valType
 			}
 			valueRow[colIdx] = val
-
-			// put behind feature toggle since it will generate high cardinality metrics
-			if fc.valueMonitoringEnabled {
-				v, err := converter.ToFloat64(val)
-				if err == nil {
-					feastFeatureSummary.WithLabelValues(column).Observe(v)
-				}
-			}
 		}
 
 		entities[rowIdx] = entity
@@ -137,4 +132,20 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 		columnTypes: columnTypes,
 		valueRows:   valueRows,
 	}, nil
+}
+
+func (fc *call) recordMetrics(val interface{}, column string, featureStatus serving.GetOnlineFeaturesResponse_FieldStatus) {
+	// put behind feature toggle since it will generate high cardinality metrics
+	// only log PRESENT feature
+	if fc.valueMonitoringEnabled {
+		v, err := converter.ToFloat64(val)
+		if err == nil {
+			feastFeatureSummary.WithLabelValues(column).Observe(v)
+		}
+	}
+
+	// put behind feature toggle since it will generate high cardinality metrics
+	if fc.statusMonitoringEnabled {
+		feastFeatureStatus.WithLabelValues(column, featureStatus.String()).Inc()
+	}
 }
