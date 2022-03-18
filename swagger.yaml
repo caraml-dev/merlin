@@ -1360,7 +1360,7 @@ definitions:
     type: "object"
     properties:
       metrics_type:
-        type:  "#/definitions/MetricsType"
+        $ref:  "#/definitions/MetricsType"
       target_value:
         type: "number"
 

@@ -10,5 +10,6 @@
 package client
 
 type AutoscalingPolicy struct {
-	TargetValue float32 `json:"target_value,omitempty"`
+	MetricsType *MetricsType `json:"metrics_type,omitempty"`
+	TargetValue float32      `json:"target_value,omitempty"`
 }

@@ -33,24 +33,50 @@ class AutoscalingPolicy(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'metrics_type': 'MetricsType',
         'target_value': 'float'
     }
 
     attribute_map = {
+        'metrics_type': 'metrics_type',
         'target_value': 'target_value'
     }
 
-    def __init__(self, target_value=None, _configuration=None):  # noqa: E501
+    def __init__(self, metrics_type=None, target_value=None, _configuration=None):  # noqa: E501
         """AutoscalingPolicy - a model defined in Swagger"""  # noqa: E501
         if _configuration is None:
             _configuration = Configuration()
         self._configuration = _configuration
 
+        self._metrics_type = None
         self._target_value = None
         self.discriminator = None
 
+        if metrics_type is not None:
+            self.metrics_type = metrics_type
         if target_value is not None:
             self.target_value = target_value
+
+    @property
+    def metrics_type(self):
+        """Gets the metrics_type of this AutoscalingPolicy.  # noqa: E501
+
+
+        :return: The metrics_type of this AutoscalingPolicy.  # noqa: E501
+        :rtype: MetricsType
+        """
+        return self._metrics_type
+
+    @metrics_type.setter
+    def metrics_type(self, metrics_type):
+        """Sets the metrics_type of this AutoscalingPolicy.
+
+
+        :param metrics_type: The metrics_type of this AutoscalingPolicy.  # noqa: E501
+        :type: MetricsType
+        """
+
+        self._metrics_type = metrics_type
 
     @property
     def target_value(self):
