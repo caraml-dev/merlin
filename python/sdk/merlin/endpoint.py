@@ -16,6 +16,8 @@ from enum import Enum
 from typing import Dict
 
 import client
+from merlin.autoscaling import AutoscalingPolicy, MetricsType, RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY, \
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY
 from merlin.deployment_mode import DeploymentMode
 from merlin.environment import Environment
 from merlin.logger import Logger
@@ -45,6 +47,16 @@ class VersionEndpoint:
         self._logger = Logger.from_logger_response(endpoint.logger)
         self._deployment_mode = DeploymentMode.SERVERLESS if endpoint.deployment_mode is None \
             else DeploymentMode(endpoint.deployment_mode)
+
+        if endpoint.autoscaling_policy is None:
+            if self._deployment_mode == DeploymentMode.SERVERLESS:
+                self._autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+            else:
+                self._autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
+        else:
+            self._autoscaling_policy = AutoscalingPolicy(metrics_type=MetricsType(endpoint.autoscaling_policy.metrics_type),
+                                                         target_value=endpoint.autoscaling_policy.target_value)
+
         if log_url is not None:
             self._log_url = log_url
 
@@ -86,6 +98,10 @@ class VersionEndpoint:
     @property
     def deployment_mode(self) -> DeploymentMode:
         return self._deployment_mode
+
+    @property
+    def autoscaling_policy(self) -> AutoscalingPolicy:
+        return self._autoscaling_policy
 
     def _repr_html_(self):
         return f"""<a href="{self._url}">{self._url}</a>"""

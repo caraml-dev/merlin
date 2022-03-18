@@ -16,6 +16,7 @@ from contextlib import contextmanager
 from typing import Optional, List, Any, Dict
 
 from client import PredictionJob
+from merlin.autoscaling import AutoscalingPolicy
 from merlin.deployment_mode import DeploymentMode
 from merlin.batch.config import PredictionJobConfig
 from merlin.client import MerlinClient
@@ -349,7 +350,8 @@ def deploy(model_version: ModelVersion = None,
            env_vars: Dict[str, str] = None,
            transformer: Transformer = None,
            logger: Logger = None,
-           deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS
+           deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
+           autoscaling_policy: AutoscalingPolicy = None,
            ) -> VersionEndpoint:
     """
     Deploy a model version.
@@ -361,6 +363,7 @@ def deploy(model_version: ModelVersion = None,
         :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
         :param logger: Response/Request logging configuration for model or transformer.
         :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
+        :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
         :return: VersionEndpoint object
     """
     _check_active_client()
@@ -371,7 +374,8 @@ def deploy(model_version: ModelVersion = None,
                                             env_vars,
                                             transformer,
                                             logger,
-                                            deployment_mode)
+                                            deployment_mode,
+                                            autoscaling_policy)
 
     return _merlin_client.deploy(model_version,  # type: ignore
                                  environment_name,
@@ -379,7 +383,8 @@ def deploy(model_version: ModelVersion = None,
                                  env_vars,
                                  transformer,
                                  logger,
-                                 deployment_mode)
+                                 deployment_mode,
+                                 autoscaling_policy)
 
 
 def undeploy(model_version=None,

@@ -21,6 +21,8 @@ import sys
 import signal
 import merlin.fluent
 import merlin.resource_request
+import merlin.deployment_mode
+import merlin.autoscaling
 from merlin.version import VERSION as __version__
 
 
@@ -76,7 +78,8 @@ list_model_endpoints = merlin.fluent.list_model_endpoints
 # Definitions
 ResourceRequest = merlin.resource_request.ResourceRequest
 DeploymentMode = merlin.deployment_mode.DeploymentMode
-
+AutoscalingPolicy = merlin.autoscaling.AutoscalingPolicy
+MetricsType = merlin.autoscaling.MetricsType
 # Batch
 create_prediction_job = merlin.fluent.create_prediction_job
 
@@ -90,7 +93,7 @@ __all__ = [
     "log_artifact", "log_pyfunc_model", "log_pytorch_model", "log_model",
     "deploy", "undeploy",
     "set_traffic", "serve_traffic",
-    "ResourceRequest", "DeploymentMode",
+    "ResourceRequest", "DeploymentMode", "AutoscalingPolicy", "MetricsType",
     "create_prediction_job"
 ]
 

@@ -1050,8 +1050,11 @@ def test_deployment_mode(integration_test_url, project_name, use_google_oauth):
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
-    # Deploy again using serverless
-    new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.SERVERLESS)
+    # Deploy again using serverless with concurrency autoscaling policy
+    new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.SERVERLESS,
+                                 autoscaling_policy=merlin.AutoscalingPolicy(
+                                     metrics_type=merlin.MetricsType.CONCURRENCY,
+                                     target_value=2))
 
     assert new_endpoint.url == initial_endpoint.url
     resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
@@ -1080,8 +1083,10 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
     with merlin.new_model_version() as v1:
         merlin.log_model(model_dir=model_dir)
 
-    # Deploy using serverless
-    endpoint = merlin.deploy(v1)
+    # Deploy using serverless with RPS autoscaling policy
+    endpoint = merlin.deploy(v1, autoscaling_policy=merlin.AutoscalingPolicy(
+        metrics_type=merlin.MetricsType.RPS,
+        target_value=20))
 
     resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
 
@@ -1102,8 +1107,11 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
     with merlin.new_model_version() as v2:
         merlin.log_model(model_dir=model_dir)
 
-    # Deploy v2 using raw_deployment
-    new_endpoint = merlin.deploy(v2, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
+    # Deploy v2 using raw_deployment with CPU autoscaling policy
+    new_endpoint = merlin.deploy(v2, deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+                                 autoscaling_policy=merlin.AutoscalingPolicy(
+                                     metrics_type=merlin.MetricsType.CPU_UTILIZATION,
+                                     target_value=20))
 
     assert new_endpoint.url == endpoint.url
     resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)

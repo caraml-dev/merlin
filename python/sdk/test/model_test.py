@@ -16,7 +16,11 @@ import json
 import types
 import pytest
 
-from merlin import DeploymentMode
+import client
+from merlin import DeploymentMode, MetricsType
+from merlin import AutoscalingPolicy
+from merlin.autoscaling import RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY, \
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY
 from merlin.model import ModelType
 from urllib3_mock import Responses
 from unittest.mock import patch
@@ -39,6 +43,10 @@ ep2 = cl.VersionEndpoint("4567", 1, "running", "localhost/1", "svc-2",
                          env_2.name, env_2, "grafana.com")
 ep3 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
                          env_1.name, env_1, "grafana.com", deployment_mode="raw_deployment")
+ep4 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
+                         env_1.name, env_1, "grafana.com",
+                         autoscaling_policy=client.AutoscalingPolicy(metrics_type=cl.MetricsType.CPU_UTILIZATION,
+                                                                     target_value=10))
 rule_1 = cl.ModelEndpointRule(destinations=[cl.ModelEndpointRuleDestination(
     ep1.id, weight=100)])
 rule_2 = cl.ModelEndpointRule(destinations=[cl.ModelEndpointRuleDestination(
@@ -179,6 +187,7 @@ class TestProject:
         secret_names = project.list_secret()
         assert secret_names == [self.secret_1.name, self.secret_2.name]
 
+
 class TestModelVersion:
     @responses.activate
     def test_endpoint(self, version):
@@ -233,6 +242,7 @@ class TestModelVersion:
         assert endpoint.environment.cluster == env_1.cluster
         assert endpoint.environment.name == env_1.name
         assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+        assert endpoint.autoscaling_policy == SERVERLESS_DEFAULT_AUTOSCALING_POLICY
 
     @responses.activate
     def test_deploy_using_raw_deployment_mode(self, version):
@@ -253,6 +263,31 @@ class TestModelVersion:
         assert endpoint.environment.cluster == env_1.cluster
         assert endpoint.environment.name == env_1.name
         assert endpoint.deployment_mode == DeploymentMode.RAW_DEPLOYMENT
+        assert endpoint.autoscaling_policy == RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
+
+    @responses.activate
+    def test_deploy_with_autoscaling_policy(self, version):
+        responses.add("GET", '/v1/environments',
+                      body=json.dumps(
+                          [env_1.to_dict(), env_2.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("POST", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps(ep4.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = version.deploy(environment_name=env_1.name,
+                                  autoscaling_policy=AutoscalingPolicy(metrics_type=MetricsType.CPU_UTILIZATION,
+                                                                       target_value=10))
+
+        assert endpoint.id == ep4.id
+        assert endpoint.status.value == ep4.status
+        assert endpoint.environment_name == ep4.environment_name
+        assert endpoint.environment.cluster == env_1.cluster
+        assert endpoint.environment.name == env_1.name
+        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+        assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+        assert endpoint.autoscaling_policy.target_value == 10
 
     @responses.activate
     def test_deploy_default_env(self, version):
@@ -470,6 +505,7 @@ class TestModelVersion:
                         return self._urls.pop(index)
                     else:
                         return match
+
         responses._find_match = types.MethodType(_find_match_patched, responses)
 
         for i in range(4):
@@ -543,6 +579,7 @@ class TestModelVersion:
                         return self._urls.pop(index)
                     else:
                         return match
+
         responses._find_match = types.MethodType(_find_match_patched, responses)
 
         for i in range(3):
@@ -627,6 +664,7 @@ class TestModelVersion:
         assert j.id == job_1.id
         assert j.error == job_1.error
         assert j.name == job_1.name
+
 
 class TestModel:
     v1 = cl.Version(id=1, model_id=1)

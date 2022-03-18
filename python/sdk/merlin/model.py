@@ -38,6 +38,8 @@ from mlflow.pyfunc import PythonModel
 
 import client
 from client import EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi, SecretApi, VersionApi
+from merlin.autoscaling import AutoscalingPolicy, RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY, \
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
@@ -980,7 +982,8 @@ class ModelVersion:
                env_vars: Dict[str, str] = None,
                transformer: Transformer = None,
                logger: Logger = None,
-               deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS) -> VersionEndpoint:
+               deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
+               autoscaling_policy: AutoscalingPolicy = None) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
         and log_pyfunc_model has to be called beforehand
@@ -991,6 +994,7 @@ class ModelVersion:
         :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
         :param logger: Response/Request logging configuration for model or transformer.
         :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
+        :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
         :return: Endpoint object
         """
 
@@ -1047,6 +1051,12 @@ class ModelVersion:
         if logger is not None:
             target_logger = logger.to_logger_spec()
 
+        if autoscaling_policy is None:
+            if deployment_mode == DeploymentMode.RAW_DEPLOYMENT:
+                autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
+            else:
+                autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
         endpoint = client.VersionEndpoint(environment_name=target_env_name,
@@ -1054,7 +1064,9 @@ class ModelVersion:
                                           env_vars=target_env_vars,
                                           transformer=target_transformer,
                                           logger=target_logger,
-                                          deployment_mode=deployment_mode.value)
+                                          deployment_mode=deployment_mode.value,
+                                          autoscaling_policy=client.AutoscalingPolicy(autoscaling_policy.metrics_type.value,
+                                                                                      autoscaling_policy.target_value))
         endpoint = endpoint_api \
             .models_model_id_versions_version_id_endpoint_post(int(model.id),
                                                                int(self.id),

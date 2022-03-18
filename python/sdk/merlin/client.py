@@ -21,6 +21,7 @@ from google.auth.transport.urllib3 import AuthorizedHttp
 
 from client import ApiClient, Configuration, EndpointApi, EnvironmentApi, \
     ModelsApi, ProjectApi, VersionApi
+from merlin.autoscaling import AutoscalingPolicy
 from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import VersionEndpoint
 from merlin.environment import Environment
@@ -231,8 +232,10 @@ class MerlinClient:
                env_vars: Dict[str, str] = None,
                transformer: Transformer = None,
                logger: Logger = None,
-               deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS) -> VersionEndpoint:
-        return model_version.deploy(environment_name, resource_request, env_vars, transformer, logger, deployment_mode)
+               deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
+               autoscaling_policy: AutoscalingPolicy = None) -> VersionEndpoint:
+        return model_version.deploy(environment_name, resource_request, env_vars, transformer, logger, deployment_mode,
+                                    autoscaling_policy)
 
     def undeploy(self, model_version: ModelVersion,
                  environment_name: str = None):
