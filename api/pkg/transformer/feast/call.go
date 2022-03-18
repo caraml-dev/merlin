@@ -82,6 +82,11 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 			var rawValue *types.Value
 
 			featureStatus := responseStatus[rowIdx][column]
+			// put behind feature toggle since it will generate high cardinality metrics
+			if fc.statusMonitoringEnabled {
+				feastFeatureStatus.WithLabelValues(column, featureStatus.String()).Inc()
+			}
+
 			switch featureStatus {
 			case serving.GetOnlineFeaturesResponse_PRESENT:
 				rawValue = feastRow[column]
@@ -113,7 +118,13 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 			}
 			valueRow[colIdx] = val
 
-			fc.recordMetrics(val, column, featureStatus)
+			// put behind feature toggle since it will generate high cardinality metrics
+			if fc.valueMonitoringEnabled {
+				v, err := converter.ToFloat64(val)
+				if err == nil {
+					feastFeatureSummary.WithLabelValues(column).Observe(v)
+				}
+			}
 		}
 
 		entities[rowIdx] = entity
@@ -126,19 +137,4 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 		columnTypes: columnTypes,
 		valueRows:   valueRows,
 	}, nil
-}
-
-func (fc *call) recordMetrics(val interface{}, column string, featureStatus serving.GetOnlineFeaturesResponse_FieldStatus) {
-	// put behind feature toggle since it will generate high cardinality metrics
-	if fc.valueMonitoringEnabled {
-		v, err := converter.ToFloat64(val)
-		if err == nil {
-			feastFeatureSummary.WithLabelValues(column).Observe(v)
-		}
-	}
-
-	// put behind feature toggle since it will generate high cardinality metrics
-	if fc.statusMonitoringEnabled {
-		feastFeatureStatus.WithLabelValues(column, featureStatus.String()).Inc()
-	}
 }
