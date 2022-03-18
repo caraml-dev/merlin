@@ -17,6 +17,7 @@ from __future__ import absolute_import
 # import models into model package
 from client.models.alert_condition_metric_type import AlertConditionMetricType
 from client.models.alert_condition_severity import AlertConditionSeverity
+from client.models.autoscaling_policy import AutoscalingPolicy
 from client.models.config import Config
 from client.models.container import Container
 from client.models.custom_predictor import CustomPredictor
@@ -29,6 +30,7 @@ from client.models.label import Label
 from client.models.logger import Logger
 from client.models.logger_config import LoggerConfig
 from client.models.logger_mode import LoggerMode
+from client.models.metrics_type import MetricsType
 from client.models.model import Model
 from client.models.model_endpoint import ModelEndpoint
 from client.models.model_endpoint_alert import ModelEndpointAlert
