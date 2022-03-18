@@ -1365,6 +1365,7 @@ definitions:
         type: "number"
 
   MetricsType:
+    type: "string"
     enum:
     - "concurrency"
     - "cpu_utilization"
