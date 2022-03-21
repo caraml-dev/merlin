@@ -7,7 +7,7 @@ import {
   useOnChangeHandler
 } from "@gojek/mlp-ui";
 import { appConfig } from "../../../../../config";
-import { EnvironmentPanel } from "../components/EnvironmentPanel";
+import { DeploymentConfigPanel } from "../components/DeploymentConfigPanel";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
@@ -17,11 +17,14 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
 
+  console.log("data");
+  console.log(data);
   return (
     <EuiFlexGroup direction="column" gutterSize="m">
       <EuiFlexItem grow={false}>
-        <EnvironmentPanel
+        <DeploymentConfigPanel
           environment={data.environment_name}
+          endpoint={data}
           version={version}
           onChange={onChange}
           errors={errors}
