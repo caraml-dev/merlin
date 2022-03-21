@@ -111,6 +111,11 @@ run:
 	@echo "> Running application ..."
 	@./bin/${BIN_NAME}
 
+.PHONY: run-ui
+run-ui:
+	@echo "> Running UI ..."
+	@cd ui && yarn start
+
 # ============================================================
 # Utility recipes
 # ============================================================
