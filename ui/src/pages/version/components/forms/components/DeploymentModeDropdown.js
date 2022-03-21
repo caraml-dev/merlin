@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment } from "react";
 import { EuiSuperSelect, EuiText } from "@elastic/eui";
 
 export const DeploymentModeDropdown = ({
