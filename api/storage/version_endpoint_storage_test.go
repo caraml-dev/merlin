@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build integration_local || integration
 // +build integration_local integration
 
 package storage
@@ -26,6 +27,7 @@ import (
 	"github.com/gojek/merlin/it/database"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/deployment"
 )
 
 func TestVersionEndpointsStorage_Get(t *testing.T) {
@@ -158,6 +160,7 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 		VersionModelID:  m.ID,
 		Status:          "pending",
 		EnvironmentName: env1.Name,
+		DeploymentMode:  deployment.ServerlessDeploymentMode,
 	}
 	db.Create(&ep1)
 	ep2 := models.VersionEndpoint{
@@ -166,6 +169,7 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 		VersionModelID:  m.ID,
 		Status:          "terminated",
 		EnvironmentName: env1.Name,
+		DeploymentMode:  deployment.ServerlessDeploymentMode,
 	}
 	db.Create(&ep2)
 	ep3 := models.VersionEndpoint{
@@ -178,6 +182,7 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 			Enabled: true,
 			Image:   "ghcr.io/gojek/merlin-transformer-test",
 		},
+		DeploymentMode: deployment.ServerlessDeploymentMode,
 	}
 	db.Create(&ep3)
 	return []*models.VersionEndpoint{&ep1, &ep2, &ep3}
