@@ -1,8 +1,10 @@
 package table
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 
@@ -38,6 +40,68 @@ func NewRaw(columnValues map[string]interface{}) (*Table, error) {
 	}
 
 	return New(newColumns...), nil
+}
+
+// Create a new table from csv file
+// The csv must be comma-separated and the first record must be the header
+// This function will check that the given file is not empty, and the column
+// names in the header matches the schema
+func NewFromCsv(filePath string, schema []*spec.Schema) (*Table, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	csvReader := csv.NewReader(f)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	// check table has at least 1 row of data
+	if len(records) <= 1 {
+		return nil, fmt.Errorf("no data found in file %s", filePath)
+	}
+	// check no. of columns same as defined in schema
+	header := make(map[string]bool)
+	for _, colName := range records[0] {
+		header[colName] = true
+	}
+
+	if len(header) != len(schema) {
+		return nil, fmt.Errorf("header length %d mismatch with %d in defined schema", len(header), len(schema))
+	}
+
+	// prepare schema for dataframe
+	dfSchema := make(map[string]gota.Type)
+	for _, colSpec := range schema {
+		// validate colname defined in schema exist
+		if !header[colSpec.GetName()] {
+			return nil, fmt.Errorf("column name of schema %s not found in header of file", colSpec.GetName())
+		}
+
+		// build the schema map for dataframe
+		switch colType := colSpec.GetType(); colType {
+		case spec.Schema_STRING:
+			dfSchema[colSpec.GetName()] = gota.String
+		case spec.Schema_INT:
+			dfSchema[colSpec.GetName()] = gota.Int
+		case spec.Schema_FLOAT:
+			dfSchema[colSpec.GetName()] = gota.Float
+		case spec.Schema_BOOL:
+			dfSchema[colSpec.GetName()] = gota.Bool
+		default:
+			return nil, fmt.Errorf("unsupported column type option for schema %s", colType)
+		}
+	}
+
+	df := dataframe.LoadRecords(records,
+		dataframe.DetectTypes(false),
+		dataframe.WithTypes(dfSchema),
+	)
+
+	return NewTable(&df), nil
 }
 
 // Row return a table containing only the specified row

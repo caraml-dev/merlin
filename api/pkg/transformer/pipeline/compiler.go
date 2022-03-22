@@ -216,6 +216,7 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 				}
 				compiledJsonPaths.Set(bt.FromJson.JsonPath, compiledJsonPath)
 			}
+			//case //TODO return table /op
 		}
 
 		if tableSpec.Columns != nil {

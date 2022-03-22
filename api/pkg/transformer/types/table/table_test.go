@@ -771,3 +771,211 @@ func TestTable_NewRaw(t *testing.T) {
 		})
 	}
 }
+
+func TestTable_NewFromCSV(t *testing.T) {
+	type args struct {
+		schema []*spec.Schema
+	}
+	tests := []struct {
+		name      string
+		filePath  string
+		args      args
+		expTable  *Table
+		wantError bool
+		expError  error
+	}{
+		{
+			name:     "error: blank file",
+			filePath: "testdata/blank.csv",
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: spec.Schema_FLOAT,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			wantError: true,
+			expError:  errors.New("no data found in file testdata/blank.csv"),
+		},
+		{
+			name:     "error: header only file",
+			filePath: "testdata/header_only.csv",
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: spec.Schema_FLOAT,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			wantError: true,
+			expError:  errors.New("no data found in file testdata/header_only.csv"),
+		},
+		{
+			name:     "error: header length mismatch with schema",
+			filePath: "testdata/normal.csv",
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: spec.Schema_FLOAT,
+					},
+				},
+			},
+			wantError: true,
+			expError:  errors.New("header length 5 mismatch with 4 in defined schema"),
+		},
+		{
+			name:     "error: Column name of schema not found in header",
+			filePath: "testdata/normal.csv",
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: spec.Schema_FLOAT,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			wantError: true,
+			expError:  errors.New("column name of schema age not found in header of file"),
+		},
+		{
+			name:     "error: Unsupported schema type",
+			filePath: "testdata/normal.csv",
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: -1,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			wantError: true,
+			expError:  errors.New("unsupported column type option for schema -1"),
+		},
+		{
+			name:     "success: Table with data of correct type created",
+			filePath: "testdata/normal.csv",
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: spec.Schema_FLOAT,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			expTable: New(
+				series.New([]string{"Apple", "Banana", "Zara", "Sandra", "Merlion"}, series.String, "First Name"),
+				series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
+				series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
+				series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
+				series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
+			),
+			wantError: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fileTable, err := NewFromCsv(tt.filePath, tt.args.schema)
+			if tt.wantError {
+				assert.EqualError(t, err, tt.expError.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expTable, fileTable)
+		})
+	}
+}

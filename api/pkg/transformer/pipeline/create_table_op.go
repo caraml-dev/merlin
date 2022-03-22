@@ -74,6 +74,8 @@ func createBaseTable(env *Environment, baseTableSpec *spec.BaseTable) (*table.Ta
 		}
 
 		return t.Copy(), nil
+	//case *spec.BaseTable_FromFile:
+	// TODO:
 	default:
 		return nil, fmt.Errorf("unsupported base table spec %T", baseTable)
 	}

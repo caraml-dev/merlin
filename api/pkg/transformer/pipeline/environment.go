@@ -20,13 +20,17 @@ type Environment struct {
 	logger           *zap.Logger
 }
 
-func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Environment {
+func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Environment { //TODO
 	sr := symbol.NewRegistryWithCompiledJSONPath(compiledPipeline.compiledJsonpath)
 	env := &Environment{
 		symbolRegistry:   sr,
 		compiledPipeline: compiledPipeline,
 		logger:           logger,
 	}
+
+	// attach static tables to environment
+	//each table do:
+	//env.SetSymbol(tablename, table)
 
 	return env
 }

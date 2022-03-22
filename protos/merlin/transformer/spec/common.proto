@@ -23,6 +23,27 @@ message FromJson {
   ValueType valueType = 4;
 }
 
+message FromFile {
+  enum FileType {
+    CSV = 0;
+    PARQUET = 1;
+  }
+  FileType format = 1;
+  string uri = 2;
+  repeated Schema schema = 3;
+}
+
+message Schema {
+  enum colType {
+    STRING = 0;
+    INT = 1;
+    FLOAT = 2;
+    BOOL = 3;
+  }
+  string name = 1;
+  colType type = 2;
+}
+
 enum ValueType {
   STRING = 0;
   INT = 1;

@@ -18,6 +18,7 @@ message BaseTable {
   oneof baseTable {
     FromJson fromJson = 1;
     FromTable fromTable = 2;
+    FromFile fromFile = 3;
   }
 }
 
