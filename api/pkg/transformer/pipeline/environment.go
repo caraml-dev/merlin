@@ -20,7 +20,7 @@ type Environment struct {
 	logger           *zap.Logger
 }
 
-func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Environment { //TODO
+func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Environment {
 	sr := symbol.NewRegistryWithCompiledJSONPath(compiledPipeline.compiledJsonpath)
 	env := &Environment{
 		symbolRegistry:   sr,
@@ -28,9 +28,10 @@ func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Env
 		logger:           logger,
 	}
 
-	// attach static tables to environment
-	//each table do:
-	//env.SetSymbol(tablename, table)
+	// attach pre-loaded tables to environment
+	for k, v := range compiledPipeline.preloadedTables {
+		env.SetSymbol(k, v)
+	}
 
 	return env
 }

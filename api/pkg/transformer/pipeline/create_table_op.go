@@ -25,7 +25,7 @@ func (c CreateTableOp) Execute(ctx context.Context, env *Environment) error {
 	for _, tableSpec := range c.tableSpecs {
 		var t *table.Table
 		if tableSpec.BaseTable != nil {
-			tbl, err := createBaseTable(env, tableSpec.BaseTable)
+			tbl, err := createBaseTable(env, tableSpec.BaseTable, tableSpec.Name)
 			if err != nil {
 				return fmt.Errorf("unable to create base table for %s: %w", tableSpec.Name, err)
 			}
@@ -48,7 +48,7 @@ func (c CreateTableOp) Execute(ctx context.Context, env *Environment) error {
 	return nil
 }
 
-func createBaseTable(env *Environment, baseTableSpec *spec.BaseTable) (*table.Table, error) {
+func createBaseTable(env *Environment, baseTableSpec *spec.BaseTable, tableName string) (*table.Table, error) {
 	switch baseTable := baseTableSpec.BaseTable.(type) {
 	case *spec.BaseTable_FromJson:
 		jsonObj, err := evalJSONPath(env, baseTable.FromJson.JsonPath)
@@ -73,9 +73,7 @@ func createBaseTable(env *Environment, baseTableSpec *spec.BaseTable) (*table.Ta
 			return nil, fmt.Errorf("variable %s is not a table", baseTable.FromTable.TableName)
 		}
 
-		return t.Copy(), nil
-	//case *spec.BaseTable_FromFile:
-	// TODO:
+		return t.Copy(), nil // TODO: check it dont call fromfile
 	default:
 		return nil, fmt.Errorf("unsupported base table spec %T", baseTable)
 	}
