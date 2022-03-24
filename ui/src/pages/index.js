@@ -20,7 +20,6 @@ import RedeployModelVersionView from "./version/redeploy/RedeployModelVersionVie
 import VersionDetails from "./version/VersionDetails";
 
 export { TransformerTools };
-
 export { DeployModelVersionView };
 export { RedeployModelVersionView };
 export { VersionDetails };

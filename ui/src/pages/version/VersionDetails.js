@@ -37,9 +37,18 @@ import { ContainerLogsView } from "../../components/logs/ContainerLogsView";
 import { PageTitle } from "../../components/PageTitle";
 import { DeploymentPanelHeader } from "./DeploymentPanelHeader";
 import { ModelVersionPanelHeader } from "./ModelVersionPanelHeader";
-import { VersionConfig } from "./VersionConfig";
+import { EndpointDetails } from "./EndpointDetails";
 import { VersionTabNavigation } from "./VersionTabNavigation";
 
+/**
+ * VersionDetails page containing detailed information of a model version.
+ * In this page users can also manage all deployed endpoint created from the model version.
+ *
+ * @param {*} projectId Project ID
+ * @param {*} modelId Model ID
+ * @param {*} versionId Model version ID
+ * @param {*} endpointId(optional) ID of the endpoint that will be openened when opening the page.
+ */
 const VersionDetails = ({
   projectId,
   modelId,
@@ -204,7 +213,7 @@ const VersionDetails = ({
 
             {model && modelLoaded && version && versionLoaded && endpoint && (
               <Router primary={false}>
-                <VersionConfig
+                <EndpointDetails
                   path="details"
                   model={model}
                   version={version}
