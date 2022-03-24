@@ -17,10 +17,10 @@
 import TransformerTools from "./tools/TransformerTools";
 import DeployModelVersionView from "./version/deploy/DeployModelVersionView";
 import RedeployModelVersionView from "./version/redeploy/RedeployModelVersionView";
-import Version from "./version/Version";
+import VersionDetails from "./version/VersionDetails";
 
 export { TransformerTools };
 
 export { DeployModelVersionView };
 export { RedeployModelVersionView };
-export { Version };
+export { VersionDetails };

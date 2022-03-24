@@ -40,7 +40,13 @@ import { ModelVersionPanelHeader } from "./ModelVersionPanelHeader";
 import { VersionConfig } from "./VersionConfig";
 import { VersionTabNavigation } from "./VersionTabNavigation";
 
-const Version = ({ projectId, modelId, versionId, endpointId, ...props }) => {
+const VersionDetails = ({
+  projectId,
+  modelId,
+  versionId,
+  endpointId,
+  ...props
+}) => {
   const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
@@ -220,4 +226,4 @@ const Version = ({ projectId, modelId, versionId, endpointId, ...props }) => {
   );
 };
 
-export default Version;
+export default VersionDetails;
