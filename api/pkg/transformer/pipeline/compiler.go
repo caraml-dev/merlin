@@ -321,6 +321,14 @@ func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransforma
 			}
 			compiledExpressions.Set(step.FilterRow.Condition, compiledExpression)
 		}
+
+		if step.SliceRow != nil {
+			startIdx := step.SliceRow.Start
+			endIdx := step.SliceRow.End
+			if startIdx < 0 || endIdx < 0 || startIdx > endIdx {
+				return nil, fmt.Errorf(`please supply valid 'start' and 'end', current value, 'start':%d, 'end':%d`, startIdx, endIdx)
+			}
+		}
 	}
 
 	c.registerDummyTable(transformationSpecs.OutputTable)

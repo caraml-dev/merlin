@@ -18,11 +18,11 @@ func TestOperationNode_Execute(t *testing.T) {
 		{
 			name: "add two series",
 			node: &OperationNode{
-				LeftVal:   series.New([]int{1, 2, 3, 4, 5}, series.Int, ""),
-				RightVal:  series.New([]int{2, 3, 4, 5, 6}, series.Int, ""),
+				LeftVal:   series.New([]interface{}{1, 2, 3, 4, 5, nil}, series.Int, ""),
+				RightVal:  series.New([]int{2, 3, 4, 5, 6, 7}, series.Int, ""),
 				Operation: operator.Add,
 			},
-			want: series.New([]int{3, 5, 7, 9, 11}, series.Int, ""),
+			want: series.New([]interface{}{3, 5, 7, 9, 11, nil}, series.Int, ""),
 		},
 		{
 			name: "substract two series",
@@ -104,6 +104,24 @@ func TestOperationNode_Execute(t *testing.T) {
 				Operation: operator.Eq,
 			},
 			want: series.New([]bool{true, true, true, false, true}, series.Bool, ""),
+		},
+		{
+			name: "equal list series with list series",
+			node: &OperationNode{
+				LeftVal:   series.New([][]interface{}{{1, 2, 4}, nil}, series.IntList, ""),
+				RightVal:  series.New([][]interface{}{{1, 2, 4}, nil}, series.IntList, ""),
+				Operation: operator.Eq,
+			},
+			want: series.New([]bool{true, true}, series.Bool, ""),
+		},
+		{
+			name: "not equal series with series",
+			node: &OperationNode{
+				LeftVal:   series.New([]interface{}{1, 2, 3, 4, nil}, series.Int, ""),
+				RightVal:  nil,
+				Operation: operator.Neq,
+			},
+			want: series.New([]bool{true, true, true, true, false}, series.Bool, ""),
 		},
 	}
 	for _, tt := range tests {

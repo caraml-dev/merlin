@@ -182,6 +182,8 @@ func getOrCreateSeries(value interface{}) (*series.Series, error) {
 		res = &val
 	case *series.Series:
 		res = val
+	case nil:
+		res = nil
 	default:
 		sr, err := createSeries(val, "leftSeries")
 		if err != nil {

@@ -289,11 +289,11 @@ func (t *Table) SliceRow(start, end int) error {
 }
 
 // FilterRow will select subset of table based on the supplied indexes
-func (t *Table) FilterRow(indexes *series.Series) error {
+func (t *Table) FilterRow(rowIndexes *series.Series) error {
 	df := t.dataFrame
 	var idxs interface{}
-	if indexes != nil {
-		idxs = *(indexes.Series())
+	if rowIndexes != nil {
+		idxs = *(rowIndexes.Series())
 	}
 	newDf := df.Subset(idxs)
 	if newDf.Err != nil {
@@ -303,67 +303,58 @@ func (t *Table) FilterRow(indexes *series.Series) error {
 	return nil
 }
 
-func (t *Table) FilterRowWithCondition(conditionSatisfied bool) error {
-	if conditionSatisfied {
-		return nil
-	}
-	// if condition not satisfied there is no indexes that selected
-	// it means indexes values all are false
-	boolVals := make([]bool, t.NRow())
-	indexes := series.New(boolVals, series.Bool, "")
-	return t.FilterRow(indexes)
+// RowValues indicate which values that needs to be set in a set of row
+type RowValues struct {
+	RowIndexes *series.Series
+	Values     *series.Series
 }
 
-type ColumnValueRule struct {
-	Indexes *series.Series
-	Values  *series.Series
-}
-
-type ConditionalUpdate struct {
-	Rules        []ColumnValueRule
+// ColumnUpdate is a rule to update a column, this contains of name of column and `RowValues` indicate values for set of row in a column
+// also have defaultValue
+type ColumnUpdate struct {
+	RowValues    []RowValues
 	DefaultValue *series.Series
 	ColName      string
 }
 
-func (t *Table) UpdateColumns(columnUpdates []ConditionalUpdate) error {
+// UpdateColumns is method to update multiple columns given list of rules for update column (ColumnUpdate)
+func (t *Table) UpdateColumns(columnUpdates []ColumnUpdate) error {
 	df := t.dataFrame
-	columnUpdateRules := make([]dataframe.ColumnUpdateRule, 0, len(columnUpdates))
+	columnUpdateRules := make([]dataframe.ColumnUpdate, 0, len(columnUpdates))
 
 	sort.Slice(columnUpdates, func(i, j int) bool {
 		return columnUpdates[i].ColName < columnUpdates[j].ColName
 	})
 
 	for _, updateRule := range columnUpdates {
-		colValueRules := make([]dataframe.ColumnValuesPerSubset, 0, len(updateRule.Rules))
-		for _, colValueRule := range updateRule.Rules {
+		rowValues := make([]dataframe.RowValues, 0, len(updateRule.RowValues))
+		for _, colValueRule := range updateRule.RowValues {
 
-			idx := colValueRule.Indexes
+			idx := colValueRule.RowIndexes
 			if idx == nil {
 				continue
 			}
 
-			colValueRules = append(colValueRules, dataframe.ColumnValuesPerSubset{
-				Values:      *colValueRule.Values.Series(),
-				SubsetIndex: *(idx.Series()),
+			rowValues = append(rowValues, dataframe.RowValues{
+				Values:     *colValueRule.Values.Series(),
+				RowIndexes: *(idx.Series()),
 			})
 		}
 
 		if updateRule.DefaultValue != nil {
 			// create series of bool, that all of its values is true
-			colVal := map[string]interface{}{updateRule.ColName: true}
-			colVal = broadcastScalar(colVal, t.NRow())
-			indexForDefaultValue := series.New(colVal[updateRule.ColName], series.Bool, "")
+			indexForDefaultValue := series.New([]bool{true}, series.Bool, "")
 
 			defaultValue := updateRule.DefaultValue
-			colValueRules = append(colValueRules, dataframe.ColumnValuesPerSubset{
-				Values:      *defaultValue.Series(),
-				SubsetIndex: *indexForDefaultValue.Series(),
+			rowValues = append(rowValues, dataframe.RowValues{
+				Values:     *defaultValue.Series(),
+				RowIndexes: *indexForDefaultValue.Series(),
 			})
 		}
 
-		columnUpdateRule := dataframe.ColumnUpdateRule{
-			ColName:      updateRule.ColName,
-			ColumnValues: colValueRules,
+		columnUpdateRule := dataframe.ColumnUpdate{
+			ColName:   updateRule.ColName,
+			RowValues: rowValues,
 		}
 
 		columnUpdateRules = append(columnUpdateRules, columnUpdateRule)

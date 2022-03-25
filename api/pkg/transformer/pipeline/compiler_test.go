@@ -207,6 +207,38 @@ func TestCompiler_Compile(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "preprocess - conditional, filter and slice row - valid",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+			},
+			specYamlFilePath: "./testdata/valid_table_transform_conditional_filtering.yaml",
+			want: want{
+				expressions: []string{
+					`zero`,
+					`driver_table.Col("rating") * 2 <= 7`,
+					`driver_table.Col("rating") * 1`,
+					`driver_table.Col("rating") * 2 >= 8`,
+					`driver_table.Col("rating") * 1.5`,
+				},
+				jsonPaths: []string{
+					"$.customer.id",
+					"$.drivers[*]",
+				},
+				preprocessOps: []Op{
+					&VariableDeclarationOp{},
+					&CreateTableOp{},
+					&TableTransformOp{},
+					&JsonOutputOp{},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "preprocess - postprocess input and output - valid",
 			fields: fields{
 				sr:           symbol.NewRegistry(),

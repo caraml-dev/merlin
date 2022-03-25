@@ -6,7 +6,6 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/scaler"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 	"github.com/opentracing/opentracing-go"
 )
@@ -121,23 +120,12 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 		}
 
 		if step.FilterRow != nil {
-			conditionResult, err := evalExpression(env, step.FilterRow.Condition)
+			rowIndexes, err := seriesFromExpression(env, step.FilterRow.Condition)
 			if err != nil {
 				return fmt.Errorf("error evaluating filter row expresion: %s. Err: %s", step.FilterRow, err)
 			}
-
-			if conditionSatisfied, isBool := conditionResult.(bool); isBool {
-				if err := resultTable.FilterRowWithCondition(conditionSatisfied); err != nil {
-					return err
-				}
-			} else {
-				filterIndex, err := series.NewInferType(conditionResult, "")
-				if err != nil {
-					return fmt.Errorf("error conversion of %v to series with err: %s", conditionResult, err)
-				}
-				if err := resultTable.FilterRow(filterIndex); err != nil {
-					return err
-				}
+			if err := resultTable.FilterRow(rowIndexes); err != nil {
+				return err
 			}
 		}
 
@@ -168,25 +156,25 @@ func getEncoder(env *Environment, encoderName string) (Encoder, error) {
 }
 
 func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *table.Table) (*table.Table, error) {
-	updateColumnRules := make([]table.ConditionalUpdate, 0, len(specs))
+	updateColumnRules := make([]table.ColumnUpdate, 0, len(specs))
 	for _, updateSpec := range specs {
 		columnName := updateSpec.Column
-
-		rule := table.ConditionalUpdate{
+		rule := table.ColumnUpdate{
 			ColName: columnName,
 		}
+		// if conditions is not specified, it will work like set default value
 		if len(updateSpec.Conditions) == 0 {
-			result, err := seriesFromExpression(env, updateSpec.Expression)
+			values, err := seriesFromExpression(env, updateSpec.Expression)
 			if err != nil {
 				return nil, fmt.Errorf("error evaluating expression for column %s: %v. Err: %s", columnName, updateSpec.Expression, err)
 			}
 
-			rule.DefaultValue = result
+			rule.DefaultValue = values
 			updateColumnRules = append(updateColumnRules, rule)
 			continue
 		}
 
-		columnValueRules := make([]table.ColumnValueRule, 0, len(updateSpec.Conditions))
+		columnValueRules := make([]table.RowValues, 0, len(updateSpec.Conditions))
 		for _, condition := range updateSpec.Conditions {
 			if condition.Default != nil {
 				defaultValue, err := seriesFromExpression(env, condition.Default.Expression)
@@ -197,45 +185,24 @@ func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *ta
 				continue
 			}
 
-			// conditionResult value can be any of this type
-			// Bool or (Converted to)Series
-			conditionResult, err := evalExpression(env, condition.If)
+			rowIndex, err := seriesFromExpression(env, condition.If)
 			if err != nil {
-				return nil, fmt.Errorf("error evaluation column rule for column %s: %v. Err: %s", columnName, condition.If, err)
+				return nil, fmt.Errorf("error evaluating expression for condition: %s with err: %s", condition.If, err)
 			}
 
-			if conditionSatisfied, isBool := conditionResult.(bool); isBool {
-				if !conditionSatisfied {
-					continue
-				}
-				// if true, then treat this as default value
-				colValue, err := seriesFromExpression(env, condition.Expression)
-				if err != nil {
-					return nil, fmt.Errorf("error evaluation value for column %s: %v. Err: %s", columnName, condition.Expression, err)
-				}
-				rule.DefaultValue = colValue
-				break
-			}
-
-			filterIdx, err := series.NewInferType(conditionResult, "")
-			if err != nil {
-				return nil, fmt.Errorf("error creating series with err: %s", err)
-			}
-
-			columnValue, err := subsetSeriesFromExpression(env, condition.Expression, filterIdx)
+			columnValue, err := subsetSeriesFromExpression(env, condition.Expression, rowIndex)
 			if err != nil {
 				return nil, fmt.Errorf("error evaluation column rule value for column %s: %v. Err: Ts", columnName, condition.Default.Expression)
 			}
 
-			colRuleValue := table.ColumnValueRule{
-				Indexes: filterIdx,
-				Values:  columnValue,
+			colRuleValue := table.RowValues{
+				RowIndexes: rowIndex,
+				Values:     columnValue,
 			}
 			columnValueRules = append(columnValueRules, colRuleValue)
 		}
-		rule.Rules = columnValueRules
+		rule.RowValues = columnValueRules
 		updateColumnRules = append(updateColumnRules, rule)
-
 	}
 	err := resultTable.UpdateColumns(updateColumnRules)
 	if err != nil {

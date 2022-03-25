@@ -403,6 +403,27 @@ export class Pipeline {
                 }
               });
             }
+            if (step.operation === "sliceRow") {
+              if (step.sliceRow) {
+                if (step.sliceRow.start) {
+                  step.sliceRow.start = parseInt(step.sliceRow.start);
+                }
+                if (step.sliceRow.end) {
+                  step.sliceRow.end = parseInt(step.sliceRow.end);
+                }
+              }
+            }
+            if (step.operation === "updateColumns") {
+              step.updateColumns.forEach(updateCol => {
+                if (updateCol.strategy === "withCondition") {
+                  delete updateCol["expression"];
+                }
+                if (updateCol.strategy === "withoutCondition") {
+                  delete updateCol["conditions"];
+                }
+                delete updateCol["strategy"];
+              });
+            }
             delete step["operation"];
           });
       });

@@ -14,8 +14,10 @@ import { EncodeColumns } from "./EncodeColumns";
 import { RenameColumns } from "./RenameColumns";
 import { SelectTableOperation } from "./SelectTableOperation";
 import { SortColumns } from "./SortColumns";
-import { UpdateColumns } from "./UpdateColumns";
 import { ScaleColumnsGroup } from "./ScaleColumnsGroup";
+import { FilterRow } from "./FilterRow";
+import { SliceRow } from "./SliceRow";
+import { UpdateColumnPanel } from "./UpdateColumnPanel";
 
 export const TableTransformationStepCard = ({
   index = 0,
@@ -116,10 +118,25 @@ export const TableTransformationStepCard = ({
           )}
 
           {step.operation === "updateColumns" && (
-            <UpdateColumns
+            <UpdateColumnPanel
               columns={step.updateColumns}
               onChangeHandler={onChange("updateColumns")}
               errors={get(errors, "updateColumns")}
+            />
+          )}
+          {step.operation === "filterRow" && (
+            <FilterRow
+              filterRow={step.filterRow}
+              onChangeHandler={onChange("filterRow")}
+              errors={get(errors, "filterRow")}
+            />
+          )}
+
+          {step.operation === "sliceRow" && (
+            <SliceRow
+              filterRow={step.sliceRow}
+              onChangeHandler={onChange("sliceRow")}
+              errors={get(errors, "sliceRow")}
             />
           )}
         </EuiFlexItem>

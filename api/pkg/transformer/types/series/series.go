@@ -196,7 +196,11 @@ func (s *Series) compare(comparator series.Comparator, comparingValue interface{
 	case Series:
 		result = s.series.Compare(comparator, cVal.series)
 	case *Series:
-		result = s.series.Compare(comparator, cVal.series)
+		if cVal == nil {
+			result = s.series.Compare(comparator, nil)
+		} else {
+			result = s.series.Compare(comparator, cVal.series)
+		}
 	default:
 		result = s.series.Compare(comparator, cVal)
 	}

@@ -912,71 +912,11 @@ func TestTable_FilterRow(t *testing.T) {
 	}
 }
 
-func TestTable_FilterRowWithCondition(t *testing.T) {
-	type args struct {
-		conditionSatisfied bool
-	}
-	tests := []struct {
-		name       string
-		inputTable *Table
-		args       args
-		want       *Table
-		wantErr    bool
-		errMessage string
-	}{
-		{
-			name: "Condition is satisfied, no change",
-			inputTable: New(
-				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
-				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
-				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
-			),
-			args: args{
-				conditionSatisfied: true,
-			},
-			wantErr: false,
-			want: New(
-				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
-				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
-				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
-			),
-		},
-		{
-			name: "Condition is not satisfied, empty table",
-			inputTable: New(
-				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
-				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
-				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
-			),
-			args: args{
-				conditionSatisfied: false,
-			},
-			wantErr: false,
-			want: New(
-				series.New([]int{}, series.Int, "A"),
-				series.New([]string{}, series.String, "B"),
-				series.New([]float32{}, series.Float, "C"),
-			),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.inputTable.FilterRowWithCondition(tt.args.conditionSatisfied)
-			if tt.wantErr {
-				assert.EqualError(t, err, tt.errMessage)
-				return
-			}
-			assert.Equal(t, tt.want, tt.inputTable)
-		})
-	}
-}
-
 func TestTable_UpdateColumns(t *testing.T) {
 	tests := []struct {
 		name           string
 		inputTable     *Table
-		updateColRules []ConditionalUpdate
+		updateColRules []ColumnUpdate
 		want           *Table
 		wantErr        bool
 		errMessage     string
@@ -987,17 +927,17 @@ func TestTable_UpdateColumns(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			updateColRules: []ConditionalUpdate{
+			updateColRules: []ColumnUpdate{
 				{
 					ColName: "A",
-					Rules: []ColumnValueRule{
+					RowValues: []RowValues{
 						{
-							Indexes: series.New([]bool{true, true, false, false, false}, series.Bool, ""),
-							Values:  series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+							RowIndexes: series.New([]bool{true, true, false, false, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
 						},
 						{
-							Indexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
-							Values:  series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
 						},
 					},
 					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
@@ -1014,17 +954,17 @@ func TestTable_UpdateColumns(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			updateColRules: []ConditionalUpdate{
+			updateColRules: []ColumnUpdate{
 				{
 					ColName: "A",
-					Rules: []ColumnValueRule{
+					RowValues: []RowValues{
 						{
-							Indexes: series.New([]bool{true, true, false, true, false}, series.Bool, ""),
-							Values:  series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+							RowIndexes: series.New([]bool{true, true, false, true, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
 						},
 						{
-							Indexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
-							Values:  series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
 						},
 					},
 					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
@@ -1041,31 +981,31 @@ func TestTable_UpdateColumns(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			updateColRules: []ConditionalUpdate{
+			updateColRules: []ColumnUpdate{
 				{
 					ColName: "D",
-					Rules: []ColumnValueRule{
+					RowValues: []RowValues{
 						{
-							Indexes: series.New([]bool{true, true, false, true, false}, series.Bool, ""),
-							Values:  series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+							RowIndexes: series.New([]bool{true, true, false, true, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
 						},
 						{
-							Indexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
-							Values:  series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
 						},
 					},
 					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
 				},
 				{
 					ColName: "C",
-					Rules: []ColumnValueRule{
+					RowValues: []RowValues{
 						{
-							Indexes: series.New([]bool{true, true, true, true, false}, series.Bool, ""),
-							Values:  series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+							RowIndexes: series.New([]bool{true, true, true, true, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
 						},
 						{
-							Indexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
-							Values:  series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
 						},
 					},
 					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
@@ -1084,10 +1024,10 @@ func TestTable_UpdateColumns(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			updateColRules: []ConditionalUpdate{
+			updateColRules: []ColumnUpdate{
 				{
 					ColName:      "C",
-					Rules:        []ColumnValueRule{},
+					RowValues:    []RowValues{},
 					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
 				},
 			},
@@ -1103,20 +1043,20 @@ func TestTable_UpdateColumns(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			updateColRules: []ConditionalUpdate{
+			updateColRules: []ColumnUpdate{
 				{
 					ColName: "A",
-					Rules: []ColumnValueRule{
+					RowValues: []RowValues{
 						{
-							Indexes: series.New([]bool{true, true, false, true, false, false}, series.Bool, ""),
-							Values:  series.New([]int{2, 4, 6, 8, 10, 12}, series.Int, ""),
+							RowIndexes: series.New([]bool{true, true, false, true, false, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10, 12}, series.Int, ""),
 						},
 					},
 					DefaultValue: series.New([]int{-1, -1, -1, -1, -1, -1}, series.Int, ""),
 				},
 			},
 			wantErr:    true,
-			errMessage: "error on series 0: indexing error: index dimensions mismatch",
+			errMessage: "failed set value for column: A with err: indexing error: index dimensions mismatch",
 		},
 	}
 	for _, tt := range tests {

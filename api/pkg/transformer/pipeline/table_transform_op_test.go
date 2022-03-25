@@ -67,6 +67,8 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 		"-1":                                                              mustCompileExpressionWithEnv("-1", env),
 		"integer_var < 100":                                               mustCompileExpressionWithEnv("integer_var < 100", env),
 		"integer_var > 1000":                                              mustCompileExpressionWithEnv("integer_var > 1000", env),
+		"existing_table.Col('int_col') == nil":                            mustCompileExpressionWithEnv("existing_table.Col('int_col') == nil", env),
+		"0":                                                               mustCompileExpressionWithEnv("0", env),
 	})
 
 	compiledPipeline := &CompiledPipeline{
@@ -268,6 +270,10 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 								Column: "conditional_col_2",
 								Conditions: []*spec.ColumnCondition{
 									{
+										If:         "existing_table.Col('int_col') == nil",
+										Expression: "0",
+									},
+									{
 										If:         "integer_var < 100",
 										Expression: "existing_table.Col('int_col')",
 									},
@@ -301,7 +307,7 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 					series.New([]interface{}{1111.1111, 2222.2222, 3333.3333, nil}, series.Float, "float_col"),
 					series.New([]interface{}{true, false, true, nil}, series.Bool, "bool_col"),
 					series.New([]interface{}{1, 2222, 3, -1}, series.Int, "conditional_col"),
-					series.New([]interface{}{1, 2, 3, nil}, series.Int, "conditional_col_2"),
+					series.New([]interface{}{1, 2, 3, 0}, series.Int, "conditional_col_2"),
 					series.New([]interface{}{time.Now().Hour(), time.Now().Hour(), time.Now().Hour(), time.Now().Hour()}, series.Int, "current_hour"),
 					series.New([]interface{}{12345, 12345, 12345, 12345}, series.Int, "from_variable"),
 					series.New([]interface{}{2222.1111, 4444.2222, 6666.3333, nil}, series.Float, "int_add_float_col"),
