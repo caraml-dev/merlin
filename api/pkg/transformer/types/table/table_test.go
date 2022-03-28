@@ -772,21 +772,153 @@ func TestTable_NewRaw(t *testing.T) {
 	}
 }
 
-func TestTable_NewFromCSV(t *testing.T) {
+func TestTable_recordsFromCsv(t *testing.T) {
+	tests := []struct {
+		name       string
+		filePath   string
+		expRecords [][]string
+		wantError  bool
+		expError   error
+	}{
+		{
+			name:       "success: blank local file",
+			filePath:   "testdata/blank.csv",
+			wantError:  false,
+			expRecords: nil,
+		},
+		{
+			name:       "success: header only local file",
+			filePath:   "testdata/header_only.csv",
+			wantError:  false,
+			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
+		},
+		{
+			name:      "success: normal local file",
+			filePath:  "testdata/normal.csv",
+			wantError: false,
+			expRecords: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "TRUE"},
+				{"Banana", "Man", "18", "68", "FALSE"},
+				{"Zara", "Vuitton", "35", "75", "TRUE"},
+				{"Sandra", "Zawaska", "32", "55", "FALSE"},
+				{"Merlion", "Krabby", "23", "57.22", "FALSE"},
+			},
+		},
+		{
+			name:       "success: blank gcs file",
+			filePath:   "gs://d-gods-mlp/merlin-preloaded-table-test/blank.csv",
+			wantError:  false,
+			expRecords: nil,
+		},
+		{
+			name:       "success: header only gcs file",
+			filePath:   "gs://d-gods-mlp/merlin-preloaded-table-test/header_only.csv",
+			wantError:  false,
+			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
+		},
+		{
+			name:      "success: normal gcs file",
+			filePath:  "gs://d-gods-mlp/merlin-preloaded-table-test/normal.csv",
+			wantError: false,
+			expRecords: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "TRUE"},
+				{"Banana", "Man", "18", "68", "FALSE"},
+				{"Zara", "Vuitton", "35", "75", "TRUE"},
+				{"Sandra", "Zawaska", "32", "55", "FALSE"},
+				{"Merlion", "Krabby", "23", "57.22", "FALSE"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			records, err := RecordsFromCsv(tt.filePath)
+			if tt.wantError {
+				assert.EqualError(t, err, tt.expError.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expRecords, records)
+		})
+	}
+}
+
+func TestTable_recordsFromParquet(t *testing.T) {
+	tests := []struct {
+		name       string
+		filePath   string
+		expRecords [][]string
+		wantError  bool
+		expError   error
+	}{
+		{
+			name:       "success: header only local file",
+			filePath:   "testdata/header_only.parquet",
+			wantError:  false,
+			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
+		},
+		{
+			name:      "success: normal local file",
+			filePath:  "testdata/normal.parquet",
+			wantError: false,
+			expRecords: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+		},
+		{
+			name:       "success: header only gcs file",
+			filePath:   "gs://d-gods-mlp/merlin-preloaded-table-test/header_only.parquet",
+			wantError:  false,
+			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
+		},
+		{
+			name:      "success: normal gcs file",
+			filePath:  "gs://d-gods-mlp/merlin-preloaded-table-test/normal.parquet",
+			wantError: false,
+			expRecords: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			records, err := RecordsFromParquet(tt.filePath)
+			if tt.wantError {
+				assert.EqualError(t, err, tt.expError.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expRecords, records)
+		})
+	}
+}
+
+func TestTable_NewFromRecords(t *testing.T) {
 	type args struct {
 		schema []*spec.Schema
 	}
 	tests := []struct {
 		name      string
-		filePath  string
+		records   [][]string
 		args      args
 		expTable  *Table
 		wantError bool
 		expError  error
 	}{
 		{
-			name:     "error: blank file",
-			filePath: "testdata/blank.csv",
+			name:    "error: no data",
+			records: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
 			args: args{
 				schema: []*spec.Schema{
 					{
@@ -812,41 +944,18 @@ func TestTable_NewFromCSV(t *testing.T) {
 				},
 			},
 			wantError: true,
-			expError:  errors.New("no data found in file testdata/blank.csv"),
+			expError:  errors.New("no data found"),
 		},
 		{
-			name:     "error: header only file",
-			filePath: "testdata/header_only.csv",
-			args: args{
-				schema: []*spec.Schema{
-					{
-						Name: "First Name",
-						Type: spec.Schema_STRING,
-					},
-					{
-						Name: "Last Name",
-						Type: spec.Schema_STRING,
-					},
-					{
-						Name: "Age",
-						Type: spec.Schema_INT,
-					},
-					{
-						Name: "Weight",
-						Type: spec.Schema_FLOAT,
-					},
-					{
-						Name: "Is VIP",
-						Type: spec.Schema_BOOL,
-					},
-				},
+			name: "error: header length mismatch with schema",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
 			},
-			wantError: true,
-			expError:  errors.New("no data found in file testdata/header_only.csv"),
-		},
-		{
-			name:     "error: header length mismatch with schema",
-			filePath: "testdata/normal.csv",
 			args: args{
 				schema: []*spec.Schema{
 					{
@@ -871,8 +980,15 @@ func TestTable_NewFromCSV(t *testing.T) {
 			expError:  errors.New("header length 5 mismatch with 4 in defined schema"),
 		},
 		{
-			name:     "error: Column name of schema not found in header",
-			filePath: "testdata/normal.csv",
+			name: "error: Column name of schema not found in header",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
 			args: args{
 				schema: []*spec.Schema{
 					{
@@ -901,8 +1017,15 @@ func TestTable_NewFromCSV(t *testing.T) {
 			expError:  errors.New("column name of schema age not found in header of file"),
 		},
 		{
-			name:     "error: Unsupported schema type",
-			filePath: "testdata/normal.csv",
+			name: "error: Unsupported schema type",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
 			args: args{
 				schema: []*spec.Schema{
 					{
@@ -931,8 +1054,15 @@ func TestTable_NewFromCSV(t *testing.T) {
 			expError:  errors.New("unsupported column type option for schema -1"),
 		},
 		{
-			name:     "success: Table with data of correct type created",
-			filePath: "testdata/normal.csv",
+			name: "success: Table with data of correct type created",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
 			args: args{
 				schema: []*spec.Schema{
 					{
@@ -969,7 +1099,7 @@ func TestTable_NewFromCSV(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fileTable, err := NewFromCsv(tt.filePath, tt.args.schema)
+			fileTable, err := NewFromRecords(tt.records, tt.args.schema)
 			if tt.wantError {
 				assert.EqualError(t, err, tt.expError.Error())
 				return

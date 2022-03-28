@@ -1,18 +1,28 @@
 package table
 
 import (
+	"bytes"
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	goparquet "github.com/fraugster/parquet-go"
+	"github.com/go-gota/gota/dataframe"
+	gota "github.com/go-gota/gota/series"
+	"io"
 	"os"
 	"reflect"
 	"sort"
-
-	"github.com/go-gota/gota/dataframe"
-	gota "github.com/go-gota/gota/series"
+	"strings"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
+
+	"github.com/bboughton/gcp-helpers/gsutil"
+)
+
+const (
+	gcsPrefix = "gs://"
 )
 
 type Table struct {
@@ -42,26 +52,120 @@ func NewRaw(columnValues map[string]interface{}) (*Table, error) {
 	return New(newColumns...), nil
 }
 
-// Create a new table from csv file
-// The csv must be comma-separated and the first record must be the header
-// This function will check that the given file is not empty, and the column
-// names in the header matches the schema
-func NewFromCsv(filePath string, schema []*spec.Schema) (*Table, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
+// RecordsFromParquet reads a parquet file which may be local (uploaded together with model) or global (from gcs).
+// The root directory for local will be same as where the model is stored (artifacts folder).
+// Data will be returned as [][]string where row 0 is the header containing all the column names.
+func RecordsFromParquet(filePath string) ([][]string, error) {
+	var r io.ReadSeeker
 
-	csvReader := csv.NewReader(f)
-	records, err := csvReader.ReadAll()
+	if strings.HasPrefix(filePath, gcsPrefix) {
+		// Global file (GCS)
+		ctx := context.Background()
+		data, err := gsutil.ReadFile(ctx, filePath)
+
+		if err != nil {
+			return nil, err
+		}
+
+		r = bytes.NewReader(data)
+	} else {
+		// Local file
+		file, err := os.Open(filePath)
+		if err != nil {
+			return nil, err
+		}
+		r = file
+		defer file.Close()
+	}
+
+	fr, err := goparquet.NewFileReader(r)
 	if err != nil {
 		return nil, err
 	}
+
+	// Get header
+	schema := fr.GetSchemaDefinition()
+	header := make([]string, 0)
+	for _, schemaCol := range schema.RootColumn.Children {
+		header = append(header, schemaCol.SchemaElement.GetName())
+	}
+
+	records := make([][]string, 0)
+	records = append(records, header) // column name in first row
+
+	// map col name to col number
+	colMap := make(map[string]int)
+	for i, colName := range header {
+		colMap[colName] = i
+	}
+
+	// Build data
+	for i := 0; i < int(fr.NumRows()); i++ {
+		row, err := fr.NextRow()
+		if err != nil {
+			return nil, err
+		}
+
+		newRow := make([]string, len(header))
+		for k, v := range row {
+			if vv, ok := v.([]byte); ok {
+				v = string(vv)
+			}
+
+			newRow[colMap[k]] = fmt.Sprint(v)
+		}
+		records = append(records, newRow)
+	}
+
+	return records, nil
+}
+
+// RecordsFromCsv reads a csv file which may be local (uploaded together with model) or global (from gcs).
+// The root directory for local will be same as where the model is stored (artifacts folder).
+// Data will be returned as [][]string where row 0 is the header containing all the column names.
+func RecordsFromCsv(filePath string) ([][]string, error) {
+	var r io.Reader
+
+	if strings.HasPrefix(filePath, gcsPrefix) {
+		// Global file (GCS)
+		ctx := context.Background()
+		data, err := gsutil.ReadFile(ctx, filePath)
+
+		if err != nil {
+			return nil, err
+		}
+
+		r = bytes.NewReader(data)
+	} else {
+		// Local file
+		file, err := os.Open(filePath)
+		if err != nil {
+			return nil, err
+		}
+		r = file
+		defer file.Close()
+	}
+
+	csvReader := csv.NewReader(r)
+	records, err := csvReader.ReadAll()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}
+
+// NewFromRecords create a new table from records in the form [][]string
+// The first row of the records array shall contain all the column names.
+// This function will check that there are at least 2 rows in records (header and data).
+// It will also check that the number of columns and the column names matches the schema specified,
+// before creating a new table to be returned
+func NewFromRecords(records [][]string, schema []*spec.Schema) (*Table, error) {
 
 	// check table has at least 1 row of data
 	if len(records) <= 1 {
-		return nil, fmt.Errorf("no data found in file %s", filePath)
+		return nil, fmt.Errorf("no data found")
 	}
 	// check no. of columns same as defined in schema
 	header := make(map[string]bool)
