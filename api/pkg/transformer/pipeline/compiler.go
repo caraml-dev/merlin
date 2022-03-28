@@ -233,14 +233,22 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 				}
 				compiledJsonPaths.Set(bt.FromJson.JsonPath, compiledJsonPath)
 			case *spec.BaseTable_FromFile:
-				if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_CSV { // TODO: gcs global scope
-					loadedTable, err := table.NewFromCsv(tableSpec.BaseTable.GetFromFile().GetUri(),
-						tableSpec.BaseTable.GetFromFile().GetSchema())
-					if err != nil {
-						return nil, nil, err
-					}
-					preloadedTables[tableSpec.Name] = *loadedTable
+				var records [][]string
+				var err error
+
+				if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_CSV {
+					records, err = table.RecordsFromCsv(tableSpec.BaseTable.GetFromFile().GetUri())
+				} else if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_PARQUET {
+					records, err = table.RecordsFromParquet(tableSpec.BaseTable.GetFromFile().GetUri())
+				} else {
+					return nil, nil, fmt.Errorf("Unsupported/Unspecified file type")
 				}
+
+				loadedTable, err := table.NewFromRecords(records, tableSpec.BaseTable.GetFromFile().GetSchema())
+				if err != nil {
+					return nil, nil, err
+				}
+				preloadedTables[tableSpec.Name] = *loadedTable
 			}
 		}
 
