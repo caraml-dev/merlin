@@ -106,8 +106,8 @@ export const AutoscalingPolicyFormGroup = ({
       title={<p>Autoscaling Policy</p>}
       description={
         <Fragment>
-          Autoscaling Policy determine the condition for adding additional
-          replica
+          Autoscaling Policy determines the condition for increasing or
+          decreasing number of replicas.
         </Fragment>
       }>
       <EuiFormRow
