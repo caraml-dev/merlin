@@ -1096,12 +1096,16 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
 
     # Set v1 as serving model
     initial_model_endpoint = merlin.set_traffic({v1: 100})
-    sleep(5)
+    sleep(2)
     resp = requests.post(f"{initial_model_endpoint.url}", json=tensorflow_request_json)
 
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Test that user can't change deployment mode of a serving model
+    with pytest.raises(Exception):
+        endpoint = merlin.deploy(v1, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
 
     # Upload new model version: v2
     with merlin.new_model_version() as v2:
@@ -1123,7 +1127,7 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
     # Set v2 as serving model
     model_endpoint = merlin.set_traffic({v2: 100})
     assert model_endpoint.url == initial_model_endpoint.url
-    sleep(5)
+    sleep(2)
 
     resp = requests.post(f"{model_endpoint.url}", json=tensorflow_request_json)
     assert resp.status_code == 200
@@ -1131,9 +1135,9 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     # Set v1 back as serving model
-    model_endpoint = merlin.set_traffic({v2: 100})
+    model_endpoint = merlin.set_traffic({v1: 100})
     assert model_endpoint.url == initial_model_endpoint.url
-    sleep(5)
+    sleep(2)
 
     resp = requests.post(f"{model_endpoint.url}", json=tensorflow_request_json)
     assert resp.status_code == 200
