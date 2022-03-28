@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/batch-predictor
         run: |
-          pip install mypy==0.812 pipenv
+          pip install pipenv
           make setup
       - name: Run batch-predictor test
         working-directory: ./python/batch-predictor

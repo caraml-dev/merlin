@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
         run: |
-          pip install mypy==0.812 pipenv
+          pip install pipenv
           make setup
       - name: Run pyfunc-server test
         working-directory: ./python/pyfunc-server
