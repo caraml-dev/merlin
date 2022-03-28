@@ -1,0 +1,149 @@
+name: Merlin API CI Workflow
+on:
+  push:
+    branches: 
+    - main 
+    - v1beta1  # TODO: remove v1beta1
+  pull_request:
+    branches: 
+    - main 
+    - v1beta1  # TODO: remove v1beta1
+
+jobs:
+  lint-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout to the target branch
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Lint UI files
+        run: make lint-ui
+
+  lint-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Install dependencies
+        run: |
+          make setup
+          make init-dep-api
+      - name: Lint API files
+        run: make lint-api
+
+  test-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout to the target branch
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Test UI files
+        run: make test-ui
+
+  build-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Build UI static files
+        run: make build-ui
+
+  build-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Install dependencies
+        run: make init-dep-api
+      - name: Build API server
+        run: make build-api
+
+  build-transformer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Install dependencies
+        run: make init-dep-api
+      - name: Build API server
+        run: make build-transformer
+
+  integration-test-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12.4
+        env:
+          POSTGRES_DB: merlin
+          POSTGRES_USER: merlin
+          POSTGRES_PASSWORD: merlin
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Install dependencies
+        run: |
+          make setup
+          make init-dep-api
+      - name: Test API files
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: merlin
+          POSTGRES_USER: merlin
+          POSTGRES_PASSWORD: merlin
+        run: make it-test-api-ci
+
+  publish-api-docker:
+    runs-on: ubuntu-latest
+    needs: integration-test-api
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
+      - name: Build and push Merlin Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
+          tags: ${{ env.branch_name }}
+
+  publish-transformer-docker:
+    runs-on: ubuntu-latest
+    needs: integration-test-api
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
+      - name: Build and push Merlin Standard Transformer Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/merlin-transformer
+          build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
+          dockerfile: transformer.Dockerfile
+          tags: ${{ env.branch_name }}

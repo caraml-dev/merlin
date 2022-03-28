@@ -2,6 +2,7 @@ include .env.sample
 export
 
 BIN_NAME=merlin
+TRANSFORMER_BIN_NAME=merlin-transformer
 UI_PATH := ui
 UI_BUILD_PATH := ${UI_PATH}/build
 API_PATH=api
@@ -89,17 +90,22 @@ bench:
 # Building recipes
 # ============================================================
 .PHONY: build
-build: build-ui build-api
+build: build-ui build-api 
 
 .PHONY: build-ui
-build-ui: clean-ui
+build-ui: 
 	@echo "> Building UI static build ..."
 	@cd ${UI_PATH} && npm run build
 
 .PHONY: build-api
-build-api: clean-bin
+build-api: 
 	@echo "> Building API binary ..."
 	@cd ${API_PATH} && go build -o ../bin/${BIN_NAME} ./cmd/api
+
+.PHONY: build-transformer
+build-transformer: 
+	@echo "> Building Transformer binary ..."
+	@cd ${API_PATH} && go build -o ../bin/${TRANSFORMER_BIN_NAME} ./cmd/transformer
 
 # ============================================================
 # Run recipe

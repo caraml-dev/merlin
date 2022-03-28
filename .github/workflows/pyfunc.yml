@@ -1,0 +1,43 @@
+name: Pyfunc Server CI Workflow
+on:
+  push:
+    branches: 
+    - main 
+    - v1beta1  # TODO: remove v1beta1
+  pull_request:
+    branches: 
+    - main 
+    - v1beta1  # TODO: remove v1beta1
+jobs:
+  test-pyfunc-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        working-directory: ./python/pyfunc-server
+        run: |
+          pip install mypy==0.812 pipenv
+          make setup
+      - name: Run pyfunc-server test
+        working-directory: ./python/pyfunc-server
+        run: make test
+
+  publish-pyfunc-base-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
+      - name: Build and push PyFunc Base Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/merlin-pyfunc-base
+          path: python
+          dockerfile: python/pyfunc-server/base.Dockerfile
+          tags: ${{ env.branch_name }}

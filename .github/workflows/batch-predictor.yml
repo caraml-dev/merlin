@@ -1,0 +1,43 @@
+name: Batch Predictor CI Workflow
+on:
+  push:
+    branches: 
+    - main 
+    - v1beta1  # TODO: remove v1beta1
+  pull_request:
+    branches: 
+    - main 
+    - v1beta1  # TODO: remove v1beta1
+jobs:
+  test-batch-predictor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        working-directory: ./python/batch-predictor
+        run: |
+          pip install mypy==0.812 pipenv
+          make setup
+      - name: Run batch-predictor test
+        working-directory: ./python/batch-predictor
+        run: make test
+
+  publish-pyspark-base-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
+      - name: Build and push PySpark Base Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/merlin-pyspark-base
+          path: python
+          dockerfile: python/batch-predictor/docker/base.Dockerfile
+          tags: ${{ env.branch_name }}

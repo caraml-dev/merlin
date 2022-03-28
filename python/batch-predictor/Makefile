@@ -2,7 +2,7 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
 .PHONY: setup
 setup:
-	@pipenv install --skip-lock --dev
+	@pipenv install --skip-lock -e .[test]
 
 .PHONY: type_check
 type_check:
