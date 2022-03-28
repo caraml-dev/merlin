@@ -45,7 +45,7 @@ class VersionEndpoint:
         self._environment = Environment(endpoint.environment)
         self._env_vars = endpoint.env_vars
         self._logger = Logger.from_logger_response(endpoint.logger)
-        self._deployment_mode = DeploymentMode.SERVERLESS if endpoint.deployment_mode is None \
+        self._deployment_mode = DeploymentMode.SERVERLESS if not endpoint.deployment_mode \
             else DeploymentMode(endpoint.deployment_mode)
 
         if endpoint.autoscaling_policy is None:
