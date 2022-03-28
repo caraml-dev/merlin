@@ -6,7 +6,7 @@ setup:
 
 .PHONY: type_check
 type_check:
-	@mypy --ignore-missing-imports --allow-untyped-globals  merlinpyspark
+	@pipenv run mypy --ignore-missing-imports --allow-untyped-globals  merlinpyspark
 
 .PHONY: test
 test: type_check
