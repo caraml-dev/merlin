@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/gojek/merlin/pkg/transformer/types/table"
 	"io/ioutil"
 	"testing"
 
@@ -25,10 +27,11 @@ func TestCompiler_Compile(t *testing.T) {
 		}
 
 		want struct {
-			expressions    []string
-			jsonPaths      []string
-			preprocessOps  []Op
-			postprocessOps []Op
+			expressions     []string
+			jsonPaths       []string
+			preloadedTables map[string]table.Table
+			preprocessOps   []Op
+			postprocessOps  []Op
 		}
 	)
 
@@ -68,6 +71,15 @@ func TestCompiler_Compile(t *testing.T) {
 					"$.entity_3",
 					"$.entity_2",
 				},
+				preloadedTables: map[string]table.Table{
+					"preload_1": *table.New(
+						series.New([]string{"Apple", "Banana", "Zara", "Sandra", "Merlion"}, series.String, "First Name"),
+						series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
+						series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
+						series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
+						series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
+					),
+				},
 				preprocessOps: []Op{
 					&FeastOp{},
 					&CreateTableOp{},
@@ -90,10 +102,11 @@ func TestCompiler_Compile(t *testing.T) {
 			},
 			specYamlFilePath: "./testdata/valid_no_pipeline.yaml",
 			want: want{
-				expressions:    []string{},
-				jsonPaths:      []string{},
-				preprocessOps:  []Op{},
-				postprocessOps: []Op{},
+				expressions:     []string{},
+				jsonPaths:       []string{},
+				preloadedTables: map[string]table.Table{},
+				preprocessOps:   []Op{},
+				postprocessOps:  []Op{},
 			},
 			wantErr: false,
 		},
@@ -119,6 +132,22 @@ func TestCompiler_Compile(t *testing.T) {
 					"$.entity_2.id",
 					"$.entity_3",
 					"$.entity_2",
+				},
+				preloadedTables: map[string]table.Table{
+					"preload_1": *table.New(
+						series.New([]string{"Apple", "Banana", "Zara", "Sandra", "Merlion"}, series.String, "First Name"),
+						series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
+						series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
+						series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
+						series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
+					),
+					"preload_2": *table.New(
+						series.New([]string{"Apple", "Banana", "Zara", "Sandra", "Merlion"}, series.String, "First Name"),
+						series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
+						series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
+						series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
+						series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
+					),
 				},
 				preprocessOps: []Op{
 					&FeastOp{},
@@ -406,6 +435,11 @@ func TestCompiler_Compile(t *testing.T) {
 
 			for _, expression := range tt.want.expressions {
 				assert.NotNil(t, got.compiledExpression.Get(expression), "expression not compiled", expression)
+			}
+
+			assert.Equal(t, len(tt.want.preloadedTables), len(got.preloadedTables))
+			for i, tb := range tt.want.preloadedTables {
+				assert.Equal(t, tb, got.preloadedTables[i])
 			}
 
 			assert.Equal(t, len(tt.want.preprocessOps), len(got.preprocessOps))

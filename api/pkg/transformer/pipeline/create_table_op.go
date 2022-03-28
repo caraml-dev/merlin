@@ -73,7 +73,7 @@ func createBaseTable(env *Environment, baseTableSpec *spec.BaseTable, tableName 
 			return nil, fmt.Errorf("variable %s is not a table", baseTable.FromTable.TableName)
 		}
 
-		return t.Copy(), nil // TODO: check it dont call fromfile
+		return t.Copy(), nil
 	default:
 		return nil, fmt.Errorf("unsupported base table spec %T", baseTable)
 	}

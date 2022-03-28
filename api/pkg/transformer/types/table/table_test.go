@@ -772,7 +772,7 @@ func TestTable_NewRaw(t *testing.T) {
 	}
 }
 
-func TestTable_recordsFromCsv(t *testing.T) {
+func TestTable_RecordsFromCsv(t *testing.T) {
 	tests := []struct {
 		name       string
 		filePath   string
@@ -844,7 +844,7 @@ func TestTable_recordsFromCsv(t *testing.T) {
 	}
 }
 
-func TestTable_recordsFromParquet(t *testing.T) {
+func TestTable_RecordsFromParquet(t *testing.T) {
 	tests := []struct {
 		name       string
 		filePath   string

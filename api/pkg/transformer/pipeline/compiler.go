@@ -2,11 +2,11 @@ package pipeline
 
 import (
 	"fmt"
-
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"os"
 
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
@@ -15,6 +15,11 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
 	"github.com/gojek/merlin/pkg/transformer/types/scaler"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
+)
+
+const (
+	envPredictorStorageURI = "STORAGE_URI"
+	artifactsFolder        = "artifacts"
 )
 
 type Compiler struct {
@@ -64,6 +69,9 @@ func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipel
 		}
 		postprocessOps = append(postprocessOps, ops...)
 		for k, v := range loadedTables {
+			if _, ok := preloadedTables[k]; ok {
+				return nil, fmt.Errorf("table name %s in postprocess already used in preprocess", k)
+			}
 			preloadedTables[k] = v
 		}
 	}
@@ -239,7 +247,11 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 				if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_CSV {
 					records, err = table.RecordsFromCsv(tableSpec.BaseTable.GetFromFile().GetUri())
 				} else if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_PARQUET {
-					records, err = table.RecordsFromParquet(tableSpec.BaseTable.GetFromFile().GetUri())
+					prefix := os.Getenv(envPredictorStorageURI)
+					if prefix != "" {
+						prefix += "/" + artifactsFolder + "/" // TODO: correct?
+					}
+					records, err = table.RecordsFromParquet(prefix + tableSpec.BaseTable.GetFromFile().GetUri())
 				} else {
 					return nil, nil, fmt.Errorf("Unsupported/Unspecified file type")
 				}
