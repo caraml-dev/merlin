@@ -289,7 +289,7 @@ jobs:
             --k3s-arg "--no-deploy=traefik,servicelb,metrics-server@server:*"
       - name: Setup cluster
         working-directory: merlin/scripts/e2e/
-        run: setup-cluster.sh
+        run: ./setup-cluster.sh
       # - name: Setup mlp namespace
       #   run: |
       #     kubectl create namespace mlp
