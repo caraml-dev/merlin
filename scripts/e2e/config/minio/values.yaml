@@ -1,0 +1,19 @@
+replicas: 1
+persistence:
+  enabled: false
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+livenessProbe:
+  initialDelaySeconds: 10
+defaultBucket:
+  enabled: true
+  name: mlflow
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: istio
+  path: /*
+  hosts:
+    - 'minio.minio.127.0.0.1.nip.io'

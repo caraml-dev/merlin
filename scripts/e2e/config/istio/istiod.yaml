@@ -1,0 +1,14 @@
+global:
+  proxy:
+    autoInject: disabled
+  omitSidecarInjectorConfigMap: false
+
+meshConfig:
+  enableTracing: true
+  enableAutoMtls: false
+
+pilot:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
