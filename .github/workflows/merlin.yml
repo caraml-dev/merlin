@@ -260,11 +260,11 @@ jobs:
 
   e2e-test:
     runs-on: ubuntu-latest
-    needs: 
-    - publish-api-docker
-    - publish-batch-predictor-docker
-    - publish-transformer-docker
-    - publish-pyfunc-server-docker
+    # needs: 
+    # - publish-api-docker
+    # - publish-batch-predictor-docker
+    # - publish-transformer-docker
+    # - publish-pyfunc-server-docker
     steps:
       - uses: actions/checkout@v2
         with:
@@ -285,7 +285,7 @@ jobs:
             -p "5053:53/udp@agent:0:direct"
             --agents 3
             --no-lb
-            --image rancher/k3s:v1.21.11
+            --image rancher/k3s:v1.22.6-k3s1
             --k3s-arg "--no-deploy=traefik,servicelb,metrics-server@server:*"
       - name: Setup cluster
         working-directory: merlin/scripts/e2e/
