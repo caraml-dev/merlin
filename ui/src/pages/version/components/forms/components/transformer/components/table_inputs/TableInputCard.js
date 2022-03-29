@@ -11,11 +11,9 @@ import {
   EuiText
 } from "@elastic/eui";
 import { DraggableHeader } from "../../../DraggableHeader";
-import {
-  FromJson,
-  FromTable
-} from "../../../../../../../../services/transformer/TransformerConfig";
+import { FromJson } from "../../../../../../../../services/transformer/TransformerConfig";
 import { TableColumnsInput } from "./TableColumnsInput";
+import { TableFromFileSchema } from "./TableFromFileSchema";
 import { get } from "@gojek/mlp-ui";
 
 export const TableInputCard = ({
@@ -103,8 +101,26 @@ export const TableInputCard = ({
                   onChange={() =>
                     onChangeHandler({
                       ...table,
-                      baseTable: { fromTable: new FromTable() },
+                      baseTable: { fromTable: { tableName: "" } },
                       columns: []
+                    })
+                  }
+                />
+              </EuiFlexItem>
+              <EuiFlexItem grow={false}>
+                <EuiRadio
+                  id={`table-input-fromFile-${index}-${tableIdx}`}
+                  label="From File"
+                  checked={
+                    (table.baseTable && !!table.baseTable.fromFile) || false
+                  }
+                  onChange={() =>
+                    onChangeHandler({
+                      ...table,
+                      baseTable: {
+                        fromFile: { format: "", uri: "", schema: [] }
+                      },
+                      columns: undefined
                     })
                   }
                 />
@@ -120,7 +136,7 @@ export const TableInputCard = ({
                     onChangeHandler({
                       ...table,
                       baseTable: { fromJson: new FromJson() },
-                      columns: undefined
+                      columns: []
                     })
                   }
                 />
@@ -178,6 +194,91 @@ export const TableInputCard = ({
           </EuiFlexItem>
         )}
 
+        {table.baseTable && table.baseTable.fromFile && (
+          <EuiFlexItem>
+            <EuiFormRow
+              label="File Type *"
+              isInvalid={!!get(errors, "baseTable.fromFile.format")}
+              error={get(errors, "baseTable.fromFile.format")}
+              display="columnCompressed"
+              fullWidth>
+              <EuiFlexGroup>
+                <EuiFlexItem grow={false}>
+                  <EuiRadio
+                    id={`table-file-format-csv-${index}-${tableIdx}`}
+                    label="CSV"
+                    checked={
+                      (table.baseTable &&
+                        table.baseTable.fromFile &&
+                        table.baseTable.fromFile.format === "CSV") ||
+                      false
+                    }
+                    onChange={e =>
+                      onChange("baseTable", {
+                        fromFile: {
+                          ...table.baseTable.fromFile,
+                          format: "CSV"
+                        }
+                      })
+                    }
+                  />
+                </EuiFlexItem>
+                <EuiFlexItem>
+                  <EuiRadio
+                    id={`table-file-format-parquet-${index}-${tableIdx}`}
+                    label="Parquet"
+                    checked={
+                      (table.baseTable &&
+                        table.baseTable.fromFile &&
+                        table.baseTable.fromFile.format === "PARQUET") ||
+                      false
+                    }
+                    onChange={e =>
+                      onChange("baseTable", {
+                        fromFile: {
+                          ...table.baseTable.fromFile,
+                          format: "PARQUET"
+                        }
+                      })
+                    }
+                  />
+                </EuiFlexItem>
+              </EuiFlexGroup>
+            </EuiFormRow>
+            <EuiFormRow
+              label="URI to file *"
+              isInvalid={!!get(errors, "baseTable.fromFile.uri")}
+              error={get(errors, "baseTable.fromFile.uri")}
+              display="columnCompressed"
+              fullWidth>
+              <Fragment>
+                <EuiFieldText
+                  placeholder="URI to file"
+                  value={table.baseTable.fromFile.uri}
+                  onChange={e =>
+                    onChange("baseTable", {
+                      fromFile: {
+                        ...table.baseTable.fromFile,
+                        uri: e.target.value
+                      }
+                    })
+                  }
+                  isInvalid={!!errors.name}
+                  name={`base-table-uri-${index}`}
+                  fullWidth
+                />
+              </Fragment>
+            </EuiFormRow>
+            <EuiFormRow label="Schema *" fullWidth>
+              <TableFromFileSchema
+                columns={table.baseTable.fromFile.schema || []}
+                onChangeHandler={onChangeHandler}
+                errors={errors.schema}
+              />
+            </EuiFormRow>
+          </EuiFlexItem>
+        )}
+
         {table.baseTable && table.baseTable.fromJson && (
           <Fragment>
             <EuiFlexItem>
@@ -222,6 +323,14 @@ export const TableInputCard = ({
                       }
                     })
                   }
+                />
+              </EuiFormRow>
+
+              <EuiFormRow label="Columns *" fullWidth>
+                <TableColumnsInput
+                  columns={table.columns || []}
+                  onChangeHandler={onColumnChangeHandler}
+                  errors={errors.columns}
                 />
               </EuiFormRow>
             </EuiFlexItem>
