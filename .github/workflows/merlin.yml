@@ -166,7 +166,7 @@ jobs:
 
   publish-api-docker:
     runs-on: ubuntu-latest
-    needs: integration-test-api
+    needs: test-api
     steps:
       - uses: actions/checkout@v2
       - name: Get branch name
