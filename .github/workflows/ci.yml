@@ -288,7 +288,8 @@ jobs:
             --image rancher/k3s:v1.21.11
             --k3s-arg "--no-deploy=traefik,servicelb,metrics-server@server:*"
       - name: Setup cluster
-        run: ./merlin/scripts/e2e/setup-cluster.sh
+        working-directory: merlin/scripts/e2e/
+        run: setup-cluster.sh
       # - name: Setup mlp namespace
       #   run: |
       #     kubectl create namespace mlp
