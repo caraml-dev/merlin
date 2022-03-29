@@ -1,0 +1,313 @@
+name: Merlin CI Workflow
+on:
+  push:
+    branches: 
+    - main 
+    - v1beta1  # TODO: remove v1beta1
+  pull_request:
+    branches: 
+    - main 
+    - v1beta1  # TODO: remove v1beta1
+
+jobs:
+  lint-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout to the target branch
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Lint UI files
+        run: make lint-ui
+
+  lint-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Install dependencies
+        run: |
+          make setup
+          make init-dep-api
+      - name: Lint API files
+        run: make lint-api
+
+  test-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout to the target branch
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Test UI files
+        run: make test-ui
+
+  test-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12.4
+        env:
+          POSTGRES_DB: merlin
+          POSTGRES_USER: merlin
+          POSTGRES_PASSWORD: merlin
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Install dependencies
+        run: |
+          make setup
+          make init-dep-api
+      - name: Test API files
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: merlin
+          POSTGRES_USER: merlin
+          POSTGRES_PASSWORD: merlin
+        run: make it-test-api-ci
+
+  test-batch-predictor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        working-directory: ./python/batch-predictor
+        run: |
+          pip install pipenv
+          make setup
+      - name: Run batch-predictor test
+        working-directory: ./python/batch-predictor
+        run: make unit-test
+
+  test-pyfunc-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7.9
+      - name: Install dependencies
+        working-directory: ./python/pyfunc-server
+        run: |
+          pip install pipenv
+          make setup
+      - name: Run pyfunc-server test
+        working-directory: ./python/pyfunc-server
+        run: make test
+
+  test-python-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        working-directory: ./python/sdk
+        run: |
+          pip install mypy==0.812 pipenv
+          make setup
+      - name: Unit test Python SDK
+        env:
+          E2E_USE_GOOGLE_OAUTH: false
+        working-directory: ./python/sdk
+        run: make unit-test
+
+  build-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - name: Install dependencies
+        run: make init-dep-ui
+      - name: Build UI static files
+        run: make build-ui
+
+  build-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Install dependencies
+        run: make init-dep-api
+      - name: Build API server
+        run: make build-api
+
+  build-transformer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Install dependencies
+        run: make init-dep-api
+      - name: Build API server
+        run: make build-transformer
+
+  publish-api-docker:
+    runs-on: ubuntu-latest
+    needs: integration-test-api
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
+      - name: Build and push Merlin Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          build_args: GITHUB_TOKEN=${{ secrets.DSP_REPO_TOKEN }}
+          tags: ${{ env.branch_name }}
+
+  publish-transformer-docker:
+    runs-on: ubuntu-latest
+    needs: integration-test-api
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
+      - name: Build and push Merlin Standard Transformer Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/merlin-transformer
+          build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
+          dockerfile: transformer.Dockerfile
+          tags: ${{ env.branch_name }}
+
+  publish-batch-predictor-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
+      - name: Build and push PySpark Base Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/merlin-pyspark-base
+          path: python
+          dockerfile: python/batch-predictor/docker/base.Dockerfile
+          tags: ${{ env.branch_name }}
+
+  publish-pyfunc-server-docker:
+    runs-on: ubuntu-latest
+    needs:
+    - test-pyfunc-server
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get branch name
+        run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
+      - name: Build and push PyFunc Base Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+          registry: ghcr.io
+          repository: gojek/merlin-pyfunc-base
+          path: python
+          dockerfile: python/pyfunc-server/base.Dockerfile
+          tags: ${{ env.branch_name }}
+
+  publish-python-sdk:
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        working-directory: ./python/sdk
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        working-directory: ./python/sdk
+        run: |
+          tag=$(git describe --tags --always --first-parent)
+          sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag//v}"`\"|g" ./merlin/version.py
+          python setup.py sdist bdist_wheel
+          twine upload dist/*
+
+  e2e-test:
+    runs-on: ubuntu-latest
+    needs: 
+    - publish-api-docker
+    - publish-batch-predictor-docker
+    - publish-transformer-docker
+    - publish-pyfunc-server-docker
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: merlin
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - uses: AbsaOSS/k3d-action@v2
+        name: "Create Test Cluster"
+        with:
+          cluster-name: "merlin-cluster"
+          args: >-
+            -p "8083:80@agent:0:direct"
+            -p "8443:443@agent:0:direct"
+            -p "5053:53/udp@agent:0:direct"
+            --agents 3
+            --no-lb
+            --image rancher/k3s:v1.21.11
+            --k3s-arg "--no-deploy=traefik,servicelb,metrics-server@server:*"
+      - name: Setup cluster
+        run: ./merlin/scripts/e2e/setup-cluster.sh
+      # - name: Setup mlp namespace
+      #   run: |
+      #     kubectl create namespace mlp
+      #     kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
+      # - name: Deploy MLP
+      #   run: |
+      #     export INGRESS_HOST=127.0.0.1
+      #     export HOST_IP=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
+      #     helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yaml \
+      #     --set mlp.image.tag=main \
+      #     --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
+      #     --set mlp.oauthClientID=${OAUTH_CLIENT_ID} \
+      #     --set mlp.mlflowTrackingUrl=http://${HOST_IP}:31100 \
+      #     --set mlp.ingress.enabled=true \
+      #     --set mlp.ingress.class=istio \
+      #     --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
+      #     --set mlp.ingress.path="/*" \
+      #     --wait --timeout=5m
+      # - name: Deploy Merlin
+      #   run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
+      # - name: Run E2E test
+      #   run: ./merlin/scripts/e2e/run-e2e.sh
