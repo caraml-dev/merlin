@@ -45,4 +45,5 @@ message FeatureTableMetadata {
   string name = 1; // Name of feast feature table spec
   string project = 2; // Feast project where the feature table stored 
   google.protobuf.Duration maxAge = 3; // MaxAge indicates maximum duration of how long features value in a feature table valid
+  repeated string entities = 4; // Entities in a feature table
 }

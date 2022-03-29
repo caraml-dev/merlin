@@ -1015,7 +1015,7 @@ func TestEntityKeysToBigTable(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			got := entityKeysToBigTable(tC.project, tC.entityKeys)
+			got := entityKeysToBigTable(tC.project, entitiesToEntityNames(tC.entityKeys))
 			assert.Equal(t, tC.want, got)
 		})
 	}
