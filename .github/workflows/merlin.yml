@@ -168,9 +168,7 @@ jobs:
       - name: Build API Docker
         run: docker build -t merlin-api:${branch_name} -f Dockerfile .
       - name: Save API Docker
-        run: docker image save \
-            --output merlin-api.${branch_name}.tar \
-            merlin-api:${branch_name}
+        run: docker image save --output merlin-api.${branch_name}.tar merlin-api:${branch_name}
       - name: Publish API Docker Artifact
         uses: actions/upload-artifact@v2
         with:
@@ -189,9 +187,7 @@ jobs:
       - name: Build Batch Predictor Docker
         run: docker build -t merlin-pyspark-base:${branch_name} -f python/batch-predictor/docker/base.Dockerfile .
       - name: Save Batch Predictor Docker
-        run: docker image save \
-            --output merlin-pyspark-base.${branch_name}.tar \
-            merlin-pyspark-base:${branch_name}
+        run: docker image save --output merlin-pyspark-base.${branch_name}.tar merlin-pyspark-base:${branch_name}
       - name: Publish Batch Predictor Docker Artifact
         uses: actions/upload-artifact@v2
         with:
@@ -210,9 +206,7 @@ jobs:
       - name: Build Pyfunc Server Docker
         run: docker build -t merlin-pyfunc-base:${branch_name} -f python/pyfunc-server/base.Dockerfile .
       - name: Save Pyfunc Server Docker
-        run: docker image save \
-            --output merlin-pyfunc-base.${branch_name}.tar \
-            merlin-pyfunc-base:${branch_name}
+        run: docker image save --output merlin-pyfunc-base.${branch_name}.tar merlin-pyfunc-base:${branch_name}
       - name: Publish Pyfunc Server Docker Artifact
         uses: actions/upload-artifact@v2
         with:
@@ -244,9 +238,7 @@ jobs:
       - name: Build Standard Transformer Docker
         run: docker build -t merlin-transformer:${branch_name} -f transformer.Dockerfile .
       - name: Save Standard Transformer Docker
-        run: docker image save \
-            --output merlin-transformer.${branch_name}.tar \
-            merlin-transformer:${branch_name}
+        run: docker image save --output merlin-transformer.${branch_name}.tar merlin-transformer:${branch_name}
       - name: Publish Standard Transformer Docker Artifact
         uses: actions/upload-artifact@v2
         with:
