@@ -21,6 +21,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7
+      - uses: actions/cache@v3
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
       - name: Install dependencies
         working-directory: ./python/batch-predictor
         run: |
@@ -37,6 +41,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7.9
+      - uses: actions/cache@v3
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
         run: |
@@ -53,6 +61,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7
+      - uses: actions/cache@v3
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
       - name: Install dependencies
         working-directory: ./python/sdk
         run: |
@@ -154,7 +166,7 @@ jobs:
       - name: Get branch name
         run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build API Docker
-        run: docker build -t merlin-api:${branch_name} -f Dockerfile
+        run: docker build -t merlin-api:${branch_name} -f Dockerfile .
       - name: Save API Docker
         run: docker image save \
             --output merlin-api.${branch_name}.tar \
@@ -175,7 +187,7 @@ jobs:
       - name: Get branch name
         run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build Batch Predictor Docker
-        run: docker build -t merlin-pyspark-base:${branch_name} -f python/batch-predictor/docker/base.Dockerfile
+        run: docker build -t merlin-pyspark-base:${branch_name} -f python/batch-predictor/docker/base.Dockerfile .
       - name: Save Batch Predictor Docker
         run: docker image save \
             --output merlin-pyspark-base.${branch_name}.tar \
@@ -196,7 +208,7 @@ jobs:
       - name: Get branch name
         run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build Pyfunc Server Docker
-        run: docker build -t merlin-pyfunc-base:${branch_name} -f python/pyfunc-server/base.Dockerfile
+        run: docker build -t merlin-pyfunc-base:${branch_name} -f python/pyfunc-server/base.Dockerfile .
       - name: Save Pyfunc Server Docker
         run: docker image save \
             --output merlin-pyfunc-base.${branch_name}.tar \
@@ -230,7 +242,7 @@ jobs:
       - name: Get branch name
         run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build Standard Transformer Docker
-        run: docker build -t merlin-transformer:${branch_name} -f transformer.Dockerfile
+        run: docker build -t merlin-transformer:${branch_name} -f transformer.Dockerfile .
       - name: Save Standard Transformer Docker
         run: docker image save \
             --output merlin-transformer.${branch_name}.tar \
