@@ -133,6 +133,23 @@ export const FeastEntities = ({
           valueType: e[0] && e[0].spec ? e[0].spec.valueType : ""
         };
       }
+      if (field === "fieldType") {
+        //flatten value type for non-jsonpath type
+        if (
+          items[idx].fieldType !== "JSONPath" &&
+          typeof items[idx].field === "object"
+        ) {
+          items[idx].field = items[idx].field.jsonPath;
+        }
+
+        switch (items[idx].fieldType) {
+          case "JSONPath":
+            if (items[idx].field && items[idx].field.jsonPath === undefined) {
+              items[idx].field = { jsonPath: items[idx].field };
+            }
+            break;
+        }
+      }
       updateItems(items);
     };
   };

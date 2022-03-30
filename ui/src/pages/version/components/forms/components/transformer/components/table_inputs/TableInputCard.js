@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import {
-  EuiCheckbox,
+  EuiSwitch,
   EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
@@ -14,7 +14,7 @@ import { DraggableHeader } from "../../../DraggableHeader";
 import { FromJson } from "../../../../../../../../services/transformer/TransformerConfig";
 import { TableColumnsInput } from "./TableColumnsInput";
 import { TableFromFileSchema } from "./TableFromFileSchema";
-import { get } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip, get } from "@gojek/mlp-ui";
 
 export const TableInputCard = ({
   index = 0,
@@ -246,7 +246,13 @@ export const TableInputCard = ({
               </EuiFlexGroup>
             </EuiFormRow>
             <EuiFormRow
-              label="URI to file *"
+              label={
+                <FormLabelWithToolTip
+                  label="URI to file *"
+                  content="Global GCS path e.g. gs://my-bucket/my-csv.csv OR
+                    local path relative to model storage uri e.g. myfiles/myparquet.parquet"
+                />
+              }
               isInvalid={!!get(errors, "baseTable.fromFile.uri")}
               error={get(errors, "baseTable.fromFile.uri")}
               display="columnCompressed"
@@ -311,7 +317,7 @@ export const TableInputCard = ({
                 label="Row Number"
                 display="columnCompressed"
                 fullWidth>
-                <EuiCheckbox
+                <EuiSwitch
                   id={`addRowNumber-${index}`}
                   label="Add row number"
                   checked={table.baseTable.fromJson.addRowNumber}

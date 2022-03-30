@@ -28,18 +28,32 @@ export const VariablesInput = ({ variables, onChangeHandler, errors = {} }) => {
 
   const onVariableChange = (idx, field, value) => {
     let newItem = { ...items[idx], [field]: value };
-    if (newItem.literal !== undefined) {
+    if ("literal" in newItem) {
       delete newItem["literal"];
     }
-    if (newItem.expression !== undefined) {
+    if ("expression" in newItem) {
       delete newItem["expression"];
     }
-    if (newItem.jsonPath !== undefined) {
-      delete newItem["jsonPath"];
+    if ("jsonPathConfig" in newItem) {
+      delete newItem["jsonPathConfig"];
+    }
+    if (newItem.name === undefined) {
+      newItem.name = "";
+    }
+    if ("idx" in newItem) {
+      delete newItem.idx;
+    }
+
+    //flatten value type for non-jsonpath type
+    if (newItem.type !== "jsonpath" && typeof newItem.value === "object") {
+      newItem["value"] = newItem.value.jsonPath;
     }
 
     switch (newItem.type) {
       case "jsonpath":
+        if (newItem.value && newItem.value.jsonPath === undefined) {
+          newItem["value"] = { jsonPath: newItem.value };
+        }
         newItem["jsonPathConfig"] = newItem.value;
         break;
       case "expression":
