@@ -22,7 +22,7 @@ jobs:
         name: Create version string
         run: |
           # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          VERSION=$(git describe --tags --always --first-parent)
 
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
