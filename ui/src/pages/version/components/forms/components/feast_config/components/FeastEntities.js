@@ -148,6 +148,8 @@ export const FeastEntities = ({
               items[idx].field = { jsonPath: items[idx].field };
             }
             break;
+          default:
+            break;
         }
       }
       updateItems(items);
