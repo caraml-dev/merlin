@@ -18,6 +18,7 @@ jobs:
     outputs:
       version: ${{ steps.create_version.outputs.version }}
     steps:
+      - uses: actions/checkout@v2
       - id: create_version
         name: Create version string
         run: |
