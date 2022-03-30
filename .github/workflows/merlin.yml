@@ -213,9 +213,9 @@ jobs:
           name: merlin-ui-dist
           path: ui/build
       - name: Build API Docker
-        run: docker build -t merlin-api:${{ env.GITHUB_REF_NAME }} -f Dockerfile .
+        run: docker build -t merlin-api:${GITHUB_REF_NAME} -f Dockerfile .
       - name: Save API Docker
-        run: docker image save --output merlin-api.${{ env.GITHUB_REF_NAME }}.tar merlin-api:${{ env.GITHUB_REF_NAME }}
+        run: docker image save --output merlin-api.${GITHUB_REF_NAME}.tar merlin-api:${GITHUB_REF_NAME}
       - name: Publish API Docker Artifact
         uses: actions/upload-artifact@v2
         with:
