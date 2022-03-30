@@ -342,37 +342,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-      - name: Publish images to local registry
-        env:
-          DOCKER_REPOSITORY: ${{ env.LOCAL_REGISTRY }}/${{ github.repository }}
-        run: |
-          # Merlin API
-          docker image load --input merlin-api.${{ needs.create-version.outputs.version }}.tar
-          docker tag \
-            merlin-api:${{ needs.create-version.outputs.version }} \
-            ${{ env.DOCKER_REPOSITORY }}/merlin-api:${{ needs.create-version.outputs.version }}
-          docker push ${{ env.DOCKER_REPOSITORY }}/merlin-api:${{ needs.create-version.outputs.version }}
-
-          # Batch Predictor
-          docker image load --input merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
-          docker tag \
-             merlin-pyspark-base:${{ needs.create-version.outputs.version }} \
-            ${{ env.DOCKER_REPOSITORY }}/merlin-pyspark-base:${{ needs.create-version.outputs.version }}
-          docker push ${{ env.DOCKER_REPOSITORY }}/merlin-pyspark-base:${{ needs.create-version.outputs.version }}
-          
-          # Pyfunc Server
-          docker image load --input merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
-          docker tag \
-            merlin-pyfunc-base:${{ needs.create-version.outputs.version }} \
-            ${{ env.DOCKER_REPOSITORY }}/merlin-pyfunc-base:${{ needs.create-version.outputs.version }}
-          docker push ${{ env.DOCKER_REPOSITORY }}/merlin-pyfunc-base:${{ needs.create-version.outputs.version }}
-
-          # Standard Transformer
-          docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-          docker tag \
-             merlin-transformer:${{ needs.create-version.outputs.version }} \
-            ${{ env.DOCKER_REPOSITORY }}/ merlin-transformer:${{ needs.create-version.outputs.version }}
-          docker push ${{ env.DOCKER_REPOSITORY }}/ merlin-transformer:${{ needs.create-version.outputs.version }}
       - uses: AbsaOSS/k3d-action@v2
         name: "Create Test Cluster"
         with:
@@ -385,6 +354,23 @@ jobs:
             --no-lb
             --image rancher/k3s:v1.22.6-k3s1
             --k3s-arg "--no-deploy=traefik,metrics-server@server:*"
+      - name: Publish images to k3d registry
+        run: |
+          # Merlin API
+          docker image load --input merlin-api.${{ needs.create-version.outputs.version }}.tar
+          k3d image import merlin-api-${{ needs.create-version.outputs.version }} merlin-cluster
+
+          # Batch Predictor
+          docker image load --input merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
+          k3d image import merlin-pyspark-base-${{ needs.create-version.outputs.version }} merlin-cluster
+          
+          # Pyfunc Server
+          docker image load --input merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
+          k3d image import merlin-pyfunc-base-${{ needs.create-version.outputs.version }} merlin-cluster
+
+          # Standard Transformer
+          docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
+          k3d image import merlin-transformer-${{ needs.create-version.outputs.version }} merlin-cluster
       - name: Setup cluster
         working-directory: merlin/scripts/e2e/
         run: ./setup-cluster.sh
