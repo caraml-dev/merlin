@@ -6,8 +6,7 @@ import {
   EuiDraggable,
   EuiDroppable,
   EuiFlexGroup,
-  EuiFlexItem,
-  EuiPanel
+  EuiFlexItem
 } from "@elastic/eui";
 import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { AddButton } from "../AddButton";

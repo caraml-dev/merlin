@@ -3,7 +3,6 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiFormRow,
-  EuiPanel,
   EuiSpacer,
   EuiFieldText
 } from "@elastic/eui";
