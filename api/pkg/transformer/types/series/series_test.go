@@ -1,6 +1,7 @@
 package series
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/go-gota/gota/series"
@@ -336,6 +337,110 @@ func TestSeries_Concat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.series1.Concat(*tt.series2)
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestSeries_IsIn(t *testing.T) {
+	type args struct {
+		comparingValue interface{}
+	}
+	tests := []struct {
+		name        string
+		inputSeries *Series
+		args        args
+		want        *Series
+	}{
+		{
+			name:        "some of record has value in comparing value",
+			inputSeries: New([]int{1, 2, 3, 4, 5}, Int, ""),
+			args: args{
+				comparingValue: []int{5, 3, 9},
+			},
+			want: New([]bool{false, false, true, false, true}, Bool, ""),
+		},
+		{
+			name:        "no records that has value in comparingValue",
+			inputSeries: New([]int{1, 2, 3, 4, 5}, Int, ""),
+			args: args{
+				comparingValue: []int{9, 10, 11},
+			},
+			want: New([]bool{false, false, false, false, false}, Bool, ""),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.inputSeries.IsIn(tt.args.comparingValue); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Series.IsIn() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSeries_Slice(t *testing.T) {
+	type args struct {
+		start int
+		end   int
+	}
+	tests := []struct {
+		name        string
+		inputSeries *Series
+		args        args
+		want        *Series
+		wantErr     bool
+		errMsg      string
+	}{
+		{
+			name:        "start < end",
+			inputSeries: New([]int{1, 2, 3, 4, 5}, Int, ""),
+			args: args{
+				start: 1,
+				end:   5,
+			},
+			want: New([]int{2, 3, 4, 5}, Int, ""),
+		},
+		{
+			name:        "start < end, end if greater and end > column size",
+			inputSeries: New([]int{1, 2, 3, 4, 5}, Int, ""),
+			args: args{
+				start: 1,
+				end:   6,
+			},
+			wantErr: true,
+			errMsg:  "slice index out of bounds",
+		},
+		{
+			name:        "start < 0",
+			inputSeries: New([]int{1, 2, 3, 4, 5}, Int, ""),
+			args: args{
+				start: -1,
+				end:   3,
+			},
+			wantErr: true,
+			errMsg:  "slice index out of bounds",
+		},
+		{
+			name:        "start > end",
+			inputSeries: New([]int{1, 2, 3, 4, 5}, Int, ""),
+			args: args{
+				start: 3,
+				end:   2,
+			},
+			wantErr: true,
+			errMsg:  "slice index out of bounds",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantErr {
+				assert.PanicsWithError(t, tt.errMsg, func() {
+					tt.inputSeries.Slice(tt.args.start, tt.args.end)
+				})
+				return
+			}
+			if got := tt.inputSeries.Slice(tt.args.start, tt.args.end); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Series.Slice() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

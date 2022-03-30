@@ -488,8 +488,8 @@ github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8 h1:S0k9mBbISxJGRUYetI+IK
 github.com/gojek/mlp v0.0.0-20201002030420-4e35e69a9ab8/go.mod h1:IjQCiAzap7TZRZVZ4r2RdzVTuAzoyR5el2GgEu2X1FM=
 github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf h1:5xRGbUdOmZKoDXkGx5evVLehuCMpuO1hl701bEQqXOM=
 github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf/go.mod h1:QzhUKaYKJmcbTnCYCAVQrroCOY7vOOI8cSQ4NbuhYf0=
-github.com/gojekfarm/gota v0.0.0-20220225033233-df7cd66a11dc h1:txm7LRQmOtmta1u77HJ2vA7kxajmSybqdF/l/Y3+7O8=
-github.com/gojekfarm/gota v0.0.0-20220225033233-df7cd66a11dc/go.mod h1:0N1RwZc60ImjH0LMLUTDCvPWdtxk419HJScoigjR66k=
+github.com/gojekfarm/gota v0.12.1-0.20220329041038-bdee6822d003 h1:P9ph+Dcd7xMe/GQ9k24T9NqVS6HRyrNqyscpV0HUBtM=
+github.com/gojekfarm/gota v0.12.1-0.20220329041038-bdee6822d003/go.mod h1:0N1RwZc60ImjH0LMLUTDCvPWdtxk419HJScoigjR66k=
 github.com/gojekfarm/jsonpath v0.1.0 h1:ofQpGrZiv75uO2mB1gTk5l9BmJLVIMB+uQh4bY2Nq7g=
 github.com/gojekfarm/jsonpath v0.1.0/go.mod h1:1cPoGRnDKrtGXzs4z/IkEPosicPFZ0Drn2prBo7cyHM=
 github.com/golang-migrate/migrate/v4 v4.11.0 h1:uqtd0ysK5WyBQ/T1K2uDIooJV0o2Obt6uPwP062DupQ=

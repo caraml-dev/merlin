@@ -4,29 +4,10 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
-	"github.com/gojek/merlin/pkg/transformer/types/operator"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
-func compareInt64(lValue, rValue interface{}, comparator operator.Comparator) (bool, error) {
-	compareFn := func(l, r int64, c operator.Comparator) (bool, error) {
-		switch c {
-		case operator.Greater:
-			return (l > r), nil
-		case operator.GreaterEq:
-			return (l >= r), nil
-		case operator.Less:
-			return (l < r), nil
-		case operator.LessEq:
-			return (l <= r), nil
-		case operator.Eq:
-			return (l == r), nil
-		case operator.Neq:
-			return (l != r), nil
-		default:
-			return false, fmt.Errorf("%s operator is not supported", c)
-		}
-	}
+func compareInt64(lValue, rValue interface{}, comparator Comparator) (bool, error) {
 	lValInt64, err := converter.ToInt64(lValue)
 	if err != nil {
 		return false, err
@@ -35,28 +16,26 @@ func compareInt64(lValue, rValue interface{}, comparator operator.Comparator) (b
 	if err != nil {
 		return false, err
 	}
-	return compareFn(lValInt64, rValInt64, comparator)
+
+	switch comparator {
+	case Greater:
+		return (lValInt64 > rValInt64), nil
+	case GreaterEq:
+		return (lValInt64 >= rValInt64), nil
+	case Less:
+		return (lValInt64 < rValInt64), nil
+	case LessEq:
+		return (lValInt64 <= rValInt64), nil
+	case Eq:
+		return (lValInt64 == rValInt64), nil
+	case Neq:
+		return (lValInt64 != rValInt64), nil
+	default:
+		return false, fmt.Errorf("%s operator is not supported", comparator)
+	}
 }
 
-func compareFloat64(lValue, rValue interface{}, comparator operator.Comparator) (bool, error) {
-	compareFn := func(l, r float64, c operator.Comparator) (bool, error) {
-		switch c {
-		case operator.Greater:
-			return (l > r), nil
-		case operator.GreaterEq:
-			return (l >= r), nil
-		case operator.Less:
-			return (l < r), nil
-		case operator.LessEq:
-			return (l <= r), nil
-		case operator.Eq:
-			return (l == r), nil
-		case operator.Neq:
-			return (l != r), nil
-		default:
-			return false, fmt.Errorf("%s operator is not supported", c)
-		}
-	}
+func compareFloat64(lValue, rValue interface{}, comparator Comparator) (bool, error) {
 	lValFloat64, err := converter.ToFloat64(lValue)
 	if err != nil {
 		return false, err
@@ -65,28 +44,25 @@ func compareFloat64(lValue, rValue interface{}, comparator operator.Comparator) 
 	if err != nil {
 		return false, err
 	}
-	return compareFn(lValFloat64, rValFloat64, comparator)
+	switch comparator {
+	case Greater:
+		return (lValFloat64 > rValFloat64), nil
+	case GreaterEq:
+		return (lValFloat64 >= rValFloat64), nil
+	case Less:
+		return (lValFloat64 < rValFloat64), nil
+	case LessEq:
+		return (lValFloat64 <= rValFloat64), nil
+	case Eq:
+		return (lValFloat64 == rValFloat64), nil
+	case Neq:
+		return (lValFloat64 != rValFloat64), nil
+	default:
+		return false, fmt.Errorf("%s operator is not supported", comparator)
+	}
 }
 
-func compareString(lValue, rValue interface{}, comparator operator.Comparator) (bool, error) {
-	compareFn := func(l, r string, c operator.Comparator) (bool, error) {
-		switch c {
-		case operator.Greater:
-			return (l > r), nil
-		case operator.GreaterEq:
-			return (l >= r), nil
-		case operator.Less:
-			return (l < r), nil
-		case operator.LessEq:
-			return (l <= r), nil
-		case operator.Eq:
-			return (l == r), nil
-		case operator.Neq:
-			return (l != r), nil
-		default:
-			return false, fmt.Errorf("%s operator is not supported", c)
-		}
-	}
+func compareString(lValue, rValue interface{}, comparator Comparator) (bool, error) {
 	lValString, err := converter.ToString(lValue)
 	if err != nil {
 		return false, err
@@ -95,20 +71,25 @@ func compareString(lValue, rValue interface{}, comparator operator.Comparator) (
 	if err != nil {
 		return false, err
 	}
-	return compareFn(lValString, rValString, comparator)
+	switch comparator {
+	case Greater:
+		return (lValString > rValString), nil
+	case GreaterEq:
+		return (lValString >= rValString), nil
+	case Less:
+		return (lValString < rValString), nil
+	case LessEq:
+		return (lValString <= rValString), nil
+	case Eq:
+		return (lValString == rValString), nil
+	case Neq:
+		return (lValString != rValString), nil
+	default:
+		return false, fmt.Errorf("%s operator is not supported", comparator)
+	}
 }
 
-func compareBool(lValue, rValue interface{}, comparator operator.Comparator) (bool, error) {
-	compareFn := func(l, r bool, c operator.Comparator) (bool, error) {
-		switch c {
-		case operator.Eq:
-			return (l == r), nil
-		case operator.Neq:
-			return (l != r), nil
-		default:
-			return false, fmt.Errorf("%s operator is not supported", c)
-		}
-	}
+func compareBool(lValue, rValue interface{}, comparator Comparator) (bool, error) {
 	lValBool, err := converter.ToBool(lValue)
 	if err != nil {
 		return false, err
@@ -117,34 +98,41 @@ func compareBool(lValue, rValue interface{}, comparator operator.Comparator) (bo
 	if err != nil {
 		return false, err
 	}
-	return compareFn(lValBool, rValBool, comparator)
+	switch comparator {
+	case Eq:
+		return (lValBool == rValBool), nil
+	case Neq:
+		return (lValBool != rValBool), nil
+	default:
+		return false, fmt.Errorf("%s operator is not supported", comparator)
+	}
 }
 
 func greaterOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doComparison(left, right, operator.Greater, indexes)
+	return doComparison(left, right, Greater, indexes)
 }
 
 func greaterEqOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doComparison(left, right, operator.GreaterEq, indexes)
+	return doComparison(left, right, GreaterEq, indexes)
 }
 
 func lessOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doComparison(left, right, operator.Less, indexes)
+	return doComparison(left, right, Less, indexes)
 }
 
 func lessEqOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doComparison(left, right, operator.LessEq, indexes)
+	return doComparison(left, right, LessEq, indexes)
 }
 
 func equalOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doComparison(left, right, operator.Eq, indexes)
+	return doComparison(left, right, Eq, indexes)
 }
 
 func neqOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doComparison(left, right, operator.Neq, indexes)
+	return doComparison(left, right, Neq, indexes)
 }
 
-func doComparison(left, right interface{}, operation operator.Comparator, indexes *series.Series) (interface{}, error) {
+func doComparison(left, right interface{}, operation Comparator, indexes *series.Series) (interface{}, error) {
 	var result interface{}
 	var err error
 	switch lVal := left.(type) {

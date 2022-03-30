@@ -5,9 +5,7 @@ import (
 	"reflect"
 
 	"github.com/go-gota/gota/series"
-
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
-	"github.com/gojek/merlin/pkg/transformer/types/operator"
 )
 
 type (
@@ -210,28 +208,16 @@ func (s *Series) compare(comparator series.Comparator, comparingValue interface{
 	return NewSeries(&result), nil
 }
 
-func (s *Series) LogicalOperation(right interface{}, op operator.LogicalOperator) (*Series, error) {
-	var rightVal interface{}
-	switch val := right.(type) {
-	case Series:
-		rightVal = val.series
-	case *Series:
-		rightVal = val.series
-	default:
-		rightVal = val
+func (s *Series) Slice(start, end int) *Series {
+	sliced := s.series.Slice(start, end)
+	if sliced.Error() != nil {
+		panic(sliced.Error())
 	}
-	var res series.Series
-	switch op {
-	case operator.And:
-		res = s.series.And(rightVal)
-	case operator.Or:
-		res = s.series.Or(rightVal)
-	default:
-	}
-	if res.Err != nil {
-		return nil, res.Err
-	}
-	return &Series{&res}, nil
+	return NewSeries(&sliced)
+}
+
+func (s *Series) IsBoolean() bool {
+	return s.Type() == Bool
 }
 
 func (s *Series) IsIn(comparingValue interface{}) *Series {

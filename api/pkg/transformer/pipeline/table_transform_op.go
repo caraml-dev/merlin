@@ -6,6 +6,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/scaler"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 	"github.com/opentracing/opentracing-go"
 )
@@ -120,7 +121,7 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 		}
 
 		if step.FilterRow != nil {
-			rowIndexes, err := seriesFromExpression(env, step.FilterRow.Condition)
+			rowIndexes, err := getRowIndexes(env, step.FilterRow.Condition)
 			if err != nil {
 				return fmt.Errorf("error evaluating filter row expresion: %s. Err: %s", step.FilterRow, err)
 			}
@@ -162,6 +163,7 @@ func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *ta
 		rule := table.ColumnUpdate{
 			ColName: columnName,
 		}
+
 		// if conditions is not specified, it will work like set default value
 		if len(updateSpec.Conditions) == 0 {
 			values, err := seriesFromExpression(env, updateSpec.Expression)
@@ -169,25 +171,34 @@ func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *ta
 				return nil, fmt.Errorf("error evaluating expression for column %s: %v. Err: %s", columnName, updateSpec.Expression, err)
 			}
 
-			rule.DefaultValue = values
+			rule.RowValues = []table.RowValues{
+				{
+					RowIndexes: getDefaultRowIndexes(),
+					Values:     values,
+				},
+			}
 			updateColumnRules = append(updateColumnRules, rule)
 			continue
 		}
 
 		columnValueRules := make([]table.RowValues, 0, len(updateSpec.Conditions))
+
+		var defaultValue *spec.DefaultColumnValue
+		alreadyProcessedIdx := series.New([]bool{false}, series.Bool, "")
 		for _, condition := range updateSpec.Conditions {
 			if condition.Default != nil {
-				defaultValue, err := seriesFromExpression(env, condition.Default.Expression)
-				if err != nil {
-					return nil, fmt.Errorf("error evaluation default value for column %s: %v. Err: %s", columnName, condition.Default.Expression, err)
-				}
-				rule.DefaultValue = defaultValue
+				defaultValue = condition.Default
 				continue
 			}
 
-			rowIndex, err := seriesFromExpression(env, condition.If)
+			rowIndex, err := getRowIndexes(env, condition.If)
 			if err != nil {
-				return nil, fmt.Errorf("error evaluating expression for condition: %s with err: %s", condition.If, err)
+				return nil, err
+			}
+
+			alreadyProcessedIdx, err = rowIndex.Or(alreadyProcessedIdx)
+			if err != nil {
+				return nil, err
 			}
 
 			columnValue, err := subsetSeriesFromExpression(env, condition.Expression, rowIndex)
@@ -201,6 +212,22 @@ func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *ta
 			}
 			columnValueRules = append(columnValueRules, colRuleValue)
 		}
+
+		if defaultValue != nil {
+			initialDefaultRowIndexes := getDefaultRowIndexes()
+			defaultRowIndexes, err := initialDefaultRowIndexes.XOr(alreadyProcessedIdx)
+			if err != nil {
+				return nil, err
+			}
+			columnValue, err := subsetSeriesFromExpression(env, defaultValue.Expression, defaultRowIndexes)
+			if err != nil {
+				return nil, fmt.Errorf("error evaluation default value for column %s: %v. Err: Ts", columnName, defaultValue.Expression)
+			}
+			columnValueRules = append(columnValueRules, table.RowValues{
+				RowIndexes: defaultRowIndexes,
+				Values:     columnValue,
+			})
+		}
 		rule.RowValues = columnValueRules
 		updateColumnRules = append(updateColumnRules, rule)
 	}
@@ -209,4 +236,19 @@ func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *ta
 		return nil, err
 	}
 	return resultTable, nil
+}
+
+func getDefaultRowIndexes() *series.Series {
+	return series.New([]bool{true}, series.Bool, "")
+}
+
+func getRowIndexes(env *Environment, ifCondition string) (*series.Series, error) {
+	rowIndexes, err := seriesFromExpression(env, ifCondition)
+	if err != nil {
+		return nil, fmt.Errorf("error evaluating expression for condition: %s with err: %s", ifCondition, err)
+	}
+	if !rowIndexes.IsBoolean() {
+		return nil, fmt.Errorf("result of the condition is not boolean or series of boolean")
+	}
+	return rowIndexes, nil
 }

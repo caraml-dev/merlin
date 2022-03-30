@@ -16,7 +16,7 @@ export const SliceRow = ({ filterRow, onChangeHandler, errors = {} }) => {
         <EuiFormRow
           label={
             <FormLabelWithToolTip
-              label="Start"
+              label="Start Index"
               content="Start index of row, the result will be began from this index"
             />
           }
@@ -25,7 +25,7 @@ export const SliceRow = ({ filterRow, onChangeHandler, errors = {} }) => {
           display="columnCompressed"
           fullWidth>
           <EuiFieldText
-            placeholder="Start"
+            placeholder="Start Indexx"
             value={filterRow !== undefined ? filterRow.condition : ""}
             onChange={e => onChange("start")(e.target.value)}
             isInvalid={!!errors.name}
@@ -38,7 +38,7 @@ export const SliceRow = ({ filterRow, onChangeHandler, errors = {} }) => {
         <EuiFormRow
           label={
             <FormLabelWithToolTip
-              label="End"
+              label="End Index"
               content="End index of row, the result will exclude this index"
             />
           }
@@ -47,7 +47,7 @@ export const SliceRow = ({ filterRow, onChangeHandler, errors = {} }) => {
           display="columnCompressed"
           fullWidth>
           <EuiFieldText
-            placeholder="End"
+            placeholder="End Index"
             value={filterRow !== undefined ? filterRow.condition : ""}
             onChange={e => onChange("end")(e.target.value)}
             isInvalid={!!errors.name}

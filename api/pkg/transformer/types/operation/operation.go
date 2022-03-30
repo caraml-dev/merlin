@@ -3,7 +3,6 @@ package operation
 import (
 	"fmt"
 
-	"github.com/gojek/merlin/pkg/transformer/types/operator"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
@@ -95,31 +94,31 @@ func (s *OperationNode) runExecution(indexes *series.Series) (interface{}, error
 			leftVal = result
 		}
 		switch node.Operation {
-		case operator.Greater:
+		case Greater:
 			result, err = greaterOp(leftVal, rightVal, indexes)
-		case operator.GreaterEq:
+		case GreaterEq:
 			result, err = greaterEqOp(leftVal, rightVal, indexes)
-		case operator.Less:
+		case Less:
 			result, err = lessOp(leftVal, rightVal, indexes)
-		case operator.LessEq:
+		case LessEq:
 			result, err = lessEqOp(leftVal, rightVal, indexes)
-		case operator.Eq:
+		case Eq:
 			result, err = equalOp(leftVal, rightVal, indexes)
-		case operator.Neq:
+		case Neq:
 			result, err = neqOp(leftVal, rightVal, indexes)
-		case operator.And:
+		case And:
 			result, err = andOp(leftVal, rightVal)
-		case operator.Or:
+		case Or:
 			result, err = orOp(leftVal, rightVal)
-		case operator.Add:
+		case Add:
 			result, err = addOp(leftVal, rightVal, indexes)
-		case operator.Substract:
+		case Substract:
 			result, err = substractOp(leftVal, rightVal, indexes)
-		case operator.Multiply:
+		case Multiply:
 			result, err = multiplyOp(leftVal, rightVal, indexes)
-		case operator.Divide:
+		case Divide:
 			result, err = divideOp(leftVal, rightVal, indexes)
-		case operator.Modulo:
+		case Modulo:
 			result, err = moduloOp(leftVal, rightVal, indexes)
 		}
 		if err != nil {
@@ -140,31 +139,31 @@ func doOperationOnSeries(left interface{}, right interface{}, operation Operator
 	}
 
 	switch operation {
-	case operator.Greater:
+	case Greater:
 		return leftSeries.Greater(rightSeries)
-	case operator.GreaterEq:
+	case GreaterEq:
 		return leftSeries.GreaterEq(rightSeries)
-	case operator.Less:
+	case Less:
 		return leftSeries.Less(rightSeries)
-	case operator.LessEq:
+	case LessEq:
 		return leftSeries.LessEq(rightSeries)
-	case operator.Eq:
+	case Eq:
 		return leftSeries.Eq(rightSeries)
-	case operator.Neq:
+	case Neq:
 		return leftSeries.Neq(rightSeries)
-	case operator.And:
+	case And:
 		return leftSeries.And(rightSeries)
-	case operator.Or:
+	case Or:
 		return leftSeries.Or(rightSeries)
-	case operator.Add:
+	case Add:
 		return leftSeries.Add(rightSeries, indexes)
-	case operator.Substract:
+	case Substract:
 		return leftSeries.Substract(rightSeries, indexes)
-	case operator.Multiply:
+	case Multiply:
 		return leftSeries.Multiply(rightSeries, indexes)
-	case operator.Divide:
+	case Divide:
 		return leftSeries.Divide(rightSeries, indexes)
-	case operator.Modulo:
+	case Modulo:
 		return leftSeries.Modulo(rightSeries, indexes)
 	default:
 		return nil, fmt.Errorf("%s operation is not supported for arithmetic", operation)

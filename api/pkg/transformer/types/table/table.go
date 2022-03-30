@@ -312,9 +312,8 @@ type RowValues struct {
 // ColumnUpdate is a rule to update a column, this contains of name of column and `RowValues` indicate values for set of row in a column
 // also have defaultValue
 type ColumnUpdate struct {
-	RowValues    []RowValues
-	DefaultValue *series.Series
-	ColName      string
+	RowValues []RowValues
+	ColName   string
 }
 
 // UpdateColumns is method to update multiple columns given list of rules for update column (ColumnUpdate)
@@ -338,17 +337,6 @@ func (t *Table) UpdateColumns(columnUpdates []ColumnUpdate) error {
 			rowValues = append(rowValues, dataframe.RowValues{
 				Values:     *colValueRule.Values.Series(),
 				RowIndexes: *(idx.Series()),
-			})
-		}
-
-		if updateRule.DefaultValue != nil {
-			// create series of bool, that all of its values is true
-			indexForDefaultValue := series.New([]bool{true}, series.Bool, "")
-
-			defaultValue := updateRule.DefaultValue
-			rowValues = append(rowValues, dataframe.RowValues{
-				Values:     *defaultValue.Series(),
-				RowIndexes: *indexForDefaultValue.Series(),
 			})
 		}
 

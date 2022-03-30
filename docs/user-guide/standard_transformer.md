@@ -577,6 +577,85 @@ tableTransformation:
      - updateColumns:
         - column: "s2id"
           expression: S2ID(table1.Col('lat'), table2.Col('lon'), 12)
+        - column: "col2"
+          conditions:
+          - if: table1.Col('col1') * 2 > 10
+            expression: table1.Col('col1')
+          - default:
+              expression: -1
+```
+
+There are two ways to update columns:
+* Update column to the whole rows. Users need to only specify `column` and `expression`. Evaluation from that `expression` must contains of one value or array / series that has the same length with the rest of the column. Following the example:
+  ```
+    - updateColumns:
+      - column: "customer_id"
+        expression: "cust_1" # the value is scalar and will be broadcasted to all the row
+      - column: "s2id"
+        expression: S2ID(table1.Col('lat'), table2.Col('lon'), 12) # the value is array or series that the length should be the same with the rest of the columns in a table 
+  ```
+* Update column to the subset of rows based on conditions. For this users can set multiple `if` with `expression` and also default value if none of conditions are match. For example users have following table
+
+| customer_id | customer_age | total_booking_1w |
+| ----------- | ------------ | ---------------- |
+| 1234        | 60           | 8                |
+| 4321        | 23           | 4                |
+| 1235        | 17           | 4                |
+  
+Users want to create new column `customer_segment` with certain rules:
+1. Customer that older than 55, the `customer_segment` will be `retired`
+2. Customer that has age between 30 - 55, the `customer_segment` will be `matured`
+3. Customer that has age between 22 - 30, the `customer_segment` will be `productive`
+4. Customer that has age < 22, the `customer_segment` will be `non-productive`
+   
+Based on those rules we can translate this to standard transformer config:
+```
+tableTransformation:
+     inputTable: myTable
+     outputTable: myTransformedTable
+     steps:
+     - updateColumns:
+        - column: "customer_segment"
+          conditions:
+          - if: myTable.Col('customer_age') > 55
+            expression: "retired"
+          - if: myTable.Col('customer_age') >= 30
+            expression: "matured"
+          - if: myTable.Col('customer_age') >= 22
+            expression: "productive"
+          - default:
+              expression: "non-productive"
+```
+All `if` conditions are working like `if else` statement. `if` condition must be returning boolean or series of boolean, `default` will be executed if none of the `if` conditions are matched.
+
+#### Filter Row
+Filter row is an operation that will filter rows in a table based on given condition. Suppose users have this following table
+| customer_id | customer_age | total_booking_1w |
+| ----------- | ------------ | ---------------- |
+| 1234        | 60           | 8                |
+| 4321        | 23           | 4                |
+| 1235        | 17           | 4                |
+
+and users want to show only records that have `total_booking_1w` less than 5. To achieve that users need to use `filterRow` operation like below configuration:
+```
+tableTransformation:
+     inputTable: myTable
+     outputTable: myTransformedTable
+     steps:
+     - filterRow:
+        condition: myTable.Col('total_booking_1w') < 5
+```
+
+### Slice Row
+Slice row is an operation to slice a table based on start(lower bound) and end index(upper bound) that given by the user. The result will including start index but not end index. Below is the example of this operation
+```
+tableTransformation:
+     inputTable: myTable
+     outputTable: myTransformedTable
+     steps:
+     - sliceRow:
+        start: 0
+        end: 4
 ```
 
 #### Encode Column

@@ -5,31 +5,30 @@ import (
 	"math"
 
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
-	"github.com/gojek/merlin/pkg/transformer/types/operator"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
 func addOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doArithmeticOperation(left, right, operator.Add, indexes)
+	return doArithmeticOperation(left, right, Add, indexes)
 }
 
 func substractOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doArithmeticOperation(left, right, operator.Substract, indexes)
+	return doArithmeticOperation(left, right, Substract, indexes)
 }
 
 func multiplyOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doArithmeticOperation(left, right, operator.Multiply, indexes)
+	return doArithmeticOperation(left, right, Multiply, indexes)
 }
 
 func divideOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doArithmeticOperation(left, right, operator.Divide, indexes)
+	return doArithmeticOperation(left, right, Divide, indexes)
 }
 
 func moduloOp(left, right interface{}, indexes *series.Series) (interface{}, error) {
-	return doArithmeticOperation(left, right, operator.Modulo, indexes)
+	return doArithmeticOperation(left, right, Modulo, indexes)
 }
 
-func calculateInInt64(left, right interface{}, operation operator.ArithmeticOperator) (int64, error) {
+func calculateInInt64(left, right interface{}, operation ArithmeticOperator) (int64, error) {
 	lValInt64, err := converter.ToInt64(left)
 	if err != nil {
 		return 0, err
@@ -40,18 +39,18 @@ func calculateInInt64(left, right interface{}, operation operator.ArithmeticOper
 	}
 
 	switch operation {
-	case operator.Add:
+	case Add:
 		return lValInt64 + rValInt64, nil
-	case operator.Substract:
+	case Substract:
 		return lValInt64 - rValInt64, nil
-	case operator.Multiply:
+	case Multiply:
 		return lValInt64 * rValInt64, nil
-	case operator.Divide:
+	case Divide:
 		if rValInt64 == 0 {
 			return int64(math.NaN()), nil
 		}
 		return lValInt64 / rValInt64, nil
-	case operator.Modulo:
+	case Modulo:
 		if rValInt64 == 0 {
 			return int64(math.NaN()), nil
 		}
@@ -61,7 +60,7 @@ func calculateInInt64(left, right interface{}, operation operator.ArithmeticOper
 	}
 }
 
-func calculateInFloat64(left, right interface{}, operation operator.ArithmeticOperator) (float64, error) {
+func calculateInFloat64(left, right interface{}, operation ArithmeticOperator) (float64, error) {
 	lValFloat64, err := converter.ToFloat64(left)
 	if err != nil {
 		return 0, err
@@ -72,13 +71,13 @@ func calculateInFloat64(left, right interface{}, operation operator.ArithmeticOp
 	}
 
 	switch operation {
-	case operator.Add:
+	case Add:
 		return lValFloat64 + rValFloat64, nil
-	case operator.Substract:
+	case Substract:
 		return lValFloat64 - rValFloat64, nil
-	case operator.Multiply:
+	case Multiply:
 		return lValFloat64 * rValFloat64, nil
-	case operator.Divide:
+	case Divide:
 		if rValFloat64 == 0 {
 			return math.NaN(), nil
 		}
@@ -88,7 +87,7 @@ func calculateInFloat64(left, right interface{}, operation operator.ArithmeticOp
 	}
 }
 
-func calculateInString(left, right interface{}, operation operator.ArithmeticOperator) (string, error) {
+func calculateInString(left, right interface{}, operation ArithmeticOperator) (string, error) {
 	lValStr, err := converter.ToString(left)
 	if err != nil {
 		return "", err
@@ -99,14 +98,14 @@ func calculateInString(left, right interface{}, operation operator.ArithmeticOpe
 	}
 
 	switch operation {
-	case operator.Add:
+	case Add:
 		return lValStr + rValStr, nil
 	default:
 		return "", fmt.Errorf("%s operation is not supported", operation)
 	}
 }
 
-func doArithmeticOperation(left, right interface{}, operation operator.ArithmeticOperator, indexes *series.Series) (interface{}, error) {
+func doArithmeticOperation(left, right interface{}, operation ArithmeticOperator, indexes *series.Series) (interface{}, error) {
 	var result interface{}
 	var err error
 	switch lVal := left.(type) {

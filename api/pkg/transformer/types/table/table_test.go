@@ -939,8 +939,11 @@ func TestTable_UpdateColumns(t *testing.T) {
 							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
 							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
 						},
+						{
+							RowIndexes: series.New([]bool{false, false, true, false, false}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+						},
 					},
-					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
 				},
 			},
 			want: New(
@@ -966,8 +969,11 @@ func TestTable_UpdateColumns(t *testing.T) {
 							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
 							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
 						},
+						{
+							RowIndexes: series.New([]bool{false, false, true, false, false}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+						},
 					},
-					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
 				},
 			},
 			want: New(
@@ -993,8 +999,11 @@ func TestTable_UpdateColumns(t *testing.T) {
 							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
 							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
 						},
+						{
+							RowIndexes: series.New([]bool{false, false, true, false, false}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+						},
 					},
-					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
 				},
 				{
 					ColName: "C",
@@ -1007,8 +1016,11 @@ func TestTable_UpdateColumns(t *testing.T) {
 							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
 							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
 						},
+						{
+							RowIndexes: series.New([]bool{false, false, false, false, false}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+						},
 					},
-					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
 				},
 			},
 			want: New(
@@ -1016,25 +1028,6 @@ func TestTable_UpdateColumns(t *testing.T) {
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 				series.New([]int{2, 4, 6, 8, 15}, series.Int, "C"),
 				series.New([]int{2, 4, -1, 8, 15}, series.Int, "D"),
-			),
-		},
-		{
-			name: "update only specified default",
-			inputTable: New(
-				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
-				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
-			),
-			updateColRules: []ColumnUpdate{
-				{
-					ColName:      "C",
-					RowValues:    []RowValues{},
-					DefaultValue: series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
-				},
-			},
-			want: New(
-				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
-				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
-				series.New([]int{-1, -1, -1, -1, -1}, series.Int, "C"),
 			),
 		},
 		{
@@ -1051,8 +1044,11 @@ func TestTable_UpdateColumns(t *testing.T) {
 							RowIndexes: series.New([]bool{true, true, false, true, false, false}, series.Bool, ""),
 							Values:     series.New([]int{2, 4, 6, 8, 10, 12}, series.Int, ""),
 						},
+						{
+							RowIndexes: series.New([]bool{false, false, true, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1, -1}, series.Int, ""),
+						},
 					},
-					DefaultValue: series.New([]int{-1, -1, -1, -1, -1, -1}, series.Int, ""),
 				},
 			},
 			wantErr:    true,

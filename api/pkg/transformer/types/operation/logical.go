@@ -4,19 +4,18 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
-	"github.com/gojek/merlin/pkg/transformer/types/operator"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
 func andOp(left interface{}, right interface{}) (interface{}, error) {
-	return doLogicalOperation(left, right, operator.And, nil)
+	return doLogicalOperation(left, right, And, nil)
 }
 
 func orOp(left interface{}, right interface{}) (interface{}, error) {
-	return doLogicalOperation(left, right, operator.Or, nil)
+	return doLogicalOperation(left, right, Or, nil)
 }
 
-func boolLogicalOperation(left, right interface{}, operation operator.LogicalOperator) (interface{}, error) {
+func boolLogicalOperation(left, right interface{}, operation LogicalOperator) (interface{}, error) {
 	lBool, err := converter.ToBool(left)
 	if err != nil {
 		return false, err
@@ -26,16 +25,16 @@ func boolLogicalOperation(left, right interface{}, operation operator.LogicalOpe
 		return false, err
 	}
 	switch operation {
-	case operator.And:
+	case And:
 		return lBool && rBool, nil
-	case operator.Or:
+	case Or:
 		return lBool || rBool, nil
 	default:
 		return false, fmt.Errorf("%s operation is not supported for logical operation", operation)
 	}
 }
 
-func doLogicalOperation(left, right interface{}, operation operator.LogicalOperator, indexes *series.Series) (interface{}, error) {
+func doLogicalOperation(left, right interface{}, operation LogicalOperator, indexes *series.Series) (interface{}, error) {
 	var res interface{}
 	var err error
 	switch lVal := left.(type) {
