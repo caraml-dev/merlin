@@ -11,7 +11,7 @@ on:
 
 env:
   ARTIFACT_RETENTION_DAYS: 7
-  VERSION: ${{ GITHUB_REF_NAME }}
+  VERSION: ${{ env.GITHUB_REF_NAME }}
 
 jobs:
 
