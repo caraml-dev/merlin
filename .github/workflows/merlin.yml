@@ -185,7 +185,7 @@ jobs:
       - name: Get branch name
         run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build Batch Predictor Docker
-        run: docker build -t merlin-pyspark-base:${branch_name} -f python/batch-predictor/docker/base.Dockerfile .
+        run: docker build -t merlin-pyspark-base:${branch_name} -f python/batch-predictor/docker/base.Dockerfile python
       - name: Save Batch Predictor Docker
         run: docker image save --output merlin-pyspark-base.${branch_name}.tar merlin-pyspark-base:${branch_name}
       - name: Publish Batch Predictor Docker Artifact
@@ -204,7 +204,7 @@ jobs:
       - name: Get branch name
         run: echo "branch_name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/*/}} | tr / -)" >> $GITHUB_ENV
       - name: Build Pyfunc Server Docker
-        run: docker build -t merlin-pyfunc-base:${branch_name} -f python/pyfunc-server/base.Dockerfile .
+        run: docker build -t merlin-pyfunc-base:${branch_name} -f python/pyfunc-server/base.Dockerfile python
       - name: Save Pyfunc Server Docker
         run: docker image save --output merlin-pyfunc-base.${branch_name}.tar merlin-pyfunc-base:${branch_name}
       - name: Publish Pyfunc Server Docker Artifact
