@@ -14,20 +14,27 @@ set -o nounset
 # Prerequisites:
 # - cluster have been created using k3d
 
-export VAULT_VERSION=0.7.0
+export CLUSTER_NAME=$1
+
 export ISTIO_VERSION=1.13.2
 export KNATIVE_VERSION=1.3.0
-export CERT_MANAGER_VERSION=1.1.0
-export MINIO_VERSION=8.0.10 
+export CERT_MANAGER_VERSION=1.7.2
+export MINIO_VERSION=3.6.3 
 export KSERVE_VERSION=0.8.0
+export VAULT_VERSION=0.19.0
 
-export CLUSTER_NAME=merlin-cluster
 export TIMEOUT=120s
 
 
-install_vault() {
+add_helm_repo() {
     helm repo add hashicorp https://helm.releases.hashicorp.com
+    helm repo add minio https://charts.min.io/
+    helm repo add istio https://istio-release.storage.googleapis.com/charts
     helm repo update
+}
+
+install_vault() {
+   
     helm upgrade --install vault hashicorp/vault --version=${VAULT_VERSION} \
         -f config/vault/values.yaml \
         --namespace=vault --create-namespace \
@@ -39,7 +46,7 @@ install_vault() {
     kubectl exec vault-0 --namespace=vault -- vault secrets disable secret
     kubectl exec vault-0 --namespace=vault -- vault secrets enable -version=1 -path=secret kv
 
-    k3d kubeconfig get merlin-e2e > kubeconfig.yaml
+    k3d kubeconfig get $CLUSTER_NAME > kubeconfig.yaml
 
     # Write cluster credential to be saved in Vault
     cat <<EOF > cluster-credential.json
@@ -62,18 +69,19 @@ EOF
 }
 
 install_istio() {
-    helm repo add istio https://istio-release.storage.googleapis.com/charts
-    helm repo update
     helm upgrade --install istio-base istio/base --version=${ISTIO_VERSION} -n istio-system --create-namespace
     helm upgrade --install istiod istio/istiod --version=${ISTIO_VERSION} -n istio-system --create-namespace \
-        -f config/istio/istiod.yaml \
-        --wait --timeout=${TIMEOUT}
-    kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT}
-
+        -f config/istio/istiod.yaml --timeout=${TIMEOUT}
+    
     helm upgrade --install istio-ingress istio/gateway -n istio-system --create-namespace \
-        -f config/istio/ingressgateway.yaml \
-        --wait --timeout=${TIMEOUT}
+        -f config/istio/ingress-gateway.yaml --timeout=${TIMEOUT}
+    
+    helm upgrade --install cluster-local-gateway istio/gateway -n istio-system --create-namespace \
+        -f config/istio/clusterlocal-gateway.yaml --timeout=${TIMEOUT}
+    
     kubectl rollout status deployment/istio-ingress -n istio-system -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT}
+    kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT}
 }
 
 install_knative() {
@@ -106,26 +114,27 @@ install_cert_manager() {
 }
 
 install_minio() {
-    helm repo add minio https://helm.min.io/
     helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
         --namespace=minio --create-namespace \
-        --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY
+        --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY \
+        --timeout=${TIMEOUT}
 
-    kubectl rollout status deployment/minio -n minio -w --timeout=${TIMEOUT}
+    kubectl rollout status statefulset/minio -n minio -w --timeout=${TIMEOUT}
 }
 
 install_kserve() {
     wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
 
     kubectl apply -k config/kserve
-    kubectl rollout status statefulset/kserve-controller-manager -w --timeout=${TIMEOUT}
+    kubectl rollout status statefulset/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
 
     kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
 }
 
+add_helm_repo
 install_istio
+install_minio
 install_knative
 install_vault
 install_cert_manager
-install_minio
 install_kserve
