@@ -4,10 +4,11 @@ global:
   omitSidecarInjectorConfigMap: false
 
 meshConfig:
-  enableTracing: true
+  enableTracing: false
   enableAutoMtls: false
 
 pilot:
+  autoscaleEnabled: false
   resources:
     requests:
       cpu: 10m
