@@ -94,6 +94,48 @@ jobs:
         working-directory: ./python/sdk
         run: make unit-test
 
+  test-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12.4
+        env:
+          POSTGRES_DB: merlin
+          POSTGRES_USER: merlin
+          POSTGRES_PASSWORD: merlin
+        ports:
+          - 5432:5432
+    needs:
+    - build-ui
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Install dependencies
+        run: |
+          make setup
+          make init-dep-api
+      - name: Lint API files
+        run: make lint-api
+      - name: Test API files
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: merlin
+          POSTGRES_USER: merlin
+          POSTGRES_PASSWORD: merlin
+        run: make it-test-api-ci
+      - name: Build API server
+        run: make build-api
+
   build-ui:
     runs-on: ubuntu-latest
     steps:
@@ -165,15 +207,6 @@ jobs:
         run: |
           make setup
           make init-dep-api
-      - name: Lint API files
-        run: make lint-api
-      - name: Test API files
-        env:
-          POSTGRES_HOST: localhost
-          POSTGRES_DB: merlin
-          POSTGRES_USER: merlin
-          POSTGRES_PASSWORD: merlin
-        run: make it-test-api-ci
       - name: Build API server
         run: make build-api
       - name: Download UI Dist
@@ -196,8 +229,6 @@ jobs:
 
   build-batch-predictor:
     runs-on: ubuntu-latest
-    needs:
-    - test-batch-predictor
     steps:
       - uses: actions/checkout@v2
       - name: Get branch name
@@ -215,8 +246,6 @@ jobs:
 
   build-pyfunc-server:
     runs-on: ubuntu-latest
-    needs:
-    - test-pyfunc-server
     steps:
       - uses: actions/checkout@v2
       - name: Get branch name
