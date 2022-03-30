@@ -11,7 +11,6 @@ on:
 
 env:
   ARTIFACT_RETENTION_DAYS: 7
-  VERSION: ${{ env.GITHUB_REF_NAME }}
 
 jobs:
 
@@ -214,14 +213,14 @@ jobs:
           name: merlin-ui-dist
           path: ui/build
       - name: Build API Docker
-        run: docker build -t merlin-api:${{ env.VERSION }} -f Dockerfile .
+        run: docker build -t merlin-api:${{ env.GITHUB_REF_NAME }} -f Dockerfile .
       - name: Save API Docker
-        run: docker image save --output merlin-api.${{ env.VERSION }}.tar merlin-api:${{ env.VERSION }}
+        run: docker image save --output merlin-api.${{ env.GITHUB_REF_NAME }}.tar merlin-api:${{ env.GITHUB_REF_NAME }}
       - name: Publish API Docker Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: merlin-api.${{ env.VERSION }}.tar
-          path: merlin-api.${{ env.VERSION }}.tar
+          name: merlin-api.${{ env.GITHUB_REF_NAME }}.tar
+          path: merlin-api.${{ env.GITHUB_REF_NAME }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-batch-predictor:
@@ -229,14 +228,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build Batch Predictor Docker
-        run: docker build -t merlin-pyspark-base:${{ env.VERSION }} -f python/batch-predictor/docker/base.Dockerfile python
+        run: docker build -t merlin-pyspark-base:${{ env.GITHUB_REF_NAME }} -f python/batch-predictor/docker/base.Dockerfile python
       - name: Save Batch Predictor Docker
-        run: docker image save --output merlin-pyspark-base.${{ env.VERSION }}.tar merlin-pyspark-base:${{ env.VERSION }}
+        run: docker image save --output merlin-pyspark-base.${{ env.GITHUB_REF_NAME }}.tar merlin-pyspark-base:${{ env.GITHUB_REF_NAME }}
       - name: Publish Batch Predictor Docker Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: merlin-pyspark-base.${{ env.VERSION }}.tar
-          path: merlin-pyspark-base.${{ env.VERSION }}.tar
+          name: merlin-pyspark-base.${{ env.GITHUB_REF_NAME }}.tar
+          path: merlin-pyspark-base.${{ env.GITHUB_REF_NAME }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-pyfunc-server:
@@ -244,14 +243,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build Pyfunc Server Docker
-        run: docker build -t merlin-pyfunc-base:${{ env.VERSION }} -f python/pyfunc-server/base.Dockerfile python
+        run: docker build -t merlin-pyfunc-base:${{ env.GITHUB_REF_NAME }} -f python/pyfunc-server/base.Dockerfile python
       - name: Save Pyfunc Server Docker
-        run: docker image save --output merlin-pyfunc-base.${{ env.VERSION }}.tar merlin-pyfunc-base:${{ env.VERSION }}
+        run: docker image save --output merlin-pyfunc-base.${{ env.GITHUB_REF_NAME }}.tar merlin-pyfunc-base:${{ env.GITHUB_REF_NAME }}
       - name: Publish Pyfunc Server Docker Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: merlin-pyfunc-base.${{ env.VERSION }}.tar
-          path: merlin-pyfunc-base.${{ env.VERSION }}.tar
+          name: merlin-pyfunc-base.${{ env.GITHUB_REF_NAME }}.tar
+          path: merlin-pyfunc-base.${{ env.GITHUB_REF_NAME }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-transformer:
@@ -274,14 +273,14 @@ jobs:
       - name: Build Standard Transformer
         run: make build-transformer
       - name: Build Standard Transformer Docker
-        run: docker build -t merlin-transformer:${{ env.VERSION }} -f transformer.Dockerfile .
+        run: docker build -t merlin-transformer:${{ env.GITHUB_REF_NAME }} -f transformer.Dockerfile .
       - name: Save Standard Transformer Docker
-        run: docker image save --output merlin-transformer.${{ env.VERSION }}.tar merlin-transformer:${{ env.VERSION }}
+        run: docker image save --output merlin-transformer.${{ env.GITHUB_REF_NAME }}.tar merlin-transformer:${{ env.GITHUB_REF_NAME }}
       - name: Publish Standard Transformer Docker Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: merlin-transformer.${{ env.VERSION }}.tar
-          path: merlin-transformer.${{ env.VERSION }}.tar
+          name: merlin-transformer.${{ env.GITHUB_REF_NAME }}.tar
+          path: merlin-transformer.${{ env.GITHUB_REF_NAME }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   e2e-test:
@@ -308,50 +307,50 @@ jobs:
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-api.${{ env.VERSION }}.tar
+          name: merlin-api.${{ env.GITHUB_REF_NAME }}.tar
       - name: Download Batch Predictor Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-pyspark-base.${{ env.VERSION }}.tar
+          name: merlin-pyspark-base.${{ env.GITHUB_REF_NAME }}.tar
       - name: Download Pyfunc Server Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-pyfunc-base.${{ env.VERSION }}.tar
+          name: merlin-pyfunc-base.${{ env.GITHUB_REF_NAME }}.tar
       - name: Download Standard Transformer Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-transformer.${{ env.VERSION }}.tar
+          name: merlin-transformer.${{ env.GITHUB_REF_NAME }}.tar
       - name: Publish images to local registry
         env:
           DOCKER_REPOSITORY: ${{ env.LOCAL_REGISTRY }}/${{ github.repository }}
         run: |
           # Merlin API
-          docker image load --input merlin-api.${{ env.VERSION }}.tar
+          docker image load --input merlin-api.${{ env.GITHUB_REF_NAME }}.tar
           docker tag \
-            merlin-api:${{ env.VERSION }} \
-            ${{ env.DOCKER_REPOSITORY }}/merlin-api:${{ env.VERSION }}
-          docker push ${{ env.DOCKER_REPOSITORY }}/merlin-api:${{ env.VERSION }}
+            merlin-api:${{ env.GITHUB_REF_NAME }} \
+            ${{ env.DOCKER_REPOSITORY }}/merlin-api:${{ env.GITHUB_REF_NAME }}
+          docker push ${{ env.DOCKER_REPOSITORY }}/merlin-api:${{ env.GITHUB_REF_NAME }}
 
           # Batch Predictor
-          docker image load --input merlin-pyspark-base.${{ env.VERSION }}.tar
+          docker image load --input merlin-pyspark-base.${{ env.GITHUB_REF_NAME }}.tar
           docker tag \
-             merlin-pyspark-base:${{ env.VERSION }} \
-            ${{ env.DOCKER_REPOSITORY }}/merlin-pyspark-base:${{ env.VERSION }}
-          docker push ${{ env.DOCKER_REPOSITORY }}/merlin-pyspark-base:${{ env.VERSION }}
+             merlin-pyspark-base:${{ env.GITHUB_REF_NAME }} \
+            ${{ env.DOCKER_REPOSITORY }}/merlin-pyspark-base:${{ env.GITHUB_REF_NAME }}
+          docker push ${{ env.DOCKER_REPOSITORY }}/merlin-pyspark-base:${{ env.GITHUB_REF_NAME }}
           
           # Pyfunc Server
-          docker image load --input merlin-pyfunc-base.${{ env.VERSION }}.tar
+          docker image load --input merlin-pyfunc-base.${{ env.GITHUB_REF_NAME }}.tar
           docker tag \
-            merlin-pyfunc-base:${{ env.VERSION }} \
-            ${{ env.DOCKER_REPOSITORY }}/merlin-pyfunc-base:${{ env.VERSION }}
-          docker push ${{ env.DOCKER_REPOSITORY }}/merlin-pyfunc-base:${{ env.VERSION }}
+            merlin-pyfunc-base:${{ env.GITHUB_REF_NAME }} \
+            ${{ env.DOCKER_REPOSITORY }}/merlin-pyfunc-base:${{ env.GITHUB_REF_NAME }}
+          docker push ${{ env.DOCKER_REPOSITORY }}/merlin-pyfunc-base:${{ env.GITHUB_REF_NAME }}
 
           # Standard Transformer
-          docker image load --input  merlin-transformer.${{ env.VERSION }}.tar
+          docker image load --input  merlin-transformer.${{ env.GITHUB_REF_NAME }}.tar
           docker tag \
-             merlin-transformer:${{ env.VERSION }} \
-            ${{ env.DOCKER_REPOSITORY }}/ merlin-transformer:${{ env.VERSION }}
-          docker push ${{ env.DOCKER_REPOSITORY }}/ merlin-transformer:${{ env.VERSION }}
+             merlin-transformer:${{ env.GITHUB_REF_NAME }} \
+            ${{ env.DOCKER_REPOSITORY }}/ merlin-transformer:${{ env.GITHUB_REF_NAME }}
+          docker push ${{ env.DOCKER_REPOSITORY }}/ merlin-transformer:${{ env.GITHUB_REF_NAME }}
       - uses: AbsaOSS/k3d-action@v2
         name: "Create Test Cluster"
         with:
