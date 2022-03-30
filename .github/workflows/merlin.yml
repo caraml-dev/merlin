@@ -105,8 +105,6 @@ jobs:
           POSTGRES_PASSWORD: merlin
         ports:
           - 5432:5432
-    needs:
-    - build-ui
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
