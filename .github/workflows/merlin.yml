@@ -347,33 +347,31 @@ jobs:
         with:
           cluster-name: "merlin-cluster"
           args: >-
-            -p "8083:80@agent:0:direct"
-            -p "8443:443@agent:0:direct"
-            -p "5053:53/udp@agent:0:direct"
-            --agents 3
-            --no-lb
             --image rancher/k3s:v1.22.6-k3s1
+            --port 80:80@loadbalancer
             --k3s-arg "--no-deploy=traefik,metrics-server@server:*"
       - name: Publish images to k3d registry
         run: |
           # Merlin API
           docker image load --input merlin-api.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-api-${{ needs.create-version.outputs.version }} merlin-cluster
+          k3d image import merlin-api-${{ needs.create-version.outputs.version }} -c merlin-cluster
 
           # Batch Predictor
           docker image load --input merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-pyspark-base-${{ needs.create-version.outputs.version }} merlin-cluster
+          k3d image import merlin-pyspark-base-${{ needs.create-version.outputs.version }} -c merlin-cluster
           
           # Pyfunc Server
           docker image load --input merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-pyfunc-base-${{ needs.create-version.outputs.version }} merlin-cluster
+          k3d image import merlin-pyfunc-base-${{ needs.create-version.outputs.version }} -c merlin-cluster
 
           # Standard Transformer
           docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-transformer-${{ needs.create-version.outputs.version }} merlin-cluster
+          k3d image import merlin-transformer-${{ needs.create-version.outputs.version }} -c merlin-cluster
       - name: Setup cluster
         working-directory: merlin/scripts/e2e/
-        run: ./setup-cluster.sh
+        run: ./setup-cluster.sh merlin-cluster
+      - name: Test
+        run: curl console.minio.127.0.0.1.nip.io
       # - name: Setup mlp namespace
       #   run: |
       #     kubectl create namespace mlp
