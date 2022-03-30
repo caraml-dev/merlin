@@ -73,13 +73,13 @@ install_istio() {
     helm upgrade --install istiod istio/istiod --version=${ISTIO_VERSION} -n istio-system --create-namespace \
         -f config/istio/istiod.yaml --timeout=${TIMEOUT}
     
-    helm upgrade --install istio-ingress istio/gateway -n istio-system --create-namespace \
+    helm upgrade --install istio-ingressgateway istio/gateway -n istio-system --create-namespace \
         -f config/istio/ingress-gateway.yaml --timeout=${TIMEOUT}
     
     helm upgrade --install cluster-local-gateway istio/gateway -n istio-system --create-namespace \
         -f config/istio/clusterlocal-gateway.yaml --timeout=${TIMEOUT}
     
-    kubectl rollout status deployment/istio-ingress -n istio-system -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/istio-ingressgateway -n istio-system -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT}
     kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT}
 }
