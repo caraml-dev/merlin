@@ -354,19 +354,19 @@ jobs:
         run: |
           # Merlin API
           docker image load --input merlin-api.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-api-${{ needs.create-version.outputs.version }} -c merlin-cluster
+          k3d image import merlin-api:${{ needs.create-version.outputs.version }} -c merlin-cluster
 
           # Batch Predictor
           docker image load --input merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-pyspark-base-${{ needs.create-version.outputs.version }} -c merlin-cluster
+          k3d image import merlin-pyspark-base:${{ needs.create-version.outputs.version }} -c merlin-cluster
           
           # Pyfunc Server
           docker image load --input merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-pyfunc-base-${{ needs.create-version.outputs.version }} -c merlin-cluster
+          k3d image import merlin-pyfunc-base:${{ needs.create-version.outputs.version }} -c merlin-cluster
 
           # Standard Transformer
           docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-transformer-${{ needs.create-version.outputs.version }} -c merlin-cluster
+          k3d image import merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
       - name: Setup cluster
         working-directory: merlin/scripts/e2e/
         run: ./setup-cluster.sh merlin-cluster
