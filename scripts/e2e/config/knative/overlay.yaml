@@ -114,3 +114,15 @@ metadata:
   namespace: knative-serving
 data:
   127.0.0.1.nip.io: ""
+
+---
+
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: webhook
+  namespace: knative-serving
+spec:
+  minReplicas: 1
+  maxReplicas: 1
+
