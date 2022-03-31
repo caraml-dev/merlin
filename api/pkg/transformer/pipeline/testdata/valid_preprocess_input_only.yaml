@@ -42,7 +42,7 @@ transformerConfig:
             baseTable:
               fromFile:
                 format: CSV
-                uri: gs://d-gods-mlp/merlin-preloaded-table-test/normal.csv
+                uri: ../types/table/testdata/normal.csv
                 schema:
                   - name: First Name
                     type: STRING
