@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
-	"os"
-
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -15,11 +11,15 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
 	"github.com/gojek/merlin/pkg/transformer/types/scaler"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+	"net/url"
+	"os"
 )
 
 const (
+	artifactsFolder        = "/mnt/models/artifacts/"
 	envPredictorStorageURI = "STORAGE_URI"
-	artifactsFolder        = "artifacts"
 )
 
 type Compiler struct {
@@ -244,14 +244,24 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 				var records [][]string
 				var err error
 
-				if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_CSV {
-					records, err = table.RecordsFromCsv(tableSpec.BaseTable.GetFromFile().GetUri())
-				} else if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_PARQUET {
-					prefix := os.Getenv(envPredictorStorageURI)
-					if prefix != "" {
-						prefix += "/" + artifactsFolder + "/" // TODO: correct?
+				//parse filepath
+				filePath, err := url.Parse(tableSpec.BaseTable.GetFromFile().GetUri())
+				if err != nil {
+					return nil, nil, err
+				}
+
+				//relative path in merlin
+				if !filePath.IsAbs() && os.Getenv("envPredictorStorageURI") != "" {
+					filePath, err = url.Parse(artifactsFolder + tableSpec.BaseTable.GetFromFile().GetUri())
+					if err != nil {
+						return nil, nil, err
 					}
-					records, err = table.RecordsFromParquet(prefix + tableSpec.BaseTable.GetFromFile().GetUri())
+				}
+
+				if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_CSV {
+					records, err = table.RecordsFromCsv(filePath)
+				} else if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_PARQUET {
+					records, err = table.RecordsFromParquet(filePath)
 				} else {
 					return nil, nil, fmt.Errorf("Unsupported/Unspecified file type")
 				}

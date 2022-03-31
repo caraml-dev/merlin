@@ -2,6 +2,7 @@ package table
 
 import (
 	"errors"
+	"net/url"
 	"testing"
 
 	"github.com/go-gota/gota/dataframe"
@@ -775,26 +776,32 @@ func TestTable_NewRaw(t *testing.T) {
 func TestTable_RecordsFromCsv(t *testing.T) {
 	tests := []struct {
 		name       string
-		filePath   string
+		filePath   *url.URL
 		expRecords [][]string
 		wantError  bool
 		expError   error
 	}{
 		{
-			name:       "success: blank local file",
-			filePath:   "testdata/blank.csv",
+			name: "success: blank local file",
+			filePath: &url.URL{
+				Path: "testdata/blank.csv",
+			},
 			wantError:  false,
 			expRecords: nil,
 		},
 		{
-			name:       "success: header only local file",
-			filePath:   "testdata/header_only.csv",
+			name: "success: header only local file",
+			filePath: &url.URL{
+				Path: "testdata/header_only.csv",
+			},
 			wantError:  false,
 			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
 		},
 		{
-			name:      "success: normal local file",
-			filePath:  "testdata/normal.csv",
+			name: "success: normal local file",
+			filePath: &url.URL{
+				Path: "testdata/normal.csv",
+			},
 			wantError: false,
 			expRecords: [][]string{
 				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
@@ -822,20 +829,24 @@ func TestTable_RecordsFromCsv(t *testing.T) {
 func TestTable_RecordsFromParquet(t *testing.T) {
 	tests := []struct {
 		name       string
-		filePath   string
+		filePath   *url.URL
 		expRecords [][]string
 		wantError  bool
 		expError   error
 	}{
 		{
-			name:       "success: header only local file",
-			filePath:   "testdata/header_only.parquet",
+			name: "success: header only local file",
+			filePath: &url.URL{
+				Path: "testdata/header_only.parquet",
+			},
 			wantError:  false,
 			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
 		},
 		{
-			name:      "success: normal local file",
-			filePath:  "testdata/normal.parquet",
+			name: "success: normal local file",
+			filePath: &url.URL{
+				Path: "testdata/normal.parquet",
+			},
 			wantError: false,
 			expRecords: [][]string{
 				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
@@ -901,39 +912,6 @@ func TestTable_NewFromRecords(t *testing.T) {
 			},
 			wantError: true,
 			expError:  errors.New("no data found"),
-		},
-		{
-			name: "error: header length mismatch with schema",
-			records: [][]string{
-				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
-				{"Apple", "Cider", "25", "48.8", "true"},
-				{"Banana", "Man", "18", "68", "false"},
-				{"Zara", "Vuitton", "35", "75", "true"},
-				{"Sandra", "Zawaska", "32", "55", "false"},
-				{"Merlion", "Krabby", "23", "57.22", "false"},
-			},
-			args: args{
-				schema: []*spec.Schema{
-					{
-						Name: "First Name",
-						Type: spec.Schema_STRING,
-					},
-					{
-						Name: "Last Name",
-						Type: spec.Schema_STRING,
-					},
-					{
-						Name: "Age",
-						Type: spec.Schema_INT,
-					},
-					{
-						Name: "Weight",
-						Type: spec.Schema_FLOAT,
-					},
-				},
-			},
-			wantError: true,
-			expError:  errors.New("header length 5 mismatch with 4 in defined schema"),
 		},
 		{
 			name: "error: Column name of schema not found in header",
@@ -1036,6 +1014,41 @@ func TestTable_NewFromRecords(t *testing.T) {
 					{
 						Name: "Weight",
 						Type: spec.Schema_FLOAT,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			expTable: New(
+				series.New([]string{"Apple", "Banana", "Zara", "Sandra", "Merlion"}, series.String, "First Name"),
+				series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
+				series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
+				series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
+				series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
+			),
+			wantError: false,
+		},
+		{
+			name: "success: Table with data with auto-detect type (incomplete schema)",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
 					},
 					{
 						Name: "Is VIP",

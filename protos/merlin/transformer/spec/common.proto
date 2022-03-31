@@ -28,8 +28,8 @@ message FromFile {
     CSV = 0;
     PARQUET = 1;
   }
-  FileType format = 1;
-  string uri = 2;
+  string uri = 1;
+  FileType format = 2;
   repeated Schema schema = 3;
 }
 

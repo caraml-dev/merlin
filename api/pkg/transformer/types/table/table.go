@@ -9,20 +9,19 @@ import (
 	goparquet "github.com/fraugster/parquet-go"
 	"github.com/go-gota/gota/dataframe"
 	gota "github.com/go-gota/gota/series"
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"io"
+	"net/url"
 	"os"
 	"reflect"
 	"sort"
-	"strings"
-
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
 
 	"github.com/bboughton/gcp-helpers/gsutil"
 )
 
 const (
-	gcsPrefix = "gs://"
+	gcsScheme = "gs"
 )
 
 type Table struct {
@@ -55,13 +54,13 @@ func NewRaw(columnValues map[string]interface{}) (*Table, error) {
 // RecordsFromParquet reads a parquet file which may be local (uploaded together with model) or global (from gcs).
 // The root directory for local will be same as where the model is stored (artifacts folder).
 // Data will be returned as [][]string where row 0 is the header containing all the column names.
-func RecordsFromParquet(filePath string) ([][]string, error) {
+func RecordsFromParquet(filePath *url.URL) ([][]string, error) {
 	var r io.ReadSeeker
 
-	if strings.HasPrefix(filePath, gcsPrefix) {
+	if filePath.Scheme == gcsScheme {
 		// Global file (GCS)
 		ctx := context.Background()
-		data, err := gsutil.ReadFile(ctx, filePath)
+		data, err := gsutil.ReadFile(ctx, filePath.String())
 
 		if err != nil {
 			return nil, err
@@ -70,7 +69,7 @@ func RecordsFromParquet(filePath string) ([][]string, error) {
 		r = bytes.NewReader(data)
 	} else {
 		// Local file
-		file, err := os.Open(filePath)
+		file, err := os.Open(filePath.String())
 		if err != nil {
 			return nil, err
 		}
@@ -123,13 +122,13 @@ func RecordsFromParquet(filePath string) ([][]string, error) {
 // RecordsFromCsv reads a csv file which may be local (uploaded together with model) or global (from gcs).
 // The root directory for local will be same as where the model is stored (artifacts folder).
 // Data will be returned as [][]string where row 0 is the header containing all the column names.
-func RecordsFromCsv(filePath string) ([][]string, error) {
+func RecordsFromCsv(filePath *url.URL) ([][]string, error) {
 	var r io.Reader
 
-	if strings.HasPrefix(filePath, gcsPrefix) {
+	if filePath.Scheme == gcsScheme {
 		// Global file (GCS)
 		ctx := context.Background()
-		data, err := gsutil.ReadFile(ctx, filePath)
+		data, err := gsutil.ReadFile(ctx, filePath.String())
 
 		if err != nil {
 			return nil, err
@@ -138,7 +137,7 @@ func RecordsFromCsv(filePath string) ([][]string, error) {
 		r = bytes.NewReader(data)
 	} else {
 		// Local file
-		file, err := os.Open(filePath)
+		file, err := os.Open(filePath.String())
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +158,7 @@ func RecordsFromCsv(filePath string) ([][]string, error) {
 // NewFromRecords create a new table from records in the form [][]string
 // The first row of the records array shall contain all the column names.
 // This function will check that there are at least 2 rows in records (header and data).
-// It will also check that the number of columns and the column names matches the schema specified,
+// It will also auto-detect the data types if schema of the column is not provided.
 // before creating a new table to be returned
 func NewFromRecords(records [][]string, schema []*spec.Schema) (*Table, error) {
 
@@ -167,14 +166,10 @@ func NewFromRecords(records [][]string, schema []*spec.Schema) (*Table, error) {
 	if len(records) <= 1 {
 		return nil, fmt.Errorf("no data found")
 	}
-	// check no. of columns same as defined in schema
+	// create a header list for checking
 	header := make(map[string]bool)
 	for _, colName := range records[0] {
 		header[colName] = true
-	}
-
-	if len(header) != len(schema) {
-		return nil, fmt.Errorf("header length %d mismatch with %d in defined schema", len(header), len(schema))
 	}
 
 	// prepare schema for dataframe
@@ -200,8 +195,9 @@ func NewFromRecords(records [][]string, schema []*spec.Schema) (*Table, error) {
 		}
 	}
 
+	// build dataframe
 	df := dataframe.LoadRecords(records,
-		dataframe.DetectTypes(false),
+		dataframe.DetectTypes(true),
 		dataframe.WithTypes(dfSchema),
 	)
 
