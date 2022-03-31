@@ -805,31 +805,6 @@ func TestTable_RecordsFromCsv(t *testing.T) {
 				{"Merlion", "Krabby", "23", "57.22", "FALSE"},
 			},
 		},
-		{
-			name:       "success: blank gcs file",
-			filePath:   "gs://d-gods-mlp/merlin-preloaded-table-test/blank.csv",
-			wantError:  false,
-			expRecords: nil,
-		},
-		{
-			name:       "success: header only gcs file",
-			filePath:   "gs://d-gods-mlp/merlin-preloaded-table-test/header_only.csv",
-			wantError:  false,
-			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
-		},
-		{
-			name:      "success: normal gcs file",
-			filePath:  "gs://d-gods-mlp/merlin-preloaded-table-test/normal.csv",
-			wantError: false,
-			expRecords: [][]string{
-				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
-				{"Apple", "Cider", "25", "48.8", "TRUE"},
-				{"Banana", "Man", "18", "68", "FALSE"},
-				{"Zara", "Vuitton", "35", "75", "TRUE"},
-				{"Sandra", "Zawaska", "32", "55", "FALSE"},
-				{"Merlion", "Krabby", "23", "57.22", "FALSE"},
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -861,25 +836,6 @@ func TestTable_RecordsFromParquet(t *testing.T) {
 		{
 			name:      "success: normal local file",
 			filePath:  "testdata/normal.parquet",
-			wantError: false,
-			expRecords: [][]string{
-				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
-				{"Apple", "Cider", "25", "48.8", "true"},
-				{"Banana", "Man", "18", "68", "false"},
-				{"Zara", "Vuitton", "35", "75", "true"},
-				{"Sandra", "Zawaska", "32", "55", "false"},
-				{"Merlion", "Krabby", "23", "57.22", "false"},
-			},
-		},
-		{
-			name:       "success: header only gcs file",
-			filePath:   "gs://d-gods-mlp/merlin-preloaded-table-test/header_only.parquet",
-			wantError:  false,
-			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
-		},
-		{
-			name:      "success: normal gcs file",
-			filePath:  "gs://d-gods-mlp/merlin-preloaded-table-test/normal.parquet",
 			wantError: false,
 			expRecords: [][]string{
 				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},

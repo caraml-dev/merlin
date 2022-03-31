@@ -42,7 +42,7 @@ transformerConfig:
             baseTable:
               fromFile:
                 format: PARQUET
-                uri: gs://d-gods-mlp/merlin-preloaded-table-test/normal.parquet
+                uri: ../types/table/testdata/normal.parquet
                 schema:
                   - name: First Name
                     type: STRING
