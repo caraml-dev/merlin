@@ -250,7 +250,7 @@ export const TableInputCard = ({
                 <FormLabelWithToolTip
                   label="URI to file *"
                   content="Global GCS path e.g. gs://my-bucket/my-csv.csv OR
-                    local path relative to model storage uri e.g. myfiles/myparquet.parquet"
+                    local path relative to model storage e.g. myfiles/myparquet.parquet"
                 />
               }
               isInvalid={!!get(errors, "baseTable.fromFile.uri")}
@@ -275,7 +275,14 @@ export const TableInputCard = ({
                 />
               </Fragment>
             </EuiFormRow>
-            <EuiFormRow label="Schema *" fullWidth>
+            <EuiFormRow
+              label={
+                <FormLabelWithToolTip
+                  label="Schema (optional)"
+                  content="Column type is auto-detected by default. Create schema below to manually define the type for specific column."
+                />
+              }
+              fullWidth>
               <TableFromFileSchema
                 columns={table.baseTable.fromFile.schema || []}
                 onChangeHandler={onChangeHandler}
