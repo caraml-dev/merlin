@@ -57,9 +57,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.4.0+incompatible
-	github.com/voxmedia/maestro v0.0.0-20200406001128-dec25df1d401
 	github.com/xanzy/go-gitlab v0.31.0
-	github.com/xitongsys/parquet-go v1.6.2
 	go.uber.org/zap v1.13.0
 	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
 	google.golang.org/api v0.59.0
@@ -148,8 +146,8 @@ require (
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a // indirect
-	github.com/mattn/go-colorable v0.1.1 // indirect
-	github.com/mattn/go-isatty v0.0.9 // indirect
+	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-isatty v0.0.11 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
@@ -167,6 +165,8 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
+	github.com/voxmedia/maestro v0.0.0-20200406001128-dec25df1d401 // indirect
+	github.com/xitongsys/parquet-go v1.6.2 // indirect
 	github.com/xitongsys/parquet-go-source v0.0.0-20220315005136-aec0fe3e777c // indirect
 	go.mongodb.org/mongo-driver v1.1.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
