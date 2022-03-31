@@ -775,6 +775,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envPredictorStorageURI, Value: fmt.Sprintf("%s/model", model.ArtifactURI)},
 									},
 									Resources: expDefaultTransformerResourceRequests,
 								},
@@ -851,6 +852,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envPredictorStorageURI, Value: fmt.Sprintf("%s/model", model.ArtifactURI)},
 									},
 									Resources: expUserResourceRequests,
 								},
@@ -942,6 +944,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envPredictorStorageURI, Value: fmt.Sprintf("%s/model", model.ArtifactURI)},
 									},
 									Resources: expDefaultTransformerResourceRequests,
 								},
@@ -1121,6 +1124,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envPredictorStorageURI, Value: fmt.Sprintf("%s/model", model.ArtifactURI)},
 									},
 									Resources: expDefaultTransformerResourceRequests,
 								},
@@ -1196,6 +1200,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envPredictorStorageURI, Value: fmt.Sprintf("%s/model", model.ArtifactURI)},
 									},
 									Resources: expDefaultTransformerResourceRequests,
 								},
@@ -1271,6 +1276,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envPredictorStorageURI, Value: fmt.Sprintf("%s/model", model.ArtifactURI)},
 									},
 									Resources: expDefaultTransformerResourceRequests,
 								},
@@ -1350,6 +1356,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envPredictorStorageURI, Value: fmt.Sprintf("%s/model", model.ArtifactURI)},
 									},
 									Resources: expDefaultTransformerResourceRequests,
 								},
@@ -1580,6 +1587,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envPredictorStorageURI, Value: fmt.Sprintf("%s/model", model.ArtifactURI)},
 									},
 									Resources: v1.ResourceRequirements{
 										Requests: v1.ResourceList{
@@ -1894,6 +1902,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 							{Name: envTransformerPort, Value: defaultTransformerPort},
 							{Name: envTransformerModelName, Value: "test-1"},
 							{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
+							{Name: envPredictorStorageURI, Value: "/model"},
 						},
 						Resources: v1.ResourceRequirements{
 							Requests: v1.ResourceList{
@@ -1945,6 +1954,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 							{Name: envTransformerPort, Value: defaultTransformerPort},
 							{Name: envTransformerModelName, Value: "test-1"},
 							{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
+							{Name: envPredictorStorageURI, Value: "/model"},
 						},
 						Resources: v1.ResourceRequirements{
 							Requests: v1.ResourceList{
