@@ -361,17 +361,17 @@ jobs:
         run: |
           # Merlin API
           docker image load --input merlin.${{ needs.create-version.outputs.version }}.tar
-          docker tag merlin.${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin.${{ needs.create-version.outputs.version }}
+          docker tag merlin.${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin:${{ needs.create-version.outputs.version }}
           k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin:${{ needs.create-version.outputs.version }} -c merlin-cluster
           
           # Pyfunc Server
           docker image load --input merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
-          docker tag merlin-pyfunc-base.${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-pyfunc-base.${{ needs.create-version.outputs.version }}
+          docker tag merlin-pyfunc-base.${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-pyfunc-base:${{ needs.create-version.outputs.version }}
           k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-pyfunc-base:${{ needs.create-version.outputs.version }} -c merlin-cluster
 
           # Standard Transformer
           docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-          docker tag merlin-transformer.${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer.${{ needs.create-version.outputs.version }}
+          docker tag merlin-transformer.${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }}
           k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
       - name: Setup cluster
         working-directory: merlin/scripts/e2e/
