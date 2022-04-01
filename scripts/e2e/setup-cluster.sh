@@ -15,6 +15,8 @@ set -o nounset
 # - cluster have been created using k3d
 
 CLUSTER_NAME=$1
+INGRESS_HOST=$2
+
 ISTIO_VERSION=1.13.2
 KNATIVE_VERSION=1.3.0
 CERT_MANAGER_VERSION=1.7.2
@@ -116,6 +118,8 @@ install_minio() {
     helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
         --namespace=minio --create-namespace \
         --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY \
+        --set ingress.hosts[0]=minio.minio.${INGRESS_HOST} \
+        --set consoleIngress.hosts[0]=console.minio.${INGRESS_HOST} \        
         --timeout=${TIMEOUT}
 
     kubectl rollout status statefulset/minio -n minio -w --timeout=${TIMEOUT}

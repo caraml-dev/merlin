@@ -5,20 +5,21 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-DOCKER_REGISTRY="$1"
-CHART_PATH="$2"
-VERSION="$3"
-INGRESS_HOST=127.0.0.1
+INGRESS_HOST="$1"
+DOCKER_REGISTRY="$2"
+CHART_PATH="$3"
+VERSION="$4"
+
 TIMEOUT=120s
 
 install_mlp() {
   helm upgrade --install --debug mlp mlp/charts/mlp --namespace mlp --create-namespace -f mlp/charts/mlp/values-e2e.yaml \
     --set mlp.image.tag=main \
-    --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
-    --set mlp.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST}.nip.io \
+    --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
+    --set mlp.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
     --set mlp.ingress.enabled=true \
     --set mlp.ingress.class=istio \
-    --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
+    --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST} \
     --set mlp.ingress.path="/*" \
     --wait --timeout=${TIMEOUT}
 
@@ -35,9 +36,9 @@ install_merlin() {
     --set merlin.image.registry=${DOCKER_REGISTRY} \
     --set merlin.image.tag=${VERSION} \
     --set merlin.transformer.image=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \
-    --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}.nip.io/v1 \
-    --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST}.nip.io \
-    --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
+    --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}/v1 \
+    --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST} \
+    --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \
     --wait --timeout=${TIMEOUT}
 
   kubectl rollout status deployment/merlin -n mlp -w --timeout=${TIMEOUT}
