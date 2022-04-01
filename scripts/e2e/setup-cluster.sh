@@ -14,16 +14,14 @@ set -o nounset
 # Prerequisites:
 # - cluster have been created using k3d
 
-export CLUSTER_NAME=$1
-
-export ISTIO_VERSION=1.13.2
-export KNATIVE_VERSION=1.3.0
-export CERT_MANAGER_VERSION=1.7.2
-export MINIO_VERSION=3.6.3 
-export KSERVE_VERSION=0.8.0
-export VAULT_VERSION=0.19.0
-
-export TIMEOUT=120s
+CLUSTER_NAME=$1
+ISTIO_VERSION=1.13.2
+KNATIVE_VERSION=1.3.0
+CERT_MANAGER_VERSION=1.7.2
+MINIO_VERSION=3.6.3 
+KSERVE_VERSION=0.8.0
+VAULT_VERSION=0.19.0
+TIMEOUT=180s
 
 
 add_helm_repo() {
@@ -52,7 +50,7 @@ install_vault() {
     cat <<EOF > cluster-credential.json
 {
 "name": "$(yq '.clusters[0].name' kubeconfig.yaml)",
-"master_ip": "$(yq '.clusters[0].cluster.server' kubeconfig.yaml)",
+"master_ip": "kubernetes.default:443",
 "certs": "$(yq '.clusters[0].cluster."certificate-authority-data"' kubeconfig.yaml | base64 --decode | awk '{printf "%s\\n", $0}')",
 "client_certificate": "$(yq '.users[0].user."client-certificate-data"' kubeconfig.yaml | base64 --decode | awk '{printf "%s\\n", $0}')",
 "client_key": "$(yq '.users[0].user."client-key-data"' kubeconfig.yaml | base64 --decode | awk '{printf "%s\\n", $0}')"
@@ -131,6 +129,10 @@ install_kserve() {
     kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
 }
 
+install_mock() {
+    kubectl apply -f config/mock/message-dumper.yaml
+}
+
 add_helm_repo
 install_istio
 install_minio
@@ -138,3 +140,4 @@ install_knative
 install_vault
 install_cert_manager
 install_kserve
+install_mock
