@@ -52,7 +52,7 @@ func (k *namespaceCreator) CreateNamespace(ctx context.Context, namespace string
 	}
 
 	if !kerrors.IsNotFound(err) {
-		return nil, fmt.Errorf("failed retrieving status of namespace %s", namespace)
+		return nil, fmt.Errorf("failed retrieving status of namespace %s, %w", namespace, err)
 	}
 
 	// Create namespaceResource
