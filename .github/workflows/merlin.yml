@@ -375,5 +375,28 @@ jobs:
         working-directory: merlin/scripts/e2e
         run: ./deploy-merlin.sh ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }}
       - name: Run E2E Test
+        id: run-e2e-test
         working-directory: merlin/scripts/e2e
         run: ./run-e2e.sh
+      - name: "Debug"
+        if: (steps.run-e2e-test.outcome == 'failure')
+        run: |
+          echo "::group::Describe deployment mlp namespace"
+          kubectl describe deployment -n mlp
+          echo "::endgroup::"
+          
+          echo "::group::Describe deployment merlin-e2e namespace"
+          kubectl describe deployment -n merlin-e2e
+          echo "::endgroup::"
+          
+          echo "::group::Merlin log"
+          kubectl logs deploy/merlin -n mlp -c merlin
+          echo "::endgroup::"
+          
+          echo "::group::KServe log"
+          kubectl logs statefulset/kserve-controller-manager -n kserve -c manager
+          echo "::endgroup::"
+
+          echo "::group::Knative log"
+          kubectl logs deploy/controller -n knative-serving
+          echo "::endgroup::"
