@@ -104,6 +104,7 @@ def test_new_model_version(url, project, model, version, mock_oauth, use_google_
 
         assert v.mlflow_run_id == version.mlflow_run_id
 
+
 @responses.activate
 def test_new_model_version_with_labels(url, project, model, version, mock_oauth, use_google_oauth):
     merlin.set_url(url, use_google_oauth=use_google_oauth)
