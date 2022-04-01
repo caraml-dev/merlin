@@ -326,7 +326,7 @@ jobs:
         with:
           repository: gojek/mlp
           ref: main
-          path: merlin/scripts/e2e/
+          path: merlin/scripts/e2e/mlp
       - uses: actions/setup-go@v2
         with:
           go-version: 1.17
@@ -370,10 +370,7 @@ jobs:
           k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
       - name: Setup cluster
         working-directory: merlin/scripts/e2e
-        run: |
-          pwd
-          ls -lah
-          ./setup-cluster.sh merlin-cluster
+        run: ./setup-cluster.sh merlin-cluster
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
         run: ./deploy-merlin.sh ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }}
