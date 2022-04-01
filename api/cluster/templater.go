@@ -286,7 +286,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	transformerSpec := &kfsv1alpha2.TransformerSpec{
 		Custom: &kfsv1alpha2.CustomSpec{
 			Container: v1.Container{
-				Name:  "transformer",
+				Name:  "kfserving-container",
 				Image: transformer.Image,
 				Env:   envVars.ToKubernetesEnvVars(),
 				Resources: v1.ResourceRequirements{
