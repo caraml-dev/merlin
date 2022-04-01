@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Bash3 Boilerplate. Copyright (c) 2014, kvz.io
+
+set -o errexit
+set -o pipefail
+set -o nounset
 
 export API_PATH="merlin/api"
 
@@ -8,9 +13,9 @@ export MERLIN_API_BASEPATH="http://merlin.mlp.${INGRESS_HOST}.nip.io"
 
 export E2E_MLP_URL="http://mlp.mlp.${INGRESS_HOST}.nip.io"
 export E2E_MERLIN_URL="http://merlin.mlp.${INGRESS_HOST}.nip.io"
-#export E2E_PROJECT_NAME="merlin-e2e-${GITHUB_SHA::8}"
+export E2E_MLFLOW_URL="http://merlin-mlflow.mlp.${INGRESS_HOST}.nip.io"
 export E2E_PROJECT_NAME="merlin-e2e"
-export E2E_MERLIN_ENVIRONMENT="id-dev"
+export E2E_MERLIN_ENVIRONMENT="dev"
 
 export AWS_ACCESS_KEY_ID=YOURACCESSKEY
 export AWS_SECRET_ACCESS_KEY=YOURSECRETKEY
@@ -20,7 +25,7 @@ curl "${E2E_MERLIN_URL}/v1/projects"
 curl -X POST "${E2E_MLP_URL}/v1/projects" -d "{\"name\": \"${E2E_PROJECT_NAME}\", \"team\": \"gojek\", \"stream\": \"gojek\", \"mlflow_tracking_url\": \"${E2E_MLFLOW_URL}\"}"
 curl "${E2E_MERLIN_URL}/v1/projects"
 
-cd ./merlin/python/sdk
+cd ../../python/sdk
 pip install pipenv
 pipenv install --dev --skip-lock
-pipenv run pytest -n=1 -W=ignore --cov=merlin test/integration_test.py -k 'not test_standard_transformer_feast_pyfunc'
+pipenv run pytest -W=ignore --cov=merlin -m "not (feast or batch or serving or pytorch or pyfunc or local_server_test)"

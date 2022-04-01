@@ -230,14 +230,14 @@ jobs:
           name: merlin-ui-dist
           path: ui/build
       - name: Build API Docker
-        run: docker build -t merlin-api:${{ needs.create-version.outputs.version }} -f Dockerfile .
+        run: docker build -t merlin:${{ needs.create-version.outputs.version }} -f Dockerfile .
       - name: Save API Docker
-        run: docker image save --output merlin-api.${{ needs.create-version.outputs.version }}.tar merlin-api:${{ needs.create-version.outputs.version }}
+        run: docker image save --output merlin.${{ needs.create-version.outputs.version }}.tar merlin:${{ needs.create-version.outputs.version }}
       - name: Publish API Docker Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: merlin-api.${{ needs.create-version.outputs.version }}.tar
-          path: merlin-api.${{ needs.create-version.outputs.version }}.tar
+          name: merlin.${{ needs.create-version.outputs.version }}.tar
+          path: merlin.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-batch-predictor:
@@ -315,11 +315,18 @@ jobs:
       - build-transformer
       - create-version
     env:
-      LOCAL_REGISTRY: registry.localhost:5000
+      K3D_CLUSTER: merlin-cluster
+      LOCAL_REGISTRY_PORT: 12345
+      LOCAL_REGISTRY: "dev.localhost"
     steps:
       - uses: actions/checkout@v2
         with:
           path: merlin
+      - uses: actions/checkout@master
+        with:
+          repository: gojek/mlp
+          ref: main
+          path: merlin/scripts/e2e/
       - uses: actions/setup-go@v2
         with:
           go-version: 1.17
@@ -329,7 +336,7 @@ jobs:
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-api.${{ needs.create-version.outputs.version }}.tar
+          name: merlin.${{ needs.create-version.outputs.version }}.tar
       - name: Download Batch Predictor Docker Artifact
         uses: actions/download-artifact@v2
         with:
@@ -342,55 +349,36 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-      - uses: AbsaOSS/k3d-action@v2
-        name: "Create Test Cluster"
-        with:
-          cluster-name: "merlin-cluster"
-          args: >-
-            --image rancher/k3s:v1.22.6-k3s1
-            --port 80:80@loadbalancer
-            --k3s-arg "--no-deploy=traefik,metrics-server@server:*"
+
+      - name: Download k3d
+        run: |
+            curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.4.1 bash
+      - name: "Create Test Cluster"
+        run: |
+          k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
+          k3d cluster create $K3D_CLUSTER --image rancher/v1.22.6-k3s1 --k3s-arg '--no-deploy=traefik,metrics-server@server:*' --port 80:80@loadbalancer
       - name: Publish images to k3d registry
         run: |
           # Merlin API
-          docker image load --input merlin-api.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-api:${{ needs.create-version.outputs.version }} -c merlin-cluster
-
-          # Batch Predictor
-          docker image load --input merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-pyspark-base:${{ needs.create-version.outputs.version }} -c merlin-cluster
+          docker image load --input merlin.${{ needs.create-version.outputs.version }}.tar
+          docker tag merlin.${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin.${{ needs.create-version.outputs.version }}
+          k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin:${{ needs.create-version.outputs.version }} -c merlin-cluster
           
           # Pyfunc Server
           docker image load --input merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-pyfunc-base:${{ needs.create-version.outputs.version }} -c merlin-cluster
+          docker tag merlin-pyfunc-base.${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-pyfunc-base.${{ needs.create-version.outputs.version }}
+          k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-pyfunc-base:${{ needs.create-version.outputs.version }} -c merlin-cluster
 
           # Standard Transformer
           docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-          k3d image import merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
+          docker tag merlin-transformer.${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer.${{ needs.create-version.outputs.version }}
+          k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
       - name: Setup cluster
         working-directory: merlin/scripts/e2e/
         run: ./setup-cluster.sh merlin-cluster
-      - name: Test
-        run: curl console.minio.127.0.0.1.nip.io
-      # - name: Setup mlp namespace
-      #   run: |
-      #     kubectl create namespace mlp
-      #     kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
-      # - name: Deploy MLP
-      #   run: |
-      #     export INGRESS_HOST=127.0.0.1
-      #     export HOST_IP=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
-      #     helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yaml \
-      #     --set mlp.image.tag=main \
-      #     --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
-      #     --set mlp.oauthClientID=${OAUTH_CLIENT_ID} \
-      #     --set mlp.mlflowTrackingUrl=http://${HOST_IP}:31100 \
-      #     --set mlp.ingress.enabled=true \
-      #     --set mlp.ingress.class=istio \
-      #     --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
-      #     --set mlp.ingress.path="/*" \
-      #     --wait --timeout=5m
-      # - name: Deploy Merlin
-      #   run: ./merlin/scripts/e2e/deploy-merlin.sh "merlin/charts/merlin"
-      # - name: Run E2E test
-      #   run: ./merlin/scripts/e2e/run-e2e.sh
+      - name: Deploy merlin and mlp
+        working-directory: merlin/scripts/e2e/
+        run: ./deploy-merlin.sh ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }}
+      - name: Run E2E Test
+        working-directory: merlin/scripts/e2e/
+        run: ./run-e2e.sh
