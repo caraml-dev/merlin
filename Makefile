@@ -7,6 +7,7 @@ UI_PATH := ui
 UI_BUILD_PATH := ${UI_PATH}/build
 API_PATH=api
 API_ALL_PACKAGES := $(shell cd ${API_PATH} && go list ./... | grep -v github.com/gojek/mlp/api/client | grep -v -e mocks -e client)
+VERSION := $(shell git describe --tags --always --first-parent)
 
 all: setup init-dep lint test clean build run
 
@@ -186,3 +187,32 @@ gen-proto:
 		protoc -I=. --go_out=../../api --go_opt=module=github.com/gojek/merlin \
 		--go-json_out=../../api/pkg \
 		transformer/**/*.proto
+
+# ============================================================
+# Docker build
+# ============================================================
+.PHONY: docker-build
+docker-build: docker-build-transformer docker-build-api docker-build-pyfunc docker-build-batch-predictor
+
+.PHONY: docker-build-api
+docker-build-api: build-ui
+	@cp -r ui/build build
+	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin:${VERSION})
+	@docker build -t ${IMAGE_TAG} -f Dockerfile .
+	@rm -rf build
+
+.PHONY: docker-build-transformer
+docker-build-transformer:
+	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-transformer:${VERSION})
+	@docker build -t ${IMAGE_TAG} -f transformer.Dockerfile .
+
+.PHONY: docker-build-pyfunc
+docker-build-pyfunc:
+	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-pyfunc-base:${VERSION})
+	@docker build -t ${IMAGE_TAG} -f python/pyfunc-server/base.Dockerfile python
+
+.PHONY: docker-build-batch-predictor
+docker-build-batch-predictor:
+	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-pyspark-base:${VERSION})
+	@docker build -t ${IMAGE_TAG} -f python/batch-predictor/docker/base.Dockerfile python
+
