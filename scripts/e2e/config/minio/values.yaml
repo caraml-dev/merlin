@@ -3,6 +3,10 @@ resources:
   requests:
     cpu: 25m
     memory: 64Mi
+
+rootUser: YOURACCESSKEY
+rootPassword: YOURSECRETKEY
+
 ingress:
   enabled: true
   annotations:
@@ -18,3 +22,9 @@ consoleIngress:
   path: /
   hosts:
   - console.minio.127.0.0.1.nip.io
+
+buckets:
+  - name: mlflow
+    policy: none
+    purge: false
+    versioning: false
