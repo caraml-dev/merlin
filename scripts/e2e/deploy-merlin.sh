@@ -19,9 +19,12 @@ install_mlp() {
     --set mlp.ingress.enabled=true \
     --set mlp.ingress.class=istio \
     --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
-    --set mlp.ingress.path="/*" 
+    --set mlp.ingress.path="/*" \
+    --wait --timeout=${TIMEOUT}
 
    kubectl apply -f config/mock/message-dumper.yaml
+
+   kubectl rollout status deployment/mlp -n mlp -w --timeout=${TIMEOUT}
 }
 
 install_merlin() {
@@ -34,14 +37,11 @@ install_merlin() {
     --set merlin.transformer.image=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \
     --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}.nip.io/v1 \
     --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST}.nip.io \
-    --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST}.nip.io 
-}
+    --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
+    --wait --timeout=${TIMEOUT}
 
-wait_ready() {
   kubectl rollout status deployment/merlin -n mlp -w --timeout=${TIMEOUT}
-  kubectl rollout status deployment/mlp -n mlp -w --timeout=${TIMEOUT}
 }
 
 install_mlp
 install_merlin
-wait_ready

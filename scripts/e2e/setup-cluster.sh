@@ -36,6 +36,8 @@ install_vault() {
         -f config/vault/values.yaml \
         --namespace=vault --create-namespace \
         --wait --timeout=${TIMEOUT}
+
+    kubectl wait pod/vault-0 --namespace=vault --for=condition=ready --timeout=${TIMEOUT}
 }
 
 store_cluster_secret() {
@@ -75,6 +77,10 @@ install_istio() {
     
     helm upgrade --install cluster-local-gateway istio/gateway -n istio-system --create-namespace \
         -f config/istio/clusterlocal-gateway.yaml --timeout=${TIMEOUT}
+
+    kubectl rollout status deployment/istio-ingressgateway -n istio-system -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT}
+    kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT}
 }
 
 install_knative() {
@@ -87,40 +93,7 @@ install_knative() {
 
     # Install knative-istio
     kubectl apply -f https://github.com/knative/net-istio/releases/download/knative-v${KNATIVE_VERSION}/net-istio.yaml
-}
 
-install_cert_manager() {
-    kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/v${CERT_MANAGER_VERSION}/cert-manager.yaml
-}
-
-install_minio() {
-    helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
-        --namespace=minio --create-namespace \
-        --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY \
-        --timeout=${TIMEOUT}
-    
-}
-
-install_kserve() {
-    wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
-
-    kubectl apply -k config/kserve
-
-    kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
-}
-
-wait_ready() {
-    # istio
-    kubectl rollout status deployment/istio-ingressgateway -n istio-system -w --timeout=${TIMEOUT}
-    kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT}
-    kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT}
-
-    # cert-manager
-    kubectl rollout status deployment/cert-manager-webhook -n cert-manager -w --timeout=${TIMEOUT}
-    kubectl rollout status deployment/cert-manager-cainjector -n cert-manager -w --timeout=${TIMEOUT}
-    kubectl rollout status deployment/cert-manager -n cert-manager -w --timeout=${TIMEOUT}
-
-    # knative
     kubectl rollout status deployment/autoscaler -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/activator -n knative-serving -w --timeout=${TIMEOUT}
@@ -129,13 +102,30 @@ wait_ready() {
     kubectl rollout status deployment/webhook -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}
+}
 
-    # vault
-    kubectl wait pod/vault-0 --namespace=vault --for=condition=ready --timeout=${TIMEOUT}
+install_cert_manager() {
+    kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/v${CERT_MANAGER_VERSION}/cert-manager.yaml
 
-    # kserve
-    kubectl rollout status statefulset/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/cert-manager-webhook -n cert-manager -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/cert-manager-cainjector -n cert-manager -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/cert-manager -n cert-manager -w --timeout=${TIMEOUT}
+}
+
+install_minio() {
+    helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
+        --namespace=minio --create-namespace \
+        --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY \
+        --timeout=${TIMEOUT}
+
     kubectl rollout status statefulset/minio -n minio -w --timeout=${TIMEOUT}
+}
+
+install_kserve() {
+    wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
+    kubectl apply -k config/kserve
+    kubectl rollout status statefulset/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
+    kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
 }
 
 add_helm_repo
@@ -145,5 +135,4 @@ install_knative
 install_vault
 install_cert_manager
 install_kserve
-wait_ready
 store_cluster_secret
