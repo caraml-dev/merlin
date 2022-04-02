@@ -376,11 +376,11 @@ jobs:
         working-directory: merlin/scripts/e2e
         run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }}
       - name: Run E2E Test
+        timeout-minutes: 30
         id: run-e2e-test
         working-directory: merlin/scripts/e2e
         run: ./run-e2e.sh ${{ env.INGRESS_HOST }}
       - name: "Debug"
-        if: (steps.run-e2e-test.outcome == 'failure') && always()
         run: |
           echo "::group::Describe deployment mlp namespace"
           kubectl describe deployment -n mlp
