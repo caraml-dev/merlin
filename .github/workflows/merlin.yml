@@ -381,6 +381,7 @@ jobs:
         working-directory: merlin/scripts/e2e
         run: ./run-e2e.sh ${{ env.INGRESS_HOST }}
       - name: "Debug"
+        if: always()
         run: |
           echo "::group::Describe deployment mlp namespace"
           kubectl describe deployment -n mlp
