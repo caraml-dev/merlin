@@ -318,7 +318,7 @@ jobs:
       K3D_CLUSTER: merlin-cluster
       LOCAL_REGISTRY_PORT: 12345
       LOCAL_REGISTRY: "dev.localhost"
-      INGRESS_HOST: "models.local"
+      INGRESS_HOST: "127.0.0.1.nip.io"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -369,11 +369,6 @@ jobs:
           docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
           docker tag merlin-transformer:${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }}
           k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
-        # TODO: use nip.io after fixing issue with model endpoint implementation
-      - name: Setup custom host for mylocal
-        run: echo "127.0.0.1 ${{ env.INGRESS_HOST }}" | sudo tee -a /etc/hosts
-      - name: Debug hosts
-        run: cat /etc/hosts
       - name: Setup cluster
         working-directory: merlin/scripts/e2e
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
@@ -385,7 +380,7 @@ jobs:
         working-directory: merlin/scripts/e2e
         run: ./run-e2e.sh ${{ env.INGRESS_HOST }}
       - name: "Debug"
-        if: (steps.run-e2e-test.outcome == 'failure')
+        if: (steps.run-e2e-test.outcome == 'failure') && always()
         run: |
           echo "::group::Describe deployment mlp namespace"
           kubectl describe deployment -n mlp
