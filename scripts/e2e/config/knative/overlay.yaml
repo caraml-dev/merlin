@@ -113,7 +113,7 @@ metadata:
   name: config-domain
   namespace: knative-serving
 data:
-  models.local: ""
+  127.0.0.1.nip.io: ""
 
 ---
 
