@@ -384,7 +384,7 @@ jobs:
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
-        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }}
+        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }} ${{ env.GITHUB_REF }}
       - name: Run E2E Test
         timeout-minutes: 15
         id: run-e2e-test

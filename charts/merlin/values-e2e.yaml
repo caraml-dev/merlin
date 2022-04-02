@@ -55,18 +55,19 @@ merlin:
 
   imageBuilder:
     clusterName: merlin-cluster
+    namespace: "mlp"
     timeout: "10m"
-    buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
+    kanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
     baseImage: ""
     dockerfilePath: "./Dockerfile"
-    predictionJobBuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
-    predictionJobBaseImage: "gojek/mlp/merlin-pyspark:v0.4.1"
     predictionJobDockerfilePath: "docker/app.Dockerfile"
-    namespace: "mlp"
-    dockerRegistry: "local.dev"
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
-    kanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
+    buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
+    predictionJobBuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
+    predictionJobBaseImage: "gojek/mlp/merlin-pyspark:v0.4.1"
+    nodeSelectors: {}
+    tolerations: []
 
   transformer:
     feast:
