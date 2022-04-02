@@ -115,12 +115,12 @@ install_cert_manager() {
 }
 
 install_minio() {
+    
     helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
-        --namespace=minio --create-namespace \
+        --namespace=minio --create-namespace --timeout=${TIMEOUT} \
         --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY \
-        --set ingress.hosts[0]=minio.minio.${INGRESS_HOST} \
-        --set consoleIngress.hosts[0]=console.minio.${INGRESS_HOST} \        
-        --timeout=${TIMEOUT}
+        --set "ingress.hosts[0]=minio.minio.${INGRESS_HOST}" \
+        --set "consoleIngress.hosts[0]=console.minio.${INGRESS_HOST}"
 
     kubectl rollout status statefulset/minio -n minio -w --timeout=${TIMEOUT}
 }
