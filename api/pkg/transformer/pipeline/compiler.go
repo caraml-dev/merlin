@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	artifactsFolder        = "/mnt/models/artifacts/artifacts/"
+	artifactsFolder        = "/mnt/models/artifacts/"
 	envPredictorStorageURI = "STORAGE_URI"
 )
 
