@@ -689,8 +689,6 @@ def test_standard_transformer_without_feast(
     merlin.set_project(project_name)
     merlin.set_model("std-transformer", ModelType.PYFUNC)
 
-    model_dir = "test/table_data"
-
     undeploy_all_version()
     with merlin.new_model_version() as v:
         v.log_pyfunc_model(

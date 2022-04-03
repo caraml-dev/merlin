@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	artifactsFolder        = "/mnt/models/artifacts/"
+	artifactsFolder        = "/mnt/models/artifacts/model/artifacts"
 	envPredictorStorageURI = "STORAGE_URI"
 )
 
@@ -251,7 +251,7 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 				}
 
 				//relative path in merlin
-				if !filePath.IsAbs() && os.Getenv("envPredictorStorageURI") != "" {
+				if !filePath.IsAbs() && os.Getenv(envPredictorStorageURI) != "" {
 					filePath, err = url.Parse(artifactsFolder + tableSpec.BaseTable.GetFromFile().GetUri())
 					if err != nil {
 						return nil, nil, err
