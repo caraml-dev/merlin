@@ -695,7 +695,7 @@ def test_standard_transformer_without_feast(
             model_instance=EchoModel(),
             conda_env="test/pyfunc/env.yaml",
             code_dir=["test"],
-            artifacts={},
+            artifacts={"normal_csv": "tests/pyfunc/normal.csv"},
         )
 
     transformer_config_path = os.path.join(
@@ -722,10 +722,20 @@ def test_standard_transformer_without_feast(
             "data": [
                 [1111, "driver-2", 2.5, 0.5, 2, 3, 1, 0],
                 [1111, "driver-1", -2.5, 0.75, 0, 1, 1, 0]],
+        },
+        "table_from_file": {
+            "columns": ["First Name", "Last Name", "Age", "Weight", "Is VIP"],
+            "data": [
+                ["Apple", "Cider", 25, 48.8, "TRUE"],
+                ["Banana", "Man", 18, 68, "FALSE"],
+                ["Zara", "Vuitton", 35, 75, "TRUE"],
+                ["Sandra", "Zawaska", 32, 55, "FALSE"],
+                ["Merlion", "Krabby", 23, 57.22, "FALSE"]],
         }
     }
 
     recursive_eq(resp.json()["instances"], exp_resp["instances"], abs_tol= 1e-09) #asserts lhs = rhs, with tolerance
+    recursive_eq(resp.json()["table_from_file"], exp_resp["table_from_file"], abs_tol=1e-09)
     merlin.undeploy(v)
 
 

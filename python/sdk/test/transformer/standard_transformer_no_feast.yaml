@@ -10,6 +10,14 @@ transformerConfig:
               fromJson:
                 jsonPath: $.drivers[*]
                 addRowNumber: true
+          - name: customer_name
+            baseTable:
+              fromFile:
+                format: CSV
+                uri: normal.csv
+                schema:
+                  - name: Is VIP
+                    type: STRING
       - encoders:
         - name: "vehicle_mapping"
           ordinalEncoderConfig:
@@ -64,3 +72,7 @@ transformerConfig:
                 fromTable:
                   tableName: transformed_driver_table
                   format: "SPLIT"
+              - fieldName: table_from_file
+                fromTable:
+                  format: SPLIT
+                  tableName: customer_name
