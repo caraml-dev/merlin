@@ -689,14 +689,18 @@ def test_standard_transformer_without_feast(
     merlin.set_project(project_name)
     merlin.set_model("std-transformer", ModelType.PYFUNC)
 
+    model_dir = "test/table_data"
+
     undeploy_all_version()
     with merlin.new_model_version() as v:
         v.log_pyfunc_model(
             model_instance=EchoModel(),
             conda_env="test/pyfunc/env.yaml",
             code_dir=["test"],
-            artifacts={"normal_csv": "test/pyfunc/normal.csv"},
+            artifacts={},
         )
+
+    merlin.log_model(model_dir=model_dir)
 
     transformer_config_path = os.path.join(
         "test/transformer", "standard_transformer_no_feast.yaml"
