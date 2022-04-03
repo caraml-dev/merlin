@@ -695,7 +695,7 @@ def test_standard_transformer_without_feast(
             model_instance=EchoModel(),
             conda_env="test/pyfunc/env.yaml",
             code_dir=["test"],
-            artifacts={"normal_csv": "tests/pyfunc/normal.csv"},
+            artifacts={"normal_csv": "test/pyfunc/normal.csv"},
         )
 
     transformer_config_path = os.path.join(
