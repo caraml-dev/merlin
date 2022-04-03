@@ -699,8 +699,7 @@ def test_standard_transformer_without_feast(
             code_dir=["test"],
             artifacts={},
         )
-
-    merlin.log_model(model_dir=model_dir)
+        merlin.log_model(model_dir=model_dir)
 
     transformer_config_path = os.path.join(
         "test/transformer", "standard_transformer_no_feast.yaml"
