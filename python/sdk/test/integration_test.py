@@ -662,7 +662,7 @@ def test_feast_enricher(integration_test_url, project_name, use_google_oauth):
             model_instance=EchoModel(),
             conda_env="test/pyfunc/env.yaml",
             code_dir=["test"],
-            artifacts={"normal_csv": "test/pyfunc/table_data/normal.csv"},
+            artifacts={},
         )
 
     transformer_config_path = os.path.join("test/transformer", "feast_enricher.yaml")
@@ -697,7 +697,7 @@ def test_standard_transformer_without_feast(
             model_instance=EchoModel(),
             conda_env="test/pyfunc/env.yaml",
             code_dir=["test"],
-            artifacts={},
+            artifacts={"normal_csv": "test/pyfunc/table_data/normal.csv"},
         )
 
     transformer_config_path = os.path.join(
