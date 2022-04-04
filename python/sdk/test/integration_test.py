@@ -13,6 +13,7 @@
 # limitations under the License.
 import json
 import os
+from time import sleep
 
 import requests
 import pytest
@@ -247,13 +248,8 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth):
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
-    # Undeploy deployed model version
-    merlin.undeploy(v)
-
-    # Redeploy and set traffic
-    merlin.deploy(v)
-
     endpoint = merlin.set_traffic({v: 100})
+    sleep(3)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -292,6 +288,7 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth):
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     model_endpoint = merlin.serve_traffic({endpoint: 100})
+    sleep(3)
 
     resp = requests.post(f"{model_endpoint.url}", json=request_json)
 
@@ -330,6 +327,7 @@ def test_stop_serving_traffic(integration_test_url, project_name, use_google_oau
     assert len(resp.json()["predictions"]) == len(request_json["instances"])
 
     model_endpoint = merlin.serve_traffic({endpoint: 100})
+    sleep(3)
 
     resp = requests.post(f"{model_endpoint.url}", json=request_json)
 
