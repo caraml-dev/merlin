@@ -287,10 +287,24 @@ export class Pipeline {
             step["operation"] = "sort";
           } else if (step.updateColumns !== undefined) {
             step["operation"] = "updateColumns";
+            step.updateColumns.forEach(updateCol => {
+              if (
+                updateCol.conditions !== undefined &&
+                updateCol.conditions.length > 0
+              ) {
+                updateCol["strategy"] = "withCondition";
+              } else {
+                updateCol["strategy"] = "withoutCondition";
+              }
+            });
           } else if (step.scaleColumns !== undefined) {
             step["operation"] = "scaleColumns";
           } else if (step.encodeColumns !== undefined) {
             step["operation"] = "encodeColumns";
+          } else if (step.filterRow !== undefined) {
+            step["operation"] = "filterRow";
+          } else if (step.sliceRow !== undefined) {
+            step["operation"] = "sliceRow";
           }
         });
 
