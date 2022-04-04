@@ -451,21 +451,18 @@ def test_logger(integration_test_url, project_name, use_google_oauth):
 
     merlin.undeploy(v)
 
-# TODO: fix pytorch
-@pytest.mark.pytorch
+
 @pytest.mark.integration
 def test_custom_transformer(
         integration_test_url, project_name, use_google_oauth
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("custom-transformer", ModelType.PYTORCH)
-
-    model_dir = "test/transformer/custom-transformer"
+    merlin.set_model("custom-transformer", ModelType.CUSTOM)
 
     undeploy_all_version()
 
-    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+    resource_request = ResourceRequest(1, 1, "50m", "200Mi")
     transformer = Transformer(
         "gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
         resource_request=resource_request,
@@ -475,8 +472,9 @@ def test_custom_transformer(
         model=LoggerConfig(enabled=True, mode=LoggerMode.ALL),
         transformer=LoggerConfig(enabled=True, mode=LoggerMode.ALL),
     )
+
     with merlin.new_model_version() as v:
-        merlin.log_model(model_dir=model_dir)
+        v.log_custom_model(image="ealen/echo-server:0.5.1", args="--port 8080")
         endpoint = merlin.deploy(transformer=transformer, logger=logger)
 
     assert endpoint.logger is not None
@@ -498,7 +496,6 @@ def test_custom_transformer(
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(req["instances"])
 
     # Undeploy other running model version endpoints
     undeploy_all_version()
