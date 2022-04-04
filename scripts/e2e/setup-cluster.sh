@@ -34,7 +34,6 @@ add_helm_repo() {
 }
 
 install_vault() {
-    echo "::group::Vault Deployment"
     helm upgrade --install vault hashicorp/vault --version=${VAULT_VERSION} \
         -f config/vault/values.yaml \
         --namespace=vault --create-namespace \
@@ -44,7 +43,6 @@ install_vault() {
 }
 
 store_cluster_secret() {
-    echo "::group::Setting up Cluster Secret"
     # Downgrade to Vault KV secrets engine version 1
     kubectl exec vault-0 --namespace=vault -- vault secrets disable secret
     kubectl exec vault-0 --namespace=vault -- vault secrets enable -version=1 -path=secret kv
@@ -72,7 +70,6 @@ EOF
 }
 
 install_istio() {
-    echo "::group::Istio Deployment"
     helm upgrade --install istio-base istio/base --version=${ISTIO_VERSION} -n istio-system --create-namespace
     helm upgrade --install istiod istio/istiod --version=${ISTIO_VERSION} -n istio-system --create-namespace \
         -f config/istio/istiod.yaml --timeout=${TIMEOUT}
@@ -89,7 +86,6 @@ install_istio() {
 }
 
 install_knative() {
-    echo "::group::Knative Deployment"
     # Install CRD
     kubectl apply -f https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-crds.yaml
 
@@ -111,7 +107,6 @@ install_knative() {
 }
 
 install_cert_manager() {
-    echo "::group::Cert Manager Deployment"
     kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/v${CERT_MANAGER_VERSION}/cert-manager.yaml
 
     kubectl rollout status deployment/cert-manager-webhook -n cert-manager -w --timeout=${TIMEOUT}
@@ -120,7 +115,7 @@ install_cert_manager() {
 }
 
 install_minio() {
-    echo "::group::Minio Deployment"
+    
     helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
         --namespace=minio --create-namespace --timeout=${TIMEOUT} \
         --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY \
@@ -131,7 +126,6 @@ install_minio() {
 }
 
 install_kserve() {
-    echo "::group::Kserve Deployment"
     wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
     kubectl apply -k config/kserve
     kubectl rollout status statefulset/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
