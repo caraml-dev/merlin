@@ -132,6 +132,10 @@ install_kserve() {
     kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
 }
 
+patch_coredns() {
+    kubectl patch cm coredns -n kube-system --patch-file config/coredns/patch.yaml 
+}
+
 add_helm_repo
 install_istio
 install_minio
@@ -140,3 +144,4 @@ install_vault
 install_cert_manager
 install_kserve
 store_cluster_secret
+patch_coredns
