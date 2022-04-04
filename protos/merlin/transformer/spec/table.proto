@@ -4,6 +4,7 @@ package merlin.transformer;
 
 import "transformer/spec/common.proto";
 import "transformer/spec/scaler.proto";
+import "google/protobuf/wrappers.proto";
 
 option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
@@ -52,8 +53,8 @@ message FilterRow {
 }
 
 message SliceRow {
-  int64 start = 1;
-  int64 end = 2;
+  google.protobuf.Int32Value start = 1;
+  google.protobuf.Int32Value end = 2;
 }
 
 message SortColumnRule {
@@ -73,7 +74,7 @@ message UpdateColumn {
 }
 
 message ColumnCondition {
-  string if = 1;
+  string rowSelector = 1;
   string expression = 2;
   DefaultColumnValue default = 3;
 }

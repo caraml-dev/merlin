@@ -22,7 +22,7 @@ export const ConditionalUpdatePanel = ({
   const items = conditions.length === 0 ? [...conditions, {}] : conditions;
 
   const onAddIfCondition = () => {
-    onChangeHandler([...conditions, { if: "", expression: "" }]);
+    onChangeHandler([...conditions, { rowSelector: "", expression: "" }]);
   };
 
   const onAddDefault = () => {
@@ -93,7 +93,7 @@ export const ConditionalUpdatePanel = ({
             <EuiFlexGroup direction="row" gutterSize="s">
               <EuiFlexItem>
                 <AddButton
-                  title="+ Add If Statement"
+                  title="+ Add Row Selector"
                   description="Add condition and the execution"
                   onClick={() => onAddIfCondition()}
                 />

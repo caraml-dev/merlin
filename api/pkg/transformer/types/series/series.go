@@ -68,6 +68,28 @@ func NewInferType(values interface{}, seriesName string) (*Series, error) {
 	return New(seriesValues, seriesType, seriesName), nil
 }
 
+// NormalizeIndex to find correct start and end index of a series
+// if index is negative, the index value will be counted backward
+func NormalizeIndex(start, end *int, numOfRow int) (startIdx, endIdx int) {
+	startIdx = 0
+	if start != nil {
+		startIdx = *start
+	}
+	endIdx = numOfRow
+	if end != nil {
+		endIdx = *end
+	}
+
+	if startIdx < 0 {
+		startIdx = numOfRow + startIdx
+	}
+	if endIdx < 0 {
+		endIdx = numOfRow + endIdx
+	}
+
+	return startIdx, endIdx
+}
+
 func (s *Series) Series() *series.Series {
 	return s.series
 }
@@ -208,8 +230,11 @@ func (s *Series) compare(comparator series.Comparator, comparingValue interface{
 	return NewSeries(&result), nil
 }
 
-func (s *Series) Slice(start, end int) *Series {
-	sliced := s.series.Slice(start, end)
+// Slice series based on start and end index
+// the result will include start index but exclude end index
+func (s *Series) Slice(start, end *int) *Series {
+	startIdx, endIdx := NormalizeIndex(start, end, s.Len())
+	sliced := s.series.Slice(startIdx, endIdx)
 	if sliced.Error() != nil {
 		panic(sliced.Error())
 	}
@@ -220,6 +245,7 @@ func (s *Series) IsBoolean() bool {
 	return s.Type() == Bool
 }
 
+// IsIn check whether whether row has value that part of `comparingValue`
 func (s *Series) IsIn(comparingValue interface{}) *Series {
 	result, err := s.compare(series.In, comparingValue)
 	if err != nil {

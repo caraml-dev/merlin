@@ -278,9 +278,10 @@ func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 }
 
 // SliceRow will slice all columns in a table based on supplied start and end index
-func (t *Table) SliceRow(start, end int) error {
+func (t *Table) SliceRow(start, end *int) error {
 	df := t.dataFrame
-	newDf := df.Slice(start, end)
+	startIdx, endIdx := series.NormalizeIndex(start, end, t.NRow())
+	newDf := df.Slice(startIdx, endIdx)
 	if newDf.Err != nil {
 		return newDf.Err
 	}

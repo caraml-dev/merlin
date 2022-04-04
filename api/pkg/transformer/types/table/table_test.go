@@ -775,8 +775,8 @@ func TestTable_SliceRow(t *testing.T) {
 	tests := []struct {
 		name       string
 		inputTable *Table
-		startIdx   int
-		endIdx     int
+		startIdx   *int
+		endIdx     *int
 		want       *Table
 		wantErr    bool
 		errMessage string
@@ -787,11 +787,24 @@ func TestTable_SliceRow(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			startIdx: 1,
-			endIdx:   3,
+			startIdx: toPointerInt(1),
+			endIdx:   toPointerInt(3),
 			want: New(
 				series.New([]int{2, 3}, series.Int, "A"),
 				series.New([]string{"b", "c"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start and end is nil",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: nil,
+			endIdx:   nil,
+			want: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
 		},
 		{
@@ -800,8 +813,8 @@ func TestTable_SliceRow(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			startIdx: 1,
-			endIdx:   5,
+			startIdx: toPointerInt(1),
+			endIdx:   toPointerInt(5),
 			want: New(
 				series.New([]int{2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"b", "c", "d", "e"}, series.String, "B"),
@@ -813,8 +826,8 @@ func TestTable_SliceRow(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			startIdx:   1,
-			endIdx:     6,
+			startIdx:   toPointerInt(1),
+			endIdx:     toPointerInt(6),
 			wantErr:    true,
 			errMessage: "failed slice col: A due to: slice index out of bounds",
 		},
@@ -824,8 +837,8 @@ func TestTable_SliceRow(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			startIdx:   2,
-			endIdx:     0,
+			startIdx:   toPointerInt(2),
+			endIdx:     toPointerInt(0),
 			wantErr:    true,
 			errMessage: "failed slice col: A due to: slice index out of bounds",
 		},
@@ -835,8 +848,91 @@ func TestTable_SliceRow(t *testing.T) {
 				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
 				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
 			),
-			startIdx:   -1,
-			endIdx:     2,
+			startIdx: toPointerInt(-1),
+			endIdx:   nil,
+			want: New(
+				series.New([]int{5}, series.Int, "A"),
+				series.New([]string{"e"}, series.String, "B"),
+			),
+		},
+		{
+			name: "end < 0",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: nil,
+			endIdx:   toPointerInt(-1),
+			want: New(
+				series.New([]int{1, 2, 3, 4}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start >= 0 and end < 0",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: toPointerInt(1),
+			endIdx:   toPointerInt(-2),
+			want: New(
+				series.New([]int{2, 3}, series.Int, "A"),
+				series.New([]string{"b", "c"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start < 0 and end > 0",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: toPointerInt(-2),
+			endIdx:   toPointerInt(4),
+			want: New(
+				series.New([]int{4}, series.Int, "A"),
+				series.New([]string{"d"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start > num of length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   toPointerInt(6),
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "start < -1 * num of length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   toPointerInt(-6),
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "end > num of length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   nil,
+			endIdx:     toPointerInt(6),
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "end < -1 * num of length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   nil,
+			endIdx:     toPointerInt(-6),
 			wantErr:    true,
 			errMessage: "failed slice col: A due to: slice index out of bounds",
 		},
@@ -851,6 +947,10 @@ func TestTable_SliceRow(t *testing.T) {
 			assert.Equal(t, tt.want, tt.inputTable)
 		})
 	}
+}
+
+func toPointerInt(val int) *int {
+	return &val
 }
 
 func TestTable_FilterRow(t *testing.T) {

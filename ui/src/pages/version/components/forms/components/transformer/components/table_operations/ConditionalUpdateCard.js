@@ -7,7 +7,7 @@ import {
   EuiSpacer,
   EuiFieldText
 } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 import { DraggableHeader } from "../../../DraggableHeader";
 export const ConditionalUpdateCard = ({
   index = 0,
@@ -57,17 +57,22 @@ export const ConditionalUpdateCard = ({
           {condition.default === undefined && (
             <>
               <EuiFormRow
-                key={`if-condition-form-${index}`}
-                label="If"
+                key={`rowselector-condition-form-${index}`}
+                label={
+                  <FormLabelWithToolTip
+                    label="Row Selector"
+                    content="Row Selector indicate which row that affected for the expression. Evaluation of row selector value should be in boolean or array of boolean type"
+                  />
+                }
                 isInvalid={!!errors.name}
                 error={errors.name}
                 display="columnCompressed"
                 fullWidth>
                 <EuiFieldText
-                  key={`if-condition-${index}`}
-                  placeholder="If condition"
-                  value={!!condition.if ? condition.if : ""}
-                  onChange={e => onChange("if")(e.target.value)}
+                  key={`row-selector-${index}`}
+                  placeholder="Row Selector"
+                  value={!!condition.rowSelector ? condition.rowSelector : ""}
+                  onChange={e => onChange("rowSelector")(e.target.value)}
                   isInvalid={!!errors.name}
                   name={`columnName`}
                   fullWidth
@@ -75,7 +80,12 @@ export const ConditionalUpdateCard = ({
               </EuiFormRow>
               <EuiFormRow
                 key={`condition-expression-form-${index}`}
-                label="Expression"
+                label={
+                  <FormLabelWithToolTip
+                    label="Expression"
+                    content="Expression will returning values that will be assigned to selected row"
+                  />
+                }
                 isInvalid={!!errors.name}
                 error={errors.name}
                 display="columnCompressed"

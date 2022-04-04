@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -252,12 +253,12 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 								Column: "conditional_col",
 								Conditions: []*spec.ColumnCondition{
 									{
-										If:         "existing_table.Col('int_col') % 2 == 0",
-										Expression: "existing_table.Col('int_col')",
+										RowSelector: "existing_table.Col('int_col') % 2 == 0",
+										Expression:  "existing_table.Col('int_col')",
 									},
 									{
-										If:         "existing_table.Col('int_col') % 2 == 1",
-										Expression: "existing_table.Col('int_col') / 1000",
+										RowSelector: "existing_table.Col('int_col') % 2 == 1",
+										Expression:  "existing_table.Col('int_col') / 1000",
 									},
 									{
 										Default: &spec.DefaultColumnValue{
@@ -270,16 +271,16 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 								Column: "conditional_col_2",
 								Conditions: []*spec.ColumnCondition{
 									{
-										If:         "existing_table.Col('int_col') == nil",
-										Expression: "0",
+										RowSelector: "existing_table.Col('int_col') == nil",
+										Expression:  "0",
 									},
 									{
-										If:         "integer_var < 100",
-										Expression: "existing_table.Col('int_col')",
+										RowSelector: "integer_var < 100",
+										Expression:  "existing_table.Col('int_col')",
 									},
 									{
-										If:         "integer_var > 1000",
-										Expression: "existing_table.Col('int_col') / 1000",
+										RowSelector: "integer_var > 1000",
+										Expression:  "existing_table.Col('int_col') / 1000",
 									},
 									{
 										Default: &spec.DefaultColumnValue{
@@ -353,8 +354,8 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 				Steps: []*spec.TransformationStep{
 					{
 						SliceRow: &spec.SliceRow{
-							Start: 2,
-							End:   4,
+							Start: wrapperspb.Int32(2),
+							End:   wrapperspb.Int32(4),
 						},
 					},
 				},
@@ -384,8 +385,8 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 				Steps: []*spec.TransformationStep{
 					{
 						SliceRow: &spec.SliceRow{
-							Start: 4,
-							End:   10,
+							Start: wrapperspb.Int32(4),
+							End:   wrapperspb.Int32(10),
 						},
 					},
 				},

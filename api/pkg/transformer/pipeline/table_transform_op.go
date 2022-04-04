@@ -132,7 +132,17 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 
 		if step.SliceRow != nil {
 			sliceRow := step.SliceRow
-			err := resultTable.SliceRow(int(sliceRow.Start), int(sliceRow.End))
+			var startIdx *int
+			if sliceRow.Start != nil {
+				starIdxIntVal := int(sliceRow.Start.Value)
+				startIdx = &starIdxIntVal
+			}
+			var endIdx *int
+			if sliceRow.End != nil {
+				endIdxIntVal := int(sliceRow.End.Value)
+				endIdx = &endIdxIntVal
+			}
+			err := resultTable.SliceRow(startIdx, endIdx)
 			if err != nil {
 				return err
 			}
@@ -191,7 +201,7 @@ func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *ta
 				continue
 			}
 
-			rowIndex, err := getRowIndexes(env, condition.If)
+			rowIndex, err := getRowIndexes(env, condition.RowSelector)
 			if err != nil {
 				return nil, err
 			}

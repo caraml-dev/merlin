@@ -24,6 +24,23 @@ func TestOperationNode_Execute(t *testing.T) {
 			want: series.New([]interface{}{3, 5, 7, 9, 11, nil}, series.Int, ""),
 		},
 		{
+			name: "add multiple series",
+			node: &OperationNode{
+				LeftVal:   series.New([]interface{}{1, 2, 3, 4, 5, nil}, series.Int, ""),
+				RightVal:  series.New([]int{2, 3, 4, 5, 6, 7}, series.Int, ""),
+				Operation: Add,
+				Next: &OperationNode{
+					RightVal: &OperationNode{
+						LeftVal:   series.New([]interface{}{1, 1, 1, 1, 1, nil}, series.Int, ""),
+						RightVal:  series.New([]int{1, 1, 1, 1, 1, 1}, series.Int, ""),
+						Operation: Add,
+					},
+					Operation: Add,
+				},
+			},
+			want: series.New([]interface{}{5, 7, 9, 11, 13, nil}, series.Int, ""),
+		},
+		{
 			name: "substract two series",
 			node: &OperationNode{
 				LeftVal:   series.New([]int{1, 2, 3, 4, 5}, series.Int, ""),

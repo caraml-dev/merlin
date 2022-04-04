@@ -134,7 +134,7 @@ export const TableTransformationStepCard = ({
 
           {step.operation === "sliceRow" && (
             <SliceRow
-              filterRow={step.sliceRow}
+              sliceRow={step.sliceRow}
               onChangeHandler={onChange("sliceRow")}
               errors={get(errors, "sliceRow")}
             />

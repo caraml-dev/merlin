@@ -6,11 +6,13 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
+// Operator interface including arithmetic operator, logical operator and comparator
 type Operator interface {
 	Type() string
 	Name() string
 }
 
+// OperationNode holds information about chain of operations
 type OperationNode struct {
 	LeftVal   interface{}
 	RightVal  interface{}
@@ -18,6 +20,8 @@ type OperationNode struct {
 	Next      *OperationNode
 }
 
+// RegisterOperation register chain of operation that already overriden
+// Returning root of operation
 func RegisterOperation(leftVal, rightVal interface{}, operator Operator) *OperationNode {
 	switch lVal := leftVal.(type) {
 	case *OperationNode:
@@ -40,11 +44,12 @@ func RegisterOperation(leftVal, rightVal interface{}, operator Operator) *Operat
 	}
 }
 
-// Run to whole dataset
+// Execute run all the operations to whole row
 func (s *OperationNode) Execute() (interface{}, error) {
 	return s.runExecution(nil)
 }
 
+// ExecuteSubset run all the operations to subset of row in a series
 func (s *OperationNode) ExecuteSubset(indexes *series.Series) (interface{}, error) {
 	return s.runExecution(indexes)
 }

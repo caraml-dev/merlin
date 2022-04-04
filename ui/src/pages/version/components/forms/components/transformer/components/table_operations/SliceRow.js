@@ -7,7 +7,7 @@ import {
 } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 
-export const SliceRow = ({ filterRow, onChangeHandler, errors = {} }) => {
+export const SliceRow = ({ sliceRow, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   return (
@@ -25,8 +25,8 @@ export const SliceRow = ({ filterRow, onChangeHandler, errors = {} }) => {
           display="columnCompressed"
           fullWidth>
           <EuiFieldText
-            placeholder="Start Indexx"
-            value={filterRow !== undefined ? filterRow.condition : ""}
+            placeholder="Start Index"
+            value={!!sliceRow && sliceRow.start ? sliceRow.start : "null"}
             onChange={e => onChange("start")(e.target.value)}
             isInvalid={!!errors.name}
             name={`start`}
@@ -48,7 +48,7 @@ export const SliceRow = ({ filterRow, onChangeHandler, errors = {} }) => {
           fullWidth>
           <EuiFieldText
             placeholder="End Index"
-            value={filterRow !== undefined ? filterRow.condition : ""}
+            value={!!sliceRow && sliceRow.end ? sliceRow.end : "null"}
             onChange={e => onChange("end")(e.target.value)}
             isInvalid={!!errors.name}
             name={`end`}

@@ -586,7 +586,8 @@ tableTransformation:
 ```
 
 There are two ways to update columns:
-* Update column to the whole rows. Users need to only specify `column` and `expression`. Evaluation from that `expression` must contains of one value or array / series that has the same length with the rest of the column. Following the example:
+* Update all rows in the column. You need to specify `column`and `expression`. `column` determines which column to be updated and `expression` determines the value that will be used to update the column.
+Value produced by the `expression` must be a scalar or a series that has the same length as the other columns. Following the example::
   ```
     - updateColumns:
       - column: "customer_id"
@@ -594,7 +595,7 @@ There are two ways to update columns:
       - column: "s2id"
         expression: S2ID(table1.Col('lat'), table2.Col('lon'), 12) # the value is array or series that the length should be the same with the rest of the columns in a table 
   ```
-* Update column to the subset of rows based on conditions. For this users can set multiple `if` with `expression` and also default value if none of conditions are match. For example users have following table
+* Update subset of rows in the columns given some row selector condition. For this users can set multiple `rowSelector` with `expression` and also default value if none of conditions are match. For example users have following table
 
 | customer_id | customer_age | total_booking_1w |
 | ----------- | ------------ | ---------------- |
@@ -617,16 +618,16 @@ tableTransformation:
      - updateColumns:
         - column: "customer_segment"
           conditions:
-          - if: myTable.Col('customer_age') > 55
+          - rowSelector: myTable.Col('customer_age') > 55
             expression: "retired"
-          - if: myTable.Col('customer_age') >= 30
+          - rowSelector: myTable.Col('customer_age') >= 30
             expression: "matured"
-          - if: myTable.Col('customer_age') >= 22
+          - rowSelector: myTable.Col('customer_age') >= 22
             expression: "productive"
           - default:
               expression: "non-productive"
 ```
-All `if` conditions are working like `if else` statement. `if` condition must be returning boolean or series of boolean, `default` will be executed if none of the `if` conditions are matched.
+All `rowSelector` conditions are working like `if else` statement. `rowSelector` condition must be returning boolean or series of boolean, `default` will be executed if none of the `rowSelector` conditions are matched.
 
 #### Filter Row
 Filter row is an operation that will filter rows in a table based on given condition. Suppose users have this following table
@@ -647,7 +648,7 @@ tableTransformation:
 ```
 
 ### Slice Row
-Slice row is an operation to slice a table based on start(lower bound) and end index(upper bound) that given by the user. The result will including start index but not end index. Below is the example of this operation
+Slice row is an operation to slice a table based on start(lower bound) and end index(upper bound) that given by the user. The result includes starting index but excluding end index. Below is the example of this operation
 ```
 tableTransformation:
      inputTable: myTable
@@ -657,6 +658,10 @@ tableTransformation:
         start: 0
         end: 4
 ```
+Value of `start` end `end` can be null or negative. Following are the behaviour:
+* Null value of `start` means that `start` value is 0
+* Null value of `end` means that `end` value is number of rows in a table
+* Negative value of `start` or `end` means that the value will be (`number of row` + `start`) or (`number of row` + `end`). Suppose you set `start` -5 and `end` -1 and number of row is 10, so `start` value will be 5 and `end` will be 9
 
 #### Encode Column
 This operation will encode the specified columns with the specified encoder defined in the input step.

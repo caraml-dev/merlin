@@ -22,9 +22,9 @@ transformerConfig:
                 expression: customer_id
               - column: driver_performa
                 conditions:
-                  - if: driver_table.Col("rating") * 2 <= 7
+                  - rowSelector: driver_table.Col("rating") * 2 <= 7
                     expression: driver_table.Col("rating") * 1
-                  - if: driver_table.Col("rating") * 2 >= 8
+                  - rowSelector: driver_table.Col("rating") * 2 >= 8
                     expression: driver_table.Col("rating") * 1.5
                   - default:
                       expression: zero
