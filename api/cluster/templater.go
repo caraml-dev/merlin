@@ -275,7 +275,6 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
 	envVars = append(envVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
 	envVars = append(envVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
-	envVars = append(envVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
 
 	var loggerSpec *kfsv1alpha2.Logger
 	if modelService.Logger != nil && modelService.Logger.Transformer != nil && modelService.Logger.Transformer.Enabled {
@@ -286,7 +285,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	transformerSpec := &kfsv1alpha2.TransformerSpec{
 		Custom: &kfsv1alpha2.CustomSpec{
 			Container: v1.Container{
-				Name:  "kfserving-container",
+				Name:  "transformer",
 				Image: transformer.Image,
 				Env:   envVars.ToKubernetesEnvVars(),
 				Resources: v1.ResourceRequirements{

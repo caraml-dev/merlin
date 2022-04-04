@@ -767,7 +767,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						Transformer: &kfsv1alpha2.TransformerSpec{
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
-									Name:    "kfserving-container",
+									Name:    "transformer",
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
@@ -844,7 +844,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						Transformer: &kfsv1alpha2.TransformerSpec{
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
-									Name:    "kfserving-container",
+									Name:    "transformer",
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
@@ -924,7 +924,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						Transformer: &kfsv1alpha2.TransformerSpec{
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
-									Name:  "kfserving-container",
+									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
 									Env: []v1.EnvVar{
 										{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
@@ -1116,7 +1116,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 						Transformer: &kfsv1alpha2.TransformerSpec{
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
-									Name:    "kfserving-container",
+									Name:    "transformer",
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
@@ -1192,7 +1192,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 						Transformer: &kfsv1alpha2.TransformerSpec{
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
-									Name:    "kfserving-container",
+									Name:    "transformer",
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
@@ -1268,7 +1268,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 						Transformer: &kfsv1alpha2.TransformerSpec{
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
-									Name:    "kfserving-container",
+									Name:    "transformer",
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
@@ -1348,7 +1348,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 						Transformer: &kfsv1alpha2.TransformerSpec{
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
-									Name:    "kfserving-container",
+									Name:    "transformer",
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
@@ -1579,7 +1579,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 						Transformer: &kfsv1alpha2.TransformerSpec{
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
-									Name:    "kfserving-container",
+									Name:    "transformer",
 									Image:   "ghcr.io/gojek/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
@@ -1884,7 +1884,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 			&kfsv1alpha2.TransformerSpec{
 				Custom: &kfsv1alpha2.CustomSpec{
 					Container: v1.Container{
-						Name:    "kfserving-container",
+						Name:    "transformer",
 						Image:   standardTransformerConfig.ImageName,
 						Command: []string{"python"},
 						Args:    []string{"main.py"},
@@ -1946,7 +1946,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 			&kfsv1alpha2.TransformerSpec{
 				Custom: &kfsv1alpha2.CustomSpec{
 					Container: v1.Container{
-						Name:    "kfserving-container",
+						Name:    "transformer",
 						Image:   "ghcr.io/gojek/merlin-transformer-test",
 						Command: []string{"python"},
 						Args:    []string{"main.py"},
