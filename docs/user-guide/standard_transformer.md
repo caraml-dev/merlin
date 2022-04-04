@@ -153,59 +153,28 @@ Expression can be used for updating column value
 For full list of standard transformer built-in function, please check [Transformer Expressions](./transformer_expressions.md).
 
 ## Input Stage
+At the input stage, users specify all the data dependencies that are going to be used in subsequent stages. There are 3 operations available in these stages: 
 
-### Variable
-Variable declaration is used for assigning literal value or result of a function into a variable. The variable declaration will be executed from top to bottom and it’s possible to refer to the declared variable in subsequent variable declarations. Following are ways to set value to variable.
+1. Table creation 
+- Table Creation from Feast Features
+- Table Creation from Input Request
+- Table Creation from File
 
-* Literal
-  Specifiying literal value to variable. By specifying literal values user needs to specify what is the type for that variable. Types that supported for this:
-    * String
-    * Int
-    * Float
-    * Bool
-  for example:
-  ```
-    - variables:
-        - name: var_1
-          literal:
-            intValue: 3
-        - name: var_2
-          literal:
-            floatValue: 2.2
-        - name: var_3
-          literal:
-            boolValue: true
-        - name: var_4
-          literal:
-            stringValue: stringVal
-  
-  ```
-* Jsonpath
-  Value of variable is obtained from request/model response payload by specifying jsonpath value, e.g
-  ```
-    - variables:
-        - name: var_5
-          jsonPathConfig: 
-            jsonPath: $.rating
-            defaultValue: -1
-            valueType: INT
-        - name: var_6
-          jsonPath: $rating # deprecated
-  ```
-* Expression
-  Value of variable is obtained from expression, e.g
-  ```
-    - variables:
-        - name: var_7
-          jsonPathConfig:
-            jsonPath: $.customer_id
-        - name: var_8
-          expression: var_7
-  ```
+2. Variable declaration
 
-  ### Feast
-  This feast input stage is stage where user specifies features that they want to retrieve from feast and the result is table that contains those features. Following is the syntax for feast input:
-  ```
+3. Encoder declaration
+
+### Table Creation
+Table is the main data structure within the standard transformer. There are 3 ways of creating table in standard transformer: 
+
+#### Table Creation from Feast Features
+This operation creates one or more tables containing features from Feast. This operation is already supported in Merlin 0.10. The key change to be made is to adapt the result of operation. Previously, the features retrieved from feast is directly enriched to the original request body to be sent to the model. Now, the operation only outputs as internal table representation which can be accessible by subsequent transformation steps in the pipeline. 
+
+Additionally, it should be possible for users to give the features table a name to ease referencing the table from subsequent steps. 
+
+Following is the syntax:  
+
+   ```
     feast:
         - tableName:       # Specify the output table name
   
@@ -270,7 +239,7 @@ Variable declaration is used for assigning literal value or result of a function
   \
   For detail explanation of environment variables in standard transformer, you can look [this section](#standard-transformer-environment-variables)
 
-  ### Table
+  #### Table Creation from Input Request
   This step is generic table creation that allows users to define one or more tables based on value from either JSON payload, result of built-in expressions, or an existing table. Following is the syntax for table input:
   ```
     tables:
@@ -331,6 +300,98 @@ Variable declaration is used for assigning literal value or result of a function
               - name: col_2
                 expression: table.Col('rating')
   
+  ```
+
+#### Table Creation from File
+This operation allows user to create a static table from a file. For example, user might choose to load a table with a list of public holidays for the year. As the data will be loaded into memory, it is strongly advised to keep the total size of all files within 50mb. Also, each file shall only contain information for 1 table.
+
+##### Supported File Format
+
+There are 2 types of files are currently supported: 
+
+- csv: For this file type, only comma (,) may be used as delimiter. The first line shall also contain a header, which gives each column a unique name.
+
+- parquet
+
+##### Supported File Storage Location
+
+Currently, files must first be uploaded to a preferred GCS bucket in gods-* project. The file will be read once during deployment.
+
+##### Supported Column Types
+
+Only basic types for the columns are supported, namely: String, Integer, Float and Boolean
+
+The types of each column are auto-detected, but may be manually set by the user (please ensure type compatibility). 
+
+##### How to use
+
+In order to use this feature, firstly, these files will have to be loaded into GCS buckets in gods-* projects in order to be linked.
+
+Then, use the syntax below to define the specifications:
+
+    ```
+    tables:
+    - name:     # Table name  
+      baseTable:      
+        fromFile:
+          format: CSV    # others: PARQUET
+          uri:  # GCS uri to the location of the file in gods-* project
+          schema:   # this part is used to manually set column type
+          - name: col_1        # name of column
+            type: STRING     #others: INT, FLOAT, BOOL
+    …         
+          - name: col_2
+            type: INT
+    ```
+
+
+### Variable
+Variable declaration is used for assigning literal value or result of a function into a variable. The variable declaration will be executed from top to bottom and it’s possible to refer to the declared variable in subsequent variable declarations. Following are ways to set value to variable.
+
+* Literal
+  Specifiying literal value to variable. By specifying literal values user needs to specify what is the type for that variable. Types that supported for this:
+    * String
+    * Int
+    * Float
+    * Bool
+  for example:
+  ```
+    - variables:
+        - name: var_1
+          literal:
+            intValue: 3
+        - name: var_2
+          literal:
+            floatValue: 2.2
+        - name: var_3
+          literal:
+            boolValue: true
+        - name: var_4
+          literal:
+            stringValue: stringVal
+  
+  ```
+* Jsonpath
+  Value of variable is obtained from request/model response payload by specifying jsonpath value, e.g
+  ```
+    - variables:
+        - name: var_5
+          jsonPathConfig: 
+            jsonPath: $.rating
+            defaultValue: -1
+            valueType: INT
+        - name: var_6
+          jsonPath: $rating # deprecated
+  ```
+* Expression
+  Value of variable is obtained from expression, e.g
+  ```
+    - variables:
+        - name: var_7
+          jsonPathConfig:
+            jsonPath: $.customer_id
+        - name: var_8
+          expression: var_7
   ```
 
 ### Encoders
@@ -424,6 +485,10 @@ cyclicalEncoderConfig:
   byEpochTime:
     periodType: HOUR #HOUR, DAY, WEEK, MONTH, QUARTER, HALF, YEAR
 ```
+
+Period type defines the time period of a cycle. For example, HOUR means that a new cycle begins every hour and DAY means that a new cycle begins every day.
+
+***NOTE: If you choose to encode by epoch time, the granularity is per seconds. If you need different granularity, you can modify the values in the epoch time column accordingly or choose to encode by range.***
 
 To encode by **range**, use the following syntax:
 ```
