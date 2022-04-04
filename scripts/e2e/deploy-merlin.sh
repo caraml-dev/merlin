@@ -14,6 +14,7 @@ GIT_REF="$5"
 TIMEOUT=120s
 
 install_mlp() {
+  echo "::group::MLP Deployment"
   helm upgrade --install --debug mlp mlp/charts/mlp --namespace mlp --create-namespace -f mlp/charts/mlp/values-e2e.yaml \
     --set mlp.image.tag=main \
     --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
@@ -30,6 +31,7 @@ install_mlp() {
 }
 
 install_merlin() {
+    echo "::group::Merlin Deployment"
   # Merlin uses vault-secret to connect to vault
   kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root --dry-run=client -o yaml | kubectl apply -f -
 
