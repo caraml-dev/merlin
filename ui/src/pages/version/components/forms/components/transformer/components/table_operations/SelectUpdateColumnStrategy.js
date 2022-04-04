@@ -34,7 +34,7 @@ export const SelectUpdateColumnStrategy = ({
         fullWidth
         label={
           <FormLabelWithToolTip
-            label="Choose Strategy *"
+            label="Strategy *"
             content="Choose the strategy to update a column"
           />
         }
