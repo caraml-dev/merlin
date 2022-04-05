@@ -7,9 +7,11 @@ set -o nounset
 
 INGRESS_HOST=$1
 
-export API_PATH="merlin/api"
-export MLP_API_BASEPATH="http://mlp.mlp.${INGRESS_HOST}/v1"
-export MERLIN_API_BASEPATH="http://merlin.mlp.${INGRESS_HOST}"
+API_PATH="merlin/api"
+MLP_API_BASEPATH="http://mlp.mlp.${INGRESS_HOST}/v1"
+MERLIN_API_BASEPATH="http://merlin.mlp.${INGRESS_HOST}"
+
+# These configuration must be exported since it's being read by conftest.py
 export E2E_MLP_URL="http://mlp.mlp.${INGRESS_HOST}"
 export E2E_MERLIN_URL="http://merlin.mlp.${INGRESS_HOST}"
 export E2E_MLFLOW_URL="http://merlin-mlflow.mlp.${INGRESS_HOST}"

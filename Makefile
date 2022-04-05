@@ -7,7 +7,7 @@ UI_PATH := ui
 UI_BUILD_PATH := ${UI_PATH}/build
 API_PATH=api
 API_ALL_PACKAGES := $(shell cd ${API_PATH} && go list ./... | grep -v github.com/gojek/mlp/api/client | grep -v -e mocks -e client)
-VERSION := $(shell git describe --tags --always --first-parent)
+VERSION := $(or ${VERSION}, $(shell git describe --tags --always --first-parent))
 
 all: setup init-dep lint test clean build run
 
