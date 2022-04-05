@@ -405,6 +405,14 @@ jobs:
           kubectl describe deployment -n merlin-e2e
           echo "::endgroup::"
 
+          echo "::group::Get Pod  merlin-e2e namespace"
+          kubectl get pod -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Describe Pod  merlin-e2e namespace"
+          kubectl describe pod -n merlin-e2e
+          echo "::endgroup::"
+
           echo "::group::Get Inference Service  merlin-e2e namespace"
           kubectl get isvc -n merlin-e2e
           echo "::endgroup::"
@@ -419,6 +427,10 @@ jobs:
 
           echo "::group::Knative log"
           kubectl logs deploy/controller -n knative-serving
+          echo "::endgroup::"
+
+          echo "::group::Get Event"
+          kubectl get events -A
           echo "::endgroup::"
 
           echo "::group::Model log"
