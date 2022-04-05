@@ -398,11 +398,15 @@ jobs:
           echo "::endgroup::"
 
           echo "::group::Get deployment  merlin-e2e namespace"
-          kubectl describe deployment -n mlp
+          kubectl get deployment -n merlin-e2e
           echo "::endgroup::"
           
           echo "::group::Describe deployment merlin-e2e namespace"
           kubectl describe deployment -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Get Inference Service  merlin-e2e namespace"
+          kubectl get isvc -n merlin-e2e
           echo "::endgroup::"
 
           echo "::group::Model log"
