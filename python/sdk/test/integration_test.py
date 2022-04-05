@@ -429,7 +429,7 @@ def test_logger(integration_test_url, project_name, use_google_oauth, requests):
 
     merlin.undeploy(v)
 
-
+@pytest.mark.customtransformer
 @pytest.mark.integration
 def test_custom_transformer(
         integration_test_url, project_name, use_google_oauth, requests
