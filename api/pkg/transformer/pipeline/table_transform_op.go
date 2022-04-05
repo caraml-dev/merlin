@@ -6,6 +6,8 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/scaler"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/gojek/merlin/pkg/transformer/types/table"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -65,17 +67,7 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 		}
 
 		if step.UpdateColumns != nil {
-			columnValues := make(map[string]interface{}, len(step.UpdateColumns))
-			for _, updateSpec := range step.UpdateColumns {
-				columnName := updateSpec.Column
-				result, err := evalExpression(env, updateSpec.Expression)
-				if err != nil {
-					return fmt.Errorf("error evaluating expression for column %s: %v. Err: %s", columnName, updateSpec.Expression, err)
-				}
-				columnValues[columnName] = result
-			}
-
-			err := resultTable.UpdateColumnsRaw(columnValues)
+			resultTable, err = updateColumns(env, step.UpdateColumns, resultTable)
 			if err != nil {
 				return err
 			}
@@ -127,6 +119,34 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 				return err
 			}
 		}
+
+		if step.FilterRow != nil {
+			rowIndexes, err := getRowIndexes(env, step.FilterRow.Condition)
+			if err != nil {
+				return fmt.Errorf("error evaluating filter row expresion: %s. Err: %s", step.FilterRow, err)
+			}
+			if err := resultTable.FilterRow(rowIndexes); err != nil {
+				return err
+			}
+		}
+
+		if step.SliceRow != nil {
+			sliceRow := step.SliceRow
+			var startIdx *int
+			if sliceRow.Start != nil {
+				starIdxIntVal := int(sliceRow.Start.Value)
+				startIdx = &starIdxIntVal
+			}
+			var endIdx *int
+			if sliceRow.End != nil {
+				endIdxIntVal := int(sliceRow.End.Value)
+				endIdx = &endIdxIntVal
+			}
+			err := resultTable.SliceRow(startIdx, endIdx)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	env.SetSymbol(outputTableName, resultTable)
@@ -144,4 +164,101 @@ func getEncoder(env *Environment, encoderName string) (Encoder, error) {
 		return nil, fmt.Errorf("variable %s is not encoder", encoderName)
 	}
 	return encodeImpl, nil
+}
+
+func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *table.Table) (*table.Table, error) {
+	updateColumnRules := make([]table.ColumnUpdate, 0, len(specs))
+	for _, updateSpec := range specs {
+		columnName := updateSpec.Column
+		rule := table.ColumnUpdate{
+			ColName: columnName,
+		}
+
+		// if conditions is not specified, it will work like set default value
+		if len(updateSpec.Conditions) == 0 {
+			values, err := seriesFromExpression(env, updateSpec.Expression)
+			if err != nil {
+				return nil, fmt.Errorf("error evaluating expression for column %s: %v. Err: %s", columnName, updateSpec.Expression, err)
+			}
+
+			rule.RowValues = []table.RowValues{
+				{
+					RowIndexes: getDefaultRowIndexes(),
+					Values:     values,
+				},
+			}
+			updateColumnRules = append(updateColumnRules, rule)
+			continue
+		}
+
+		columnValueRules := make([]table.RowValues, 0, len(updateSpec.Conditions))
+
+		var defaultValue *spec.DefaultColumnValue
+		alreadyProcessedIdx := series.New([]bool{false}, series.Bool, "")
+		for _, condition := range updateSpec.Conditions {
+			if condition.Default != nil {
+				defaultValue = condition.Default
+				continue
+			}
+
+			rowIndex, err := getRowIndexes(env, condition.RowSelector)
+			if err != nil {
+				return nil, err
+			}
+
+			alreadyProcessedIdx, err = rowIndex.Or(alreadyProcessedIdx)
+			if err != nil {
+				return nil, err
+			}
+
+			columnValue, err := subsetSeriesFromExpression(env, condition.Expression, rowIndex)
+			if err != nil {
+				return nil, fmt.Errorf("error evaluation column rule value for column %s: %v. Err: Ts", columnName, condition.Default.Expression)
+			}
+
+			colRuleValue := table.RowValues{
+				RowIndexes: rowIndex,
+				Values:     columnValue,
+			}
+			columnValueRules = append(columnValueRules, colRuleValue)
+		}
+
+		if defaultValue != nil {
+			initialDefaultRowIndexes := getDefaultRowIndexes()
+			defaultRowIndexes, err := initialDefaultRowIndexes.XOr(alreadyProcessedIdx)
+			if err != nil {
+				return nil, err
+			}
+			columnValue, err := subsetSeriesFromExpression(env, defaultValue.Expression, defaultRowIndexes)
+			if err != nil {
+				return nil, fmt.Errorf("error evaluation default value for column %s: %v. Err: Ts", columnName, defaultValue.Expression)
+			}
+			columnValueRules = append(columnValueRules, table.RowValues{
+				RowIndexes: defaultRowIndexes,
+				Values:     columnValue,
+			})
+		}
+		rule.RowValues = columnValueRules
+		updateColumnRules = append(updateColumnRules, rule)
+	}
+	err := resultTable.UpdateColumns(updateColumnRules)
+	if err != nil {
+		return nil, err
+	}
+	return resultTable, nil
+}
+
+func getDefaultRowIndexes() *series.Series {
+	return series.New([]bool{true}, series.Bool, "")
+}
+
+func getRowIndexes(env *Environment, ifCondition string) (*series.Series, error) {
+	rowIndexes, err := seriesFromExpression(env, ifCondition)
+	if err != nil {
+		return nil, fmt.Errorf("error evaluating expression for condition: %s with err: %s", ifCondition, err)
+	}
+	if !rowIndexes.IsBoolean() {
+		return nil, fmt.Errorf("result of the condition is not boolean or series of boolean")
+	}
+	return rowIndexes, nil
 }

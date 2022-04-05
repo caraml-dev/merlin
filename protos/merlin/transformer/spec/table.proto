@@ -4,6 +4,7 @@ package merlin.transformer;
 
 import "transformer/spec/common.proto";
 import "transformer/spec/scaler.proto";
+import "google/protobuf/wrappers.proto";
 
 option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
@@ -43,6 +44,17 @@ message TransformationStep {
   repeated UpdateColumn updateColumns = 5;
   repeated ScaleColumn scaleColumns = 6;
   repeated EncodeColumn encodeColumns = 7;
+  FilterRow filterRow = 8;
+  SliceRow sliceRow = 9;
+}
+
+message FilterRow {
+  string condition = 1;
+}
+
+message SliceRow {
+  google.protobuf.Int32Value start = 1;
+  google.protobuf.Int32Value end = 2;
 }
 
 message SortColumnRule {
@@ -58,6 +70,17 @@ enum SortOrder {
 message UpdateColumn {
   string column = 1;
   string expression = 2;
+  repeated ColumnCondition conditions = 3; 
+}
+
+message ColumnCondition {
+  string rowSelector = 1;
+  string expression = 2;
+  DefaultColumnValue default = 3;
+}
+
+message DefaultColumnValue {
+  string expression = 1;
 }
 
 message TableJoin {

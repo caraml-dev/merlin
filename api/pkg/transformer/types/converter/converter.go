@@ -42,20 +42,36 @@ func ToStringList(val interface{}) ([]string, error) {
 
 func ToInt(v interface{}) (int, error) {
 	switch v := v.(type) {
+	case *float64:
+		return int(*v), nil
 	case float64:
 		return int(v), nil
+	case *float32:
+		return int(*v), nil
 	case float32:
 		return int(v), nil
+	case *int:
+		return int(*v), nil
 	case int:
 		return int(v), nil
+	case *int8:
+		return int(*v), nil
 	case int8:
 		return int(v), nil
+	case *int16:
+		return int(*v), nil
 	case int16:
 		return int(v), nil
+	case *int32:
+		return int(*v), nil
 	case int32:
 		return int(v), nil
+	case *int64:
+		return int(*v), nil
 	case int64:
 		return int(v), nil
+	case *string:
+		return strconv.Atoi(*v)
 	case string:
 		return strconv.Atoi(v)
 	default:
@@ -150,20 +166,36 @@ func ToIntList(val interface{}) ([]int, error) {
 
 func ToInt64(v interface{}) (int64, error) {
 	switch v := v.(type) {
+	case *float64:
+		return int64(*v), nil
 	case float64:
 		return int64(v), nil
+	case *float32:
+		return int64(*v), nil
 	case float32:
 		return int64(v), nil
+	case *int:
+		return int64(*v), nil
 	case int:
 		return int64(v), nil
+	case *int8:
+		return int64(*v), nil
 	case int8:
 		return int64(v), nil
+	case *int16:
+		return int64(*v), nil
 	case int16:
 		return int64(v), nil
+	case *int32:
+		return int64(*v), nil
 	case int32:
 		return int64(v), nil
+	case *int64:
+		return int64(*v), nil
 	case int64:
 		return int64(v), nil
+	case *string:
+		return strconv.ParseInt(*v, 10, 64)
 	case string:
 		return strconv.ParseInt(v, 10, 64)
 	default:
@@ -173,20 +205,40 @@ func ToInt64(v interface{}) (int64, error) {
 
 func ToInt32(v interface{}) (int32, error) {
 	switch v := v.(type) {
+	case *float64:
+		return int32(*v), nil
 	case float64:
 		return int32(v), nil
+	case *float32:
+		return int32(*v), nil
 	case float32:
 		return int32(v), nil
+	case *int:
+		return int32(*v), nil
 	case int:
 		return int32(v), nil
+	case *int8:
+		return int32(*v), nil
 	case int8:
 		return int32(v), nil
+	case *int16:
+		return int32(*v), nil
 	case int16:
 		return int32(v), nil
+	case *int32:
+		return *v, nil
 	case int32:
 		return v, nil
+	case *int64:
+		return int32(*v), nil
 	case int64:
 		return int32(v), nil
+	case *string:
+		val, err := strconv.ParseInt(*v, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return int32(val), nil
 	case string:
 		val, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
@@ -397,20 +449,36 @@ func ToFloat32(v interface{}) (float32, error) {
 
 func ToFloat64(v interface{}) (float64, error) {
 	switch v := v.(type) {
+	case *float64:
+		return *v, nil
 	case float64:
 		return v, nil
+	case *float32:
+		return float64(*v), nil
 	case float32:
 		return float64(v), nil
+	case *int:
+		return float64(*v), nil
 	case int:
 		return float64(v), nil
+	case *int8:
+		return float64(*v), nil
 	case int8:
 		return float64(v), nil
+	case *int16:
+		return float64(*v), nil
 	case int16:
 		return float64(v), nil
+	case *int32:
+		return float64(*v), nil
 	case int32:
 		return float64(v), nil
+	case *int64:
+		return float64(*v), nil
 	case int64:
 		return float64(v), nil
+	case *string:
+		return strconv.ParseFloat(*v, 64)
 	case string:
 		return strconv.ParseFloat(v, 64)
 	default:
@@ -590,6 +658,8 @@ func ToFloat64List(val interface{}) ([]float64, error) {
 
 func ToBool(v interface{}) (bool, error) {
 	switch v := v.(type) {
+	case *bool:
+		return *v, nil
 	case bool:
 		return v, nil
 	case int, int8, int16, int32, int64:
@@ -608,6 +678,8 @@ func ToBool(v interface{}) (bool, error) {
 			return false, nil
 		}
 		return false, fmt.Errorf("error parsing %v to bool", v)
+	case *string:
+		return strconv.ParseBool(*v)
 	case string:
 		return strconv.ParseBool(v)
 	default:

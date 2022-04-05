@@ -71,6 +71,14 @@ export const SelectTableOperation = ({
     {
       value: "updateColumns",
       inputDisplay: "Update Columns"
+    },
+    {
+      value: "filterRow",
+      inputDisplay: "Filter Row"
+    },
+    {
+      value: "sliceRow",
+      inputDisplay: "Slice Row"
     }
   ];
 

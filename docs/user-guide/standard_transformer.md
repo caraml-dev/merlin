@@ -577,7 +577,91 @@ tableTransformation:
      - updateColumns:
         - column: "s2id"
           expression: S2ID(table1.Col('lat'), table2.Col('lon'), 12)
+        - column: "col2"
+          conditions:
+          - if: table1.Col('col1') * 2 > 10
+            expression: table1.Col('col1')
+          - default:
+              expression: -1
 ```
+
+There are two ways to update columns:
+* Update all rows in the column. You need to specify `column`and `expression`. `column` determines which column to be updated and `expression` determines the value that will be used to update the column.
+Value produced by the `expression` must be a scalar or a series that has the same length as the other columns. Following the example::
+  ```
+    - updateColumns:
+      - column: "customer_id"
+        expression: "cust_1" # the value is scalar and will be broadcasted to all the row
+      - column: "s2id"
+        expression: S2ID(table1.Col('lat'), table2.Col('lon'), 12) # the value is array or series that the length should be the same with the rest of the columns in a table 
+  ```
+* Update subset of rows in the columns given some row selector condition. For this users can set multiple `rowSelector` with `expression` and also default value if none of conditions are match. For example users have following table
+
+| customer_id | customer_age | total_booking_1w |
+| ----------- | ------------ | ---------------- |
+| 1234        | 60           | 8                |
+| 4321        | 23           | 4                |
+| 1235        | 17           | 4                |
+  
+Users want to create new column `customer_segment` with certain rules:
+1. Customer that older than 55, the `customer_segment` will be `retired`
+2. Customer that has age between 30 - 55, the `customer_segment` will be `matured`
+3. Customer that has age between 22 - 30, the `customer_segment` will be `productive`
+4. Customer that has age < 22, the `customer_segment` will be `non-productive`
+   
+Based on those rules we can translate this to standard transformer config:
+```
+tableTransformation:
+     inputTable: myTable
+     outputTable: myTransformedTable
+     steps:
+     - updateColumns:
+        - column: "customer_segment"
+          conditions:
+          - rowSelector: myTable.Col('customer_age') > 55
+            expression: "retired"
+          - rowSelector: myTable.Col('customer_age') >= 30
+            expression: "matured"
+          - rowSelector: myTable.Col('customer_age') >= 22
+            expression: "productive"
+          - default:
+              expression: "non-productive"
+```
+All `rowSelector` conditions are working like `if else` statement. `rowSelector` condition must be returning boolean or series of boolean, `default` will be executed if none of the `rowSelector` conditions are matched.
+
+#### Filter Row
+Filter row is an operation that will filter rows in a table based on given condition. Suppose users have this following table
+| customer_id | customer_age | total_booking_1w |
+| ----------- | ------------ | ---------------- |
+| 1234        | 60           | 8                |
+| 4321        | 23           | 4                |
+| 1235        | 17           | 4                |
+
+and users want to show only records that have `total_booking_1w` less than 5. To achieve that users need to use `filterRow` operation like below configuration:
+```
+tableTransformation:
+     inputTable: myTable
+     outputTable: myTransformedTable
+     steps:
+     - filterRow:
+        condition: myTable.Col('total_booking_1w') < 5
+```
+
+### Slice Row
+Slice row is an operation to slice a table based on start(lower bound) and end index(upper bound) that given by the user. The result includes starting index but excluding end index. Below is the example of this operation
+```
+tableTransformation:
+     inputTable: myTable
+     outputTable: myTransformedTable
+     steps:
+     - sliceRow:
+        start: 0
+        end: 4
+```
+Value of `start` end `end` can be null or negative. Following are the behaviour:
+* Null value of `start` means that `start` value is 0
+* Null value of `end` means that `end` value is number of rows in a table
+* Negative value of `start` or `end` means that the value will be (`number of row` + `start`) or (`number of row` + `end`). Suppose you set `start` -5 and `end` -1 and number of row is 10, so `start` value will be 5 and `end` will be 9
 
 #### Encode Column
 This operation will encode the specified columns with the specified encoder defined in the input step.

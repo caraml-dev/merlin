@@ -19,6 +19,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
@@ -300,6 +301,38 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			},
 		},
 		{
+			name:         "table transformation with conditional update, filter row and slice row",
+			specYamlPath: "../pipeline/testdata/valid_table_transform_conditional_filtering.yaml",
+			mockFeasts:   []mockFeast{},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"drivers":[{"id":1,"name":"driver-1","rating":4,"acceptance_rate":0.8},{"id":2,"name":"driver-2","rating":3,"acceptance_rate":0.6},{"id":3,"name":"driver-3","rating":3.5,"acceptance_rate":0.77},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.9},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.88}],"customer":{"id":1111}}`),
+			},
+			expTransformedRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"instances":{"columns":["acceptance_rate","driver_id","name","rating","customer_id","driver_performa"],"data":[[0.8,1,"driver-1",4,1111,6],[0.77,3,"driver-3",3.5,1111,3.5]]}}`),
+			},
+			modelResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status":"ok"}`),
+				statusCode: 200,
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type":   "application/json",
+					"Content-Length": "15",
+				},
+				body:       []byte(`{"status":"ok"}`),
+				statusCode: 200,
+			},
+		},
+		{
 			name:         "table transformation with feast",
 			specYamlPath: "../pipeline/testdata/valid_feast_preprocess.yaml",
 			mockFeasts: []mockFeast{
@@ -395,7 +428,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
 								{
 									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.Int64Val(1),
+										"driver_id":        feastSdk.StrVal("1"),
 										"driver_feature_1": feastSdk.DoubleVal(1111),
 										"driver_feature_2": feastSdk.DoubleVal(2222),
 										"driver_feature_3": {
@@ -417,7 +450,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 								},
 								{
 									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.Int64Val(2),
+										"driver_id":        feastSdk.StrVal("2"),
 										"driver_feature_1": feastSdk.DoubleVal(3333),
 										"driver_feature_2": feastSdk.DoubleVal(4444),
 										"driver_feature_3": {
@@ -450,7 +483,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
 								{
 									Fields: map[string]*feastTypes.Value{
-										"driver_id": feastSdk.Int64Val(1),
+										"driver_id": feastSdk.StrVal("1"),
 										"customers_picked_up": {
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
@@ -476,7 +509,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 								},
 								{
 									Fields: map[string]*feastTypes.Value{
-										"driver_id": feastSdk.Int64Val(2),
+										"driver_id": feastSdk.StrVal("2"),
 										"customers_picked_up": {
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
@@ -492,32 +525,6 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 											},
 										},
 										"total_tips": feastSdk.DoubleVal(1000000),
-									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
-										"customers_picked_up": serving.GetOnlineFeaturesResponse_PRESENT,
-										"top_customer":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"total_tips":          serving.GetOnlineFeaturesResponse_PRESENT,
-									},
-								},
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id": feastSdk.Int64Val(3),
-										"customers_picked_up": {
-											Val: &feastTypes.Value_StringListVal{
-												StringListVal: &feastTypes.StringList{
-													Val: []string{"PA11", "PA22", "PA22", "PA33"},
-												},
-											},
-										},
-										"top_customer": {
-											Val: &feastTypes.Value_StringListVal{
-												StringListVal: &feastTypes.StringList{
-													Val: []string{"PA22"},
-												},
-											},
-										},
-										"total_tips": feastSdk.DoubleVal(5000000),
 									},
 									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
 										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
@@ -544,9 +551,6 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 							{"customer_id": feastSdk.StrVal("U111")},
 							{"customer_id": feastSdk.StrVal("U222")},
 							{"customer_id": feastSdk.StrVal("U333")},
-							{"customer_id": feastSdk.StrVal("PA11")},
-							{"customer_id": feastSdk.StrVal("PA22")},
-							{"customer_id": feastSdk.StrVal("PA33")},
 						},
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
@@ -606,6 +610,60 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
 									},
 								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"customer_id":   feastSdk.StrVal("U111"),
+										"customer_name": feastSdk.StrVal("Customer U1"),
+										"customer_phones": {
+											Val: &feastTypes.Value_DoubleListVal{
+												DoubleListVal: &feastTypes.DoubleList{
+													Val: []float64{111111, 100001},
+												},
+											},
+										},
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"customer_id":   feastSdk.StrVal("U222"),
+										"customer_name": feastSdk.StrVal("Customer U2"),
+										"customer_phones": {
+											Val: &feastTypes.Value_DoubleListVal{
+												DoubleListVal: &feastTypes.DoubleList{
+													Val: []float64{111111, 100001},
+												},
+											},
+										},
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"customer_id":   feastSdk.StrVal("U333"),
+										"customer_name": feastSdk.StrVal("Customer U3"),
+										"customer_phones": {
+											Val: &feastTypes.Value_DoubleListVal{
+												DoubleListVal: &feastTypes.DoubleList{
+													Val: []float64{111111, 100001},
+												},
+											},
+										},
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
+										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
 							},
 						},
 					},
@@ -622,59 +680,162 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 					"Content-Type": "application/json",
 				},
 				body: []byte(`{
-					"instances": {
-						"columns": [
-							"rank",
-							"driver_id",
-							"customer_id",
-							"driver_feature_1",
-							"driver_feature_2",
-							"driver_feature_3",
-							"driver_feature_3_flatten",
-							"stddev_driver_score",
-							"mean_driver_score",
-							"median_driver_score",
-							"max_driver_score",
-							"maxstr_driver_score",
-							"min_driver_score",
-							"minstr_driver_score",
-							"quantile_driver_score",
-							"sum_driver_score"
+					"customer_feature_table": {
+					  "columns": [
+						"customer_id",
+						"customer_name",
+						"customer_phones"
+					  ],
+					  "data": [
+						[
+						  "C111",
+						  "Customer 1",
+						  [
+							111111,
+							100001
+						  ]
 						],
-						"data": [
-							[0, 1, 1111, 1111, 2222, ["A"], "A", 2.1213203435596424, 96.5, 96.5, 98, "X", 95, "A", 98, 193],
-							[1, 2, 1111, 3333, 4444, ["X"], "X", 2.1213203435596424, 96.5, 96.5, 98, "X", 95, "A", 98, 193]
-						]
-					},
-					"raw_customers": {
-						"columns": [
-							"all_customers"
+						[
+						  "C222",
+						  "Customer 2",
+						  [
+							222222,
+							200002
+						  ]
 						],
-						"data": [
-							[["C111", "C222", "C222", "C333"]],
-							[["U111", "U222", "U222", "U333"]],
-							[["PA11", "PA22", "PA22", "PA33"]]
+						[
+						  "C333",
+						  "Customer 3",
+						  [
+							333333,
+							300003
+						  ]
+						],
+						[
+						  "U111",
+						  "Customer U1",
+						  [
+							111111,
+							100001
+						  ]
+						],
+						[
+						  "U222",
+						  "Customer U2",
+						  [
+							111111,
+							100001
+						  ]
+						],
+						[
+						  "U333",
+						  "Customer U3",
+						  [
+							111111,
+							100001
+						  ]
 						]
+					  ]
 					},
 					"flatten_customers": {
-						"columns": [
-							"top_customer"
+					  "columns": [
+						"top_customer"
+					  ],
+					  "data": [
+						[
+						  "C233"
 						],
-						"data": [
-							["C233"],
-							["U309"],
-							["PA22"]
+						[
+						  "U309"
 						]
+					  ]
 					},
-					"customer_feature_table": {
-						"columns": ["customer_id","customer_name","customer_phones"],
-						"data": [
-							["C111","Customer 1",[111111, 100001]],
-							["C222","Customer 2",[222222, 200002]],
-							["C333","Customer 3",[333333, 300003]]
+					"instances": {
+					  "columns": [
+						"rank",
+						"driver_id",
+						"customer_id",
+						"driver_feature_1",
+						"driver_feature_2",
+						"driver_feature_3",
+						"driver_feature_3_flatten",
+						"stddev_driver_score",
+						"mean_driver_score",
+						"median_driver_score",
+						"max_driver_score",
+						"maxstr_driver_score",
+						"min_driver_score",
+						"minstr_driver_score",
+						"quantile_driver_score",
+						"sum_driver_score"
+					  ],
+					  "data": [
+						[
+						  0,
+						  1,
+						  1111,
+						  1111,
+						  2222,
+						  [
+							"A"
+						  ],
+						  "A",
+						  2.1213203435596424,
+						  96.5,
+						  96.5,
+						  98,
+						  "X",
+						  95,
+						  "A",
+						  98,
+						  193
+						],
+						[
+						  1,
+						  2,
+						  1111,
+						  3333,
+						  4444,
+						  [
+							"X"
+						  ],
+						  "X",
+						  2.1213203435596424,
+						  96.5,
+						  96.5,
+						  98,
+						  "X",
+						  95,
+						  "A",
+						  98,
+						  193
 						]
+					  ]
+					},
+					"raw_customers": {
+					  "columns": [
+						"all_customers"
+					  ],
+					  "data": [
+						[
+						  [
+							"C111",
+							"C222",
+							"C222",
+							"C333"
+						  ]
+						],
+						[
+						  [
+							"U111",
+							"U222",
+							"U222",
+							"U333"
+						  ]
+						]
+					  ]
 					}
-				}`),
+				  }`),
 			},
 			modelResponse: response{
 				headers: map[string]string{
@@ -789,8 +950,12 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				assert.Nil(t, err)
 
 				var expectedMap, actualMap map[string]interface{}
-				json.Unmarshal(tt.expTransformedRequest.body, &expectedMap)
-				json.Unmarshal(body, &actualMap)
+				err = json.Unmarshal(tt.expTransformedRequest.body, &expectedMap)
+				require.NoError(t, err)
+				err = json.Unmarshal(body, &actualMap)
+				require.NoError(t, err)
+				fmt.Printf("expected value %+v\n", string(tt.expTransformedRequest.body))
+				fmt.Printf("actual value %+v\n", string(body))
 				assertJSONEqWithFloat(t, expectedMap, actualMap, 0.00000001)
 				assertHasHeaders(t, tt.expTransformedRequest.headers, r.Header)
 
@@ -868,11 +1033,14 @@ func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, act
 		case map[string]interface{}:
 			assertJSONEqWithFloat(t, expectedMap[key].(map[string]interface{}), actualMap[key].(map[string]interface{}), delta)
 		case []interface{}:
-			for i, v := range value.([]interface{}) {
+			expectedArr := value.([]interface{})
+			actualArr := actualMap[key].([]interface{})
+			assert.Equal(t, len(expectedArr), len(actualArr))
+			for i, v := range expectedArr {
 				exp := make(map[string]interface{})
 				act := make(map[string]interface{})
 				exp["v"] = v
-				act["v"] = actualMap[key].([]interface{})[i]
+				act["v"] = actualArr[i]
 				assertJSONEqWithFloat(t, exp, act, delta)
 			}
 		default:

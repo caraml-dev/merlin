@@ -260,11 +260,35 @@ func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransforma
 
 	for _, step := range transformationSpecs.Steps {
 		for _, updateColumn := range step.UpdateColumns {
-			compiledExpression, err := c.compileExpression(updateColumn.Expression)
-			if err != nil {
-				return nil, err
+			if updateColumn.Expression != "" {
+				compiledExpression, err := c.compileExpression(updateColumn.Expression)
+				if err != nil {
+					return nil, err
+				}
+				compiledExpressions.Set(updateColumn.Expression, compiledExpression)
+				continue
 			}
-			compiledExpressions.Set(updateColumn.Expression, compiledExpression)
+			for _, condition := range updateColumn.Conditions {
+				if condition.Default != nil {
+					compiledExpression, err := c.compileExpression(condition.Default.Expression)
+					if err != nil {
+						return nil, err
+					}
+					compiledExpressions.Set(condition.Default.Expression, compiledExpression)
+					continue
+				}
+				compiledIfExpression, err := c.compileExpression(condition.RowSelector)
+				if err != nil {
+					return nil, err
+				}
+				compiledExpressions.Set(condition.RowSelector, compiledIfExpression)
+
+				compiledExpression, err := c.compileExpression(condition.Expression)
+				if err != nil {
+					return nil, err
+				}
+				compiledExpressions.Set(condition.Expression, compiledExpression)
+			}
 		}
 
 		for _, scaleCol := range step.ScaleColumns {
@@ -288,6 +312,14 @@ func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransforma
 				return nil, err
 			}
 			compiledExpressions.Set(encodeColumn.Encoder, compiledExpression)
+		}
+
+		if step.FilterRow != nil {
+			compiledExpression, err := c.compileExpression(step.FilterRow.Condition)
+			if err != nil {
+				return nil, err
+			}
+			compiledExpressions.Set(step.FilterRow.Condition, compiledExpression)
 		}
 	}
 
@@ -385,7 +417,22 @@ func (c *Compiler) parseJsonFields(fields []*spec.Field, compiledJsonPaths *json
 }
 
 func (c *Compiler) compileExpression(expression string) (*vm.Program, error) {
-	return expr.Compile(expression, expr.Env(c.sr))
+	return expr.Compile(expression,
+		expr.Env(c.sr),
+		expr.Operator("&&", "AndOp"),
+		expr.Operator("||", "OrOp"),
+		expr.Operator(">", "GreaterOp"),
+		expr.Operator(">=", "GreaterEqOp"),
+		expr.Operator("<", "LessOp"),
+		expr.Operator("<=", "LessEqOp"),
+		expr.Operator("==", "EqualOp"),
+		expr.Operator("!=", "NeqOp"),
+		expr.Operator("+", "AddOp"),
+		expr.Operator("-", "SubstractOp"),
+		expr.Operator("*", "MultiplyOp"),
+		expr.Operator("/", "DivideOp"),
+		expr.Operator("%", "ModuloOp"),
+	)
 }
 
 func (c *Compiler) registerDummyVariable(varName string) {
