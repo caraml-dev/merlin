@@ -408,14 +408,6 @@ jobs:
           echo "::group::Get Inference Service  merlin-e2e namespace"
           kubectl get isvc -n merlin-e2e
           echo "::endgroup::"
-
-          echo "::group::Model log"
-          kubectl logs -l component=predictor -c kserve-container -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Transformer log"
-          kubectl logs -l component=transformer -c kserve-container -n merlin-e2e
-          echo "::endgroup::"
           
           echo "::group::Merlin log"
           kubectl logs deploy/merlin -n mlp -c merlin
@@ -427,4 +419,12 @@ jobs:
 
           echo "::group::Knative log"
           kubectl logs deploy/controller -n knative-serving
+          echo "::endgroup::"
+
+          echo "::group::Model log"
+          kubectl logs -l component=predictor -c kserve-container -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Transformer log"
+          kubectl logs -l component=transformer -c kserve-container -n merlin-e2e
           echo "::endgroup::"
