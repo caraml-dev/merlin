@@ -348,10 +348,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: merlin.${{ needs.create-version.outputs.version }}.tar
-      - name: Download Pyfunc Server Docker Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
       - name: Download Standard Transformer Docker Artifact
         uses: actions/download-artifact@v2
         with:
