@@ -526,7 +526,9 @@ def test_standard_transformer_without_feast(
     transformer_config_path = os.path.join(
         "test/transformer", "standard_transformer_no_feast.yaml"
     )
-    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
+    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True, env_vars={
+        "MODEL_TIMEOUT" : "5s"
+    })
 
     endpoint = merlin.deploy(v, transformer=transformer)
     request_json = {
