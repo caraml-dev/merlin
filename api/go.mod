@@ -139,8 +139,8 @@ require (
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a // indirect
-	github.com/mattn/go-colorable v0.1.1 // indirect
-	github.com/mattn/go-isatty v0.0.9 // indirect
+	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-isatty v0.0.11 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
@@ -189,7 +189,7 @@ require (
 )
 
 replace (
-	github.com/go-gota/gota => github.com/gojekfarm/gota v0.0.0-20220225033233-df7cd66a11dc
+	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20220329041038-bdee6822d003
 	github.com/gojek/merlin-pyspark-app => ../python/batch-predictor
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
 	k8s.io/api => k8s.io/api v0.16.6
