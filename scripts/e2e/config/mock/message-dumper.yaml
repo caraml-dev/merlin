@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: message-dumper
   namespace: mlp
+  annotations:
+    autoscaling.knative.dev/min-scale: "1"
 spec:
   template:
     spec:
