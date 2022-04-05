@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	goparquet "github.com/fraugster/parquet-go"
+	"github.com/fraugster/parquet-go/parquet"
 	"github.com/go-gota/gota/dataframe"
 	gota "github.com/go-gota/gota/series"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -54,7 +55,8 @@ func NewRaw(columnValues map[string]interface{}) (*Table, error) {
 // RecordsFromParquet reads a parquet file which may be local (uploaded together with model) or global (from gcs).
 // The root directory for local will be same as where the model is stored (artifacts folder).
 // Data will be returned as [][]string where row 0 is the header containing all the column names.
-func RecordsFromParquet(filePath *url.URL) ([][]string, error) {
+// The types for each column, defined in the parquet file will also be returned as a map
+func RecordsFromParquet(filePath *url.URL) ([][]string, map[string]gota.Type, error) {
 	var r io.ReadSeeker
 
 	if filePath.Scheme == gcsScheme {
@@ -63,7 +65,7 @@ func RecordsFromParquet(filePath *url.URL) ([][]string, error) {
 		data, err := gsutil.ReadFile(ctx, filePath.String())
 
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		r = bytes.NewReader(data)
@@ -71,7 +73,7 @@ func RecordsFromParquet(filePath *url.URL) ([][]string, error) {
 		// Local file
 		file, err := os.Open(filePath.String())
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		r = file
 		defer file.Close()
@@ -79,14 +81,27 @@ func RecordsFromParquet(filePath *url.URL) ([][]string, error) {
 
 	fr, err := goparquet.NewFileReader(r)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	// Get header
+	// Get header & schema
 	schema := fr.GetSchemaDefinition()
 	header := make([]string, 0)
+	colType := make(map[string]gota.Type, 0)
 	for _, schemaCol := range schema.RootColumn.Children {
-		header = append(header, schemaCol.SchemaElement.GetName())
+		colName := schemaCol.SchemaElement.GetName()
+		header = append(header, colName)
+		switch schemaCol.SchemaElement.GetType() {
+		case parquet.Type_BOOLEAN:
+			colType[colName] = gota.Bool
+		case parquet.Type_INT32, parquet.Type_INT64, parquet.Type_INT96:
+			colType[colName] = gota.Int
+		case parquet.Type_DOUBLE, parquet.Type_FLOAT:
+			colType[colName] = gota.Float
+		case parquet.Type_BYTE_ARRAY, parquet.Type_FIXED_LEN_BYTE_ARRAY:
+			colType[colName] = gota.String
+		}
+
 	}
 
 	records := make([][]string, 0)
@@ -102,7 +117,7 @@ func RecordsFromParquet(filePath *url.URL) ([][]string, error) {
 	for i := 0; i < int(fr.NumRows()); i++ {
 		row, err := fr.NextRow()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		newRow := make([]string, len(header))
@@ -116,7 +131,7 @@ func RecordsFromParquet(filePath *url.URL) ([][]string, error) {
 		records = append(records, newRow)
 	}
 
-	return records, nil
+	return records, colType, nil
 }
 
 // RecordsFromCsv reads a csv file which may be local (uploaded together with model) or global (from gcs).
@@ -160,7 +175,10 @@ func RecordsFromCsv(filePath *url.URL) ([][]string, error) {
 // This function will check that there are at least 2 rows in records (header and data).
 // It will also auto-detect the data types if schema of the column is not provided.
 // before creating a new table to be returned
-func NewFromRecords(records [][]string, schema []*spec.Schema) (*Table, error) {
+// records may be supplied with its column types as a map of column name to gota types.
+// Note: Schema is user specified, colType is type defined in files such as parquet. It may be set to nil.
+func NewFromRecords(records [][]string, colType map[string]gota.Type, schema []*spec.Schema) (*Table, error) {
+	var dfSchema map[string]gota.Type
 
 	// check table has at least 1 row of data
 	if len(records) <= 1 {
@@ -173,7 +191,11 @@ func NewFromRecords(records [][]string, schema []*spec.Schema) (*Table, error) {
 	}
 
 	// prepare schema for dataframe
-	dfSchema := make(map[string]gota.Type)
+	if colType == nil {
+		dfSchema = make(map[string]gota.Type)
+	} else {
+		dfSchema = colType
+	}
 	for _, colSpec := range schema {
 		// validate colname defined in schema exist
 		if !header[colSpec.GetName()] {
