@@ -15,7 +15,7 @@ import json
 import os
 from time import sleep
 
-import requests
+import requests as requests_lib
 import pytest
 import pandas as pd
 from recursive_diff import recursive_eq
@@ -29,9 +29,25 @@ from merlin.logger import Logger, LoggerConfig, LoggerMode
 from test.utils import undeploy_all_version
 from test.feast_model import EchoModel
 
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
+
 request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
 
+@pytest.fixture
+def requests():
+    retry_strategy = Retry(
+        total=5,
+        status_forcelist=[429, 500, 502, 503, 504, 404],
+        method_whitelist=["HEAD", "GET", "OPTIONS"],
+        backoff_factor=0.5,
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    req = requests_lib.Session()
+    req.mount("http://", adapter)
 
+    return req
 
 @pytest.mark.integration
 @pytest.mark.dependency()
@@ -65,7 +81,7 @@ def test_model_version_with_labels(
 
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_sklearn(integration_test_url, project_name, use_google_oauth):
+def test_sklearn(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("sklearn-sample", ModelType.SKLEARN)
@@ -89,7 +105,7 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth):
 
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_xgboost(integration_test_url, project_name, use_google_oauth):
+def test_xgboost(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("xgboost-sample", ModelType.XGBOOST)
@@ -114,7 +130,7 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth):
 
 
 @pytest.mark.integration
-def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth):
+def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("mlflow-test", ModelType.XGBOOST)
@@ -161,7 +177,7 @@ def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth):
 
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_tensorflow(integration_test_url, project_name, use_google_oauth):
+def test_tensorflow(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("tensorflow-sample", ModelType.TENSORFLOW)
@@ -204,7 +220,7 @@ def test_tensorflow(integration_test_url, project_name, use_google_oauth):
 @pytest.mark.pytorch
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_pytorch(integration_test_url, project_name, use_google_oauth):
+def test_pytorch(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pytorch-sample", ModelType.PYTORCH)
@@ -228,7 +244,7 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth):
 
 @pytest.mark.serving
 @pytest.mark.integration
-def test_set_traffic(integration_test_url, project_name, use_google_oauth):
+def test_set_traffic(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("set-traffic-sample", ModelType.SKLEARN)
@@ -269,7 +285,7 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth):
 
 @pytest.mark.serving
 @pytest.mark.integration
-def test_serve_traffic(integration_test_url, project_name, use_google_oauth):
+def test_serve_traffic(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("serve-traffic-sample", ModelType.SKLEARN)
@@ -308,50 +324,8 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth):
     undeploy_all_version()
 
 
-@pytest.mark.serving
 @pytest.mark.integration
-def test_stop_serving_traffic(integration_test_url, project_name, use_google_oauth):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
-    merlin.set_project(project_name)
-    merlin.set_model("stop-serving-traffic", ModelType.SKLEARN)
-
-    model_dir = "test/sklearn-model"
-
-    undeploy_all_version()
-
-    with merlin.new_model_version() as v:
-        # Upload the serialized model to MLP
-        merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v)
-
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(request_json["instances"])
-
-    model_endpoint = merlin.serve_traffic({endpoint: 100})
-    sleep(3)
-
-    resp = requests.post(f"{model_endpoint.url}", json=request_json)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(request_json["instances"])
-
-    merlin.stop_serving_traffic(model_endpoint.environment_name)
-
-    endpoints = merlin.list_model_endpoints()
-    for endpoint in endpoints:
-        if endpoint.environment_name == model_endpoint.environment_name:
-            assert endpoint.status == Status.TERMINATED
-
-    # Undeploy other running model version endpoints
-    undeploy_all_version()
-
-
-@pytest.mark.integration
-def test_multi_env(integration_test_url, project_name, use_google_oauth):
+def test_multi_env(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("multi-env", ModelType.XGBOOST)
@@ -384,7 +358,7 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth):
 
 
 @pytest.mark.integration
-def test_resource_request(integration_test_url, project_name, use_google_oauth):
+def test_resource_request(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("resource-request", ModelType.XGBOOST)
@@ -417,7 +391,7 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth):
 
 
 @pytest.mark.integration
-def test_logger(integration_test_url, project_name, use_google_oauth):
+def test_logger(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("logger", ModelType.TENSORFLOW)
@@ -458,7 +432,7 @@ def test_logger(integration_test_url, project_name, use_google_oauth):
 
 @pytest.mark.integration
 def test_custom_transformer(
-        integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth, requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -507,7 +481,7 @@ def test_custom_transformer(
 
 @pytest.mark.feast
 @pytest.mark.integration
-def test_feast_enricher(integration_test_url, project_name, use_google_oauth):
+def test_feast_enricher(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("feast-enricher", ModelType.PYFUNC)
@@ -539,7 +513,7 @@ def test_feast_enricher(integration_test_url, project_name, use_google_oauth):
 
 @pytest.mark.integration
 def test_standard_transformer_without_feast(
-        integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth, requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -587,7 +561,7 @@ def test_standard_transformer_without_feast(
 @pytest.mark.feast
 @pytest.mark.integration
 def test_standard_transformer_with_feast(
-        integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth, requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -643,7 +617,8 @@ def test_standard_transformer_with_multiple_feast(
         project_name,
         use_google_oauth,
         feast_serving_redis_url,
-        feast_serving_bigtable_url
+        feast_serving_bigtable_url,
+        requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -734,7 +709,8 @@ def test_standard_transformer_with_multiple_feast_with_source(
         integration_test_url,
         project_name,
         use_google_oauth,
-        feast_serving_bigtable_url
+        feast_serving_bigtable_url,
+        requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -828,7 +804,7 @@ def test_standard_transformer_with_multiple_feast_with_source(
 
 @pytest.mark.integration
 def test_custom_model_without_artifact(
-        integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth, requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -851,7 +827,7 @@ def test_custom_model_without_artifact(
 
 @pytest.mark.integration
 def test_custom_model_with_artifact(
-        integration_test_url, project_name, use_google_oauth
+        integration_test_url, project_name, use_google_oauth, requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
