@@ -43,17 +43,6 @@ transformerConfig:
               fromFile:
                 format: PARQUET
                 uri: ../types/table/testdata/normal.parquet
-                schema:
-                  - name: First Name
-                    type: STRING
-                  - name: Last Name
-                    type: STRING
-                  - name: Age
-                    type: INT
-                  - name: Weight
-                    type: FLOAT
-                  - name: Is VIP
-                    type: BOOL
       - variables:
           - name: variable1
             jsonPath: $.entity_2.id
@@ -106,17 +95,6 @@ transformerConfig:
               fromFile:
                 format: CSV
                 uri: ../types/table/testdata/normal.csv
-                schema:
-                  - name: First Name
-                    type: STRING
-                  - name: Last Name
-                    type: STRING
-                  - name: Age
-                    type: INT
-                  - name: Weight
-                    type: FLOAT
-                  - name: Is VIP
-                    type: BOOL
       - variables:
           - name: variable1
             jsonPath: $.entity_2.id

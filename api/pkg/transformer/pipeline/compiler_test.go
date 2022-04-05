@@ -146,7 +146,7 @@ func TestCompiler_Compile(t *testing.T) {
 						series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
 						series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
 						series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
-						series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
+						series.New([]string{"TRUE", "FALSE", "TRUE", "FALSE", "FALSE"}, series.String, "Is VIP"),
 					),
 				},
 				preprocessOps: []Op{

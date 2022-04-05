@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
+	gota "github.com/go-gota/gota/series"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -243,6 +244,7 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 			case *spec.BaseTable_FromFile:
 				var records [][]string
 				var err error
+				var colType map[string]gota.Type
 
 				//parse filepath
 				filePath, err := url.Parse(tableSpec.BaseTable.GetFromFile().GetUri())
@@ -260,13 +262,14 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 
 				if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_CSV {
 					records, err = table.RecordsFromCsv(filePath)
+					colType = nil
 				} else if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_PARQUET {
-					records, err = table.RecordsFromParquet(filePath)
+					records, colType, err = table.RecordsFromParquet(filePath)
 				} else {
 					return nil, nil, fmt.Errorf("Unsupported/Unspecified file type")
 				}
 
-				loadedTable, err := table.NewFromRecords(records, tableSpec.BaseTable.GetFromFile().GetSchema())
+				loadedTable, err := table.NewFromRecords(records, colType, tableSpec.BaseTable.GetFromFile().GetSchema())
 				if err != nil {
 					return nil, nil, err
 				}
