@@ -260,6 +260,8 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth):
     # Try to undeploy serving model version. It must be fail
     with pytest.raises(Exception):
         assert merlin.undeploy(v)
+        
+    merlin.stop_serving_traffic(endpoint.environment_name)
 
     # Undeploy other running model version endpoints
     undeploy_all_version()
@@ -299,6 +301,8 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth):
     # Try to undeploy serving model version. It must be fail
     with pytest.raises(Exception):
         assert merlin.undeploy(v)
+      
+    merlin.stop_serving_traffic(model_endpoint.environment_name)
 
     # Undeploy other running model version endpoints
     undeploy_all_version()
