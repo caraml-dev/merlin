@@ -393,12 +393,24 @@ jobs:
       - name: "Debug"
         if: always()
         run: |
-          echo "::group::Describe deployment mlp namespace"
+          echo "::group::Get deployment mlp namespace"
+          kubectl get deployment -n mlp
+          echo "::endgroup::"
+
+          echo "::group::Get deployment  merlin-e2e namespace"
           kubectl describe deployment -n mlp
           echo "::endgroup::"
           
           echo "::group::Describe deployment merlin-e2e namespace"
           kubectl describe deployment -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Model log"
+          kubectl logs -l component=predictor -c kserve-container -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Transformer log"
+          kubectl logs -l component=transformer -c kserve-container -n merlin-e2e
           echo "::endgroup::"
           
           echo "::group::Merlin log"
