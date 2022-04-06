@@ -1008,7 +1008,6 @@ func extractArrayFromString(str interface{}, delimiter string) (interface{}, err
 }
 
 func ExtractFeastValue(val *feastType.Value) (interface{}, feastType.ValueType_Enum, error) {
-	fmt.Printf("val: %+v and type %T\n", val, val)
 	switch val.Val.(type) {
 	case *feastType.Value_StringVal:
 		return val.GetStringVal(), feastType.ValueType_STRING, nil
