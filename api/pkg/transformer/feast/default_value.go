@@ -28,7 +28,7 @@ func compileDefaultValues(featureTableSpecs []*spec.FeatureTable) defaultValues 
 			if len(f.DefaultValue) != 0 {
 				feastValType := feastTypes.ValueType_Enum(feastTypes.ValueType_Enum_value[f.ValueType])
 				defVal, err := converter.ToFeastValue(f.DefaultValue, feastValType)
-				if err != nil {
+				if err != nil || defVal == nil {
 					continue
 				}
 

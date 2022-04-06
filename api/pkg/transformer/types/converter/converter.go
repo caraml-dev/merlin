@@ -3,6 +3,7 @@ package converter
 import (
 	"encoding/base64"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -500,14 +501,24 @@ func ToFloat32List(val interface{}) ([]float32, error) {
 		}
 		return out, nil
 	case float32, float64:
-		val := reflect.ValueOf(v)
-		return []float32{float32(val.Float())}, nil
+		d, err := ToFloat32(val)
+		if err != nil {
+			return nil, err
+		}
+		if math.IsNaN(float64(d)) {
+			return []float32{}, nil
+		}
+		return []float32{d}, nil
 	case []float32, []float64:
 		list := reflect.ValueOf(v)
 		l := list.Len()
-		out := make([]float32, l)
+		out := make([]float32, 0, l)
 		for i := 0; i < l; i++ {
-			out[i] = float32(list.Index(i).Float())
+			float64Val := list.Index(i).Float()
+			if math.IsNaN(float64Val) {
+				continue
+			}
+			out = append(out, float32(float64Val))
 		}
 		return out, nil
 	case bool:
@@ -528,21 +539,27 @@ func ToFloat32List(val interface{}) ([]float32, error) {
 		}
 		return out, nil
 	case string:
-		d, err := strconv.ParseFloat(v, 32)
+		d, err := ToFloat32(val)
 		if err != nil {
 			return nil, err
+		}
+		if math.IsNaN(float64(d)) {
+			return []float32{}, nil
 		}
 		return []float32{float32(d)}, nil
 	case []string:
 		list := reflect.ValueOf(v)
 		l := list.Len()
-		out := make([]float32, l)
+		out := make([]float32, 0, l)
 		for i := 0; i < l; i++ {
-			d, err := strconv.ParseFloat(list.Index(i).String(), 32)
+			d, err := ToFloat32(list.Index(i).Interface())
 			if err != nil {
 				return nil, err
 			}
-			out[i] = float32(d)
+			if math.IsNaN(float64(d)) {
+				continue
+			}
+			out = append(out, d)
 		}
 		return out, nil
 	case interface{}:
@@ -550,19 +567,25 @@ func ToFloat32List(val interface{}) ([]float32, error) {
 		case reflect.Slice:
 			list := reflect.ValueOf(v)
 			l := list.Len()
-			out := make([]float32, l)
+			out := make([]float32, 0, l)
 			for i := 0; i < l; i++ {
 				d, err := ToFloat32(list.Index(i).Interface())
 				if err != nil {
 					return nil, err
 				}
-				out[i] = d
+				if math.IsNaN(float64(d)) {
+					continue
+				}
+				out = append(out, d)
 			}
 			return out, nil
 		default:
 			d, err := ToFloat32(v)
 			if err != nil {
 				return nil, err
+			}
+			if math.IsNaN(float64(d)) {
+				return []float32{}, nil
 			}
 			return []float32{d}, nil
 		}
@@ -581,18 +604,29 @@ func ToFloat64List(val interface{}) ([]float64, error) {
 		l := list.Len()
 		out := make([]float64, l)
 		for i := 0; i < l; i++ {
-			out[i] = float64(list.Index(i).Int())
+			float64Val := float64(list.Index(i).Int())
+			out[i] = float64Val
 		}
 		return out, nil
 	case float32, float64:
-		val := reflect.ValueOf(v)
-		return []float64{val.Float()}, nil
+		float64Val, err := ToFloat64(val)
+		if err != nil {
+			return nil, err
+		}
+		if math.IsNaN(float64Val) {
+			return []float64{}, nil
+		}
+		return []float64{float64Val}, nil
 	case []float32, []float64:
 		list := reflect.ValueOf(v)
 		l := list.Len()
-		out := make([]float64, l)
+		out := make([]float64, 0, l)
 		for i := 0; i < l; i++ {
-			out[i] = list.Index(i).Float()
+			float64Val := list.Index(i).Float()
+			if math.IsNaN(float64Val) {
+				continue
+			}
+			out = append(out, float64Val)
 		}
 		return out, nil
 	case bool:
@@ -613,21 +647,27 @@ func ToFloat64List(val interface{}) ([]float64, error) {
 		}
 		return out, nil
 	case string:
-		d, err := strconv.ParseFloat(v, 64)
+		d, err := ToFloat64(val)
 		if err != nil {
 			return nil, err
+		}
+		if math.IsNaN(d) {
+			return []float64{}, nil
 		}
 		return []float64{d}, nil
 	case []string:
 		list := reflect.ValueOf(v)
 		l := list.Len()
-		out := make([]float64, l)
+		out := make([]float64, 0, l)
 		for i := 0; i < l; i++ {
-			d, err := strconv.ParseFloat(list.Index(i).String(), 64)
+			d, err := ToFloat64(list.Index(i).String())
 			if err != nil {
 				return nil, err
 			}
-			out[i] = d
+			if math.IsNaN(d) {
+				continue
+			}
+			out = append(out, d)
 		}
 		return out, nil
 	case interface{}:
@@ -635,13 +675,16 @@ func ToFloat64List(val interface{}) ([]float64, error) {
 		case reflect.Slice:
 			list := reflect.ValueOf(v)
 			l := list.Len()
-			out := make([]float64, l)
+			out := make([]float64, 0, l)
 			for i := 0; i < l; i++ {
 				d, err := ToFloat64(list.Index(i).Interface())
 				if err != nil {
 					return nil, err
 				}
-				out[i] = d
+				if math.IsNaN(d) {
+					continue
+				}
+				out = append(out, d)
 			}
 			return out, nil
 		default:
@@ -649,6 +692,10 @@ func ToFloat64List(val interface{}) ([]float64, error) {
 			if err != nil {
 				return nil, err
 			}
+			if math.IsNaN(d) {
+				return []float64{}, nil
+			}
+
 			return []float64{d}, nil
 		}
 	default:
@@ -826,11 +873,17 @@ func ToFeastValue(v interface{}, valueType feastType.ValueType_Enum) (*feastType
 		if err != nil {
 			return nil, err
 		}
+		if math.IsNaN(val) {
+			return nil, nil
+		}
 		return feast.FloatVal(float32(val)), nil
 	case feastType.ValueType_DOUBLE:
 		val, err := ToFloat64(v)
 		if err != nil {
 			return nil, err
+		}
+		if math.IsNaN(val) {
+			return nil, nil
 		}
 		return feast.DoubleVal(val), nil
 	case feastType.ValueType_BOOL:
@@ -955,6 +1008,7 @@ func extractArrayFromString(str interface{}, delimiter string) (interface{}, err
 }
 
 func ExtractFeastValue(val *feastType.Value) (interface{}, feastType.ValueType_Enum, error) {
+	fmt.Printf("val: %+v and type %T\n", val, val)
 	switch val.Val.(type) {
 	case *feastType.Value_StringVal:
 		return val.GetStringVal(), feastType.ValueType_STRING, nil
