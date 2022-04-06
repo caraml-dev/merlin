@@ -17,6 +17,7 @@ import os
 from merlin.transformer import StandardTransformer, TransformerType
 from merlin.resource_request import ResourceRequest
 
+
 @pytest.mark.unit
 def test_feast_enricher():
     transformer_config_path = os.path.join("test/transformer", "feast_enricher.yaml")
@@ -26,6 +27,7 @@ def test_feast_enricher():
     assert transformer.command is None
     assert transformer.args is None
     assert transformer.transformer_type == TransformerType.STANDARD_TRANSFORMER
+
 
 def test_feast_enricher_with_env_vars():
     transformer_config_path = os.path.join("test/transformer", "feast_enricher.yaml")

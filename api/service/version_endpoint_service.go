@@ -22,6 +22,7 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/gojek/merlin/cluster"
 	"github.com/gojek/merlin/config"
+	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/imagebuilder"
@@ -191,7 +192,13 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 	endpoint.Status = models.EndpointPending
 	// Copy to avoid race condition
 	tobeDeployedEndpoint := *endpoint
-	err := k.jobProducer.EnqueueJob(&queue.Job{
+	endpoint.Status = models.EndpointPending
+	err := k.storage.Save(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.jobProducer.EnqueueJob(&queue.Job{
 		Name: ModelServiceDeployment,
 		Arguments: queue.Arguments{
 			dataArgKey: work.EndpointJob{
@@ -201,19 +208,16 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 				Project:  model.Project,
 			},
 		},
-	})
-
-	if err != nil {
+	}); err != nil {
 		// if error enqueue job, mark endpoint status to failed
 		endpoint.Status = models.EndpointFailed
+		if err := k.storage.Save(endpoint); err != nil {
+			log.Errorf("error to update endpoint %s status to failed: %v", endpoint.ID, err)
+		}
+		return nil, err
 	}
 
-	errSave := k.storage.Save(endpoint)
-	if errSave != nil {
-		return nil, errSave
-	}
-
-	return endpoint, err
+	return endpoint, nil
 }
 
 func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {

@@ -19,6 +19,7 @@ import joblib
 import mlflow
 import numpy as np
 import pandas as pd
+import pytest
 from merlin.model import PyFuncV2Model
 from mlflow.pyfunc import log_model
 from sklearn.datasets import load_iris
@@ -38,7 +39,7 @@ class IrisModel(PyFuncV2Model):
                                                         pd.DataFrame]:
         return self._model.predict(model_input)
 
-
+@pytest.mark.ci
 def test_pyfuncv2_model(spark_session):
     log_model("model", python_model=IrisModel(), artifacts={
         "model_path": "test-model/model.joblib"}, code_path=["merlinpyspark", "test"],
