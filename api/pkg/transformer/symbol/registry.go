@@ -6,6 +6,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gojek/merlin/pkg/transformer/types/operation"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
@@ -81,6 +82,18 @@ func (sr Registry) evalArg(arg interface{}) (interface{}, error) {
 		return cplJsonPath.LookupFromContainer(sr.jsonObjectContainer())
 	case *series.Series:
 		return val.GetRecords(), nil
+	case *operation.OperationNode:
+		res, err := val.Execute()
+		if err != nil {
+			return nil, err
+		}
+		return sr.evalArg(res)
+	case operation.OperationNode:
+		res, err := val.Execute()
+		if err != nil {
+			return nil, err
+		}
+		return sr.evalArg(res)
 	default:
 		return arg, nil
 	}

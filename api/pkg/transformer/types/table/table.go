@@ -350,7 +350,7 @@ func (t *Table) RenameColumns(columnMap map[string]string) error {
 	renamedSeries := make([]gota.Series, len(columns))
 
 	// check all column in columnMap exists in the original table
-	for colName, _ := range columnMap {
+	for colName := range columnMap {
 		found := false
 		for _, origCol := range columns {
 			if colName == origCol {
@@ -405,7 +405,7 @@ func (t *Table) Sort(sortRules []*spec.SortColumnRule) error {
 // UpdateColumnsRaw add or update existing column with values specified in columnValues map
 func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 	origColumns := t.Columns()
-	updateCol := map[string]bool{} //name of col that are updates
+	updateCol := map[string]bool{} // name of col that are updates
 	combinedColumns := make([]*series.Series, 0)
 
 	columnValues = broadcastScalar(columnValues, t.NRow())
@@ -441,7 +441,7 @@ func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 		i++
 	}
 
-	sort.Strings(colNames) //to ensure predictability of appended new columns
+	sort.Strings(colNames) // to ensure predictability of appended new columns
 
 	// Append new columns
 	for _, colName := range colNames {
@@ -460,6 +460,86 @@ func (t *Table) UpdateColumnsRaw(columnValues map[string]interface{}) error {
 	newT := New(combinedColumns...)
 	t.dataFrame = newT.dataFrame
 
+	return nil
+}
+
+// SliceRow will slice all columns in a table based on supplied start and end index
+func (t *Table) SliceRow(start, end *int) error {
+	df := t.dataFrame
+	startIdx, endIdx := series.NormalizeIndex(start, end, t.NRow())
+	newDf := df.Slice(startIdx, endIdx)
+	if newDf.Err != nil {
+		return newDf.Err
+	}
+	t.dataFrame = &newDf
+	return nil
+}
+
+// FilterRow will select subset of table based on the supplied indexes
+func (t *Table) FilterRow(rowIndexes *series.Series) error {
+	df := t.dataFrame
+	var idxs interface{}
+	if rowIndexes != nil {
+		idxs = *(rowIndexes.Series())
+	}
+	newDf := df.Subset(idxs)
+	if newDf.Err != nil {
+		return newDf.Err
+	}
+	t.dataFrame = &newDf
+	return nil
+}
+
+// RowValues indicate which values that needs to be set in a set of row
+type RowValues struct {
+	RowIndexes *series.Series
+	Values     *series.Series
+}
+
+// ColumnUpdate is a rule to update a column, this contains of name of column and `RowValues` indicate values for set of row in a column
+// also have defaultValue
+type ColumnUpdate struct {
+	RowValues []RowValues
+	ColName   string
+}
+
+// UpdateColumns is method to update multiple columns given list of rules for update column (ColumnUpdate)
+func (t *Table) UpdateColumns(columnUpdates []ColumnUpdate) error {
+	df := t.dataFrame
+	columnUpdateRules := make([]dataframe.ColumnUpdate, 0, len(columnUpdates))
+
+	sort.Slice(columnUpdates, func(i, j int) bool {
+		return columnUpdates[i].ColName < columnUpdates[j].ColName
+	})
+
+	for _, updateRule := range columnUpdates {
+		rowValues := make([]dataframe.RowValues, 0, len(updateRule.RowValues))
+		for _, colValueRule := range updateRule.RowValues {
+
+			idx := colValueRule.RowIndexes
+			if idx == nil {
+				continue
+			}
+
+			rowValues = append(rowValues, dataframe.RowValues{
+				Values:     *colValueRule.Values.Series(),
+				RowIndexes: *(idx.Series()),
+			})
+		}
+
+		columnUpdateRule := dataframe.ColumnUpdate{
+			ColName:   updateRule.ColName,
+			RowValues: rowValues,
+		}
+
+		columnUpdateRules = append(columnUpdateRules, columnUpdateRule)
+	}
+
+	newDf := df.UpdateColumns(columnUpdateRules)
+	if newDf.Err != nil {
+		return newDf.Err
+	}
+	t.dataFrame = &newDf
 	return nil
 }
 

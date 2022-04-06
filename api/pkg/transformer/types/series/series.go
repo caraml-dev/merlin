@@ -5,11 +5,13 @@ import (
 	"reflect"
 
 	"github.com/go-gota/gota/series"
-
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
-type Type string
+type (
+	Type       string
+	Comparator string
+)
 
 const (
 	String     Type = "string"
@@ -66,12 +68,38 @@ func NewInferType(values interface{}, seriesName string) (*Series, error) {
 	return New(seriesValues, seriesType, seriesName), nil
 }
 
+// NormalizeIndex to find correct start and end index of a series
+// if index is negative, the index value will be counted backward
+func NormalizeIndex(start, end *int, numOfRow int) (startIdx, endIdx int) {
+	startIdx = 0
+	if start != nil {
+		startIdx = *start
+	}
+	endIdx = numOfRow
+	if end != nil {
+		endIdx = *end
+	}
+
+	if startIdx < 0 {
+		startIdx = numOfRow + startIdx
+	}
+	if endIdx < 0 {
+		endIdx = numOfRow + endIdx
+	}
+
+	return startIdx, endIdx
+}
+
 func (s *Series) Series() *series.Series {
 	return s.series
 }
 
 func (s *Series) Type() Type {
 	return Type(s.series.Type())
+}
+
+func (s *Series) Len() int {
+	return s.series.Len()
 }
 
 func (s *Series) IsNumeric() error {
@@ -82,6 +110,148 @@ func (s *Series) IsNumeric() error {
 		}
 	}
 	return fmt.Errorf("this series type is not numeric but %s", seriesType)
+}
+
+func (s *Series) And(right *Series) (*Series, error) {
+	newSeries := s.series.And(right.series)
+	if newSeries.Err != nil {
+		return nil, newSeries.Err
+	}
+	return &Series{&newSeries}, nil
+}
+
+func (s *Series) XOr(right *Series) (*Series, error) {
+	newSeries := s.series.XOr(right.series)
+	if newSeries.Err != nil {
+		return nil, newSeries.Err
+	}
+	return &Series{&newSeries}, nil
+}
+
+func (s *Series) Or(right *Series) (*Series, error) {
+	newSeries := s.series.Or(right.series)
+	if newSeries.Err != nil {
+		return nil, newSeries.Err
+	}
+	return &Series{&newSeries}, nil
+}
+
+func getIndexes(indexes *Series) interface{} {
+	if indexes == nil {
+		return nil
+	}
+	if indexes.series == nil {
+		return nil
+	}
+	return *indexes.series
+}
+
+func (s *Series) Add(right *Series, indexes *Series) (*Series, error) {
+	res := s.series.Add(*right.series, getIndexes(indexes))
+	if res.Err != nil {
+		return nil, res.Err
+	}
+	return &Series{&res}, nil
+}
+
+func (s *Series) Substract(right *Series, indexes *Series) (*Series, error) {
+	res := s.series.Substract(*right.series, getIndexes(indexes))
+	if res.Err != nil {
+		return nil, res.Err
+	}
+	return &Series{&res}, nil
+}
+
+func (s *Series) Multiply(right *Series, indexes *Series) (*Series, error) {
+	res := s.series.Multiply(*right.series, getIndexes(indexes))
+	if res.Err != nil {
+		return nil, res.Err
+	}
+	return &Series{&res}, nil
+}
+
+func (s *Series) Divide(right *Series, indexes *Series) (*Series, error) {
+	res := s.series.Divide(*right.series, getIndexes(indexes))
+	if res.Err != nil {
+		return nil, res.Err
+	}
+	return &Series{&res}, nil
+}
+
+func (s *Series) Modulo(right *Series, indexes *Series) (*Series, error) {
+	res := s.series.Modulo(*right.series, getIndexes(indexes))
+	if res.Err != nil {
+		return nil, res.Err
+	}
+	return &Series{&res}, nil
+}
+
+func (s *Series) Greater(comparingValue interface{}) (*Series, error) {
+	return s.compare(series.Greater, comparingValue)
+}
+
+func (s *Series) GreaterEq(comparingValue interface{}) (*Series, error) {
+	return s.compare(series.GreaterEq, comparingValue)
+}
+
+func (s *Series) Less(comparingValue interface{}) (*Series, error) {
+	return s.compare(series.Less, comparingValue)
+}
+
+func (s *Series) LessEq(comparingValue interface{}) (*Series, error) {
+	return s.compare(series.LessEq, comparingValue)
+}
+
+func (s *Series) Eq(comparingValue interface{}) (*Series, error) {
+	return s.compare(series.Eq, comparingValue)
+}
+
+func (s *Series) Neq(comparingValue interface{}) (*Series, error) {
+	return s.compare(series.Neq, comparingValue)
+}
+
+func (s *Series) compare(comparator series.Comparator, comparingValue interface{}) (*Series, error) {
+	var result series.Series
+	switch cVal := comparingValue.(type) {
+	case Series:
+		result = s.series.Compare(comparator, cVal.series)
+	case *Series:
+		if cVal == nil {
+			result = s.series.Compare(comparator, nil)
+		} else {
+			result = s.series.Compare(comparator, cVal.series)
+		}
+	default:
+		result = s.series.Compare(comparator, cVal)
+	}
+	if result.Err != nil {
+		return nil, result.Err
+	}
+	return NewSeries(&result), nil
+}
+
+// Slice series based on start and end index
+// the result will include start index but exclude end index
+func (s *Series) Slice(start, end *int) *Series {
+	startIdx, endIdx := NormalizeIndex(start, end, s.Len())
+	sliced := s.series.Slice(startIdx, endIdx)
+	if sliced.Error() != nil {
+		panic(sliced.Error())
+	}
+	return NewSeries(&sliced)
+}
+
+func (s *Series) IsBoolean() bool {
+	return s.Type() == Bool
+}
+
+// IsIn check whether whether row has value that part of `comparingValue`
+func (s *Series) IsIn(comparingValue interface{}) *Series {
+	result, err := s.compare(series.In, comparingValue)
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 func (s *Series) GetRecords() []interface{} {

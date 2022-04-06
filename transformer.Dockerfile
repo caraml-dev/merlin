@@ -28,6 +28,7 @@ WORKDIR /src/api
 COPY api .
 COPY python/batch-predictor ../python/batch-predictor
 
+RUN go mod tidy
 RUN go build -o bin/transformer \
     -ldflags="-X github.com/prometheus/common/version.Branch=${BRANCH} \
     -X github.com/prometheus/common/version.Revision=${REVISION} \

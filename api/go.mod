@@ -199,7 +199,7 @@ require (
 )
 
 replace (
-	github.com/go-gota/gota => github.com/gojekfarm/gota v0.0.0-20220225033233-df7cd66a11dc
+	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20220329041038-bdee6822d003
 	github.com/gojek/merlin-pyspark-app => ../python/batch-predictor
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
 	k8s.io/api => k8s.io/api v0.16.6

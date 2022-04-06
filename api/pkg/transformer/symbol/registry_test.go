@@ -20,7 +20,9 @@ var (
 		"longitudeString" : "2.0",
 		"longitudeInteger": 1,
 		"longitudeArrays": [1.0, 2.0],
-		"longitudeLongArrays": [1.0, 2.0, 3.0]
+		"longitudeLongArrays": [1.0, 2.0, 3.0],
+		"originGeohash": "bcd3u",
+		"destinationGeohash": "bc83n"
 	}`)
 
 	responseJSONString = []byte(`{

@@ -7,10 +7,9 @@ import (
 
 	"github.com/go-gota/gota/dataframe"
 	gotaSeries "github.com/go-gota/gota/series"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTable_New(t *testing.T) {
@@ -773,6 +772,184 @@ func TestTable_NewRaw(t *testing.T) {
 	}
 }
 
+func TestTable_SliceRow(t *testing.T) {
+	tests := []struct {
+		name       string
+		inputTable *Table
+		startIdx   *int
+		endIdx     *int
+		want       *Table
+		wantErr    bool
+		errMessage string
+	}{
+		{
+			name: "start < end, end < table row length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: toPointerInt(1),
+			endIdx:   toPointerInt(3),
+			want: New(
+				series.New([]int{2, 3}, series.Int, "A"),
+				series.New([]string{"b", "c"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start and end is nil",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: nil,
+			endIdx:   nil,
+			want: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start < end, end == table row length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: toPointerInt(1),
+			endIdx:   toPointerInt(5),
+			want: New(
+				series.New([]int{2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"b", "c", "d", "e"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start < end, end > table row length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   toPointerInt(1),
+			endIdx:     toPointerInt(6),
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "start > end",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   toPointerInt(2),
+			endIdx:     toPointerInt(0),
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "start < 0",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: toPointerInt(-1),
+			endIdx:   nil,
+			want: New(
+				series.New([]int{5}, series.Int, "A"),
+				series.New([]string{"e"}, series.String, "B"),
+			),
+		},
+		{
+			name: "end < 0",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: nil,
+			endIdx:   toPointerInt(-1),
+			want: New(
+				series.New([]int{1, 2, 3, 4}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start >= 0 and end < 0",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: toPointerInt(1),
+			endIdx:   toPointerInt(-2),
+			want: New(
+				series.New([]int{2, 3}, series.Int, "A"),
+				series.New([]string{"b", "c"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start < 0 and end > 0",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx: toPointerInt(-2),
+			endIdx:   toPointerInt(4),
+			want: New(
+				series.New([]int{4}, series.Int, "A"),
+				series.New([]string{"d"}, series.String, "B"),
+			),
+		},
+		{
+			name: "start > num of length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   toPointerInt(6),
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "start < -1 * num of length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   toPointerInt(-6),
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "end > num of length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   nil,
+			endIdx:     toPointerInt(6),
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+		{
+			name: "end < -1 * num of length",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			startIdx:   nil,
+			endIdx:     toPointerInt(-6),
+			wantErr:    true,
+			errMessage: "failed slice col: A due to: slice index out of bounds",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.inputTable.SliceRow(tt.startIdx, tt.endIdx)
+			if tt.wantErr {
+				assert.EqualError(t, err, tt.errMessage)
+				return
+			}
+			assert.Equal(t, tt.want, tt.inputTable)
+		})
+	}
+}
+
 func TestTable_RecordsFromCsv(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -883,6 +1060,69 @@ func TestTable_RecordsFromParquet(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expRecords, records)
 			assert.Equal(t, tt.expColType, colType)
+		})
+	}
+}
+
+func toPointerInt(val int) *int {
+	return &val
+}
+
+func TestTable_FilterRow(t *testing.T) {
+	tests := []struct {
+		name       string
+		inputTable *Table
+		subset     *series.Series
+		want       *Table
+		wantErr    bool
+		errorMsg   string
+	}{
+		{
+			name: "Subset length is same with table row",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
+			),
+			subset:  series.New([]bool{false, true, false, true, false}, series.Bool, ""),
+			wantErr: false,
+			want: New(
+				series.New([]int{2, 4}, series.Int, "A"),
+				series.New([]string{"b", "d"}, series.String, "B"),
+				series.New([]float32{2.2, 4.4}, series.Float, "C"),
+			),
+		},
+		{
+			name: "Subset length is less than table row",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
+			),
+			subset:   series.New([]bool{false, true, true}, series.Bool, ""),
+			wantErr:  true,
+			errorMsg: "error on series 0: indexing error: index dimensions mismatch",
+		},
+		{
+			name: "Subset length is more than table row",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]float32{1.1, 2.2, 3.3, 4.4, 5.5}, series.Float, "C"),
+			),
+			subset:   series.New([]bool{false, true, true, true, true, true, true}, series.Bool, ""),
+			wantErr:  true,
+			errorMsg: "error on series 0: indexing error: index dimensions mismatch",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.inputTable.FilterRow(tt.subset)
+			if tt.wantErr {
+				assert.EqualError(t, err, tt.errorMsg)
+				return
+			}
+			assert.Equal(t, tt.want, tt.inputTable)
 		})
 	}
 }
@@ -1139,7 +1379,7 @@ func TestTable_NewFromRecords(t *testing.T) {
 				series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
 			),
 			wantError: false,
-		},
+					},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1150,6 +1390,161 @@ func TestTable_NewFromRecords(t *testing.T) {
 			}
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expTable, fileTable)
+		})
+	}
+}
+
+func TestTable_UpdateColumns(t *testing.T) {
+	tests := []struct {
+		name           string
+		inputTable     *Table
+		updateColRules []ColumnUpdate
+		want           *Table
+		wantErr        bool
+		errMessage     string
+	}{
+		{
+			name: "update one existing column, all column value rules are mutually exclusive",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			updateColRules: []ColumnUpdate{
+				{
+					ColName: "A",
+					RowValues: []RowValues{
+						{
+							RowIndexes: series.New([]bool{true, true, false, false, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+						},
+						{
+							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+						},
+						{
+							RowIndexes: series.New([]bool{false, false, true, false, false}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+						},
+					},
+				},
+			},
+			want: New(
+				series.New([]int{2, 4, -1, 12, 15}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+		},
+		{
+			name: "update existing one column, all column value rules are not mutually exclusive",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			updateColRules: []ColumnUpdate{
+				{
+					ColName: "A",
+					RowValues: []RowValues{
+						{
+							RowIndexes: series.New([]bool{true, true, false, true, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+						},
+						{
+							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+						},
+						{
+							RowIndexes: series.New([]bool{false, false, true, false, false}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+						},
+					},
+				},
+			},
+			want: New(
+				series.New([]int{2, 4, -1, 8, 15}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+		},
+		{
+			name: "update multiple columns",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			updateColRules: []ColumnUpdate{
+				{
+					ColName: "D",
+					RowValues: []RowValues{
+						{
+							RowIndexes: series.New([]bool{true, true, false, true, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+						},
+						{
+							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+						},
+						{
+							RowIndexes: series.New([]bool{false, false, true, false, false}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+						},
+					},
+				},
+				{
+					ColName: "C",
+					RowValues: []RowValues{
+						{
+							RowIndexes: series.New([]bool{true, true, true, true, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10}, series.Int, ""),
+						},
+						{
+							RowIndexes: series.New([]bool{false, false, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{3, 6, 9, 12, 15}, series.Int, ""),
+						},
+						{
+							RowIndexes: series.New([]bool{false, false, false, false, false}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1}, series.Int, ""),
+						},
+					},
+				},
+			},
+			want: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+				series.New([]int{2, 4, 6, 8, 15}, series.Int, "C"),
+				series.New([]int{2, 4, -1, 8, 15}, series.Int, "D"),
+			),
+		},
+		{
+			name: "error when values in column dimension is different with table",
+			inputTable: New(
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "B"),
+			),
+			updateColRules: []ColumnUpdate{
+				{
+					ColName: "A",
+					RowValues: []RowValues{
+						{
+							RowIndexes: series.New([]bool{true, true, false, true, false, false}, series.Bool, ""),
+							Values:     series.New([]int{2, 4, 6, 8, 10, 12}, series.Int, ""),
+						},
+						{
+							RowIndexes: series.New([]bool{false, false, true, false, true, true}, series.Bool, ""),
+							Values:     series.New([]int{-1, -1, -1, -1, -1, -1}, series.Int, ""),
+						},
+					},
+				},
+			},
+			wantErr:    true,
+			errMessage: "failed set value for column: A with err: indexing error: index dimensions mismatch",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.inputTable.UpdateColumns(tt.updateColRules)
+			if tt.wantErr {
+				assert.EqualError(t, err, tt.errMessage)
+				return
+			}
+			assert.Equal(t, tt.want, tt.inputTable)
 		})
 	}
 }
