@@ -86,6 +86,8 @@ install_istio() {
     kubectl rollout status deployment/istio-ingressgateway -n istio-system -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT}
     kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT}
+
+    kubectl apply -f config/istio/ingress-class.yaml
 }
 
 install_knative() {
