@@ -859,15 +859,15 @@ def test_custom_model_with_artifact(
     undeploy_all_version()
 
 
+@pytest.mark.raw_deployment
 @pytest.mark.integration
-@pytest.mark.dependency()
-def test_deployment_mode(integration_test_url, project_name, use_google_oauth):
+def test_deployment_mode(integration_test_url, project_name, use_google_oauth, requests):
     """
     Validate that user can redeploy a model version using different deployment mode
     """
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("deployment-mode", ModelType.TENSORFLOW)
+    merlin.set_model("raw-deployment", ModelType.TENSORFLOW)
     model_dir = "test/tensorflow-model"
 
     undeploy_all_version()
@@ -875,50 +875,48 @@ def test_deployment_mode(integration_test_url, project_name, use_google_oauth):
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
 
+    # Deploy using raw_deployment
+    new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
+                                 autoscaling_policy=merlin.AutoscalingPolicy(
+                                     metrics_type=merlin.MetricsType.CPU_UTILIZATION,
+                                     target_value=20))
+
+    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # TODO: Ideally we should redeploy instead of undeploy
+    merlin.undeploy(v)
+    sleep(5)
     # Deploy using serverless
-    initial_endpoint = merlin.deploy(v)
+    initial_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.SERVERLESS,
+                                 autoscaling_policy=merlin.AutoscalingPolicy(
+                                     metrics_type=merlin.MetricsType.CONCURRENCY,
+                                     target_value=2))
 
     resp = requests.post(f"{initial_endpoint.url}", json=tensorflow_request_json)
 
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
-
-    # Deploy using raw_deployment
-    new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
-
+    
     assert new_endpoint.url == initial_endpoint.url
-    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
 
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
-
-    # Deploy again using serverless with concurrency autoscaling policy
-    new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.SERVERLESS,
-                                 autoscaling_policy=merlin.AutoscalingPolicy(
-                                     metrics_type=merlin.MetricsType.CONCURRENCY,
-                                     target_value=2))
-
-    assert new_endpoint.url == initial_endpoint.url
-    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
-
-    merlin.undeploy(v)
+    undeploy_all_version()
 
 
+
+@pytest.mark.raw_deployment
 @pytest.mark.integration
-@pytest.mark.dependency()
-def test_deployment_mode_for_serving_model(integration_test_url, project_name, use_google_oauth):
+def test_deployment_mode_for_serving_model(integration_test_url, project_name, use_google_oauth, requests):
     """
     Validate that set traffic is working when switching from different deployment mode
     """
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("deployment-mode", ModelType.TENSORFLOW)
+    merlin.set_model("serve-raw-deployment", ModelType.TENSORFLOW)
     model_dir = "test/tensorflow-model"
 
     undeploy_all_version()
@@ -940,7 +938,6 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
 
     # Set v1 as serving model
     initial_model_endpoint = merlin.set_traffic({v1: 100})
-    sleep(2)
     resp = requests.post(f"{initial_model_endpoint.url}", json=tensorflow_request_json)
 
     assert resp.status_code == 200
@@ -961,7 +958,6 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
                                      metrics_type=merlin.MetricsType.CPU_UTILIZATION,
                                      target_value=20))
 
-    assert new_endpoint.url == endpoint.url
     resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
 
     assert resp.status_code == 200
@@ -971,7 +967,6 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
     # Set v2 as serving model
     model_endpoint = merlin.set_traffic({v2: 100})
     assert model_endpoint.url == initial_model_endpoint.url
-    sleep(2)
 
     resp = requests.post(f"{model_endpoint.url}", json=tensorflow_request_json)
     assert resp.status_code == 200
@@ -981,11 +976,11 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
     # Set v1 back as serving model
     model_endpoint = merlin.set_traffic({v1: 100})
     assert model_endpoint.url == initial_model_endpoint.url
-    sleep(2)
 
     resp = requests.post(f"{model_endpoint.url}", json=tensorflow_request_json)
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
-
+    
+    merlin.stop_serving_traffic(model_endpoint.environment_name)
     undeploy_all_version()
