@@ -8,12 +8,13 @@ spec:
     spec:
       containers:
       - name: manager
+        image: kserve/kserve-controller:latest
         resources:
           limits:
-            cpu: 100m
+            cpu: 1
             memory: 300Mi
           requests:
-            cpu: 20m
+            cpu: 25m
             memory: 64Mi
 
 ---
@@ -75,7 +76,9 @@ data:
         "ingressService" : "istio-ingressgateway.istio-system.svc.cluster.local",
         "localGateway" : "knative-serving/knative-local-gateway",
         "localGatewayService" : "knative-local-gateway.istio-system.svc.cluster.local",
-        "ingressDomain"  : "example.com"
+        "ingressDomain"  : "127.0.0.1.nip.io",
+        "ingressClassName" : "istio",
+        "domainTemplate": "{{ .Name }}.{{ .Namespace }}.{{ .IngressDomain }}"
     }
   logger: |-
     {
