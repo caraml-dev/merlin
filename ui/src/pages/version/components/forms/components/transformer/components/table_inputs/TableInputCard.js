@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import {
-  EuiCheckbox,
+  EuiSwitch,
   EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
@@ -11,12 +11,10 @@ import {
   EuiText
 } from "@elastic/eui";
 import { DraggableHeader } from "../../../DraggableHeader";
-import {
-  FromJson,
-  FromTable
-} from "../../../../../../../../services/transformer/TransformerConfig";
+import { FromJson } from "../../../../../../../../services/transformer/TransformerConfig";
 import { TableColumnsInput } from "./TableColumnsInput";
-import { get } from "@gojek/mlp-ui";
+import { TableFromFileSchema } from "./TableFromFileSchema";
+import { FormLabelWithToolTip, get } from "@gojek/mlp-ui";
 
 export const TableInputCard = ({
   index = 0,
@@ -103,8 +101,26 @@ export const TableInputCard = ({
                   onChange={() =>
                     onChangeHandler({
                       ...table,
-                      baseTable: { fromTable: new FromTable() },
+                      baseTable: { fromTable: { tableName: "" } },
                       columns: []
+                    })
+                  }
+                />
+              </EuiFlexItem>
+              <EuiFlexItem grow={false}>
+                <EuiRadio
+                  id={`table-input-fromFile-${index}-${tableIdx}`}
+                  label="From File"
+                  checked={
+                    (table.baseTable && !!table.baseTable.fromFile) || false
+                  }
+                  onChange={() =>
+                    onChangeHandler({
+                      ...table,
+                      baseTable: {
+                        fromFile: { format: "", uri: "", schema: [] }
+                      },
+                      columns: undefined
                     })
                   }
                 />
@@ -120,7 +136,7 @@ export const TableInputCard = ({
                     onChangeHandler({
                       ...table,
                       baseTable: { fromJson: new FromJson() },
-                      columns: undefined
+                      columns: []
                     })
                   }
                 />
@@ -178,6 +194,104 @@ export const TableInputCard = ({
           </EuiFlexItem>
         )}
 
+        {table.baseTable && table.baseTable.fromFile && (
+          <EuiFlexItem>
+            <EuiFormRow
+              label="File Type *"
+              isInvalid={!!get(errors, "baseTable.fromFile.format")}
+              error={get(errors, "baseTable.fromFile.format")}
+              display="columnCompressed"
+              fullWidth>
+              <EuiFlexGroup>
+                <EuiFlexItem grow={false}>
+                  <EuiRadio
+                    id={`table-file-format-csv-${index}-${tableIdx}`}
+                    label="CSV"
+                    checked={
+                      (table.baseTable &&
+                        table.baseTable.fromFile &&
+                        table.baseTable.fromFile.format === "CSV") ||
+                      false
+                    }
+                    onChange={e =>
+                      onChange("baseTable", {
+                        fromFile: {
+                          ...table.baseTable.fromFile,
+                          format: "CSV"
+                        }
+                      })
+                    }
+                  />
+                </EuiFlexItem>
+                <EuiFlexItem>
+                  <EuiRadio
+                    id={`table-file-format-parquet-${index}-${tableIdx}`}
+                    label="Parquet"
+                    checked={
+                      (table.baseTable &&
+                        table.baseTable.fromFile &&
+                        table.baseTable.fromFile.format === "PARQUET") ||
+                      false
+                    }
+                    onChange={e =>
+                      onChange("baseTable", {
+                        fromFile: {
+                          ...table.baseTable.fromFile,
+                          format: "PARQUET"
+                        }
+                      })
+                    }
+                  />
+                </EuiFlexItem>
+              </EuiFlexGroup>
+            </EuiFormRow>
+            <EuiFormRow
+              label={
+                <FormLabelWithToolTip
+                  label="URI to file *"
+                  content="Global GCS path e.g. gs://my-bucket/my-csv.csv OR
+                    local path relative to model storage e.g. myfiles/myparquet.parquet"
+                />
+              }
+              isInvalid={!!get(errors, "baseTable.fromFile.uri")}
+              error={get(errors, "baseTable.fromFile.uri")}
+              display="columnCompressed"
+              fullWidth>
+              <Fragment>
+                <EuiFieldText
+                  placeholder="URI to file"
+                  value={table.baseTable.fromFile.uri}
+                  onChange={e =>
+                    onChange("baseTable", {
+                      fromFile: {
+                        ...table.baseTable.fromFile,
+                        uri: e.target.value
+                      }
+                    })
+                  }
+                  isInvalid={!!errors.name}
+                  name={`base-table-uri-${index}`}
+                  fullWidth
+                />
+              </Fragment>
+            </EuiFormRow>
+            <EuiFormRow
+              label={
+                <FormLabelWithToolTip
+                  label="Schema (optional)"
+                  content="Column type is auto-detected by default. Create schema below to manually define the type for specific column."
+                />
+              }
+              fullWidth>
+              <TableFromFileSchema
+                columns={table.baseTable.fromFile.schema || []}
+                onChangeHandler={onChangeHandler}
+                errors={errors.schema}
+              />
+            </EuiFormRow>
+          </EuiFlexItem>
+        )}
+
         {table.baseTable && table.baseTable.fromJson && (
           <Fragment>
             <EuiFlexItem>
@@ -210,7 +324,7 @@ export const TableInputCard = ({
                 label="Row Number"
                 display="columnCompressed"
                 fullWidth>
-                <EuiCheckbox
+                <EuiSwitch
                   id={`addRowNumber-${index}`}
                   label="Add row number"
                   checked={table.baseTable.fromJson.addRowNumber}
@@ -222,6 +336,14 @@ export const TableInputCard = ({
                       }
                     })
                   }
+                />
+              </EuiFormRow>
+
+              <EuiFormRow label="Columns *" fullWidth>
+                <TableColumnsInput
+                  columns={table.columns || []}
+                  onChangeHandler={onColumnChangeHandler}
+                  errors={errors.columns}
                 />
               </EuiFormRow>
             </EuiFlexItem>

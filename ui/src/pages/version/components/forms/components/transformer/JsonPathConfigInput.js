@@ -4,7 +4,7 @@ import {
   EuiFlexItem,
   EuiFormRow,
   EuiFieldText,
-  EuiCheckbox
+  EuiSwitch
 } from "@elastic/eui";
 import { SelectValueType } from "./components/table_inputs/SelectValueType";
 import _uniqueId from "lodash/uniqueId";
@@ -67,7 +67,7 @@ export const JsonPathConfigInput = ({
         </EuiFlexItem>
 
         <EuiFlexItem>
-          <EuiCheckbox
+          <EuiSwitch
             id={`addDefaultValue-${checkBoxId}`}
             label="Add default value"
             color="subdued"
