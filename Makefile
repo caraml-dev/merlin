@@ -211,21 +211,21 @@ docker-build: docker-build-transformer docker-build-api docker-build-pyfunc dock
 docker-build-api: build-ui
 	@cp -r ui/build build
 	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin:${VERSION})
-	@docker build -t ${IMAGE_TAG} -f Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f Dockerfile .
 	@rm -rf build
 
 .PHONY: docker-build-transformer
 docker-build-transformer:
 	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-transformer:${VERSION})
-	@docker build -t ${IMAGE_TAG} -f transformer.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f transformer.Dockerfile .
 
 .PHONY: docker-build-pyfunc
 docker-build-pyfunc:
 	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-pyfunc-base:${VERSION})
-	@docker build -t ${IMAGE_TAG} -f python/pyfunc-server/base.Dockerfile python
+	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f python/pyfunc-server/base.Dockerfile python
 
 .PHONY: docker-build-batch-predictor
 docker-build-batch-predictor:
 	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-pyspark-base:${VERSION})
-	@docker build -t ${IMAGE_TAG} -f python/batch-predictor/docker/base.Dockerfile python
+	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f python/batch-predictor/docker/base.Dockerfile python
 
