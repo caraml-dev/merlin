@@ -28,4 +28,4 @@ curl "${E2E_MERLIN_URL}/v1/projects"
 cd ../../python/sdk
 pip install pipenv
 pipenv install --dev --skip-lock
-pipenv run pytest -n=2 -W=ignore --cov=merlin -m "not (feast or batch or pyfunc or local_server_test or cli or customtransformer)"
+pipenv run pytest -n=4 -W=ignore --cov=merlin -m "not (feast or batch or pyfunc or local_server_test or cli or customtransformer)"
