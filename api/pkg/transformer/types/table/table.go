@@ -1,16 +1,28 @@
 package table
 
 import (
+	"bytes"
+	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	goparquet "github.com/fraugster/parquet-go"
+	"github.com/fraugster/parquet-go/parquet"
+	"github.com/go-gota/gota/dataframe"
+	gota "github.com/go-gota/gota/series"
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"io"
+	"net/url"
+	"os"
 	"reflect"
 	"sort"
 
-	"github.com/go-gota/gota/dataframe"
-	gota "github.com/go-gota/gota/series"
+	"github.com/bboughton/gcp-helpers/gsutil"
+)
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+const (
+	gcsScheme = "gs"
 )
 
 type Table struct {
@@ -38,6 +50,180 @@ func NewRaw(columnValues map[string]interface{}) (*Table, error) {
 	}
 
 	return New(newColumns...), nil
+}
+
+// RecordsFromParquet reads a parquet file which may be local (uploaded together with model) or global (from gcs).
+// The root directory for local will be same as where the model is stored (artifacts folder).
+// Data will be returned as [][]string where row 0 is the header containing all the column names.
+// The types for each column, defined in the parquet file will also be returned as a map
+func RecordsFromParquet(filePath *url.URL) ([][]string, map[string]gota.Type, error) {
+	var r io.ReadSeeker
+
+	if filePath.Scheme == gcsScheme {
+		// Global file (GCS)
+		ctx := context.Background()
+		data, err := gsutil.ReadFile(ctx, filePath.String())
+
+		if err != nil {
+			return nil, nil, err
+		}
+
+		r = bytes.NewReader(data)
+	} else {
+		// Local file
+		file, err := os.Open(filePath.String())
+		if err != nil {
+			return nil, nil, err
+		}
+		r = file
+		defer file.Close()
+	}
+
+	fr, err := goparquet.NewFileReader(r)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Get header & schema
+	schema := fr.GetSchemaDefinition()
+	header := make([]string, 0)
+	colType := make(map[string]gota.Type, 0)
+	for _, schemaCol := range schema.RootColumn.Children {
+		colName := schemaCol.SchemaElement.GetName()
+		header = append(header, colName)
+		switch schemaCol.SchemaElement.GetType() {
+		case parquet.Type_BOOLEAN:
+			colType[colName] = gota.Bool
+		case parquet.Type_INT32, parquet.Type_INT64, parquet.Type_INT96:
+			colType[colName] = gota.Int
+		case parquet.Type_DOUBLE, parquet.Type_FLOAT:
+			colType[colName] = gota.Float
+		case parquet.Type_BYTE_ARRAY, parquet.Type_FIXED_LEN_BYTE_ARRAY:
+			colType[colName] = gota.String
+		}
+
+	}
+
+	records := make([][]string, 0)
+	records = append(records, header) // column name in first row
+
+	// map col name to col number
+	colMap := make(map[string]int)
+	for i, colName := range header {
+		colMap[colName] = i
+	}
+
+	// Build data
+	for i := 0; i < int(fr.NumRows()); i++ {
+		row, err := fr.NextRow()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		newRow := make([]string, len(header))
+		for k, v := range row {
+			if vv, ok := v.([]byte); ok {
+				v = string(vv)
+			}
+
+			newRow[colMap[k]] = fmt.Sprint(v)
+		}
+		records = append(records, newRow)
+	}
+
+	return records, colType, nil
+}
+
+// RecordsFromCsv reads a csv file which may be local (uploaded together with model) or global (from gcs).
+// The root directory for local will be same as where the model is stored (artifacts folder).
+// Data will be returned as [][]string where row 0 is the header containing all the column names.
+func RecordsFromCsv(filePath *url.URL) ([][]string, error) {
+	var r io.Reader
+
+	if filePath.Scheme == gcsScheme {
+		// Global file (GCS)
+		ctx := context.Background()
+		data, err := gsutil.ReadFile(ctx, filePath.String())
+
+		if err != nil {
+			return nil, err
+		}
+
+		r = bytes.NewReader(data)
+	} else {
+		// Local file
+		file, err := os.Open(filePath.String())
+		if err != nil {
+			return nil, err
+		}
+		r = file
+		defer file.Close()
+	}
+
+	csvReader := csv.NewReader(r)
+	records, err := csvReader.ReadAll()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}
+
+// NewFromRecords create a new table from records in the form [][]string
+// The first row of the records array shall contain all the column names.
+// This function will check that there are at least 2 rows in records (header and data).
+// It will also auto-detect the data types if schema of the column is not provided.
+// before creating a new table to be returned
+// records may be supplied with its column types as a map of column name to gota types.
+// Note: Schema is user specified, colType is type defined in files such as parquet. It may be set to nil.
+func NewFromRecords(records [][]string, colType map[string]gota.Type, schema []*spec.Schema) (*Table, error) {
+	var dfSchema map[string]gota.Type
+
+	// check table has at least 1 row of data
+	if len(records) <= 1 {
+		return nil, fmt.Errorf("no data found")
+	}
+	// create a header list for checking
+	header := make(map[string]bool)
+	for _, colName := range records[0] {
+		header[colName] = true
+	}
+
+	// prepare schema for dataframe
+	if colType == nil {
+		dfSchema = make(map[string]gota.Type)
+	} else {
+		dfSchema = colType
+	}
+	for _, colSpec := range schema {
+		// validate colname defined in schema exist
+		if !header[colSpec.GetName()] {
+			return nil, fmt.Errorf("column name of schema %s not found in header of file", colSpec.GetName())
+		}
+
+		// build the schema map for dataframe
+		switch colType := colSpec.GetType(); colType {
+		case spec.Schema_STRING:
+			dfSchema[colSpec.GetName()] = gota.String
+		case spec.Schema_INT:
+			dfSchema[colSpec.GetName()] = gota.Int
+		case spec.Schema_FLOAT:
+			dfSchema[colSpec.GetName()] = gota.Float
+		case spec.Schema_BOOL:
+			dfSchema[colSpec.GetName()] = gota.Bool
+		default:
+			return nil, fmt.Errorf("unsupported column type option for schema %s", colType)
+		}
+	}
+
+	// build dataframe
+	df := dataframe.LoadRecords(records,
+		dataframe.DetectTypes(true),
+		dataframe.WithTypes(dfSchema),
+	)
+
+	return NewTable(&df), nil
 }
 
 // Row return a table containing only the specified row

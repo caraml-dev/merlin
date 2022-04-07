@@ -141,6 +141,104 @@ func (FromTable_JsonFormat) EnumDescriptor() ([]byte, []int) {
 	return file_transformer_spec_common_proto_rawDescGZIP(), []int{0, 0}
 }
 
+type FromFile_FileType int32
+
+const (
+	FromFile_CSV     FromFile_FileType = 0
+	FromFile_PARQUET FromFile_FileType = 1
+)
+
+// Enum value maps for FromFile_FileType.
+var (
+	FromFile_FileType_name = map[int32]string{
+		0: "CSV",
+		1: "PARQUET",
+	}
+	FromFile_FileType_value = map[string]int32{
+		"CSV":     0,
+		"PARQUET": 1,
+	}
+)
+
+func (x FromFile_FileType) Enum() *FromFile_FileType {
+	p := new(FromFile_FileType)
+	*p = x
+	return p
+}
+
+func (x FromFile_FileType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (FromFile_FileType) Descriptor() protoreflect.EnumDescriptor {
+	return file_transformer_spec_common_proto_enumTypes[2].Descriptor()
+}
+
+func (FromFile_FileType) Type() protoreflect.EnumType {
+	return &file_transformer_spec_common_proto_enumTypes[2]
+}
+
+func (x FromFile_FileType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use FromFile_FileType.Descriptor instead.
+func (FromFile_FileType) EnumDescriptor() ([]byte, []int) {
+	return file_transformer_spec_common_proto_rawDescGZIP(), []int{2, 0}
+}
+
+type SchemaColType int32
+
+const (
+	Schema_STRING SchemaColType = 0
+	Schema_INT    SchemaColType = 1
+	Schema_FLOAT  SchemaColType = 2
+	Schema_BOOL   SchemaColType = 3
+)
+
+// Enum value maps for SchemaColType.
+var (
+	SchemaColType_name = map[int32]string{
+		0: "STRING",
+		1: "INT",
+		2: "FLOAT",
+		3: "BOOL",
+	}
+	SchemaColType_value = map[string]int32{
+		"STRING": 0,
+		"INT":    1,
+		"FLOAT":  2,
+		"BOOL":   3,
+	}
+)
+
+func (x SchemaColType) Enum() *SchemaColType {
+	p := new(SchemaColType)
+	*p = x
+	return p
+}
+
+func (x SchemaColType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SchemaColType) Descriptor() protoreflect.EnumDescriptor {
+	return file_transformer_spec_common_proto_enumTypes[3].Descriptor()
+}
+
+func (SchemaColType) Type() protoreflect.EnumType {
+	return &file_transformer_spec_common_proto_enumTypes[3]
+}
+
+func (x SchemaColType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SchemaColType.Descriptor instead.
+func (SchemaColType) EnumDescriptor() ([]byte, []int) {
+	return file_transformer_spec_common_proto_rawDescGZIP(), []int{3, 0}
+}
+
 type FromTable struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -267,6 +365,124 @@ func (x *FromJson) GetValueType() ValueType {
 	return ValueType_STRING
 }
 
+type FromFile struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Uri    string            `protobuf:"bytes,1,opt,name=uri,proto3" json:"uri,omitempty"`
+	Format FromFile_FileType `protobuf:"varint,2,opt,name=format,proto3,enum=merlin.transformer.FromFile_FileType" json:"format,omitempty"`
+	Schema []*Schema         `protobuf:"bytes,3,rep,name=schema,proto3" json:"schema,omitempty"`
+}
+
+func (x *FromFile) Reset() {
+	*x = FromFile{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_transformer_spec_common_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FromFile) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FromFile) ProtoMessage() {}
+
+func (x *FromFile) ProtoReflect() protoreflect.Message {
+	mi := &file_transformer_spec_common_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FromFile.ProtoReflect.Descriptor instead.
+func (*FromFile) Descriptor() ([]byte, []int) {
+	return file_transformer_spec_common_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *FromFile) GetUri() string {
+	if x != nil {
+		return x.Uri
+	}
+	return ""
+}
+
+func (x *FromFile) GetFormat() FromFile_FileType {
+	if x != nil {
+		return x.Format
+	}
+	return FromFile_CSV
+}
+
+func (x *FromFile) GetSchema() []*Schema {
+	if x != nil {
+		return x.Schema
+	}
+	return nil
+}
+
+type Schema struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name string        `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Type SchemaColType `protobuf:"varint,2,opt,name=type,proto3,enum=merlin.transformer.SchemaColType" json:"type,omitempty"`
+}
+
+func (x *Schema) Reset() {
+	*x = Schema{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_transformer_spec_common_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Schema) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Schema) ProtoMessage() {}
+
+func (x *Schema) ProtoReflect() protoreflect.Message {
+	mi := &file_transformer_spec_common_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Schema.ProtoReflect.Descriptor instead.
+func (*Schema) Descriptor() ([]byte, []int) {
+	return file_transformer_spec_common_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Schema) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Schema) GetType() SchemaColType {
+	if x != nil {
+		return x.Type
+	}
+	return Schema_STRING
+}
+
 var File_transformer_spec_common_proto protoreflect.FileDescriptor
 
 var file_transformer_spec_common_proto_rawDesc = []byte{
@@ -294,7 +510,27 @@ var file_transformer_spec_common_proto_rawDesc = []byte{
 	0x12, 0x3b, 0x0a, 0x09, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x54, 0x79, 0x70, 0x65, 0x18, 0x04, 0x20,
 	0x01, 0x28, 0x0e, 0x32, 0x1d, 0x2e, 0x6d, 0x65, 0x72, 0x6c, 0x69, 0x6e, 0x2e, 0x74, 0x72, 0x61,
 	0x6e, 0x73, 0x66, 0x6f, 0x72, 0x6d, 0x65, 0x72, 0x2e, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x54, 0x79,
-	0x70, 0x65, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x54, 0x79, 0x70, 0x65, 0x2a, 0x73, 0x0a,
+	0x70, 0x65, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x54, 0x79, 0x70, 0x65, 0x22, 0xb1, 0x01,
+	0x0a, 0x08, 0x46, 0x72, 0x6f, 0x6d, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x72,
+	0x69, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x69, 0x12, 0x3d, 0x0a, 0x06,
+	0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x25, 0x2e, 0x6d,
+	0x65, 0x72, 0x6c, 0x69, 0x6e, 0x2e, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x6f, 0x72, 0x6d, 0x65,
+	0x72, 0x2e, 0x46, 0x72, 0x6f, 0x6d, 0x46, 0x69, 0x6c, 0x65, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x54,
+	0x79, 0x70, 0x65, 0x52, 0x06, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12, 0x32, 0x0a, 0x06, 0x73,
+	0x63, 0x68, 0x65, 0x6d, 0x61, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x6d, 0x65,
+	0x72, 0x6c, 0x69, 0x6e, 0x2e, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x6f, 0x72, 0x6d, 0x65, 0x72,
+	0x2e, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x52, 0x06, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x22,
+	0x20, 0x0a, 0x08, 0x46, 0x69, 0x6c, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12, 0x07, 0x0a, 0x03, 0x43,
+	0x53, 0x56, 0x10, 0x00, 0x12, 0x0b, 0x0a, 0x07, 0x50, 0x41, 0x52, 0x51, 0x55, 0x45, 0x54, 0x10,
+	0x01, 0x22, 0x89, 0x01, 0x0a, 0x06, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x12, 0x12, 0x0a, 0x04,
+	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65,
+	0x12, 0x36, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x22,
+	0x2e, 0x6d, 0x65, 0x72, 0x6c, 0x69, 0x6e, 0x2e, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x6f, 0x72,
+	0x6d, 0x65, 0x72, 0x2e, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x2e, 0x63, 0x6f, 0x6c, 0x54, 0x79,
+	0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x22, 0x33, 0x0a, 0x07, 0x63, 0x6f, 0x6c, 0x54,
+	0x79, 0x70, 0x65, 0x12, 0x0a, 0x0a, 0x06, 0x53, 0x54, 0x52, 0x49, 0x4e, 0x47, 0x10, 0x00, 0x12,
+	0x07, 0x0a, 0x03, 0x49, 0x4e, 0x54, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x46, 0x4c, 0x4f, 0x41,
+	0x54, 0x10, 0x02, 0x12, 0x08, 0x0a, 0x04, 0x42, 0x4f, 0x4f, 0x4c, 0x10, 0x03, 0x2a, 0x73, 0x0a,
 	0x09, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12, 0x0a, 0x0a, 0x06, 0x53, 0x54,
 	0x52, 0x49, 0x4e, 0x47, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x49, 0x4e, 0x54, 0x10, 0x01, 0x12,
 	0x09, 0x0a, 0x05, 0x46, 0x4c, 0x4f, 0x41, 0x54, 0x10, 0x02, 0x12, 0x08, 0x0a, 0x04, 0x42, 0x4f,
@@ -320,22 +556,29 @@ func file_transformer_spec_common_proto_rawDescGZIP() []byte {
 	return file_transformer_spec_common_proto_rawDescData
 }
 
-var file_transformer_spec_common_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_transformer_spec_common_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_transformer_spec_common_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_transformer_spec_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_transformer_spec_common_proto_goTypes = []interface{}{
 	(ValueType)(0),            // 0: merlin.transformer.ValueType
 	(FromTable_JsonFormat)(0), // 1: merlin.transformer.FromTable.JsonFormat
-	(*FromTable)(nil),         // 2: merlin.transformer.FromTable
-	(*FromJson)(nil),          // 3: merlin.transformer.FromJson
+	(FromFile_FileType)(0),    // 2: merlin.transformer.FromFile.FileType
+	(SchemaColType)(0),        // 3: merlin.transformer.Schema.colType
+	(*FromTable)(nil),         // 4: merlin.transformer.FromTable
+	(*FromJson)(nil),          // 5: merlin.transformer.FromJson
+	(*FromFile)(nil),          // 6: merlin.transformer.FromFile
+	(*Schema)(nil),            // 7: merlin.transformer.Schema
 }
 var file_transformer_spec_common_proto_depIdxs = []int32{
 	1, // 0: merlin.transformer.FromTable.format:type_name -> merlin.transformer.FromTable.JsonFormat
 	0, // 1: merlin.transformer.FromJson.valueType:type_name -> merlin.transformer.ValueType
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 2: merlin.transformer.FromFile.format:type_name -> merlin.transformer.FromFile.FileType
+	7, // 3: merlin.transformer.FromFile.schema:type_name -> merlin.transformer.Schema
+	3, // 4: merlin.transformer.Schema.type:type_name -> merlin.transformer.Schema.colType
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_transformer_spec_common_proto_init() }
@@ -368,14 +611,38 @@ func file_transformer_spec_common_proto_init() {
 				return nil
 			}
 		}
+		file_transformer_spec_common_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FromFile); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_transformer_spec_common_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Schema); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_transformer_spec_common_proto_rawDesc,
-			NumEnums:      2,
-			NumMessages:   2,
+			NumEnums:      4,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

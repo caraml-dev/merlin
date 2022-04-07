@@ -2,6 +2,7 @@ package table
 
 import (
 	"errors"
+	"net/url"
 	"testing"
 
 	"github.com/go-gota/gota/dataframe"
@@ -949,6 +950,120 @@ func TestTable_SliceRow(t *testing.T) {
 	}
 }
 
+func TestTable_RecordsFromCsv(t *testing.T) {
+	tests := []struct {
+		name       string
+		filePath   *url.URL
+		expRecords [][]string
+		wantError  bool
+		expError   error
+	}{
+		{
+			name: "success: blank local file",
+			filePath: &url.URL{
+				Path: "testdata/blank.csv",
+			},
+			wantError:  false,
+			expRecords: nil,
+		},
+		{
+			name: "success: header only local file",
+			filePath: &url.URL{
+				Path: "testdata/header_only.csv",
+			},
+			wantError:  false,
+			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
+		},
+		{
+			name: "success: normal local file",
+			filePath: &url.URL{
+				Path: "testdata/normal.csv",
+			},
+			wantError: false,
+			expRecords: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "TRUE"},
+				{"Banana", "Man", "18", "68", "FALSE"},
+				{"Zara", "Vuitton", "35", "75", "TRUE"},
+				{"Sandra", "Zawaska", "32", "55", "FALSE"},
+				{"Merlion", "Krabby", "23", "57.22", "FALSE"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			records, err := RecordsFromCsv(tt.filePath)
+			if tt.wantError {
+				assert.EqualError(t, err, tt.expError.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expRecords, records)
+		})
+	}
+}
+
+func TestTable_RecordsFromParquet(t *testing.T) {
+	tests := []struct {
+		name       string
+		filePath   *url.URL
+		expRecords [][]string
+		expColType map[string]gotaSeries.Type
+		wantError  bool
+		expError   error
+	}{
+		{
+			name: "success: header only local file",
+			filePath: &url.URL{
+				Path: "testdata/header_only.parquet",
+			},
+			wantError:  false,
+			expRecords: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
+			expColType: map[string]gotaSeries.Type{
+				"First Name": gotaSeries.Int,
+				"Last Name":  gotaSeries.Int,
+				"Age":        gotaSeries.Int,
+				"Weight":     gotaSeries.Int,
+				"Is VIP":     gotaSeries.Int,
+			},
+		},
+		{
+			name: "success: normal local file",
+			filePath: &url.URL{
+				Path: "testdata/normal.parquet",
+			},
+			wantError: false,
+			expRecords: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+			expColType: map[string]gotaSeries.Type{
+				"First Name": gotaSeries.String,
+				"Last Name":  gotaSeries.String,
+				"Age":        gotaSeries.Int,
+				"Weight":     gotaSeries.Float,
+				"Is VIP":     gotaSeries.Bool,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			records, colType, err := RecordsFromParquet(tt.filePath)
+			if tt.wantError {
+				assert.EqualError(t, err, tt.expError.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expRecords, records)
+			assert.Equal(t, tt.expColType, colType)
+		})
+	}
+}
+
 func toPointerInt(val int) *int {
 	return &val
 }
@@ -1008,6 +1123,273 @@ func TestTable_FilterRow(t *testing.T) {
 				return
 			}
 			assert.Equal(t, tt.want, tt.inputTable)
+		})
+	}
+}
+
+func TestTable_NewFromRecords(t *testing.T) {
+	type args struct {
+		schema []*spec.Schema
+	}
+	tests := []struct {
+		name      string
+		records   [][]string
+		colType   map[string]gotaSeries.Type
+		args      args
+		expTable  *Table
+		wantError bool
+		expError  error
+	}{
+		{
+			name:    "error: no data",
+			records: [][]string{{"First Name", "Last Name", "Age", "Weight", "Is VIP"}},
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: spec.Schema_FLOAT,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			wantError: true,
+			expError:  errors.New("no data found"),
+		},
+		{
+			name: "error: Column name of schema not found in header",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+			colType: map[string]gotaSeries.Type{
+				"First Name": gotaSeries.String,
+				"Last Name":  gotaSeries.String,
+				"Age":        gotaSeries.Int,
+				"Weight":     gotaSeries.Float,
+				"Is VIP":     gotaSeries.Bool,
+			},
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: spec.Schema_FLOAT,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			wantError: true,
+			expError:  errors.New("column name of schema age not found in header of file"),
+		},
+		{
+			name: "error: Unsupported schema type",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: -1,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			wantError: true,
+			expError:  errors.New("unsupported column type option for schema -1"),
+		},
+		{
+			name: "success: Table with data of correct type created",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Last Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Weight",
+						Type: spec.Schema_FLOAT,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			expTable: New(
+				series.New([]string{"Apple", "Banana", "Zara", "Sandra", "Merlion"}, series.String, "First Name"),
+				series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
+				series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
+				series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
+				series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
+			),
+			wantError: false,
+		},
+		{
+			name: "success: Table with data with auto-detect type (incomplete schema)",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+			args: args{
+				schema: []*spec.Schema{
+					{
+						Name: "First Name",
+						Type: spec.Schema_STRING,
+					},
+					{
+						Name: "Age",
+						Type: spec.Schema_INT,
+					},
+					{
+						Name: "Is VIP",
+						Type: spec.Schema_BOOL,
+					},
+				},
+			},
+			expTable: New(
+				series.New([]string{"Apple", "Banana", "Zara", "Sandra", "Merlion"}, series.String, "First Name"),
+				series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
+				series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
+				series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
+				series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
+			),
+			wantError: false,
+		},
+		{
+			name: "success: no schema, colType",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+			colType: map[string]gotaSeries.Type{
+				"First Name": gotaSeries.String,
+				"Last Name":  gotaSeries.String,
+				"Age":        gotaSeries.Int,
+				"Weight":     gotaSeries.Float,
+				"Is VIP":     gotaSeries.String,
+			},
+			args: args{
+				schema: nil,
+			},
+			expTable: New(
+				series.New([]string{"Apple", "Banana", "Zara", "Sandra", "Merlion"}, series.String, "First Name"),
+				series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
+				series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
+				series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
+				series.New([]string{"true", "false", "true", "false", "false"}, series.String, "Is VIP"),
+			),
+			wantError: false,
+		},
+		{
+			name: "success: no schema, no colType",
+			records: [][]string{
+				{"First Name", "Last Name", "Age", "Weight", "Is VIP"},
+				{"Apple", "Cider", "25", "48.8", "true"},
+				{"Banana", "Man", "18", "68", "false"},
+				{"Zara", "Vuitton", "35", "75", "true"},
+				{"Sandra", "Zawaska", "32", "55", "false"},
+				{"Merlion", "Krabby", "23", "57.22", "false"},
+			},
+			args: args{
+				schema: nil,
+			},
+			expTable: New(
+				series.New([]string{"Apple", "Banana", "Zara", "Sandra", "Merlion"}, series.String, "First Name"),
+				series.New([]string{"Cider", "Man", "Vuitton", "Zawaska", "Krabby"}, series.String, "Last Name"),
+				series.New([]int{25, 18, 35, 32, 23}, series.Int, "Age"),
+				series.New([]float64{48.8, 68, 75, 55, 57.22}, series.Float, "Weight"),
+				series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
+			),
+			wantError: false,
+					},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fileTable, err := NewFromRecords(tt.records, tt.colType, tt.args.schema)
+			if tt.wantError {
+				assert.EqualError(t, err, tt.expError.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expTable, fileTable)
 		})
 	}
 }

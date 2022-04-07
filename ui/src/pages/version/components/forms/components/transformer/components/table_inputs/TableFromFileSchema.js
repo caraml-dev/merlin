@@ -1,10 +1,9 @@
 import React from "react";
 import { EuiButtonIcon, EuiFieldText, EuiSuperSelect } from "@elastic/eui";
 import { get, InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
-import { JsonPathConfigInput } from "../../JsonPathConfigInput";
 import "../../RowCell.scss";
 
-export const TableColumnsInput = ({
+export const TableFromFileSchema = ({
   columns,
   onChangeHandler,
   errors = {}
@@ -18,103 +17,81 @@ export const TableColumnsInput = ({
 
   const onDeleteVariable = idx => () => {
     columns.splice(idx, 1);
-    onChangeHandler(columns);
+    onChange(`baseTable.fromFile.schema`)(columns);
   };
 
   const typeOptions = [
-    { value: "jsonpath", inputDisplay: "JSONPath" },
-    { value: "expression", inputDisplay: "Expression" }
+    { value: "STRING", inputDisplay: "String" },
+    { value: "INT", inputDisplay: "Integer" },
+    { value: "FLOAT", inputDisplay: "Float" },
+    { value: "BOOL", inputDisplay: "Boolean" }
   ];
 
   const onVariableChange = (idx, field, value) => {
     let newItem = { ...items[idx], [field]: value };
 
-    if ("expression" in newItem) {
-      delete newItem["expression"];
-    }
-    if ("fromJson" in newItem) {
-      delete newItem["fromJson"];
-    }
-
     if (newItem.name === undefined) {
       newItem.name = "";
     }
-    if ("idx" in newItem) {
+    if (newItem.idx !== undefined) {
       delete newItem.idx;
     }
 
-    //flatten value type for non-jsonpath type
-    if (newItem.type !== "jsonpath" && typeof newItem.value === "object") {
-      newItem["value"] = newItem.value.jsonPath;
-    }
-
     switch (newItem.type) {
-      case "jsonpath":
-        if (newItem.value && newItem.value.jsonPath === undefined) {
-          newItem["value"] = { jsonPath: newItem.value };
-        }
-        newItem = { ...newItem, fromJson: newItem.value };
+      case "STRING":
+        newItem = { ...newItem, type: "STRING" };
         break;
-      case "expression":
-        newItem["expression"] = newItem.value || "";
+      case "INT":
+        newItem = { ...newItem, type: "INT" };
+        break;
+      case "FLOAT":
+        newItem = { ...newItem, type: "FLOAT" };
+        break;
+      case "BOOL":
+        newItem = { ...newItem, type: "BOOL" };
         break;
       default:
         break;
     }
-    onChange(`${idx}`)(newItem);
+
+    onChange(`baseTable.fromFile.schema.${idx}`)(newItem);
   };
 
   const cols = [
     {
       name: "Name",
       field: "name",
-      width: "30%",
+      width: "50%",
       render: (name, item) => (
         <EuiFieldText
           placeholder="Name"
           value={name || ""}
-          onChange={e => onChange(`${item.idx}.name`)(e.target.value)}
-          isInvalid={!!get(errors, `${item.idx}.name`)}
+          onChange={e =>
+            onChange(`baseTable.fromFile.schema.${item.idx}.name`)(
+              e.target.value
+            )
+          }
+          isInvalid={
+            !!get(errors, `baseTable.fromFile.schema.${item.idx}.name`)
+          }
         />
       )
     },
     {
       name: "Type",
       field: "type",
-      width: "30%",
+      width: "40%",
       render: (type, item) => (
         <EuiSuperSelect
           options={typeOptions}
           valueOfSelected={type || ""}
           onChange={value => onVariableChange(item.idx, "type", value)}
-          isInvalid={!!get(errors, `${item.idx}.type`)}
+          isInvalid={
+            !!get(errors, `baseTable.fromFile.schema.${item.idx}.type`)
+          }
           hasDividers
         />
       )
-    },
-    {
-      name: "Value",
-      field: "value",
-      width: "30%",
-      render: (value, item) => {
-        if (item.type === "jsonpath") {
-          return (
-            <JsonPathConfigInput
-              jsonPathConfig={value}
-              identifier={`column-${item.idx}`}
-              onChangeHandler={val => onVariableChange(item.idx, "value", val)}
-            />
-          );
-        }
-        return (
-          <EuiFieldText
-            placeholder="Value"
-            value={value || ""}
-            onChange={e => onVariableChange(item.idx, "value", e.target.value)}
-            isInvalid={!!get(errors, `${item.idx}.value`)}
-          />
-        );
-      }
     },
     {
       width: "10%",
