@@ -43,7 +43,7 @@ spec:
     spec:
       containers:
       - name: merlin
-        image: {{ .Values.merlin.image.registry }}/{{ .Values.merlin.image.repository }}:{{ .Values.merlin.image.tag }}
+        image: "{{- if .Values.merlin.image.registry -}}{{ .Values.merlin.image.registry }}/{{- end -}}{{ .Values.merlin.image.repository }}:{{ .Values.merlin.image.tag }}"
         imagePullPolicy: {{ .Values.merlin.image.pullPolicy }}
         ports:
           - containerPort: {{ .Values.merlin.service.internalPort }}

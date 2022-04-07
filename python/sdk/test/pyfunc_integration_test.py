@@ -59,6 +59,7 @@ class EnsembleModel(PyFuncModel):
         return {"predictions": ((result_1 + result_2) / 2).tolist()}
 
 
+@pytest.mark.pyfunc
 @pytest.mark.integration
 @pytest.mark.dependency()
 def test_pyfunc(integration_test_url, project_name, use_google_oauth):
@@ -96,6 +97,7 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth):
     assert resp.status_code == 404
 
 
+@pytest.mark.pyfunc
 @pytest.mark.integration
 def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
@@ -131,6 +133,8 @@ def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use
 
     assert resp.status_code == 404
 
+
+@pytest.mark.pyfunc
 @pytest.mark.integration
 def test_pyfunc_old_merlin_old_mlflow(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
@@ -166,8 +170,6 @@ def test_pyfunc_old_merlin_old_mlflow(integration_test_url, project_name, use_go
 
     assert resp.status_code == 404
 
-
-
 class EnvVarModel(PyFuncModel):
     def initialize(self, artifacts):
         self.env_var = {}
@@ -179,6 +181,7 @@ class EnvVarModel(PyFuncModel):
         return self.env_var
 
 
+@pytest.mark.pyfunc
 @pytest.mark.integration
 def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
@@ -221,6 +224,7 @@ class OldInferModel(PyFuncModel):
         return model_input
 
 
+@pytest.mark.pyfunc
 @pytest.mark.integration
 def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)

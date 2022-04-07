@@ -18,6 +18,8 @@ from setuptools import setup, find_packages
 tests_require = [
     'pytest',
     'pytest-tornasync',
+    'requests',
+    'types-requests',
     'mypy'
 ]
 

@@ -2,12 +2,12 @@ merlin:
   environment: dev
   loggerDestinationURL: "http://message-dumper.mlp.svc.cluster.local"
   image:
-    tag: 0.7.0
+    repository: merlin
   replicaCount: 1
   resources:
     requests:
       cpu: 25m
-      memory: 128Mi
+      memory: 64Mi
     limits:
       memory: 256Mi
   service:
@@ -15,6 +15,7 @@ merlin:
     internalPort: 8080
   mlpApi:
     encryptionKey: password
+    apiHost: http://mlp.mlp.svc.cluster.local:8080/v1
   sentry:
     enabled: false
   newrelic:
@@ -25,7 +26,7 @@ merlin:
   environmentConfigs:
     - name: dev
       is_default: true
-      cluster: dev
+      cluster: merlin-cluster
       region: id
       gcp_project: gcp-project
       deployment_timeout: 10m
@@ -50,10 +51,23 @@ merlin:
         min_replica: 0
         max_replica: 1
         cpu_request: "25m"
-        memory_request: "128Mi"
+        memory_request: "64Mi"
 
   imageBuilder:
-    clusterName: "dev"
+    clusterName: merlin-cluster
+    namespace: "mlp"
+    timeout: "10m"
+    kanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
+    baseImage: ""
+    dockerfilePath: "./Dockerfile"
+    predictionJobDockerfilePath: "docker/app.Dockerfile"
+    contextSubPath: "python/pyfunc-server"
+    predictionJobContextSubPath: "python/batch-predictor"
+    buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.19.0"
+    predictionJobBuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.19.0"
+    predictionJobBaseImage: "ghcr.io/gojek/merlin-pyspark-base:v0.4.1"
+    nodeSelectors: {}
+    tolerations: []
 
   transformer:
     feast:
@@ -76,7 +90,11 @@ merlin:
 
   mlflow:
     # This should be the actual DNS registered
-    trackingURL: "http://www.example.com"
+    trackingURL: "http://merlin-mlflow"
+  ingress:
+    enabled: true
+    class: istio
+    path: /
 
 merlin-postgresql:
   enabled: true
@@ -88,7 +106,7 @@ merlin-postgresql:
   resources:
     requests:
       cpu: 25m
-      memory: 256Mi
+      memory: 64Mi
 
 mlflow:
   name: mlflow
@@ -97,7 +115,15 @@ mlflow:
     AWS_ACCESS_KEY_ID: YOURACCESSKEY
     AWS_SECRET_ACCESS_KEY: YOURSECRETKEY
     AWS_DEFAULT_REGION: ap-southeast-2
-    MLFLOW_S3_ENDPOINT_URL: http://minio.minio:9000
+    MLFLOW_S3_ENDPOINT_URL: http://minio.minio.svc.cluster.local:9000
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+  ingress:
+    enabled: true
+    class: istio
+    path: /
 
 mlflow-postgresql:
   enabled: true
@@ -109,7 +135,7 @@ mlflow-postgresql:
   resources:
     requests:
       cpu: 25m
-      memory: 256Mi
+      memory: 64Mi
 
 swagger:
   enabled: false

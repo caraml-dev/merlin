@@ -29,22 +29,15 @@ COPY swagger.yaml ./swagger.yaml
 RUN go build -o bin/merlin_api ./cmd/api
 
 # ============================================================
-# Build stage 2: Build UI
-# ============================================================
-FROM node:14 as node-builder
-WORKDIR /src/ui
-COPY ui .
-RUN yarn install --network-concurrency 1
-RUN yarn run build
-
-# ============================================================
-# Build stage 3: Copy binary and config file
+# Build stage 2: Copy binary and config file
 # ============================================================
 FROM alpine:3.12
 
 COPY --from=go-builder /src/api/bin/merlin_api /usr/bin/merlin_api
 COPY --from=go-builder /src/api/db-migrations ./db-migrations
 COPY --from=go-builder /src/api/swagger.yaml ./swagger.yaml
-COPY --from=node-builder /src/ui/build ./ui/build
+
+# UI must be built outside docker
+COPY ./ui/build ./ui/build
 
 CMD ["merlin_api"]
