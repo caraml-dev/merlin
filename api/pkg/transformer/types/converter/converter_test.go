@@ -2,6 +2,7 @@ package converter
 
 import (
 	"encoding/base64"
+	"math"
 	"reflect"
 	"strings"
 	"testing"
@@ -1654,6 +1655,14 @@ func TestToFloat32List(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from NaN float32",
+			args: args{
+				val: float32(math.NaN()),
+			},
+			want:    []float32{},
+			wantErr: false,
+		},
+		{
 			name: "from float64",
 			args: args{
 				val: float64(3.14),
@@ -1662,9 +1671,17 @@ func TestToFloat32List(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from NaN float64",
+			args: args{
+				val: math.NaN(),
+			},
+			want:    []float32{},
+			wantErr: false,
+		},
+		{
 			name: "from []float32",
 			args: args{
-				val: []float32{float32(3.14), float32(4.56)},
+				val: []float32{float32(3.14), float32(4.56), float32(math.NaN())},
 			},
 			want:    []float32{3.14, 4.56},
 			wantErr: false,
@@ -1672,7 +1689,7 @@ func TestToFloat32List(t *testing.T) {
 		{
 			name: "from []float64",
 			args: args{
-				val: []float64{float64(3.14), float64(4.56)},
+				val: []float64{float64(3.14), math.NaN(), float64(4.56)},
 			},
 			want:    []float32{3.14, 4.56},
 			wantErr: false,
@@ -1696,7 +1713,7 @@ func TestToFloat32List(t *testing.T) {
 		{
 			name: "from []string",
 			args: args{
-				val: []string{"23.3", "30.09"},
+				val: []string{"23.3", "30.09", "NaN"},
 			},
 			want:    []float32{23.3, 30.09},
 			wantErr: false,
@@ -1736,7 +1753,7 @@ func TestToFloat32List(t *testing.T) {
 		{
 			name: "from []interface",
 			args: args{
-				val: []interface{}{0, 1, 10},
+				val: []interface{}{0, 1, 10, math.NaN(), "NaN"},
 			},
 			want:    []float32{0, 1, 10},
 			wantErr: false,
@@ -1823,11 +1840,27 @@ func TestToFloat64List(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "from float64",
+			name: "from NaN float32",
 			args: args{
-				val: float64(3.14),
+				val: float32(math.NaN()),
+			},
+			want:    []float64{},
+			wantErr: false,
+		},
+		{
+			name: "from float32",
+			args: args{
+				val: float32(3.14),
 			},
 			want:    []float64{3.14},
+			wantErr: false,
+		},
+		{
+			name: "from NaN float64",
+			args: args{
+				val: math.NaN(),
+			},
+			want:    []float64{},
 			wantErr: false,
 		},
 		{
@@ -1841,15 +1874,15 @@ func TestToFloat64List(t *testing.T) {
 		{
 			name: "from []float64",
 			args: args{
-				val: []float64{float64(3.14), float64(4.56)},
+				val: []float64{float64(3.14), float64(4.56), math.NaN()},
 			},
 			want:    []float64{3.14, 4.56},
 			wantErr: false,
 		},
 		{
-			name: "from []float64",
+			name: "from []float32",
 			args: args{
-				val: []float64{float64(3.14), float64(4.56)},
+				val: []float32{float32(3.14), float32(math.NaN())},
 			},
 			want:    []float64{3.14, 4.56},
 			wantErr: false,
@@ -1863,6 +1896,14 @@ func TestToFloat64List(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "from NaN string",
+			args: args{
+				val: "NaN",
+			},
+			want:    []float64{},
+			wantErr: false,
+		},
+		{
 			name: "from string - invalid",
 			args: args{
 				val: "asd",
@@ -1873,7 +1914,7 @@ func TestToFloat64List(t *testing.T) {
 		{
 			name: "from []string",
 			args: args{
-				val: []string{"23.3", "30.09"},
+				val: []string{"23.3", "30.09", "NaN"},
 			},
 			want:    []float64{23.3, 30.09},
 			wantErr: false,
@@ -1913,7 +1954,7 @@ func TestToFloat64List(t *testing.T) {
 		{
 			name: "from []interface",
 			args: args{
-				val: []interface{}{3.14, 1, 10},
+				val: []interface{}{3.14, 1, 10, "NaN", math.NaN()},
 			},
 			want:    []float64{3.14, 1, 10},
 			wantErr: false,
@@ -2219,12 +2260,48 @@ func TestToFeastValue(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "float32 from NaN string",
+			args: args{
+				v:         "NaN",
+				valueType: types.ValueType_FLOAT,
+			},
+			want:    nil,
+			wantErr: false,
+		},
+		{
+			name: "float32 from NaN ",
+			args: args{
+				v:         float32(math.NaN()),
+				valueType: types.ValueType_FLOAT,
+			},
+			want:    nil,
+			wantErr: false,
+		},
+		{
 			name: "double",
 			args: args{
-				v:         float64(3.14),
+				v:         float64(0.201),
 				valueType: types.ValueType_DOUBLE,
 			},
-			want:    &types.Value{Val: &types.Value_DoubleVal{DoubleVal: 3.14}},
+			want:    &types.Value{Val: &types.Value_DoubleVal{DoubleVal: 0.201}},
+			wantErr: false,
+		},
+		{
+			name: "double from NaN string",
+			args: args{
+				v:         "NaN",
+				valueType: types.ValueType_DOUBLE,
+			},
+			want:    nil,
+			wantErr: false,
+		},
+		{
+			name: "double from NaN ",
+			args: args{
+				v:         math.NaN(),
+				valueType: types.ValueType_DOUBLE,
+			},
+			want:    nil,
 			wantErr: false,
 		},
 		{
