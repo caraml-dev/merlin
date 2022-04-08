@@ -220,13 +220,13 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				},
 				body: []byte(`{"instances": {"columns": ["id", "name"], "data":[[1, "entity-1"],[2, "entity-2"]]},
 								"tablefile": {"columns": ["First Name", "Last Name", "Age", "Weight", "Is VIP"],
-												"data": [["Apple Cider", 25, 48.8, true], ["Banana Man", 18, 68, false],
-														["Zara Vuitton", 35, 75, true], ["Sandra Zawaska", 32, 55, false],
-														["Merlion Krabby", 23, 57.22, false]]},
+												"data": [["Apple", "Cider", 25, 48.8, true], ["Banana", "Man", 18, 68, false],
+														["Zara", "Vuitton", 35, 75, true], ["Sandra", "Zawaska", 32, 55, false],
+														["Merlion", "Krabby", 23, 57.22, false]]},
 								"tablefile2": {"columns": ["First Name", "Last Name", "Age", "Weight", "Is VIP"],
-												"data": [["Apple Cider", 25, 48.8, true], ["Banana Man", 18, 68, false],
-														["Zara Vuitton", 35, 75, true], ["Sandra Zawaska", 32, 55, false],
-														["Merlion Krabby", 23, 57.22, false]]}
+												"data": [["Apple", "Cider", 25, 48.8, true], ["Banana", "Man", 18, 68, false],
+														["Zara", "Vuitton", 35, 75, true], ["Sandra", "Zawaska", 32, 55, false],
+														["Merlion", "Krabby", 23, 57.22, false]]}
 								}`),
 			},
 			modelResponse: response{
@@ -963,7 +963,6 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				require.NoError(t, err)
 				err = json.Unmarshal(body, &actualMap)
 				require.NoError(t, err)
-				fmt.Println(actualMap)
 				assertJSONEqWithFloat(t, expectedMap, actualMap, 0.00000001)
 				assertHasHeaders(t, tt.expTransformedRequest.headers, r.Header)
 

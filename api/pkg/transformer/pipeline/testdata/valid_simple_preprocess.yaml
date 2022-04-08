@@ -18,6 +18,9 @@ transformerConfig:
               fromFile:
                 uri: ../types/table/testdata/normal.csv
                 format: CSV
+                schema:
+                  - name: "Is VIP"
+                    type: BOOL
     outputs:
       - jsonOutput:
           jsonTemplate:
