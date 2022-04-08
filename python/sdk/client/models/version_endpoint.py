@@ -46,6 +46,8 @@ class VersionEndpoint(object):
         'env_vars': 'list[EnvVar]',
         'transformer': 'Transformer',
         'logger': 'Logger',
+        'deployment_mode': 'DeploymentMode',
+        'autoscaling_policy': 'AutoscalingPolicy',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -64,11 +66,13 @@ class VersionEndpoint(object):
         'env_vars': 'env_vars',
         'transformer': 'transformer',
         'logger': 'logger',
+        'deployment_mode': 'deployment_mode',
+        'autoscaling_policy': 'autoscaling_policy',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, env_vars=None, transformer=None, logger=None, created_at=None, updated_at=None, _configuration=None):  # noqa: E501
+    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, env_vars=None, transformer=None, logger=None, deployment_mode=None, autoscaling_policy=None, created_at=None, updated_at=None, _configuration=None):  # noqa: E501
         """VersionEndpoint - a model defined in Swagger"""  # noqa: E501
         if _configuration is None:
             _configuration = Configuration()
@@ -87,6 +91,8 @@ class VersionEndpoint(object):
         self._env_vars = None
         self._transformer = None
         self._logger = None
+        self._deployment_mode = None
+        self._autoscaling_policy = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -117,6 +123,10 @@ class VersionEndpoint(object):
             self.transformer = transformer
         if logger is not None:
             self.logger = logger
+        if deployment_mode is not None:
+            self.deployment_mode = deployment_mode
+        if autoscaling_policy is not None:
+            self.autoscaling_policy = autoscaling_policy
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -394,6 +404,48 @@ class VersionEndpoint(object):
         """
 
         self._logger = logger
+
+    @property
+    def deployment_mode(self):
+        """Gets the deployment_mode of this VersionEndpoint.  # noqa: E501
+
+
+        :return: The deployment_mode of this VersionEndpoint.  # noqa: E501
+        :rtype: DeploymentMode
+        """
+        return self._deployment_mode
+
+    @deployment_mode.setter
+    def deployment_mode(self, deployment_mode):
+        """Sets the deployment_mode of this VersionEndpoint.
+
+
+        :param deployment_mode: The deployment_mode of this VersionEndpoint.  # noqa: E501
+        :type: DeploymentMode
+        """
+
+        self._deployment_mode = deployment_mode
+
+    @property
+    def autoscaling_policy(self):
+        """Gets the autoscaling_policy of this VersionEndpoint.  # noqa: E501
+
+
+        :return: The autoscaling_policy of this VersionEndpoint.  # noqa: E501
+        :rtype: AutoscalingPolicy
+        """
+        return self._autoscaling_policy
+
+    @autoscaling_policy.setter
+    def autoscaling_policy(self, autoscaling_policy):
+        """Sets the autoscaling_policy of this VersionEndpoint.
+
+
+        :param autoscaling_policy: The autoscaling_policy of this VersionEndpoint.  # noqa: E501
+        :type: AutoscalingPolicy
+        """
+
+        self._autoscaling_policy = autoscaling_policy
 
     @property
     def created_at(self):

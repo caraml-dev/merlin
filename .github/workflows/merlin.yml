@@ -11,6 +11,7 @@ on:
 
 env:
   ARTIFACT_RETENTION_DAYS: 7
+  DOCKER_BUILDKIT: 1
 
 jobs:
   create-version:

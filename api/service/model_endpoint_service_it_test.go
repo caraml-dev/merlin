@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build integration || integration_local
 // +build integration integration_local
 
 package service
@@ -20,6 +21,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -146,6 +148,7 @@ func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 		VersionModelID:  m.ID,
 		Status:          "serving",
 		EnvironmentName: env1.Name,
+		DeploymentMode:  deployment.ServerlessDeploymentMode,
 	}
 	db.Create(&ep1)
 	ep2 := models.VersionEndpoint{
@@ -154,6 +157,7 @@ func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 		VersionModelID:  m.ID,
 		Status:          "serving",
 		EnvironmentName: env2.Name,
+		DeploymentMode:  deployment.ServerlessDeploymentMode,
 	}
 	db.Create(&ep2)
 

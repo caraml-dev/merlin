@@ -39,7 +39,7 @@ import { PrivateLayout } from "./PrivateLayout";
 import {
   DeployModelVersionView,
   RedeployModelVersionView,
-  Version,
+  VersionDetails,
   TransformerTools
 } from "./pages";
 
@@ -101,7 +101,7 @@ export default () => (
           {/* Version pages (and its sub-routers) */}
           <PrivateRoute
             path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/*`}
-            render={PrivateLayout(Version)}
+            render={PrivateLayout(VersionDetails)}
           />
 
           <Redirect
@@ -112,7 +112,7 @@ export default () => (
 
           <PrivateRoute
             path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/*`}
-            render={PrivateLayout(Version)}
+            render={PrivateLayout(VersionDetails)}
           />
 
           <Redirect

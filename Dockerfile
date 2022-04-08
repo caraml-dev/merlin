@@ -21,6 +21,14 @@ RUN apk update && apk add --no-cache git ca-certificates bash
 RUN mkdir -p src/api
 
 WORKDIR /src/api
+
+# Caching dependencies
+COPY api/go.mod .
+COPY api/go.sum .
+COPY python/batch-predictor/go.mod ../python/batch-predictor/go.mod
+COPY python/batch-predictor/go.sum ../python/batch-predictor/go.sum
+RUN go mod download
+
 COPY api .
 COPY python/batch-predictor ../python/batch-predictor
 COPY db-migrations ./db-migrations
