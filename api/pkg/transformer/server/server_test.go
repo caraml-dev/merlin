@@ -222,8 +222,12 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 								"tablefile": {"columns": ["First Name", "Last Name", "Age", "Weight", "Is VIP"],
 												"data": [["Apple Cider", 25, 48.8, true], ["Banana Man", 18, 68, false],
 														["Zara Vuitton", 35, 75, true], ["Sandra Zawaska", 32, 55, false],
-														["Merlion Krabby", 23, 57.22, false]]
-								}}`),
+														["Merlion Krabby", 23, 57.22, false]]},
+								"tablefile2": {"columns": ["First Name", "Last Name", "Age", "Weight", "Is VIP"],
+												"data": [["Apple Cider", 25, 48.8, true], ["Banana Man", 18, 68, false],
+														["Zara Vuitton", 35, 75, true], ["Sandra Zawaska", 32, 55, false],
+														["Merlion Krabby", 23, 57.22, false]]}
+								}`),
 			},
 			modelResponse: response{
 				headers: map[string]string{

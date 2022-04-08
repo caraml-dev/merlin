@@ -13,6 +13,11 @@ transformerConfig:
               fromFile:
                 uri: ../types/table/testdata/normal.parquet
                 format: PARQUET
+          - name: filetable2
+            baseTable:
+              fromFile:
+                uri: ../types/table/testdata/normal.csv
+                format: CSV
     outputs:
       - jsonOutput:
           jsonTemplate:
@@ -24,4 +29,8 @@ transformerConfig:
               - fieldName: tablefile
                 fromTable:
                   tableName: "filetable"
+                  format: "SPLIT"
+              - fieldName: tablefile2
+                fromTable:
+                  tableName: "filetable2"
                   format: "SPLIT"
