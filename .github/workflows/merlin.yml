@@ -23,11 +23,8 @@ jobs:
       - id: create_version
         name: Create version string
         run: |
-          # Strip git ref prefix from version
-          VERSION=$(git describe --tags --always --first-parent)
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "main" ] && VERSION=latest
+          # This version will be used to identify intermediary artifact published to github
+          VERSION=$(git rev-parse --short=10 HEAD)
 
           echo "::set-output name=version::${VERSION}"
 
