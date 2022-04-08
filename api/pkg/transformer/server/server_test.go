@@ -218,7 +218,12 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body: []byte(`{"instances": {"columns": ["id", "name"], "data":[[1, "entity-1"],[2, "entity-2"]]}}`),
+				body: []byte(`{"instances": {"columns": ["id", "name"], "data":[[1, "entity-1"],[2, "entity-2"]]},
+								"tablefile": {"columns": ["First Name", "Last Name", "Age", "Weight", "Is VIP"],
+												"data": [["Apple Cider", 25, 48.8, true], ["Banana Man", 18, 68, false],
+														["Zara Vuitton", 35, 75, true], ["Sandra Zawaska", 32, 55, false],
+														["Merlion Krabby", 23, 57.22, false]]
+								}}`),
 			},
 			modelResponse: response{
 				headers: map[string]string{
@@ -954,8 +959,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				require.NoError(t, err)
 				err = json.Unmarshal(body, &actualMap)
 				require.NoError(t, err)
-				fmt.Printf("expected value %+v\n", string(tt.expTransformedRequest.body))
-				fmt.Printf("actual value %+v\n", string(body))
+				fmt.Println(actualMap)
 				assertJSONEqWithFloat(t, expectedMap, actualMap, 0.00000001)
 				assertHasHeaders(t, tt.expTransformedRequest.headers, r.Header)
 

@@ -30,7 +30,7 @@ func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Env
 
 	// attach pre-loaded tables to environment
 	for k, v := range compiledPipeline.preloadedTables {
-		env.SetSymbol(k, v)
+		env.SetSymbol(k, &v)
 	}
 
 	return env

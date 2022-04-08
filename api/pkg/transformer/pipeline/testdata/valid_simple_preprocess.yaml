@@ -7,6 +7,12 @@ transformerConfig:
               fromJson:
                 jsonPath: $.entities[*]
                 addRowNumber: false
+      - tables:
+          - name: filetable
+            baseTable:
+              fromFile:
+                uri: ../types/table/testdata/normal.parquet
+                format: PARQUET
     outputs:
       - jsonOutput:
           jsonTemplate:
@@ -14,4 +20,8 @@ transformerConfig:
               - fieldName: instances
                 fromTable:
                   tableName: "entity_table"
+                  format: "SPLIT"
+              - fieldName: tablefile
+                fromTable:
+                  tableName: "filetable"
                   format: "SPLIT"
