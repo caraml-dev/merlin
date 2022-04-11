@@ -419,10 +419,10 @@ export class Pipeline {
             }
             if (step.operation === "sliceRow") {
               if (step.sliceRow) {
-                if (step.sliceRow.start) {
+                if (step.sliceRow.start !== undefined) {
                   step.sliceRow.start = parseInt(step.sliceRow.start);
                 }
-                if (step.sliceRow.end) {
+                if (step.sliceRow.end !== undefined) {
                   step.sliceRow.end = parseInt(step.sliceRow.end);
                 }
               }
