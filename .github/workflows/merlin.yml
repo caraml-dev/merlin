@@ -26,7 +26,7 @@ jobs:
         name: Create version string
         run: |
           # This version will be used to identify intermediary artifact published to github
-          VERSION=$(git describe --tags --always --first-parent)
+          VERSION=${$(git describe --tags --always --first-parent)//v}
         
           echo "::set-output name=version::${VERSION}"
 
@@ -412,3 +412,14 @@ jobs:
           echo "::group::Transformer log"
           kubectl logs -l component=transformer -c kserve-container -n merlin-e2e
           echo "::endgroup::"
+
+  release:
+    uses: gojek/merlin/.github/workflows/release.yml
+    needs:
+    - e2e-test
+    - test-api
+    - test-python-sdk
+    - test-pyfunc-server
+    - test-batch-predictor
+    with:
+      version: ${{ needs.create-version.outputs.version }}

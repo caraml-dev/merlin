@@ -1,9 +1,10 @@
 name: Merlin Release CI
 on:
-  workflow_run:
-    workflows: [Merlin CI Workflow]
-    types:
-      - completed
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
 env:
   DOCKER_REGISTRY: ghcr.io
 
@@ -31,83 +32,63 @@ jobs:
           sed -i -e "s|VERSION = \".*\"|VERSION = \"`echo "${tag//v}"`\"|g" ./merlin/version.py
           python setup.py sdist bdist_wheel
           twine upload dist/*
-  create-version:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.create_version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v2
-      - id: create_version
-        name: Create version string
-        run: |
-          # This version will be used to identify intermediary artifact published to github
-          VERSION=$(git rev-parse --short=10 HEAD)
-          echo "::set-output name=version::${VERSION}"
 
   publish-api:
-    # if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin.${{ needs.create-version.outputs.version }}.tar
+          name: merlin.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
         run: |
-          RELEASE_VERSION=${$(git describe --tags --always --first-parent)//v}
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin:${RELEASE_VERSION}"
+          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin:${{ inputs.version }}"
           docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
-          docker image load --input merlin.${{ needs.create-version.outputs.version }}.tar
-          docker tag merlin:${{ needs.create-version.outputs.version }} ${IMAGE_TAG}
+          docker image load --input merlin.${{ inputs.version }}.tar
+          docker tag merlin:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
 
   publish-transformer:
-    # if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
+          name: merlin-transformer.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
         run: |
-          RELEASE_VERSION=${$(git describe --tags --always --first-parent)//v}
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin-transformer:${RELEASE_VERSION}"
+          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin-transformer:${{ inputs.version }}"
           docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
-          docker image load --input merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-          docker tag merlin-transformer:${{ needs.create-version.outputs.version }} ${IMAGE_TAG}
+          docker image load --input merlin-transformer.${{ inputs.version }}.tar
+          docker tag merlin-transformer:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
 
   publish-batch-predictor:
-    # if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
+          name: merlin-pyspark-base.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
         run: |
-          RELEASE_VERSION=${$(git describe --tags --always --first-parent)//v}
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin-pyspark-base:${RELEASE_VERSION}"
+          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin-pyspark-base:${{ inputs.version }}"
           docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
-          docker image load --input merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
-          docker tag merlin-pyspark-base:${{ needs.create-version.outputs.version }} ${IMAGE_TAG}
+          docker image load --input merlin-pyspark-base.${{ inputs.version }}.tar
+          docker tag merlin-pyspark-base:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
   
   publish-pyfunc:
-    # if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
+          name: merlin-pyfunc-base.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
         run: |
-          RELEASE_VERSION=${$(git describe --tags --always --first-parent)//v}
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin-pyfunc-base:${RELEASE_VERSION}"
+          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin-pyfunc-base:${{ inputs.version }}"
           docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
-          docker image load --input merlin-pyfunc-base.${{ needs.create-version.outputs.version }}.tar
-          docker tag merlin-pyfunc-base:${{ needs.create-version.outputs.version }} ${IMAGE_TAG}
+          docker image load --input merlin-pyfunc-base.${{ inputs.version }}.tar
+          docker tag merlin-pyfunc-base:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
