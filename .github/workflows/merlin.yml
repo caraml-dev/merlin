@@ -414,7 +414,7 @@ jobs:
           echo "::endgroup::"
 
   release:
-    uses: gojek/merlin/.github/workflows/release.yml
+    uses: ./.github/workflows/release.yml
     needs:
     - e2e-test
     - test-api
