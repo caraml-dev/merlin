@@ -26,7 +26,7 @@ export const SliceRow = ({ sliceRow, onChangeHandler, errors = {} }) => {
           fullWidth>
           <EuiFieldText
             placeholder="Start Index"
-            value={!!sliceRow && sliceRow.start ? sliceRow.start : "null"}
+            value={!!sliceRow && sliceRow.start ? sliceRow.start : ""}
             onChange={e => onChange("start")(e.target.value)}
             isInvalid={!!errors.name}
             name={`start`}
@@ -48,7 +48,7 @@ export const SliceRow = ({ sliceRow, onChangeHandler, errors = {} }) => {
           fullWidth>
           <EuiFieldText
             placeholder="End Index"
-            value={!!sliceRow && sliceRow.end ? sliceRow.end : "null"}
+            value={!!sliceRow && sliceRow.end ? sliceRow.end : ""}
             onChange={e => onChange("end")(e.target.value)}
             isInvalid={!!errors.name}
             name={`end`}
