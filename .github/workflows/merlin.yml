@@ -26,9 +26,9 @@ jobs:
         name: Create version string
         run: |
           # This version will be used to identify intermediary artifact published to github
-          VERSION=${$(git describe --tags --always --first-parent)//v}
+          VERSION=$(git describe --tags --always --first-parent)
         
-          echo "::set-output name=version::${VERSION}"
+          echo "::set-output name=version::${VERSION//v}"
 
   test-batch-predictor:
     runs-on: ubuntu-latest
