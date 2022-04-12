@@ -416,6 +416,7 @@ jobs:
   release:
     uses: ./.github/workflows/release.yml
     needs:
+    - create-version
     - e2e-test
     - test-api
     - test-python-sdk
