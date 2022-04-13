@@ -4,10 +4,13 @@ on:
     branches: 
     - main 
     - v1beta1  # TODO: remove v1beta1
+    tags:
+    - v*
   pull_request:
     branches: 
     - main 
     - v1beta1  # TODO: remove v1beta1
+
 
 env:
   ARTIFACT_RETENTION_DAYS: 7
@@ -19,18 +22,22 @@ jobs:
     outputs:
       version: ${{ steps.create_version.outputs.version }}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - id: create_version
         name: Create version string
         run: |
-          # https://github.com/actions/checkout/issues/290
-          git fetch --force --tags
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [ "$VERSION" == "main" ] && VERSION=$(git describe --tags --always --first-parent)
 
-          # This version will be used to identify intermediary artifact published to github
-          VERSION=$(git describe --tags --always --first-parent)
+          # Strip "v" prefix if it's a tag
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # If it's pull request the version string is prefixed by 0.0.0-
+          [ ${{ github.event_name}} == "pull_request" ] && VERSION="0.0.0-${{ github.event.pull_request.head.sha }}"
 
           echo ${VERSION}
-          echo "::set-output name=version::${VERSION//v}"
+          echo "::set-output name=version::${VERSION}"
 
   test-batch-predictor:
     runs-on: ubuntu-latest
