@@ -424,3 +424,7 @@ jobs:
     - test-batch-predictor
     with:
       version: ${{ needs.create-version.outputs.version }}
+    secrets:
+      pypi_username: ${{ secrets.PYPI_USERNAME }}
+      pypi_password: ${{ secrets.PYPI_PASSWORD }}
+      ghcr_token: ${{ secrets.GHCR_TOKEN }}

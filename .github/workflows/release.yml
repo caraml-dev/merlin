@@ -5,6 +5,14 @@ on:
       version:
         required: true
         type: string
+    secrets:
+      ghcr_token:
+        required: true
+      pypi_username:
+        required: true
+      pypi_password:
+        required: true
+
 env:
   DOCKER_REGISTRY: ghcr.io
 
@@ -24,8 +32,8 @@ jobs:
           pip install setuptools wheel twine
       - name: Build and publish
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          TWINE_USERNAME: ${{ secrets.pypi_username }}
+          TWINE_PASSWORD: ${{ secrets.pypi_password }}
         working-directory: ./python/sdk
         run: |
           tag=$(git describe --tags --always --first-parent)
@@ -43,7 +51,7 @@ jobs:
       - name: Retag and Push Docker Image
         run: |
           IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin:${{ inputs.version }}"
-          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
+          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
           docker image load --input merlin.${{ inputs.version }}.tar
           docker tag merlin:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
@@ -58,7 +66,7 @@ jobs:
       - name: Retag and Push Docker Image
         run: |
           IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin-transformer:${{ inputs.version }}"
-          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
+          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
           docker image load --input merlin-transformer.${{ inputs.version }}.tar
           docker tag merlin-transformer:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
@@ -73,7 +81,7 @@ jobs:
       - name: Retag and Push Docker Image
         run: |
           IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin-pyspark-base:${{ inputs.version }}"
-          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
+          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
           docker image load --input merlin-pyspark-base.${{ inputs.version }}.tar
           docker tag merlin-pyspark-base:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
@@ -88,7 +96,7 @@ jobs:
       - name: Retag and Push Docker Image
         run: |
           IMAGE_TAG="${{ env.DOCKER_REGISTRY }}:gojek/merlin-pyfunc-base:${{ inputs.version }}"
-          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
+          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
           docker image load --input merlin-pyfunc-base.${{ inputs.version }}.tar
           docker tag merlin-pyfunc-base:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
