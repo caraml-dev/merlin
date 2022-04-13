@@ -28,7 +28,6 @@ from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer, StandardTransformer
 from merlin.logger import Logger, LoggerConfig, LoggerMode
 from test.utils import undeploy_all_version
-from test.feast_model import EchoModel
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -217,7 +216,6 @@ def test_tensorflow(integration_test_url, project_name, use_google_oauth, reques
     merlin.undeploy(v)
 
 
-# TODO: fix pytorch
 @pytest.mark.pytorch
 @pytest.mark.integration
 @pytest.mark.dependency()
@@ -485,16 +483,11 @@ def test_custom_transformer(
 def test_feast_enricher(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("feast-enricher", ModelType.PYFUNC)
+    merlin.set_model("feast-enricher", ModelType.CUSTOM)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
-        v.log_pyfunc_model(
-            model_instance=EchoModel(),
-            conda_env="test/pyfunc/env.yaml",
-            code_dir=["test"],
-            artifacts={},
-        )
+        v.log_custom_model(image="ealen/echo-server:0.5.1", args="--port 8080")
 
     transformer_config_path = os.path.join("test/transformer", "feast_enricher.yaml")
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
@@ -505,7 +498,7 @@ def test_feast_enricher(integration_test_url, project_name, use_google_oauth, re
 
     assert resp.status_code == 200
     assert resp.json() is not None
-    feast_features = resp.json()["feast_features"]
+    feast_features = resp.json()["request"]["body"]["feast_features"]
     assert feast_features is not None
     assert pd.DataFrame(feast_features) is not None
 
@@ -568,16 +561,11 @@ def test_standard_transformer_with_feast(
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("std-transformer-feast", ModelType.PYFUNC)
+    merlin.set_model("std-transformer-feast", ModelType.CUSTOM)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
-        v.log_pyfunc_model(
-            model_instance=EchoModel(),
-            conda_env="test/pyfunc/env.yaml",
-            code_dir=["test"],
-            artifacts={},
-        )
+        v.log_custom_model(image="ealen/echo-server:0.5.1", args="--port 8080")
 
     transformer_config_path = os.path.join(
         "test/transformer", "standard_transformer_with_feast.yaml"
@@ -609,7 +597,7 @@ def test_standard_transformer_with_feast(
         }
     }
 
-    assert resp.json()["instances"] == exp_resp["instances"]
+    assert resp.json()["request"]["body"]["instances"] == exp_resp["instances"]
     merlin.undeploy(v)
 
 
@@ -625,16 +613,11 @@ def test_standard_transformer_with_multiple_feast(
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("std-transformer-feasts", ModelType.PYFUNC)
+    merlin.set_model("std-transformer-feasts", ModelType.CUSTOM)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
-        v.log_pyfunc_model(
-            model_instance=EchoModel(),
-            conda_env="test/pyfunc/env.yaml",
-            code_dir=["test"],
-            artifacts={},
-        )
+        v.log_custom_model(image="ealen/echo-server:0.5.1", args="--port 8080")
 
     config_template_file_path = os.path.join(
         "test/transformer", "standard_transformer_multiple_feast.yaml.tmpl"
@@ -702,7 +685,7 @@ def test_standard_transformer_with_multiple_feast(
         }
     }
 
-    assert resp.json()["instances"] == exp_resp["instances"]
+    assert resp.json()["request"]["body"]["instances"] == exp_resp["instances"]
     merlin.undeploy(v)
 
 
@@ -717,16 +700,11 @@ def test_standard_transformer_with_multiple_feast_with_source(
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("std-trf-feasts-source", ModelType.PYFUNC)
+    merlin.set_model("std-trf-feasts-source", ModelType.CUSTOM)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
-        v.log_pyfunc_model(
-            model_instance=EchoModel(),
-            conda_env="test/pyfunc/env.yaml",
-            code_dir=["test"],
-            artifacts={},
-        )
+        v.log_custom_model(image="ealen/echo-server:0.5.1", args="--port 8080")
 
     config_template_file_path = os.path.join(
         "test/transformer", "standard_transformer_feast_with_source.yaml.tmpl"
