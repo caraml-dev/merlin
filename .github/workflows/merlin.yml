@@ -32,8 +32,8 @@ jobs:
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           [ "$VERSION" == "main" ] && VERSION=$(git describe --tags --always --first-parent)
 
-          # Strip "v" prefix if it's a tag
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          # Strip "v" prefix
+          [[ "${VERSION}" == "v"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
 
           # If it's pull request the version string is prefixed by 0.0.0-
           [ ${{ github.event_name}} == "pull_request" ] && VERSION="0.0.0-${{ github.event.pull_request.head.sha }}"
