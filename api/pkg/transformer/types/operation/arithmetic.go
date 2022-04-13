@@ -46,14 +46,8 @@ func calculateInInt64(left, right interface{}, operation ArithmeticOperator) (in
 	case Multiply:
 		return lValInt64 * rValInt64, nil
 	case Divide:
-		if rValInt64 == 0 {
-			return int64(math.NaN()), nil
-		}
 		return lValInt64 / rValInt64, nil
 	case Modulo:
-		if rValInt64 == 0 {
-			return int64(math.NaN()), nil
-		}
 		return lValInt64 % rValInt64, nil
 	default:
 		return 0, fmt.Errorf("%s operation is not supported", operation)
