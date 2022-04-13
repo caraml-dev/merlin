@@ -19,7 +19,6 @@ from time import sleep
 import joblib
 import numpy as np
 import pytest
-import requests
 import xgboost as xgb
 from sklearn import svm
 from sklearn.datasets import load_iris
@@ -62,7 +61,7 @@ class EnsembleModel(PyFuncModel):
 @pytest.mark.pyfunc
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_pyfunc(integration_test_url, project_name, use_google_oauth):
+def test_pyfunc(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-sample", ModelType.PYFUNC)
@@ -82,7 +81,6 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth):
                                       "sklearn_model": sklearn_path})
 
     endpoint = merlin.deploy(v)
-    sleep(5)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -91,15 +89,11 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth):
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use_google_oauth):
+def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pf-old-merlin-new-mlflow", ModelType.PYFUNC)
@@ -119,7 +113,6 @@ def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use
                                       "sklearn_model": sklearn_path})
 
     endpoint = merlin.deploy(v)
-    sleep(5)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -128,15 +121,11 @@ def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_old_merlin_old_mlflow(integration_test_url, project_name, use_google_oauth):
+def test_pyfunc_old_merlin_old_mlflow(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pf-old-merlin-mlflow", ModelType.PYFUNC)
@@ -156,7 +145,6 @@ def test_pyfunc_old_merlin_old_mlflow(integration_test_url, project_name, use_go
                                       "sklearn_model": sklearn_path})
 
     endpoint = merlin.deploy(v)
-    sleep(5)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -165,8 +153,6 @@ def test_pyfunc_old_merlin_old_mlflow(integration_test_url, project_name, use_go
     assert len(resp.json()['predictions']) == len(request_json['instances'])
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 404
 
@@ -183,7 +169,7 @@ class EnvVarModel(PyFuncModel):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth):
+def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-env-vars-sample", ModelType.PYFUNC)
@@ -207,10 +193,6 @@ def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth):
     assert env_vars.items() <= endpoint.env_vars.items()
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 # This implementation of PyFuncModel uses the old infer method (no keyword arguments).
 # The keywords arguments for infer() method introduced in Merlin 0.5.2.
@@ -226,7 +208,7 @@ class OldInferModel(PyFuncModel):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth):
+def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-old-infer-sample", ModelType.PYFUNC)
@@ -245,10 +227,6 @@ def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth):
     assert resp.json()['instances'] == request_json['instances']
 
     merlin.undeploy(v)
-    sleep(5)
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 404
 
 
 def train_xgboost_model(X, y):

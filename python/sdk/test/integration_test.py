@@ -15,7 +15,7 @@ import json
 import os
 from time import sleep
 
-import requests as requests_lib
+
 import pytest
 import pandas as pd
 from recursive_diff import recursive_eq
@@ -29,8 +29,6 @@ from merlin.transformer import Transformer, StandardTransformer
 from merlin.logger import Logger, LoggerConfig, LoggerMode
 from test.utils import undeploy_all_version
 
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 
 
 request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
@@ -51,20 +49,6 @@ tensorflow_request_json = {
         },
     ],
 }
-
-@pytest.fixture
-def requests():
-    retry_strategy = Retry(
-        total=5,
-        status_forcelist=[429, 500, 502, 503, 504, 404],
-        method_whitelist=["POST"],
-        backoff_factor=0.5,
-    )
-    adapter = HTTPAdapter(max_retries=retry_strategy)
-    req = requests_lib.Session()
-    req.mount("http://", adapter)
-
-    return req
 
 @pytest.mark.integration
 @pytest.mark.dependency()
