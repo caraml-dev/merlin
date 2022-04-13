@@ -25,9 +25,13 @@ jobs:
       - id: create_version
         name: Create version string
         run: |
+          # https://github.com/actions/checkout/issues/290
+          git fetch --force --tags
+
           # This version will be used to identify intermediary artifact published to github
           VERSION=$(git describe --tags --always --first-parent)
-        
+
+          echo ${VERSION}
           echo "::set-output name=version::${VERSION//v}"
 
   test-batch-predictor:
