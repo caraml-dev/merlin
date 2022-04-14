@@ -763,7 +763,7 @@ def test_standard_transformer_with_multiple_feast_with_source(
         }
     }
 
-    assert resp.json()["instances"] == exp_resp["instances"]
+    assert resp.json()["request"]["body"]["instances"] == exp_resp["instances"]
     merlin.undeploy(v)
 
 
