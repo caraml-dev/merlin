@@ -3,13 +3,11 @@ on:
   push:
     branches: 
     - main 
-    - v1beta1  # TODO: remove v1beta1
     tags:
     - v*
   pull_request:
     branches: 
     - main 
-    - v1beta1  # TODO: remove v1beta1
 
 
 env:
