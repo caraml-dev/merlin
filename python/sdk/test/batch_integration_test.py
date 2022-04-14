@@ -107,7 +107,7 @@ def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_accou
 
     job = v.create_prediction_job(job_config=job_config, sync=False)
     while job.status == JobStatus.PENDING:
-        sleep(20)
+        sleep(1)
         job = job.refresh()
     job = job.stop()
 
