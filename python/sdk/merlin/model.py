@@ -16,6 +16,7 @@ import os
 import pathlib
 import re
 import shutil
+import tempfile
 import warnings
 
 from abc import abstractmethod
@@ -937,9 +938,7 @@ class ModelVersion:
                 Hence will raise error when creating inferenceservice
             """
             is_using_temp_dir = True
-            temp_file_dir = "/tmp/custom"
-            os.makedirs(temp_file_dir, exist_ok=True)
-            model_dir = temp_file_dir
+            model_dir = tempfile.mkdtemp(suffix="merlin-custom-model")
 
         with open(os.path.join(model_dir, model_properties_file), 'w') as writer:
             writer.write(f"image = {image}\n")
