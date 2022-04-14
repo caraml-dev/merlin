@@ -4,10 +4,13 @@ on:
     branches: 
     - main 
     - v1beta1  # TODO: remove v1beta1
+    tags:
+    - v*
   pull_request:
     branches: 
     - main 
     - v1beta1  # TODO: remove v1beta1
+
 
 env:
   ARTIFACT_RETENTION_DAYS: 7
@@ -20,12 +23,22 @@ jobs:
       version: ${{ steps.create_version.outputs.version }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - id: create_version
         name: Create version string
         run: |
-          # This version will be used to identify intermediary artifact published to github
-          VERSION=$(git rev-parse --short=10 HEAD)
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [ "$VERSION" == "main" ] && VERSION=$(git describe --tags --always --first-parent)
 
+          # Strip "v" prefix
+          [[ "${VERSION}" == "v"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # If it's pull request the version string is prefixed by 0.0.0-
+          [ ${{ github.event_name}} == "pull_request" ] && VERSION="0.0.0-${{ github.event.pull_request.head.sha }}"
+
+          echo ${VERSION}
           echo "::set-output name=version::${VERSION}"
 
   test-batch-predictor:
@@ -410,3 +423,19 @@ jobs:
           echo "::group::Transformer log"
           kubectl logs -l component=transformer -c kserve-container -n merlin-e2e
           echo "::endgroup::"
+
+  release:
+    uses: ./.github/workflows/release.yml
+    needs:
+    - create-version
+    - e2e-test
+    - test-api
+    - test-python-sdk
+    - test-pyfunc-server
+    - test-batch-predictor
+    with:
+      version: ${{ needs.create-version.outputs.version }}
+    secrets:
+      pypi_username: ${{ secrets.PYPI_USERNAME }}
+      pypi_password: ${{ secrets.PYPI_PASSWORD }}
+      ghcr_token: ${{ secrets.GHCR_TOKEN }}
