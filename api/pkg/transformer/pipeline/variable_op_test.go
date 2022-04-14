@@ -39,7 +39,8 @@ func mustCompileExpressionWithEnv(expression string, env *Environment) *vm.Progr
 		expr.Operator("-", "SubstractOp"),
 		expr.Operator("*", "MultiplyOp"),
 		expr.Operator("/", "DivideOp"),
-		expr.Operator("%", "ModuloOp"))
+		expr.Operator("%", "ModuloOp"),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -67,7 +68,8 @@ const (
           "int": 1234,
 		  "long_int": 12345678910,
 		  "float": 12345.567,
-		  "string" : "hello"
+		  "string" : "hello",
+		  "details":"{\"points\": [{\"distanceInMeter\": 0.0}, {\"distanceInMeter\": 8976.0}, {\"distanceInMeter\": 729.0}, {\"distanceInMeter\": 8573.0}]}"
 		}
 		`
 
