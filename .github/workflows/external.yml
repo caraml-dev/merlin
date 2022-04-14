@@ -3,11 +3,8 @@ on:
   push:
     branches: 
     - main 
-    - v1beta1  # TODO: remove v1beta1
   pull_request:
-    branches: 
-    - main 
-    - v1beta1  # TODO: remove v1beta1
+  
 jobs:
   publish-mlflow-docker:
     runs-on: ubuntu-latest
