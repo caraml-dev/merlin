@@ -82,10 +82,11 @@ def test_model_version_with_labels(
 
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_sklearn(integration_test_url, project_name, use_google_oauth, requests):
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
+def test_sklearn(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("sklearn-sample", ModelType.SKLEARN)
+    merlin.set_model(f"sklearn-sample-{deployment_mode_suffix(deployment_mode)}", ModelType.SKLEARN)
 
     model_dir = "test/sklearn-model"
 
@@ -94,7 +95,7 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth, requests)
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
 
-    endpoint = merlin.deploy(v)
+    endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
@@ -106,10 +107,11 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth, requests)
 
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_xgboost(integration_test_url, project_name, use_google_oauth, requests):
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
+def test_xgboost(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("xgboost-sample", ModelType.XGBOOST)
+    merlin.set_model(f"xgboost-sample-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST)
 
     model_dir = "test/xgboost-model"
 
@@ -120,7 +122,7 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth, requests)
         merlin.log_model(model_dir=model_dir)
 
     resource_request = ResourceRequest(1, 1, "100m", "200Mi")
-    endpoint = merlin.deploy(v, resource_request=resource_request)
+    endpoint = merlin.deploy(v, resource_request=resource_request, deployment_mode=deployment_mode)
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
@@ -178,10 +180,11 @@ def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth, r
 
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_tensorflow(integration_test_url, project_name, use_google_oauth, requests):
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
+def test_tensorflow(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("tensorflow-sample", ModelType.TENSORFLOW)
+    merlin.set_model(f"tensorflow-sample-{deployment_mode_suffix(deployment_mode)}", ModelType.TENSORFLOW)
 
     model_dir = "test/tensorflow-model"
 
@@ -190,7 +193,7 @@ def test_tensorflow(integration_test_url, project_name, use_google_oauth, reques
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
 
-    endpoint = merlin.deploy(v)
+    endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
     resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
 
     assert resp.status_code == 200
@@ -341,10 +344,11 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth, request
 
 
 @pytest.mark.integration
-def test_resource_request(integration_test_url, project_name, use_google_oauth, requests):
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
+def test_resource_request(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("resource-request", ModelType.XGBOOST)
+    merlin.set_model(f"resource-request-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST)
 
     model_dir = "test/xgboost-model"
 
@@ -361,7 +365,7 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth, 
 
         resource_request = ResourceRequest(1, 1, "100m", "200Mi")
         endpoint = merlin.deploy(
-            v, environment_name=default_env.name, resource_request=resource_request
+            v, environment_name=default_env.name, resource_request=resource_request, deployment_mode=deployment_mode
         )
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
@@ -373,11 +377,14 @@ def test_resource_request(integration_test_url, project_name, use_google_oauth, 
     merlin.undeploy(v)
 
 
+# https://github.com/kserve/kserve/issues/2142
+# Logging is not supported yet in raw_deployment
 @pytest.mark.integration
-def test_logger(integration_test_url, project_name, use_google_oauth, requests):
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.SERVERLESS]) 
+def test_logger(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("logger", ModelType.TENSORFLOW)
+    merlin.set_model(f"logger-{deployment_mode_suffix(deployment_mode)}", ModelType.TENSORFLOW)
     model_dir = "test/tensorflow-model"
 
     undeploy_all_version()
@@ -385,7 +392,7 @@ def test_logger(integration_test_url, project_name, use_google_oauth, requests):
     logger = Logger(model=LoggerConfig(enabled=True, mode=LoggerMode.REQUEST))
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(logger=logger)
+        endpoint = merlin.deploy(logger=logger, deployment_mode=deployment_mode)
 
     request_json = {
         "signature_name": "predict",
@@ -412,14 +419,18 @@ def test_logger(integration_test_url, project_name, use_google_oauth, requests):
 
     merlin.undeploy(v)
 
+
+# https://github.com/kserve/kserve/issues/2142
+# Logging is not supported yet in raw_deployment
 @pytest.mark.customtransformer
 @pytest.mark.integration
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.SERVERLESS])
 def test_custom_transformer(
-        integration_test_url, project_name, use_google_oauth, requests
+        integration_test_url, project_name, deployment_mode, use_google_oauth, requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("custom-transformer", ModelType.CUSTOM)
+    merlin.set_model(f"custom-transformer-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
     undeploy_all_version()
 
@@ -436,7 +447,7 @@ def test_custom_transformer(
 
     with merlin.new_model_version() as v:
         v.log_custom_model(image="ealen/echo-server:0.5.1", args="--port 8080")
-        endpoint = merlin.deploy(transformer=transformer, logger=logger)
+        endpoint = merlin.deploy(transformer=transformer, logger=logger, deployment_mode=deployment_mode)
 
     assert endpoint.logger is not None
 
@@ -464,10 +475,11 @@ def test_custom_transformer(
 
 @pytest.mark.feast
 @pytest.mark.integration
-def test_feast_enricher(integration_test_url, project_name, use_google_oauth, requests):
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
+def test_feast_enricher(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("feast-enricher", ModelType.CUSTOM)
+    merlin.set_model(f"feast-enricher-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
@@ -477,7 +489,7 @@ def test_feast_enricher(integration_test_url, project_name, use_google_oauth, re
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
 
     request_json = {"driver_id": "1000"}
-    endpoint = merlin.deploy(v, transformer=transformer)
+    endpoint = merlin.deploy(v, transformer=transformer, deployment_mode=deployment_mode)
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
@@ -490,12 +502,13 @@ def test_feast_enricher(integration_test_url, project_name, use_google_oauth, re
 
 
 @pytest.mark.integration
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_standard_transformer_without_feast(
-        integration_test_url, project_name, use_google_oauth, requests
+        integration_test_url, project_name, deployment_mode, use_google_oauth, requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("std-transformer", ModelType.CUSTOM)
+    merlin.set_model(f"std-transformer-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
@@ -508,7 +521,7 @@ def test_standard_transformer_without_feast(
         "MODEL_TIMEOUT" : "5s"
     })
 
-    endpoint = merlin.deploy(v, transformer=transformer)
+    endpoint = merlin.deploy(v, transformer=transformer, deployment_mode=deployment_mode)
     request_json = {
         "drivers": [
             # 1 Feb 2022, 00:00:00
@@ -540,12 +553,13 @@ def test_standard_transformer_without_feast(
 
 @pytest.mark.feast
 @pytest.mark.integration
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_standard_transformer_with_feast(
-        integration_test_url, project_name, use_google_oauth, requests
+        integration_test_url, project_name, deployment_mode, use_google_oauth, requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("std-transformer-feast", ModelType.CUSTOM)
+    merlin.set_model(f"std-transformer-feast-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
@@ -556,7 +570,7 @@ def test_standard_transformer_with_feast(
     )
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
 
-    endpoint = merlin.deploy(v, transformer=transformer)
+    endpoint = merlin.deploy(v, transformer=transformer, deployment_mode=deployment_mode)
     request_json = {
         "drivers": [
             {"id": "1234", "name": "driver-1"},
@@ -587,9 +601,11 @@ def test_standard_transformer_with_feast(
 
 @pytest.mark.feast
 @pytest.mark.integration
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_standard_transformer_with_multiple_feast(
         integration_test_url,
         project_name,
+        deployment_mode,
         use_google_oauth,
         feast_serving_redis_url,
         feast_serving_bigtable_url,
@@ -597,7 +613,7 @@ def test_standard_transformer_with_multiple_feast(
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("std-transformer-feasts", ModelType.CUSTOM)
+    merlin.set_model(f"std-transformer-feasts-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
@@ -626,7 +642,7 @@ def test_standard_transformer_with_multiple_feast(
 
     transformer = StandardTransformer(config_file=config_file_path, enabled=True)
 
-    endpoint = merlin.deploy(v, transformer=transformer)
+    endpoint = merlin.deploy(v, transformer=transformer, deployment_mode=deployment_mode)
     request_json = {
         "drivers": [
             {"id": "driver_1", "name": "driver-1"},
@@ -675,16 +691,18 @@ def test_standard_transformer_with_multiple_feast(
 
 @pytest.mark.feast
 @pytest.mark.integration
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_standard_transformer_with_multiple_feast_with_source(
         integration_test_url,
         project_name,
+        deployment_mode,
         use_google_oauth,
         feast_serving_bigtable_url,
         requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("std-trf-feasts-source", ModelType.CUSTOM)
+    merlin.set_model(f"std-trf-feasts-source-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
@@ -720,7 +738,7 @@ def test_standard_transformer_with_multiple_feast_with_source(
     }
     transformer = StandardTransformer(config_file=config_file_path, enabled=True, env_vars=env_vars)
 
-    endpoint = merlin.deploy(v, transformer=transformer)
+    endpoint = merlin.deploy(v, transformer=transformer, deployment_mode=deployment_mode)
     request_json = {
         "drivers": [
             {"id": "driver_1", "name": "driver-1"},
@@ -791,12 +809,13 @@ def test_custom_model_without_artifact(
 
 
 @pytest.mark.integration
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_custom_model_with_artifact(
-        integration_test_url, project_name, use_google_oauth, requests
+        integration_test_url, project_name, deployment_mode, use_google_oauth, requests
 ):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("custom-w-artifact", ModelType.CUSTOM)
+    merlin.set_model(f"custom-w-artifact-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
     undeploy_all_version()
 
     resource_request = ResourceRequest(1, 1, "25m", "128Mi")
@@ -809,7 +828,7 @@ def test_custom_model_with_artifact(
         )
 
     endpoint = merlin.deploy(
-        v, resource_request=resource_request, env_vars={"MODEL_FILE_NAME": BST_FILE}
+        v, resource_request=resource_request, env_vars={"MODEL_FILE_NAME": BST_FILE}, deployment_mode=deployment_mode
     )
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
@@ -851,7 +870,7 @@ def test_deployment_mode(integration_test_url, project_name, use_google_oauth, r
 
     # TODO: Ideally we should redeploy instead of undeploy
     merlin.undeploy(v)
-    sleep(5)
+    sleep(15)
     # Deploy using serverless
     initial_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.SERVERLESS,
                                  autoscaling_policy=merlin.AutoscalingPolicy(
@@ -946,3 +965,7 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
     
     merlin.stop_serving_traffic(model_endpoint.environment_name)
     undeploy_all_version()
+
+
+def deployment_mode_suffix(deployment_mode: DeploymentMode):
+    return deployment_mode.value.lower()[0:1]
