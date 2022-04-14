@@ -25,6 +25,8 @@ curl "${E2E_MERLIN_URL}/v1/projects"
 curl -X POST "${E2E_MLP_URL}/v1/projects" -d "{\"name\": \"${E2E_PROJECT_NAME}\", \"team\": \"gojek\", \"stream\": \"gojek\", \"mlflow_tracking_url\": \"${E2E_MLFLOW_URL}\"}"
 curl "${E2E_MERLIN_URL}/v1/projects"
 
+kubectl create namespace ${E2E_PROJECT_NAME} --dry-run=client -o yaml | kubectl apply -f -
+
 cd ../../python/sdk
 pip install pipenv
 pipenv install --dev --skip-lock
