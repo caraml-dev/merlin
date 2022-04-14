@@ -26,6 +26,27 @@ func mustCompileExpression(expression string) *vm.Program {
 	return cpl
 }
 
+func mustCompileExpressionWithEnv(expression string, env *Environment) *vm.Program {
+	cpl, err := expr.Compile(expression, expr.Env(env.symbolRegistry), expr.Operator("&&", "AndOp"),
+		expr.Operator("||", "OrOp"),
+		expr.Operator(">", "GreaterOp"),
+		expr.Operator(">=", "GreaterEqOp"),
+		expr.Operator("<", "LessOp"),
+		expr.Operator("<=", "LessEqOp"),
+		expr.Operator("==", "EqualOp"),
+		expr.Operator("!=", "NeqOp"),
+		expr.Operator("+", "AddOp"),
+		expr.Operator("-", "SubstractOp"),
+		expr.Operator("*", "MultiplyOp"),
+		expr.Operator("/", "DivideOp"),
+		expr.Operator("%", "ModuloOp"),
+	)
+	if err != nil {
+		panic(err)
+	}
+	return cpl
+}
+
 const (
 	rawRequestJson = `
 		{
@@ -47,7 +68,8 @@ const (
           "int": 1234,
 		  "long_int": 12345678910,
 		  "float": 12345.567,
-		  "string" : "hello"
+		  "string" : "hello",
+		  "details":"{\"points\": [{\"distanceInMeter\": 0.0}, {\"distanceInMeter\": 8976.0}, {\"distanceInMeter\": 729.0}, {\"distanceInMeter\": 8573.0}]}"
 		}
 		`
 

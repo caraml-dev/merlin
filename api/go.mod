@@ -9,12 +9,14 @@ require (
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/antihax/optional v1.0.0
 	github.com/antonmedv/expr v1.8.9
+	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/cespare/xxhash v1.1.0
 	github.com/coocood/freecache v1.1.1
-	github.com/fatih/color v1.7.0
+	github.com/fatih/color v1.9.0
 	github.com/feast-dev/feast/sdk/go v0.9.2
+	github.com/fraugster/parquet-go v0.10.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-gota/gota v0.0.0-00010101000000-000000000000
 	github.com/go-playground/locales v0.13.0
@@ -83,6 +85,7 @@ require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/apache/thrift v0.15.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/aws/aws-sdk-go v1.35.24 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -141,8 +144,8 @@ require (
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-colorable v0.1.1 // indirect
-	github.com/mattn/go-isatty v0.0.9 // indirect
+	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-isatty v0.0.11 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
@@ -191,7 +194,7 @@ require (
 )
 
 replace (
-	github.com/go-gota/gota => github.com/gojekfarm/gota v0.0.0-20220225033233-df7cd66a11dc
+	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20220329041038-bdee6822d003
 	github.com/gojek/merlin-pyspark-app => ../python/batch-predictor
 	github.com/googleapis/gnostic => github.com/google/gnostic v0.5.5
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1

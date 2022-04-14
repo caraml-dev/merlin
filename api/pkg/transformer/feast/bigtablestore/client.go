@@ -27,8 +27,8 @@ func NewClient(bigtableStorage *spec.BigTableStorage, featureSpecs []*spec.Featu
 	if err != nil {
 		return nil, err
 	}
-	for _, featureSpec := range featureSpecs {
-		btn := entityKeysToBigTable(featureSpec.Project, featureSpec.Entities)
+	for index, featureSpec := range featureSpecs {
+		btn := entityKeysToBigTable(featureSpec.Project, metadata[index].Entities)
 		if _, exists := tables[btn]; !exists {
 			btTable := client.Open(btn)
 			tableStorage := &btStorage{table: btTable}

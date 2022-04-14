@@ -153,59 +153,28 @@ Expression can be used for updating column value
 For full list of standard transformer built-in function, please check [Transformer Expressions](./transformer_expressions.md).
 
 ## Input Stage
+At the input stage, users specify all the data dependencies that are going to be used in subsequent stages. There are 3 operations available in these stages: 
 
-### Variable
-Variable declaration is used for assigning literal value or result of a function into a variable. The variable declaration will be executed from top to bottom and it’s possible to refer to the declared variable in subsequent variable declarations. Following are ways to set value to variable.
+1. Table creation 
+- Table Creation from Feast Features
+- Table Creation from Input Request
+- Table Creation from File
 
-* Literal
-  Specifiying literal value to variable. By specifying literal values user needs to specify what is the type for that variable. Types that supported for this:
-    * String
-    * Int
-    * Float
-    * Bool
-  for example:
-  ```
-    - variables:
-        - name: var_1
-          literal:
-            intValue: 3
-        - name: var_2
-          literal:
-            floatValue: 2.2
-        - name: var_3
-          literal:
-            boolValue: true
-        - name: var_4
-          literal:
-            stringValue: stringVal
-  
-  ```
-* Jsonpath
-  Value of variable is obtained from request/model response payload by specifying jsonpath value, e.g
-  ```
-    - variables:
-        - name: var_5
-          jsonPathConfig: 
-            jsonPath: $.rating
-            defaultValue: -1
-            valueType: INT
-        - name: var_6
-          jsonPath: $rating # deprecated
-  ```
-* Expression
-  Value of variable is obtained from expression, e.g
-  ```
-    - variables:
-        - name: var_7
-          jsonPathConfig:
-            jsonPath: $.customer_id
-        - name: var_8
-          expression: var_7
-  ```
+2. Variable declaration
 
-  ### Feast
-  This feast input stage is stage where user specifies features that they want to retrieve from feast and the result is table that contains those features. Following is the syntax for feast input:
-  ```
+3. Encoder declaration
+
+### Table Creation
+Table is the main data structure within the standard transformer. There are 3 ways of creating table in standard transformer: 
+
+#### Table Creation from Feast Features
+This operation creates one or more tables containing features from Feast. This operation is already supported in Merlin 0.10. The key change to be made is to adapt the result of operation. Previously, the features retrieved from feast is directly enriched to the original request body to be sent to the model. Now, the operation only outputs as internal table representation which can be accessible by subsequent transformation steps in the pipeline. 
+
+Additionally, it should be possible for users to give the features table a name to ease referencing the table from subsequent steps. 
+
+Following is the syntax:  
+
+   ```
     feast:
         - tableName:       # Specify the output table name
   
@@ -270,7 +239,7 @@ Variable declaration is used for assigning literal value or result of a function
   \
   For detail explanation of environment variables in standard transformer, you can look [this section](#standard-transformer-environment-variables)
 
-  ### Table
+  #### Table Creation from Input Request
   This step is generic table creation that allows users to define one or more tables based on value from either JSON payload, result of built-in expressions, or an existing table. Following is the syntax for table input:
   ```
     tables:
@@ -331,6 +300,98 @@ Variable declaration is used for assigning literal value or result of a function
               - name: col_2
                 expression: table.Col('rating')
   
+  ```
+
+#### Table Creation from File
+This operation allows user to create a static table from a file. For example, user might choose to load a table with a list of public holidays for the year. As the data will be loaded into memory, it is strongly advised to keep the total size of all files within 50mb. Also, each file shall only contain information for 1 table.
+
+##### Supported File Format
+
+There are 2 types of files are currently supported: 
+
+- csv: For this file type, only comma (,) may be used as delimiter. The first line shall also contain a header, which gives each column a unique name.
+
+- parquet
+
+##### Supported File Storage Location
+
+Currently, files must first be uploaded to a preferred GCS bucket in gods-* project. The file will be read once during deployment.
+
+##### Supported Column Types
+
+Only basic types for the columns are supported, namely: String, Integer, Float and Boolean
+
+The types of each column are auto-detected, but may be manually set by the user (please ensure type compatibility). 
+
+##### How to use
+
+In order to use this feature, firstly, these files will have to be loaded into GCS buckets in gods-* projects in order to be linked.
+
+Then, use the syntax below to define the specifications:
+
+    ```
+    tables:
+    - name:     # Table name  
+      baseTable:      
+        fromFile:
+          format: CSV    # others: PARQUET
+          uri:  # GCS uri to the location of the file in gods-* project
+          schema:   # this part is used to manually set column type
+          - name: col_1        # name of column
+            type: STRING     #others: INT, FLOAT, BOOL
+    …         
+          - name: col_2
+            type: INT
+    ```
+
+
+### Variable
+Variable declaration is used for assigning literal value or result of a function into a variable. The variable declaration will be executed from top to bottom and it’s possible to refer to the declared variable in subsequent variable declarations. Following are ways to set value to variable.
+
+* Literal
+  Specifiying literal value to variable. By specifying literal values user needs to specify what is the type for that variable. Types that supported for this:
+    * String
+    * Int
+    * Float
+    * Bool
+  for example:
+  ```
+    - variables:
+        - name: var_1
+          literal:
+            intValue: 3
+        - name: var_2
+          literal:
+            floatValue: 2.2
+        - name: var_3
+          literal:
+            boolValue: true
+        - name: var_4
+          literal:
+            stringValue: stringVal
+  
+  ```
+* Jsonpath
+  Value of variable is obtained from request/model response payload by specifying jsonpath value, e.g
+  ```
+    - variables:
+        - name: var_5
+          jsonPathConfig: 
+            jsonPath: $.rating
+            defaultValue: -1
+            valueType: INT
+        - name: var_6
+          jsonPath: $rating # deprecated
+  ```
+* Expression
+  Value of variable is obtained from expression, e.g
+  ```
+    - variables:
+        - name: var_7
+          jsonPathConfig:
+            jsonPath: $.customer_id
+        - name: var_8
+          expression: var_7
   ```
 
 ### Encoders
@@ -424,6 +485,10 @@ cyclicalEncoderConfig:
   byEpochTime:
     periodType: HOUR #HOUR, DAY, WEEK, MONTH, QUARTER, HALF, YEAR
 ```
+
+Period type defines the time period of a cycle. For example, HOUR means that a new cycle begins every hour and DAY means that a new cycle begins every day.
+
+***NOTE: If you choose to encode by epoch time, the granularity is per seconds. If you need different granularity, you can modify the values in the epoch time column accordingly or choose to encode by range.***
 
 To encode by **range**, use the following syntax:
 ```
@@ -577,7 +642,91 @@ tableTransformation:
      - updateColumns:
         - column: "s2id"
           expression: S2ID(table1.Col('lat'), table2.Col('lon'), 12)
+        - column: "col2"
+          conditions:
+          - if: table1.Col('col1') * 2 > 10
+            expression: table1.Col('col1')
+          - default:
+              expression: -1
 ```
+
+There are two ways to update columns:
+* Update all rows in the column. You need to specify `column`and `expression`. `column` determines which column to be updated and `expression` determines the value that will be used to update the column.
+Value produced by the `expression` must be a scalar or a series that has the same length as the other columns. Following the example::
+  ```
+    - updateColumns:
+      - column: "customer_id"
+        expression: "cust_1" # the value is scalar and will be broadcasted to all the row
+      - column: "s2id"
+        expression: S2ID(table1.Col('lat'), table2.Col('lon'), 12) # the value is array or series that the length should be the same with the rest of the columns in a table 
+  ```
+* Update subset of rows in the columns given some row selector condition. For this users can set multiple `rowSelector` with `expression` and also default value if none of conditions are match. For example users have following table
+
+| customer_id | customer_age | total_booking_1w |
+| ----------- | ------------ | ---------------- |
+| 1234        | 60           | 8                |
+| 4321        | 23           | 4                |
+| 1235        | 17           | 4                |
+  
+Users want to create new column `customer_segment` with certain rules:
+1. Customer that older than 55, the `customer_segment` will be `retired`
+2. Customer that has age between 30 - 55, the `customer_segment` will be `matured`
+3. Customer that has age between 22 - 30, the `customer_segment` will be `productive`
+4. Customer that has age < 22, the `customer_segment` will be `non-productive`
+   
+Based on those rules we can translate this to standard transformer config:
+```
+tableTransformation:
+     inputTable: myTable
+     outputTable: myTransformedTable
+     steps:
+     - updateColumns:
+        - column: "customer_segment"
+          conditions:
+          - rowSelector: myTable.Col('customer_age') > 55
+            expression: "retired"
+          - rowSelector: myTable.Col('customer_age') >= 30
+            expression: "matured"
+          - rowSelector: myTable.Col('customer_age') >= 22
+            expression: "productive"
+          - default:
+              expression: "non-productive"
+```
+All `rowSelector` conditions are working like `if else` statement. `rowSelector` condition must be returning boolean or series of boolean, `default` will be executed if none of the `rowSelector` conditions are matched.
+
+#### Filter Row
+Filter row is an operation that will filter rows in a table based on given condition. Suppose users have this following table
+| customer_id | customer_age | total_booking_1w |
+| ----------- | ------------ | ---------------- |
+| 1234        | 60           | 8                |
+| 4321        | 23           | 4                |
+| 1235        | 17           | 4                |
+
+and users want to show only records that have `total_booking_1w` less than 5. To achieve that users need to use `filterRow` operation like below configuration:
+```
+tableTransformation:
+     inputTable: myTable
+     outputTable: myTransformedTable
+     steps:
+     - filterRow:
+        condition: myTable.Col('total_booking_1w') < 5
+```
+
+### Slice Row
+Slice row is an operation to slice a table based on start(lower bound) and end index(upper bound) that given by the user. The result includes starting index but excluding end index. Below is the example of this operation
+```
+tableTransformation:
+     inputTable: myTable
+     outputTable: myTransformedTable
+     steps:
+     - sliceRow:
+        start: 0
+        end: 4
+```
+Value of `start` end `end` can be null or negative. Following are the behaviour:
+* Null value of `start` means that `start` value is 0
+* Null value of `end` means that `end` value is number of rows in a table
+* Negative value of `start` or `end` means that the value will be (`number of row` + `start`) or (`number of row` + `end`). Suppose you set `start` -5 and `end` -1 and number of row is 10, so `start` value will be 5 and `end` will be 9
 
 #### Encode Column
 This operation will encode the specified columns with the specified encoder defined in the input step.

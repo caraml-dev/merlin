@@ -37,6 +37,7 @@ RUN go mod download
 COPY api .
 COPY python/batch-predictor ../python/batch-predictor
 
+RUN go mod tidy
 RUN go build -o bin/transformer \
     ./cmd/transformer/main.go
 

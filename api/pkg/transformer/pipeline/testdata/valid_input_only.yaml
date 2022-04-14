@@ -38,6 +38,11 @@ transformerConfig:
               - name: column_2
                 fromJson:
                   jsonPath: $.entity_2
+          - name: preload_1
+            baseTable:
+              fromFile:
+                format: PARQUET
+                uri: ../types/table/testdata/normal.parquet
       - variables:
           - name: variable1
             jsonPath: $.entity_2.id
@@ -85,6 +90,11 @@ transformerConfig:
               - name: column_2
                 fromJson:
                   jsonPath: $.entity_2
+          - name: preload_2
+            baseTable:
+              fromFile:
+                format: CSV
+                uri: ../types/table/testdata/normal.csv
       - variables:
           - name: variable1
             jsonPath: $.entity_2.id

@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"github.com/gojek/merlin/pkg/transformer/types/table"
 
 	"github.com/antonmedv/expr/vm"
 	"github.com/pkg/errors"
@@ -14,15 +15,18 @@ import (
 type CompiledPipeline struct {
 	compiledJsonpath   *jsonpath.Storage
 	compiledExpression *expression.Storage
+	preloadedTables    map[string]table.Table
 
 	preprocessOps  []Op
 	postprocessOps []Op
 }
 
-func NewCompiledPipeline(compiledJSONPath *jsonpath.Storage, compiledExpression *expression.Storage, preprocessOps []Op, postprocessOps []Op) *CompiledPipeline {
+func NewCompiledPipeline(compiledJSONPath *jsonpath.Storage, compiledExpression *expression.Storage,
+	preloadedTables map[string]table.Table, preprocessOps []Op, postprocessOps []Op) *CompiledPipeline {
 	return &CompiledPipeline{
 		compiledJsonpath:   compiledJSONPath,
 		compiledExpression: compiledExpression,
+		preloadedTables:    preloadedTables,
 
 		preprocessOps:  preprocessOps,
 		postprocessOps: postprocessOps,

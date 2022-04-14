@@ -2,12 +2,9 @@ package pipeline
 
 import (
 	"fmt"
-
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
-
+	gota "github.com/go-gota/gota/series"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -15,6 +12,15 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
 	"github.com/gojek/merlin/pkg/transformer/types/scaler"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+	"net/url"
+	"os"
+)
+
+const (
+	artifactsFolder        = "/mnt/models/artifacts"
+	envPredictorStorageURI = "STORAGE_URI"
 )
 
 type Compiler struct {
@@ -33,66 +39,83 @@ func NewCompiler(sr symbol.Registry, feastClients feast.Clients, feastOptions *f
 func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipeline, error) {
 	preprocessOps := make([]Op, 0)
 	postprocessOps := make([]Op, 0)
+	preloadedTables := map[string]table.Table{}
 	jsonPathStorage := jsonpath.NewStorage()
 	expressionStorage := expression.NewStorage()
 	if spec.TransformerConfig == nil {
 		return NewCompiledPipeline(
 			jsonPathStorage,
 			expressionStorage,
+			preloadedTables,
 			preprocessOps,
 			postprocessOps,
 		), nil
 	}
 
 	if spec.TransformerConfig.Preprocess != nil {
-		ops, err := c.doCompilePipeline(spec.TransformerConfig.Preprocess, jsonPathStorage, expressionStorage)
+		ops, loadedTables, err := c.doCompilePipeline(spec.TransformerConfig.Preprocess, jsonPathStorage, expressionStorage)
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to compile preprocessing pipeline")
 		}
 		preprocessOps = append(preprocessOps, ops...)
+		for k, v := range loadedTables {
+			preloadedTables[k] = v
+		}
 	}
 
 	if spec.TransformerConfig.Postprocess != nil {
-		ops, err := c.doCompilePipeline(spec.TransformerConfig.Postprocess, jsonPathStorage, expressionStorage)
+		ops, loadedTables, err := c.doCompilePipeline(spec.TransformerConfig.Postprocess, jsonPathStorage, expressionStorage)
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to compile postprocessing pipeline")
 		}
 		postprocessOps = append(postprocessOps, ops...)
+		for k, v := range loadedTables {
+			if _, ok := preloadedTables[k]; ok {
+				return nil, fmt.Errorf("table name %s in postprocess already used in preprocess", k)
+			}
+			preloadedTables[k] = v
+		}
 	}
 
 	return NewCompiledPipeline(
 		jsonPathStorage,
 		expressionStorage,
+		preloadedTables,
 		preprocessOps,
 		postprocessOps,
 	), nil
 }
 
-func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) ([]Op, error) {
+func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) ([]Op, map[string]table.Table, error) {
 	ops := make([]Op, 0)
+	preloadedTables := map[string]table.Table{}
 
 	// input
 	for _, input := range pipeline.Inputs {
 		if input.Variables != nil {
 			varOp, err := c.parseVariablesSpec(input.Variables, compiledJsonPaths, compiledExpressions)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			ops = append(ops, varOp)
 		}
 
 		if input.Tables != nil {
-			tableOp, err := c.parseTablesSpec(input.Tables, compiledJsonPaths, compiledExpressions)
+			tableOp, loadedTables, err := c.parseTablesSpec(input.Tables, compiledJsonPaths, compiledExpressions)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
+
 			ops = append(ops, tableOp)
+			for k, v := range loadedTables {
+				preloadedTables[k] = v
+			}
 		}
 
 		if input.Feast != nil {
 			feastOp, err := c.parseFeastSpec(input.Feast, compiledJsonPaths, compiledExpressions)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			ops = append(ops, feastOp)
 		}
@@ -100,7 +123,7 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 		if input.Encoders != nil {
 			encoderOp, err := c.parseEncodersSpec(input.Encoders, compiledExpressions)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			ops = append(ops, encoderOp)
 		}
@@ -111,7 +134,7 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 		if transformation.TableTransformation != nil {
 			tableTransformOps, err := c.parseTableTransform(transformation.TableTransformation, compiledJsonPaths, compiledExpressions)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			ops = append(ops, tableTransformOps)
 		}
@@ -119,7 +142,7 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 		if transformation.TableJoin != nil {
 			tableJoinOp, err := c.parseTableJoin(transformation.TableJoin, compiledJsonPaths, compiledExpressions)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			ops = append(ops, tableJoinOp)
 		}
@@ -130,13 +153,13 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 		if jsonOutput := output.JsonOutput; jsonOutput != nil {
 			jsonOutputOp, err := c.parseJsonOutputSpec(jsonOutput, compiledJsonPaths, compiledExpressions)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			ops = append(ops, jsonOutputOp)
 		}
 	}
 
-	return ops, nil
+	return ops, preloadedTables, nil
 }
 
 func (c *Compiler) parseVariablesSpec(variables []*spec.Variable, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
@@ -200,7 +223,10 @@ func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compil
 	return NewFeastOp(c.feastClients, c.feastOptions, entityExtractor, featureTableSpecs, c.logger), nil
 }
 
-func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
+func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, map[string]table.Table, error) {
+	// for storing pre-loaded tables
+	preloadedTables := map[string]table.Table{}
+
 	for _, tableSpec := range tableSpecs {
 		c.registerDummyTable(tableSpec.Name)
 		if tableSpec.BaseTable != nil {
@@ -212,9 +238,42 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 					TargetType:   bt.FromJson.ValueType,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
 				compiledJsonPaths.Set(bt.FromJson.JsonPath, compiledJsonPath)
+			case *spec.BaseTable_FromFile:
+				var records [][]string
+				var err error
+				var colType map[string]gota.Type
+
+				//parse filepath
+				filePath, err := url.Parse(tableSpec.BaseTable.GetFromFile().GetUri())
+				if err != nil {
+					return nil, nil, err
+				}
+
+				//relative path in merlin
+				if !filePath.IsAbs() && os.Getenv(envPredictorStorageURI) != "" {
+					filePath, err = url.Parse(artifactsFolder + tableSpec.BaseTable.GetFromFile().GetUri())
+					if err != nil {
+						return nil, nil, err
+					}
+				}
+
+				if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_CSV {
+					records, err = table.RecordsFromCsv(filePath)
+					colType = nil
+				} else if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_PARQUET {
+					records, colType, err = table.RecordsFromParquet(filePath)
+				} else {
+					return nil, nil, fmt.Errorf("Unsupported/Unspecified file type")
+				}
+
+				loadedTable, err := table.NewFromRecords(records, colType, tableSpec.BaseTable.GetFromFile().GetSchema())
+				if err != nil {
+					return nil, nil, err
+				}
+				preloadedTables[tableSpec.Name] = *loadedTable
 			}
 		}
 
@@ -224,7 +283,7 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 				case *spec.Column_Expression:
 					compiledExpression, err := c.compileExpression(cv.Expression)
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
 					compiledExpressions.Set(cv.Expression, compiledExpression)
 				case *spec.Column_FromJson:
@@ -234,7 +293,7 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 						TargetType:   cv.FromJson.ValueType,
 					})
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
 					compiledJsonPaths.Set(cv.FromJson.JsonPath, compiledJsonPath)
 				}
@@ -242,7 +301,7 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 		}
 	}
 
-	return NewCreateTableOp(tableSpecs), nil
+	return NewCreateTableOp(tableSpecs), preloadedTables, nil
 }
 
 func (c *Compiler) parseEncodersSpec(encoderSpecs []*spec.Encoder, compiledExpression *expression.Storage) (Op, error) {
@@ -260,11 +319,35 @@ func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransforma
 
 	for _, step := range transformationSpecs.Steps {
 		for _, updateColumn := range step.UpdateColumns {
-			compiledExpression, err := c.compileExpression(updateColumn.Expression)
-			if err != nil {
-				return nil, err
+			if updateColumn.Expression != "" {
+				compiledExpression, err := c.compileExpression(updateColumn.Expression)
+				if err != nil {
+					return nil, err
+				}
+				compiledExpressions.Set(updateColumn.Expression, compiledExpression)
+				continue
 			}
-			compiledExpressions.Set(updateColumn.Expression, compiledExpression)
+			for _, condition := range updateColumn.Conditions {
+				if condition.Default != nil {
+					compiledExpression, err := c.compileExpression(condition.Default.Expression)
+					if err != nil {
+						return nil, err
+					}
+					compiledExpressions.Set(condition.Default.Expression, compiledExpression)
+					continue
+				}
+				compiledIfExpression, err := c.compileExpression(condition.RowSelector)
+				if err != nil {
+					return nil, err
+				}
+				compiledExpressions.Set(condition.RowSelector, compiledIfExpression)
+
+				compiledExpression, err := c.compileExpression(condition.Expression)
+				if err != nil {
+					return nil, err
+				}
+				compiledExpressions.Set(condition.Expression, compiledExpression)
+			}
 		}
 
 		for _, scaleCol := range step.ScaleColumns {
@@ -288,6 +371,14 @@ func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransforma
 				return nil, err
 			}
 			compiledExpressions.Set(encodeColumn.Encoder, compiledExpression)
+		}
+
+		if step.FilterRow != nil {
+			compiledExpression, err := c.compileExpression(step.FilterRow.Condition)
+			if err != nil {
+				return nil, err
+			}
+			compiledExpressions.Set(step.FilterRow.Condition, compiledExpression)
 		}
 	}
 
@@ -385,7 +476,22 @@ func (c *Compiler) parseJsonFields(fields []*spec.Field, compiledJsonPaths *json
 }
 
 func (c *Compiler) compileExpression(expression string) (*vm.Program, error) {
-	return expr.Compile(expression, expr.Env(c.sr))
+	return expr.Compile(expression,
+		expr.Env(c.sr),
+		expr.Operator("&&", "AndOp"),
+		expr.Operator("||", "OrOp"),
+		expr.Operator(">", "GreaterOp"),
+		expr.Operator(">=", "GreaterEqOp"),
+		expr.Operator("<", "LessOp"),
+		expr.Operator("<=", "LessEqOp"),
+		expr.Operator("==", "EqualOp"),
+		expr.Operator("!=", "NeqOp"),
+		expr.Operator("+", "AddOp"),
+		expr.Operator("-", "SubstractOp"),
+		expr.Operator("*", "MultiplyOp"),
+		expr.Operator("/", "DivideOp"),
+		expr.Operator("%", "ModuloOp"),
+	)
 }
 
 func (c *Compiler) registerDummyVariable(varName string) {

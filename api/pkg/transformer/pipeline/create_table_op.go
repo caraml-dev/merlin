@@ -25,11 +25,16 @@ func (c CreateTableOp) Execute(ctx context.Context, env *Environment) error {
 	for _, tableSpec := range c.tableSpecs {
 		var t *table.Table
 		if tableSpec.BaseTable != nil {
-			tbl, err := createBaseTable(env, tableSpec.BaseTable)
-			if err != nil {
-				return fmt.Errorf("unable to create base table for %s: %w", tableSpec.Name, err)
+			switch tableSpec.BaseTable.BaseTable.(type) {
+			case *spec.BaseTable_FromFile: // handle table creation from file separately
+				continue
+			default:
+				tbl, err := createBaseTable(env, tableSpec.BaseTable)
+				if err != nil {
+					return fmt.Errorf("unable to create base table for %s: %w", tableSpec.Name, err)
+				}
+				t = tbl
 			}
-			t = tbl
 		}
 
 		if tableSpec.Columns != nil {

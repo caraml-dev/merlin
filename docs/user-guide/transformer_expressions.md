@@ -2,20 +2,24 @@
 
 Standard Transformer provides several built-in functions that are useful for common ML use-cases. These built-in functions are accessible from within expression context.
 
-| Categories | Functions                               |
-| ---------- | --------------------------------------- |
-| Geospatial | [Geohash](#geohash)                     |
-| Geospatial | [S2ID](#s2id)                           |
-| Geospatial | [HaversineDistance](#haversinedistance) |
-| Geospatial | [PolarAngle](#polarangle)               |
-| JSON       | [JsonExtract](#jsonextract)             |
-| Statistics | [CumulativeValue](#cumulativevalue)     |
-| Time       | [Now](#now)                             |
-| Time       | [DayOfWeek](#dayofweek)                 |
-| Time       | [IsWeekend](#isweekend)                 |
-| Time       | [FormatTimestamp](#formattimestamp)     |
-| Time       | [ParseTimestamp](#parsetimestamp)       |
-| Time       | [ParseDateTime](#parsedatetime)         |
+| Categories | Functions                                                    |
+| ---------- | -------------------------------------------------------------|
+| Geospatial | [Geohash](#geohash)                                          |
+| Geospatial | [S2ID](#s2id)                                                |
+| Geospatial | [HaversineDistance](#haversinedistance)                      |
+| Geospatial | [HaversineDistanceWithUnit](#haversinedistancewithunit)      |
+| Geospatial | [PolarAngle](#polarangle)                                    |
+| Geospatial | [GeohashDistance](#geohashdistance)                          |
+| Geospatial | [GeohashAllNeighbors](#geohashallneighbors)                  |
+| Geospatial | [GeohashNeighborForDirection](#geohashneighborfordirection)  |
+| JSON       | [JsonExtract](#jsonextract)                                  |
+| Statistics | [CumulativeValue](#cumulativevalue)                          |
+| Time       | [Now](#now)                                                  |
+| Time       | [DayOfWeek](#dayofweek)                                      |
+| Time       | [IsWeekend](#isweekend)                                      |
+| Time       | [FormatTimestamp](#formattimestamp)                          |
+| Time       | [ParseTimestamp](#parsetimestamp)                            |
+| Time       | [ParseDateTime](#parsedatetime)                              |
 
 ## Geospatial
 
@@ -123,6 +127,45 @@ variables:
   expression: HaversineDistance("$.pickup.latitude", "$.pickup.longitude", "$.dropoff.latitude", "$.dropoff.longitude")
 ```
 
+### HaversineDistanceWithUnit
+
+HaversineDistanceWithUnit calculates Haversine distance of two points (given by their latitude and longitude) and given the distance unit
+
+#### Input
+
+| Name          | Description                                                             |
+| -----------   | ----------------------------------------------------------------------- |
+| Latitude 1    | Latitude of the first point, in form of JSONPath, array, or variable.   |
+| Longitude 1   | Longitude of the first point, in form of JSONPath, array, or variable.  |
+| Latitude 2    | Latitude of the second point, in form of JSONPath, array, or variable.  |
+| Longitude 2   | Longitude of the second point, in form of JSONPath, array, or variable. |
+| Distance Unit | Unit of distance measurement, supported unit `km` and `m`               |
+
+#### Output
+
+`The haversine distance between 2 points.`
+
+#### Example
+
+```
+Input:
+{
+  "pickup": {
+    "latitude": 1.0,
+    "longitude": 2.0
+  },
+  "dropoff": {
+    "latitude": 1.2,
+    "longitude": 2.2
+  }
+}
+
+Standard Transformer Config:
+variables:
+- name: haversine_distance
+  expression: HaversineDistanceWithUnit("$.pickup.latitude", "$.pickup.longitude", "$.dropoff.latitude", "$.dropoff.longitude", "m")
+```
+
 ### PolarAngle
 
 PolarAngle calculates polar angles between two points (given by their latitude and longitude) in radian.
@@ -159,6 +202,89 @@ Standard Transformer Config:
 variables:
 - name: polar_angle
   expression: PolarAngle("$.pickup.latitude", "$.pickup.longitude", "$.dropoff.latitude", "$.dropoff.longitude")
+```
+
+### GeohashDistance
+GeohashDistance will calculate haversine distance between two geohash. It will convert a geohash into the center point (latitude, longitude) of that geohash and calculate haversine distance based on that point.
+
+#### Input
+
+| Name          | Description                                              |
+|---------------|----------------------------------------------------------|
+| Geohash 1     | First geohash, in form of JSONPath, array                |
+| Geohash 2     | Second geohash, in form of JSONPath, array               |
+| Distance Unit | Unit measurement of distance, supported unit `km` and `m`|
+
+#### Output
+`Haversine Distance between two geohash calculated from the center point of that geohash`
+
+#### Example
+```
+Input:
+{
+  "pickup_geohash": "qqgggnwxx",
+  "dropoff_geohash": "qqgggnweb"
+}
+
+Standard Transformer Config:
+variables:
+- name: geohash_distance
+  expression: GeohashDistance("$.pickup_geohash", "$.dropoff_geohash", "m")
+```
+
+### GeohashAllNeighbors
+
+GeohashAllNeighbors will find all neighbors of geohash from all directions
+
+#### Input
+
+| Name          | Description                                              |
+|---------------|----------------------------------------------------------|
+| Geohash 1     | Geohash , in form of JSONPath, array                     |
+
+#### Output
+`List of neighbors of given geohash`
+
+#### Example
+```
+Input:
+{
+  "pickup_geohash": "qqgggnwxx",
+  "dropoff_geohash": "qqgggnweb"
+}
+
+Standard Transformer Config:
+variables:
+- name: geohash_distance
+  expression: GeohashAllNeighbors("$.pickup_geohash")
+```
+
+### GeohashNeighborForDirection
+
+GeohashNeighborForDirection will find a neighbor of geohash given the direction
+
+#### Input
+
+| Name          | Description                                              |
+|---------------|----------------------------------------------------------|
+| Geohash 1     | Geohash , in form of JSONPath, array                     |
+| Direction     | Direction of that neighbor relatively from geohash. List of accepted direction `north`, `northeast`, `northwest`, `south`, `southeast`, `southwest`, `west`, `east`|
+
+#### Output
+`Neighbor of given geohash`
+
+#### Example
+```
+Input:
+{
+  "pickup_geohash": "qqgggnwxx",
+  "dropoff_geohash": "qqgggnweb"
+}
+
+Standard Transformer Config:
+variables:
+- name: geohash_distance
+  expression: GeohashNeighborForDirection("$.pickup_geohash", "north")
 ```
 
 ## JSON

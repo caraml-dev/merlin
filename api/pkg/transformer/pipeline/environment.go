@@ -28,6 +28,11 @@ func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Env
 		logger:           logger,
 	}
 
+	// attach pre-loaded tables to environment
+	for k, v := range compiledPipeline.preloadedTables {
+		env.SetSymbol(k, &v)
+	}
+
 	return env
 }
 

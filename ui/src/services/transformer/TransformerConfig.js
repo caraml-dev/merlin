@@ -287,10 +287,24 @@ export class Pipeline {
             step["operation"] = "sort";
           } else if (step.updateColumns !== undefined) {
             step["operation"] = "updateColumns";
+            step.updateColumns.forEach(updateCol => {
+              if (
+                updateCol.conditions !== undefined &&
+                updateCol.conditions.length > 0
+              ) {
+                updateCol["strategy"] = "withCondition";
+              } else {
+                updateCol["strategy"] = "withoutCondition";
+              }
+            });
           } else if (step.scaleColumns !== undefined) {
             step["operation"] = "scaleColumns";
           } else if (step.encodeColumns !== undefined) {
             step["operation"] = "encodeColumns";
+          } else if (step.filterRow !== undefined) {
+            step["operation"] = "filterRow";
+          } else if (step.sliceRow !== undefined) {
+            step["operation"] = "sliceRow";
           }
         });
 
@@ -401,6 +415,27 @@ export class Pipeline {
                     );
                   }
                 }
+              });
+            }
+            if (step.operation === "sliceRow") {
+              if (step.sliceRow) {
+                if (step.sliceRow.start !== undefined) {
+                  step.sliceRow.start = parseInt(step.sliceRow.start);
+                }
+                if (step.sliceRow.end !== undefined) {
+                  step.sliceRow.end = parseInt(step.sliceRow.end);
+                }
+              }
+            }
+            if (step.operation === "updateColumns") {
+              step.updateColumns.forEach(updateCol => {
+                if (updateCol.strategy === "withCondition") {
+                  delete updateCol["expression"];
+                }
+                if (updateCol.strategy === "withoutCondition") {
+                  delete updateCol["conditions"];
+                }
+                delete updateCol["strategy"];
               });
             }
             delete step["operation"];

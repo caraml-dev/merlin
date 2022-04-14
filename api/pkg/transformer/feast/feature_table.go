@@ -81,9 +81,10 @@ func getFeatureTablesMetadata(ctx context.Context, coreClient core.CoreServiceCl
 			if featureTableResp.Table != nil {
 				featureTableSpec := featureTableResp.Table.Spec
 				featureTableMetadata := &spec.FeatureTableMetadata{
-					Name:    featureTableSpec.Name,
-					Project: project,
-					MaxAge:  featureTableSpec.MaxAge,
+					Name:     featureTableSpec.Name,
+					Project:  project,
+					MaxAge:   featureTableSpec.MaxAge,
+					Entities: featureTableSpec.Entities,
 				}
 				featureTableMetadataMap[featureTableKeyName] = featureTableMetadata
 			}

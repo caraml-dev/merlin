@@ -23,65 +23,44 @@ export const TableColumnsInput = ({
 
   const typeOptions = [
     { value: "jsonpath", inputDisplay: "JSONPath" },
-    { value: "expression", inputDisplay: "Expression" },
-    { value: "string", inputDisplay: "String literal" },
-    { value: "int", inputDisplay: "Integer literal" },
-    { value: "float", inputDisplay: "Float literal" },
-    { value: "bool", inputDisplay: "Boolean literal" }
+    { value: "expression", inputDisplay: "Expression" }
   ];
 
   const onVariableChange = (idx, field, value) => {
     let newItem = { ...items[idx], [field]: value };
-    if (newItem.literal !== undefined) {
-      delete newItem["literal"];
-    }
-    if (newItem.expression !== undefined) {
+
+    if ("expression" in newItem) {
       delete newItem["expression"];
     }
-    if (newItem.fromJson !== undefined) {
+    if ("fromJson" in newItem) {
       delete newItem["fromJson"];
     }
 
     if (newItem.name === undefined) {
       newItem.name = "";
     }
+    if ("idx" in newItem) {
+      delete newItem.idx;
+    }
+
+    //flatten value type for non-jsonpath type
+    if (newItem.type !== "jsonpath" && typeof newItem.value === "object") {
+      newItem["value"] = newItem.value.jsonPath;
+    }
 
     switch (newItem.type) {
       case "jsonpath":
+        if (newItem.value && newItem.value.jsonPath === undefined) {
+          newItem["value"] = { jsonPath: newItem.value };
+        }
         newItem = { ...newItem, fromJson: newItem.value };
         break;
       case "expression":
         newItem["expression"] = newItem.value || "";
         break;
-      case "string":
-        newItem = { ...newItem, literal: { stringValue: newItem.value } };
-        break;
-      case "int":
-        newItem = {
-          ...newItem,
-          literal: { intValue: parseInt(newItem.value) }
-        };
-        break;
-      case "float":
-        newItem = {
-          ...newItem,
-          literal: { floatValue: parseFloat(newItem.value) }
-        };
-        break;
-      case "bool":
-        newItem = {
-          ...newItem,
-          literal: {
-            boolValue: newItem.value
-              ? newItem.value.toLowerCase() === "true"
-              : false
-          }
-        };
-        break;
       default:
         break;
     }
-
     onChange(`${idx}`)(newItem);
   };
 

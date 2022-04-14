@@ -34,6 +34,7 @@ COPY python/batch-predictor ../python/batch-predictor
 COPY db-migrations ./db-migrations
 COPY swagger.yaml ./swagger.yaml
 
+RUN go mod tidy
 RUN go build -o bin/merlin_api ./cmd/api
 
 # ============================================================

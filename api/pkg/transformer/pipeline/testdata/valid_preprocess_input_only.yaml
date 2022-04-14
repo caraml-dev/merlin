@@ -38,6 +38,22 @@ transformerConfig:
               - name: column_2
                 fromJson:
                   jsonPath: $.entity_2
+          - name: preload_1
+            baseTable:
+              fromFile:
+                format: CSV
+                uri: ../types/table/testdata/normal.csv
+                schema:
+                  - name: First Name
+                    type: STRING
+                  - name: Last Name
+                    type: STRING
+                  - name: Age
+                    type: INT
+                  - name: Weight
+                    type: FLOAT
+                  - name: Is VIP
+                    type: BOOL
       - variables:
           - name: variable1
             jsonPath: $.entity_2.id

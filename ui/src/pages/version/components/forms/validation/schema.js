@@ -105,6 +105,13 @@ const tablesInputSchema = yup.object().shape({
       .shape({
         jsonPath: yup.string().required("JSONPath is required")
       }),
+    fromFile: yup
+      .object()
+      .nullable()
+      .default(undefined)
+      .shape({
+        uri: yup.string().required("URI to file is required")
+      }),
     fromTable: yup
       .object()
       .nullable()
