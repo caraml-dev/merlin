@@ -20,6 +20,16 @@ transformerConfig:
             - updateColumns:
               - column: customer_id
                 expression: customer_id
+              - column: distance_in_km
+                expression: map(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# * 0.001})
+              - column: distance_in_m
+                expression: filter(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# >= 0})
+              - column: distance_is_valid
+                expression: all(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# >= 0})
+              - column: distance_is_not_far_away
+                expression: none(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# * 0.001 > 10})
+              - column: distance_contains_zero
+                expression: any(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# == 0.0})
               - column: driver_performa
                 conditions:
                   - rowSelector: driver_table.Col("rating") * 2 <= 7

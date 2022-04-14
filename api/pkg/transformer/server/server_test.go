@@ -317,13 +317,13 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body: []byte(`{"drivers":[{"id":1,"name":"driver-1","rating":4,"acceptance_rate":0.8},{"id":2,"name":"driver-2","rating":3,"acceptance_rate":0.6},{"id":3,"name":"driver-3","rating":3.5,"acceptance_rate":0.77},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.9},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.88}],"customer":{"id":1111}}`),
+				body: []byte(`{"drivers":[{"id":1,"name":"driver-1","rating":4,"acceptance_rate":0.8},{"id":2,"name":"driver-2","rating":3,"acceptance_rate":0.6},{"id":3,"name":"driver-3","rating":3.5,"acceptance_rate":0.77},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.9},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.88}],"customer":{"id":1111},"details":"{\"points\": [{\"distanceInMeter\": 0.0}, {\"distanceInMeter\": 8976.0}, {\"distanceInMeter\": 729.0}, {\"distanceInMeter\": 8573.0}, {\"distanceInMeter\": 9000.0}]}"}`),
 			},
 			expTransformedRequest: request{
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body: []byte(`{"instances":{"columns":["acceptance_rate","driver_id","name","rating","customer_id","driver_performa"],"data":[[0.8,1,"driver-1",4,1111,6],[0.77,3,"driver-3",3.5,1111,3.5]]}}`),
+				body: []byte(`{"instances":{"columns":["acceptance_rate","driver_id","name","rating","customer_id","distance_contains_zero","distance_in_km","distance_in_m","distance_is_not_far_away","distance_is_valid","driver_performa"],"data":[[0.8,1,"driver-1",4,1111,true,0,0,true,true,6],[0.77,3,"driver-3",3.5,1111,true,0.729,729,true,true,3.5]]}}`),
 			},
 			modelResponse: response{
 				headers: map[string]string{

@@ -70,6 +70,11 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 		"integer_var > 1000":                                              mustCompileExpressionWithEnv("integer_var > 1000", env),
 		"existing_table.Col('int_col') == nil":                            mustCompileExpressionWithEnv("existing_table.Col('int_col') == nil", env),
 		"0":                                                               mustCompileExpressionWithEnv("0", env),
+		`map(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# * 0.001})`:       mustCompileExpressionWithEnv(`map(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# * 0.001})`, env),
+		`filter(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# >= 0})`:       mustCompileExpressionWithEnv(`filter(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# >= 0})`, env),
+		`all(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# >= 0})`:          mustCompileExpressionWithEnv(`all(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# >= 0})`, env),
+		`none(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# * 0.001 > 10})`: mustCompileExpressionWithEnv(`none(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# * 0.001 > 10})`, env),
+		`any(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# == 0.0})`:        mustCompileExpressionWithEnv(`any(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# == 0.0})`, env),
 	})
 
 	compiledPipeline := &CompiledPipeline{
@@ -250,6 +255,26 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 								Expression: "existing_table.Col('int_col') + existing_table.Col('float_col')",
 							},
 							{
+								Column:     "distance_in_km",
+								Expression: `map(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# * 0.001})`,
+							},
+							{
+								Column:     "distance_in_m",
+								Expression: `filter(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# >= 0})`,
+							},
+							{
+								Column:     "distance_is_valid",
+								Expression: `all(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# >= 0})`,
+							},
+							{
+								Column:     "distance_is_not_far_away",
+								Expression: `none(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# * 0.001 > 10})`,
+							},
+							{
+								Column:     "distance_contains_zero",
+								Expression: `any(JsonExtract("$.details", "$.points[*].distanceInMeter"), {# == 0.0})`,
+							},
+							{
 								Column: "conditional_col",
 								Conditions: []*spec.ColumnCondition{
 									{
@@ -310,6 +335,11 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 					series.New([]interface{}{1, 2222, 3, -1}, series.Int, "conditional_col"),
 					series.New([]interface{}{1, 2, 3, 0}, series.Int, "conditional_col_2"),
 					series.New([]interface{}{time.Now().Hour(), time.Now().Hour(), time.Now().Hour(), time.Now().Hour()}, series.Int, "current_hour"),
+					series.New([]interface{}{true, true, true, true}, series.Bool, "distance_contains_zero"),
+					series.New([]interface{}{0, 8.976, 0.729, 8.573}, series.Float, "distance_in_km"),
+					series.New([]interface{}{0, 8976, 729, 8573}, series.Float, "distance_in_m"),
+					series.New([]interface{}{true, true, true, true}, series.Bool, "distance_is_not_far_away"),
+					series.New([]interface{}{true, true, true, true}, series.Bool, "distance_is_valid"),
 					series.New([]interface{}{12345, 12345, 12345, 12345}, series.Int, "from_variable"),
 					series.New([]interface{}{2222.1111, 4444.2222, 6666.3333, nil}, series.Float, "int_add_float_col"),
 					series.New([]interface{}{"1111", "2222", "3333", nil}, series.String, "string_col_copy"),

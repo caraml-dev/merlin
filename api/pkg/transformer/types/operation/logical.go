@@ -51,6 +51,8 @@ func doLogicalOperation(left, right interface{}, operation LogicalOperator, inde
 		res, err = doOperationOnSeries(lVal, right, operation, indexes)
 	case *series.Series:
 		res, err = doOperationOnSeries(lVal, right, operation, indexes)
+	default:
+		err = fmt.Errorf("logical operation %s is not supported for type %T and %T", operation, lVal, right)
 	}
 	if err != nil {
 		return nil, err
