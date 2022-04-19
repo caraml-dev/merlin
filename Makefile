@@ -209,7 +209,6 @@ docker-build: docker-build-transformer docker-build-api docker-build-pyfunc dock
 
 .PHONY: docker-build-api
 docker-build-api: build-ui
-	@cp -r ui/build build
 	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin:${VERSION})
 	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f Dockerfile .
 	@rm -rf build
