@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 
+	merror "github.com/gojek/merlin/pkg/errors"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
@@ -37,6 +38,7 @@ type EndpointsController struct {
 	*AppContext
 }
 
+// ListEndpoint list all endpoints created from certain model version
 func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
@@ -53,7 +55,7 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
 	}
 
-	endpoints, err := c.EndpointsService.ListEndpoints(model, version)
+	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
 	if err != nil {
 		return InternalServerError(err.Error())
 	}
@@ -71,6 +73,7 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 	return Ok(endpoints)
 }
 
+// GetEndpoint get model endpoint with certain ID
 func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
@@ -88,7 +91,7 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
 	}
 
-	endpoint, err := c.EndpointsService.FindByID(endpointID)
+	endpoint, err := c.EndpointsService.FindByID(ctx, endpointID)
 	if err != nil {
 		log.Errorf("Error finding version endpoint with id %s, reason: %v", endpointID, err)
 		if gorm.IsRecordNotFoundError(err) {
@@ -109,6 +112,8 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 	return Ok(endpoint)
 }
 
+// CreateEndpoint create new endpoint from a model version and deploy to certain environment as specified by request
+// If target environment is not set then fallback to default environment
 func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
@@ -169,9 +174,9 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	}
 
 	// check that the model version quota
-	deployedModelVersionCount, err := c.EndpointsService.CountEndpoints(env, model)
+	deployedModelVersionCount, err := c.EndpointsService.CountEndpoints(ctx, env, model)
 	if deployedModelVersionCount >= config.MaxDeployedVersion {
-		return BadRequest(fmt.Sprintf("Max deployed endpoint reached. Max: %d Current: %d ", config.MaxDeployedVersion, deployedModelVersionCount))
+		return BadRequest(fmt.Sprintf("Max deployed endpoint reached. Max: %d Current: %d, undeploy existing endpoint before continuing", config.MaxDeployedVersion, deployedModelVersionCount))
 	}
 
 	// validate transformer
@@ -183,14 +188,19 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 		}
 	}
 
-	endpoint, err = c.EndpointsService.DeployEndpoint(env, model, version, newEndpoint)
+	endpoint, err = c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)
 	if err != nil {
+		if errors.Is(err, merror.InvalidInputError) {
+			return BadRequest(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
+		}
+
 		return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
 	}
 
 	return Created(endpoint)
 }
 
+// UpdateEndpoint update a an existing endpoint i.e. trigger redeployment
 func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
@@ -214,7 +224,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 		}
 	}
 
-	endpoint, err := c.EndpointsService.FindByID(endpointID)
+	endpoint, err := c.EndpointsService.FindByID(ctx, endpointID)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
 			return InternalServerError(fmt.Sprintf("Error finding endpoint with ID: %s", endpointID))
@@ -251,12 +261,21 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 			}
 		}
 
-		endpoint, err = c.EndpointsService.DeployEndpoint(env, model, version, newEndpoint)
+		// Should not allow redeploying a "serving" model and changing its deployment type since we can't guaratee graceful deployment
+		if endpoint.IsServing() && newEndpoint.DeploymentMode != endpoint.DeploymentMode {
+			return BadRequest("Changing deployment type of a serving model is not allowed")
+		}
+
+		endpoint, err = c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)
 		if err != nil {
+			if errors.Is(err, merror.InvalidInputError) {
+				return BadRequest(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
+			}
+
 			return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
 		}
 	} else if newEndpoint.Status == models.EndpointTerminated {
-		endpoint, err = c.EndpointsService.UndeployEndpoint(env, model, version, endpoint)
+		endpoint, err = c.EndpointsService.UndeployEndpoint(ctx, env, model, version, endpoint)
 		if err != nil {
 			return InternalServerError(fmt.Sprintf("Unable to undeploy version endpoint %s", endpointID))
 		}
@@ -301,7 +320,7 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 			return BadRequest(fmt.Sprintf("Unable to parse endpoint_id %s", rawEndpointID))
 		}
 
-		endpoint, err = c.EndpointsService.FindByID(endpointID)
+		endpoint, err = c.EndpointsService.FindByID(ctx, endpointID)
 		if err != nil {
 			log.Errorf("error finding endpoint %s: %v", rawEndpointID, err)
 			if gorm.IsRecordNotFoundError(err) {
@@ -321,7 +340,7 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 		return BadRequest(fmt.Sprintf("Version Endpoints %s is still serving traffic. Please route the traffic to another model version first", rawEndpointID))
 	}
 
-	endpoint, err = c.EndpointsService.UndeployEndpoint(env, model, version, endpoint)
+	endpoint, err = c.EndpointsService.UndeployEndpoint(ctx, env, model, version, endpoint)
 	if err != nil {
 		log.Errorf("error undeploying version endpoint %s: %v", rawEndpointID, err)
 		return InternalServerError(fmt.Sprintf("Unable to undeploy version endpoint %s", rawEndpointID))
@@ -345,7 +364,7 @@ func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]st
 		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
 	}
 
-	endpoint, err := c.EndpointsService.ListContainers(model, version, endpointID)
+	endpoint, err := c.EndpointsService.ListContainers(ctx, model, version, endpointID)
 	if err != nil {
 		log.Errorf("Error finding containers for endpoint %s, reason: %v", endpointID, err)
 		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint with id %s", endpointID))

@@ -229,7 +229,7 @@ func (c *ModelEndpointsController) saveDB(ctx context.Context, newModelEndpoint,
 	// Update version and version endpoints from previous model endpoint
 	if prevModelEndpoint != nil {
 		for _, ruleDestination := range prevModelEndpoint.Rule.Destination {
-			versionEndpoint, err := c.EndpointsService.FindByID(ruleDestination.VersionEndpointID)
+			versionEndpoint, err := c.EndpointsService.FindByID(ctx, ruleDestination.VersionEndpointID)
 			if err != nil {
 				return err
 			}
@@ -244,7 +244,7 @@ func (c *ModelEndpointsController) saveDB(ctx context.Context, newModelEndpoint,
 
 	// Update version and version endpoints from new model endpoint
 	for _, ruleDestination := range newModelEndpoint.Rule.Destination {
-		versionEndpoint, err := c.EndpointsService.FindByID(ruleDestination.VersionEndpointID)
+		versionEndpoint, err := c.EndpointsService.FindByID(ctx, ruleDestination.VersionEndpointID)
 		if err != nil {
 			return err
 		}
@@ -274,7 +274,7 @@ func (c *ModelEndpointsController) assignVersionEndpoint(ctx context.Context, en
 	for k := range endpoint.Rule.Destination {
 		versionEndpointID := endpoint.Rule.Destination[k].VersionEndpointID
 
-		versionEndpoint, err := c.EndpointsService.FindByID(versionEndpointID)
+		versionEndpoint, err := c.EndpointsService.FindByID(ctx, versionEndpointID)
 		if err != nil {
 			return nil, fmt.Errorf("Version Endpoint with given `version_endpoint_id: %s` not found", versionEndpointID)
 		}

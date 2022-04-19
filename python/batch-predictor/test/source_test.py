@@ -15,8 +15,9 @@
 from merlinpyspark.config import BigQuerySourceConfig
 from merlinpyspark.source import create_source
 from merlinpyspark.spec.prediction_job_pb2 import BigQuerySource
+import pytest
 
-
+@pytest.mark.ci
 def test_bq_source(spark_session):
     bq_src_proto = BigQuerySource(
         table="bigquery-public-data:samples.shakespeare",

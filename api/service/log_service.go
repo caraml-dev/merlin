@@ -16,6 +16,7 @@ package service
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"hash/fnv"
 	"io"
@@ -90,7 +91,7 @@ type ReadLogStream struct {
 }
 
 type LogService interface {
-	StreamLogs(logLineCh chan string, stopCh chan struct{}, options *LogQuery) error
+	StreamLogs(ctx context.Context, logLineCh chan string, stopCh chan struct{}, options *LogQuery) error
 }
 
 type logService struct {
@@ -106,7 +107,7 @@ func NewLogService(clusterControllers map[string]cluster.Controller) LogService 
 	return &logService{clusterControllers: clusterControllers}
 }
 
-func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, options *LogQuery) error {
+func (l logService) StreamLogs(ctx context.Context, logLineCh chan string, stopCh chan struct{}, options *LogQuery) error {
 	clusterController, ok := l.clusterControllers[options.Cluster]
 	if !ok {
 		return fmt.Errorf("unable to find cluster %s", options.Cluster)
@@ -115,7 +116,7 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {
-			allLogLines, err := l.getPodsLogs(clusterController, options)
+			allLogLines, err := l.getPodsLogs(ctx, clusterController, options)
 			if err != nil {
 				log.Errorf("failed getting all pods' logs: %s", err.Error())
 				return
@@ -145,11 +146,11 @@ func (l logService) StreamLogs(logLineCh chan string, stopCh chan struct{}, opti
 	return nil
 }
 
-func (l logService) getPodsLogs(clusterController cluster.Controller, options *LogQuery) ([]*LogLine, error) {
+func (l logService) getPodsLogs(ctx context.Context, clusterController cluster.Controller, options *LogQuery) ([]*LogLine, error) {
 	namespace := options.Namespace
 	labelSelector := l.getLabelSelector(*options)
 
-	pods, err := clusterController.ListPods(namespace, labelSelector)
+	pods, err := clusterController.ListPods(ctx, namespace, labelSelector)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list pods: %s", err.Error())
 	}
@@ -179,7 +180,7 @@ func (l logService) getPodsLogs(clusterController cluster.Controller, options *L
 			wg.Add(1)
 			go func(clusterController cluster.Controller, namespace string, pod v1.Pod, options LogQuery) {
 				defer wg.Done()
-				logLines := l.getContainerLogs(clusterController, namespace, pod.Name, options)
+				logLines := l.getContainerLogs(ctx, clusterController, namespace, pod.Name, options)
 
 				mu.Lock()
 				allLogLines = append(allLogLines, logLines...)
@@ -237,12 +238,12 @@ func determineColor(podName string) (color *color.Color) {
 	return colorList[idx]
 }
 
-func (l logService) getContainerLogs(clusterController cluster.Controller, namespace, podName string, options LogQuery) []*LogLine {
+func (l logService) getContainerLogs(ctx context.Context, clusterController cluster.Controller, namespace, podName string, options LogQuery) []*LogLine {
 	logLines := make([]*LogLine, 0)
 
 	prefixColor := determineColor(podName)
 
-	stream, err := clusterController.StreamPodLogs(namespace, podName, options.ToKubernetesLogOption())
+	stream, err := clusterController.StreamPodLogs(ctx, namespace, podName, options.ToKubernetesLogOption())
 	if err != nil {
 		// Error is handled here by logging it rather than returned because the caller usually does not know how to
 		// handle it. Example of what can trigger StreamPodLogs error: while the container is being created/terminated

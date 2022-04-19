@@ -16,6 +16,7 @@ import pytest
 import client
 from merlin.logger import Logger,LoggerMode,LoggerConfig
 
+
 @pytest.mark.unit
 def test_from_logger_response():
     logger_response = client.Logger(model=client.LoggerConfig(enabled=True, mode=client.LoggerMode.RESPONSE))
@@ -57,6 +58,7 @@ def test_from_logger_response():
     result = Logger.from_logger_response(None)
     assert result.model is None
     assert result.transformer is None
+
 
 @pytest.mark.unit
 def test_to_logger_spec():

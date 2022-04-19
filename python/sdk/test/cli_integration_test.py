@@ -46,10 +46,13 @@ def deployment_info():
     }
     return info
 
+
 @pytest.fixture(scope="module")
 def runner():
     return CliRunner()
 
+
+@pytest.mark.cli
 @pytest.mark.integration
 def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth):
 
@@ -110,6 +113,8 @@ def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth):
     assert latest_version._id == int(test_deployed_model_version)
     assert received_output == planned_output
 
+
+@pytest.mark.cli
 @pytest.mark.integration
 def test_cli_deployment_undeployment_with_resource_request(deployment_info, runner, use_google_oauth):
 
@@ -174,6 +179,8 @@ def test_cli_deployment_undeployment_with_resource_request(deployment_info, runn
     assert latest_version._id == int(test_deployed_model_version)
     assert received_output == planned_output
 
+
+@pytest.mark.cli
 @pytest.mark.integration
 def test_cli_scaffold_with_invalid_project(runner):
     result = runner.invoke(
@@ -193,6 +200,8 @@ def test_cli_scaffold_with_invalid_project(runner):
     assert result.output.strip() == expected_output.strip()
     assert not os.path.exists('./pyfunc_prediction')
 
+
+@pytest.mark.cli
 @pytest.mark.integration
 def test_cli_scaffold_with_invalid_model(runner):
     result = runner.invoke(

@@ -180,8 +180,8 @@ func createDriverSpec(job *models.PredictionJob) (v1beta2.DriverSpec, error) {
 			Tolerations: []corev1.Toleration{
 				defaultToleration,
 			},
+			ServiceAccount: &job.Name,
 		},
-		ServiceAccount: &job.Name,
 	}, nil
 }
 

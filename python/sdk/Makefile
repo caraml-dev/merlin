@@ -4,7 +4,7 @@ setup:
 
 .PHONY: type_check
 type_check:
-	@mypy --ignore-missing-imports --allow-untyped-globals  merlin
+	@pipenv run mypy --ignore-missing-imports --allow-untyped-globals  merlin
 
 .PHONY: test
 test: type_check

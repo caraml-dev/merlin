@@ -15,12 +15,14 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/gojek/mlp/api/client"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
@@ -79,7 +81,7 @@ func TestListEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("ListEndpoints", mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{
+				svc.On("ListEndpoints", context.Background(), mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{
 					{
 						ID:             uuid,
 						VersionID:      models.ID(1),
@@ -205,7 +207,7 @@ func TestListEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("ListEndpoints", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("ListEndpoints", context.Background(), mock.Anything, mock.Anything).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			expected: &Response{
@@ -257,7 +259,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:        models.ID(1),
 					Name:      "Model 1",
 					ProjectID: models.ID(1),
@@ -271,7 +273,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
 					RunID:       "runID",
@@ -282,7 +284,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:             uuid,
 					VersionID:      models.ID(1),
 					VersionModelID: models.ID(1),
@@ -322,7 +324,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -347,7 +349,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:        models.ID(1),
 					Name:      "Model 1",
 					ProjectID: models.ID(1),
@@ -361,7 +363,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			endpointService: func() *mocks.EndpointsService {
@@ -382,7 +384,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:        models.ID(1),
 					Name:      "Model 1",
 					ProjectID: models.ID(1),
@@ -396,7 +398,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
 					RunID:       "runID",
@@ -407,7 +409,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", context.Background(), uuid).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			expected: &Response{
@@ -424,7 +426,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:        models.ID(1),
 					Name:      "Model 1",
 					ProjectID: models.ID(1),
@@ -438,7 +440,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
 					RunID:       "runID",
@@ -449,7 +451,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", context.Background(), uuid).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			expected: &Response{
@@ -501,7 +503,7 @@ func TestListContainers(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:        models.ID(1),
 					Name:      "Model 1",
 					ProjectID: models.ID(1),
@@ -515,7 +517,7 @@ func TestListContainers(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:          models.ID(1),
 					ModelID:     models.ID(1),
 					RunID:       "runID",
@@ -526,7 +528,7 @@ func TestListContainers(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("ListContainers", mock.Anything, mock.Anything, uuid).Return([]*models.Container{
+				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, uuid).Return([]*models.Container{
 					{
 						Name:              "pod-1",
 						PodName:           "pod-1-1",
@@ -646,7 +648,7 @@ func TestListContainers(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("ListContainers", mock.Anything, mock.Anything, uuid).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, uuid).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			expected: &Response{
@@ -784,8 +786,8 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
-				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -945,8 +947,8 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
-				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -1384,7 +1386,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(5, nil)
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(5, nil)
 				return svc
 			},
 			monitoringConfig: config.MonitoringConfig{
@@ -1396,7 +1398,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Max deployed endpoint reached. Max: 2 Current: 5 "},
+				data: Error{Message: "Max deployed endpoint reached. Max: 2 Current: 5, undeploy existing endpoint before continuing"},
 			},
 		},
 		{
@@ -1484,8 +1486,8 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
-				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Something went wrong"))
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Something went wrong"))
 				return svc
 			},
 			monitoringConfig: config.MonitoringConfig{
@@ -1590,8 +1592,8 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
-				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -1911,8 +1913,8 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
-				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -2186,8 +2188,8 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
-				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -2424,8 +2426,8 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("CountEndpoints", mock.Anything, mock.Anything).Return(0, nil)
-				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -2553,7 +2555,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -2567,7 +2569,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -2599,7 +2601,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -2628,7 +2630,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						},
 					}),
 				}, nil)
-				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -2727,7 +2729,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -2778,7 +2780,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -2792,7 +2794,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -2824,7 +2826,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -2891,7 +2893,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -2905,7 +2907,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -2937,7 +2939,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -3004,7 +3006,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3018,7 +3020,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -3050,7 +3052,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -3117,7 +3119,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3131,7 +3133,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -3154,7 +3156,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -3221,7 +3223,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3235,7 +3237,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -3267,7 +3269,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -3296,7 +3298,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						},
 					}),
 				}, nil)
-				svc.On("UndeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("UndeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -3395,7 +3397,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3409,7 +3411,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -3444,7 +3446,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -3473,7 +3475,7 @@ func TestUpdateEndpoint(t *testing.T) {
 						},
 					}),
 				}, nil)
-				svc.On("DeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -3572,7 +3574,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3586,7 +3588,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -3614,6 +3616,299 @@ func TestUpdateEndpoint(t *testing.T) {
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{Message: "custom predictor image must be set"},
+			},
+		},
+		{
+			desc: "Should success update deployment mode",
+			vars: map[string]string{
+				"model_id":    "1",
+				"version_id":  "1",
+				"endpoint_id": uuid.String(),
+			},
+			requestBody: &models.VersionEndpoint{
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
+				Status:          models.EndpointRunning,
+				ServiceName:     "sample",
+				Namespace:       "sample",
+				EnvironmentName: "dev",
+				Message:         "",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    1,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				EnvVars: models.EnvVars([]models.EnvVar{
+					{
+						Name:  "WORKER",
+						Value: "1",
+					},
+				}),
+				DeploymentMode: deployment.RawDeploymentMode,
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
+					Name:         "model-1",
+					ProjectID:    models.ID(1),
+					Project:      mlp.Project{},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "",
+						Endpoints:    nil,
+					},
+				}, nil)
+				return svc
+			},
+			envService: func() *mocks.EnvironmentService {
+				svc := &mocks.EnvironmentService{}
+				svc.On("GetEnvironment", "dev").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointPending,
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					URL:                  "http://endpoint.svc",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					}, EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					DeploymentMode: deployment.ServerlessDeploymentMode,
+				}, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointRunning,
+					URL:                  "http://endpoint.svc",
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					},
+					EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					DeploymentMode: deployment.RawDeploymentMode,
+					CreatedUpdated: models.CreatedUpdated{},
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusOK,
+				data: &models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointRunning,
+					URL:                  "http://endpoint.svc",
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					},
+					EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					DeploymentMode: deployment.RawDeploymentMode,
+					CreatedUpdated: models.CreatedUpdated{},
+				},
+			},
+		},
+		{
+			desc: "Should fail to change deployment type for a serving endpoint endpoint",
+			vars: map[string]string{
+				"model_id":    "1",
+				"version_id":  "1",
+				"endpoint_id": uuid.String(),
+			},
+			requestBody: &models.VersionEndpoint{
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
+				Status:          models.EndpointServing,
+				ServiceName:     "sample",
+				Namespace:       "sample",
+				EnvironmentName: "dev",
+				Message:         "",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    1,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				EnvVars: models.EnvVars([]models.EnvVar{
+					{
+						Name:  "WORKER",
+						Value: "1",
+					},
+				}),
+				DeploymentMode: deployment.RawDeploymentMode,
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
+					Name:         "model-1",
+					ProjectID:    models.ID(1),
+					Project:      mlp.Project{},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "",
+						Endpoints:    nil,
+					},
+				}, nil)
+				return svc
+			},
+			envService: func() *mocks.EnvironmentService {
+				svc := &mocks.EnvironmentService{}
+				svc.On("GetEnvironment", "dev").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointServing,
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					URL:                  "http://endpoint.svc",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					}, EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					DeploymentMode: deployment.ServerlessDeploymentMode,
+				}, nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "Changing deployment type of a serving model is not allowed"},
 			},
 		},
 	}
@@ -3665,7 +3960,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3679,7 +3974,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -3711,7 +4006,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -3740,7 +4035,7 @@ func TestDeleteEndpoint(t *testing.T) {
 						},
 					}),
 				}, nil)
-				svc.On("UndeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("UndeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -3816,7 +4111,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3830,7 +4125,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			envService: func() *mocks.EnvironmentService {
@@ -3855,7 +4150,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3869,7 +4164,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -3891,7 +4186,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(nil, gorm.ErrRecordNotFound)
+				svc.On("FindByID", context.Background(), uuid).Return(nil, gorm.ErrRecordNotFound)
 				return svc
 			},
 			expected: &Response{
@@ -3908,7 +4203,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3922,7 +4217,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -3944,7 +4239,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", context.Background(), uuid).Return(nil, fmt.Errorf("DB is down"))
 				return svc
 			},
 			expected: &Response{
@@ -3961,7 +4256,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -3975,7 +4270,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -3998,7 +4293,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -4043,7 +4338,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -4057,7 +4352,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -4089,7 +4384,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -4118,7 +4413,7 @@ func TestDeleteEndpoint(t *testing.T) {
 						},
 					}),
 				}, nil)
-				svc.On("UndeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+				svc.On("UndeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -4165,7 +4460,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+				svc.On("FindByID", context.Background(), models.ID(1)).Return(&models.Model{
 					ID:           models.ID(1),
 					Name:         "model-1",
 					ProjectID:    models.ID(1),
@@ -4179,7 +4474,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+				svc.On("FindByID", context.Background(), models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
 					Model: &models.Model{
@@ -4211,7 +4506,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", uuid).Return(&models.VersionEndpoint{
+				svc.On("FindByID", context.Background(), uuid).Return(&models.VersionEndpoint{
 					ID:                   uuid,
 					VersionID:            models.ID(1),
 					VersionModelID:       models.ID(1),
@@ -4240,7 +4535,7 @@ func TestDeleteEndpoint(t *testing.T) {
 						},
 					}),
 				}, nil)
-				svc.On("UndeployEndpoint", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
+				svc.On("UndeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Connection refused"))
 				return svc
 			},
 			expected: &Response{

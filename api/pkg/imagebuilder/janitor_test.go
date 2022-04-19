@@ -1,6 +1,7 @@
 package imagebuilder
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -120,15 +121,15 @@ func TestJanitor_CleanJobs(t *testing.T) {
 
 	totalDelete := 0
 
-	mc.On("ListJobs", namespace, labelOrchestratorName+"=merlin").
+	mc.On("ListJobs", context.Background(), namespace, labelOrchestratorName+"=merlin").
 		Return(&batchv1.JobList{Items: []batchv1.Job{completedJob1, completedJob2, activeJob1, failedJob1}}, nil)
 
-	mc.On("DeleteJob", namespace, completedJob1.Name, mock.Anything).
+	mc.On("DeleteJob", context.Background(), namespace, completedJob1.Name, mock.Anything).
 		Run(func(args mock.Arguments) {
 			totalDelete++
 		}).
 		Return(nil)
-	mc.On("DeleteJob", namespace, completedJob2.Name, mock.Anything).
+	mc.On("DeleteJob", context.Background(), namespace, completedJob2.Name, mock.Anything).
 		Run(func(args mock.Arguments) {
 			totalDelete++
 		}).
@@ -156,7 +157,7 @@ func TestJanitor_getExpiredJobs(t *testing.T) {
 				cfg: JanitorConfig{BuildNamespace: namespace, Retention: retention},
 			},
 			mockFn: func(mc *mocks.Controller) {
-				mc.On("ListJobs", namespace, labelOrchestratorName+"=merlin").
+				mc.On("ListJobs", context.Background(), namespace, labelOrchestratorName+"=merlin").
 					Return(&batchv1.JobList{}, nil)
 			},
 			want:    []batchv1.Job{},
@@ -168,7 +169,7 @@ func TestJanitor_getExpiredJobs(t *testing.T) {
 				cfg: JanitorConfig{BuildNamespace: namespace, Retention: retention},
 			},
 			mockFn: func(mc *mocks.Controller) {
-				mc.On("ListJobs", namespace, labelOrchestratorName+"=merlin").
+				mc.On("ListJobs", context.Background(), namespace, labelOrchestratorName+"=merlin").
 					Return(&batchv1.JobList{Items: []batchv1.Job{completedJob1}}, nil)
 			},
 			want:    []batchv1.Job{completedJob1},
@@ -180,7 +181,7 @@ func TestJanitor_getExpiredJobs(t *testing.T) {
 				cfg: JanitorConfig{BuildNamespace: namespace, Retention: retention},
 			},
 			mockFn: func(mc *mocks.Controller) {
-				mc.On("ListJobs", namespace, labelOrchestratorName+"=merlin").
+				mc.On("ListJobs", context.Background(), namespace, labelOrchestratorName+"=merlin").
 					Return(&batchv1.JobList{Items: []batchv1.Job{completedJob1, activeJob1}}, nil)
 			},
 			want:    []batchv1.Job{completedJob1},
@@ -192,7 +193,7 @@ func TestJanitor_getExpiredJobs(t *testing.T) {
 				cfg: JanitorConfig{BuildNamespace: namespace, Retention: retention},
 			},
 			mockFn: func(mc *mocks.Controller) {
-				mc.On("ListJobs", namespace, labelOrchestratorName+"=merlin").
+				mc.On("ListJobs", context.Background(), namespace, labelOrchestratorName+"=merlin").
 					Return(&batchv1.JobList{Items: []batchv1.Job{completedJob1, activeJob1, failedJob1}}, nil)
 			},
 			want:    []batchv1.Job{completedJob1},
@@ -207,7 +208,7 @@ func TestJanitor_getExpiredJobs(t *testing.T) {
 
 			tt.mockFn(mc)
 
-			got, err := j.getExpiredJobs()
+			got, err := j.getExpiredJobs(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Janitor.getExpiredJobs() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -223,9 +224,9 @@ func TestJanitor_deleteJobs_one(t *testing.T) {
 	mc := &mocks.Controller{}
 	j := NewJanitor(mc, JanitorConfig{BuildNamespace: namespace, Retention: retention})
 
-	mc.On("DeleteJob", namespace, completedJob1.Name, mock.Anything).Return(nil)
+	mc.On("DeleteJob", context.Background(), namespace, completedJob1.Name, mock.Anything).Return(nil)
 
-	err := j.deleteJobs([]batchv1.Job{completedJob1})
+	err := j.deleteJobs(context.Background(), []batchv1.Job{completedJob1})
 	assert.Nil(t, err)
 }
 
@@ -235,18 +236,18 @@ func TestJanitor_deleteJobs_two(t *testing.T) {
 
 	totalDelete := 0
 
-	mc.On("DeleteJob", namespace, completedJob1.Name, mock.Anything).
+	mc.On("DeleteJob", context.Background(), namespace, completedJob1.Name, mock.Anything).
 		Run(func(args mock.Arguments) {
 			totalDelete++
 		}).
 		Return(nil)
-	mc.On("DeleteJob", namespace, completedJob2.Name, mock.Anything).
+	mc.On("DeleteJob", context.Background(), namespace, completedJob2.Name, mock.Anything).
 		Run(func(args mock.Arguments) {
 			totalDelete++
 		}).
 		Return(nil)
 
-	err := j.deleteJobs([]batchv1.Job{completedJob1, completedJob2})
+	err := j.deleteJobs(context.Background(), []batchv1.Job{completedJob1, completedJob2})
 	assert.Nil(t, err)
 
 	assert.Equal(t, 2, totalDelete)
@@ -256,10 +257,10 @@ func TestJanitor_deleteJob_notFound(t *testing.T) {
 	mc := &mocks.Controller{}
 	j := NewJanitor(mc, JanitorConfig{BuildNamespace: namespace, Retention: retention})
 
-	mc.On("DeleteJob", namespace, completedJob1.Name, mock.Anything).
+	mc.On("DeleteJob", context.Background(), namespace, completedJob1.Name, mock.Anything).
 		Return(errors.NewNotFound(batchv1.Resource("jobs"), "batch-image-builder-expired-1"))
 
-	err := j.deleteJobs([]batchv1.Job{completedJob1})
+	err := j.deleteJobs(context.Background(), []batchv1.Job{completedJob1})
 	assert.Nil(t, err)
 }
 
@@ -267,9 +268,9 @@ func TestJanitor_deleteJob_serverTimeout(t *testing.T) {
 	mc := &mocks.Controller{}
 	j := NewJanitor(mc, JanitorConfig{BuildNamespace: namespace, Retention: retention})
 
-	mc.On("DeleteJob", namespace, completedJob1.Name, mock.Anything).
+	mc.On("DeleteJob", context.Background(), namespace, completedJob1.Name, mock.Anything).
 		Return(errors.NewServerTimeout(batchv1.Resource("jobs"), "reason", 0))
 
-	err := j.deleteJobs([]batchv1.Job{completedJob1})
+	err := j.deleteJobs(context.Background(), []batchv1.Job{completedJob1})
 	assert.Nil(t, err)
 }

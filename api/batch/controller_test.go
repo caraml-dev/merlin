@@ -111,7 +111,7 @@ var (
 
 	sparkApp, _ = CreateSparkApplicationResource(predictionJob)
 	namespace   = &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: defaultNamespace}}
-	errRaised           = errors.New("error")
+	errRaised   = errors.New("error")
 )
 
 func TestSubmit(t *testing.T) {
@@ -332,9 +332,9 @@ func TestSubmit(t *testing.T) {
 				}
 				return true, test.sparkResourceSubmissionResult.resource, test.sparkResourceSubmissionResult.error
 			})
-			mockManifestManager.On("CreateDriverAuthorization", test.namespace).Return(test.driverAuthzCreationResult.serviceAccountName, test.driverAuthzCreationResult.error)
-			mockManifestManager.On("CreateSecret", jobName, test.namespace, secret.Data).Return(test.secretCreationResult.secretName, test.secretCreationResult.error)
-			mockManifestManager.On("CreateJobSpec", jobName, test.namespace, predictionJob.Config.JobConfig).Return(test.jobConfigCreationResult.configName, test.jobConfigCreationResult.error)
+			mockManifestManager.On("CreateDriverAuthorization", context.Background(), test.namespace).Return(test.driverAuthzCreationResult.serviceAccountName, test.driverAuthzCreationResult.error)
+			mockManifestManager.On("CreateSecret", context.Background(), jobName, test.namespace, secret.Data).Return(test.secretCreationResult.secretName, test.secretCreationResult.error)
+			mockManifestManager.On("CreateJobSpec", context.Background(), jobName, test.namespace, predictionJob.Config.JobConfig).Return(test.jobConfigCreationResult.configName, test.jobConfigCreationResult.error)
 			if test.existingServiceAccount.Id != int32(0) {
 				mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(test.existingServiceAccount, nil)
 			} else {
@@ -343,11 +343,11 @@ func TestSubmit(t *testing.T) {
 			mockStorage.On("Save", predictionJob).Return(test.saveResult.error)
 
 			if test.wantError {
-				mockManifestManager.On("DeleteSecret", jobName, defaultNamespace).Return(nil)
-				mockManifestManager.On("DeleteJobSpec", jobName, defaultNamespace).Return(nil)
+				mockManifestManager.On("DeleteSecret", context.Background(), jobName, defaultNamespace).Return(nil)
+				mockManifestManager.On("DeleteJobSpec", context.Background(), jobName, defaultNamespace).Return(nil)
 			}
 
-			err := ctl.Submit(predictionJob, test.namespace)
+			err := ctl.Submit(context.Background(), predictionJob, test.namespace)
 			if test.wantError {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())
@@ -386,10 +386,10 @@ func TestCleanupAfterSubmitFailed(t *testing.T) {
 	clusterMetadata := cluster.Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
 	ctl := NewController(mockStorage, mockMlpAPIClient, mockSparkClient, mockKubeClient, mockManifestManager, clusterMetadata)
 
-	mockManifestManager.On("DeleteSecret", jobName, defaultNamespace).Return(nil)
-	mockManifestManager.On("DeleteJobSpec", jobName, defaultNamespace).Return(nil)
+	mockManifestManager.On("DeleteSecret", context.Background(), jobName, defaultNamespace).Return(nil)
+	mockManifestManager.On("DeleteJobSpec", context.Background(), jobName, defaultNamespace).Return(nil)
 
-	err := ctl.Submit(predictionJob, defaultNamespace)
+	err := ctl.Submit(context.Background(), predictionJob, defaultNamespace)
 	assert.Error(t, err)
 	mockManifestManager.AssertExpectations(t)
 }
@@ -415,10 +415,10 @@ func TestOnUpdate(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	serviceAccountName := "driver-service-account"
-	mockManifestManager.On("CreateDriverAuthorization", defaultNamespace).Return(serviceAccountName, nil)
-	mockManifestManager.On("CreateSecret", jobName, defaultNamespace, secret.Data).Return(jobName, nil)
-	mockManifestManager.On("DeleteSecret", jobName, defaultNamespace).Return(nil)
-	mockManifestManager.On("DeleteJobSpec", jobName, defaultNamespace).Return(nil)
+	mockManifestManager.On("CreateDriverAuthorization", context.Background(), defaultNamespace).Return(serviceAccountName, nil)
+	mockManifestManager.On("CreateSecret", context.Background(), jobName, defaultNamespace, secret.Data).Return(jobName, nil)
+	mockManifestManager.On("DeleteSecret", context.Background(), jobName, defaultNamespace).Return(nil)
+	mockManifestManager.On("DeleteJobSpec", context.Background(), jobName, defaultNamespace).Return(nil)
 
 	sparkAppNew := sparkApp.DeepCopy()
 
@@ -490,8 +490,8 @@ func TestUpdateStatus(t *testing.T) {
 			time.Sleep(5 * time.Millisecond)
 
 			if test.wantState.IsTerminal() {
-				mockManifestManager.On("DeleteSecret", jobName, defaultNamespace).Return(nil)
-				mockManifestManager.On("DeleteJobSpec", jobName, defaultNamespace).Return(nil)
+				mockManifestManager.On("DeleteSecret", context.Background(), jobName, defaultNamespace).Return(nil)
+				mockManifestManager.On("DeleteJobSpec", context.Background(), jobName, defaultNamespace).Return(nil)
 			}
 
 			sparkAppNew := sparkApp.DeepCopy()
@@ -576,11 +576,11 @@ func TestStop(t *testing.T) {
 			mockKubeClient.PrependReactor("get", "namespaces", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil, kerrors.NewNotFound(schema.GroupResource{}, action.(ktesting.GetAction).GetName())
 			})
-			mockManifestManager.On("CreateDriverAuthorization", defaultNamespace).Return(serviceAccountName, nil)
-			mockManifestManager.On("CreateSecret", jobName, defaultNamespace, secret.Data).Return(jobName, nil)
-			mockManifestManager.On("DeleteSecret", jobName, defaultNamespace).Return(nil)
-			mockManifestManager.On("CreateJobSpec", jobName, test.namespace, predictionJob.Config.JobConfig).Return(jobConfig.configName, jobConfig.error)
-			mockManifestManager.On("DeleteJobSpec", jobName, defaultNamespace).Return(nil)
+			mockManifestManager.On("CreateDriverAuthorization", context.Background(), defaultNamespace).Return(serviceAccountName, nil)
+			mockManifestManager.On("CreateSecret", context.Background(), jobName, defaultNamespace, secret.Data).Return(jobName, nil)
+			mockManifestManager.On("DeleteSecret", context.Background(), jobName, defaultNamespace).Return(nil)
+			mockManifestManager.On("CreateJobSpec", context.Background(), jobName, test.namespace, predictionJob.Config.JobConfig).Return(jobConfig.configName, jobConfig.error)
+			mockManifestManager.On("DeleteJobSpec", context.Background(), jobName, defaultNamespace).Return(nil)
 			mockSparkClient.PrependReactor("create", "sparkapplications", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, sparkApp, nil
 			})
@@ -589,7 +589,7 @@ func TestStop(t *testing.T) {
 			})
 			mockStorage.On("Save", predictionJob).Return(nil)
 
-			err := ctl.Stop(predictionJob, namespace.Name)
+			err := ctl.Stop(context.Background(), predictionJob, namespace.Name)
 			if test.wantError {
 				assert.Error(t, err)
 				assert.Equal(t, test.wantErrorMsg, err.Error())

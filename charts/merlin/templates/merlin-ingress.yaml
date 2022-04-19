@@ -1,5 +1,5 @@
 {{- if .Values.merlin.ingress.enabled }}
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ template "merlin.fullname" .}}
@@ -25,7 +25,10 @@ spec:
       http:
         paths:
           - path: {{ .Values.merlin.ingress.path | default "/" }}
+            pathType: Prefix
             backend:
-              serviceName: {{ template "merlin.fullname" .}}
-              servicePort: {{ .Values.merlin.service.externalPort }}
+              service:
+                name: {{ template "merlin.fullname" .}}
+                port:
+                  number: {{ .Values.merlin.service.externalPort }}
 {{- end }}

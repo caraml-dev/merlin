@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
       - name: {{ template "mlflow.fullname" . }}
-        image: {{ .Values.mlflow.image.registry }}/{{ .Values.mlflow.image.repository }}:{{ .Values.mlflow.image.tag }}
+        image: "{{- if .Values.mlflow.image.registry -}}{{ .Values.mlflow.image.registry }}/{{- end -}}{{ .Values.mlflow.image.repository }}:{{ .Values.mlflow.image.tag }}"
         imagePullPolicy: {{ .Values.mlflow.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.mlflow.service.internalPort }}

@@ -1,0 +1,4 @@
+resources:
+- kserve.yaml
+patchesStrategicMerge:
+- overlay.yaml

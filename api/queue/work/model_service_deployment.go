@@ -1,6 +1,7 @@
 package work
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -46,6 +47,7 @@ type EndpointJob struct {
 }
 
 func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
+	ctx := context.Background()
 	data := job.Arguments[dataArgKey]
 	byte, _ := json.Marshal(data)
 	var jobArgs EndpointJob
@@ -99,18 +101,18 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		}
 	}()
 
-	modelOpt, err := depl.generateModelOptions(model, version)
+	modelOpt, err := depl.generateModelOptions(ctx, model, version)
 	if err != nil {
 		endpoint.Message = err.Error()
 		return err
 	}
 
-	modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, endpoint.EnvironmentName, endpoint.Transformer, endpoint.Logger)
+	modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, endpoint.EnvironmentName, endpoint.Transformer, endpoint.Logger, endpoint.DeploymentMode, endpoint.AutoscalingPolicy)
 	ctl, ok := depl.ClusterControllers[endpoint.EnvironmentName]
 	if !ok {
 		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)
 	}
-	svc, err := ctl.Deploy(modelService)
+	svc, err := ctl.Deploy(ctx, modelService)
 	if err != nil {
 		log.Errorf("unable to deploy version endpoint for model: %s, version: %s, reason: %v", model.Name, version.ID, err)
 		endpoint.Message = err.Error()
@@ -128,17 +130,15 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 	return nil
 }
 
-func (depl *ModelServiceDeployment) generateModelOptions(model *models.Model, version *models.Version) (*models.ModelOption, error) {
+func (depl *ModelServiceDeployment) generateModelOptions(ctx context.Context, model *models.Model, version *models.Version) (*models.ModelOption, error) {
 	modelOpt := &models.ModelOption{}
 	switch model.Type {
 	case models.ModelTypePyFunc:
-		imageRef, err := depl.ImageBuilder.BuildImage(model.Project, model, version)
+		imageRef, err := depl.ImageBuilder.BuildImage(ctx, model.Project, model, version)
 		if err != nil {
 			return modelOpt, err
 		}
 		modelOpt.PyFuncImageName = imageRef
-	case models.ModelTypePyTorch:
-		modelOpt = models.NewPyTorchModelOption(version)
 	case models.ModelTypeCustom:
 		modelOpt = models.NewCustomModelOption(version)
 	}

@@ -2,10 +2,12 @@ include .env.sample
 export
 
 BIN_NAME=merlin
+TRANSFORMER_BIN_NAME=merlin-transformer
 UI_PATH := ui
 UI_BUILD_PATH := ${UI_PATH}/build
 API_PATH=api
 API_ALL_PACKAGES := $(shell cd ${API_PATH} && go list ./... | grep -v github.com/gojek/mlp/api/client | grep -v -e mocks -e client)
+VERSION := $(or ${VERSION}, $(shell git describe --tags --always --first-parent))
 
 all: setup init-dep lint test clean build run
 
@@ -18,6 +20,8 @@ setup:
 	@test -x ${GOPATH}/bin/goimports || go get -u golang.org/x/tools/cmd/goimports
 	@test -x ${GOPATH}/bin/golint || go get -u golang.org/x/lint/golint
 	@test -x ${GOPATH}/bin/gotest || go get -u github.com/rakyll/gotest
+	@go install github.com/mitchellh/protoc-gen-go-json@v1.1.0
+	@go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
 
 .PHONY: init-dep
 init-dep: init-dep-ui init-dep-api
@@ -89,17 +93,22 @@ bench:
 # Building recipes
 # ============================================================
 .PHONY: build
-build: build-ui build-api
+build: build-ui build-api 
 
 .PHONY: build-ui
-build-ui: clean-ui
+build-ui: 
 	@echo "> Building UI static build ..."
 	@cd ${UI_PATH} && npm run build
 
 .PHONY: build-api
-build-api: clean-bin
+build-api: 
 	@echo "> Building API binary ..."
 	@cd ${API_PATH} && go build -o ../bin/${BIN_NAME} ./cmd/api
+
+.PHONY: build-transformer
+build-transformer: 
+	@echo "> Building Transformer binary ..."
+	@cd ${API_PATH} && go build -o ../bin/${TRANSFORMER_BIN_NAME} ./cmd/transformer
 
 # ============================================================
 # Run recipe
@@ -108,6 +117,11 @@ build-api: clean-bin
 run:
 	@echo "> Running application ..."
 	@./bin/${BIN_NAME}
+
+.PHONY: run-ui
+run-ui:
+	@echo "> Running UI ..."
+	@cd ui && yarn start
 
 # ============================================================
 # Utility recipes
@@ -141,8 +155,11 @@ swagger-ui:
 	@docker-compose up -d swagger-ui
 
 # ============================================================
-# Generate client recipes
+# Generate code recipes
 # ============================================================
+.PHONY: generate
+generate: generate-client generate-proto
+
 .PHONY: generate-client
 generate-client: generate-client-go generate-client-python
 
@@ -173,10 +190,41 @@ generate-client-python:
 	@rm -rf ${TEMP_CLIENT_PYTHON_OUTPUT_DIR}
 
 
-.PHONY: gen-proto
-gen-proto:
+.PHONY: generate-proto
+generate-proto:
 	@echo "> Generating specification configuration from Proto file..."
 	@cd protos/merlin && \
-		protoc -I=. --go_out=../../api --go_opt=module=github.com/gojek/merlin \
-		--go-json_out=../../api/pkg \
+		protoc -I=. \
+		--go_out=../../api \
+		--go_opt=module=github.com/gojek/merlin \
+		--go-json_out=../../api \
+		--go-json_opt=module=github.com/gojek/merlin \
 		transformer/**/*.proto
+
+# ============================================================
+# Docker build
+# ============================================================
+.PHONY: docker-build
+docker-build: docker-build-transformer docker-build-api docker-build-pyfunc docker-build-batch-predictor
+
+.PHONY: docker-build-api
+docker-build-api: build-ui
+	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin:${VERSION})
+	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f Dockerfile .
+	@rm -rf build
+
+.PHONY: docker-build-transformer
+docker-build-transformer:
+	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-transformer:${VERSION})
+	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f transformer.Dockerfile .
+
+.PHONY: docker-build-pyfunc
+docker-build-pyfunc:
+	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-pyfunc-base:${VERSION})
+	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f python/pyfunc-server/base.Dockerfile python
+
+.PHONY: docker-build-batch-predictor
+docker-build-batch-predictor:
+	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-pyspark-base:${VERSION})
+	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f python/batch-predictor/docker/base.Dockerfile python
+

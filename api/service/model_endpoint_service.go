@@ -23,11 +23,10 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	networking "istio.io/api/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 
 	"github.com/gojek/merlin/istio"
 	"github.com/gojek/merlin/log"
@@ -210,7 +209,7 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 	return endpoint, nil
 }
 
-func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoint *models.ModelEndpoint) (*v1alpha3.VirtualService, error) {
+func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoint *models.ModelEndpoint) (*v1beta1.VirtualService, error) {
 	metadata := models.Metadata{
 		Team:        model.Project.Team,
 		Stream:      model.Project.Stream,
@@ -220,19 +219,19 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 	}
 	labels := metadata.ToLabel()
 
-	vs := &v1alpha3.VirtualService{
+	vs := &v1beta1.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      model.Name,
 			Namespace: model.Project.Name,
 			Labels:    labels,
 		},
-		Spec: networking.VirtualService{},
+		Spec: istiov1beta1.VirtualService{},
 	}
 
 	modelEndpointHost := ""
 	versionEndpointPath := ""
 
-	var httpRouteDestinations []*networking.HTTPRouteDestination
+	var httpRouteDestinations []*istiov1beta1.HTTPRouteDestination
 	for _, destination := range endpoint.Rule.Destination {
 		versionEndpoint := destination.VersionEndpoint
 
@@ -252,12 +251,12 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 		}
 		versionEndpointPath = vePath
 
-		httpRouteDest := &networking.HTTPRouteDestination{
-			Destination: &networking.Destination{
+		httpRouteDest := &istiov1beta1.HTTPRouteDestination{
+			Destination: &istiov1beta1.Destination{
 				Host: defaultIstioGateway,
 			},
-			Headers: &networking.Headers{
-				Request: &networking.Headers_HeaderOperations{
+			Headers: &istiov1beta1.Headers{
+				Request: &istiov1beta1.Headers_HeaderOperations{
 					Set: map[string]string{"Host": versionEndpoint.HostURL()},
 				},
 			},
@@ -271,9 +270,9 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 		versionEndpointPath += predictPathSuffix
 	}
 
-	var mirrorDestination *networking.Destination
+	var mirrorDestination *istiov1beta1.Destination
 	if endpoint.Rule.Mirror != nil {
-		mirrorDestination = &networking.Destination{
+		mirrorDestination = &istiov1beta1.Destination{
 			Host: endpoint.Rule.Mirror.ServiceName,
 		}
 	}
@@ -282,18 +281,18 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 
 	vs.Spec.Gateways = []string{defaultGateway}
 
-	vs.Spec.Http = []*networking.HTTPRoute{
-		&networking.HTTPRoute{
-			Match: []*networking.HTTPMatchRequest{
-				&networking.HTTPMatchRequest{
-					Uri: &networking.StringMatch{
-						MatchType: &networking.StringMatch_Prefix{
+	vs.Spec.Http = []*istiov1beta1.HTTPRoute{
+		&istiov1beta1.HTTPRoute{
+			Match: []*istiov1beta1.HTTPMatchRequest{
+				&istiov1beta1.HTTPMatchRequest{
+					Uri: &istiov1beta1.StringMatch{
+						MatchType: &istiov1beta1.StringMatch_Prefix{
 							Prefix: defaultMatchURIPrefix,
 						},
 					},
 				},
 			},
-			Rewrite: &networking.HTTPRewrite{
+			Rewrite: &istiov1beta1.HTTPRewrite{
 				Uri: versionEndpointPath,
 			},
 

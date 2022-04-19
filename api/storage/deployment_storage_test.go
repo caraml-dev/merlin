@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build integration_local || integration
 // +build integration_local integration
 
 package storage
@@ -19,6 +20,7 @@ package storage
 import (
 	"testing"
 
+	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -62,20 +64,21 @@ func TestDeploymentStorage_List(t *testing.T) {
 		}
 		db.Create(&env1)
 
-		errRaised := models.VersionEndpoint{
+		endpoint := models.VersionEndpoint{
 			ID:              uuid.New(),
 			VersionID:       v.ID,
 			VersionModelID:  m.ID,
 			Status:          "pending",
 			EnvironmentName: env1.Name,
+			DeploymentMode:  deployment.ServerlessDeploymentMode,
 		}
-		db.Create(&errRaised)
+		db.Create(&endpoint)
 
 		deploy1 := &models.Deployment{
 			ProjectID:         models.ID(p.Id),
 			VersionID:         v.ID,
 			VersionModelID:    m.ID,
-			VersionEndpointID: errRaised.ID,
+			VersionEndpointID: endpoint.ID,
 			Status:            models.EndpointServing,
 			Error:             "",
 			CreatedUpdated:    models.CreatedUpdated{},
@@ -85,7 +88,7 @@ func TestDeploymentStorage_List(t *testing.T) {
 			ProjectID:         models.ID(p.Id),
 			VersionID:         v.ID,
 			VersionModelID:    m.ID,
-			VersionEndpointID: errRaised.ID,
+			VersionEndpointID: endpoint.ID,
 			Status:            models.EndpointServing,
 			Error:             "",
 			CreatedUpdated:    models.CreatedUpdated{},
@@ -149,6 +152,7 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 			VersionModelID:  m.ID,
 			Status:          models.EndpointFailed,
 			EnvironmentName: env1.Name,
+			DeploymentMode:  deployment.ServerlessDeploymentMode,
 		}
 		db.Create(&e1)
 
@@ -158,6 +162,7 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 			VersionModelID:  m.ID,
 			Status:          models.EndpointServing,
 			EnvironmentName: env1.Name,
+			DeploymentMode:  deployment.ServerlessDeploymentMode,
 		}
 		db.Create(&e2)
 

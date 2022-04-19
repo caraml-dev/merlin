@@ -15,6 +15,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -126,7 +127,7 @@ var (
 func TestGetPredictionJob(t *testing.T) {
 	svc, _, _, mockStorage, _ := newMockPredictionJobService()
 	mockStorage.On("Get", job.ID).Return(job, nil)
-	j, err := svc.GetPredictionJob(predJobEnv, model, version, job.ID)
+	j, err := svc.GetPredictionJob(context.Background(), predJobEnv, model, version, job.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, job, j)
 	mockStorage.AssertExpectations(t)
@@ -154,7 +155,7 @@ func TestListPredictionJob(t *testing.T) {
 		Error:          query.Error,
 	}
 	mockStorage.On("List", expDbQuery).Return(jobs, nil)
-	j, err := svc.ListPredictionJobs(project, query)
+	j, err := svc.ListPredictionJobs(context.Background(), project, query)
 	assert.NoError(t, err)
 	assert.Equal(t, jobs, j)
 	mockStorage.AssertExpectations(t)
@@ -174,7 +175,7 @@ func TestCreatePredictionJob(t *testing.T) {
 	mockController.(*mocks.Controller).On("Submit", savedJob, project.Name).Return(nil)
 	mockJobProducer.On("EnqueueJob", mock.Anything).Return(nil)
 
-	j, err := svc.CreatePredictionJob(predJobEnv, model, version, reqJob)
+	j, err := svc.CreatePredictionJob(context.Background(), predJobEnv, model, version, reqJob)
 	// time.Sleep(10 * time.Millisecond)
 	assert.NoError(t, err)
 	assert.Equal(t, job, j)
@@ -190,9 +191,9 @@ func TestStopPredictionJob(t *testing.T) {
 
 	mockStorage.On("Get", job.ID).Return(job, nil)
 	mockController := mockControllers[envName]
-	mockController.(*mocks.Controller).On("Stop", job, project.Name).Return(nil)
+	mockController.(*mocks.Controller).On("Stop", context.Background(), job, project.Name).Return(nil)
 
-	j, err := svc.StopPredictionJob(predJobEnv, model, version, job.ID)
+	j, err := svc.StopPredictionJob(context.Background(), predJobEnv, model, version, job.ID)
 	time.Sleep(10 * time.Millisecond)
 	assert.NoError(t, err)
 	assert.Equal(t, job, j)
@@ -250,7 +251,7 @@ func TestInvalidResourceRequest(t *testing.T) {
 			reqJob.Config = &models.Config{
 				ResourceRequest: test.resourceRequest,
 			}
-			_, err := svc.CreatePredictionJob(predJobEnv, model, version, reqJob)
+			_, err := svc.CreatePredictionJob(context.Background(), predJobEnv, model, version, reqJob)
 			assert.Error(t, err)
 			assert.Equal(t, test.wantErrMsg, err.Error())
 		})
@@ -329,14 +330,14 @@ func TestPredictionJobService_ListContainers(t *testing.T) {
 
 	for _, tt := range tests {
 		imgBuilder := &imageBuilderMock.ImageBuilder{}
-		imgBuilder.On("GetContainers", mock.Anything, mock.Anything, mock.Anything).
+		imgBuilder.On("GetContainers", context.Background(), mock.Anything, mock.Anything, mock.Anything).
 			Return(tt.mock.imageBuilderContainer, nil)
 
 		svc, mockControllers, _, _, _ := newMockPredictionJobService()
 		mockController := mockControllers[tt.args.env.Name]
-		mockController.(*mocks.Controller).On("GetContainers", "my-project", "prediction-job-id=2").Return(tt.mock.modelContainers, nil)
+		mockController.(*mocks.Controller).On("GetContainers", context.Background(), "my-project", "prediction-job-id=2").Return(tt.mock.modelContainers, nil)
 
-		containers, err := svc.ListContainers(tt.args.env, tt.args.model, tt.args.version, tt.args.job)
+		containers, err := svc.ListContainers(context.Background(), tt.args.env, tt.args.model, tt.args.version, tt.args.job)
 		if !tt.wantError {
 			assert.Nil(t, err, "unwanted error %v", err)
 		} else {

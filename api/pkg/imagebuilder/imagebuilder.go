@@ -15,6 +15,7 @@
 package imagebuilder
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"sort"
@@ -44,9 +45,9 @@ var maxCheckImageRetry uint64 = 2
 type ImageBuilder interface {
 	// BuildImage build docker image for the given model version
 	// return docker image ref
-	BuildImage(project mlp.Project, model *models.Model, version *models.Version) (string, error)
+	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error)
 	// GetContainers return reference to container used to build the docker image of a model version
-	GetContainers(project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error)
+	GetContainers(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error)
 }
 
 type nameGenerator interface {
@@ -93,7 +94,7 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 
 // BuildImage build a docker image for the given model version
 // Returns the docker image ref
-func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, version *models.Version) (string, error) {
+func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error) {
 	// check for existing image
 	imageName := c.nameGenerator.generateDockerImageName(project, model)
 	imageExists := c.imageExists(imageName, version.ID.String())
@@ -106,7 +107,7 @@ func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, vers
 
 	// check for existing job
 	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
-	job, err := jobClient.Get(c.nameGenerator.generateBuilderJobName(project, model, version), metav1.GetOptions{})
+	job, err := jobClient.Get(ctx, c.nameGenerator.generateBuilderJobName(project, model, version), metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
 			log.Errorf("error retrieving job status: %v", err)
@@ -114,7 +115,7 @@ func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, vers
 		}
 
 		jobSpec := c.createKanikoJobSpec(project, model, version)
-		job, err = jobClient.Create(jobSpec)
+		job, err = jobClient.Create(ctx, jobSpec, metav1.CreateOptions{})
 		if err != nil {
 			log.Errorf("unable to build image %s, error: %v", imageRef, err)
 			return "", ErrUnableToBuildImage{
@@ -124,14 +125,14 @@ func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, vers
 	} else {
 		if job.Status.Failed != 0 {
 			// job already created before so we have to delete it first if it failed
-			err = jobClient.Delete(job.Name, &metav1.DeleteOptions{})
+			err = jobClient.Delete(ctx, job.Name, metav1.DeleteOptions{})
 			if err != nil {
 				log.Errorf("error deleting job: %v", err)
 				return "", ErrDeleteFailedJob
 			}
 
 			jobSpec := c.createKanikoJobSpec(project, model, version)
-			job, err = jobClient.Create(jobSpec)
+			job, err = jobClient.Create(ctx, jobSpec, metav1.CreateOptions{})
 			if err != nil {
 				log.Errorf("unable to build image %s, error: %v", imageRef, err)
 				return "", ErrUnableToBuildImage{
@@ -142,7 +143,7 @@ func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, vers
 	}
 
 	// wait until pod is created successfully
-	err = c.waitJobCompleted(job)
+	err = c.waitJobCompleted(ctx, job)
 	if err != nil {
 		return "", err
 	}
@@ -151,9 +152,9 @@ func (c *imageBuilder) BuildImage(project mlp.Project, model *models.Model, vers
 }
 
 // GetContainers return container used for building a docker image for the given model version
-func (c *imageBuilder) GetContainers(project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error) {
+func (c *imageBuilder) GetContainers(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error) {
 	podClient := c.kubeClient.CoreV1().Pods(c.config.BuildNamespace)
-	pods, err := podClient.List(metav1.ListOptions{
+	pods, err := podClient.List(ctx, metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("job-name=%s", c.nameGenerator.generateBuilderJobName(project, model, version)),
 		FieldSelector: "status.phase!=Pending",
 	})
@@ -258,7 +259,7 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 	return false, nil
 }
 
-func (c *imageBuilder) waitJobCompleted(job *batchv1.Job) error {
+func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) error {
 	timeout := time.After(c.config.BuildTimeoutDuration)
 	ticker := time.Tick(time.Second * tickDurationSecond)
 	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
@@ -270,7 +271,7 @@ func (c *imageBuilder) waitJobCompleted(job *batchv1.Job) error {
 			log.Errorf("timeout waiting for kaniko job completion %s", job.Name)
 			return ErrTimeoutBuilImage
 		case <-ticker:
-			j, err := jobClient.Get(job.Name, metav1.GetOptions{})
+			j, err := jobClient.Get(ctx, job.Name, metav1.GetOptions{})
 			if err != nil {
 				log.Errorf("unable to get job status for job %s: %v", job.Name, err)
 				return ErrUnableToBuildImage{
@@ -282,7 +283,7 @@ func (c *imageBuilder) waitJobCompleted(job *batchv1.Job) error {
 				// successfully created pod
 				return nil
 			} else if j.Status.Failed == 1 {
-				podList, err := podClient.List(metav1.ListOptions{
+				podList, err := podClient.List(ctx, metav1.ListOptions{
 					LabelSelector: fmt.Sprintf("job-name=%s", j.Name),
 				})
 				pods := podList.Items

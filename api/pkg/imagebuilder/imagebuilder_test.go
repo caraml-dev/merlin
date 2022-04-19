@@ -15,6 +15,7 @@
 package imagebuilder
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -927,7 +928,7 @@ func TestBuildImage(t *testing.T) {
 			imageBuilderCfg := tt.config
 			c := NewModelServiceImageBuilder(kubeClient, imageBuilderCfg)
 
-			imageRef, err := c.BuildImage(tt.args.project, tt.args.model, tt.args.version)
+			imageRef, err := c.BuildImage(context.Background(), tt.args.project, tt.args.model, tt.args.version)
 			var actions []ktesting.Action
 			assert.NoError(t, err)
 			assert.Equal(t, tt.wantImageRef, imageRef)
@@ -1024,7 +1025,7 @@ func TestGetContainers(t *testing.T) {
 			return true, tt.mock, nil
 		})
 		c := NewModelServiceImageBuilder(kubeClient, config)
-		containers, err := c.GetContainers(tt.args.project, tt.args.model, tt.args.version)
+		containers, err := c.GetContainers(context.Background(), tt.args.project, tt.args.model, tt.args.version)
 
 		if !tt.wantError {
 			assert.NoErrorf(t, err, "expected no error, got %v", err)

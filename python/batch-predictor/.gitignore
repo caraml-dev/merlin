@@ -74,3 +74,4 @@ docs/_build
 # mlflow runs
 mlruns/
 
+test-config/*

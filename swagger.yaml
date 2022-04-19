@@ -1251,6 +1251,10 @@ definitions:
         $ref: "#/definitions/Transformer"
       logger:
         $ref: "#/definitions/Logger"
+      deployment_mode:
+        $ref: "#/definitions/DeploymentMode"
+      autoscaling_policy:
+        $ref: "#/definitions/AutoscalingPolicy"
       created_at:
         type: "string"
         format: "date-time"
@@ -1307,6 +1311,13 @@ definitions:
         type: "string"
         format: "date-time"
 
+  DeploymentMode:
+    type: string
+    enum:
+      - serverless
+      - raw_deployment
+    default: serverless  
+
   Container:
     type: "object"
     properties:
@@ -1343,6 +1354,23 @@ definitions:
         type: "string"
       memory_request:
         type: "string"
+
+
+  AutoscalingPolicy:
+    type: "object"
+    properties:
+      metrics_type:
+        $ref:  "#/definitions/MetricsType"
+      target_value:
+        type: "number"
+
+  MetricsType:
+    type: "string"
+    enum:
+    - "concurrency"
+    - "cpu_utilization"
+    - "memory_utilization"
+    - "rps"
 
   EnvVar:
     type: "object"
