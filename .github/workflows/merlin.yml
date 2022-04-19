@@ -3,7 +3,6 @@ on:
   push:
     branches: 
     - main 
-    - kserve_upgrade
     tags:
     - v*
   pull_request:
