@@ -189,7 +189,6 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 		endpoint.EnvVars = newEndpoint.EnvVars
 	}
 
-	endpoint.Status = models.EndpointPending
 	// Copy to avoid race condition
 	tobeDeployedEndpoint := *endpoint
 	endpoint.Status = models.EndpointPending
