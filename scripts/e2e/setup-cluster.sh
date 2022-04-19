@@ -1,254 +1,157 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Bash3 Boilerplate. Copyright (c) 2014, kvz.io
 
-set -ex
+set -o errexit
+set -o pipefail
+set -o nounset
 
-  export CLUSTER_NAME=dev
-  export KIND_NODE_VERSION=v1.16.15
-  export VAULT_VERSION=0.7.0
-  export ISTIO_VERSION=1.5.4
-  export KNATIVE_VERSION=v0.14.3
-  export KNATIVE_NET_ISTIO_VERSION=v0.15.0
-  export CERT_MANAGER_VERSION=v1.1.0
-  export KFSERVING_VERSION=v0.4.0
+# Software requirements:
+# - yq 4.24.2 
+# - helm 3
+# - k3d
+# - kubectl
 
-  export VAULT_VERSION=0.7.0
-  export MINIO_VERSION=7.0.2
+# Prerequisites:
+# - cluster have been created using k3d
 
-  export OAUTH_CLIENT_ID="<put your oauth client id here>"
-  export MERLIN_VERSION=v0.10.0
+CLUSTER_NAME=$1
+INGRESS_HOST=$2
 
-########################################
-# Install tools
-#
-if ! command -v jq &> /dev/null
-then
-  sudo apt-get update && sudo apt-get install jq
-fi
-if ! command -v yq &> /dev/null
-then
-  pip3 install yq
-fi
+ISTIO_VERSION=1.13.2
+KNATIVE_VERSION=1.3.0
+CERT_MANAGER_VERSION=1.7.2
+MINIO_VERSION=3.6.3 
+KSERVE_VERSION=0.8.0
+VAULT_VERSION=0.19.0
+TIMEOUT=180s
 
-########################################
-# Provision KinD cluster
-#
-cat << EOF > ./kind-config-istio.yaml
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-  extraPortMappings:
-  - containerPort: 32000
-    hostPort: 80
-    protocol: TCP
-  - containerPort: 443
-    hostPort: 443
-    protocol: TCP
-- role: worker
-EOF
-kind --version
-kind create cluster --name=${CLUSTER_NAME} --image=kindest/node:${KIND_NODE_VERSION} --config kind-config-istio.yaml
-kind get kubeconfig --name ${CLUSTER_NAME} --internal > kubeconfig.yaml
-########################################
-# Install Vault
-#
-kubectl create namespace vault
 
-# Helm 3 already installed in GitHub Actions
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm install vault hashicorp/vault --version=${VAULT_VERSION} --namespace=vault \
-  --set injector.enabled=false \
-  --set server.dev.enabled=true \
-  --set server.dataStorage.enabled=false \
-  --set server.resources.requests.cpu=25m \
-  --set server.resources.requests.memory=64Mi \
-  --set server.affinity=null \
-  --set server.tolerations=null \
-  --wait --timeout=600s
-sleep 15
+add_helm_repo() {
+    helm repo add hashicorp https://helm.releases.hashicorp.com
+    helm repo add minio https://charts.min.io/
+    helm repo add istio https://istio-release.storage.googleapis.com/charts
+    helm repo update
+}
 
-kubectl wait pod/vault-0 --namespace=vault --for=condition=ready --timeout=600s
+install_vault() {
+    echo "::group::Vault Deployment"
+    helm upgrade --install vault hashicorp/vault --version=${VAULT_VERSION} \
+        -f config/vault/values.yaml \
+        --namespace=vault --create-namespace \
+        --wait --timeout=${TIMEOUT}
 
-# Downgrade to Vault KV secrets engine version 1
-kubectl exec vault-0 --namespace=vault -- vault secrets disable secret
-kubectl exec vault-0 --namespace=vault -- vault secrets enable -version=1 -path=secret kv
+    kubectl wait pod/vault-0 --namespace=vault --for=condition=ready --timeout=${TIMEOUT}
+}
 
-# Write cluster credential to be saved in Vault
-cat <<EOF > cluster-credential.json
+store_cluster_secret() {
+      echo "::group::Storing Cluster Secret"
+    # Downgrade to Vault KV secrets engine version 1
+    kubectl exec vault-0 --namespace=vault -- vault secrets disable secret
+    kubectl exec vault-0 --namespace=vault -- vault secrets enable -version=1 -path=secret kv
+
+    k3d kubeconfig get $CLUSTER_NAME > kubeconfig.yaml
+
+    # Write cluster credential to be saved in Vault
+    cat <<EOF > cluster-credential.json
 {
-  "name": "$(yq -r '.clusters[0].name' kubeconfig.yaml)",
-  "master_ip": "$(yq -r '.clusters[0].cluster.server' kubeconfig.yaml)",
-  "certs": "$(yq -r '.clusters[0].cluster."certificate-authority-data"' kubeconfig.yaml | base64 --decode | awk '{printf "%s\\n", $0}')",
-  "client_certificate": "$(yq -r '.users[0].user."client-certificate-data"' kubeconfig.yaml | base64 --decode | awk '{printf "%s\\n", $0}')",
-  "client_key": "$(yq -r '.users[0].user."client-key-data"' kubeconfig.yaml | base64 --decode | awk '{printf "%s\\n", $0}')"
+"name": "$(yq '.clusters[0].name' kubeconfig.yaml)",
+"master_ip": "kubernetes.default:443",
+"certs": "$(yq '.clusters[0].cluster."certificate-authority-data"' kubeconfig.yaml | base64 --decode | awk '{printf "%s\\n", $0}')",
+"client_certificate": "$(yq '.users[0].user."client-certificate-data"' kubeconfig.yaml | base64 --decode | awk '{printf "%s\\n", $0}')",
+"client_key": "$(yq '.users[0].user."client-key-data"' kubeconfig.yaml | base64 --decode | awk '{printf "%s\\n", $0}')"
 }
 EOF
 
-# Save KinD cluster credential to Vault
-kubectl cp cluster-credential.json vault/vault-0:/tmp/cluster-credential.json
-kubectl exec vault-0 --namespace=vault -- vault kv put secret/${CLUSTER_NAME} @/tmp/cluster-credential.json
+    # Save KinD cluster credential to Vault
+    kubectl cp cluster-credential.json vault/vault-0:/tmp/cluster-credential.json
+    kubectl exec vault-0 --namespace=vault -- vault kv put secret/${CLUSTER_NAME} @/tmp/cluster-credential.json
 
-# Clean created credential files
-rm kubeconfig.yaml
-rm cluster-credential.json
-
-########################################
-# Install Istio
-#
-curl --location https://git.io/getLatestIstio | sh -
-cat << EOF > ./istio-config.yaml
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-spec:
-  values:
-    global:
-      proxy:
-        autoInject: disabled
-      useMCP: false
-      jwtPolicy: first-party-jwt
-      k8sIngress:
-        enabled: true
-  addonComponents:
-    pilot:
-      enabled: true
-    prometheus:
-      enabled: false
-  components:
-    pilot:
-      k8s:
-        resources:
-          requests:
-            cpu: 20m
-            memory: 64Mi
-    ingressGateways:
-      - name: istio-ingressgateway
-        enabled: true
-        k8s:
-          resources:
-            requests:
-              cpu: 20m
-              memory: 64Mi
-            limits:
-              memory: 128Mi
-      - name: cluster-local-gateway
-        enabled: true
-        label:
-          istio: cluster-local-gateway
-          app: cluster-local-gateway
-        k8s:
-          resources:
-            requests:
-              cpu: 20m
-              memory: 64Mi
-            limits:
-              memory: 128Mi
-          service:
-            type: ClusterIP
-            ports:
-              - port: 15020
-                name: status-port
-              - port: 80
-                name: http2
-              - port: 443
-                name: https
-EOF
-istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f istio-config.yaml
-sleep 120
-
-cat <<EOF > ./patch-ingressgateway-nodeport.yaml
-spec:
-  type: NodePort
-  ports:
-  - name: http2
-    nodePort: 32000
-    port: 80
-    protocol: TCP
-    targetPort: 80
-EOF
-
-kubectl patch service/istio-ingressgateway -n istio-system --patch="$(cat patch-ingressgateway-nodeport.yaml)"
-
-########################################
-# Install Knative
-#
-kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-crds.yaml
-kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-core.yaml
-
-kubectl set resources deployment activator --namespace=knative-serving --containers=activator --requests=cpu=20m,memory=64Mi
-kubectl set resources deployment autoscaler --namespace=knative-serving --containers=autoscaler --requests=cpu=20m,memory=64Mi
-kubectl set resources deployment controller --namespace=knative-serving --containers=controller --requests=cpu=20m,memory=64Mi
-kubectl set resources deployment webhook --namespace=knative-serving --containers=webhook --requests=cpu=20m,memory=64Mi
-
-kubectl wait deployment.apps/activator --namespace=knative-serving --for=condition=available --timeout=600s
-kubectl wait deployment.apps/autoscaler --namespace=knative-serving --for=condition=available --timeout=600s
-kubectl wait deployment.apps/controller --namespace=knative-serving --for=condition=available --timeout=600s
-kubectl wait deployment.apps/webhook --namespace=knative-serving --for=condition=available --timeout=600s
-
-export INGRESS_HOST=127.0.0.1
-cat <<EOF > ./patch-config-domain.json
-{
-  "data": {
-    "${INGRESS_HOST}.nip.io": ""
-  }
+    # Clean created credential files
+    rm kubeconfig.yaml
+    rm cluster-credential.json
 }
-EOF
-kubectl patch configmap/config-domain --namespace=knative-serving --type=merge --patch="$(cat patch-config-domain.json)"
 
-########################################
-# Install Knative Net Istio
-#
-kubectl apply --filename=https://github.com/knative/net-istio/releases/download/${KNATIVE_NET_ISTIO_VERSION}/release.yaml
+install_istio() {
+    echo "::group::Istio Deployment"
+    helm upgrade --install istio-base istio/base --version=${ISTIO_VERSION} -n istio-system --create-namespace
+    helm upgrade --install istiod istio/istiod --version=${ISTIO_VERSION} -n istio-system --create-namespace \
+        -f config/istio/istiod.yaml --timeout=${TIMEOUT}
+    
+    helm upgrade --install istio-ingressgateway istio/gateway -n istio-system --create-namespace \
+        -f config/istio/ingress-gateway.yaml --timeout=${TIMEOUT}
+    
+    helm upgrade --install cluster-local-gateway istio/gateway -n istio-system --create-namespace \
+        -f config/istio/clusterlocal-gateway.yaml --timeout=${TIMEOUT}
 
-########################################
-# Install Cert Manager
-#
-kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
-kubectl wait deployment.apps/cert-manager-webhook --namespace=cert-manager --for=condition=available --timeout=600s
+    kubectl rollout status deployment/istio-ingressgateway -n istio-system -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/istiod -w -n istio-system --timeout=${TIMEOUT}
+    kubectl rollout status deployment/cluster-local-gateway -n istio-system -w --timeout=${TIMEOUT}
 
-########################################
-# Install KFServing
-#
-kubectl apply --filename=https://raw.githubusercontent.com/kubeflow/kfserving/master/install/${KFSERVING_VERSION}/kfserving.yaml
-
-cat <<EOF > ./patch-config-inferenceservice.json
-{
-  "data": {
-    "storageInitializer": "{\n\"image\":\"ghcr.io/ariefrahmansyah/kfserving-storage-init:latest\",\n\"memoryRequest\":\"100Mi\",\n\"memoryLimit\":\"1Gi\",\n\"cpuRequest\":\"100m\",\n\"cpuLimit\":\"1\"\n}",
-    "logger": "{\n\"image\":\"ghcr.io/gojek/logger:v0.4.0-predictor-health-check\",\n\"memoryRequest\":\"100Mi\",\n\"memoryLimit\":\"1Gi\",\n\"cpuRequest\":\"100m\",\n\"cpuLimit\":\"1\",\n\"defaultUrl\":\"http://default-broker\"\n}"
-  }
+    kubectl apply -f config/istio/ingress-class.yaml
 }
-EOF
-kubectl patch configmap/inferenceservice-config --namespace=kfserving-system --type=merge --patch="$(cat patch-config-inferenceservice.json)"
 
+install_knative() {
+    echo "::group::Knative Deployment"
+    # Install CRD
+    kubectl apply -f https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-crds.yaml
 
-########################################
-# Install Minio
-#
-cat <<EOF > minio-values.yaml
-replicas: 1
-persistence:
-  enabled: false
-resources:
-  requests:
-    cpu: 25m
-    memory: 64Mi
-livenessProbe:
-  initialDelaySeconds: 30
-defaultBucket:
-  enabled: true
-  name: mlflow
-ingress:
-  enabled: true
-  annotations:
-    kubernetes.io/ingress.class: istio
-  path: /*
-  hosts:
-    - 'minio.minio.${INGRESS_HOST}.nip.io'
-EOF
+    # Install knative serving
+    wget https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-core.yaml -O config/knative/serving-core.yaml
+    kubectl apply -k config/knative
 
-kubectl create namespace minio
-helm repo add minio https://helm.min.io/
-helm install minio minio/minio --version=${MINIO_VERSION} --namespace=minio --values=minio-values.yaml \
---set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY
+    # Install knative-istio
+    kubectl apply -f https://github.com/knative/net-istio/releases/download/knative-v${KNATIVE_VERSION}/net-istio.yaml
 
-set +ex
+    kubectl rollout status deployment/autoscaler -n knative-serving -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/controller -n knative-serving -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/activator -n knative-serving -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/domain-mapping -n knative-serving -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/domainmapping-webhook -n knative-serving -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/webhook -n knative-serving -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}
+}
+
+install_cert_manager() {
+    echo "::group::Cert Manager Deployment"
+    kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/v${CERT_MANAGER_VERSION}/cert-manager.yaml
+
+    kubectl rollout status deployment/cert-manager-webhook -n cert-manager -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/cert-manager-cainjector -n cert-manager -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/cert-manager -n cert-manager -w --timeout=${TIMEOUT}
+}
+
+install_minio() {
+    echo "::group::Minio Deployment"
+    helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
+        --namespace=minio --create-namespace --timeout=${TIMEOUT} \
+        --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY \
+        --set "ingress.hosts[0]=minio.minio.${INGRESS_HOST}" \
+        --set "consoleIngress.hosts[0]=console.minio.${INGRESS_HOST}"
+
+    kubectl rollout status statefulset/minio -n minio -w --timeout=${TIMEOUT}
+}
+
+install_kserve() {
+    echo "::group::KServe Deployment"
+    wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
+    kubectl apply -k config/kserve
+    kubectl rollout status statefulset/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
+    kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
+}
+
+patch_coredns() {
+    echo "::group::Patching CoreDNS"
+    kubectl patch cm coredns -n kube-system --patch-file config/coredns/patch.yaml 
+    kubectl get cm coredns -n kube-system -o yaml
+}
+
+add_helm_repo
+install_istio
+install_minio
+install_knative
+install_vault
+install_cert_manager
+install_kserve
+store_cluster_secret
+patch_coredns

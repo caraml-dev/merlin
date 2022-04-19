@@ -19,15 +19,15 @@ import (
 	"encoding/json"
 	"errors"
 
-	kfsv1alpha2 "github.com/kubeflow/kfserving/pkg/apis/serving/v1alpha2"
+	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 )
 
 type LoggerMode string
 
-var modeMapping = map[LoggerMode]kfsv1alpha2.LoggerMode{
-	LogAll:      kfsv1alpha2.LogAll,
-	LogRequest:  kfsv1alpha2.LogRequest,
-	LogResponse: kfsv1alpha2.LogResponse,
+var modeMapping = map[LoggerMode]kservev1beta1.LoggerType{
+	LogAll:      kservev1beta1.LogAll,
+	LogRequest:  kservev1beta1.LogRequest,
+	LogResponse: kservev1beta1.LogResponse,
 }
 
 const (
@@ -62,9 +62,9 @@ func (lc *LoggerConfig) SanitizeMode() {
 	}
 }
 
-func ToKFServingLoggerMode(mode LoggerMode) kfsv1alpha2.LoggerMode {
+func ToKFServingLoggerMode(mode LoggerMode) kservev1beta1.LoggerType {
 
-	loggerMode := kfsv1alpha2.LogAll
+	loggerMode := kservev1beta1.LogAll
 	if mappedValue, found := modeMapping[mode]; found {
 		loggerMode = mappedValue
 	}

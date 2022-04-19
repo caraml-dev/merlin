@@ -1,0 +1,14 @@
+injector:
+  enabled: false
+
+server:
+  dev:
+    enabled: true
+  dataStore:
+    enabled: false
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+  affinity: null
+  tolerations: null

@@ -25,10 +25,14 @@ export class VersionEndpoint {
     };
 
     this.env_vars = [];
-
     this.transformer = new Transformer();
-
     this.logger = new Logger();
+
+    this.deployment_mode = "serverless";
+    this.autoscaling_policy = {
+      metrics_type: "concurrency",
+      target_value: 1
+    };
 
     this.created_at = undefined;
     this.updated_at = undefined;

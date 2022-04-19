@@ -65,6 +65,7 @@ def batch_gcs_staging_bucket():
     return os.environ.get("E2E_BATCH_GCS_STAGING_BUCKET", default="bucket-name")
 
 
+@pytest.mark.batch
 @pytest.mark.integration
 def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth,
                                batch_bigquery_source, batch_bigquery_sink, batch_gcs_staging_bucket):
@@ -106,7 +107,7 @@ def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_accou
 
     job = v.create_prediction_job(job_config=job_config, sync=False)
     while job.status == JobStatus.PENDING:
-        sleep(20)
+        sleep(1)
         job = job.refresh()
     job = job.stop()
 

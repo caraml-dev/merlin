@@ -15,8 +15,9 @@
 import os
 import pathlib
 import re
-import urllib.parse
 import shutil
+import tempfile
+import warnings
 
 from abc import abstractmethod
 from datetime import datetime
@@ -38,15 +39,18 @@ from mlflow.pyfunc import PythonModel
 
 import client
 from client import EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi, SecretApi, VersionApi
+from merlin.autoscaling import AutoscalingPolicy, RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY, \
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
 from merlin.batch.source import BigQuerySource
+from merlin.deployment_mode import DeploymentMode
 from merlin.docker.docker import copy_pyfunc_dockerfile, copy_standard_dockerfile
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.logger import Logger, LoggerConfig, LoggerMode
+from merlin.logger import Logger
 from merlin.util import autostr, download_files_from_gcs, guess_mlp_ui_url, valid_name_check
 from merlin.validation import validate_model_dir
 from merlin.version import VERSION
@@ -873,7 +877,6 @@ class ModelVersion:
             raise ValueError(
                 "log_pyfunc_model is only for PyFunc and PyFuncV2 model")
 
-        validate_model_dir(self._model.type, ModelType.PYFUNC, None)
         mlflow.pyfunc.log_model(DEFAULT_MODEL_PATH,
                                 python_model=model_instance,
                                 code_path=code_dir,
@@ -890,15 +893,9 @@ class ModelVersion:
         if self._model.type != ModelType.PYTORCH:
             raise ValueError("log_pytorch_model is only for PyTorch model")
 
-        validate_model_dir(self._model.type, ModelType.PYTORCH, model_dir)
-        mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
-        if model_class_name is not None:
-            version_api = VersionApi(self._api_client)
-            version_api.models_model_id_versions_version_id_patch(
-                int(self.model.id), int(self.id), body={"properties": {
-                    "pytorch_class_name": model_class_name
-                }
-                })
+        warnings.warn("'log_pytorch_model' is deprecated, use 'log_model' instead",
+                      DeprecationWarning)
+        self.log_model(model_dir)
 
     def log_model(self, model_dir=None):
         """
@@ -911,10 +908,7 @@ class ModelVersion:
         if self._model.type == ModelType.PYFUNC or self._model.type == ModelType.PYFUNC_V2:
             raise ValueError("use log_pyfunc_model to log pyfunc model")
 
-        if self._model.type == ModelType.PYTORCH:
-            raise ValueError("use log_pytorch_model to log pytorch model")
-
-        validate_model_dir(self._model.type, None, model_dir)
+        validate_model_dir(self._model.type, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
     def log_custom_model(self,
@@ -944,16 +938,14 @@ class ModelVersion:
                 Hence will raise error when creating inferenceservice
             """
             is_using_temp_dir = True
-            temp_file_dir = "/tmp/custom"
-            os.makedirs(temp_file_dir, exist_ok=True)
-            model_dir = temp_file_dir
+            model_dir = tempfile.mkdtemp(suffix="merlin-custom-model")
 
         with open(os.path.join(model_dir, model_properties_file), 'w') as writer:
             writer.write(f"image = {image}\n")
             writer.write(f"command = {command}\n")
             writer.write(f"args = {args}\n")
 
-        validate_model_dir(self._model.type, ModelType.CUSTOM, model_dir)
+        validate_model_dir(self._model.type, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
         if is_using_temp_dir:
@@ -988,7 +980,9 @@ class ModelVersion:
                resource_request: ResourceRequest = None,
                env_vars: Dict[str, str] = None,
                transformer: Transformer = None,
-               logger: Logger = None) -> VersionEndpoint:
+               logger: Logger = None,
+               deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
+               autoscaling_policy: AutoscalingPolicy = None) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
         and log_pyfunc_model has to be called beforehand
@@ -998,6 +992,8 @@ class ModelVersion:
         :param env_vars: List of environment variables to be passed to the model container.
         :param transformer: The service to be deployed alongside the model for pre/post-processing steps.
         :param logger: Response/Request logging configuration for model or transformer.
+        :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
+        :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
         :return: Endpoint object
         """
 
@@ -1054,13 +1050,22 @@ class ModelVersion:
         if logger is not None:
             target_logger = logger.to_logger_spec()
 
+        if autoscaling_policy is None:
+            if deployment_mode == DeploymentMode.RAW_DEPLOYMENT:
+                autoscaling_policy = RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY
+            else:
+                autoscaling_policy = SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
         endpoint = client.VersionEndpoint(environment_name=target_env_name,
                                           resource_request=target_resource_request,
                                           env_vars=target_env_vars,
                                           transformer=target_transformer,
-                                          logger=target_logger)
+                                          logger=target_logger,
+                                          deployment_mode=deployment_mode.value,
+                                          autoscaling_policy=client.AutoscalingPolicy(autoscaling_policy.metrics_type.value,
+                                                                                      autoscaling_policy.target_value))
         endpoint = endpoint_api \
             .models_model_id_versions_version_id_endpoint_post(int(model.id),
                                                                int(self.id),

@@ -25,14 +25,20 @@ RUN apk update && apk add --no-cache git ca-certificates bash
 RUN mkdir -p src/api
 
 WORKDIR /src/api
+
+# Caching dependencies
+COPY api/go.mod .
+COPY api/go.sum .
+COPY python/batch-predictor/go.mod ../python/batch-predictor/go.mod
+COPY python/batch-predictor/go.sum ../python/batch-predictor/go.sum
+
+RUN go mod download
+
 COPY api .
 COPY python/batch-predictor ../python/batch-predictor
 
 RUN go mod tidy
 RUN go build -o bin/transformer \
-    -ldflags="-X github.com/prometheus/common/version.Branch=${BRANCH} \
-    -X github.com/prometheus/common/version.Revision=${REVISION} \
-    -X github.com/prometheus/common/version.Version=${VERSION}" \
     ./cmd/transformer/main.go
 
 # ============================================================

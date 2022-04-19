@@ -1,63 +1,20 @@
-import React, { Fragment, useContext } from "react";
+import React, { useContext } from "react";
 import {
   EuiForm,
   EuiFormRow,
   EuiIcon,
+  EuiSpacer,
   EuiSuperSelect,
-  EuiText,
-  EuiTextColor,
   EuiToolTip
 } from "@elastic/eui";
 import sortBy from "lodash/sortBy";
 import { Panel } from "./Panel";
 import EnvironmentsContext from "../../../../../providers/environments/context";
+import { EnvironmentDropdownOption } from "./EnvironmentDropdownOption";
+import { DeploymentModeDropdown } from "./DeploymentModeDropdown";
+import { AutoscalingPolicyFormGroup } from "./AutoscalingPolicyFormGroup";
 
-const EnvironmentDropdownOption = ({
-  environment,
-  version,
-  endpoint,
-  disabled
-}) => {
-  const option = (
-    <Fragment>
-      <strong>{environment.name}</strong>
-      <EuiText size="s">
-        <EuiTextColor color="subdued">{environment.cluster}</EuiTextColor>
-      </EuiText>
-      {endpoint && (
-        <EuiText size="s">
-          <EuiTextColor color="subdued">{endpoint.status}</EuiTextColor>
-        </EuiText>
-      )}
-    </Fragment>
-  );
-
-  return disabled ? (
-    <EuiToolTip
-      position="left"
-      content={
-        <Fragment>
-          <p>
-            Model version {version.id} already has a <b>{endpoint.status}</b>{" "}
-            endpoint on <b>{environment.name}</b>.
-          </p>
-          <p>
-            <br />
-          </p>
-          <p>
-            If you want to do redeployment, go to model version details page and
-            click Redeploy button.
-          </p>
-        </Fragment>
-      }>
-      {option}
-    </EuiToolTip>
-  ) : (
-    option
-  );
-};
-
-const isOptionDisabled = endpoint => {
+const isEnvironmentOptionDisabled = endpoint => {
   return (
     endpoint &&
     (endpoint.status === "serving" ||
@@ -67,13 +24,15 @@ const isOptionDisabled = endpoint => {
 };
 
 const getEndpointByEnvironment = (version, environmentName) => {
-  return version.endpoints.find(ve => {
+  const ve = version.endpoints.find(ve => {
     return ve.environment_name === environmentName;
   });
+  return ve;
 };
 
-export const EnvironmentPanel = ({
+export const DeploymentConfigPanel = ({
   environment,
+  endpoint,
   version,
   onChange,
   errors = {},
@@ -83,7 +42,7 @@ export const EnvironmentPanel = ({
 
   const environmentOptions = sortBy(environments, "name").map(environment => {
     const versionEndpoint = getEndpointByEnvironment(version, environment.name);
-    const isDisabled = isOptionDisabled(versionEndpoint);
+    const isDisabled = isEnvironmentOptionDisabled(versionEndpoint);
 
     return {
       value: environment.name,
@@ -104,6 +63,7 @@ export const EnvironmentPanel = ({
     onChange("environment_name")(value);
 
     const versionEndpoint = getEndpointByEnvironment(version, value);
+
     if (versionEndpoint) {
       Object.keys(versionEndpoint).forEach(key => {
         onChange(key)(versionEndpoint[key]);
@@ -111,8 +71,17 @@ export const EnvironmentPanel = ({
     }
   };
 
+  const onDeploymentModeChange = deploymentMode => {
+    onChange("deployment_mode")(deploymentMode);
+  };
+
+  const onAutoscalingPolicyChange = policy => {
+    onChange("autoscaling_policy")(policy);
+  };
+
   return (
-    <Panel title="Environment">
+    <Panel title="Deployment Configuration">
+      <EuiSpacer></EuiSpacer>
       <EuiForm>
         <EuiFormRow
           fullWidth
@@ -138,6 +107,31 @@ export const EnvironmentPanel = ({
             disabled={isEnvironmentDisabled}
           />
         </EuiFormRow>
+        <EuiFormRow
+          fullWidth
+          label={
+            <EuiToolTip content="Specify the deployment mode of your model version">
+              <span>
+                Deployment Mode *{" "}
+                <EuiIcon type="questionInCircle" color="subdued" />
+              </span>
+            </EuiToolTip>
+          }
+          display="row">
+          <DeploymentModeDropdown
+            fullWidth
+            endpointStatus={endpoint.status}
+            deploymentMode={endpoint.deployment_mode}
+            onDeploymentModeChange={onDeploymentModeChange}
+          />
+        </EuiFormRow>
+        <EuiSpacer></EuiSpacer>
+        <AutoscalingPolicyFormGroup
+          fullWidth
+          deploymentMode={endpoint.deployment_mode}
+          autoscalingPolicy={endpoint.autoscaling_policy}
+          onAutoscalingPolicyChange={onAutoscalingPolicyChange}
+        />
       </EuiForm>
     </Panel>
   );

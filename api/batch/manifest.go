@@ -16,6 +16,7 @@ package batch
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	"github.com/ghodss/yaml"
@@ -32,14 +33,14 @@ import (
 )
 
 type ManifestManager interface {
-	CreateJobSpec(predictionJobName string, namespace string, spec *spec.PredictionJob) (string, error)
-	DeleteJobSpec(predictionJobName string, namespace string) error
+	CreateJobSpec(ctx context.Context, predictionJobName string, namespace string, spec *spec.PredictionJob) (string, error)
+	DeleteJobSpec(ctx context.Context, predictionJobName string, namespace string) error
 
-	CreateSecret(predictionJobName string, namespace string, data string) (string, error)
-	DeleteSecret(predictionJobName string, namespace string) error
+	CreateSecret(ctx context.Context, predictionJobName string, namespace string, data string) (string, error)
+	DeleteSecret(ctx context.Context, predictionJobName string, namespace string) error
 
-	CreateDriverAuthorization(namespace string) (string, error)
-	DeleteDriverAuthorization(namespace string) error
+	CreateDriverAuthorization(ctx context.Context, namespace string) (string, error)
+	DeleteDriverAuthorization(ctx context.Context, namespace string) error
 }
 
 var (
@@ -80,14 +81,14 @@ func NewManifestManager(kubeClient kubernetes.Interface) ManifestManager {
 	return &manifestManager{kubeClient: kubeClient}
 }
 
-func (m *manifestManager) CreateJobSpec(predictionJobName string, namespace string, spec *spec.PredictionJob) (string, error) {
+func (m *manifestManager) CreateJobSpec(ctx context.Context, predictionJobName string, namespace string, spec *spec.PredictionJob) (string, error) {
 	configYaml, err := toYamlString(spec)
 	if err != nil {
 		log.Errorf("failed converting prediction job spec to yaml: %v", err)
 		return "", errors.New("failed converting prediction job spec to yaml")
 	}
 
-	cm, err := m.kubeClient.CoreV1().ConfigMaps(namespace).Create(&corev1.ConfigMap{
+	cm, err := m.kubeClient.CoreV1().ConfigMaps(namespace).Create(ctx, &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      predictionJobName,
 			Namespace: namespace,
@@ -95,7 +96,7 @@ func (m *manifestManager) CreateJobSpec(predictionJobName string, namespace stri
 		Data: map[string]string{
 			jobSpecFileName: configYaml,
 		},
-	})
+	}, metav1.CreateOptions{})
 
 	if err != nil {
 		log.Errorf("failed creating job specification config map %s in namespace %s: %v", predictionJobName, namespace, err)
@@ -105,8 +106,8 @@ func (m *manifestManager) CreateJobSpec(predictionJobName string, namespace stri
 	return cm.Name, nil
 }
 
-func (m *manifestManager) DeleteJobSpec(predictionJobName string, namespace string) error {
-	err := m.kubeClient.CoreV1().ConfigMaps(namespace).Delete(predictionJobName, &metav1.DeleteOptions{})
+func (m *manifestManager) DeleteJobSpec(ctx context.Context, predictionJobName string, namespace string) error {
+	err := m.kubeClient.CoreV1().ConfigMaps(namespace).Delete(ctx, predictionJobName, metav1.DeleteOptions{})
 	if client.IgnoreNotFound(err) != nil {
 		log.Errorf("failed deleting configmap %s in namespace %s: %v", predictionJobName, namespace, err)
 		return errors.Errorf("failed deleting configmap %s in namespace %s", predictionJobName, namespace)
@@ -114,21 +115,21 @@ func (m *manifestManager) DeleteJobSpec(predictionJobName string, namespace stri
 	return nil
 }
 
-func (m *manifestManager) CreateDriverAuthorization(namespace string) (string, error) {
+func (m *manifestManager) CreateDriverAuthorization(ctx context.Context, namespace string) (string, error) {
 	serviceAccountName, driverRoleName, driverRoleBindingName := createAuthorizationResourceNames(namespace)
 	// create service account
-	sa, err := m.kubeClient.CoreV1().ServiceAccounts(namespace).Get(serviceAccountName, metav1.GetOptions{})
+	sa, err := m.kubeClient.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
 			return "", errors.Errorf("failed getting status of driver service account %s in namespace %s", serviceAccountName, namespace)
 		}
 
-		sa, err = m.kubeClient.CoreV1().ServiceAccounts(namespace).Create(&corev1.ServiceAccount{
+		sa, err = m.kubeClient.CoreV1().ServiceAccounts(namespace).Create(ctx, &corev1.ServiceAccount{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      serviceAccountName,
 				Namespace: namespace,
 			},
-		})
+		}, metav1.CreateOptions{})
 
 		if err != nil {
 			return "", errors.Errorf("failed creating driver service account %s in namespace %s", serviceAccountName, namespace)
@@ -136,19 +137,19 @@ func (m *manifestManager) CreateDriverAuthorization(namespace string) (string, e
 	}
 
 	// create role
-	role, err := m.kubeClient.RbacV1().Roles(namespace).Get(driverRoleName, metav1.GetOptions{})
+	role, err := m.kubeClient.RbacV1().Roles(namespace).Get(ctx, driverRoleName, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
 			return "", errors.Errorf("failed getting status of driver role %s in namespace %s", driverRoleName, namespace)
 		}
 
-		role, err = m.kubeClient.RbacV1().Roles(namespace).Create(&v1.Role{
+		role, err = m.kubeClient.RbacV1().Roles(namespace).Create(ctx, &v1.Role{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      driverRoleName,
 				Namespace: namespace,
 			},
 			Rules: defaultSparkDriverRoleRules,
-		})
+		}, metav1.CreateOptions{})
 
 		if err != nil {
 			return "", errors.Errorf("failed creating driver roles %s in namespace %s", driverRoleName, namespace)
@@ -156,13 +157,13 @@ func (m *manifestManager) CreateDriverAuthorization(namespace string) (string, e
 	}
 
 	// create role binding
-	_, err = m.kubeClient.RbacV1().RoleBindings(namespace).Get(driverRoleBindingName, metav1.GetOptions{})
+	_, err = m.kubeClient.RbacV1().RoleBindings(namespace).Get(ctx, driverRoleBindingName, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
 			return "", errors.Errorf("failed getting status of driver rolebinding %s in namespace %s", driverRoleBindingName, namespace)
 		}
 
-		_, err = m.kubeClient.RbacV1().RoleBindings(namespace).Create(&v1.RoleBinding{
+		_, err = m.kubeClient.RbacV1().RoleBindings(namespace).Create(ctx, &v1.RoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      driverRoleBindingName,
 				Namespace: namespace,
@@ -179,7 +180,7 @@ func (m *manifestManager) CreateDriverAuthorization(namespace string) (string, e
 				Kind:     "Role",
 				Name:     role.Name,
 			},
-		})
+		}, metav1.CreateOptions{})
 
 		if err != nil {
 			return "", errors.Errorf("failed creating driver roles binding %s in namespace %s", driverRoleBindingName, namespace)
@@ -189,25 +190,25 @@ func (m *manifestManager) CreateDriverAuthorization(namespace string) (string, e
 	return sa.Name, nil
 }
 
-func (m *manifestManager) DeleteDriverAuthorization(namespace string) error {
+func (m *manifestManager) DeleteDriverAuthorization(ctx context.Context, namespace string) error {
 	serviceAccountName, driverRoleName, driverRoleBindingName := createAuthorizationResourceNames(namespace)
-	err := m.kubeClient.RbacV1().RoleBindings(namespace).Delete(driverRoleBindingName, &metav1.DeleteOptions{})
+	err := m.kubeClient.RbacV1().RoleBindings(namespace).Delete(ctx, driverRoleBindingName, metav1.DeleteOptions{})
 	if client.IgnoreNotFound(err) != nil {
 		return errors.Errorf("failed deleting driver roles binding %s in namespace %s", driverRoleBindingName, namespace)
 	}
-	err = m.kubeClient.RbacV1().Roles(namespace).Delete(driverRoleName, &metav1.DeleteOptions{})
+	err = m.kubeClient.RbacV1().Roles(namespace).Delete(ctx, driverRoleName, metav1.DeleteOptions{})
 	if client.IgnoreNotFound(err) != nil {
 		return errors.Errorf("failed deleting driver roles %s in namespace %s", driverRoleName, namespace)
 	}
-	err = m.kubeClient.CoreV1().ServiceAccounts(namespace).Delete(serviceAccountName, &metav1.DeleteOptions{})
+	err = m.kubeClient.CoreV1().ServiceAccounts(namespace).Delete(ctx, serviceAccountName, metav1.DeleteOptions{})
 	if client.IgnoreNotFound(err) != nil {
 		return errors.Errorf("failed deleting service account %s in namespace %s", serviceAccountName, namespace)
 	}
 	return nil
 }
 
-func (m *manifestManager) CreateSecret(predictionJobName string, namespace string, data string) (string, error) {
-	secret, err := m.kubeClient.CoreV1().Secrets(namespace).Create(&corev1.Secret{
+func (m *manifestManager) CreateSecret(ctx context.Context, predictionJobName string, namespace string, data string) (string, error) {
+	secret, err := m.kubeClient.CoreV1().Secrets(namespace).Create(ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      predictionJobName,
 			Namespace: namespace,
@@ -216,7 +217,7 @@ func (m *manifestManager) CreateSecret(predictionJobName string, namespace strin
 			serviceAccountFileName: data,
 		},
 		Type: corev1.SecretTypeOpaque,
-	})
+	}, metav1.CreateOptions{})
 
 	if err != nil {
 		log.Errorf("failed creating secret %s in namespace %s: %v", predictionJobName, namespace, err)
@@ -226,8 +227,8 @@ func (m *manifestManager) CreateSecret(predictionJobName string, namespace strin
 	return secret.Name, nil
 }
 
-func (m *manifestManager) DeleteSecret(predictionJobName string, namespace string) error {
-	err := m.kubeClient.CoreV1().Secrets(namespace).Delete(predictionJobName, &metav1.DeleteOptions{})
+func (m *manifestManager) DeleteSecret(ctx context.Context, predictionJobName string, namespace string) error {
+	err := m.kubeClient.CoreV1().Secrets(namespace).Delete(ctx, predictionJobName, metav1.DeleteOptions{})
 	if client.IgnoreNotFound(err) != nil {
 		log.Errorf("failed deleting secret %s in namespace %s: %v", predictionJobName, namespace, err)
 		return errors.Errorf("failed deleting secret %s in namespace %s", predictionJobName, namespace)

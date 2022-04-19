@@ -15,13 +15,12 @@
 from merlin.util import valid_name_check, get_bucket_name, get_gcs_path
 import pytest
 
-import merlin.util as utils
 
 @pytest.mark.unit
 def test_name_check():
     invalid_names = [
         'test-name,', 'test,name', 'test.name'
-        ]
+    ]
 
     valid_names = [
         'test-name', 'testname'
@@ -29,10 +28,11 @@ def test_name_check():
 
     for name in invalid_names:
         result = valid_name_check(name)
-        assert result == False
+        assert result is False
     for name in valid_names:
         result = valid_name_check(name)
-        assert result == True
+        assert result is True
+
 
 @pytest.mark.unit
 def test_get_bucket_name():

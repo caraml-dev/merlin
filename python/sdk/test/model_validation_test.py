@@ -15,26 +15,34 @@
 from merlin.validation import validate_model_dir
 from merlin.model import ModelType
 import pytest
+import re
 
-
+@pytest.mark.parametrize(
+    "model_type,model_dir,message",
+    [
+        (ModelType.PYTORCH, "test/invalid-models/pytorch-model-invalid", "test/invalid-models/pytorch-model-invalid/config/config.properties is not found"),
+        (ModelType.TENSORFLOW, "test/invalid-models/tensorflow-model-invalid", "test/invalid-models/tensorflow-model-invalid/1/saved_model.pb is not found"),
+        (ModelType.SKLEARN, "test/invalid-models/sklearn-model-invalid", "['model.joblib'] is not found in test/invalid-models/sklearn-model-invalid"),
+        (ModelType.XGBOOST, "test/invalid-models/xgboost-model-invalid", "['model.bst'] is not found in test/invalid-models/xgboost-model-invalid"),
+        (ModelType.ONNX, "test/invalid-models/onnx-model-invalid", "['model.onnx'] is not found in test/invalid-models/onnx-model-invalid")
+    ]
+)
 @pytest.mark.unit
-def test_validate_model_dir():
-    models = [modeltype for modeltype in ModelType]
-    functions = [ModelType.PYFUNC, ModelType.PYTORCH, None]
-    for input_model in models:
-        for target_function in functions:
-            valid_model_dir = f'test/{input_model.value}-model'
-            invalid_model_dir = f'test/invalid-models/{input_model.value}-model-invalid'
-            if target_function == input_model or \
-                    (input_model
-                     not in [ModelType.PYFUNC, ModelType.PYTORCH,
-                             ModelType.PYFUNC_V2]
-                     and target_function == None):
-                assert validate_model_dir(input_model, target_function,
-                                          valid_model_dir) == None
-                if input_model != ModelType.PYFUNC and input_model != ModelType.CUSTOM:
-                    with pytest.raises(Exception) as exc:
-                        validate_model_dir(input_model, target_function,
-                                           invalid_model_dir)
-                    assert str(exc.value).startswith(
-                        f'Provided {input_model.name} model directory should contain all of the following:')
+def test_invalid_model_dir(model_type, model_dir, message):
+    with pytest.raises(ValueError, match=re.escape(message)):
+        validate_model_dir(model_type, model_dir)
+
+
+@pytest.mark.parametrize(
+    "model_type,model_dir",
+    [
+        (ModelType.PYTORCH, "test/pytorch-model/pytorch-sample"),
+        (ModelType.TENSORFLOW, "test/tensorflow-model"),
+        (ModelType.SKLEARN, "test/sklearn-model"),
+        (ModelType.XGBOOST, "test/xgboost-model"),
+        (ModelType.ONNX, "test/onnx-model")
+    ]
+)
+@pytest.mark.unit
+def test_valid_model_dir(model_type, model_dir):
+    validate_model_dir(model_type, model_dir)

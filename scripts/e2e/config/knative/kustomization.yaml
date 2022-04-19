@@ -1,0 +1,4 @@
+resources:
+- serving-core.yaml
+patchesStrategicMerge:
+- overlay.yaml

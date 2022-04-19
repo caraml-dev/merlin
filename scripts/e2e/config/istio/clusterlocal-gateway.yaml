@@ -1,0 +1,39 @@
+name: cluster-local-gateway
+
+labels:
+  app: cluster-local-gateway
+  istio: cluster-local-gateway
+
+autoscaling:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+service:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http2
+  - port: 443
+    name: https
+  - port: 31400
+    name: tcp
+  - port: 15011
+    targetPort: 15011
+    name: tcp-pilot-grpc-tls
+  - port: 8060
+    targetPort: 8060
+    name: tcp-citadel-grpc-tls
+  - port: 15030
+    targetPort: 15030
+    name: http2-prometheus
+  - port: 15032
+    targetPort: 15032
+    name: http2-tracing

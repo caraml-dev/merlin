@@ -19,5 +19,5 @@ from merlin.endpoint import Status
 def undeploy_all_version():
     for v in merlin.active_model().list_version():
         ve = v.endpoint
-        if ve is not None and ve.status == Status.RUNNING:
+        if ve is not None and (ve.status == Status.RUNNING or ve.status == Status.PENDING):
             merlin.undeploy(v)

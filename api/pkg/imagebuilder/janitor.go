@@ -1,6 +1,7 @@
 package imagebuilder
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -52,15 +53,16 @@ func NewJanitor(clusterController cluster.Controller, cfg JanitorConfig) *Janito
 
 // CleanJobs deletes the finished (succeeded or failed) image building jobs.
 func (j *Janitor) CleanJobs() {
+	ctx := context.Background()
 	log.Infof("Image Builder Janitor: Start cleaning jobs...")
 
-	expiredJobs, err := j.getExpiredJobs()
+	expiredJobs, err := j.getExpiredJobs(ctx)
 	if err != nil {
 		log.Errorf("failed to get expired jobs: %s", err)
 		return
 	}
 
-	if err := j.deleteJobs(expiredJobs); err != nil {
+	if err := j.deleteJobs(ctx, expiredJobs); err != nil {
 		log.Errorf("failed to delete jobs: %s", err)
 		return
 	}
@@ -68,8 +70,8 @@ func (j *Janitor) CleanJobs() {
 	log.Infof("Image Builder Janitor: Cleaning jobs finish...")
 }
 
-func (j *Janitor) getExpiredJobs() ([]batchv1.Job, error) {
-	jobs, err := j.cc.ListJobs(j.cfg.BuildNamespace, labelOrchestratorName+"=merlin")
+func (j *Janitor) getExpiredJobs(ctx context.Context) ([]batchv1.Job, error) {
+	jobs, err := j.cc.ListJobs(ctx, j.cfg.BuildNamespace, labelOrchestratorName+"=merlin")
 	if err != nil {
 		return nil, err
 	}
@@ -90,13 +92,13 @@ func (j *Janitor) getExpiredJobs() ([]batchv1.Job, error) {
 	return expiredJobs, nil
 }
 
-func (j *Janitor) deleteJobs(expiredJobs []batchv1.Job) error {
+func (j *Janitor) deleteJobs(ctx context.Context, expiredJobs []batchv1.Job) error {
 	for _, job := range expiredJobs {
 		jobStatusType := j.getJobStatusType(job.Status)
 		logMsg := fmt.Sprintf("Image Builder Janitor: Deleting an image builder job (Name: %s, Status: %s)", job.Name, jobStatusType)
 
 		propagationPolicy := metav1.DeletePropagationBackground
-		deleteOptions := &metav1.DeleteOptions{
+		deleteOptions := metav1.DeleteOptions{
 			PropagationPolicy: &propagationPolicy,
 		}
 		if j.cfg.DryRun {
@@ -107,7 +109,7 @@ func (j *Janitor) deleteJobs(expiredJobs []batchv1.Job) error {
 		log.Debugf(logMsg)
 
 		startTime := time.Now()
-		err := j.cc.DeleteJob(j.cfg.BuildNamespace, job.Name, deleteOptions)
+		err := j.cc.DeleteJob(ctx, j.cfg.BuildNamespace, job.Name, deleteOptions)
 		durationMs := time.Since(startTime).Microseconds()
 
 		if err != nil && !errors.IsNotFound(err) {

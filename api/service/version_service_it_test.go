@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build integration || integration_local
 // +build integration integration_local
 
 package service
@@ -22,6 +23,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -71,6 +73,7 @@ func TestVersionsService_FindById(t *testing.T) {
 			VersionModelID:  m.ID,
 			Status:          models.EndpointTerminated,
 			EnvironmentName: env.Name,
+			DeploymentMode:  deployment.ServerlessDeploymentMode,
 		}
 		db.Create(&endpoint1)
 
@@ -80,6 +83,7 @@ func TestVersionsService_FindById(t *testing.T) {
 			VersionModelID:  m.ID,
 			Status:          models.EndpointTerminated,
 			EnvironmentName: env.Name,
+			DeploymentMode:  deployment.ServerlessDeploymentMode,
 		}
 		db.Create(&endpoint2)
 
@@ -89,6 +93,7 @@ func TestVersionsService_FindById(t *testing.T) {
 			VersionModelID:  m.ID,
 			Status:          models.EndpointTerminated,
 			EnvironmentName: env.Name,
+			DeploymentMode:  deployment.ServerlessDeploymentMode,
 			Transformer: &models.Transformer{
 				Enabled: true,
 				Image:   "ghcr.io/gojek/merlin-transformer-test",
@@ -178,6 +183,7 @@ func TestVersionsService_ListVersions(t *testing.T) {
 				VersionModelID:  m.ID,
 				Status:          models.EndpointTerminated,
 				EnvironmentName: env.Name,
+				DeploymentMode:  deployment.ServerlessDeploymentMode,
 			}
 			db.Create(&endpoint1)
 
@@ -187,6 +193,7 @@ func TestVersionsService_ListVersions(t *testing.T) {
 				VersionModelID:  m.ID,
 				Status:          models.EndpointTerminated,
 				EnvironmentName: env.Name,
+				DeploymentMode:  deployment.ServerlessDeploymentMode,
 			}
 			db.Create(&endpoint2)
 
@@ -205,6 +212,7 @@ func TestVersionsService_ListVersions(t *testing.T) {
 					Enabled: true,
 					Image:   "ghcr.io/gojek/merlin-transformer-test",
 				},
+				DeploymentMode: deployment.ServerlessDeploymentMode,
 			}
 			db.Create(&endpoint3)
 		}

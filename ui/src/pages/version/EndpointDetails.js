@@ -19,12 +19,22 @@ import PropTypes from "prop-types";
 import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import { ModelServicePanel } from "./ModelServicePanel";
 import { TransformerServicePanel } from "./TransformerServicePanel";
+import { DeploymentConfigPanel } from "./DeploymentConfigPanel";
 
-export const VersionConfig = ({ endpoint, version }) => {
+/**
+ * EndpointDetails UI component containing detailed information of an endpoint
+ * @param {*} endpoint The endpoint
+ * @param {*} version The model version from which the endpoint is created
+ */
+export const EndpointDetails = ({ endpoint, version }) => {
   return (
     endpoint && (
       <Fragment>
         <EuiFlexGroup direction="column">
+          <EuiFlexItem>
+            <DeploymentConfigPanel endpoint={endpoint} />
+          </EuiFlexItem>
+
           <EuiFlexItem>
             <ModelServicePanel endpoint={endpoint} version={version} />
           </EuiFlexItem>
@@ -40,7 +50,7 @@ export const VersionConfig = ({ endpoint, version }) => {
   );
 };
 
-VersionConfig.propTypes = {
+EndpointDetails.propTypes = {
   model: PropTypes.object.isRequired,
   version: PropTypes.object.isRequired,
   endpoint: PropTypes.object.isRequired

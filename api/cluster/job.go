@@ -15,18 +15,20 @@
 package cluster
 
 import (
+	"context"
+
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (c *controller) ListJobs(namespace, labelSelector string) (*batchv1.JobList, error) {
-	return c.batchClient.Jobs(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+func (c *controller) ListJobs(ctx context.Context, namespace, labelSelector string) (*batchv1.JobList, error) {
+	return c.batchClient.Jobs(namespace).List(ctx, metav1.ListOptions{LabelSelector: labelSelector})
 }
 
-func (c *controller) DeleteJob(namespace, jobName string, options *metav1.DeleteOptions) error {
-	return c.batchClient.Jobs(namespace).Delete(jobName, options)
+func (c *controller) DeleteJob(ctx context.Context, namespace, jobName string, options metav1.DeleteOptions) error {
+	return c.batchClient.Jobs(namespace).Delete(ctx, jobName, options)
 }
 
-func (c *controller) DeleteJobs(namespace string, options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
-	return c.batchClient.Jobs(namespace).DeleteCollection(options, listOptions)
+func (c *controller) DeleteJobs(ctx context.Context, namespace string, deleteOptions metav1.DeleteOptions, listOptions metav1.ListOptions) error {
+	return c.batchClient.Jobs(namespace).DeleteCollection(ctx, deleteOptions, listOptions)
 }

@@ -4,13 +4,14 @@
 .dockerignore
 
 bin/
-chart/
+build/
+charts/
 docs/
+examples/
 python/pyfunc-scaffolding
 python/pyfunc-server
 python/sdk
-ui/build/
-ui/node_modules/
+scripts/
 
 Dockerfile
 

@@ -16,6 +16,7 @@ import pytest
 
 from merlin.resource_request import ResourceRequest
 
+
 @pytest.mark.unit
 def test_resource_request_validate():
     resource_request = ResourceRequest(1, 2, "100m", "128Mi")

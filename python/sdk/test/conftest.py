@@ -15,11 +15,14 @@
 import mlflow
 import os
 import pytest
+import requests as requests_lib
 
 import client as cl
 from client import ApiClient, Configuration
 from merlin.model import Model, ModelType, ModelVersion, Project
 
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 @pytest.fixture
 def url():
@@ -114,3 +117,17 @@ def service_account():
 @pytest.fixture
 def use_google_oauth():
     return os.environ.get("E2E_USE_GOOGLE_OAUTH", default=True) == "true"
+
+@pytest.fixture
+def requests():
+    retry_strategy = Retry(
+        total=5,
+        status_forcelist=[429, 500, 502, 503, 504, 404],
+        method_whitelist=["POST"],
+        backoff_factor=0.5,
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    req = requests_lib.Session()
+    req.mount("http://", adapter)
+
+    return req
