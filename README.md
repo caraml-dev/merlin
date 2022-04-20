@@ -45,3 +45,4 @@ make generate-client
 ## Notice
 
 Merlin is a community project and is still under active development. Your feedback and contributions are important to us. Please have a look at our [contributing guide](CONTRIBUTING.md) for details.
+.
