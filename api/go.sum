@@ -716,8 +716,8 @@ github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf h1:5xRGbUdOmZKoDXkG
 github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf/go.mod h1:QzhUKaYKJmcbTnCYCAVQrroCOY7vOOI8cSQ4NbuhYf0=
 github.com/gojekfarm/gota v0.12.1-0.20220329041038-bdee6822d003 h1:P9ph+Dcd7xMe/GQ9k24T9NqVS6HRyrNqyscpV0HUBtM=
 github.com/gojekfarm/gota v0.12.1-0.20220329041038-bdee6822d003/go.mod h1:0N1RwZc60ImjH0LMLUTDCvPWdtxk419HJScoigjR66k=
-github.com/gojekfarm/jsonpath v0.1.0 h1:ofQpGrZiv75uO2mB1gTk5l9BmJLVIMB+uQh4bY2Nq7g=
-github.com/gojekfarm/jsonpath v0.1.0/go.mod h1:1cPoGRnDKrtGXzs4z/IkEPosicPFZ0Drn2prBo7cyHM=
+github.com/gojekfarm/jsonpath v0.1.1 h1:6GPJ+dBF6pPAQ536FmZw6trUD8uMXEeK//LZ7icgIy0=
+github.com/gojekfarm/jsonpath v0.1.1/go.mod h1:1cPoGRnDKrtGXzs4z/IkEPosicPFZ0Drn2prBo7cyHM=
 github.com/golang-migrate/migrate/v4 v4.11.0 h1:uqtd0ysK5WyBQ/T1K2uDIooJV0o2Obt6uPwP062DupQ=
 github.com/golang-migrate/migrate/v4 v4.11.0/go.mod h1:nqbpDbckcYjsCD5I8q5+NI9Tkk7SVcmaF40Ax1eAWhg=
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGwJL78qG/PmXZO1EjYhfJinVAhrmmHX6Z8B9k=
