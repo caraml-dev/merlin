@@ -32,6 +32,18 @@ const (
 		  "array_object": [
 			  {"exist_key":1},
 			  {"exist_key":2}
+		  ],
+		  "inputs": [
+			  {
+				  "variable": [
+					{"name": "A", "value": 200}, {"name": "B", "value": 250}
+				  ]
+			  },
+			  {
+				  "variable": [
+					{"name": "C", "value": 300}, {"name": "D", "value": 350}
+				  ]
+			  }
 		  ]
 		}
 		`
@@ -278,6 +290,87 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 			want:        []interface{}{0.4, float64(-1), 0.5},
 			wantErr:     false,
 			err:         nil,
+		},
+		{
+			desc: "filtering nested array",
+			opt: JsonPathOption{
+				JsonPath: "$.inputs[*].variable[?(@.value > 200)]",
+			},
+			sourceJSONs: jsonContainer,
+			want: []interface{}{
+				map[string]interface{}{
+					"name":  "B",
+					"value": float64(250),
+				},
+				map[string]interface{}{
+					"name":  "C",
+					"value": float64(300),
+				},
+				map[string]interface{}{
+					"name":  "D",
+					"value": float64(350),
+				},
+			},
+			wantErr: false,
+			err:     nil,
+		},
+		{
+			desc: "range nested array",
+			opt: JsonPathOption{
+				JsonPath: "$.inputs[*].variable[*]",
+			},
+			sourceJSONs: jsonContainer,
+			want: []interface{}{
+				map[string]interface{}{
+					"name":  "A",
+					"value": float64(200),
+				},
+				map[string]interface{}{
+					"name":  "B",
+					"value": float64(250),
+				},
+				map[string]interface{}{
+					"name":  "C",
+					"value": float64(300),
+				},
+				map[string]interface{}{
+					"name":  "D",
+					"value": float64(350),
+				},
+			},
+			wantErr: false,
+			err:     nil,
+		},
+		{
+			desc: "access nested array",
+			opt: JsonPathOption{
+				JsonPath: "$.inputs[*].variable",
+			},
+			sourceJSONs: jsonContainer,
+			want: []interface{}{
+				[]interface{}{
+					map[string]interface{}{
+						"name":  "A",
+						"value": float64(200),
+					},
+					map[string]interface{}{
+						"name":  "B",
+						"value": float64(250),
+					},
+				},
+				[]interface{}{
+					map[string]interface{}{
+						"name":  "C",
+						"value": float64(300),
+					},
+					map[string]interface{}{
+						"name":  "D",
+						"value": float64(350),
+					},
+				},
+			},
+			wantErr: false,
+			err:     nil,
 		},
 	}
 	for _, tC := range testCases {
