@@ -1012,6 +1012,19 @@ func TestEntityKeysToBigTable(t *testing.T) {
 			},
 			want: "default-project-mobility-nationwide__drivede1619bb",
 		},
+		{
+			desc:    "sort entity keys",
+			project: "default",
+			entityKeys: []*spec.Entity{
+				{
+					Name: "driver_id",
+				},
+				{
+					Name: "driver_geohash",
+				},
+			},
+			want: "default__driver_geohash__driver_id",
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
