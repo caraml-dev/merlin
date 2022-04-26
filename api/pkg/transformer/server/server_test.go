@@ -323,7 +323,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				headers: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body: []byte(`{"instances":{"columns":["acceptance_rate","driver_id","name","rating","customer_id","distance_contains_zero","distance_in_km","distance_in_m","distance_is_not_far_away","distance_is_valid","driver_performa"],"data":[[0.8,1,"driver-1",4,1111,true,0,0,true,true,6],[0.77,3,"driver-3",3.5,1111,true,0.729,729,true,true,3.5]]}}`),
+				body: []byte(`{"instances":{"columns":["acceptance_rate","driver_id","name","rating","customer_id","distance_contains_zero","distance_in_km","distance_in_m","distance_is_not_far_away","distance_is_valid","driver_performa"],"data":[[0.8,1,"driver-1",4,1111,true,0,0,true,true,6],[0.77,3,"driver-3",3.5,1111,true,0.729,729,true,true,3.5]]},"max_performa":6}`),
 			},
 			modelResponse: response{
 				headers: map[string]string{

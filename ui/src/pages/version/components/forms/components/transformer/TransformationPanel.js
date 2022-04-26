@@ -12,6 +12,7 @@ import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "../Panel";
 import { AddButton } from "./components/AddButton";
 import { TableJoinCard } from "./components/table_operations/TableJoinCard";
+import { VariablesInputCard } from "./components/table_inputs/VariablesInputCard";
 import { TableTransformationCard } from "./components/table_operations/TableTransformationCard";
 import {
   TableJoin,
@@ -85,6 +86,17 @@ export const TransformationPanel = ({
                       />
                     )}
 
+                    {transformation.variables && (
+                      <VariablesInputCard
+                        index={idx}
+                        variables={transformation.variables}
+                        onChangeHandler={onChange(`${idx}.variables`)}
+                        onDelete={onDeleteTransformation(idx)}
+                        dragHandleProps={provided.dragHandleProps}
+                        errors={get(errors, `${idx}.variables`)}
+                      />
+                    )}
+
                     <EuiSpacer size="s" />
                   </EuiFlexItem>
                 )}
@@ -109,6 +121,14 @@ export const TransformationPanel = ({
                   title="+ Add Table Join"
                   description="Perform join operation on two tables"
                   onClick={() => onAddInput("tableJoin", new TableJoin())}
+                />
+              </EuiFlexItem>
+
+              <EuiFlexItem>
+                <AddButton
+                  title="+ Add Variables"
+                  description="Perform storing variable in transformation stage"
+                  onClick={() => onAddInput("variables", [{}])}
                 />
               </EuiFlexItem>
             </EuiFlexGroup>
