@@ -2,6 +2,9 @@ package pipeline
 
 import (
 	"fmt"
+	"net/url"
+	"os"
+
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	gota "github.com/go-gota/gota/series"
@@ -14,8 +17,6 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"net/url"
-	"os"
 )
 
 const (
@@ -146,6 +147,13 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 			}
 			ops = append(ops, tableJoinOp)
 		}
+		if len(transformation.Variables) > 0 {
+			varOp, err := c.parseVariablesSpec(transformation.Variables, compiledJsonPaths, compiledExpressions)
+			if err != nil {
+				return nil, nil, err
+			}
+			ops = append(ops, varOp)
+		}
 	}
 
 	// output stage
@@ -172,14 +180,14 @@ func (c *Compiler) parseVariablesSpec(variables []*spec.Variable, compiledJsonPa
 		case *spec.Variable_Expression:
 			compiledExpression, err := c.compileExpression(v.Expression)
 			if err != nil {
-				return nil, nil
+				return nil, err
 			}
 			compiledExpressions.Set(v.Expression, compiledExpression)
 
 		case *spec.Variable_JsonPath:
 			compiledJsonPath, err := jsonpath.Compile(v.JsonPath)
 			if err != nil {
-				return nil, nil
+				return nil, err
 			}
 			compiledJsonPaths.Set(v.JsonPath, compiledJsonPath)
 		case *spec.Variable_JsonPathConfig:
@@ -190,7 +198,7 @@ func (c *Compiler) parseVariablesSpec(variables []*spec.Variable, compiledJsonPa
 				TargetType:   jsonPathCfg.ValueType,
 			})
 			if err != nil {
-				return nil, nil
+				return nil, err
 			}
 			compiledJsonPaths.Set(jsonPathCfg.JsonPath, compiledJsonPath)
 
@@ -246,13 +254,13 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 				var err error
 				var colType map[string]gota.Type
 
-				//parse filepath
+				// parse filepath
 				filePath, err := url.Parse(tableSpec.BaseTable.GetFromFile().GetUri())
 				if err != nil {
 					return nil, nil, err
 				}
 
-				//relative path in merlin
+				// relative path in merlin
 				if !filePath.IsAbs() && os.Getenv(envPredictorStorageURI) != "" {
 					filePath, err = url.Parse(artifactsFolder + tableSpec.BaseTable.GetFromFile().GetUri())
 					if err != nil {

@@ -1,10 +1,11 @@
 package pipeline
 
 import (
-	"github.com/gojek/merlin/pkg/transformer/types/series"
-	"github.com/gojek/merlin/pkg/transformer/types/table"
 	"io/ioutil"
 	"testing"
+
+	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/gojek/merlin/pkg/transformer/types/table"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -180,6 +181,8 @@ func TestCompiler_Compile(t *testing.T) {
 					"variable1",
 					"entity_2_table.Col('col1')",
 					"Now().Hour()",
+					"transformed_entity_3_table.Col('col5').Mean()",
+					"transformed_entity_3_table.Col('col5').Max()",
 				},
 				jsonPaths: []string{
 					"$.entity_1[*].id",
@@ -194,6 +197,7 @@ func TestCompiler_Compile(t *testing.T) {
 					&EncoderOp{},
 					&TableTransformOp{},
 					&TableJoinOp{},
+					&VariableDeclarationOp{},
 				},
 			},
 			wantErr: false,
@@ -253,6 +257,7 @@ func TestCompiler_Compile(t *testing.T) {
 					`driver_table.Col("rating") * 1`,
 					`driver_table.Col("rating") * 2 >= 8`,
 					`driver_table.Col("rating") * 1.5`,
+					`transformed_driver_table.Col('driver_performa').Max()`,
 				},
 				jsonPaths: []string{
 					"$.customer.id",
@@ -262,6 +267,7 @@ func TestCompiler_Compile(t *testing.T) {
 					&VariableDeclarationOp{},
 					&CreateTableOp{},
 					&TableTransformOp{},
+					&VariableDeclarationOp{},
 					&JsonOutputOp{},
 				},
 			},
@@ -433,6 +439,21 @@ func TestCompiler_Compile(t *testing.T) {
 			specYamlFilePath: "./testdata/invalid_encode_column.yaml",
 			wantErr:          true,
 			expError:         errors.New("unable to compile preprocessing pipeline: unknown name notFoundEncoder (1:1)\n | notFoundEncoder\n | ^"),
+		},
+		{
+			name: "invalid - variables that want to store is not exist",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger: logger,
+			},
+			specYamlFilePath: "./testdata/invalid_variables_in_transformations.yaml",
+			wantErr:          true,
+			expError:         errors.New("unable to compile preprocessing pipeline: unknown name transformed_entity_100_table (1:1)\n | transformed_entity_100_table.Col('col5').Mean()\n | ^"),
 		},
 	}
 	for _, tt := range tests {

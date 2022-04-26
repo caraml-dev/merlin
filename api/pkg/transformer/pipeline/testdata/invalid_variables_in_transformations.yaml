@@ -93,6 +93,6 @@ transformerConfig:
           how: LEFT
       - variables:
         - name: mean
-          expression: transformed_entity_3_table.Col('col5').Mean()
+          expression: transformed_entity_100_table.Col('col5').Mean()
         - name: max
-          expression: transformed_entity_3_table.Col('col5').Max()
+          expression: transformed_entity_100_table.Col('col5').Max()
