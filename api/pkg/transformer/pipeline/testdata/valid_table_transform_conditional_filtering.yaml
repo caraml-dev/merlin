@@ -45,7 +45,9 @@ transformerConfig:
                 end: 2
             - renameColumns:
                 id: driver_id
-                
+      - variables:
+        - name: max_performa
+          expression: transformed_driver_table.Col('driver_performa').Max()         
     outputs:
       - jsonOutput:
           jsonTemplate:
@@ -54,3 +56,5 @@ transformerConfig:
                 fromTable:
                   tableName: transformed_driver_table
                   format: "SPLIT"
+              - fieldName: max_performa
+                expression: max_performa

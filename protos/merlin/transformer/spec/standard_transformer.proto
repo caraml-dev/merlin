@@ -58,6 +58,7 @@ message Transformation {
   // Thus we will handle the oneof behavior in the code side
   TableJoin tableJoin = 1;
   TableTransformation tableTransformation = 2;
+  repeated Variable variables = 3;
 }
 
 message Output {
