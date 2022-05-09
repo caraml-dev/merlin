@@ -24,7 +24,7 @@ export const AutoscalingPolicyFormGroup = ({
   const onTargetValueChange = e => {
     onAutoscalingPolicyChange({
       metrics_type: autoscalingPolicy.metrics_type,
-      target_value: e.target.value
+      target_value: parseFloat(e.target.value)
     });
   };
 

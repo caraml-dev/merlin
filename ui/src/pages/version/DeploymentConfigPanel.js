@@ -47,7 +47,7 @@ export const DeploymentConfigPanel = ({ endpoint }) => {
       title: "Autoscaling Metrics",
       description: endpoint.autoscaling_policy
         ? autoscalingMetricsDesc[endpoint.autoscaling_policy.metrics_type]
-        : autoscalingMetricsDesc["cpu_utilization"]
+        : autoscalingMetricsDesc["concurrency"]
     },
     {
       title: "Autoscaling Target",

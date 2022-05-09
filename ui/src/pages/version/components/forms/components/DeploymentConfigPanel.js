@@ -30,6 +30,11 @@ const getEndpointByEnvironment = (version, environmentName) => {
   return ve;
 };
 
+const DEFAULT_AUTOSCALING_POLICY = {
+  metrics_type: "concurrency",
+  target_value: 1.0
+};
+
 export const DeploymentConfigPanel = ({
   environment,
   endpoint,
@@ -129,7 +134,9 @@ export const DeploymentConfigPanel = ({
         <AutoscalingPolicyFormGroup
           fullWidth
           deploymentMode={endpoint.deployment_mode}
-          autoscalingPolicy={endpoint.autoscaling_policy}
+          autoscalingPolicy={
+            endpoint.autoscaling_policy || DEFAULT_AUTOSCALING_POLICY
+          }
           onAutoscalingPolicyChange={onAutoscalingPolicyChange}
         />
       </EuiForm>
