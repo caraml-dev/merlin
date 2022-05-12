@@ -55,6 +55,7 @@ func entitiesToEntityNames(entities []*spec.Entity) []string {
 }
 
 func entityKeysToBigTable(project string, entityNames []string) string {
+	sort.Strings(entityNames)
 	fullTableName := project + "__" + strings.Join(entityNames, "__")
 	if len(fullTableName) <= maxTableNameLength {
 		return fullTableName
