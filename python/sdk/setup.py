@@ -25,7 +25,7 @@ REQUIRES = [
     "python-dateutil>=2.1",
     "six>=1.10",
     "mlflow>=1.2.0,<=1.23.0",
-    "google-cloud-storage <=1.28.1",
+    "google-cloud-storage>=1.19.0",
     "boto3>=1.9.84",
     "urllib3>=1.23",
     "PyPrind>=2.11.2",
@@ -34,9 +34,6 @@ REQUIRES = [
     "cloudpickle==1.2.2",
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
-    "google-api-core<=1.17.0",  # https://github.com/googleapis/python-pubsub/issues/115
-    "grpcio<=1.27.2",
-    "google-cloud-core==1.3.0",
     "PyYAML>=5.4"
 ]
 
