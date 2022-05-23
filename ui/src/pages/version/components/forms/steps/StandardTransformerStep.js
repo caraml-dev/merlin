@@ -3,7 +3,6 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiSideNav,
-  slugify,
   EuiIcon,
   EuiAccordion,
   EuiTitle
@@ -46,23 +45,53 @@ export const StandardTransformerStep = () => {
     setSelectedItem(name);
   };
 
-  const createItem = (name, data = {}) => {
-    // NOTE: Duplicate `name` values will cause `id` collisions.
+  const createItem = (name, id, data = {}) => {
     return {
-      id: slugify(name),
+      id: id,
       name,
-      isSelected: selectedItemName === name,
-      onClick: () => selectItem(name),
-      href: "#" + name,
+      isSelected: selectedItemName === id,
+      onClick: () => selectItem(id),
+      href: "#" + id,
       ...data
     };
   };
 
   const sideNav = [
-    createItem("Edit Configurations", {
+    createItem("Edit Configurations", "config", {
       onClick: undefined,
       icon: <EuiIcon type="indexEdit" />,
-      items: [createItem("Pre-Processing"), createItem("Post-Processing")]
+      items: [
+        createItem("Pre-Processing", "preprocessing", {
+          icon: <EuiIcon type="editorItemAlignRight" />,
+          forceOpen: true,
+          items: [
+            createItem("Input", "input-preprocess", {
+              icon: <EuiIcon type="logstashInput" />
+            }),
+            createItem("Transformation", "transform-preprocess", {
+              icon: <EuiIcon type="inputOutput" />
+            }),
+            createItem("Output", "output-preprocess", {
+              icon: <EuiIcon type="logstashOutput" />
+            })
+          ]
+        }),
+        createItem("Post-Processing", "postprocessing", {
+          icon: <EuiIcon type="editorItemAlignLeft" />,
+          forceOpen: true,
+          items: [
+            createItem("Input", "input-postprocess", {
+              icon: <EuiIcon type="logstashInput" />
+            }),
+            createItem("Transformation", "transform-postprocess", {
+              icon: <EuiIcon type="inputOutput" />
+            }),
+            createItem("Output", "output-postprocess", {
+              icon: <EuiIcon type="logstashOutput" />
+            })
+          ]
+        })
+      ]
     })
   ];
 
@@ -70,7 +99,7 @@ export const StandardTransformerStep = () => {
     <div>
       <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
         <EuiFlexItem grow={false}>
-          <EuiIcon type="menuLeft" size="m" />
+          <EuiIcon type="editorItemAlignRight" size="m" />
         </EuiFlexItem>
 
         <EuiFlexItem>
@@ -94,7 +123,7 @@ export const StandardTransformerStep = () => {
     <div>
       <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
         <EuiFlexItem grow={false}>
-          <EuiIcon type="menuRight" size="m" />
+          <EuiIcon type="editorItemAlignLeft" size="m" />
         </EuiFlexItem>
 
         <EuiFlexItem>
@@ -117,7 +146,7 @@ export const StandardTransformerStep = () => {
   return (
     <EuiFlexGroup>
       <EuiFlexItem>
-        <div class="sidebar">
+        <div className="sidebar">
           <EuiSideNav
             aria-label="Standard Transformer Config"
             mobileTitle="Standard Transformer Config"
@@ -130,9 +159,9 @@ export const StandardTransformerStep = () => {
       </EuiFlexItem>
 
       <EuiFlexItem grow={7}>
-        <div class="config">
+        <div className="config">
           <EuiFlexGroup direction="column" gutterSize="m">
-            <div id="Pre-Processing">
+            <div id="preprocessing" className="preprocessing">
               <EuiAccordion
                 id="preprocess"
                 element="fieldset"
@@ -140,7 +169,7 @@ export const StandardTransformerStep = () => {
                 buttonClassName="euiAccordionForm__button"
                 buttonContent={preprocessHeader}
                 paddingSize="l"
-                initialIsOpen="true">
+                initialIsOpen={true}>
                 <PipelineStage
                   stage="preprocess"
                   values={preValues}
@@ -154,7 +183,7 @@ export const StandardTransformerStep = () => {
                 />
               </EuiAccordion>
             </div>
-            <div id="Post-Processing">
+            <div id="postprocessing" className="postprocessing">
               <EuiAccordion
                 id="postprocess"
                 element="fieldset"
@@ -162,7 +191,7 @@ export const StandardTransformerStep = () => {
                 buttonClassName="euiAccordionForm__button"
                 buttonContent={postprocessHeader}
                 paddingSize="l"
-                initialIsOpen="true">
+                initialIsOpen={true}>
                 <PipelineStage
                   stage="postprocess"
                   values={postValues}

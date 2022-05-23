@@ -32,44 +32,50 @@ export const PipelineStage = ({ stage }) => {
       <EuiFlexItem grow={7}>
         <EuiFlexGroup direction="column" gutterSize="m">
           <EuiFlexItem grow={false}>
-            <FeastProjectsContextProvider>
-              <InputPanel
-                inputs={inputs}
+            <div id={"input-" + stage}>
+              <FeastProjectsContextProvider>
+                <InputPanel
+                  inputs={inputs}
+                  onChangeHandler={onChange(
+                    `transformer.config.transformerConfig.${stage}.inputs`
+                  )}
+                  errors={get(
+                    errors,
+                    `transformer.config.transformerConfig.${stage}.inputs`
+                  )}
+                />
+              </FeastProjectsContextProvider>
+            </div>
+          </EuiFlexItem>
+
+          <EuiFlexItem grow={false}>
+            <div id={"transform-" + stage}>
+              <TransformationPanel
+                transformations={transformations}
                 onChangeHandler={onChange(
-                  `transformer.config.transformerConfig.${stage}.inputs`
+                  `transformer.config.transformerConfig.${stage}.transformations`
                 )}
                 errors={get(
                   errors,
-                  `transformer.config.transformerConfig.${stage}.inputs`
+                  `transformer.config.transformerConfig.${stage}.transformations`
                 )}
               />
-            </FeastProjectsContextProvider>
+            </div>
           </EuiFlexItem>
 
           <EuiFlexItem grow={false}>
-            <TransformationPanel
-              transformations={transformations}
-              onChangeHandler={onChange(
-                `transformer.config.transformerConfig.${stage}.transformations`
-              )}
-              errors={get(
-                errors,
-                `transformer.config.transformerConfig.${stage}.transformations`
-              )}
-            />
-          </EuiFlexItem>
-
-          <EuiFlexItem grow={false}>
-            <OutputPanel
-              outputs={outputs}
-              onChangeHandler={onChange(
-                `transformer.config.transformerConfig.${stage}.outputs`
-              )}
-              errors={get(
-                errors,
-                `transformer.config.transformerConfig.${stage}.outputs`
-              )}
-            />
+            <div id={"output-" + stage}>
+              <OutputPanel
+                outputs={outputs}
+                onChangeHandler={onChange(
+                  `transformer.config.transformerConfig.${stage}.outputs`
+                )}
+                errors={get(
+                  errors,
+                  `transformer.config.transformerConfig.${stage}.outputs`
+                )}
+              />
+            </div>
           </EuiFlexItem>
         </EuiFlexGroup>
       </EuiFlexItem>
