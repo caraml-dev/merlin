@@ -11,8 +11,8 @@ import {
 import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "../Panel";
 import { AddButton } from "./components/AddButton";
-import { JsonOutputFieldCard } from "./components/table_outpus/JsonOutputFieldCard";
-import { BaseJsonOutputCard } from "./components/table_outpus/BaseJsonOutputCard";
+import { JsonOutputFieldCard } from "./components/table_outputs/JsonOutputFieldCard";
+import { BaseJsonOutputCard } from "./components/table_outputs/BaseJsonOutputCard";
 import {
   BaseJson,
   JsonOutput

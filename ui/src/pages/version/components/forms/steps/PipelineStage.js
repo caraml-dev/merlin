@@ -8,11 +8,10 @@ import {
 } from "@gojek/mlp-ui";
 import { InputPanel } from "../components/transformer/InputPanel";
 import { OutputPanel } from "../components/transformer/OutputPanel";
-import { PipelineSidebarPanel } from "../components/transformer/PipelineSidebarPanel";
 import { TransformationPanel } from "../components/transformer/TransformationPanel";
 import { FeastProjectsContextProvider } from "../../../../../providers/feast/FeastProjectsContext";
 
-export const PipelineStep = ({ stage }) => {
+export const PipelineStage = ({ stage }) => {
   const {
     data: {
       transformer: {
@@ -73,10 +72,6 @@ export const PipelineStep = ({ stage }) => {
             />
           </EuiFlexItem>
         </EuiFlexGroup>
-      </EuiFlexItem>
-
-      <EuiFlexItem grow={3}>
-        <PipelineSidebarPanel />
       </EuiFlexItem>
     </EuiFlexGroup>
   );
