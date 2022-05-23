@@ -81,20 +81,6 @@ export const DeployModelVersionForm = ({
     validationSchema: standardTransformerSchema,
     width: "100%"
   };
-  // const standardTransformerStep = [
-  //   {
-  //     title: "Preprocess",
-  //     children: <PipelineStep stage="preprocess" />,
-  //     validationSchema: preprocessTransformerSchema,
-  //     width: "100%"
-  //   },
-  //   // {
-  //   //   title: "Postprocess",
-  //   //   children: <PipelineStep stage="postprocess" />,
-  //   //   validationSchema: postprocessTransformerSchema,
-  //   //   width: "100%"
-  //   // }
-  // ];
 
   const customTransformerStep = {
     title: "Custom Transformer",

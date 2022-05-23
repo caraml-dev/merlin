@@ -1,0 +1,10 @@
+.config {
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  height: 70vh;
+}
+
+.config::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
