@@ -17,8 +17,6 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
 
-  console.log("data");
-  console.log(data);
   return (
     <EuiFlexGroup direction="column" gutterSize="m">
       <EuiFlexItem grow={false}>

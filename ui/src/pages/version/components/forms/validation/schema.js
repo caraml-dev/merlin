@@ -234,20 +234,11 @@ export const feastEnricherTransformerSchema = yup.object().shape({
   })
 });
 
-export const preprocessTransformerSchema = yup.object().shape({
+export const standardTransformerSchema = yup.object().shape({
   transformer: yup.object().shape({
     config: yup.object().shape({
       transformerConfig: yup.object().shape({
-        preprocess: pipelineSchema
-      })
-    })
-  })
-});
-
-export const postprocessTransformerSchema = yup.object().shape({
-  transformer: yup.object().shape({
-    config: yup.object().shape({
-      transformerConfig: yup.object().shape({
+        preprocess: pipelineSchema,
         postprocess: pipelineSchema
       })
     })
