@@ -9,13 +9,12 @@ import { DeploymentSummary } from "./components/DeploymentSummary";
 import { CustomTransformerStep } from "./steps/CustomTransformerStep";
 import { FeastTransformerStep } from "./steps/FeastTransformerStep";
 import { ModelStep } from "./steps/ModelStep";
-import { PipelineStep } from "./steps/PipelineStep";
+import { StandardTransformerStep } from "./steps/StandardTransformerStep";
 import { TransformerStep } from "./steps/TransformerStep";
 import {
   customTransformerSchema,
   feastEnricherTransformerSchema,
-  postprocessTransformerSchema,
-  preprocessTransformerSchema,
+  standardTransformerSchema,
   transformerConfigSchema,
   versionEndpointSchema
 } from "./validation/schema";
@@ -76,20 +75,12 @@ export const DeployModelVersionForm = ({
     }
   ];
 
-  const standardTransformerSteps = [
-    {
-      title: "Preprocess",
-      children: <PipelineStep stage="preprocess" />,
-      validationSchema: preprocessTransformerSchema,
-      width: "100%"
-    },
-    {
-      title: "Postprocess",
-      children: <PipelineStep stage="postprocess" />,
-      validationSchema: postprocessTransformerSchema,
-      width: "100%"
-    }
-  ];
+  const standardTransformerStep = {
+    title: "Standard Transformer",
+    children: <StandardTransformerStep />,
+    validationSchema: standardTransformerSchema,
+    width: "100%"
+  };
 
   const customTransformerStep = {
     title: "Custom Transformer",
@@ -110,7 +101,7 @@ export const DeployModelVersionForm = ({
       if (versionEndpoint.transformer && versionEndpoint.transformer.enabled) {
         switch (versionEndpoint.transformer.type_on_ui) {
           case "standard":
-            setSteps([...mainSteps, ...standardTransformerSteps]);
+            setSteps([...mainSteps, standardTransformerStep]);
             break;
           case "custom":
             setSteps([...mainSteps, customTransformerStep]);
