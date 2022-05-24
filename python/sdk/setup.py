@@ -31,7 +31,7 @@ REQUIRES = [
     "PyPrind>=2.11.2",
     "google-auth>=1.11.0,<2.0dev",
     'Click>=7.0',
-    "cloudpickle==1.2.2",
+    "cloudpickle==2.0.0",
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "PyYAML>=5.4"
