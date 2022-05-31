@@ -6,16 +6,25 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 	"github.com/opentracing/opentracing-go"
 )
 
 type CreateTableOp struct {
 	tableSpecs []*spec.Table
+	*OperationTracing
 }
 
-func NewCreateTableOp(tableSpecs []*spec.Table) Op {
-	return &CreateTableOp{tableSpecs: tableSpecs}
+func NewCreateTableOp(tableSpecs []*spec.Table, tracingEnabled bool) *CreateTableOp {
+	createTableOp := &CreateTableOp{
+		tableSpecs: tableSpecs,
+	}
+
+	if tracingEnabled {
+		createTableOp.OperationTracing = NewOperationTracing(tableSpecs, types.CreateTableOpType)
+	}
+	return createTableOp
 }
 
 func (c CreateTableOp) Execute(ctx context.Context, env *Environment) error {
@@ -47,6 +56,13 @@ func (c CreateTableOp) Execute(ctx context.Context, env *Environment) error {
 
 		// register to environment
 		env.SetSymbol(tableSpec.Name, t)
+		if c.OperationTracing != nil {
+			createdTbl, err := table.TableToJson(t, spec.FromTable_RECORD)
+			if err != nil {
+				return err
+			}
+			c.AddInputOutput(nil, map[string]interface{}{tableSpec.Name: createdTbl})
+		}
 		env.LogOperation("create_table", tableSpec.Name)
 	}
 

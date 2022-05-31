@@ -5,17 +5,25 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/opentracing/opentracing-go"
 )
 
 type VariableDeclarationOp struct {
 	variableSpec []*spec.Variable
+	*OperationTracing
 }
 
-func NewVariableDeclarationOp(variables []*spec.Variable) Op {
-	return &VariableDeclarationOp{
-		variableSpec: variables,
+func NewVariableDeclarationOp(variables []*spec.Variable, tracingEnabled bool) Op {
+	varOp := &VariableDeclarationOp{
+		variableSpec:     variables,
+		OperationTracing: NewOperationTracing(variables, types.VariableOpType),
 	}
+
+	if tracingEnabled {
+		varOp.OperationTracing = NewOperationTracing(variables, types.VariableOpType)
+	}
+	return varOp
 }
 
 func (v *VariableDeclarationOp) Execute(context context.Context, env *Environment) error {
@@ -23,17 +31,21 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 	defer span.Finish()
 
 	for _, varDef := range v.variableSpec {
+		name := varDef.Name
+		var value interface{}
 		switch v := varDef.Value.(type) {
 		case *spec.Variable_Literal:
 			switch val := v.Literal.LiteralValue.(type) {
 			case *spec.Literal_IntValue:
-				env.SetSymbol(varDef.Name, val.IntValue)
+				value = val.IntValue
 			case *spec.Literal_FloatValue:
-				env.SetSymbol(varDef.Name, val.FloatValue)
+				value = val.FloatValue
 			case *spec.Literal_StringValue:
-				env.SetSymbol(varDef.Name, val.StringValue)
+				value = val.StringValue
 			case *spec.Literal_BoolValue:
-				env.SetSymbol(varDef.Name, val.BoolValue)
+				value = val.BoolValue
+			default:
+				return fmt.Errorf("Variable.Literal.LiteralValue has unexpected type %T", v)
 			}
 
 		case *spec.Variable_Expression:
@@ -41,23 +53,27 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 			if err != nil {
 				return err
 			}
-			env.SetSymbol(varDef.Name, result)
+			value = result
 		case *spec.Variable_JsonPath:
 			result, err := evalJSONPath(env, v.JsonPath)
 			if err != nil {
 				return nil
 			}
-			env.SetSymbol(varDef.Name, result)
+			value = result
 		case *spec.Variable_JsonPathConfig:
 			result, err := evalJSONPath(env, v.JsonPathConfig.JsonPath)
 			if err != nil {
 				return nil
 			}
-			env.SetSymbol(varDef.Name, result)
+			value = result
 		default:
 			return fmt.Errorf("Variable.Value has unexpected type %T", v)
 		}
 
+		env.SetSymbol(name, value)
+		if v.OperationTracing != nil {
+			v.AddInputOutput(nil, map[string]interface{}{name: value})
+		}
 		env.LogOperation("set variable", varDef.Name)
 	}
 

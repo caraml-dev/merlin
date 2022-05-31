@@ -1,6 +1,7 @@
 package symbol
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
@@ -16,6 +17,9 @@ const (
 
 	rawRequestHeadersKey    = "raw_request_headers"
 	modelResponseHeadersKey = "model_response_headers"
+
+	preprocessTracingKey  = "__preprocess_tracing_detail__"
+	postprocessTracingKey = "__postprocess_tracing_detail__"
 )
 
 // Registry contains all symbol (variable and functions) that can be used for expression evaluation
@@ -49,6 +53,31 @@ func (sr Registry) SetModelResponseJSON(jsonObj types.JSONObject) {
 
 func (sr Registry) JSONContainer() types.JSONObjectContainer {
 	return sr[sourceJSONKey].(types.JSONObjectContainer)
+}
+
+func (sr Registry) PreprocessTracingDetail() ([]types.TracingDetail, error) {
+	return sr.getTracingDetail(preprocessTracingKey)
+}
+
+func (sr Registry) PostprocessTracingDetail() ([]types.TracingDetail, error) {
+	return sr.getTracingDetail(postprocessTracingKey)
+}
+
+func (sr Registry) getTracingDetail(tracingKey string) ([]types.TracingDetail, error) {
+	val := sr[tracingKey]
+	tracingDetail, ok := val.([]types.TracingDetail)
+	if !ok {
+		return nil, fmt.Errorf(`type of tracing detail is not '[]types.TracingDetail', found %T`, val)
+	}
+	return tracingDetail, nil
+}
+
+func (sr Registry) SetPreprocessTracingDetail(vals []types.TracingDetail) {
+	sr[preprocessTracingKey] = vals
+}
+
+func (sr Registry) SetPostprocessTracingDetail(vals []types.TracingDetail) {
+	sr[postprocessTracingKey] = vals
 }
 
 func (sr Registry) SetRawRequestHeaders(headers map[string]string) {

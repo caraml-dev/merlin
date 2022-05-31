@@ -97,6 +97,9 @@ merlin:
     apiHost: ""
 
   transformer:
+    simulation:
+      feastRedisServingURL: online-serving-redis.feast.dev
+      feastBigtableServingURL: online-serving-bt.feast.dev
     feast:
       defaultServingURL: online-serving-redis.feast.dev
       servingURLs:

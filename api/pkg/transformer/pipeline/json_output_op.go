@@ -13,10 +13,15 @@ import (
 
 type JsonOutputOp struct {
 	outputSpec *spec.JsonOutput
+	*OperationTracing
 }
 
-func NewJsonOutputOp(outputSpec *spec.JsonOutput) Op {
-	return &JsonOutputOp{outputSpec: outputSpec}
+func NewJsonOutputOp(outputSpec *spec.JsonOutput, tracingEnabled bool) Op {
+	outputOp := &JsonOutputOp{outputSpec: outputSpec}
+	if tracingEnabled {
+		outputOp.OperationTracing = NewOperationTracing(outputSpec, types.JsonOutputOpType)
+	}
+	return outputOp
 }
 
 func (j JsonOutputOp) Execute(ctx context.Context, env *Environment) error {
@@ -42,6 +47,9 @@ func (j JsonOutputOp) Execute(ctx context.Context, env *Environment) error {
 	}
 
 	env.SetOutputJSON(outputJson)
+	if j.OperationTracing != nil {
+		j.AddInputOutput(nil, outputJson)
+	}
 	return nil
 }
 

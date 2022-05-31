@@ -259,6 +259,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 
 	mlflowConfig := cfg.MlflowConfig
 	mlflowClient := mlflow.NewClient(mlflowConfig.TrackingURL)
+	transformerService := service.NewTransformerService(cfg.StandardTransformerConfig)
 	apiContext := api.AppContext{
 		DB:       db,
 		Enforcer: authEnforcer,
@@ -273,6 +274,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		PredictionJobService:      predictionJobService,
 		SecretService:             secretService,
 		ModelEndpointAlertService: modelEndpointAlertService,
+		TransformerService:        transformerService,
 
 		AuthorizationEnabled: cfg.AuthorizationConfig.AuthorizationEnabled,
 		AlertEnabled:         cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,

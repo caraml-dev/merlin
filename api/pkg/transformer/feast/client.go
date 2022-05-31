@@ -10,19 +10,22 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/feast/redis"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
-func InitFeastServingClients(feastOptions Options, featureTableMetadata []*spec.FeatureTableMetadata, standardTransformerConfig *spec.StandardTransformerConfig, logger *zap.Logger) (Clients, error) {
+func InitFeastServingClients(feastOptions Options, featureTableMetadata []*spec.FeatureTableMetadata, standardTransformerConfig *spec.StandardTransformerConfig) (Clients, error) {
 	servingSources := getFeastServingSources(standardTransformerConfig)
 
 	clients := Clients{}
 	for _, source := range servingSources {
-		feastClient, err := createFeastServingClient(feastOptions, featureTableMetadata, source, standardTransformerConfig)
+		feastSource := source
+		if feastSource == spec.ServingSource_UNKNOWN {
+			feastSource = feastOptions.DefaultFeastSource
+		}
+		feastClient, err := createFeastServingClient(feastOptions, featureTableMetadata, feastSource, standardTransformerConfig)
 		if err != nil {
 			return nil, err
 		}
-		clients[source] = feastClient
+		clients[feastSource] = feastClient
 	}
 	return clients, nil
 }

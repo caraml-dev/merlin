@@ -1,0 +1,16 @@
+{
+  "config": {
+    "transformerConfig": {
+      "preprocess": {},
+      "postprocess": {}
+    }
+  },
+  "payload": {
+    "drivers": [
+      { "id": "1234", "name": "driver-1" },
+      { "id": "5678", "name": "driver-2" }
+    ],
+    "customer": { "id": 1111 }
+  },
+  "model_prediction_config": { "mock": {} }
+}

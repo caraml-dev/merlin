@@ -11,13 +11,14 @@ import (
 
 type EncoderOp struct {
 	encoderSpecs []*spec.Encoder
+	*OperationTracing
 }
 
 type Encoder interface {
 	Encode(values []interface{}, column string) (map[string]interface{}, error)
 }
 
-func NewEncoderOp(encoders []*spec.Encoder) *EncoderOp {
+func NewEncoderOp(encoders []*spec.Encoder, tracingEnabled bool) *EncoderOp {
 	return &EncoderOp{encoderSpecs: encoders}
 }
 
@@ -44,6 +45,9 @@ func (e *EncoderOp) Execute(ctx context.Context, env *Environment) error {
 			return fmt.Errorf("encoder spec have unexpected type %T", encoderCfg)
 		}
 		env.SetSymbol(encoderSpec.Name, encoderImpl)
+		if e.OperationTracing != nil {
+			e.AddInputOutput(nil, map[string]interface{}{encoderSpec.Name: "The result of this operation is on the transformer step that use this encoder"})
+		}
 	}
 	return nil
 }

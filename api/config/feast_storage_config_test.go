@@ -69,6 +69,7 @@ func TestFeastRedisConfig(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
 			os.Setenv("FEAST_REDIS_CONFIG", tC.redisConfigString)
+
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
 			if err == nil {
@@ -349,4 +350,6 @@ func setRequiredEnvironmentVariables() {
 	os.Setenv("FEAST_CORE_URL", "localhost")
 	os.Setenv("FEAST_CORE_AUTH_AUDIENCE", "true")
 	os.Setenv("DEFAULT_FEAST_SOURCE", "BIGTABLE")
+	os.Setenv("SIMULATION_FEAST_BIGTABLE_URL", "online-serving-bt.dev")
+	os.Setenv("SIMULATION_FEAST_REDIS_URL", "online-serving-redis.dev")
 }

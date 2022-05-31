@@ -55,6 +55,7 @@ type AppContext struct {
 	PredictionJobService      service.PredictionJobService
 	SecretService             service.SecretService
 	ModelEndpointAlertService service.ModelEndpointAlertService
+	TransformerService        service.TransformerService
 
 	AuthorizationEnabled bool
 	AlertEnabled         bool
@@ -142,6 +143,7 @@ func NewRouter(appCtx AppContext) *mux.Router {
 	logController := LogController{&appCtx}
 	secretController := SecretsController{&appCtx}
 	alertsController := AlertsController{&appCtx}
+	transformerController := TransformerController{&appCtx}
 
 	routes := []Route{
 		// Environment API
@@ -194,6 +196,9 @@ func NewRouter(appCtx AppContext) *mux.Router {
 		{http.MethodPut, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/jobs/{job_id:[0-9]+}/stop", nil, predictionJobController.Stop, "StopPredictionJob"},
 		{http.MethodPost, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/jobs", models.PredictionJob{}, predictionJobController.Create, "CreatePredictionJob"},
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/jobs/{job_id:[0-9]+}/containers", nil, predictionJobController.ListContainers, "ListJobContainers"},
+
+		// Standard Transformer Simulation API
+		{http.MethodPost, "/standard_transformer/simulate", models.TransformerSimulation{}, transformerController.SimulateTransformer, "SimulateTransformer"},
 	}
 
 	if appCtx.AlertEnabled {

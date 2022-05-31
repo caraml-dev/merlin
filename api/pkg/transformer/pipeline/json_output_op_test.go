@@ -420,7 +420,6 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 			},
 			outputSpec: &spec.JsonOutput{
 				JsonTemplate: &spec.JsonTemplate{
-
 					Fields: []*spec.Field{
 						{
 							FieldName: "data",
@@ -851,7 +850,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			jsonOutputOp := NewJsonOutputOp(tC.outputSpec)
+			jsonOutputOp := NewJsonOutputOp(tC.outputSpec, false)
 			env := tC.envFunc()
 			err := jsonOutputOp.Execute(context.Background(), env)
 			if tC.err != nil {
@@ -860,7 +859,6 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				output := env.OutputJSON()
 				assert.Equal(t, tC.want, output)
 			}
-
 		})
 	}
 }

@@ -69,7 +69,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default",
 						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
-
 							{
 								Name:      "driver_id",
 								ValueType: "STRING",
@@ -1081,7 +1080,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default",
 						Source:  spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
-
 							{
 								Name:      "driver_id",
 								ValueType: "STRING",
@@ -1165,7 +1163,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						ServingUrl: mockRedisServingURL,
 						Source:     spec.ServingSource_BIGTABLE,
 						Entities: []*spec.Entity{
-
 							{
 								Name:      "driver_id",
 								ValueType: "STRING",
@@ -1187,7 +1184,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						ServingUrl: mockBigtableServingURL,
 						Source:     spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
-
 							{
 								Name:      "driver_id",
 								ValueType: "STRING",
@@ -1300,7 +1296,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						ServingUrl: mockRedisServingURL,
 						Source:     spec.ServingSource_BIGTABLE,
 						Entities: []*spec.Entity{
-
 							{
 								Name:      "driver_id",
 								ValueType: "STRING",
@@ -1322,7 +1317,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						ServingUrl: mockBigtableServingURL,
 						Source:     spec.ServingSource_REDIS,
 						Entities: []*spec.Entity{
-
 							{
 								Name:      "driver_id",
 								ValueType: "STRING",
@@ -1426,7 +1420,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default",
 						Source:  spec.ServingSource_UNKNOWN,
 						Entities: []*spec.Entity{
-
 							{
 								Name:      "driver_id",
 								ValueType: "STRING",
@@ -1534,7 +1527,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_Batching(t *testing.T
 			Project:   "default",
 			Source:    spec.ServingSource_BIGTABLE,
 			Entities: []*spec.Entity{
-
 				{
 					Name:      "driver_id",
 					ValueType: "STRING",
@@ -2274,7 +2266,6 @@ var (
 			Project: "default",
 			Source:  spec.ServingSource_REDIS,
 			Entities: []*spec.Entity{
-
 				{
 					Name:      "driver_id",
 					ValueType: "STRING",
@@ -2362,7 +2353,6 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		go func() {
 			_, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
-			fmt.Println(err)
 			if err != nil {
 				atomic.AddUint32(&bad, 1)
 			} else {

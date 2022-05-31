@@ -63,8 +63,8 @@ func NewFeastRetriever(
 	entityExtractor *EntityExtractor,
 	featureTableSpecs []*spec.FeatureTable,
 	options *Options,
-	logger *zap.Logger) *FeastRetriever {
-
+	logger *zap.Logger,
+) *FeastRetriever {
 	defaultValues := compileDefaultValues(featureTableSpecs)
 
 	hystrix.ConfigureCommand(options.FeastClientHystrixCommandName, hystrix.CommandConfig{
