@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/scaler"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
@@ -13,12 +14,18 @@ import (
 
 type TableTransformOp struct {
 	tableTransformSpec *spec.TableTransformation
+	*OperationTracing
 }
 
-func NewTableTransformOp(tableTransformSpec *spec.TableTransformation) Op {
-	return &TableTransformOp{
+func NewTableTransformOp(tableTransformSpec *spec.TableTransformation, tracingEnabled bool) Op {
+	tableTrfOp := &TableTransformOp{
 		tableTransformSpec: tableTransformSpec,
 	}
+
+	if tracingEnabled {
+		tableTrfOp.OperationTracing = NewOperationTracing(tableTransformSpec, types.TableTransformOp)
+	}
+	return tableTrfOp
 }
 
 func (t TableTransformOp) Execute(context context.Context, env *Environment) error {
@@ -150,6 +157,20 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 	}
 
 	env.SetSymbol(outputTableName, resultTable)
+	if t.OperationTracing != nil {
+		formattedInputTbl, err := table.TableToJson(inputTable, spec.FromTable_RECORD)
+		if err != nil {
+			return err
+		}
+		formattedResultTbl, err := table.TableToJson(resultTable, spec.FromTable_RECORD)
+		if err != nil {
+			return err
+		}
+		t.AddInputOutput(
+			map[string]interface{}{inputTableName: formattedInputTbl},
+			map[string]interface{}{outputTableName: formattedResultTbl},
+		)
+	}
 	env.LogOperation("table_transform", outputTableName)
 	return nil
 }

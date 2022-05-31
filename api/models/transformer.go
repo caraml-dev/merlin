@@ -14,7 +14,11 @@
 
 package models
 
-import "github.com/google/uuid"
+import (
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/google/uuid"
+)
 
 type TransformerType string
 
@@ -39,4 +43,23 @@ type Transformer struct {
 	ResourceRequest *ResourceRequest `json:"resource_request"`
 	EnvVars         EnvVars          `json:"env_vars"`
 	CreatedUpdated
+}
+
+// TransformerSimulation is payload that user supplies to simulate standard transformer config
+type TransformerSimulation struct {
+	Payload          types.JSONObject                `json:"payload"`
+	Headers          map[string]string               `json:"headers"`
+	Config           *spec.StandardTransformerConfig `json:"config"`
+	PredictionConfig *ModelPredictionConfig          `json:"model_prediction_config"`
+}
+
+// ModelPredictionConfig
+type ModelPredictionConfig struct {
+	Mock *MockResponse `json:"mock_response"`
+}
+
+// MockResponse
+type MockResponse struct {
+	Body    types.JSONObject  `json:"body"`
+	Headers map[string]string `json:"headers"`
 }

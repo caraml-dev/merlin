@@ -1105,7 +1105,7 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 				},
 			},
 		},
-	}, logger)
+	}, logger, false)
 	compiledPipeline, err := compiler.Compile(&transformerConfig)
 	if err != nil {
 		logger.Fatal("Unable to compile standard transformer", zap.Error(err))

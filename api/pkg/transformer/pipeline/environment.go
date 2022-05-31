@@ -58,6 +58,10 @@ func (e *Environment) Postprocess(ctx context.Context, modelResponse types.JSONO
 	return e.compiledPipeline.Postprocess(ctx, e)
 }
 
+func (e *Environment) GetPreprocessTracingDetail(ctx context.Context) {
+	e.symbolRegistry.PreprocessTracingDetail()
+}
+
 func (e *Environment) IsPostProcessOpExist() bool {
 	return len(e.compiledPipeline.postprocessOps) > 0
 }
@@ -103,4 +107,20 @@ func (e *Environment) LogOperation(opName string, variables ...string) {
 		}
 		ce.Write(fields...)
 	}
+}
+
+func (e *Environment) PreprocessTracingDetail() []types.TracingDetail {
+	details, err := e.symbolRegistry.PreprocessTracingDetail()
+	if err != nil {
+		e.logger.Warn("error retrieve preprocess tracing detail: " + err.Error())
+	}
+	return details
+}
+
+func (e *Environment) PostprocessTracingDetail() []types.TracingDetail {
+	details, err := e.symbolRegistry.PostprocessTracingDetail()
+	if err != nil {
+		e.logger.Warn("error retrieve postprocess tracing detail: " + err.Error())
+	}
+	return details
 }

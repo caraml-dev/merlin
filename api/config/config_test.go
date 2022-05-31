@@ -52,9 +52,147 @@ func TestFeastServingURLs_URLs(t *testing.T) {
 	}
 }
 
-func TestStandardTransfomer_ToFeastStorageConfigs(t *testing.T) {
+func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing.T) {
 	redisCfg := `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`
 	bigtableCfg := `{"serving_url":"10.1.1.3","project":"gcp-project","is_using_direct_storage":true,"instance":"instance","app_profile":"default","pool_size":3,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`
+	simulationRedisURL := "online-redis-serving.dev"
+	simulationBigtableURL := "online-bt-serving.dev"
+	testCases := []struct {
+		desc                  string
+		redisConfig           *string
+		bigtableConfig        *string
+		simulationRedisURL    *string
+		simulationBigtableURL *string
+		feastStorageCfg       feast.FeastStorageConfig
+
+		bigtableCredential string
+	}{
+		{
+			desc:                  "redis config and big table config set",
+			redisConfig:           &redisCfg,
+			bigtableConfig:        &bigtableCfg,
+			simulationRedisURL:    &simulationRedisURL,
+			simulationBigtableURL: &simulationBigtableURL,
+			feastStorageCfg: feast.FeastStorageConfig{
+				spec.ServingSource_REDIS: &spec.OnlineStorage{
+					ServingType: spec.ServingType_FEAST_GRPC,
+					Storage: &spec.OnlineStorage_RedisCluster{
+						RedisCluster: &spec.RedisClusterStorage{
+							FeastServingUrl: "online-redis-serving.dev",
+							RedisAddress:    []string{"10.1.1.10", "10.1.1.11"},
+							Option: &spec.RedisOption{
+								PoolSize:    4,
+								MaxRetries:  1,
+								DialTimeout: durationpb.New(time.Second * 10),
+							},
+						},
+					},
+				},
+				spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+					ServingType: spec.ServingType_FEAST_GRPC,
+					Storage: &spec.OnlineStorage_Bigtable{
+						Bigtable: &spec.BigTableStorage{
+							FeastServingUrl: "online-bt-serving.dev",
+							Project:         "gcp-project",
+							Instance:        "instance",
+							AppProfile:      "default",
+							Option: &spec.BigTableOption{
+								GrpcConnectionPool: 3,
+								KeepAliveInterval:  durationpb.New(time.Minute * 2),
+								KeepAliveTimeout:   durationpb.New(time.Minute * 1),
+								CredentialJson:     "eyJrZXkiOiJ2YWx1ZSJ9",
+							},
+						},
+					},
+				},
+			},
+			bigtableCredential: `eyJrZXkiOiJ2YWx1ZSJ9`,
+		},
+		{
+			desc:                  "redis config set and big table config not set",
+			redisConfig:           &redisCfg,
+			simulationRedisURL:    &simulationRedisURL,
+			simulationBigtableURL: &simulationBigtableURL,
+			feastStorageCfg: feast.FeastStorageConfig{
+				spec.ServingSource_REDIS: &spec.OnlineStorage{
+					ServingType: spec.ServingType_FEAST_GRPC,
+					Storage: &spec.OnlineStorage_RedisCluster{
+						RedisCluster: &spec.RedisClusterStorage{
+							FeastServingUrl: "online-redis-serving.dev",
+							RedisAddress:    []string{"10.1.1.10", "10.1.1.11"},
+							Option: &spec.RedisOption{
+								PoolSize:    4,
+								MaxRetries:  1,
+								DialTimeout: durationpb.New(time.Second * 10),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:                  "redis config not set and big table config set",
+			bigtableConfig:        &bigtableCfg,
+			simulationRedisURL:    &simulationRedisURL,
+			simulationBigtableURL: &simulationBigtableURL,
+			feastStorageCfg: feast.FeastStorageConfig{
+				spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+					ServingType: spec.ServingType_FEAST_GRPC,
+					Storage: &spec.OnlineStorage_Bigtable{
+						Bigtable: &spec.BigTableStorage{
+							FeastServingUrl: "online-bt-serving.dev",
+							Project:         "gcp-project",
+							Instance:        "instance",
+							AppProfile:      "default",
+							Option: &spec.BigTableOption{
+								GrpcConnectionPool: 3,
+								KeepAliveInterval:  durationpb.New(time.Minute * 2),
+								KeepAliveTimeout:   durationpb.New(time.Minute * 1),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:                  "redis config and big table config not set",
+			simulationRedisURL:    &simulationRedisURL,
+			simulationBigtableURL: &simulationBigtableURL,
+			feastStorageCfg:       feast.FeastStorageConfig{},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			os.Clearenv()
+			setRequiredEnvironmentVariables()
+			if tC.redisConfig != nil {
+				os.Setenv("FEAST_REDIS_CONFIG", *tC.redisConfig)
+			}
+			if tC.bigtableConfig != nil {
+				os.Setenv("FEAST_BIG_TABLE_CONFIG", *tC.bigtableConfig)
+			}
+			if tC.simulationBigtableURL != nil {
+				os.Setenv("SIMULATION_FEAST_BIGTABLE_URL", *tC.simulationBigtableURL)
+			}
+			if tC.simulationRedisURL != nil {
+				os.Setenv("SIMULATION_FEAST_REDIS_URL", *tC.simulationRedisURL)
+			}
+			os.Setenv("FEAST_BIGTABLE_CREDENTIAL", tC.bigtableCredential)
+
+			var cfg StandardTransformerConfig
+			err := envconfig.Process("", &cfg)
+			require.NoError(t, err)
+			got := cfg.ToFeastStorageConfigsForSimulation()
+			assert.Equal(t, tC.feastStorageCfg, got)
+		})
+	}
+}
+
+func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
+	redisCfg := `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`
+	bigtableCfg := `{"serving_url":"10.1.1.3","project":"gcp-project","is_using_direct_storage":true,"instance":"instance","app_profile":"default","pool_size":3,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`
+	simulationRedisURL := "online-redis-serving.dev"
+	simulationBigtableURL := "online-bt-serving.dev"
 	testCases := []struct {
 		desc               string
 		redisConfig        *string
@@ -159,7 +297,8 @@ func TestStandardTransfomer_ToFeastStorageConfigs(t *testing.T) {
 				os.Setenv("FEAST_BIG_TABLE_CONFIG", *tC.bigtableConfig)
 			}
 			os.Setenv("FEAST_BIGTABLE_CREDENTIAL", tC.bigtableCredential)
-
+			os.Setenv("SIMULATION_FEAST_BIGTABLE_URL", simulationBigtableURL)
+			os.Setenv("SIMULATION_FEAST_REDIS_URL", simulationRedisURL)
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
 			require.NoError(t, err)

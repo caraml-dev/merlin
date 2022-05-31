@@ -138,7 +138,6 @@ func TestFeastOp_Execute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			logger, err := zap.NewDevelopment()
 			if err != nil {
 				panic(err)
