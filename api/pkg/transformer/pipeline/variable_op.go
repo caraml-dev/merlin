@@ -16,8 +16,7 @@ type VariableDeclarationOp struct {
 
 func NewVariableDeclarationOp(variables []*spec.Variable, tracingEnabled bool) Op {
 	varOp := &VariableDeclarationOp{
-		variableSpec:     variables,
-		OperationTracing: NewOperationTracing(variables, types.VariableOpType),
+		variableSpec: variables,
 	}
 
 	if tracingEnabled {

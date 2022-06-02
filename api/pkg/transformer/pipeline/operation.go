@@ -4,26 +4,24 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"sync"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
+// Op responsible to execute all the operation
 type Op interface {
+	// Core function to run the operation
 	Execute(context context.Context, environment *Environment) error
+	// Keep track input and output of certain operation
 	AddInputOutput(input, output map[string]interface{}) error
+	// Retrieve the tracing detail of certain operation
 	GetOperationTracingDetail() ([]types.TracingDetail, error)
 }
 
-type OperationIO struct {
-	Name  string
-	Value interface{}
-}
-
+// OperationTracing track information about input, output, specs for certain Operation that implemented in standard transformer
 type OperationTracing struct {
-	mutex  sync.RWMutex
 	Input  []map[string]interface{}
 	Output []map[string]interface{}
 	Specs  interface{}
@@ -38,10 +36,8 @@ func NewOperationTracing(operationSpecs interface{}, opType types.OperationType)
 	return opTracing
 }
 
+// AddInputOutput store input and output in for certain operation
 func (ot *OperationTracing) AddInputOutput(input, output map[string]interface{}) error {
-	ot.mutex.Lock()
-	defer ot.mutex.Unlock()
-
 	if ot.Input == nil {
 		ot.Input = make([]map[string]interface{}, 0)
 	}
@@ -62,6 +58,7 @@ func (ot *OperationTracing) AddInputOutput(input, output map[string]interface{})
 	return nil
 }
 
+// this is required to convert table type to format that can be marshalled
 func sanitizeIO(io map[string]interface{}) error {
 	for k, v := range io {
 		tbl, ok := v.(*table.Table)
@@ -77,9 +74,8 @@ func sanitizeIO(io map[string]interface{}) error {
 	return nil
 }
 
-func (ot *OperationTracing) addInputOutputTable(input, output *table.Table) {
-}
-
+// GetOperationTracingDetail retrieve all the tracing detail
+// it will flatten the result if the operation specs is in slice form
 func (ot *OperationTracing) GetOperationTracingDetail() ([]types.TracingDetail, error) {
 	refVal := reflect.ValueOf(ot.Specs)
 	if refVal.Kind() == reflect.Slice {
