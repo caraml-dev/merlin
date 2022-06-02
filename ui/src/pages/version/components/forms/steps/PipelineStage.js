@@ -24,6 +24,7 @@ export const PipelineStage = ({ stage }) => {
     },
     onChangeHandler
   } = useContext(FormContext);
+
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
 

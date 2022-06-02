@@ -8,6 +8,8 @@ import (
 	"time"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
+	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
@@ -55,6 +57,98 @@ func TestStandardTransformer_Predict(t *testing.T) {
 				"Country-ID": "ID",
 			},
 			wantResponseByte: []byte(`{"response":{"instances":{"columns":["id","name"],"data":[[1,"entity-1"],[2,"entity-2"]]},"tablefile":{"columns":["First Name","Last Name","Age","Weight","Is VIP"],"data":[["Apple","Cider",25,48.8,true],["Banana","Man",18,68,false],["Zara","Vuitton",35,75,true],["Sandra","Zawaska",32,55,false],["Merlion","Krabby",23,57.22,false]]},"tablefile2":{"columns":["First Name","Last Name","Age","Weight","Is VIP"],"data":[["Apple","Cider",25,48.8,true],["Banana","Man",18,68,false],["Zara","Vuitton",35,75,true],["Sandra","Zawaska",32,55,false],["Merlion","Krabby",23,57.22,false]]}},"operation_tracing":{"preprocess":[{"input":null,"output":{"entity_table":[{"id":1,"name":"entity-1"},{"id":2,"name":"entity-2"}]},"spec":{"name":"entity_table","baseTable":{"fromJson":{"jsonPath":"$.entities[*]"}}},"operation_type":"create_table_op"},{"input":null,"output":{"filetable":[{"Age":25,"First Name":"Apple","Is VIP":true,"Last Name":"Cider","Weight":48.8},{"Age":18,"First Name":"Banana","Is VIP":false,"Last Name":"Man","Weight":68},{"Age":35,"First Name":"Zara","Is VIP":true,"Last Name":"Vuitton","Weight":75},{"Age":32,"First Name":"Sandra","Is VIP":false,"Last Name":"Zawaska","Weight":55},{"Age":23,"First Name":"Merlion","Is VIP":false,"Last Name":"Krabby","Weight":57.22}]},"spec":{"name":"filetable","baseTable":{"fromFile":{"uri":"../types/table/testdata/normal.parquet","format":"PARQUET"}}},"operation_type":"create_table_op"},{"input":null,"output":{"filetable2":[{"Age":25,"First Name":"Apple","Is VIP":true,"Last Name":"Cider","Weight":48.8},{"Age":18,"First Name":"Banana","Is VIP":false,"Last Name":"Man","Weight":68},{"Age":35,"First Name":"Zara","Is VIP":true,"Last Name":"Vuitton","Weight":75},{"Age":32,"First Name":"Sandra","Is VIP":false,"Last Name":"Zawaska","Weight":55},{"Age":23,"First Name":"Merlion","Is VIP":false,"Last Name":"Krabby","Weight":57.22}]},"spec":{"name":"filetable2","baseTable":{"fromFile":{"uri":"../types/table/testdata/normal.csv","schema":[{"name":"Is VIP","type":"BOOL"}]}}},"operation_type":"create_table_op"},{"input":null,"output":{"instances":{"columns":["id","name"],"data":[[1,"entity-1"],[2,"entity-2"]]},"tablefile":{"columns":["First Name","Last Name","Age","Weight","Is VIP"],"data":[["Apple","Cider",25,48.8,true],["Banana","Man",18,68,false],["Zara","Vuitton",35,75,true],["Sandra","Zawaska",32,55,false],["Merlion","Krabby",23,57.22,false]]},"tablefile2":{"columns":["First Name","Last Name","Age","Weight","Is VIP"],"data":[["Apple","Cider",25,48.8,true],["Banana","Man",18,68,false],["Zara","Vuitton",35,75,true],["Sandra","Zawaska",32,55,false],["Merlion","Krabby",23,57.22,false]]}},"spec":{"jsonTemplate":{"fields":[{"fieldName":"instances","fromTable":{"tableName":"entity_table","format":"SPLIT"}},{"fieldName":"tablefile","fromTable":{"tableName":"filetable","format":"SPLIT"}},{"fieldName":"tablefile2","fromTable":{"tableName":"filetable2","format":"SPLIT"}}]}},"operation_type":"json_output_op"}],"postprocess":[]}}`),
+		},
+		{
+			desc:         "simple preprocess without tracing",
+			specYamlPath: "../pipeline/testdata/valid_simple_preprocess.yaml",
+			executorCfg: transformerExecutorConfig{
+				traceEnabled: false,
+				logger:       logger,
+			},
+			modelPredictor: newEchoMockPredictor(),
+			requestPayload: []byte(`{"entities" : [{"id": 1,"name": "entity-1"},{"id": 2,"name": "entity-2"}]}`),
+			requestHeaders: map[string]string{
+				"Country-ID": "ID",
+			},
+			wantResponseByte: []byte(`{"response":{"instances":{"columns":["id","name"],"data":[[1,"entity-1"],[2,"entity-2"]]},"tablefile":{"columns":["First Name","Last Name","Age","Weight","Is VIP"],"data":[["Apple","Cider",25,48.8,true],["Banana","Man",18,68,false],["Zara","Vuitton",35,75,true],["Sandra","Zawaska",32,55,false],["Merlion","Krabby",23,57.22,false]]},"tablefile2":{"columns":["First Name","Last Name","Age","Weight","Is VIP"],"data":[["Apple","Cider",25,48.8,true],["Banana","Man",18,68,false],["Zara","Vuitton",35,75,true],["Sandra","Zawaska",32,55,false],["Merlion","Krabby",23,57.22,false]]}},"operation_tracing":null}`),
+		},
+		{
+			desc:         "preprocess and postprocess with mock model predictor",
+			specYamlPath: "../pipeline/testdata/valid_preprocess_postprocess_transformation.yaml",
+			executorCfg: transformerExecutorConfig{
+				traceEnabled: true,
+				logger:       logger,
+			},
+			mockFeasts: []*mockFeast{
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(1),
+										"driver_feature_1": feastSdk.DoubleVal(1111),
+										"driver_feature_2": feastSdk.DoubleVal(2222),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"A", "B", "C"},
+												},
+											},
+										},
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(2),
+										"driver_feature_1": feastSdk.DoubleVal(3333),
+										"driver_feature_2": feastSdk.DoubleVal(4444),
+										"driver_feature_3": {
+											Val: &feastTypes.Value_StringListVal{
+												StringListVal: &feastTypes.StringList{
+													Val: []string{"X", "Y", "Z"},
+												},
+											},
+										},
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			modelPredictor:   NewMockPredictor(types.JSONObject{"session_id": "#1"}, map[string]string{"Country-ID": "ID"}),
+			requestPayload:   []byte(`{"drivers" : [{"id": 1,"name": "driver-1"},{"id": 2,"name": "driver-2"}], "customer": {"id": 1111}}`),
+			wantResponseByte: []byte(`{"response":{"instances":{"columns":["driver_id","driver_feature_1","driver_feature_2","driver_feature_3"],"data":[[1,1111,2222,["A","B","C"]],[2,3333,4444,["X","Y","Z"]]]},"session":"#1"},"operation_tracing":{"preprocess":[{"input":null,"output":{"customer_id":1111},"spec":{"name":"customer_id","jsonPath":"$.customer.id"},"operation_type":"variable_op"},{"input":null,"output":{"driver_table":[{"id":1,"name":"driver-1","row_number":0},{"id":2,"name":"driver-2","row_number":1}]},"spec":{"name":"driver_table","baseTable":{"fromJson":{"jsonPath":"$.drivers[*]","addRowNumber":true}}},"operation_type":"create_table_op"},{"input":null,"output":{"driver_feature_table":[{"driver_feature_1":1111,"driver_feature_2":2222,"driver_feature_3":["A","B","C"],"driver_id":1},{"driver_feature_1":3333,"driver_feature_2":4444,"driver_feature_3":["X","Y","Z"],"driver_id":2}]},"spec":{"project":"default","entities":[{"name":"driver_id","valueType":"STRING","jsonPath":"$.drivers[*].id"}],"features":[{"name":"driver_feature_1","valueType":"INT64","defaultValue":"0"},{"name":"driver_feature_2","valueType":"INT64","defaultValue":"0"},{"name":"driver_feature_3","valueType":"STRING_LIST","defaultValue":"[\"A\", \"B\", \"C\", \"D\", \"E\"]"}],"tableName":"driver_feature_table"},"operation_type":"feast_op"},{"input":null,"output":{"instances":{"columns":["driver_id","driver_feature_1","driver_feature_2","driver_feature_3"],"data":[[1,1111,2222,["A","B","C"]],[2,3333,4444,["X","Y","Z"]]]}},"spec":{"jsonTemplate":{"fields":[{"fieldName":"instances","fromTable":{"tableName":"driver_feature_table","format":"SPLIT"}}]}},"operation_type":"json_output_op"}],"postprocess":[{"input":null,"output":{"instances":{"columns":["driver_id","driver_feature_1","driver_feature_2","driver_feature_3"],"data":[[1,1111,2222,["A","B","C"]],[2,3333,4444,["X","Y","Z"]]]},"session":"#1"},"spec":{"jsonTemplate":{"fields":[{"fieldName":"instances","fromTable":{"tableName":"driver_feature_table","format":"SPLIT"}},{"fieldName":"session","fromJson":{"jsonPath":"$.model_response.session_id"}}]}},"operation_type":"json_output_op"}]}}`),
+		},
+		{
+			desc:         "simple preprocess without tracing - error preprocess",
+			specYamlPath: "../pipeline/testdata/valid_simple_preprocess.yaml",
+			executorCfg: transformerExecutorConfig{
+				traceEnabled: false,
+				logger:       logger,
+			},
+			modelPredictor: newEchoMockPredictor(),
+			requestPayload: []byte(`{"entity" : [{"id": 1,"name": "entity-1"},{"id": 2,"name": "entity-2"}]}`),
+			requestHeaders: map[string]string{
+				"Country-ID": "ID",
+			},
+			wantResponseByte: []byte(`{"response":{"error":"error executing preprocess operation: *pipeline.CreateTableOp: unable to create base table for entity_table: invalid json pointed by $.entities[*]: not an array"},"operation_tracing":null}`),
 		},
 	}
 	for _, tt := range tests {

@@ -158,18 +158,12 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 
 	env.SetSymbol(outputTableName, resultTable)
 	if t.OperationTracing != nil {
-		formattedInputTbl, err := table.TableToJson(inputTable, spec.FromTable_RECORD)
-		if err != nil {
+		if err := t.AddInputOutput(
+			map[string]interface{}{inputTableName: inputTable},
+			map[string]interface{}{outputTableName: resultTable},
+		); err != nil {
 			return err
 		}
-		formattedResultTbl, err := table.TableToJson(resultTable, spec.FromTable_RECORD)
-		if err != nil {
-			return err
-		}
-		t.AddInputOutput(
-			map[string]interface{}{inputTableName: formattedInputTbl},
-			map[string]interface{}{outputTableName: formattedResultTbl},
-		)
 	}
 	env.LogOperation("table_transform", outputTableName)
 	return nil

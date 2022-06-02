@@ -57,11 +57,9 @@ func (c CreateTableOp) Execute(ctx context.Context, env *Environment) error {
 		// register to environment
 		env.SetSymbol(tableSpec.Name, t)
 		if c.OperationTracing != nil {
-			createdTbl, err := table.TableToJson(t, spec.FromTable_RECORD)
-			if err != nil {
+			if err := c.AddInputOutput(nil, map[string]interface{}{tableSpec.Name: t}); err != nil {
 				return err
 			}
-			c.AddInputOutput(nil, map[string]interface{}{tableSpec.Name: createdTbl})
 		}
 		env.LogOperation("create_table", tableSpec.Name)
 	}
