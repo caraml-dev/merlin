@@ -380,7 +380,7 @@ def test_resource_request(integration_test_url, project_name, deployment_mode, u
 # https://github.com/kserve/kserve/issues/2142
 # Logging is not supported yet in raw_deployment
 @pytest.mark.integration
-@pytest.mark.parametrize("deployment_mode", [DeploymentMode.SERVERLESS]) 
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS]) 
 def test_logger(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -389,7 +389,7 @@ def test_logger(integration_test_url, project_name, deployment_mode, use_google_
 
     undeploy_all_version()
 
-    logger = Logger(model=LoggerConfig(enabled=True, mode=LoggerMode.REQUEST))
+    logger = Logger(model=LoggerConfig(enabled=True, mode=LoggerMode.ALL))
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
         endpoint = merlin.deploy(logger=logger, deployment_mode=deployment_mode)
@@ -424,7 +424,7 @@ def test_logger(integration_test_url, project_name, deployment_mode, use_google_
 # Logging is not supported yet in raw_deployment
 @pytest.mark.customtransformer
 @pytest.mark.integration
-@pytest.mark.parametrize("deployment_mode", [DeploymentMode.SERVERLESS])
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_custom_transformer(
         integration_test_url, project_name, deployment_mode, use_google_oauth, requests
 ):
