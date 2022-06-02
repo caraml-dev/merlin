@@ -141,7 +141,7 @@ export const StandardTransformerStep = () => {
       <EuiFlexItem grow={7}>
         <div className="config">
           <EuiFlexGroup direction="column" gutterSize="m">
-            <div id="preprocessing" className="preprocessing">
+            <div id="simulation" className="simulation">
               <EuiAccordion
                 id="simulation"
                 element="fieldset"
@@ -156,6 +156,8 @@ export const StandardTransformerStep = () => {
                 initialIsOpen={true}>
                 <TransformerSimulation />
               </EuiAccordion>
+            </div>
+            <div id="preprocessing" className="preprocessing">
               <EuiAccordion
                 id="preprocess"
                 element="fieldset"

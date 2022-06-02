@@ -11,7 +11,7 @@ type TransformerController struct {
 	*AppContext
 }
 
-// SimulateTransformer
+// SimulateTransformer API handles simulation of standard transformer
 func (c *TransformerController) SimulateTransformer(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 	simulationPayload, ok := body.(*models.TransformerSimulation)

@@ -1,119 +1,296 @@
-import React from "react";
+import {
+  EuiCodeBlock,
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiModal,
+  EuiModalBody,
+  EuiModalHeader,
+  EuiModalHeaderTitle,
+  EuiFormRow
+} from "@elastic/eui";
+import React, { useState } from "react";
 import ReactFlow, {
   addEdge,
-  MiniMap,
   Controls,
   Background,
+  MarkerType,
   useNodesState,
   useEdgesState
 } from "react-flow-renderer";
 
-import { MarkerType } from "react-flow-renderer";
+import PipelineNode from "./PipelineNode";
 
-const createChainEdges = nodes => {
-  var edges = [];
-  for (let i = 0; i < nodes.length - 1; i++) {
-    var sourceNode = nodes[i];
-    var targetNode = nodes[i + 1];
-    edges.push({
-      id: sourceNode.id + "-" + targetNode.id,
-      source: sourceNode.id,
-      target: targetNode.id
-    });
-  }
-};
+const nodeTypes = { pipeline: PipelineNode };
 
-// const nodeTypes = { pipeline: PipelineNode };
+export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
+  const leftDirection = "left";
+  const rightDirection = "right";
+  const topDirection = "top";
+  const bottomDirection = "bottom";
 
-const onInit = reactFlowInstance =>
-  console.log("flow loaded:", reactFlowInstance);
-
-export const TransformerSimulationOutputTracing = tracingDetails => {
-  const createNodes = tracingDetails => {
-    const nodeHeight = 100;
-    const nodeWidth = 70;
-    const marginHorizontal = 20;
-    const marginVertical = 30;
-    var nodes = [];
-    const initialXPosition = 0;
-    const initialYPosition = 20;
-    let lastXPosition = initialXPosition;
-    let lastYPosition = initialYPosition;
-    for (let i = 0; i < tracingDetails.preprocess.length; i++) {
-      if (i != 0) {
-        lastXPosition = lastXPosition + marginHorizontal + nodeWidth;
-      }
-      nodes.push({
-        id: "preprocess-" + i,
-        type: "pipeline",
-        position: { x: lastXPosition, y: lastYPosition },
-        data: { value: tracingDetails.preprocess[i] }
-      });
+  const reverseDirection = position => {
+    if (position === leftDirection) {
+      return rightDirection;
     }
-
-    lastYPosition = lastYPosition + marginVertical + nodeHeight;
-    nodes.push({
-      id: "prediction",
-      type: "prediction",
-      position: { x: lastXPosition, y: lastYPosition },
-      data: { label: "Prediction" }
-    });
-
-    var directionToRight = false;
-    for (let i = 0; i < tracingDetails.postprocess.length; i++) {
-      let tempXPosition = lastXPosition - (marginHorizontal + nodeWidth);
-      if (tempXPosition < 0) {
-        directionToRight = true;
-        lastYPosition = lastYPosition + marginVertical + nodeHeight;
-      }
-      lastXPosition = directionToRight
-        ? lastXPosition + marginHorizontal + nodeWidth
-        : tempXPosition;
-
-      nodes.push({
-        id: "preprocess-" + i,
-        type: "pipeline",
-        position: { x: lastXPosition, y: lastYPosition },
-        data: { value: tracingDetails.postprocess[i] }
-      });
+    if (position === rightDirection) {
+      return leftDirection;
+    }
+    if (position === topDirection) {
+      return bottomDirection;
+    }
+    if (position === bottomDirection) {
+      return topDirection;
     }
   };
-  const initialNodes = createNodes();
-  const initialEdges = createChainEdges(initialEdges);
-  const [nodes, setNodes, onNodesChange] = useNodesState(createNodes);
+
+  const createChainEdges = nodes => {
+    var edges = [];
+    for (let i = 0; i < nodes.length - 1; i++) {
+      var sourceNode = nodes[i];
+      var targetNode = nodes[i + 1];
+      let sourcePosition = targetNode.sourcePosition;
+      if (sourcePosition === undefined) {
+        sourcePosition = rightDirection;
+      }
+      edges.push({
+        id: sourceNode.id + "-" + targetNode.id,
+        source: sourceNode.id,
+        target: targetNode.id,
+        sourceHandle: "source-" + sourcePosition,
+        targetHandle: "target-" + reverseDirection(sourcePosition),
+        markerEnd: {
+          type: MarkerType.ArrowClosed
+        }
+      });
+    }
+
+    return edges;
+  };
+
+  // this function is to create position like reverted 's'
+  const calculatePosition = (
+    positionX,
+    positionY,
+    currentDirection,
+    directionInfo
+  ) => {
+    const selectedDirectionInfo = directionInfo[currentDirection];
+    let newPositionY = positionY;
+    let newPositionX = positionX;
+    let newDirection = currentDirection;
+    if (
+      selectedDirectionInfo.isViolateBounderyFn(
+        positionX + selectedDirectionInfo.horizontalDistance
+      )
+    ) {
+      newPositionY = positionY + selectedDirectionInfo.verticalDistance;
+      newDirection = reverseDirection(newDirection);
+    } else {
+      newPositionX = positionX + selectedDirectionInfo.horizontalDistance;
+    }
+
+    let sourcePosition = currentDirection;
+    if (newDirection !== currentDirection) {
+      sourcePosition = bottomDirection;
+    }
+
+    return {
+      x: newPositionX,
+      y: newPositionY,
+      direction: newDirection,
+      sourcePosition: sourcePosition
+    };
+  };
+
+  const createNodes = details => {
+    const nodeHeight = 100;
+    const nodeWidth = 200;
+    const marginHorizontal = 50;
+    const marginVertical = 50;
+    const maximumWidth = 800;
+    const initialXPosition = 0;
+    const initialYPosition = 0;
+    let lastXPosition = initialXPosition;
+    let lastYPosition = initialYPosition;
+
+    var nodes = [];
+
+    var direction = rightDirection;
+    const directionInfo = {
+      right: {
+        isViolateBounderyFn: position => {
+          return position > maximumWidth;
+        },
+        horizontalDistance: marginHorizontal + nodeWidth,
+        verticalDistance: marginVertical + nodeHeight
+      },
+      left: {
+        isViolateBounderyFn: position => {
+          return position < 0;
+        },
+        horizontalDistance: -1 * (marginHorizontal + nodeWidth),
+        verticalDistance: marginVertical + nodeHeight
+      }
+    };
+
+    for (let i = 0; i < details.preprocess.length; i++) {
+      if (i !== 0) {
+        var generatedPosition = calculatePosition(
+          lastXPosition,
+          lastYPosition,
+          direction,
+          directionInfo
+        );
+        lastXPosition = generatedPosition.x;
+        lastYPosition = generatedPosition.y;
+        direction = generatedPosition.direction;
+        nodes.push({
+          id: "preprocess-" + i,
+          type: "pipeline",
+          width: nodeWidth,
+          height: nodeHeight,
+          position: { x: lastXPosition, y: lastYPosition },
+          data: details.preprocess[i],
+          style: { width: nodeWidth },
+          sourcePosition: generatedPosition.sourcePosition
+        });
+      } else {
+        nodes.push({
+          id: "preprocess-" + i,
+          type: "pipeline",
+          width: nodeWidth,
+          height: nodeHeight,
+          position: { x: lastXPosition, y: lastYPosition },
+          data: details.preprocess[i],
+          style: { width: nodeWidth }
+        });
+      }
+    }
+
+    generatedPosition = calculatePosition(
+      lastXPosition,
+      lastYPosition,
+      direction,
+      directionInfo
+    );
+    lastXPosition = generatedPosition.x;
+    lastYPosition = generatedPosition.y;
+    direction = generatedPosition.direction;
+
+    nodes.push({
+      id: "prediction",
+      width: nodeWidth,
+      height: nodeHeight,
+      position: { x: lastXPosition, y: lastYPosition },
+      data: { label: "Model Prediction" }
+    });
+
+    for (let i = 0; i < details.postprocess.length; i++) {
+      generatedPosition = calculatePosition(
+        lastXPosition,
+        lastYPosition,
+        direction,
+        directionInfo
+      );
+      lastXPosition = generatedPosition.x;
+      lastYPosition = generatedPosition.y;
+      direction = generatedPosition.direction;
+      nodes.push({
+        id: "preprocess-" + i,
+        type: "pipeline",
+        width: { nodeWidth },
+        height: { nodeHeight },
+        position: { x: lastXPosition, y: lastYPosition },
+        data: details.postprocess[i]
+      });
+    }
+    return nodes;
+  };
+  const initialNodes = createNodes(tracingDetails);
+  const initialEdges = createChainEdges(initialNodes);
+
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const onConnect = params => setEdges(eds => addEdge(params, eds));
 
+  const [higlightedNode, setHightlightedNode] = useState(undefined);
+
+  const onNodeClicked = (_, node) => {
+    if (node.type === "pipeline") {
+      setHightlightedNode(node);
+    } else {
+      setHightlightedNode(undefined);
+    }
+  };
+
+  const onCloseModal = () => {
+    setHightlightedNode(undefined);
+  };
+
   return (
-    <div style={{ height: 800 }}>
+    <div style={{ height: 500 }}>
       <ReactFlow
         nodes={nodes}
+        nodeTypes={nodeTypes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onInit={onInit}
+        onNodeClick={onNodeClicked}
         fitView
         attributionPosition="top-right">
-        <MiniMap
-          nodeStrokeColor={n => {
-            if (n.style?.background) return n.style.background;
-            if (n.type === "input") return "#0041d0";
-            if (n.type === "output") return "#ff0072";
-            if (n.type === "default") return "#1a192b";
-
-            return "#eee";
-          }}
-          nodeColor={n => {
-            if (n.style?.background) return n.style.background;
-
-            return "#fff";
-          }}
-          nodeBorderRadius={2}
-        />
         <Controls />
         <Background color="#aaa" gap={16} />
       </ReactFlow>
+      {!!higlightedNode && (
+        <EuiModal onClose={onCloseModal} style={{ width: "800px" }}>
+          <EuiModalHeader>
+            <EuiModalHeaderTitle>
+              <h2>Operation Tracing Detail</h2>
+            </EuiModalHeaderTitle>
+          </EuiModalHeader>
+          <EuiModalBody>
+            <EuiFlexGroup direction="column" justifyContent="spaceEvenly">
+              <EuiFlexItem>
+                <EuiFormRow fullWidth label="Spec" display="columnCompressed">
+                  <EuiCodeBlock
+                    language="json"
+                    fontSize="s"
+                    paddingSize="s"
+                    overflowHeight={600}
+                    isVirtualized>
+                    {JSON.stringify(higlightedNode.data.spec, null, 2)}
+                  </EuiCodeBlock>
+                </EuiFormRow>
+              </EuiFlexItem>
+              <EuiFlexItem>
+                <EuiFormRow fullWidth label="Input" display="columnCompressed">
+                  <EuiCodeBlock
+                    language="json"
+                    fontSize="s"
+                    paddingSize="s"
+                    overflowHeight={600}
+                    isVirtualized>
+                    {JSON.stringify(higlightedNode.data.input, null, 2)}
+                  </EuiCodeBlock>
+                </EuiFormRow>
+              </EuiFlexItem>
+              <EuiFlexItem>
+                <EuiFormRow fullWidth label="Output" display="columnCompressed">
+                  <EuiCodeBlock
+                    language="json"
+                    fontSize="s"
+                    paddingSize="s"
+                    overflowHeight={600}
+                    isVirtualized>
+                    {JSON.stringify(higlightedNode.data.output, null, 2)}
+                  </EuiCodeBlock>
+                </EuiFormRow>
+              </EuiFlexItem>
+            </EuiFlexGroup>
+          </EuiModalBody>
+        </EuiModal>
+      )}
     </div>
   );
 };
