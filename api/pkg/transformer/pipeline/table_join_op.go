@@ -112,22 +112,12 @@ func (t TableJoinOp) Execute(ctx context.Context, environment *Environment) erro
 
 	environment.SetSymbol(t.tableJoinSpec.OutputTable, resultTable)
 	if t.OperationTracing != nil {
-		formattedLeftTable, err := table.TableToJson(leftTable, spec.FromTable_RECORD)
-		if err != nil {
-			return err
+		if err := t.AddInputOutput(
+			map[string]interface{}{t.tableJoinSpec.LeftTable: leftTable, t.tableJoinSpec.RightTable: rightTable},
+			map[string]interface{}{t.tableJoinSpec.OutputTable: resultTable},
+		); err != nil {
+			return nil
 		}
-		formattedRightTable, err := table.TableToJson(rightTable, spec.FromTable_RECORD)
-		if err != nil {
-			return err
-		}
-		formattedResultTable, err := table.TableToJson(resultTable, spec.FromTable_RECORD)
-		if err != nil {
-			return err
-		}
-		t.AddInputOutput(
-			map[string]interface{}{t.tableJoinSpec.LeftTable: formattedLeftTable, t.tableJoinSpec.RightTable: formattedRightTable},
-			map[string]interface{}{t.tableJoinSpec.OutputTable: formattedResultTable},
-		)
 	}
 	environment.LogOperation("table_join", t.tableJoinSpec.OutputTable)
 	return nil

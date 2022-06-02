@@ -9,7 +9,6 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
-	table "github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
 type FeastOp struct {
@@ -56,12 +55,9 @@ func (op *FeastOp) Execute(context context.Context, env *Environment) error {
 
 		env.SetSymbol(featureTable.Name, tbl)
 		if op.OperationTracing != nil {
-
-			tableJson, err := table.TableToJson(tbl, spec.FromTable_RECORD)
-			if err != nil {
+			if err := op.AddInputOutput(nil, map[string]interface{}{featureTable.Name: tbl}); err != nil {
 				return err
 			}
-			op.AddInputOutput(nil, map[string]interface{}{featureTable.Name: tableJson})
 		}
 		env.LogOperation("feast", featureTable.Name)
 	}

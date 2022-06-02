@@ -6,13 +6,14 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
 type Op interface {
 	Execute(context context.Context, environment *Environment) error
-	AddInputOutput(input, output map[string]interface{})
+	AddInputOutput(input, output map[string]interface{}) error
 	GetOperationTracingDetail() ([]types.TracingDetail, error)
 }
 
@@ -37,7 +38,7 @@ func NewOperationTracing(operationSpecs interface{}, opType types.OperationType)
 	return opTracing
 }
 
-func (ot *OperationTracing) AddInputOutput(input, output map[string]interface{}) {
+func (ot *OperationTracing) AddInputOutput(input, output map[string]interface{}) error {
 	ot.mutex.Lock()
 	defer ot.mutex.Unlock()
 
@@ -47,8 +48,33 @@ func (ot *OperationTracing) AddInputOutput(input, output map[string]interface{})
 	if ot.Output == nil {
 		ot.Output = make([]map[string]interface{}, 0)
 	}
+
+	if err := sanitizeIO(input); err != nil {
+		return err
+	}
+	if err := sanitizeIO(output); err != nil {
+		return err
+	}
+
 	ot.Input = append(ot.Input, input)
 	ot.Output = append(ot.Output, output)
+
+	return nil
+}
+
+func sanitizeIO(io map[string]interface{}) error {
+	for k, v := range io {
+		tbl, ok := v.(*table.Table)
+		if !ok {
+			continue
+		}
+		formattedTable, err := table.TableToJson(tbl, spec.FromTable_RECORD)
+		if err != nil {
+			return err
+		}
+		io[k] = formattedTable
+	}
+	return nil
 }
 
 func (ot *OperationTracing) addInputOutputTable(input, output *table.Table) {

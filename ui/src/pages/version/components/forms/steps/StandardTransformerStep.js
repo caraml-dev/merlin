@@ -16,6 +16,7 @@ import {
 } from "@gojek/mlp-ui";
 import { PipelineSidebarPanel } from "../components/transformer/PipelineSidebarPanel";
 import { PipelineStage } from "./PipelineStage";
+import { TransformerSimulation } from "./TransformerSimulation";
 import "./Pipeline.scss";
 
 export const StandardTransformerStep = () => {
@@ -61,6 +62,9 @@ export const StandardTransformerStep = () => {
       onClick: undefined,
       icon: <EuiIcon type="indexEdit" />,
       items: [
+        createItem("Simulation", "simulation", {
+          icon: <EuiIcon type="play" />
+        }),
         createItem("Pre-Processing", "preprocessing", {
           icon: <EuiIcon type="editorItemAlignRight" />,
           forceOpen: true,
@@ -95,53 +99,29 @@ export const StandardTransformerStep = () => {
     })
   ];
 
-  const preprocessHeader = (
-    <div>
-      <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
-        <EuiFlexItem grow={false}>
-          <EuiIcon type="editorItemAlignRight" size="m" />
-        </EuiFlexItem>
+  const createHeader = (title, subtitle, iconType) => {
+    return (
+      <div>
+        <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
+          <EuiFlexItem grow={false}>
+            <EuiIcon type={iconType} size="m" />
+          </EuiFlexItem>
 
-        <EuiFlexItem>
-          <EuiTitle size="xs">
-            <h3>Pre-Processing</h3>
-          </EuiTitle>
-        </EuiFlexItem>
-      </EuiFlexGroup>
+          <EuiFlexItem>
+            <EuiTitle size="xs">
+              <h3>{title}</h3>
+            </EuiTitle>
+          </EuiFlexItem>
+        </EuiFlexGroup>
 
-      <EuiText size="s">
-        <p>
-          <EuiTextColor color="subdued">
-            Input, Transformation and Output configurations for pre-processing
-          </EuiTextColor>
-        </p>
-      </EuiText>
-    </div>
-  );
-
-  const postprocessHeader = (
-    <div>
-      <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
-        <EuiFlexItem grow={false}>
-          <EuiIcon type="editorItemAlignLeft" size="m" />
-        </EuiFlexItem>
-
-        <EuiFlexItem>
-          <EuiTitle size="xs">
-            <h3>Post-Processing</h3>
-          </EuiTitle>
-        </EuiFlexItem>
-      </EuiFlexGroup>
-
-      <EuiText size="s">
-        <p>
-          <EuiTextColor color="subdued">
-            Input, Transformation and Output configurations for post-processing
-          </EuiTextColor>
-        </p>
-      </EuiText>
-    </div>
-  );
+        <EuiText size="s">
+          <p>
+            <EuiTextColor color="subdued">{subtitle}</EuiTextColor>
+          </p>
+        </EuiText>
+      </div>
+    );
+  };
 
   return (
     <EuiFlexGroup>
@@ -163,11 +143,29 @@ export const StandardTransformerStep = () => {
           <EuiFlexGroup direction="column" gutterSize="m">
             <div id="preprocessing" className="preprocessing">
               <EuiAccordion
+                id="simulation"
+                element="fieldset"
+                className="euiAccordionForm"
+                buttonClassName="euiAccordionForm__button"
+                buttonContent={createHeader(
+                  "Simulation",
+                  "Simulation of standard transformer given your config without deploying the model",
+                  "play"
+                )}
+                paddingSize="l"
+                initialIsOpen={true}>
+                <TransformerSimulation />
+              </EuiAccordion>
+              <EuiAccordion
                 id="preprocess"
                 element="fieldset"
                 className="euiAccordionForm"
                 buttonClassName="euiAccordionForm__button"
-                buttonContent={preprocessHeader}
+                buttonContent={createHeader(
+                  "Pre-Processing",
+                  "Input, Transformation and Output configurations for pre-processing",
+                  "editorItemAlignRight"
+                )}
                 paddingSize="l"
                 initialIsOpen={true}>
                 <PipelineStage
@@ -189,7 +187,11 @@ export const StandardTransformerStep = () => {
                 element="fieldset"
                 className="euiAccordionForm"
                 buttonClassName="euiAccordionForm__button"
-                buttonContent={postprocessHeader}
+                buttonContent={createHeader(
+                  "Post-Processing",
+                  "Input, Transformation and Output configurations for post-processing",
+                  "editorItemAlignLeft"
+                )}
                 paddingSize="l"
                 initialIsOpen={true}>
                 <PipelineStage

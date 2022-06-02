@@ -28,5 +28,6 @@ export default {
   versionEndpointList: require("./data/versionEndpointList"),
   noBody: require("./data/noBody"),
   jobList: require("./data/jobList"),
-  job: require("./data/job")
+  job: require("./data/job"),
+  transformerSimulation: require("./data/transformerSimulationOutput.json")
 };

@@ -46,7 +46,9 @@ func (e *EncoderOp) Execute(ctx context.Context, env *Environment) error {
 		}
 		env.SetSymbol(encoderSpec.Name, encoderImpl)
 		if e.OperationTracing != nil {
-			e.AddInputOutput(nil, map[string]interface{}{encoderSpec.Name: "The result of this operation is on the transformer step that use this encoder"})
+			if err := e.AddInputOutput(nil, map[string]interface{}{encoderSpec.Name: "The result of this operation is on the transformer step that use this encoder"}); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

@@ -18,7 +18,7 @@ type standardTransformer struct {
 	executorConfig   transformerExecutorConfig
 }
 
-// Transformer
+// Transformer have predict function that process all the preprocess, model prediction and postproces
 type Transformer interface {
 	Predict(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error)
 }
@@ -71,25 +71,25 @@ func (st *standardTransformer) Predict(ctx context.Context, requestBody types.JS
 	if env.IsPreprocessOpExist() {
 		preprocessOut, err = env.Preprocess(ctx, requestBody, requestHeaders)
 		if err != nil {
-			return nil, err
+			return generateErrorResponse(err), err
 		}
 	}
 
 	reqBody, err := json.Marshal(preprocessOut)
 	if err != nil {
-		return nil, err
+		return generateErrorResponse(err), err
 	}
 
 	predictorRespBody, predictorRespHeaders, err := st.modelPredictor.ModelPrediction(ctx, reqBody, requestHeaders)
 	if err != nil {
-		return nil, err
+		return generateErrorResponse(err), err
 	}
 
 	predictionOut := predictorRespBody
 	if env.IsPreprocessOpExist() {
 		predictionOut, err = env.Postprocess(ctx, predictionOut, predictorRespHeaders)
 		if err != nil {
-			return nil, err
+			return generateErrorResponse(err), err
 		}
 	}
 
@@ -105,4 +105,12 @@ func (st *standardTransformer) Predict(ctx context.Context, requestBody types.JS
 	}
 
 	return resp, nil
+}
+
+func generateErrorResponse(err error) *types.PredictResponse {
+	return &types.PredictResponse{
+		Response: types.JSONObject{
+			"error": err.Error(),
+		},
+	}
 }

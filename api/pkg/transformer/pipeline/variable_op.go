@@ -72,7 +72,9 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 
 		env.SetSymbol(name, value)
 		if v.OperationTracing != nil {
-			v.AddInputOutput(nil, map[string]interface{}{name: value})
+			if err := v.AddInputOutput(nil, map[string]interface{}{name: value}); err != nil {
+				return err
+			}
 		}
 		env.LogOperation("set variable", varDef.Name)
 	}

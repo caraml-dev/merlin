@@ -114,11 +114,9 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 			for k, v := range loadedTables {
 				preloadedTables[k] = v
 				if c.operationTracingEnabled {
-					preloadedTbl, err := table.TableToJson(&v, spec.FromTable_RECORD)
-					if err != nil {
+					if err := tableOp.AddInputOutput(nil, map[string]interface{}{k: &v}); err != nil {
 						return nil, nil, err
 					}
-					tableOp.AddInputOutput(nil, map[string]interface{}{k: preloadedTbl})
 				}
 			}
 		}
