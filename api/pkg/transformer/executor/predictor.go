@@ -21,7 +21,7 @@ func newEchoMockPredictor() *mockModelPredictor {
 	return &mockModelPredictor{}
 }
 
-func NewMockPredictor(respBody types.JSONObject, respHeader map[string]string) *mockModelPredictor {
+func NewMockModelPredictor(respBody types.JSONObject, respHeader map[string]string) *mockModelPredictor {
 	return &mockModelPredictor{
 		mockResponseBody:   respBody,
 		mockResponseHeader: respHeader,
@@ -35,13 +35,16 @@ func (mock *mockModelPredictor) ModelPrediction(ctx context.Context, requestBody
 	if err := json.Unmarshal(requestBody, &reqBodyObj); err != nil {
 		return nil, nil, err
 	}
+
 	respBody = reqBodyObj
 	if mock.mockResponseBody != nil {
 		respBody = mock.mockResponseBody
 	}
+
 	respHeaders = requestHeader
 	if mock.mockResponseHeader != nil {
 		respHeaders = mock.mockResponseHeader
 	}
+
 	return respBody, respHeaders, nil
 }
