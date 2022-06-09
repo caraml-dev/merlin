@@ -279,7 +279,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 									Kind:  yamlv3.ScalarNode,
 									Style: yamlv3.LiteralStyle,
 									Tag:   "!!str",
-									Value: "(100 * sum(rate(container_cpu_usage_seconds_total{cluster_name=\"cluster-1\",container!~\"|POD\",namespace=\"project-1\",pod=~\".*model-1.*\"}[1m])) / sum(kube_pod_container_resource_requests_cpu_cores{cluster_name=\"cluster-1\",container!~\"|POD\",namespace=\"project-1\",pod=~\".*model-1.*\"})) > 50",
+									Value: "(100 * sum(rate(container_cpu_usage_seconds_total{cluster_name=\"cluster-1\",container!~\"|POD\",namespace=\"project-1\",pod=~\".*model-1.*\"}[1m])) / sum(kube_pod_container_resource_requests{cluster_name=\"cluster-1\",container!~\"|POD\",namespace=\"project-1\",pod=~\".*model-1.*\",resource=\"cpu\"})) > 50",
 								},
 								For: "5m",
 								Labels: PromAlertRuleLabels{
@@ -342,7 +342,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 									Kind:  yamlv3.ScalarNode,
 									Style: yamlv3.LiteralStyle,
 									Tag:   "!!str",
-									Value: "(100 * sum(container_memory_usage_bytes{cluster_name=\"cluster-1\",container!~\"|POD\",namespace=\"project-1\",pod=~\".*model-1.*\"}) / sum(kube_pod_container_resource_requests_memory_bytes{cluster_name=\"cluster-1\",container!~\"|POD\",namespace=\"project-1\",pod=~\".*model-1.*\"})) > 50",
+									Value: "(100 * sum(container_memory_usage_bytes{cluster_name=\"cluster-1\",container!~\"|POD\",namespace=\"project-1\",pod=~\".*model-1.*\"}) / sum(kube_pod_container_resource_requests{cluster_name=\"cluster-1\",container!~\"|POD\",namespace=\"project-1\",pod=~\".*model-1.*\",resource=\"memory\"})) > 50",
 								},
 								For: "5m",
 								Labels: PromAlertRuleLabels{
