@@ -131,8 +131,8 @@ webhooks:
   - clientConfig:
       caBundle: Cg==
       service:
-        name: $(webhookServiceName)
-        namespace: $(kserveNamespace)
+        name: kserve-webhook-server-service
+        namespace: kserve
         path: /validate-serving-kserve-io-v1alpha1-inferencegraph
     failurePolicy: Fail
     name: inferencegraph.kserve-webhook-server.validator
