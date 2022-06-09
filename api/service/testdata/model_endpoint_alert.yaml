@@ -1,147 +1,147 @@
 groups:
-  - name: merlin_project-1_model-1_env-1
-    rules:
-      - alert: "[merlin] model-1: Throughput warning"
-        expr: |-
-          round(sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m])), 0.001) < 1
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: warning
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: Throughput (RPM) of model-1 model in env-1 is less than 1.00. Current value is {{ $value }}.
-      - alert: "[merlin] model-1: Throughput critical"
-        expr: |-
-          round(sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m])), 0.001) < 2
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: critical
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: Throughput (RPM) of model-1 model in env-1 is less than 2.00. Current value is {{ $value }}.
-      - alert: "[merlin] model-1: 99.00p Latency warning"
-        expr: |-
-          histogram_quantile(0.99, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 3
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: warning
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: 99.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 3.00 ms. Current value is {{ $value }} ms.
-      - alert: "[merlin] model-1: 99.00p Latency critical"
-        expr: |-
-          histogram_quantile(0.99, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 4
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: critical
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: 99.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 4.00 ms. Current value is {{ $value }} ms.
-      - alert: "[merlin] model-1: 95.00p Latency warning"
-        expr: |-
-          histogram_quantile(0.95, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 5
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: warning
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: 95.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 5.00 ms. Current value is {{ $value }} ms.
-      - alert: "[merlin] model-1: 95.00p Latency critical"
-        expr: |-
-          histogram_quantile(0.95, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 6
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: critical
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: 95.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 6.00 ms. Current value is {{ $value }} ms.
-      - alert: "[merlin] model-1: Error Rate warning"
-        expr: |-
-          (100 * sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",response_code_class!="2xx",revision_name=~".*model-1.*"}[1m])) / sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 7
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: warning
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: Error rate of model-1 model in env-1 is higher than 7.00%. Current value is {{ $value }}%.
-      - alert: "[merlin] model-1: Error Rate critical"
-        expr: |-
-          (100 * sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",response_code_class!="2xx",revision_name=~".*model-1.*"}[1m])) / sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 8
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: critical
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: Error rate of model-1 model in env-1 is higher than 8.00%. Current value is {{ $value }}%.
-      - alert: "[merlin] model-1: Cpu warning"
-        expr: |-
-          (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="cpu"})) > 9
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: warning
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: CPU usage of model-1 model in env-1 is higher than 9.00%. Current value is {{ $value }}%.
-      - alert: "[merlin] model-1: Cpu critical"
-        expr: |-
-          (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="cpu"})) > 10
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: critical
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: CPU usage of model-1 model in env-1 is higher than 10.00%. Current value is {{ $value }}%.
-      - alert: "[merlin] model-1: Memory warning"
-        expr: |-
-          (100 * sum(container_memory_usage_bytes{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="memory"})) > 11
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: warning
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: Memory usage of model-1 model in env-1 is higher than 11.00%. Current value is {{ $value }}%.
-      - alert: "[merlin] model-1: Memory critical"
-        expr: |-
-          (100 * sum(container_memory_usage_bytes{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="memory"})) > 12
-        for: 5m
-        labels:
-          owner: team-1
-          service_name: merlin_project-1_model-1_env-1
-          severity: critical
-        annotations:
-          dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
-          playbook: TODO
-          summary: Memory usage of model-1 model in env-1 is higher than 12.00%. Current value is {{ $value }}%.
+    - name: merlin_project-1_model-1_env-1
+      rules:
+        - alert: "[merlin] model-1: Throughput warning"
+          expr: |-
+            round(sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m])), 0.001) < 1
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: warning
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: Throughput (RPM) of model-1 model in env-1 is less than 1.00. Current value is {{ $value }}.
+        - alert: "[merlin] model-1: Throughput critical"
+          expr: |-
+            round(sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m])), 0.001) < 2
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: critical
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: Throughput (RPM) of model-1 model in env-1 is less than 2.00. Current value is {{ $value }}.
+        - alert: "[merlin] model-1: 99.00p Latency warning"
+          expr: |-
+            histogram_quantile(0.99, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 3
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: warning
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: 99.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 3.00 ms. Current value is {{ $value }} ms.
+        - alert: "[merlin] model-1: 99.00p Latency critical"
+          expr: |-
+            histogram_quantile(0.99, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 4
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: critical
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: 99.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 4.00 ms. Current value is {{ $value }} ms.
+        - alert: "[merlin] model-1: 95.00p Latency warning"
+          expr: |-
+            histogram_quantile(0.95, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 5
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: warning
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: 95.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 5.00 ms. Current value is {{ $value }} ms.
+        - alert: "[merlin] model-1: 95.00p Latency critical"
+          expr: |-
+            histogram_quantile(0.95, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 6
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: critical
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: 95.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 6.00 ms. Current value is {{ $value }} ms.
+        - alert: "[merlin] model-1: Error Rate warning"
+          expr: |-
+            (100 * sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",response_code_class!="2xx",revision_name=~".*model-1.*"}[1m])) / sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 7
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: warning
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: Error rate of model-1 model in env-1 is higher than 7.00%. Current value is {{ $value }}%.
+        - alert: "[merlin] model-1: Error Rate critical"
+          expr: |-
+            (100 * sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",response_code_class!="2xx",revision_name=~".*model-1.*"}[1m])) / sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 8
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: critical
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: Error rate of model-1 model in env-1 is higher than 8.00%. Current value is {{ $value }}%.
+        - alert: "[merlin] model-1: Cpu warning"
+          expr: |-
+            (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="cpu"})) > 9
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: warning
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: CPU usage of model-1 model in env-1 is higher than 9.00%. Current value is {{ $value }}%.
+        - alert: "[merlin] model-1: Cpu critical"
+          expr: |-
+            (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="cpu")) > 10
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: critical
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: CPU usage of model-1 model in env-1 is higher than 10.00%. Current value is {{ $value }}%.
+        - alert: "[merlin] model-1: Memory warning"
+          expr: |-
+            (100 * sum(container_memory_usage_bytes{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="memory"})) > 11
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: warning
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: Memory usage of model-1 model in env-1 is higher than 11.00%. Current value is {{ $value }}%.
+        - alert: "[merlin] model-1: Memory critical"
+          expr: |-
+            (100 * sum(container_memory_usage_bytes{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="memory"})) > 12
+          for: 5m
+          labels:
+            owner: team-1
+            service_name: merlin_project-1_model-1_env-1
+            severity: critical
+          annotations:
+            dashboard: http://dashboard.dev/?var-cluster=cluster-1&var-model=model-1&var-project=project-1
+            playbook: TODO
+            summary: Memory usage of model-1 model in env-1 is higher than 12.00%. Current value is {{ $value }}%.
