@@ -111,7 +111,7 @@ groups:
             summary: CPU usage of model-1 model in env-1 is higher than 9.00%. Current value is {{ $value }}%.
         - alert: "[merlin] model-1: Cpu critical"
           expr: |-
-            (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="cpu")) > 10
+            (100 * sum(rate(container_cpu_usage_seconds_total{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*"}[1m])) / sum(kube_pod_container_resource_requests{cluster_name="cluster-1",container!~"|POD",namespace="project-1",pod=~".*model-1.*",resource="cpu"})) > 10
           for: 5m
           labels:
             owner: team-1
