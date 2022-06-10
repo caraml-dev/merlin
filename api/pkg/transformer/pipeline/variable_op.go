@@ -31,7 +31,6 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 
 	for _, varDef := range v.variableSpec {
 		name := varDef.Name
-		input := make(map[string]interface{})
 
 		var value interface{}
 		switch v := varDef.Value.(type) {
@@ -48,14 +47,13 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 			default:
 				return fmt.Errorf("Variable.Literal.LiteralValue has unexpected type %T", v)
 			}
-			input["literal"] = value
+
 		case *spec.Variable_Expression:
 			result, err := evalExpression(env, v.Expression)
 			if err != nil {
 				return err
 			}
 			value = result
-			input["expression"] = v.Expression
 
 		case *spec.Variable_JsonPath:
 			result, err := evalJSONPath(env, v.JsonPath)
@@ -63,21 +61,21 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 				return nil
 			}
 			value = result
-			input["jsonPath"] = v.JsonPath
+
 		case *spec.Variable_JsonPathConfig:
 			result, err := evalJSONPath(env, v.JsonPathConfig.JsonPath)
 			if err != nil {
 				return nil
 			}
 			value = result
-			input["jsonPathConfig"] = v.JsonPathConfig.JsonPath
+
 		default:
 			return fmt.Errorf("Variable.Value has unexpected type %T", v)
 		}
 
 		env.SetSymbol(name, value)
 		if v.OperationTracing != nil {
-			if err := v.AddInputOutput(input, map[string]interface{}{name: value}); err != nil {
+			if err := v.AddInputOutput(nil, map[string]interface{}{name: value}); err != nil {
 				return err
 			}
 		}
