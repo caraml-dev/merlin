@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
@@ -17,6 +18,7 @@ const (
 
 // TransformerService handles the standard transformer simulation
 type TransformerService interface {
+	// SimulateTransformer simulate transformer execution including preprocessing and postprocessing
 	SimulateTransformer(ctx context.Context, simulationPayload *models.TransformerSimulation) (*types.PredictResponse, error)
 }
 
@@ -37,7 +39,7 @@ var _ TransformerService = (*transformerService)(nil)
 func (ts *transformerService) SimulateTransformer(ctx context.Context, simulationPayload *models.TransformerSimulation) (*types.PredictResponse, error) {
 	transformerExecutor, err := ts.createTransformerExecutor(ctx, simulationPayload)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed creating transformer executor: %w", err)
 	}
 
 	return ts.simulate(ctx, transformerExecutor, simulationPayload.Payload, simulationPayload.Headers)
@@ -73,12 +75,12 @@ func (ts *transformerService) createTransformerExecutor(ctx context.Context, sim
 		}),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed initializing standard transformer: %w", err)
 	}
 
 	return transformerExecutor, nil
 }
 
 func (ts *transformerService) simulate(ctx context.Context, transformer executor.Transformer, requestPayload types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
-	return transformer.Predict(ctx, requestPayload, requestHeaders)
+	return transformer.Execute(ctx, requestPayload, requestHeaders)
 }

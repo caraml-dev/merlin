@@ -25,7 +25,7 @@ func Test_transformerService_simulate(t *testing.T) {
 			desc: "executor success",
 			transformerExecutor: func(payload types.JSONObject, headers map[string]string) *mocks.Transformer {
 				mockTrf := &mocks.Transformer{}
-				mockTrf.On("Predict", mock.Anything, payload, headers).Return(&types.PredictResponse{
+				mockTrf.On("Execute", mock.Anything, payload, headers).Return(&types.PredictResponse{
 					Response: types.JSONObject{
 						"prediction": []float64{0.25, 0.55},
 					},
@@ -102,7 +102,7 @@ func Test_transformerService_simulate(t *testing.T) {
 			desc: "executor error",
 			transformerExecutor: func(payload types.JSONObject, headers map[string]string) *mocks.Transformer {
 				mockTrf := &mocks.Transformer{}
-				mockTrf.On("Predict", mock.Anything, payload, headers).Return(nil, fmt.Errorf("executor error"))
+				mockTrf.On("Execute", mock.Anything, payload, headers).Return(nil, fmt.Errorf("executor error"))
 				return mockTrf
 			},
 			wantErr: true,

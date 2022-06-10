@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 )
 
@@ -17,11 +18,13 @@ func (c *TransformerController) SimulateTransformer(r *http.Request, vars map[st
 
 	simulationPayload, ok := body.(*models.TransformerSimulation)
 	if !ok {
+		log.Errorf("Unable to parse request body %v", body)
 		return BadRequest("Unable to parse request body")
 	}
 
 	transformerResult, err := c.TransformerService.SimulateTransformer(ctx, simulationPayload)
 	if err != nil {
+		log.Errorf("Failed performing transfomer simulation %v", err)
 		return InternalServerError(err.Error())
 	}
 

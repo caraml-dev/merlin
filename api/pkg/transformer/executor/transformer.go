@@ -22,7 +22,7 @@ type standardTransformer struct {
 
 // Transformer have predict function that process all the preprocess, model prediction and postproces
 type Transformer interface {
-	Predict(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error)
+	Execute(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error)
 }
 
 type transformerExecutorConfig struct {
@@ -66,8 +66,8 @@ func NewStandardTransformerWithConfig(ctx context.Context, transformerConfig *sp
 }
 
 // Predict will process all standard transformer request including preprocessing, model prediction and postprocess
-func (st *standardTransformer) Predict(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "st.Predict")
+func (st *standardTransformer) Execute(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "st.Execute")
 	defer span.Finish()
 
 	preprocessOut := requestBody
@@ -110,7 +110,11 @@ func (st *standardTransformer) Predict(ctx context.Context, requestBody types.JS
 	}
 
 	if st.executorConfig.traceEnabled {
-		resp.Tracing = &types.OperationTracing{}
+		resp.Tracing = &types.OperationTracing{
+			PreprocessTracing:  make([]types.TracingDetail, 0),
+			PostprocessTracing: make([]types.TracingDetail, 0),
+		}
+
 		if env.IsPreprocessOpExist() {
 			resp.Tracing.PreprocessTracing = env.PreprocessTracingDetail()
 		}

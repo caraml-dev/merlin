@@ -5,16 +5,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"testing"
-	"time"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -24,7 +21,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func TestStandardTransformer_Predict(t *testing.T) {
+func TestStandardTransformer_Execute(t *testing.T) {
 	logger, err := zap.NewProduction()
 	require.NoError(t, err)
 
@@ -221,7 +218,7 @@ func TestStandardTransformer_Predict(t *testing.T) {
 			err = json.Unmarshal(tt.requestPayload, &payload)
 			require.NoError(t, err)
 
-			got, err := transformerExecutor.Predict(context.Background(), payload, tt.requestHeaders)
+			got, err := transformerExecutor.Execute(context.Background(), payload, tt.requestHeaders)
 			if tt.wantErr != nil {
 				assert.EqualError(t, tt.wantErr, err.Error())
 				return

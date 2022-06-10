@@ -16,7 +16,7 @@ type Transformer struct {
 }
 
 // Predict provides a mock function with given fields: ctx, requestBody, requestHeaders
-func (_m *Transformer) Predict(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
+func (_m *Transformer) Execute(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
 	ret := _m.Called(ctx, requestBody, requestHeaders)
 
 	var r0 *types.PredictResponse
