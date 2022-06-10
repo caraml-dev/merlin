@@ -64,6 +64,7 @@ func (p *CompiledPipeline) executePipelineOp(ctx context.Context, pType pipeline
 	} else {
 		ops = p.postprocessOps
 	}
+
 	tracingDetails := make([]types.TracingDetail, 0)
 	for _, op := range ops {
 		err := op.Execute(ctx, env)
@@ -92,6 +93,7 @@ func (p *CompiledPipeline) executePipelineOp(ctx context.Context, pType pipeline
 	if output == nil {
 		return nil, errors.New("output json is not computed")
 	}
+
 	return output, nil
 }
 

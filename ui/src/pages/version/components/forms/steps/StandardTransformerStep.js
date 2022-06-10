@@ -1,22 +1,23 @@
-import React, { useContext, useState } from "react";
 import {
+  EuiAccordion,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiSideNav,
   EuiIcon,
-  EuiAccordion,
+  EuiSideNav,
+  EuiText,
+  EuiTextColor,
   EuiTitle
 } from "@elastic/eui";
-import { EuiText, EuiTextColor } from "@elastic/eui";
 import {
   FormContext,
   FormValidationContext,
   get,
   useOnChangeHandler
 } from "@gojek/mlp-ui";
+import React, { useContext, useState } from "react";
 import { PipelineSidebarPanel } from "../components/transformer/PipelineSidebarPanel";
-import { PipelineStage } from "./PipelineStage";
-import { TransformerSimulation } from "./TransformerSimulation";
+import { PipelineStage } from "../components/transformer/PipelineStage";
+import { TransformerSimulation } from "../components/transformer/TransformerSimulation";
 import "./Pipeline.scss";
 
 export const StandardTransformerStep = () => {
@@ -62,9 +63,6 @@ export const StandardTransformerStep = () => {
       onClick: undefined,
       icon: <EuiIcon type="indexEdit" />,
       items: [
-        createItem("Simulation", "simulation", {
-          icon: <EuiIcon type="play" />
-        }),
         createItem("Pre-Processing", "preprocessing", {
           icon: <EuiIcon type="editorItemAlignRight" />,
           forceOpen: true,
@@ -94,6 +92,9 @@ export const StandardTransformerStep = () => {
               icon: <EuiIcon type="logstashOutput" />
             })
           ]
+        }),
+        createItem("Simulation", "simulation", {
+          icon: <EuiIcon type="play" />
         })
       ]
     })
@@ -141,22 +142,6 @@ export const StandardTransformerStep = () => {
       <EuiFlexItem grow={7}>
         <div className="config">
           <EuiFlexGroup direction="column" gutterSize="m">
-            <div id="simulation" className="simulation">
-              <EuiAccordion
-                id="simulation"
-                element="fieldset"
-                className="euiAccordionForm"
-                buttonClassName="euiAccordionForm__button"
-                buttonContent={createHeader(
-                  "Simulation",
-                  "Simulation of standard transformer given your config without deploying the model",
-                  "play"
-                )}
-                paddingSize="l"
-                initialIsOpen={true}>
-                <TransformerSimulation />
-              </EuiAccordion>
-            </div>
             <div id="preprocessing" className="preprocessing">
               <EuiAccordion
                 id="preprocess"
@@ -183,6 +168,7 @@ export const StandardTransformerStep = () => {
                 />
               </EuiAccordion>
             </div>
+
             <div id="postprocessing" className="postprocessing">
               <EuiAccordion
                 id="postprocess"
@@ -207,6 +193,23 @@ export const StandardTransformerStep = () => {
                     "transformer.config.transformerConfig.postprocess"
                   )}
                 />
+              </EuiAccordion>
+            </div>
+
+            <div id="simulation" className="simulation">
+              <EuiAccordion
+                id="simulation"
+                element="fieldset"
+                className="euiAccordionForm"
+                buttonClassName="euiAccordionForm__button"
+                buttonContent={createHeader(
+                  "Simulation",
+                  "Simulation of standard transformer given your config without deploying the model",
+                  "play"
+                )}
+                paddingSize="l"
+                initialIsOpen={true}>
+                <TransformerSimulation />
               </EuiAccordion>
             </div>
           </EuiFlexGroup>
