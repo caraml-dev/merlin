@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/transformer/executor"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"go.uber.org/zap"
 )
 
 const (
@@ -39,32 +39,33 @@ func (ts *transformerService) SimulateTransformer(ctx context.Context, simulatio
 	if err != nil {
 		return nil, err
 	}
+
 	return ts.simulate(ctx, transformerExecutor, simulationPayload.Payload, simulationPayload.Headers)
 }
 
-func (ts *transformerService) simulate(ctx context.Context, transformer executor.Transformer, requestPayload types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
-	return transformer.Predict(ctx, requestPayload, requestHeaders)
-}
-
 func (ts *transformerService) createTransformerExecutor(ctx context.Context, simulationPayload *models.TransformerSimulation) (executor.Transformer, error) {
-	var mockResponseBody types.JSONObject
-	var mockRequestHeaders map[string]string
+	var mockModelResponseBody types.JSONObject
+	var mockModelRequestHeaders map[string]string
 
 	if simulationPayload.PredictionConfig != nil && simulationPayload.PredictionConfig.Mock != nil {
 		if simulationPayload.PredictionConfig.Mock.Body != nil {
-			mockResponseBody = simulationPayload.PredictionConfig.Mock.Body
+			mockModelResponseBody = simulationPayload.PredictionConfig.Mock.Body
 		}
+
 		if simulationPayload.PredictionConfig.Mock.Headers != nil {
-			mockRequestHeaders = simulationPayload.PredictionConfig.Mock.Headers
+			mockModelRequestHeaders = simulationPayload.PredictionConfig.Mock.Headers
 		}
 	}
+
+	// logger := log.GetLogger()
+	logger, _ := zap.NewDevelopment()
 
 	transformerExecutor, err := executor.NewStandardTransformerWithConfig(
 		ctx,
 		simulationPayload.Config,
-		executor.WithLogger(log.GetLogger()),
+		executor.WithLogger(logger),
 		executor.WithTraceEnabled(true),
-		executor.WithModelPredictor(executor.NewMockPredictor(mockResponseBody, mockRequestHeaders)),
+		executor.WithModelPredictor(executor.NewMockModelPredictor(mockModelResponseBody, mockModelRequestHeaders)),
 		executor.WithFeastOptions(feast.Options{
 			StorageConfigs:     ts.cfg.ToFeastStorageConfigsForSimulation(),
 			DefaultFeastSource: ts.cfg.DefaultFeastSource,
@@ -74,5 +75,10 @@ func (ts *transformerService) createTransformerExecutor(ctx context.Context, sim
 	if err != nil {
 		return nil, err
 	}
+
 	return transformerExecutor, nil
+}
+
+func (ts *transformerService) simulate(ctx context.Context, transformer executor.Transformer, requestPayload types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
+	return transformer.Predict(ctx, requestPayload, requestHeaders)
 }

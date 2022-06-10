@@ -2,22 +2,21 @@ import {
   EuiCodeBlock,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiFormRow,
   EuiModal,
   EuiModalBody,
   EuiModalHeader,
-  EuiModalHeaderTitle,
-  EuiFormRow
+  EuiModalHeaderTitle
 } from "@elastic/eui";
 import React, { useState } from "react";
 import ReactFlow, {
   addEdge,
-  Controls,
   Background,
+  Controls,
   MarkerType,
-  useNodesState,
-  useEdgesState
+  useEdgesState,
+  useNodesState
 } from "react-flow-renderer";
-
 import PipelineNode from "./PipelineNode";
 
 const nodeTypes = { pipeline: PipelineNode };
@@ -133,37 +132,39 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
       }
     };
 
-    for (let i = 0; i < details.preprocess.length; i++) {
-      if (i !== 0) {
-        var generatedPosition = calculatePosition(
-          lastXPosition,
-          lastYPosition,
-          direction,
-          directionInfo
-        );
-        lastXPosition = generatedPosition.x;
-        lastYPosition = generatedPosition.y;
-        direction = generatedPosition.direction;
-        nodes.push({
-          id: "preprocess-" + i,
-          type: "pipeline",
-          width: nodeWidth,
-          height: nodeHeight,
-          position: { x: lastXPosition, y: lastYPosition },
-          data: details.preprocess[i],
-          style: { width: nodeWidth },
-          sourcePosition: generatedPosition.sourcePosition
-        });
-      } else {
-        nodes.push({
-          id: "preprocess-" + i,
-          type: "pipeline",
-          width: nodeWidth,
-          height: nodeHeight,
-          position: { x: lastXPosition, y: lastYPosition },
-          data: details.preprocess[i],
-          style: { width: nodeWidth }
-        });
+    if (details.preprocess) {
+      for (let i = 0; i < details.preprocess.length; i++) {
+        if (i !== 0) {
+          var generatedPosition = calculatePosition(
+            lastXPosition,
+            lastYPosition,
+            direction,
+            directionInfo
+          );
+          lastXPosition = generatedPosition.x;
+          lastYPosition = generatedPosition.y;
+          direction = generatedPosition.direction;
+          nodes.push({
+            id: "preprocess-" + i,
+            type: "pipeline",
+            width: nodeWidth,
+            height: nodeHeight,
+            position: { x: lastXPosition, y: lastYPosition },
+            data: details.preprocess[i],
+            style: { width: nodeWidth },
+            sourcePosition: generatedPosition.sourcePosition
+          });
+        } else {
+          nodes.push({
+            id: "preprocess-" + i,
+            type: "pipeline",
+            width: nodeWidth,
+            height: nodeHeight,
+            position: { x: lastXPosition, y: lastYPosition },
+            data: details.preprocess[i],
+            style: { width: nodeWidth }
+          });
+        }
       }
     }
 
@@ -185,24 +186,26 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
       data: { label: "Model Prediction" }
     });
 
-    for (let i = 0; i < details.postprocess.length; i++) {
-      generatedPosition = calculatePosition(
-        lastXPosition,
-        lastYPosition,
-        direction,
-        directionInfo
-      );
-      lastXPosition = generatedPosition.x;
-      lastYPosition = generatedPosition.y;
-      direction = generatedPosition.direction;
-      nodes.push({
-        id: "preprocess-" + i,
-        type: "pipeline",
-        width: { nodeWidth },
-        height: { nodeHeight },
-        position: { x: lastXPosition, y: lastYPosition },
-        data: details.postprocess[i]
-      });
+    if (details.postprocess) {
+      for (let i = 0; i < details.postprocess.length; i++) {
+        generatedPosition = calculatePosition(
+          lastXPosition,
+          lastYPosition,
+          direction,
+          directionInfo
+        );
+        lastXPosition = generatedPosition.x;
+        lastYPosition = generatedPosition.y;
+        direction = generatedPosition.direction;
+        nodes.push({
+          id: "preprocess-" + i,
+          type: "pipeline",
+          width: { nodeWidth },
+          height: { nodeHeight },
+          position: { x: lastXPosition, y: lastYPosition },
+          data: details.postprocess[i]
+        });
+      }
     }
     return nodes;
   };
@@ -257,8 +260,7 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
                     language="json"
                     fontSize="s"
                     paddingSize="s"
-                    overflowHeight={600}
-                    isVirtualized>
+                    overflowHeight={600}>
                     {JSON.stringify(higlightedNode.data.spec, null, 2)}
                   </EuiCodeBlock>
                 </EuiFormRow>
@@ -269,8 +271,7 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
                     language="json"
                     fontSize="s"
                     paddingSize="s"
-                    overflowHeight={600}
-                    isVirtualized>
+                    overflowHeight={600}>
                     {JSON.stringify(higlightedNode.data.input, null, 2)}
                   </EuiCodeBlock>
                 </EuiFormRow>
@@ -281,8 +282,7 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
                     language="json"
                     fontSize="s"
                     paddingSize="s"
-                    overflowHeight={600}
-                    isVirtualized>
+                    overflowHeight={600}>
                     {JSON.stringify(higlightedNode.data.output, null, 2)}
                   </EuiCodeBlock>
                 </EuiFormRow>

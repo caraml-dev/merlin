@@ -1,7 +1,7 @@
 import { EuiButton, EuiFlexGroup, EuiFlexItem, EuiText } from "@elastic/eui";
-import { Handle } from "react-flow-renderer";
 import React from "react";
-import { Panel } from "../components/Panel";
+import { Handle } from "react-flow-renderer";
+import { Panel } from "../../../Panel";
 
 function PipelineNode({ data }) {
   return (

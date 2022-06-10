@@ -9,6 +9,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 )
 
@@ -16,6 +17,7 @@ type standardTransformer struct {
 	compiledPipeline *pipeline.CompiledPipeline
 	modelPredictor   ModelPredictor
 	executorConfig   transformerExecutorConfig
+	logger           *zap.Logger
 }
 
 // Transformer have predict function that process all the preprocess, model prediction and postproces
@@ -59,12 +61,18 @@ func NewStandardTransformerWithConfig(ctx context.Context, transformerConfig *sp
 		compiledPipeline: compiledPipeline,
 		modelPredictor:   executorConfig.modelPredictor,
 		executorConfig:   *executorConfig,
+		logger:           executorConfig.logger,
 	}, nil
 }
 
 // Predict will process all standard transformer request including preprocessing, model prediction and postprocess
 func (st *standardTransformer) Predict(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "st.Predict")
+	defer span.Finish()
+
 	preprocessOut := requestBody
+	st.logger.Debug("raw request_body", zap.Any("request_body", requestBody))
+
 	env := pipeline.NewEnvironment(st.compiledPipeline, st.executorConfig.logger)
 
 	var err error
@@ -73,6 +81,7 @@ func (st *standardTransformer) Predict(ctx context.Context, requestBody types.JS
 		if err != nil {
 			return generateErrorResponse(err), err
 		}
+		st.logger.Debug("preprocess response", zap.Any("preprocess_response", preprocessOut))
 	}
 
 	reqBody, err := json.Marshal(preprocessOut)
@@ -85,12 +94,15 @@ func (st *standardTransformer) Predict(ctx context.Context, requestBody types.JS
 		return generateErrorResponse(err), err
 	}
 
+	st.logger.Debug("predictor response", zap.Any("predict_response", predictorRespBody))
+
 	predictionOut := predictorRespBody
-	if env.IsPreprocessOpExist() {
+	if env.IsPostProcessOpExist() {
 		predictionOut, err = env.Postprocess(ctx, predictionOut, predictorRespHeaders)
 		if err != nil {
 			return generateErrorResponse(err), err
 		}
+		st.logger.Debug("postprocess response", zap.Any("postprocess_response", predictionOut))
 	}
 
 	resp := &types.PredictResponse{
@@ -98,10 +110,14 @@ func (st *standardTransformer) Predict(ctx context.Context, requestBody types.JS
 	}
 
 	if st.executorConfig.traceEnabled {
-		resp.Tracing = &types.OperationTracing{
-			PreprocessTracing:  env.PreprocessTracingDetail(),
-			PostprocessTracing: env.PostprocessTracingDetail(),
+		resp.Tracing = &types.OperationTracing{}
+		if env.IsPreprocessOpExist() {
+			resp.Tracing.PreprocessTracing = env.PreprocessTracingDetail()
 		}
+		if env.IsPostProcessOpExist() {
+			resp.Tracing.PostprocessTracing = env.PostprocessTracingDetail()
+		}
+		st.logger.Debug("executor tracing", zap.Any("tracing_details", resp.Tracing))
 	}
 
 	return resp, nil

@@ -31,6 +31,7 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 
 	for _, varDef := range v.variableSpec {
 		name := varDef.Name
+
 		var value interface{}
 		switch v := varDef.Value.(type) {
 		case *spec.Variable_Literal:
@@ -53,18 +54,21 @@ func (v *VariableDeclarationOp) Execute(context context.Context, env *Environmen
 				return err
 			}
 			value = result
+
 		case *spec.Variable_JsonPath:
 			result, err := evalJSONPath(env, v.JsonPath)
 			if err != nil {
 				return nil
 			}
 			value = result
+
 		case *spec.Variable_JsonPathConfig:
 			result, err := evalJSONPath(env, v.JsonPathConfig.JsonPath)
 			if err != nil {
 				return nil
 			}
 			value = result
+
 		default:
 			return fmt.Errorf("Variable.Value has unexpected type %T", v)
 		}

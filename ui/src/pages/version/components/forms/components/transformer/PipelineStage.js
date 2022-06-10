@@ -1,4 +1,3 @@
-import React, { useContext } from "react";
 import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import {
   FormContext,
@@ -6,10 +5,11 @@ import {
   get,
   useOnChangeHandler
 } from "@gojek/mlp-ui";
-import { InputPanel } from "../components/transformer/InputPanel";
-import { OutputPanel } from "../components/transformer/OutputPanel";
-import { TransformationPanel } from "../components/transformer/TransformationPanel";
-import { FeastProjectsContextProvider } from "../../../../../providers/feast/FeastProjectsContext";
+import React, { useContext } from "react";
+import { FeastProjectsContextProvider } from "../../../../../../providers/feast/FeastProjectsContext";
+import { InputPanel } from "./InputPanel";
+import { OutputPanel } from "./OutputPanel";
+import { TransformationPanel } from "./TransformationPanel";
 
 export const PipelineStage = ({ stage }) => {
   const {
