@@ -183,7 +183,9 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
       width: nodeWidth,
       height: nodeHeight,
       position: { x: lastXPosition, y: lastYPosition },
-      data: { label: "Model Prediction" }
+      data: { label: "Model Prediction" },
+      sourcePosition: "right",
+      targetPosition: "left"
     });
 
     if (details.postprocess) {
@@ -198,7 +200,7 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
         lastYPosition = generatedPosition.y;
         direction = generatedPosition.direction;
         nodes.push({
-          id: "preprocess-" + i,
+          id: "postprocess-" + i,
           type: "pipeline",
           width: { nodeWidth },
           height: { nodeHeight },

@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"testing"
+	"time"
 
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
+	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -134,6 +137,18 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			wantResponseByte: []byte(`{"response":{"instances":{"columns":["driver_id","driver_feature_1","driver_feature_2","driver_feature_3"],"data":[[1,1111,2222,["A","B","C"]],[2,3333,4444,["X","Y","Z"]]]},"session":"#1"},"operation_tracing":{"preprocess":[{"input":null,"output":{"customer_id":1111},"spec":{"name":"customer_id","jsonPath":"$.customer.id"},"operation_type":"variable_op"},{"input":null,"output":{"driver_table":[{"id":1,"name":"driver-1","row_number":0},{"id":2,"name":"driver-2","row_number":1}]},"spec":{"name":"driver_table","baseTable":{"fromJson":{"jsonPath":"$.drivers[*]","addRowNumber":true}}},"operation_type":"create_table_op"},{"input":null,"output":{"driver_feature_table":[{"driver_feature_1":1111,"driver_feature_2":2222,"driver_feature_3":["A","B","C"],"driver_id":1},{"driver_feature_1":3333,"driver_feature_2":4444,"driver_feature_3":["X","Y","Z"],"driver_id":2}]},"spec":{"project":"default","entities":[{"name":"driver_id","valueType":"STRING","jsonPath":"$.drivers[*].id"}],"features":[{"name":"driver_feature_1","valueType":"INT64","defaultValue":"0"},{"name":"driver_feature_2","valueType":"INT64","defaultValue":"0"},{"name":"driver_feature_3","valueType":"STRING_LIST","defaultValue":"[\"A\", \"B\", \"C\", \"D\", \"E\"]"}],"tableName":"driver_feature_table"},"operation_type":"feast_op"},{"input":null,"output":{"instances":{"columns":["driver_id","driver_feature_1","driver_feature_2","driver_feature_3"],"data":[[1,1111,2222,["A","B","C"]],[2,3333,4444,["X","Y","Z"]]]}},"spec":{"jsonTemplate":{"fields":[{"fieldName":"instances","fromTable":{"tableName":"driver_feature_table","format":"SPLIT"}}]}},"operation_type":"json_output_op"}],"postprocess":[{"input":null,"output":{"instances":{"columns":["driver_id","driver_feature_1","driver_feature_2","driver_feature_3"],"data":[[1,1111,2222,["A","B","C"]],[2,3333,4444,["X","Y","Z"]]]},"session":"#1"},"spec":{"jsonTemplate":{"fields":[{"fieldName":"instances","fromTable":{"tableName":"driver_feature_table","format":"SPLIT"}},{"fieldName":"session","fromJson":{"jsonPath":"$.model_response.session_id"}}]}},"operation_type":"json_output_op"}]}}`),
 		},
 		{
+			desc:         "only outputting raw request and model response",
+			specYamlPath: "../pipeline/testdata/valid_passthrough.yaml",
+			executorCfg: transformerExecutorConfig{
+				traceEnabled: false,
+				logger:       logger,
+			},
+			mockFeasts:       nil,
+			modelPredictor:   NewMockModelPredictor(types.JSONObject{"session_id": "#1"}, map[string]string{"Country-ID": "ID"}),
+			requestPayload:   []byte(`{"drivers" : [{"id": 1,"name": "driver-1"},{"id": 2,"name": "driver-2"}], "customer": {"id": 1111}}`),
+			wantResponseByte: []byte(`{"response":{"session_id":"#1"},"operation_tracing":null}`),
+		},
+		{
 			desc:         "simple preprocess without tracing - error preprocess",
 			specYamlPath: "../pipeline/testdata/valid_simple_preprocess.yaml",
 			executorCfg: transformerExecutorConfig{
@@ -213,6 +228,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 				compiledPipeline: compiledPipeline,
 				modelPredictor:   tt.modelPredictor,
 				executorConfig:   tt.executorCfg,
+				logger:           tt.executorCfg.logger,
 			}
 			var payload types.JSONObject
 			err = json.Unmarshal(tt.requestPayload, &payload)

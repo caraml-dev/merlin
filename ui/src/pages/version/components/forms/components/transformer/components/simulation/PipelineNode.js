@@ -5,7 +5,7 @@ import { Panel } from "../../../Panel";
 
 function PipelineNode({ data }) {
   return (
-    <div>
+    <>
       <Handle type="target" position="left" id="target-left" />
       <Handle type="target" position="right" id="target-right" />
       <Handle type="target" position="top" id="target-top" />
@@ -19,8 +19,8 @@ function PipelineNode({ data }) {
             <EuiText>{data.operation_type}</EuiText>
           </EuiFlexItem>
           <EuiFlexItem>
-            <EuiButton fill size="s" color="primary">
-              <EuiText size="s">Show Detail</EuiText>
+            <EuiButton fill={false} size="s" color="primary">
+              <EuiText size="xs">Show Details</EuiText>
             </EuiButton>
           </EuiFlexItem>
         </EuiFlexGroup>
@@ -28,7 +28,7 @@ function PipelineNode({ data }) {
       <Handle type="source" position="right" id="source-right" />
       <Handle type="source" position="left" id="source-left" />
       <Handle type="source" position="bottom" id="source-bottom" />
-    </div>
+    </>
   );
 }
 
