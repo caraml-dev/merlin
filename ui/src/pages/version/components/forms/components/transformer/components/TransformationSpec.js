@@ -1,4 +1,3 @@
-import React, { useContext } from "react";
 import {
   EuiCodeBlock,
   EuiFilePicker,
@@ -6,10 +5,11 @@ import {
   EuiFlexItem,
   EuiFormRow,
   EuiIcon,
-  EuiToolTip,
-  EuiSpacer
+  EuiSpacer,
+  EuiToolTip
 } from "@elastic/eui";
 import { FormContext, useOnChangeHandler } from "@gojek/mlp-ui";
+import React, { useContext } from "react";
 import { Config } from "../../../../../../../services/transformer/TransformerConfig";
 
 const yaml = require("js-yaml");
@@ -69,14 +69,14 @@ export const TransformationSpec = ({ importEnabled = true }) => {
       )}
 
       {config && (
-        <EuiFlexItem>
+        <EuiFlexItem grow={false}>
           <EuiSpacer size="m" />
           <EuiCodeBlock
             language="yaml"
             fontSize="s"
             paddingSize="s"
             overflowHeight={640}
-            style={{ maxWidth: 480 }}
+            style={{ maxWidth: 480, maxHeight: 480 }}
             isCopyable>
             {yaml.dump(JSON.parse(JSON.stringify(config)))}
           </EuiCodeBlock>

@@ -1,12 +1,11 @@
-.config {
-  overflow-y: scroll;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  padding: 5px 5px 40vh 10px;
-}
-
 .config::-webkit-scrollbar {
   display: none; /* Safari and Chrome */
+}
+
+.config-sidebar {
+  overflow-y: auto;
+  position: sticky;
+  top: 75px !important;
 }
 
 .preprocessing {

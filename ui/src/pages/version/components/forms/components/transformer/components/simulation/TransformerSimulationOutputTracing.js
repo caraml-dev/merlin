@@ -1,8 +1,4 @@
 import {
-  EuiCodeBlock,
-  EuiFlexGroup,
-  EuiFlexItem,
-  EuiFormRow,
   EuiModal,
   EuiModalBody,
   EuiModalHeader,
@@ -18,6 +14,7 @@ import ReactFlow, {
   useNodesState
 } from "react-flow-renderer";
 import PipelineNode from "./PipelineNode";
+import { PipelineNodeDetails } from "./PipelineNodeDetails";
 
 const nodeTypes = { pipeline: PipelineNode };
 
@@ -255,41 +252,7 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
             </EuiModalHeaderTitle>
           </EuiModalHeader>
           <EuiModalBody>
-            <EuiFlexGroup direction="column" justifyContent="spaceEvenly">
-              <EuiFlexItem>
-                <EuiFormRow fullWidth label="Spec" display="columnCompressed">
-                  <EuiCodeBlock
-                    language="json"
-                    fontSize="s"
-                    paddingSize="s"
-                    overflowHeight={600}>
-                    {JSON.stringify(higlightedNode.data.spec, null, 2)}
-                  </EuiCodeBlock>
-                </EuiFormRow>
-              </EuiFlexItem>
-              <EuiFlexItem>
-                <EuiFormRow fullWidth label="Input" display="columnCompressed">
-                  <EuiCodeBlock
-                    language="json"
-                    fontSize="s"
-                    paddingSize="s"
-                    overflowHeight={600}>
-                    {JSON.stringify(higlightedNode.data.input, null, 2)}
-                  </EuiCodeBlock>
-                </EuiFormRow>
-              </EuiFlexItem>
-              <EuiFlexItem>
-                <EuiFormRow fullWidth label="Output" display="columnCompressed">
-                  <EuiCodeBlock
-                    language="json"
-                    fontSize="s"
-                    paddingSize="s"
-                    overflowHeight={600}>
-                    {JSON.stringify(higlightedNode.data.output, null, 2)}
-                  </EuiCodeBlock>
-                </EuiFormRow>
-              </EuiFlexItem>
-            </EuiFlexGroup>
+            <PipelineNodeDetails details={higlightedNode.data} />
           </EuiModalBody>
         </EuiModal>
       )}

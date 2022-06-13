@@ -1,8 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
 import { EuiPanel, EuiTabbedContent } from "@elastic/eui";
-import { TransformationGraph } from "./components/TransformationGraph";
-import { TransformationSpec } from "./components/TransformationSpec";
 import { FormContext } from "@gojek/mlp-ui";
+import React, { useContext, useEffect, useState } from "react";
+import { TransformationSpec } from "./components/TransformationSpec";
 
 export const PipelineSidebarPanel = ({ importEnabled = true }) => {
   const {
@@ -20,14 +19,15 @@ export const PipelineSidebarPanel = ({ importEnabled = true }) => {
   useEffect(
     () => {
       if (transformer.type_on_ui === "standard") {
-        setTabs([
-          tabs[0],
-          {
-            id: "graph-panel",
-            name: "Transformation Graph",
-            content: <TransformationGraph />
-          }
-        ]);
+        // TODO: Rework Transformation Graph to match the operation trace and use React Flow
+        // setTabs([
+        //   tabs[0],
+        //   {
+        //     id: "graph-panel",
+        //     name: "Transformation Graph",
+        //     content: <TransformationGraph />
+        //   }
+        // ]);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
