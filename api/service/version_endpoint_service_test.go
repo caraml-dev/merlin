@@ -2079,7 +2079,7 @@ func TestListContainers(t *testing.T) {
 			Return(tt.mock.imageBuilderContainer, nil)
 
 		envController := &clusterMock.Controller{}
-		envController.On("GetContainers", context.Background(), "my-project", "serving.kubeflow.org/inferenceservice=model-1").
+		envController.On("GetContainers", context.Background(), "my-project", "serving.kserve.io/inferenceservice=model-1").
 			Return(tt.mock.modelContainers, nil)
 
 		controllers := map[string]cluster.Controller{env.Name: envController}
