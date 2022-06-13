@@ -1,0 +1,13 @@
+transformerConfig:
+  preprocess:
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            baseJson:
+              jsonPath: $.raw_request
+  postprocess:
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            baseJson:
+              jsonPath: $.model_response

@@ -205,6 +205,38 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			},
 		},
 		{
+			name:         "passthrough",
+			specYamlPath: "../pipeline/testdata/valid_passthrough.yaml",
+			mockFeasts:   []mockFeast{},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"entities" : [{"id": 1,"name": "entity-1"},{"id": 2,"name": "entity-2"}]}`),
+			},
+			expTransformedRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"entities" : [{"id": 1,"name": "entity-1"},{"id": 2,"name": "entity-2"}]}`),
+			},
+			modelResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"entities" : [{"id": 1,"name": "entity-1"},{"id": 2,"name": "entity-2"}]}`),
+				statusCode: 200,
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type":   "application/json",
+					"Content-Length": "68",
+				},
+				body:       []byte(`{"entities" : [{"id": 1,"name": "entity-1"},{"id": 2,"name": "entity-2"}]}`),
+				statusCode: 200,
+			},
+		},
+		{
 			name:         "simple preprocess",
 			specYamlPath: "../pipeline/testdata/valid_simple_preprocess.yaml",
 			mockFeasts:   []mockFeast{},
@@ -1024,109 +1056,6 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	}
 }
 
-// Function to assert that 2 JSONs are the same, with considerations of delta in float values
-// inputs are map[string]interface{} converted from json, and delta which is th tolerance of error for the float
-// function will first confirm that the number of items in map are same
-// then it will iterate through each element in the map. If element is a map, it will work call itself recursively
-// if it is a slice or an array, it will call itself for each element by first converting each into a map
-// otherwise, if element is a basic type like float, int, string etc it will do the comparison to make sure they are the same
-// For float type, a tolerance in differences "delta" is checked
-func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, actualMap map[string]interface{}, delta float64) {
-	assert.Equal(t, len(expectedMap), len(actualMap))
-	for key, value := range expectedMap {
-		switch value.(type) {
-		case float64:
-			assert.InDelta(t, expectedMap[key], actualMap[key], delta)
-		case map[string]interface{}:
-			assertJSONEqWithFloat(t, expectedMap[key].(map[string]interface{}), actualMap[key].(map[string]interface{}), delta)
-		case []interface{}:
-			expectedArr := value.([]interface{})
-			actualArr := actualMap[key].([]interface{})
-			assert.Equal(t, len(expectedArr), len(actualArr))
-			for i, v := range expectedArr {
-				exp := make(map[string]interface{})
-				act := make(map[string]interface{})
-				exp["v"] = v
-				act["v"] = actualArr[i]
-				assertJSONEqWithFloat(t, exp, act, delta)
-			}
-		default:
-			assert.Equal(t, expectedMap[key], actualMap[key])
-		}
-	}
-}
-
-func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *Options) (*Server, error) {
-	yamlBytes, err := ioutil.ReadFile(transformerConfigPath)
-	if err != nil {
-		return nil, err
-	}
-
-	jsonBytes, err := yaml.YAMLToJSON(yamlBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	var transformerConfig spec.StandardTransformerConfig
-	err = protojson.Unmarshal(jsonBytes, &transformerConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	logger, err := zap.NewProduction()
-	if err != nil {
-		return nil, err
-	}
-
-	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClients, &feast.Options{
-		CacheEnabled:  true,
-		CacheSizeInMB: 100,
-		CacheTTL:      60 * time.Second,
-		BatchSize:     100,
-
-		DefaultFeastSource: spec.ServingSource_BIGTABLE,
-		StorageConfigs: feast.FeastStorageConfig{
-			spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
-				Storage: &spec.OnlineStorage_Bigtable{
-					Bigtable: &spec.BigTableStorage{
-						FeastServingUrl: "localhost:6866",
-					},
-				},
-			},
-			spec.ServingSource_REDIS: &spec.OnlineStorage{
-				Storage: &spec.OnlineStorage_RedisCluster{
-					RedisCluster: &spec.RedisClusterStorage{
-						FeastServingUrl: "localhost:6867",
-						RedisAddress:    []string{"10.1.1.2", "10.1.1.3"},
-						Option: &spec.RedisOption{
-							PoolSize: 5,
-						},
-					},
-				},
-			},
-		},
-	}, logger)
-	compiledPipeline, err := compiler.Compile(&transformerConfig)
-	if err != nil {
-		logger.Fatal("Unable to compile standard transformer", zap.Error(err))
-	}
-
-	transformerServer := New(options, logger)
-	handler := pipeline.NewHandler(compiledPipeline, logger)
-	transformerServer.PreprocessHandler = handler.Preprocess
-	transformerServer.PostprocessHandler = handler.Postprocess
-	transformerServer.ContextModifier = handler.EmbedEnvironment
-
-	return transformerServer, nil
-}
-
-func assertHasHeaders(t *testing.T, expected map[string]string, actual http.Header) bool {
-	for k, v := range expected {
-		assert.Equal(t, v, actual.Get(k))
-	}
-	return true
-}
-
 func Test_newHeimdallClient(t *testing.T) {
 	defaultRequestBodyString := `{ "name": "merlin" }`
 	defaultResponseBodyString := `{ "response": "ok" }`
@@ -1326,19 +1255,6 @@ func Test_newHystrixClient_RetriesGetOnFailure5xx(t *testing.T) {
 	assert.Equal(t, 6, count)
 }
 
-func respBody(t *testing.T, response *http.Response) string {
-	if response.Body != nil {
-		defer func() {
-			_ = response.Body.Close()
-		}()
-	}
-
-	respBody, err := ioutil.ReadAll(response.Body)
-	assert.NoError(t, err, "should not have failed to read response body")
-
-	return string(respBody)
-}
-
 func Test_recoveryHandler(t *testing.T) {
 	router := mux.NewRouter()
 	logger, _ := zap.NewDevelopment()
@@ -1375,4 +1291,120 @@ func Test_recoveryHandler(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, `{"code":500,"message":"panic: panic at preprocess"}`, string(respBody))
+}
+
+// Function to assert that 2 JSONs are the same, with considerations of delta in float values
+// inputs are map[string]interface{} converted from json, and delta which is th tolerance of error for the float
+// function will first confirm that the number of items in map are same
+// then it will iterate through each element in the map. If element is a map, it will work call itself recursively
+// if it is a slice or an array, it will call itself for each element by first converting each into a map
+// otherwise, if element is a basic type like float, int, string etc it will do the comparison to make sure they are the same
+// For float type, a tolerance in differences "delta" is checked
+func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, actualMap map[string]interface{}, delta float64) {
+	assert.Equal(t, len(expectedMap), len(actualMap))
+	for key, value := range expectedMap {
+		switch value.(type) {
+		case float64:
+			assert.InDelta(t, expectedMap[key], actualMap[key], delta)
+		case map[string]interface{}:
+			assertJSONEqWithFloat(t, expectedMap[key].(map[string]interface{}), actualMap[key].(map[string]interface{}), delta)
+		case []interface{}:
+			expectedArr := value.([]interface{})
+			actualArr := actualMap[key].([]interface{})
+			assert.Equal(t, len(expectedArr), len(actualArr))
+			for i, v := range expectedArr {
+				exp := make(map[string]interface{})
+				act := make(map[string]interface{})
+				exp["v"] = v
+				act["v"] = actualArr[i]
+				assertJSONEqWithFloat(t, exp, act, delta)
+			}
+		default:
+			assert.Equal(t, expectedMap[key], actualMap[key])
+		}
+	}
+}
+
+func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *Options) (*Server, error) {
+	yamlBytes, err := ioutil.ReadFile(transformerConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonBytes, err := yaml.YAMLToJSON(yamlBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	var transformerConfig spec.StandardTransformerConfig
+	err = protojson.Unmarshal(jsonBytes, &transformerConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	logger, err := zap.NewProduction()
+	if err != nil {
+		return nil, err
+	}
+
+	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClients, &feast.Options{
+		CacheEnabled:  true,
+		CacheSizeInMB: 100,
+		CacheTTL:      60 * time.Second,
+		BatchSize:     100,
+
+		DefaultFeastSource: spec.ServingSource_BIGTABLE,
+		StorageConfigs: feast.FeastStorageConfig{
+			spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
+				Storage: &spec.OnlineStorage_Bigtable{
+					Bigtable: &spec.BigTableStorage{
+						FeastServingUrl: "localhost:6866",
+					},
+				},
+			},
+			spec.ServingSource_REDIS: &spec.OnlineStorage{
+				Storage: &spec.OnlineStorage_RedisCluster{
+					RedisCluster: &spec.RedisClusterStorage{
+						FeastServingUrl: "localhost:6867",
+						RedisAddress:    []string{"10.1.1.2", "10.1.1.3"},
+						Option: &spec.RedisOption{
+							PoolSize: 5,
+						},
+					},
+				},
+			},
+		},
+	}, logger)
+	compiledPipeline, err := compiler.Compile(&transformerConfig)
+	if err != nil {
+		logger.Fatal("Unable to compile standard transformer", zap.Error(err))
+	}
+
+	transformerServer := New(options, logger)
+	handler := pipeline.NewHandler(compiledPipeline, logger)
+	transformerServer.PreprocessHandler = handler.Preprocess
+	transformerServer.PostprocessHandler = handler.Postprocess
+	transformerServer.ContextModifier = handler.EmbedEnvironment
+
+	return transformerServer, nil
+}
+
+func assertHasHeaders(t *testing.T, expected map[string]string, actual http.Header) bool {
+	for k, v := range expected {
+		assert.Equal(t, v, actual.Get(k))
+	}
+	return true
+}
+
+func respBody(t *testing.T, response *http.Response) string {
+	if response.Body != nil {
+		defer func() {
+			_ = response.Body.Close()
+		}()
+	}
+
+	respBody, err := ioutil.ReadAll(response.Body)
+	assert.NoError(t, err, "should not have failed to read response body")
+
+	return string(respBody)
 }
