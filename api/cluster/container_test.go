@@ -44,7 +44,7 @@ func TestContainer_GetContainers(t *testing.T) {
 	}{
 		{
 			args{
-				labelSelector: "serving.kubeflow.org/inferenceservice=my-service",
+				labelSelector: "serving.kserve.io/inferenceservice=my-service",
 				namespace:     "my-namespace",
 			},
 			&v1.PodList{
@@ -53,7 +53,7 @@ func TestContainer_GetContainers(t *testing.T) {
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "pod-1",
 							Labels: map[string]string{
-								"serving.kubeflow.org/inferenceservice": "my-service",
+								"serving.kserve.io/inferenceservice": "my-service",
 							},
 						},
 						Spec: v1.PodSpec{
