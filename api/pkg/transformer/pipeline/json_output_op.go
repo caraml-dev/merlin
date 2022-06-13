@@ -2,14 +2,13 @@ package pipeline
 
 import (
 	"context"
-
-	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
+	"errors"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
+	"github.com/opentracing/opentracing-go"
 )
 
 type JsonOutputOp struct {
@@ -114,9 +113,12 @@ func (j JsonOutputOp) createBaseJsonOutput(env *Environment, baseJson *spec.Base
 		return nil, err
 	}
 
-	jsonOutput, ok := jsonObj.(map[string]interface{})
-	if !ok {
+	switch v := jsonObj.(type) {
+	case types.JSONObject:
+		return v, nil
+	case map[string]interface{}:
+		return types.JSONObject(v), nil
+	default:
 		return nil, errors.New("value in jsonpath must be object")
 	}
-	return types.JSONObject(jsonOutput), nil
 }
