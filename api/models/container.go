@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	onlineInferenceLabelTemplate = "serving.kubeflow.org/inferenceservice=%s"
+	onlineInferenceLabelTemplate = "serving.kserve.io/inferenceservice=%s"
 	batchInferenceLabelTemplate  = "prediction-job-id=%s"
 
 	ImageBuilderComponentType     = "image_builder"
