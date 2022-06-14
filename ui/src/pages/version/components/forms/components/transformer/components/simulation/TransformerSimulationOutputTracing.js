@@ -134,7 +134,7 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
 
   const onConnect = useCallback(
     params => setEdges(eds => addEdge({ ...params }, eds)),
-    []
+    [setEdges]
   );
 
   const [higlightedNode, setHightlightedNode] = useState(undefined);
