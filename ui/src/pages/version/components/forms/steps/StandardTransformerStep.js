@@ -18,6 +18,7 @@ import {
 } from "@gojek/mlp-ui";
 import React, { useContext, useState } from "react";
 import { Element, scroller } from "react-scroll";
+import { simulationIcon } from "../components/transformer/components/simulation/constants";
 import { PipelineSidebarPanel } from "../components/transformer/PipelineSidebarPanel";
 import { PipelineStage } from "../components/transformer/PipelineStage";
 import { TransformerSimulation } from "../components/transformer/TransformerSimulation";
@@ -105,7 +106,7 @@ export const StandardTransformerStep = () => {
           ]
         }),
         createItem("Simulation", "simulation", {
-          icon: <EuiIcon type="analyzeEvent" />,
+          icon: <EuiIcon type={simulationIcon} />,
           offset: -75
         })
       ]
@@ -217,7 +218,7 @@ export const StandardTransformerStep = () => {
                 buttonContent={createHeader(
                   "Simulation",
                   "Simulation of standard transformer given your config without deploying the model",
-                  "analyzeEvent"
+                  simulationIcon
                 )}
                 paddingSize="l"
                 initialIsOpen={true}>

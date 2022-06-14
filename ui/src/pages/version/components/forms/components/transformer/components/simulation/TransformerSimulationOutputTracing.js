@@ -248,9 +248,10 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
         <EuiModal onClose={onCloseModal} style={{ width: "800px" }}>
           <EuiModalHeader>
             <EuiModalHeaderTitle>
-              <h2>Operation Tracing Detail</h2>
+              <h2>{higlightedNode.data.operation_type}</h2>
             </EuiModalHeaderTitle>
           </EuiModalHeader>
+
           <EuiModalBody>
             <PipelineNodeDetails details={higlightedNode.data} />
           </EuiModalBody>

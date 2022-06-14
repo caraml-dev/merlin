@@ -4,9 +4,13 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiIcon,
+  EuiInMemoryTable,
+  EuiSpacer,
+  EuiTabbedContent,
+  EuiText,
   EuiTitle
 } from "@elastic/eui";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const yaml = require("js-yaml");
 
@@ -26,34 +30,186 @@ const AccordionButton = item => {
   );
 };
 
+const Table = ({ data }) => {
+  const [columns, setColumns] = useState([]);
+  const [items, setItems] = useState([]);
+  const [tableName, setTableName] = useState();
+
+  useEffect(() => {
+    // Get how many keys the data has so we can determine whether the data is table, variable, or Pandas format (which not supported yet)
+    const keys = Object.keys(data);
+
+    // Skip Pandas format fow now.
+    if (keys[0] === "instances") {
+      return;
+    }
+
+    // If the object only has 1 key and the value of this key is array, this is table.
+    // For example:
+    // { "driver_table": [
+    //     {
+    //       "driver_id": 1
+    //     },
+    //     {
+    //       "driver_id": 2
+    //     },
+    //   ]
+    // }
+    if (keys.length === 1 && Array.isArray(data[keys[0]])) {
+      const tableName = keys[0];
+      setTableName(tableName);
+
+      let columns = [];
+      Object.keys(data[tableName][0]).forEach(key => {
+        columns.push({
+          field: key,
+          name: key,
+          truncateText: false
+        });
+      });
+      setColumns(columns);
+
+      setItems(data[tableName]);
+      return;
+    }
+
+    // This part to handle variable output
+    // For example:
+    // {
+    //   "variable_1": 1,
+    //   "variable_2": 2
+    // }
+    if (
+      keys.length > 0 &&
+      typeof data === "object" &&
+      !Array.isArray(data) &&
+      data !== null
+    ) {
+      let columns = [];
+      keys.forEach(key => {
+        columns.push({
+          field: key,
+          name: key,
+          truncateText: false
+        });
+      });
+      setColumns(columns);
+
+      setItems([data]);
+      return;
+    }
+  }, [data]);
+
+  return (
+    <EuiFlexGroup gutterSize="none" direction="column">
+      <EuiSpacer size="s" />
+      {tableName && (
+        <EuiFlexItem grow={true}>
+          <EuiFlexGroup justifyContent="center">
+            <EuiFlexItem grow={false}>
+              <EuiText size="xs">
+                <strong>{tableName}</strong>
+              </EuiText>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        </EuiFlexItem>
+      )}
+      {columns.length > 0 ? (
+        <EuiFlexItem grow={true}>
+          <EuiInMemoryTable columns={columns} items={items} />
+        </EuiFlexItem>
+      ) : (
+        <EuiText size="xs">
+          The data format is not supported yet. Please use the raw JSON.
+        </EuiText>
+      )}
+    </EuiFlexGroup>
+  );
+};
+
+const Code = ({ content, language }) => {
+  return (
+    <EuiCodeBlock
+      language={language}
+      fontSize="s"
+      paddingSize="s"
+      overflowHeight={600}>
+      {content}
+    </EuiCodeBlock>
+  );
+};
+
 export const PipelineNodeDetails = ({ details }) => {
   const items = [
     {
       label: "Spec",
       language: "yaml",
       icon: "tableDensityExpanded",
-      data: details.spec !== null ? yaml.dump(details.spec) : undefined,
-      initialIsOpen: false
+      initialIsOpen: false,
+      tabs: [
+        {
+          id: "spec-yaml",
+          content: (
+            <Code
+              content={
+                details.spec !== null ? yaml.dump(details.spec) : undefined
+              }
+              language="yaml"
+            />
+          )
+        }
+      ]
     },
     {
       label: "Input",
-      language: "json",
       icon: "logstashInput",
-      data:
+      initialIsOpen: false,
+      tabs:
         details.input !== null
-          ? JSON.stringify(details.input, null, 2)
-          : undefined,
-      initialIsOpen: false
+          ? [
+              // TODO: Refactor input tables
+              // {
+              //   id: "input-table",
+              //   name: "Table",
+              //   content: <Table data={details.input} />,
+              // },
+              {
+                id: "input-json",
+                name: "Raw JSON",
+                content: (
+                  <Code
+                    content={JSON.stringify(details.input, null, 2)}
+                    language="json"
+                  />
+                )
+              }
+            ]
+          : []
     },
     {
       label: "Output",
-      language: "json",
       icon: "logstashOutput",
-      data:
+      initialIsOpen: true,
+      tabs:
         details.output !== null
-          ? JSON.stringify(details.output, null, 2)
-          : undefined,
-      initialIsOpen: true
+          ? [
+              {
+                id: "output-table",
+                name: "Table",
+                content: <Table data={details.output} />
+              },
+              {
+                id: "output-json",
+                name: "Raw JSON",
+                content: (
+                  <Code
+                    content={JSON.stringify(details.output, null, 2)}
+                    language="json"
+                  />
+                )
+              }
+            ]
+          : []
     }
   ];
 
@@ -61,7 +217,7 @@ export const PipelineNodeDetails = ({ details }) => {
     <>
       {items.map(
         (item, itemIdx) =>
-          item.data && (
+          item.tabs.length > 0 && (
             <EuiAccordion
               id={`node-trace-details-${itemIdx}`}
               key={`node-trace-details-${itemIdx}`}
@@ -69,13 +225,16 @@ export const PipelineNodeDetails = ({ details }) => {
               buttonClassName="euiAccordionForm__button"
               buttonContent={AccordionButton(item)}
               initialIsOpen={item.initialIsOpen}>
-              <EuiCodeBlock
-                language={item.language}
-                fontSize="s"
-                paddingSize="s"
-                overflowHeight={600}>
-                {item.data}
-              </EuiCodeBlock>
+              {item.tabs.length > 1 ? (
+                <EuiTabbedContent
+                  tabs={item.tabs}
+                  initialSelectedTab={item.tabs[0]}
+                  autoFocus="selected"
+                  size="s"
+                />
+              ) : (
+                item.tabs[0].content
+              )}
             </EuiAccordion>
           )
       )}
