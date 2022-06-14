@@ -4,9 +4,8 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiFormRow,
-  EuiIcon,
   EuiSpacer,
-  EuiToolTip
+  EuiText
 } from "@elastic/eui";
 import { FormContext, useOnChangeHandler } from "@gojek/mlp-ui";
 import React, { useContext } from "react";
@@ -45,19 +44,13 @@ export const TransformationSpec = ({ importEnabled = true }) => {
     <EuiFlexGroup direction="column" gutterSize="s">
       {importEnabled && (
         <EuiFlexItem>
-          <EuiSpacer size="m" />
-          <EuiFormRow
-            label={
-              <EuiToolTip content="This is beta feature. Proceed with caution 😉">
-                <span>
-                  Import <EuiIcon type="questionInCircle" color="subdued" />
-                </span>
-              </EuiToolTip>
-            }
-            display="row"
-            fullWidth>
+          <EuiFormRow label="Import Configuration" display="row" fullWidth>
             <EuiFilePicker
-              initialPromptText="Import Transformer YAML Specification"
+              initialPromptText={
+                <EuiText size="xs">
+                  Import Transformer YAML Specification
+                </EuiText>
+              }
               onChange={files => {
                 onFilePickerChange(files);
               }}

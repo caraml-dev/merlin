@@ -5,219 +5,137 @@ import {
   EuiModalHeaderTitle
 } from "@elastic/eui";
 import dagre from "dagre";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import ReactFlow, {
   addEdge,
   Background,
   Controls,
-  MarkerType,
   useEdgesState,
   useNodesState
 } from "react-flow-renderer";
 import PipelineNode from "./PipelineNode";
 import { PipelineNodeDetails } from "./PipelineNodeDetails";
 
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+
 const nodeTypes = { pipeline: PipelineNode };
 
-export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
+const createNodes = details => {
+  let nodes = [];
 
-  const leftDirection = "left";
-  const rightDirection = "right";
-  const topDirection = "top";
-  const bottomDirection = "bottom";
-
-  const reverseDirection = position => {
-    if (position === leftDirection) {
-      return rightDirection;
-    }
-    if (position === rightDirection) {
-      return leftDirection;
-    }
-    if (position === topDirection) {
-      return bottomDirection;
-    }
-    if (position === bottomDirection) {
-      return topDirection;
-    }
-  };
-
-  const createChainEdges = nodes => {
-    var edges = [];
-    for (let i = 0; i < nodes.length - 1; i++) {
-      var sourceNode = nodes[i];
-      var targetNode = nodes[i + 1];
-      let sourcePosition = targetNode.sourcePosition;
-      if (sourcePosition === undefined) {
-        sourcePosition = rightDirection;
-      }
-      edges.push({
-        id: sourceNode.id + "-" + targetNode.id,
-        source: sourceNode.id,
-        target: targetNode.id,
-        sourceHandle: "source-" + sourcePosition,
-        targetHandle: "target-" + reverseDirection(sourcePosition),
-        markerEnd: {
-          type: MarkerType.ArrowClosed
+  if (details.preprocess) {
+    for (let i = 0; i < details.preprocess.length; i++) {
+      nodes.push({
+        id: "preprocess-" + i,
+        type: "pipeline",
+        position: { x: 0, y: 0 },
+        data: {
+          label: details.preprocess[i].operation_type,
+          ...details.preprocess[i]
         }
       });
     }
+  }
 
-    return edges;
-  };
+  nodes.push({
+    id: "prediction",
+    position: { x: 0, y: 0 },
+    data: { label: "Model Prediction" }
+  });
 
-  // this function is to create position like reverted 's'
-  const calculatePosition = (
-    positionX,
-    positionY,
-    currentDirection,
-    directionInfo
-  ) => {
-    const selectedDirectionInfo = directionInfo[currentDirection];
-    let newPositionY = positionY;
-    let newPositionX = positionX;
-    let newDirection = currentDirection;
-    if (
-      selectedDirectionInfo.isViolateBounderyFn(
-        positionX + selectedDirectionInfo.horizontalDistance
-      )
-    ) {
-      newPositionY = positionY + selectedDirectionInfo.verticalDistance;
-      newDirection = reverseDirection(newDirection);
-    } else {
-      newPositionX = positionX + selectedDirectionInfo.horizontalDistance;
-    }
-
-    let sourcePosition = currentDirection;
-    if (newDirection !== currentDirection) {
-      sourcePosition = bottomDirection;
-    }
-
-    return {
-      x: newPositionX,
-      y: newPositionY,
-      direction: newDirection,
-      sourcePosition: sourcePosition
-    };
-  };
-
-  const createNodes = details => {
-    const nodeHeight = 100;
-    const nodeWidth = 200;
-    const marginHorizontal = 50;
-    const marginVertical = 50;
-    const maximumWidth = 800;
-    const initialXPosition = 0;
-    const initialYPosition = 0;
-    let lastXPosition = initialXPosition;
-    let lastYPosition = initialYPosition;
-
-    var nodes = [];
-
-    var direction = rightDirection;
-    const directionInfo = {
-      right: {
-        isViolateBounderyFn: position => {
-          return position > maximumWidth;
-        },
-        horizontalDistance: marginHorizontal + nodeWidth,
-        verticalDistance: marginVertical + nodeHeight
-      },
-      left: {
-        isViolateBounderyFn: position => {
-          return position < 0;
-        },
-        horizontalDistance: -1 * (marginHorizontal + nodeWidth),
-        verticalDistance: marginVertical + nodeHeight
-      }
-    };
-
-    if (details.preprocess) {
-      for (let i = 0; i < details.preprocess.length; i++) {
-        if (i !== 0) {
-          var generatedPosition = calculatePosition(
-            lastXPosition,
-            lastYPosition,
-            direction,
-            directionInfo
-          );
-          lastXPosition = generatedPosition.x;
-          lastYPosition = generatedPosition.y;
-          direction = generatedPosition.direction;
-          nodes.push({
-            id: "preprocess-" + i,
-            type: "pipeline",
-            width: nodeWidth,
-            height: nodeHeight,
-            position: { x: lastXPosition, y: lastYPosition },
-            data: details.preprocess[i],
-            style: { width: nodeWidth },
-            sourcePosition: generatedPosition.sourcePosition
-          });
-        } else {
-          nodes.push({
-            id: "preprocess-" + i,
-            type: "pipeline",
-            width: nodeWidth,
-            height: nodeHeight,
-            position: { x: lastXPosition, y: lastYPosition },
-            data: details.preprocess[i],
-            style: { width: nodeWidth }
-          });
+  if (details.postprocess) {
+    for (let i = 0; i < details.postprocess.length; i++) {
+      nodes.push({
+        id: "postprocess-" + i,
+        type: "pipeline",
+        position: { x: 0, y: 0 },
+        data: {
+          label: details.postprocess[i].operation_type,
+          ...details.postprocess[i]
         }
-      }
+      });
     }
+  }
 
-    generatedPosition = calculatePosition(
-      lastXPosition,
-      lastYPosition,
-      direction,
-      directionInfo
-    );
-    lastXPosition = generatedPosition.x;
-    lastYPosition = generatedPosition.y;
-    direction = generatedPosition.direction;
+  return nodes;
+};
 
-    nodes.push({
-      id: "prediction",
-      width: nodeWidth,
-      height: nodeHeight,
-      position: { x: lastXPosition, y: lastYPosition },
-      data: { label: "Model Prediction" },
-      sourcePosition: "right",
-      targetPosition: "left"
+const createChainEdges = nodes => {
+  let edges = [];
+
+  for (let i = 0; i < nodes.length - 1; i++) {
+    let sourceNode = nodes[i];
+    let targetNode = nodes[i + 1];
+
+    edges.push({
+      id: sourceNode.id + "-" + targetNode.id,
+      source: sourceNode.id,
+      target: targetNode.id
     });
+  }
 
-    if (details.postprocess) {
-      for (let i = 0; i < details.postprocess.length; i++) {
-        generatedPosition = calculatePosition(
-          lastXPosition,
-          lastYPosition,
-          direction,
-          directionInfo
-        );
-        lastXPosition = generatedPosition.x;
-        lastYPosition = generatedPosition.y;
-        direction = generatedPosition.direction;
-        nodes.push({
-          id: "postprocess-" + i,
-          type: "pipeline",
-          width: { nodeWidth },
-          height: { nodeHeight },
-          position: { x: lastXPosition, y: lastYPosition },
-          data: details.postprocess[i]
-        });
-      }
-    }
-    return nodes;
-  };
+  return edges;
+};
+
+const getLayoutedElements = (nodes, edges, direction = "TB") => {
+  const isHorizontal = direction === "LR";
+  dagreGraph.setGraph({ rankdir: direction });
+
+  nodes.forEach(node => {
+    dagreGraph.setNode(node.id, {
+      width: 120,
+      height: 10
+    });
+  });
+
+  edges.forEach(edge => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  nodes.forEach(node => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    node.targetPosition = isHorizontal ? "left" : "top";
+    node.sourcePosition = isHorizontal ? "right" : "bottom";
+
+    // We are shifting the dagre node position (anchor=center center) to the top left
+    // so it matches the React Flow node anchor point (top left).
+    node.position = {
+      x: nodeWithPosition.x,
+      y: nodeWithPosition.y
+    };
+
+    return node;
+  });
+
+  edges.forEach(edge => {
+    edge.targetHandle = isHorizontal ? "target-left" : "target-top";
+    edge.sourceHandle = isHorizontal ? "source-right" : "source-bottom";
+    return edge;
+  });
+
+  return { nodes, edges };
+};
+
+export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
   const initialNodes = createNodes(tracingDetails);
   const initialEdges = createChainEdges(initialNodes);
 
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const onConnect = params => setEdges(eds => addEdge(params, eds));
+  const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+    initialNodes,
+    initialEdges,
+    "LR"
+  );
+
+  const [nodes, , onNodesChange] = useNodesState(layoutedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
+
+  const onConnect = useCallback(
+    params => setEdges(eds => addEdge({ ...params }, eds)),
+    []
+  );
 
   const [higlightedNode, setHightlightedNode] = useState(undefined);
 
@@ -234,7 +152,7 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
   };
 
   return (
-    <div style={{ height: 500 }}>
+    <div style={{ height: 640 }}>
       <ReactFlow
         nodes={nodes}
         nodeTypes={nodeTypes}
@@ -243,11 +161,11 @@ export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClicked}
-        fitView
-        attributionPosition="top-right">
+        fitView>
         <Controls />
         <Background color="#aaa" gap={16} />
       </ReactFlow>
+
       {!!higlightedNode && (
         <EuiModal onClose={onCloseModal} style={{ width: "800px" }}>
           <EuiModalHeader>

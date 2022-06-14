@@ -6,6 +6,23 @@
   overflow-y: auto;
   position: sticky;
   top: 75px !important;
+
+  .euiSideNavItemButton__label {
+    font-size: 0.75rem;
+    line-height: 2;
+  }
+}
+
+.toggle-panel-button {
+  overflow-y: auto;
+  position: sticky;
+  top: 90px !important;
+}
+
+.graph-sidebar {
+  overflow-y: auto;
+  position: sticky;
+  top: 75px !important;
 }
 
 .preprocessing {

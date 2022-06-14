@@ -1,5 +1,6 @@
 import {
   EuiAccordion,
+  EuiButtonIcon,
   EuiFlexGroup,
   EuiFlexItem,
   EuiIcon,
@@ -19,7 +20,8 @@ import {
 import React, { useContext, useState } from "react";
 import { Element, scroller } from "react-scroll";
 import { simulationIcon } from "../components/transformer/components/simulation/constants";
-import { PipelineSidebarPanel } from "../components/transformer/PipelineSidebarPanel";
+import { TransformationGraph } from "../components/transformer/components/TransformationGraph";
+import { TransformationSpec } from "../components/transformer/components/TransformationSpec";
 import { PipelineStage } from "../components/transformer/PipelineStage";
 import { TransformerSimulation } from "../components/transformer/TransformerSimulation";
 import "./Pipeline.scss";
@@ -43,6 +45,18 @@ export const StandardTransformerStep = () => {
   const [isSideNavOpenOnMobile, setisSideNavOpenOnMobile] = useState(false);
   const [selectedItemName, setSelectedItem] = useState("Pre-Processing");
 
+  const [togglePanelButton, setTogglePanelButton] = useState({
+    "transformer-sidebar-panel": "show",
+    "transformer-graph-panel": "hide"
+  });
+  const onPanelChange = (panelId, state) => {
+    const newtogglePanelButton = {
+      ...togglePanelButton,
+      [panelId]: state
+    };
+    setTogglePanelButton(newtogglePanelButton);
+  };
+
   const toggleOpenOnMobile = () => {
     setisSideNavOpenOnMobile(!isSideNavOpenOnMobile);
   };
@@ -59,8 +73,7 @@ export const StandardTransformerStep = () => {
       onClick: () => {
         selectItem(id);
         scroller.scrollTo(id, {
-          offset: data.offset,
-          isDynamic: true
+          offset: -75
         });
       },
       href: "#" + id,
@@ -70,13 +83,28 @@ export const StandardTransformerStep = () => {
 
   const sideNav = [
     createItem("Edit Configurations", "config", {
-      onClick: undefined,
-      icon: <EuiIcon type="indexEdit" />,
+      renderItem: () => (
+        <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
+          <EuiFlexItem>
+            <EuiText size="xs">
+              <strong>Transformer Configuration</strong>
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiButtonIcon
+              color="text"
+              aria-label={"Toggle sidebar panel"}
+              iconType="menuLeft"
+              onClick={() => onPanelChange("transformer-sidebar-panel", "hide")}
+            />
+          </EuiFlexItem>
+        </EuiFlexGroup>
+      ),
       items: [
         createItem("Pre-Processing", "preprocessing", {
           icon: <EuiIcon type="editorItemAlignRight" />,
           forceOpen: true,
-          offset: -75,
+
           items: [
             createItem("Input", "input-preprocess", {
               icon: <EuiIcon type="logstashInput" />
@@ -92,7 +120,7 @@ export const StandardTransformerStep = () => {
         createItem("Post-Processing", "postprocessing", {
           icon: <EuiIcon type="editorItemAlignLeft" />,
           forceOpen: true,
-          offset: -75,
+
           items: [
             createItem("Input", "input-postprocess", {
               icon: <EuiIcon type="logstashInput" />
@@ -106,8 +134,7 @@ export const StandardTransformerStep = () => {
           ]
         }),
         createItem("Simulation", "simulation", {
-          icon: <EuiIcon type={simulationIcon} />,
-          offset: -75
+          icon: <EuiIcon type={simulationIcon} />
         })
       ]
     })
@@ -139,23 +166,38 @@ export const StandardTransformerStep = () => {
 
   return (
     <EuiFlexGroup>
-      <EuiFlexItem grow={1}>
-        <div className="config-sidebar">
-          <EuiPanel grow={false} hasShadow={false}>
-            <EuiSideNav
-              aria-label="Standard Transformer Config"
-              mobileTitle="Standard Transformer Config"
-              toggleOpenOnMobile={() => toggleOpenOnMobile()}
-              isOpenOnMobile={isSideNavOpenOnMobile}
-              items={sideNav}
-            />
-          </EuiPanel>
-          <EuiSpacer />
-          <PipelineSidebarPanel />
-        </div>
-      </EuiFlexItem>
+      {togglePanelButton &&
+      togglePanelButton["transformer-sidebar-panel"] === "hide" ? (
+        <EuiButtonIcon
+          color="text"
+          aria-label={"Toggle sidebar panel"}
+          iconType="menuRight"
+          onClick={() => onPanelChange("transformer-sidebar-panel")}
+          className="toggle-panel-button"
+        />
+      ) : (
+        <EuiFlexItem grow={1}>
+          <div className="config-sidebar">
+            <EuiPanel grow={false} hasShadow={false}>
+              <EuiSideNav
+                aria-label="Standard Transformer Config"
+                mobileTitle="Standard Transformer Config"
+                toggleOpenOnMobile={() => toggleOpenOnMobile()}
+                isOpenOnMobile={isSideNavOpenOnMobile}
+                items={sideNav}
+              />
+            </EuiPanel>
 
-      <EuiFlexItem grow={9}>
+            <EuiSpacer />
+
+            <EuiPanel grow={false} hasShadow={false}>
+              <TransformationSpec importEnabled={true} />
+            </EuiPanel>
+          </div>
+        </EuiFlexItem>
+      )}
+
+      <EuiFlexItem grow={7}>
         <EuiPanel grow={false} paddingSize="none" hasShadow={false}>
           <div className="config">
             <Element name="preprocessing" className="preprocessing">
@@ -228,6 +270,42 @@ export const StandardTransformerStep = () => {
           </div>
         </EuiPanel>
       </EuiFlexItem>
+
+      {togglePanelButton &&
+      togglePanelButton["transformer-graph-panel"] === "hide" ? (
+        <EuiButtonIcon
+          color="text"
+          aria-label={"Toggle graph panel"}
+          iconType="menuLeft"
+          onClick={() => onPanelChange("transformer-graph-panel")}
+          className="toggle-panel-button"
+        />
+      ) : (
+        <EuiFlexItem grow={2}>
+          <div className="graph-sidebar">
+            <EuiPanel grow={false} hasShadow={false}>
+              <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
+                <EuiFlexItem>
+                  <EuiText size="xs">
+                    <strong>Transformer Graph</strong>
+                  </EuiText>
+                </EuiFlexItem>
+                <EuiFlexItem grow={false}>
+                  <EuiButtonIcon
+                    color="text"
+                    aria-label={"Toggle graph panel"}
+                    iconType="menuRight"
+                    onClick={() =>
+                      onPanelChange("transformer-graph-panel", "hide")
+                    }
+                  />
+                </EuiFlexItem>
+              </EuiFlexGroup>
+              <TransformationGraph />
+            </EuiPanel>
+          </div>
+        </EuiFlexItem>
+      )}
     </EuiFlexGroup>
   );
 };

@@ -6,6 +6,7 @@ import {
   useOnChangeHandler
 } from "@gojek/mlp-ui";
 import React, { useContext } from "react";
+import { Element } from "react-scroll";
 import { FeastProjectsContextProvider } from "../../../../../../providers/feast/FeastProjectsContext";
 import { InputPanel } from "./InputPanel";
 import { OutputPanel } from "./OutputPanel";
@@ -33,7 +34,7 @@ export const PipelineStage = ({ stage }) => {
       <EuiFlexItem grow={7}>
         <EuiFlexGroup direction="column" gutterSize="m">
           <EuiFlexItem grow={false}>
-            <div id={"input-" + stage}>
+            <Element name={"input-" + stage}>
               <FeastProjectsContextProvider>
                 <InputPanel
                   inputs={inputs}
@@ -46,11 +47,11 @@ export const PipelineStage = ({ stage }) => {
                   )}
                 />
               </FeastProjectsContextProvider>
-            </div>
+            </Element>
           </EuiFlexItem>
 
           <EuiFlexItem grow={false}>
-            <div id={"transform-" + stage}>
+            <Element name={"transform-" + stage}>
               <TransformationPanel
                 transformations={transformations}
                 onChangeHandler={onChange(
@@ -61,11 +62,11 @@ export const PipelineStage = ({ stage }) => {
                   `transformer.config.transformerConfig.${stage}.transformations`
                 )}
               />
-            </div>
+            </Element>
           </EuiFlexItem>
 
           <EuiFlexItem grow={false}>
-            <div id={"output-" + stage}>
+            <Element name={"output-" + stage}>
               <OutputPanel
                 outputs={outputs}
                 onChangeHandler={onChange(
@@ -76,7 +77,7 @@ export const PipelineStage = ({ stage }) => {
                   `transformer.config.transformerConfig.${stage}.outputs`
                 )}
               />
-            </div>
+            </Element>
           </EuiFlexItem>
         </EuiFlexGroup>
       </EuiFlexItem>

@@ -148,7 +148,6 @@ export const PipelineNodeDetails = ({ details }) => {
     }
 
     let tabs = [];
-    console.log("details", details);
     if (details.operation_type === "table_join_op") {
       let tables = [];
       Object.keys(details.input).forEach(tableName => {
@@ -237,7 +236,7 @@ export const PipelineNodeDetails = ({ details }) => {
     {
       label: "Input",
       icon: "logstashInput",
-      initialIsOpen: true,
+      initialIsOpen: false,
       tabs: inputTabs
     },
     {
