@@ -73,7 +73,7 @@ const Table = ({ data }) => {
       return;
     }
 
-    // This part to handle variable output
+    // This part to handle variable type output
     // For example:
     // {
     //   "variable_1": 1,
@@ -120,7 +120,7 @@ const Table = ({ data }) => {
         </EuiFlexItem>
       ) : (
         <EuiText size="xs">
-          The data format is not supported yet. Please use the raw JSON.
+          The data format is not supported yet. Please use see the raw data.
         </EuiText>
       )}
     </EuiFlexGroup>
@@ -140,6 +140,80 @@ const Code = ({ content, language }) => {
 };
 
 export const PipelineNodeDetails = ({ details }) => {
+  const [inputTabs, setInputTabs] = useState([]);
+  useEffect(() => {
+    if (details.input === null) {
+      setInputTabs([]);
+      return;
+    }
+
+    let tabs = [];
+    console.log("details", details);
+    if (details.operation_type === "table_join_op") {
+      let tables = [];
+      Object.keys(details.input).forEach(tableName => {
+        tables.push(
+          <Table
+            key={tableName}
+            data={{ [tableName]: details.input[tableName] }}
+          />
+        );
+      });
+      tabs.push({
+        id: "input-table",
+        name: "Table",
+        content: tables
+      });
+    } else {
+      tabs.push({
+        id: "input-table",
+        name: "Table",
+        content: <Table data={details.input} />
+      });
+    }
+
+    tabs.push({
+      id: "input-json",
+      name: "Raw",
+      content: (
+        <Code
+          content={JSON.stringify(details.input, null, 2)}
+          language="json"
+        />
+      )
+    });
+    setInputTabs(tabs);
+  }, [details, details.input, setInputTabs]);
+
+  const [outputTabs, setOutputTabs] = useState([]);
+  useEffect(() => {
+    if (details.output === null) {
+      setOutputTabs([]);
+      return;
+    }
+
+    let tabs = [];
+    if (details.output["instances"] === undefined) {
+      tabs.push({
+        id: "output-table",
+        name: "Table",
+        content: <Table data={details.output} />
+      });
+    }
+
+    tabs.push({
+      id: "output-json",
+      name: "Raw",
+      content: (
+        <Code
+          content={JSON.stringify(details.output, null, 2)}
+          language="json"
+        />
+      )
+    });
+    setOutputTabs(tabs);
+  }, [details.output, setOutputTabs]);
+
   const items = [
     {
       label: "Spec",
@@ -163,53 +237,14 @@ export const PipelineNodeDetails = ({ details }) => {
     {
       label: "Input",
       icon: "logstashInput",
-      initialIsOpen: false,
-      tabs:
-        details.input !== null
-          ? [
-              // TODO: Refactor input tables
-              // {
-              //   id: "input-table",
-              //   name: "Table",
-              //   content: <Table data={details.input} />,
-              // },
-              {
-                id: "input-json",
-                name: "Raw JSON",
-                content: (
-                  <Code
-                    content={JSON.stringify(details.input, null, 2)}
-                    language="json"
-                  />
-                )
-              }
-            ]
-          : []
+      initialIsOpen: true,
+      tabs: inputTabs
     },
     {
       label: "Output",
       icon: "logstashOutput",
       initialIsOpen: true,
-      tabs:
-        details.output !== null
-          ? [
-              {
-                id: "output-table",
-                name: "Table",
-                content: <Table data={details.output} />
-              },
-              {
-                id: "output-json",
-                name: "Raw JSON",
-                content: (
-                  <Code
-                    content={JSON.stringify(details.output, null, 2)}
-                    language="json"
-                  />
-                )
-              }
-            ]
-          : []
+      tabs: outputTabs
     }
   ];
 

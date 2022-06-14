@@ -4,6 +4,7 @@ import {
   EuiModalHeader,
   EuiModalHeaderTitle
 } from "@elastic/eui";
+import dagre from "dagre";
 import React, { useState } from "react";
 import ReactFlow, {
   addEdge,
@@ -19,6 +20,9 @@ import { PipelineNodeDetails } from "./PipelineNodeDetails";
 const nodeTypes = { pipeline: PipelineNode };
 
 export const TransformerSimulationOutputTracing = ({ tracingDetails }) => {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+
   const leftDirection = "left";
   const rightDirection = "right";
   const topDirection = "top";
