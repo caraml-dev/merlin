@@ -30,11 +30,12 @@ type Compiler struct {
 	feastClients feast.Clients
 	feastOptions *feast.Options
 
-	logger *zap.Logger
+	logger                  *zap.Logger
+	operationTracingEnabled bool
 }
 
-func NewCompiler(sr symbol.Registry, feastClients feast.Clients, feastOptions *feast.Options, logger *zap.Logger) *Compiler {
-	return &Compiler{sr: sr, feastClients: feastClients, feastOptions: feastOptions, logger: logger}
+func NewCompiler(sr symbol.Registry, feastClients feast.Clients, feastOptions *feast.Options, logger *zap.Logger, tracingEnabled bool) *Compiler {
+	return &Compiler{sr: sr, feastClients: feastClients, feastOptions: feastOptions, logger: logger, operationTracingEnabled: tracingEnabled}
 }
 
 func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipeline, error) {
@@ -50,6 +51,7 @@ func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipel
 			preloadedTables,
 			preprocessOps,
 			postprocessOps,
+			c.operationTracingEnabled,
 		), nil
 	}
 
@@ -84,6 +86,7 @@ func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipel
 		preloadedTables,
 		preprocessOps,
 		postprocessOps,
+		c.operationTracingEnabled,
 	), nil
 }
 
@@ -110,6 +113,11 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, compiledJsonPaths 
 			ops = append(ops, tableOp)
 			for k, v := range loadedTables {
 				preloadedTables[k] = v
+				if c.operationTracingEnabled {
+					if err := tableOp.AddInputOutput(nil, map[string]interface{}{k: &v}); err != nil {
+						return nil, nil, err
+					}
+				}
 			}
 		}
 
@@ -207,7 +215,7 @@ func (c *Compiler) parseVariablesSpec(variables []*spec.Variable, compiledJsonPa
 		}
 	}
 
-	return NewVariableDeclarationOp(variables), nil
+	return NewVariableDeclarationOp(variables, c.operationTracingEnabled), nil
 }
 
 func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
@@ -228,10 +236,10 @@ func (c *Compiler) parseFeastSpec(featureTableSpecs []*spec.FeatureTable, compil
 	}
 
 	entityExtractor := feast.NewEntityExtractor(compiledJsonPaths, compiledExpressions)
-	return NewFeastOp(c.feastClients, c.feastOptions, entityExtractor, featureTableSpecs, c.logger), nil
+	return NewFeastOp(c.feastClients, c.feastOptions, entityExtractor, featureTableSpecs, c.logger, c.operationTracingEnabled), nil
 }
 
-func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, map[string]table.Table, error) {
+func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (*CreateTableOp, map[string]table.Table, error) {
 	// for storing pre-loaded tables
 	preloadedTables := map[string]table.Table{}
 
@@ -309,14 +317,14 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 		}
 	}
 
-	return NewCreateTableOp(tableSpecs), preloadedTables, nil
+	return NewCreateTableOp(tableSpecs, c.operationTracingEnabled), preloadedTables, nil
 }
 
 func (c *Compiler) parseEncodersSpec(encoderSpecs []*spec.Encoder, compiledExpression *expression.Storage) (Op, error) {
 	for _, encoderSpec := range encoderSpecs {
 		c.registerDummyVariable(encoderSpec.Name)
 	}
-	return NewEncoderOp(encoderSpecs), nil
+	return NewEncoderOp(encoderSpecs, c.operationTracingEnabled), nil
 }
 
 func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransformation, paths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
@@ -391,7 +399,7 @@ func (c *Compiler) parseTableTransform(transformationSpecs *spec.TableTransforma
 	}
 
 	c.registerDummyTable(transformationSpecs.OutputTable)
-	return NewTableTransformOp(transformationSpecs), nil
+	return NewTableTransformOp(transformationSpecs, c.operationTracingEnabled), nil
 }
 
 func (c *Compiler) parseTableJoin(tableJoinSpecs *spec.TableJoin, paths *jsonpath.Storage, expressions *expression.Storage) (Op, error) {
@@ -406,7 +414,7 @@ func (c *Compiler) parseTableJoin(tableJoinSpecs *spec.TableJoin, paths *jsonpat
 	}
 
 	c.registerDummyTable(tableJoinSpecs.OutputTable)
-	return NewTableJoinOp(tableJoinSpecs), nil
+	return NewTableJoinOp(tableJoinSpecs, c.operationTracingEnabled), nil
 }
 
 func (c *Compiler) parseJsonOutputSpec(jsonSpec *spec.JsonOutput, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) (Op, error) {
@@ -426,7 +434,7 @@ func (c *Compiler) parseJsonOutputSpec(jsonSpec *spec.JsonOutput, compiledJsonPa
 		return nil, err
 	}
 
-	jsonOutputOp := NewJsonOutputOp(jsonSpec)
+	jsonOutputOp := NewJsonOutputOp(jsonSpec, c.operationTracingEnabled)
 
 	return jsonOutputOp, nil
 }

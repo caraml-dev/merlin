@@ -1,0 +1,51 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - variables:
+          - name: customer_id
+            jsonPath: $.customer.id
+      - tables:
+          - name: driver_table
+            baseTable:
+              fromJson:
+                jsonPath: $.drivers[*]
+                addRowNumber: true
+      - feast:
+          - tableName: driver_feature_table
+            project: default
+            entities:
+              - name: driver_id
+                valueType: STRING
+                jsonPath: $.drivers[*].id
+            features:
+              - name: driver_feature_1
+                valueType: INT64
+                defaultValue: "0"
+              - name: driver_feature_2
+                valueType: INT64
+                defaultValue: "0"
+              - name: driver_feature_3
+                valueType: STRING_LIST
+                defaultValue: '["A", "B", "C", "D", "E"]'
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: driver_feature_table
+                  format: "SPLIT"
+  postprocess:
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: driver_feature_table
+                  format: "SPLIT"
+              - fieldName: session
+                fromJson:
+                  jsonPath: "$.model_response.session_id"
+
+    

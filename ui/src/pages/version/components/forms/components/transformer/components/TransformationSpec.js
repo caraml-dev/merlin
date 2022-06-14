@@ -1,15 +1,14 @@
-import React, { useContext } from "react";
 import {
   EuiCodeBlock,
   EuiFilePicker,
   EuiFlexGroup,
   EuiFlexItem,
   EuiFormRow,
-  EuiIcon,
-  EuiToolTip,
-  EuiSpacer
+  EuiSpacer,
+  EuiText
 } from "@elastic/eui";
 import { FormContext, useOnChangeHandler } from "@gojek/mlp-ui";
+import React, { useContext } from "react";
 import { Config } from "../../../../../../../services/transformer/TransformerConfig";
 
 const yaml = require("js-yaml");
@@ -45,19 +44,13 @@ export const TransformationSpec = ({ importEnabled = true }) => {
     <EuiFlexGroup direction="column" gutterSize="s">
       {importEnabled && (
         <EuiFlexItem>
-          <EuiSpacer size="m" />
-          <EuiFormRow
-            label={
-              <EuiToolTip content="This is beta feature. Proceed with caution 😉">
-                <span>
-                  Import <EuiIcon type="questionInCircle" color="subdued" />
-                </span>
-              </EuiToolTip>
-            }
-            display="row"
-            fullWidth>
+          <EuiFormRow label="Import Configuration" display="row" fullWidth>
             <EuiFilePicker
-              initialPromptText="Import Transformer YAML Specification"
+              initialPromptText={
+                <EuiText size="xs">
+                  Import Transformer YAML Specification
+                </EuiText>
+              }
               onChange={files => {
                 onFilePickerChange(files);
               }}
@@ -69,14 +62,14 @@ export const TransformationSpec = ({ importEnabled = true }) => {
       )}
 
       {config && (
-        <EuiFlexItem>
+        <EuiFlexItem grow={false}>
           <EuiSpacer size="m" />
           <EuiCodeBlock
             language="yaml"
             fontSize="s"
             paddingSize="s"
             overflowHeight={640}
-            style={{ maxWidth: 480 }}
+            style={{ maxWidth: 480, maxHeight: 480 }}
             isCopyable>
             {yaml.dump(JSON.parse(JSON.stringify(config)))}
           </EuiCodeBlock>

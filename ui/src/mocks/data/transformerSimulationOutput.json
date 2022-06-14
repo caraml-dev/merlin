@@ -1,0 +1,416 @@
+{
+  "response": {
+    "instances": {
+      "columns": [
+        "rank",
+        "driver_id",
+        "customer_id",
+        "merlin_test_redis_driver_features:completion_rate",
+        "merlin_test_redis_driver_features:cancellation_rate",
+        "merlin_test_bt_driver_features:rating"
+      ],
+      "data": [
+        [0, "driver_1", 1111, 0, 0, 4.2],
+        [1, "driver_2", 1111, 0, 0, 4.2]
+      ]
+    }
+  },
+  "operation_tracing": {
+    "preprocess": [
+      {
+        "input": null,
+        "output": {
+          "customer_id": 1111
+        },
+        "spec": {
+          "name": "customer_id",
+          "jsonPath": "$.customer.id"
+        },
+        "operation_type": "variable_op"
+      },
+      {
+        "input": null,
+        "output": {
+          "driver_table": [
+            {
+              "id": "driver_1",
+              "name": "driver-1",
+              "row_number": 0
+            },
+            {
+              "id": "driver_2",
+              "name": "driver-2",
+              "row_number": 1
+            }
+          ]
+        },
+        "spec": {
+          "name": "driver_table",
+          "baseTable": {
+            "fromJson": {
+              "jsonPath": "$.drivers[*]",
+              "addRowNumber": true
+            }
+          }
+        },
+        "operation_type": "create_table_op"
+      },
+      {
+        "input": null,
+        "output": {
+          "driver_redis_feature_table": [
+            {
+              "merlin_test_driver_id": "driver_1",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0
+            },
+            {
+              "merlin_test_driver_id": "driver_2",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0
+            }
+          ]
+        },
+        "spec": {
+          "project": "merlin",
+          "entities": [
+            {
+              "name": "merlin_test_driver_id",
+              "valueType": "STRING",
+              "jsonPath": "$.drivers[*].id"
+            }
+          ],
+          "features": [
+            {
+              "name": "merlin_test_redis_driver_features:completion_rate",
+              "valueType": "DOUBLE",
+              "defaultValue": "0"
+            },
+            {
+              "name": "merlin_test_redis_driver_features:cancellation_rate",
+              "valueType": "DOUBLE",
+              "defaultValue": "0"
+            }
+          ],
+          "tableName": "driver_redis_feature_table",
+          "source": "REDIS"
+        },
+        "operation_type": "feast_op"
+      },
+      {
+        "input": null,
+        "output": {
+          "driver_bigtable_feature_table": [
+            {
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_driver_id": "driver_1"
+            },
+            {
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_driver_id": "driver_2"
+            }
+          ]
+        },
+        "spec": {
+          "project": "merlin",
+          "entities": [
+            {
+              "name": "merlin_test_driver_id",
+              "valueType": "STRING",
+              "jsonPath": "$.drivers[*].id"
+            }
+          ],
+          "features": [
+            {
+              "name": "merlin_test_bt_driver_features:rating",
+              "valueType": "DOUBLE",
+              "defaultValue": "0"
+            }
+          ],
+          "tableName": "driver_bigtable_feature_table",
+          "source": "BIGTABLE"
+        },
+        "operation_type": "feast_op"
+      },
+      {
+        "input": {
+          "driver_table": [
+            {
+              "id": "driver_1",
+              "name": "driver-1",
+              "row_number": 0
+            },
+            {
+              "id": "driver_2",
+              "name": "driver-2",
+              "row_number": 1
+            }
+          ]
+        },
+        "output": {
+          "driver_table": [
+            {
+              "customer_id": 1111,
+              "merlin_test_driver_id": "driver_2",
+              "rank": 1
+            },
+            {
+              "customer_id": 1111,
+              "merlin_test_driver_id": "driver_1",
+              "rank": 0
+            }
+          ]
+        },
+        "spec": {
+          "inputTable": "driver_table",
+          "outputTable": "driver_table",
+          "steps": [
+            {
+              "sort": [
+                {
+                  "column": "row_number",
+                  "order": "DESC"
+                }
+              ]
+            },
+            {
+              "renameColumns": {
+                "id": "merlin_test_driver_id",
+                "row_number": "rank"
+              }
+            },
+            {
+              "updateColumns": [
+                {
+                  "column": "customer_id",
+                  "expression": "customer_id"
+                }
+              ]
+            },
+            {
+              "selectColumns": ["customer_id", "merlin_test_driver_id", "rank"]
+            }
+          ]
+        },
+        "operation_type": "table_transform_op"
+      },
+      {
+        "input": {
+          "driver_redis_feature_table": [
+            {
+              "merlin_test_driver_id": "driver_1",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0
+            },
+            {
+              "merlin_test_driver_id": "driver_2",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0
+            }
+          ],
+          "driver_table": [
+            {
+              "customer_id": 1111,
+              "merlin_test_driver_id": "driver_2",
+              "rank": 1
+            },
+            {
+              "customer_id": 1111,
+              "merlin_test_driver_id": "driver_1",
+              "rank": 0
+            }
+          ]
+        },
+        "output": {
+          "result_table": [
+            {
+              "customer_id": 1111,
+              "merlin_test_driver_id": "driver_2",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 1
+            },
+            {
+              "customer_id": 1111,
+              "merlin_test_driver_id": "driver_1",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 0
+            }
+          ]
+        },
+        "spec": {
+          "leftTable": "driver_table",
+          "rightTable": "driver_redis_feature_table",
+          "outputTable": "result_table",
+          "how": "LEFT",
+          "onColumn": "merlin_test_driver_id"
+        },
+        "operation_type": "table_join_op"
+      },
+      {
+        "input": {
+          "driver_bigtable_feature_table": [
+            {
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_driver_id": "driver_1"
+            },
+            {
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_driver_id": "driver_2"
+            }
+          ],
+          "result_table": [
+            {
+              "customer_id": 1111,
+              "merlin_test_driver_id": "driver_2",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 1
+            },
+            {
+              "customer_id": 1111,
+              "merlin_test_driver_id": "driver_1",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 0
+            }
+          ]
+        },
+        "output": {
+          "result_table": [
+            {
+              "customer_id": 1111,
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_driver_id": "driver_2",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 1
+            },
+            {
+              "customer_id": 1111,
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_driver_id": "driver_1",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 0
+            }
+          ]
+        },
+        "spec": {
+          "leftTable": "result_table",
+          "rightTable": "driver_bigtable_feature_table",
+          "outputTable": "result_table",
+          "how": "LEFT",
+          "onColumn": "merlin_test_driver_id"
+        },
+        "operation_type": "table_join_op"
+      },
+      {
+        "input": {
+          "result_table": [
+            {
+              "customer_id": 1111,
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_driver_id": "driver_2",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 1
+            },
+            {
+              "customer_id": 1111,
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_driver_id": "driver_1",
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 0
+            }
+          ]
+        },
+        "output": {
+          "result_table": [
+            {
+              "customer_id": 1111,
+              "driver_id": "driver_1",
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 0
+            },
+            {
+              "customer_id": 1111,
+              "driver_id": "driver_2",
+              "merlin_test_bt_driver_features:rating": 4.2,
+              "merlin_test_redis_driver_features:cancellation_rate": 0,
+              "merlin_test_redis_driver_features:completion_rate": 0,
+              "rank": 1
+            }
+          ]
+        },
+        "spec": {
+          "inputTable": "result_table",
+          "outputTable": "result_table",
+          "steps": [
+            {
+              "sort": [
+                {
+                  "column": "rank"
+                }
+              ]
+            },
+            {
+              "renameColumns": {
+                "merlin_test_driver_id": "driver_id"
+              }
+            },
+            {
+              "selectColumns": [
+                "rank",
+                "driver_id",
+                "customer_id",
+                "merlin_test_redis_driver_features:completion_rate",
+                "merlin_test_redis_driver_features:cancellation_rate",
+                "merlin_test_bt_driver_features:rating"
+              ]
+            }
+          ]
+        },
+        "operation_type": "table_transform_op"
+      },
+      {
+        "input": null,
+        "output": {
+          "instances": {
+            "columns": [
+              "rank",
+              "driver_id",
+              "customer_id",
+              "merlin_test_redis_driver_features:completion_rate",
+              "merlin_test_redis_driver_features:cancellation_rate",
+              "merlin_test_bt_driver_features:rating"
+            ],
+            "data": [
+              [0, "driver_1", 1111, 0, 0, 4.2],
+              [1, "driver_2", 1111, 0, 0, 4.2]
+            ]
+          }
+        },
+        "spec": {
+          "jsonTemplate": {
+            "fields": [
+              {
+                "fieldName": "instances",
+                "fromTable": {
+                  "tableName": "result_table",
+                  "format": "SPLIT"
+                }
+              }
+            ]
+          }
+        },
+        "operation_type": "json_output_op"
+      }
+    ],
+    "postprocess": []
+  }
+}

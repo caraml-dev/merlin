@@ -9,17 +9,24 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
+	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
 type TableJoinOp struct {
 	tableJoinSpec *spec.TableJoin
+	*OperationTracing
 }
 
-func NewTableJoinOp(tableJoinSpec *spec.TableJoin) Op {
-	return &TableJoinOp{
+func NewTableJoinOp(tableJoinSpec *spec.TableJoin, tracingEnabled bool) Op {
+	tableJoinOp := &TableJoinOp{
 		tableJoinSpec: tableJoinSpec,
 	}
+
+	if tracingEnabled {
+		tableJoinOp.OperationTracing = NewOperationTracing(tableJoinSpec, types.TableJoinOpType)
+	}
+	return tableJoinOp
 }
 
 func (t TableJoinOp) Execute(ctx context.Context, environment *Environment) error {
@@ -104,6 +111,14 @@ func (t TableJoinOp) Execute(ctx context.Context, environment *Environment) erro
 	}
 
 	environment.SetSymbol(t.tableJoinSpec.OutputTable, resultTable)
+	if t.OperationTracing != nil {
+		if err := t.AddInputOutput(
+			map[string]interface{}{t.tableJoinSpec.LeftTable: leftTable, t.tableJoinSpec.RightTable: rightTable},
+			map[string]interface{}{t.tableJoinSpec.OutputTable: resultTable},
+		); err != nil {
+			return nil
+		}
+	}
 	environment.LogOperation("table_join", t.tableJoinSpec.OutputTable)
 	return nil
 }
