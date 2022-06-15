@@ -73,6 +73,50 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			wantResponseByte: []byte(`{"response":{"instances":{"columns":["id","name"],"data":[[1,"entity-1"],[2,"entity-2"]]},"tablefile":{"columns":["First Name","Last Name","Age","Weight","Is VIP"],"data":[["Apple","Cider",25,48.8,true],["Banana","Man",18,68,false],["Zara","Vuitton",35,75,true],["Sandra","Zawaska",32,55,false],["Merlion","Krabby",23,57.22,false]]},"tablefile2":{"columns":["First Name","Last Name","Age","Weight","Is VIP"],"data":[["Apple","Cider",25,48.8,true],["Banana","Man",18,68,false],["Zara","Vuitton",35,75,true],["Sandra","Zawaska",32,55,false],["Merlion","Krabby",23,57.22,false]]}},"operation_tracing":null}`),
 		},
 		{
+			desc:         "simple postprocess",
+			specYamlPath: "../pipeline/testdata/valid_simple_postprocess.yaml",
+			executorCfg: transformerExecutorConfig{
+				traceEnabled: true,
+				logger:       logger,
+			},
+			modelPredictor: NewMockModelPredictor(types.JSONObject{"entities": []interface{}{
+				map[string]interface{}{
+					"id":   1,
+					"name": "entity-1",
+				},
+				map[string]interface{}{
+					"id":   2,
+					"name": "entity-2",
+				},
+			}}, map[string]string{"Content-Type": "application/json"}),
+			requestPayload:   []byte(`{}`),
+			requestHeaders:   map[string]string{},
+			wantResponseByte: []byte(`{"response":{"instances":{"columns":["id","name"],"data":[[1,"entity-1"],[2,"entity-2"]]}},"operation_tracing":{"preprocess":[],"postprocess":[{"input":null,"output":{"entity_table":[{"id":1,"name":"entity-1"},{"id":2,"name":"entity-2"}]},"spec":{"name":"entity_table","baseTable":{"fromJson":{"jsonPath":"$.model_response.entities[*]"}}},"operation_type":"create_table_op"},{"input":null,"output":{"instances":{"columns":["id","name"],"data":[[1,"entity-1"],[2,"entity-2"]]}},"spec":{"jsonTemplate":{"fields":[{"fieldName":"instances","fromTable":{"tableName":"entity_table","format":"SPLIT"}}]}},"operation_type":"json_output_op"}]}}`),
+		},
+		{
+			desc:         "simple postprocess without tracing",
+			specYamlPath: "../pipeline/testdata/valid_simple_postprocess.yaml",
+			executorCfg: transformerExecutorConfig{
+				traceEnabled: false,
+				logger:       logger,
+			},
+			modelPredictor: NewMockModelPredictor(types.JSONObject{"entities": []interface{}{
+				map[string]interface{}{
+					"id":   1,
+					"name": "entity-1",
+				},
+				map[string]interface{}{
+					"id":   2,
+					"name": "entity-2",
+				},
+			}}, map[string]string{"Content-Type": "application/json"}),
+			requestPayload: []byte(`{"entities" : [{"id": 1,"name": "entity-1"},{"id": 2,"name": "entity-2"}]}`),
+			requestHeaders: map[string]string{
+				"Country-ID": "ID",
+			},
+			wantResponseByte: []byte(`{"response":{"instances":{"columns":["id","name"],"data":[[1,"entity-1"],[2,"entity-2"]]}},"operation_tracing":null}`),
+		},
+		{
 			desc:         "preprocess and postprocess with mock model predictor",
 			specYamlPath: "../pipeline/testdata/valid_preprocess_postprocess_transformation.yaml",
 			executorCfg: transformerExecutorConfig{
@@ -162,6 +206,34 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			},
 			wantResponseByte: []byte(`{"response":{"error":"error executing preprocess operation: *pipeline.CreateTableOp: unable to create base table for entity_table: invalid json pointed by $.entities[*]: not an array"},"operation_tracing":null}`),
 		},
+		{
+			desc:         "table transformation with conditional update, filter row and slice row",
+			specYamlPath: "../pipeline/testdata/valid_table_transform_conditional_filtering.yaml",
+			executorCfg: transformerExecutorConfig{
+				traceEnabled: false,
+				logger:       logger,
+			},
+			modelPredictor: NewMockModelPredictor(types.JSONObject{"status": "ok"}, map[string]string{"Content-Type": "application/json"}),
+			requestPayload: []byte(`{"drivers":[{"id":1,"name":"driver-1","rating":4,"acceptance_rate":0.8},{"id":2,"name":"driver-2","rating":3,"acceptance_rate":0.6},{"id":3,"name":"driver-3","rating":3.5,"acceptance_rate":0.77},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.9},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.88}],"customer":{"id":1111},"details":"{\"points\": [{\"distanceInMeter\": 0.0}, {\"distanceInMeter\": 8976.0}, {\"distanceInMeter\": 729.0}, {\"distanceInMeter\": 8573.0}, {\"distanceInMeter\": 9000.0}]}"}`),
+			requestHeaders: map[string]string{
+				"Content-Type": "application/json",
+			},
+			wantResponseByte: []byte(`{"response":{"status":"ok"},"operation_tracing":null}`),
+		},
+		{
+			desc:         "table transformation with conditional update, filter row and slice row",
+			specYamlPath: "../pipeline/testdata/valid_table_transform_conditional_filtering.yaml",
+			executorCfg: transformerExecutorConfig{
+				traceEnabled: true,
+				logger:       logger,
+			},
+			modelPredictor: NewMockModelPredictor(types.JSONObject{"status": "ok"}, map[string]string{"Content-Type": "application/json"}),
+			requestPayload: []byte(`{"drivers":[{"id":1,"name":"driver-1","rating":4,"acceptance_rate":0.8},{"id":2,"name":"driver-2","rating":3,"acceptance_rate":0.6},{"id":3,"name":"driver-3","rating":3.5,"acceptance_rate":0.77},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.9},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.88}],"customer":{"id":1111},"details":"{\"points\": [{\"distanceInMeter\": 0.0}, {\"distanceInMeter\": 8976.0}, {\"distanceInMeter\": 729.0}, {\"distanceInMeter\": 8573.0}, {\"distanceInMeter\": 9000.0}]}"}`),
+			requestHeaders: map[string]string{
+				"Content-Type": "application/json",
+			},
+			wantResponseByte: []byte(`{"response":{"status":"ok"},"operation_tracing":{"preprocess":[{"input":null,"output":{"customer_id":1111},"spec":{"name":"customer_id","jsonPath":"$.customer.id"},"operation_type":"variable_op"},{"input":null,"output":{"zero":0},"spec":{"name":"zero","literal":{"intValue":"0"}},"operation_type":"variable_op"},{"input":null,"output":{"driver_table":[{"acceptance_rate":0.8,"id":1,"name":"driver-1","rating":4},{"acceptance_rate":0.6,"id":2,"name":"driver-2","rating":3},{"acceptance_rate":0.77,"id":3,"name":"driver-3","rating":3.5},{"acceptance_rate":0.9,"id":4,"name":"driver-4","rating":2.5},{"acceptance_rate":0.88,"id":4,"name":"driver-4","rating":2.5}]},"spec":{"name":"driver_table","baseTable":{"fromJson":{"jsonPath":"$.drivers[*]"}}},"operation_type":"create_table_op"},{"input":{"driver_table":[{"acceptance_rate":0.8,"id":1,"name":"driver-1","rating":4},{"acceptance_rate":0.6,"id":2,"name":"driver-2","rating":3},{"acceptance_rate":0.77,"id":3,"name":"driver-3","rating":3.5},{"acceptance_rate":0.9,"id":4,"name":"driver-4","rating":2.5},{"acceptance_rate":0.88,"id":4,"name":"driver-4","rating":2.5}]},"output":{"transformed_driver_table":[{"acceptance_rate":0.8,"customer_id":1111,"distance_contains_zero":true,"distance_in_km":0,"distance_in_m":0,"distance_is_not_far_away":true,"distance_is_valid":true,"driver_id":1,"driver_performa":6,"name":"driver-1","rating":4},{"acceptance_rate":0.77,"customer_id":1111,"distance_contains_zero":true,"distance_in_km":0.729,"distance_in_m":729,"distance_is_not_far_away":true,"distance_is_valid":true,"driver_id":3,"driver_performa":3.5,"name":"driver-3","rating":3.5}]},"spec":{"inputTable":"driver_table","outputTable":"transformed_driver_table","steps":[{"updateColumns":[{"column":"customer_id","expression":"customer_id"},{"column":"distance_in_km","expression":"map(JsonExtract(\"$.details\", \"$.points[*].distanceInMeter\"), {# * 0.001})"},{"column":"distance_in_m","expression":"filter(JsonExtract(\"$.details\", \"$.points[*].distanceInMeter\"), {# \u003e= 0})"},{"column":"distance_is_valid","expression":"all(JsonExtract(\"$.details\", \"$.points[*].distanceInMeter\"), {# \u003e= 0})"},{"column":"distance_is_not_far_away","expression":"none(JsonExtract(\"$.details\", \"$.points[*].distanceInMeter\"), {# * 0.001 \u003e 10})"},{"column":"distance_contains_zero","expression":"any(JsonExtract(\"$.details\", \"$.points[*].distanceInMeter\"), {# == 0.0})"},{"column":"driver_performa","conditions":[{"rowSelector":"driver_table.Col(\"rating\") * 2 \u003c= 7","expression":"driver_table.Col(\"rating\") * 1"},{"rowSelector":"driver_table.Col(\"rating\") * 2 \u003e= 8","expression":"driver_table.Col(\"rating\") * 1.5"},{"default":{"expression":"zero"}}]}]},{"filterRow":{"condition":"driver_table.Col(\"acceptance_rate\") \u003e 0.7"}},{"sliceRow":{"start":0,"end":2}},{"renameColumns":{"id":"driver_id"}}]},"operation_type":"table_transform_op"},{"input":null,"output":{"max_performa":6},"spec":{"name":"max_performa","expression":"transformed_driver_table.Col('driver_performa').Max()"},"operation_type":"variable_op"},{"input":null,"output":{"instances":{"columns":["acceptance_rate","driver_id","name","rating","customer_id","distance_contains_zero","distance_in_km","distance_in_m","distance_is_not_far_away","distance_is_valid","driver_performa"],"data":[[0.8,1,"driver-1",4,1111,true,0,0,true,true,6],[0.77,3,"driver-3",3.5,1111,true,0.729,729,true,true,3.5]]},"max_performa":6},"spec":{"jsonTemplate":{"fields":[{"fieldName":"instances","fromTable":{"tableName":"transformed_driver_table","format":"SPLIT"}},{"fieldName":"max_performa","expression":"max_performa"}]}},"operation_type":"json_output_op"}],"postprocess":[]}}`),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
@@ -224,12 +296,14 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			if err != nil {
 				logger.Fatal("Unable to compile standard transformer", zap.Error(err))
 			}
+
 			transformerExecutor := &standardTransformer{
 				compiledPipeline: compiledPipeline,
 				modelPredictor:   tt.modelPredictor,
 				executorConfig:   tt.executorCfg,
 				logger:           tt.executorCfg.logger,
 			}
+
 			var payload types.JSONObject
 			err = json.Unmarshal(tt.requestPayload, &payload)
 			require.NoError(t, err)
