@@ -312,7 +312,7 @@ func TestOperationTracing_GetOperationTracingDetail(t *testing.T) {
 			},
 		},
 		{
-			name: "list of variable specs - number of inputs is not match with length of specs",
+			name: "list of variable specs - number of inputs does not match with length of specs",
 			operationTracing: &OperationTracing{
 				Specs: []*spec.Variable{
 					{
@@ -349,10 +349,10 @@ func TestOperationTracing_GetOperationTracingDetail(t *testing.T) {
 				},
 				OpType: types.VariableOpType,
 			},
-			wantErr: fmt.Errorf("number of inputs is not match with number of specs"),
+			wantErr: fmt.Errorf("variable_op: number of inputs (1) does not match with number of specs (2)"),
 		},
 		{
-			name: "list of variable specs - number of outputs is not match with length of specs",
+			name: "list of variable specs - number of outputs does not match with length of specs",
 			operationTracing: &OperationTracing{
 				Specs: []*spec.Variable{
 					{
@@ -392,7 +392,7 @@ func TestOperationTracing_GetOperationTracingDetail(t *testing.T) {
 				},
 				OpType: types.VariableOpType,
 			},
-			wantErr: fmt.Errorf("number of outputs is not match with number of specs"),
+			wantErr: fmt.Errorf("variable_op: number of outputs (3) does not match with number of specs (2)"),
 		},
 		{
 			name: "single jsonoutput - no input recorded",
@@ -424,7 +424,7 @@ func TestOperationTracing_GetOperationTracingDetail(t *testing.T) {
 				},
 				OpType: types.JsonOutputOpType,
 			},
-			wantErr: fmt.Errorf("input should has one record"),
+			wantErr: fmt.Errorf("json_output_op: input should has one record"),
 		},
 		{
 			name: "single jsonoutput - no output recorded",
@@ -466,7 +466,7 @@ func TestOperationTracing_GetOperationTracingDetail(t *testing.T) {
 				},
 				OpType: types.JsonOutputOpType,
 			},
-			wantErr: fmt.Errorf("output should has one record"),
+			wantErr: fmt.Errorf("json_output_op: output should has one record"),
 		},
 	}
 	for _, tt := range tests {
