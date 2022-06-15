@@ -955,6 +955,20 @@ paths:
             $ref: "#/definitions/Container"
         404:
           description: "Version endpoint with given `endpoint_id` not found"
+  "/standard_transformer/simulate":
+    post:
+      tags: ["standard_transformer"]
+      summary: "Simulate standard transformer"
+      parameters:
+        - in: "body"
+          name: "body"
+          schema:
+            $ref: "#/definitions/StandardTransformerSimulationRequest"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/VersionEndpoint"
 
 definitions:
   EndpointStatus:
@@ -1589,6 +1603,67 @@ definitions:
       - IGNORE
       - ERROR
     default: ERRORIFEXISTS
+  
+  StandardTransformerSimulationRequest:
+    type: object
+    properties:
+      payload:
+        $ref: "#/definitions/FreeFormObject"
+      headers:
+        $ref: "#/definitions/FreeFormObject"
+      config: 
+        $ref: "#/definitions/FreeFormObject"
+      model_prediction_config:
+        $ref: "#/definitions/ModelPredictionConfig"
+
+  StandardTransformerSimulationResponse:
+    type: object
+    properties:
+      response:
+        $ref: "#/definitions/FreeFormObject"
+      operation_tracing:
+        $ref: "#/definitions/OperationTracing"
+
+  OperationTracing:
+    type: object
+    properties:
+      preprocess:
+        $ref: "#/definitions/PipelineTracing"
+      postprocess:
+        $ref: "#/definitions/PipelineTracing"
+
+  PipelineTracing:
+    type: array
+    items:
+      type: object
+      properties:
+        operation_type:
+          type: string
+        specs:
+          $ref: "#/definitions/FreeFormObject"
+        inputs:
+          $ref: "#/definitions/FreeFormObject"
+        outputs:
+          $ref: "#/definitions/FreeFormObject"
+
+
+  ModelPredictionConfig:
+    type: object
+    properties:
+      mock_response:
+        $ref: "#/definitions/MockResponse"
+
+  MockResponse:
+    type: object
+    properties:
+      body:
+        $ref: "#/definitions/FreeFormObject"
+      headers:
+        $ref: "#/definitions/FreeFormObject"
+
+  FreeFormObject:
+    type: object
+    additionalProperties: true
 
 securityDefinitions:
   Bearer:

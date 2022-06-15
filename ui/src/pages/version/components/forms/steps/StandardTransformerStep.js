@@ -1,21 +1,29 @@
-import React, { useContext, useState } from "react";
 import {
+  EuiAccordion,
+  EuiButtonIcon,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiSideNav,
   EuiIcon,
-  EuiAccordion,
+  EuiPanel,
+  EuiSideNav,
+  EuiSpacer,
+  EuiText,
+  EuiTextColor,
   EuiTitle
 } from "@elastic/eui";
-import { EuiText, EuiTextColor } from "@elastic/eui";
 import {
   FormContext,
   FormValidationContext,
   get,
   useOnChangeHandler
 } from "@gojek/mlp-ui";
-import { PipelineSidebarPanel } from "../components/transformer/PipelineSidebarPanel";
-import { PipelineStage } from "./PipelineStage";
+import React, { useContext, useState } from "react";
+import { Element, scroller } from "react-scroll";
+import { simulationIcon } from "../components/transformer/components/simulation/constants";
+import { TransformationGraph } from "../components/transformer/components/TransformationGraph";
+import { TransformationSpec } from "../components/transformer/components/TransformationSpec";
+import { PipelineStage } from "../components/transformer/PipelineStage";
+import { TransformerSimulation } from "../components/transformer/TransformerSimulation";
 import "./Pipeline.scss";
 
 export const StandardTransformerStep = () => {
@@ -37,6 +45,18 @@ export const StandardTransformerStep = () => {
   const [isSideNavOpenOnMobile, setisSideNavOpenOnMobile] = useState(false);
   const [selectedItemName, setSelectedItem] = useState("Pre-Processing");
 
+  const [togglePanelButton, setTogglePanelButton] = useState({
+    "transformer-sidebar-panel": "show",
+    "transformer-graph-panel": "hide"
+  });
+  const onPanelChange = (panelId, state) => {
+    const newtogglePanelButton = {
+      ...togglePanelButton,
+      [panelId]: state
+    };
+    setTogglePanelButton(newtogglePanelButton);
+  };
+
   const toggleOpenOnMobile = () => {
     setisSideNavOpenOnMobile(!isSideNavOpenOnMobile);
   };
@@ -50,7 +70,12 @@ export const StandardTransformerStep = () => {
       id: id,
       name,
       isSelected: selectedItemName === id,
-      onClick: () => selectItem(id),
+      onClick: () => {
+        selectItem(id);
+        scroller.scrollTo(id, {
+          offset: -75
+        });
+      },
       href: "#" + id,
       ...data
     };
@@ -58,18 +83,34 @@ export const StandardTransformerStep = () => {
 
   const sideNav = [
     createItem("Edit Configurations", "config", {
-      onClick: undefined,
-      icon: <EuiIcon type="indexEdit" />,
+      renderItem: () => (
+        <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
+          <EuiFlexItem>
+            <EuiText size="xs">
+              <strong>Transformer Configuration</strong>
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiButtonIcon
+              color="text"
+              aria-label={"Toggle sidebar panel"}
+              iconType="menuLeft"
+              onClick={() => onPanelChange("transformer-sidebar-panel", "hide")}
+            />
+          </EuiFlexItem>
+        </EuiFlexGroup>
+      ),
       items: [
         createItem("Pre-Processing", "preprocessing", {
           icon: <EuiIcon type="editorItemAlignRight" />,
           forceOpen: true,
+
           items: [
             createItem("Input", "input-preprocess", {
               icon: <EuiIcon type="logstashInput" />
             }),
             createItem("Transformation", "transform-preprocess", {
-              icon: <EuiIcon type="inputOutput" />
+              icon: <EuiIcon type="tableDensityExpanded" />
             }),
             createItem("Output", "output-preprocess", {
               icon: <EuiIcon type="logstashOutput" />
@@ -79,95 +120,96 @@ export const StandardTransformerStep = () => {
         createItem("Post-Processing", "postprocessing", {
           icon: <EuiIcon type="editorItemAlignLeft" />,
           forceOpen: true,
+
           items: [
             createItem("Input", "input-postprocess", {
               icon: <EuiIcon type="logstashInput" />
             }),
             createItem("Transformation", "transform-postprocess", {
-              icon: <EuiIcon type="inputOutput" />
+              icon: <EuiIcon type="tableDensityExpanded" />
             }),
             createItem("Output", "output-postprocess", {
               icon: <EuiIcon type="logstashOutput" />
             })
           ]
+        }),
+        createItem("Simulation", "simulation", {
+          icon: <EuiIcon type={simulationIcon} />
         })
       ]
     })
   ];
 
-  const preprocessHeader = (
-    <div>
-      <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
-        <EuiFlexItem grow={false}>
-          <EuiIcon type="editorItemAlignRight" size="m" />
-        </EuiFlexItem>
+  const createHeader = (title, subtitle, iconType) => {
+    return (
+      <div>
+        <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
+          <EuiFlexItem grow={false}>
+            <EuiIcon type={iconType} size="m" />
+          </EuiFlexItem>
 
-        <EuiFlexItem>
-          <EuiTitle size="xs">
-            <h3>Pre-Processing</h3>
-          </EuiTitle>
-        </EuiFlexItem>
-      </EuiFlexGroup>
+          <EuiFlexItem>
+            <EuiTitle size="xs">
+              <h3>{title}</h3>
+            </EuiTitle>
+          </EuiFlexItem>
+        </EuiFlexGroup>
 
-      <EuiText size="s">
-        <p>
-          <EuiTextColor color="subdued">
-            Input, Transformation and Output configurations for pre-processing
-          </EuiTextColor>
-        </p>
-      </EuiText>
-    </div>
-  );
-
-  const postprocessHeader = (
-    <div>
-      <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
-        <EuiFlexItem grow={false}>
-          <EuiIcon type="editorItemAlignLeft" size="m" />
-        </EuiFlexItem>
-
-        <EuiFlexItem>
-          <EuiTitle size="xs">
-            <h3>Post-Processing</h3>
-          </EuiTitle>
-        </EuiFlexItem>
-      </EuiFlexGroup>
-
-      <EuiText size="s">
-        <p>
-          <EuiTextColor color="subdued">
-            Input, Transformation and Output configurations for post-processing
-          </EuiTextColor>
-        </p>
-      </EuiText>
-    </div>
-  );
+        <EuiText size="s">
+          <p>
+            <EuiTextColor color="subdued">{subtitle}</EuiTextColor>
+          </p>
+        </EuiText>
+      </div>
+    );
+  };
 
   return (
     <EuiFlexGroup>
-      <EuiFlexItem>
-        <div className="sidebar">
-          <EuiSideNav
-            aria-label="Standard Transformer Config"
-            mobileTitle="Standard Transformer Config"
-            toggleOpenOnMobile={() => toggleOpenOnMobile()}
-            isOpenOnMobile={isSideNavOpenOnMobile}
-            style={{ width: 192 }}
-            items={sideNav}
-          />
-        </div>
-      </EuiFlexItem>
+      {togglePanelButton &&
+      togglePanelButton["transformer-sidebar-panel"] === "hide" ? (
+        <EuiButtonIcon
+          color="text"
+          aria-label={"Toggle sidebar panel"}
+          iconType="menuRight"
+          onClick={() => onPanelChange("transformer-sidebar-panel")}
+          className="toggle-panel-button"
+        />
+      ) : (
+        <EuiFlexItem grow={1}>
+          <div className="config-sidebar">
+            <EuiPanel grow={false} hasShadow={false}>
+              <EuiSideNav
+                aria-label="Standard Transformer Config"
+                mobileTitle="Standard Transformer Config"
+                toggleOpenOnMobile={() => toggleOpenOnMobile()}
+                isOpenOnMobile={isSideNavOpenOnMobile}
+                items={sideNav}
+              />
+            </EuiPanel>
+
+            <EuiSpacer />
+
+            <EuiPanel grow={false} hasShadow={false}>
+              <TransformationSpec importEnabled={true} />
+            </EuiPanel>
+          </div>
+        </EuiFlexItem>
+      )}
 
       <EuiFlexItem grow={7}>
-        <div className="config">
-          <EuiFlexGroup direction="column" gutterSize="m">
-            <div id="preprocessing" className="preprocessing">
+        <EuiPanel grow={false} paddingSize="none" hasShadow={false}>
+          <div className="config">
+            <Element name="preprocessing" className="preprocessing">
               <EuiAccordion
-                id="preprocess"
+                id="preprocess-accordion"
                 element="fieldset"
-                className="euiAccordionForm"
                 buttonClassName="euiAccordionForm__button"
-                buttonContent={preprocessHeader}
+                buttonContent={createHeader(
+                  "Pre-Processing",
+                  "Input, Transformation and Output configurations for pre-processing",
+                  "editorItemAlignRight"
+                )}
                 paddingSize="l"
                 initialIsOpen={true}>
                 <PipelineStage
@@ -182,14 +224,18 @@ export const StandardTransformerStep = () => {
                   )}
                 />
               </EuiAccordion>
-            </div>
-            <div id="postprocessing" className="postprocessing">
+            </Element>
+
+            <Element name="postprocessing" className="postprocessing">
               <EuiAccordion
-                id="postprocess"
+                id="postprocess-accordion"
                 element="fieldset"
-                className="euiAccordionForm"
                 buttonClassName="euiAccordionForm__button"
-                buttonContent={postprocessHeader}
+                buttonContent={createHeader(
+                  "Post-Processing",
+                  "Input, Transformation and Output configurations for post-processing",
+                  "editorItemAlignLeft"
+                )}
                 paddingSize="l"
                 initialIsOpen={true}>
                 <PipelineStage
@@ -204,14 +250,62 @@ export const StandardTransformerStep = () => {
                   )}
                 />
               </EuiAccordion>
-            </div>
-          </EuiFlexGroup>
-        </div>
+            </Element>
+
+            <Element name="simulation" className="simulation">
+              <EuiAccordion
+                id="simulation-accordion"
+                element="fieldset"
+                buttonClassName="euiAccordionForm__button"
+                buttonContent={createHeader(
+                  "Simulation",
+                  "Simulation of standard transformer given your config without deploying the model",
+                  simulationIcon
+                )}
+                paddingSize="l"
+                initialIsOpen={true}>
+                <TransformerSimulation />
+              </EuiAccordion>
+            </Element>
+          </div>
+        </EuiPanel>
       </EuiFlexItem>
 
-      <EuiFlexItem grow={3}>
-        <PipelineSidebarPanel />
-      </EuiFlexItem>
+      {togglePanelButton &&
+      togglePanelButton["transformer-graph-panel"] === "hide" ? (
+        <EuiButtonIcon
+          color="text"
+          aria-label={"Toggle graph panel"}
+          iconType="menuLeft"
+          onClick={() => onPanelChange("transformer-graph-panel")}
+          className="toggle-panel-button"
+        />
+      ) : (
+        <EuiFlexItem grow={2}>
+          <div className="graph-sidebar">
+            <EuiPanel grow={false} hasShadow={false}>
+              <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
+                <EuiFlexItem>
+                  <EuiText size="xs">
+                    <strong>Transformer Graph</strong>
+                  </EuiText>
+                </EuiFlexItem>
+                <EuiFlexItem grow={false}>
+                  <EuiButtonIcon
+                    color="text"
+                    aria-label={"Toggle graph panel"}
+                    iconType="menuRight"
+                    onClick={() =>
+                      onPanelChange("transformer-graph-panel", "hide")
+                    }
+                  />
+                </EuiFlexItem>
+              </EuiFlexGroup>
+              <TransformationGraph />
+            </EuiPanel>
+          </div>
+        </EuiFlexItem>
+      )}
     </EuiFlexGroup>
   );
 };

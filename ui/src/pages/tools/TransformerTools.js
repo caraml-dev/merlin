@@ -14,33 +14,37 @@
  * limitations under the License.
  */
 
-import React from "react";
-import { EuiFlexGroup, EuiFlexItem, EuiPage, EuiPageBody } from "@elastic/eui";
+import { EuiPage, EuiPageBody, EuiPageContent } from "@elastic/eui";
 import { FormContextProvider } from "@gojek/mlp-ui";
-import { Panel } from "../version/components/forms/components/Panel";
-import { TransformationSpec } from "../version/components/forms/components/transformer/components/TransformationSpec";
-import { TransformationGraph } from "../version/components/forms/components/transformer/components/TransformationGraph";
-import { VersionEndpoint } from "../../services/version_endpoint/VersionEndpoint";
+import React from "react";
+import {
+  Config,
+  Pipeline,
+  TransformerConfig
+} from "../../services/transformer/TransformerConfig";
+import { StandardTransformerStep } from "../version/components/forms/steps/StandardTransformerStep";
 
 const TransformerTools = () => {
   return (
     <EuiPage>
       <EuiPageBody>
-        <FormContextProvider data={new VersionEndpoint()}>
-          <EuiFlexGroup>
-            <EuiFlexItem grow={5}>
-              <Panel title="Transformation Spec" content="100%">
-                <TransformationSpec />
-              </Panel>
-            </EuiFlexItem>
-
-            <EuiFlexItem grow={5}>
-              <Panel title="Transformation Graph" content="100%">
-                <TransformationGraph />
-              </Panel>
-            </EuiFlexItem>
-          </EuiFlexGroup>
-        </FormContextProvider>
+        <EuiPageContent hasBorder={false} hasShadow={false} color="transparent">
+          <FormContextProvider
+            data={{
+              transformer: {
+                config: new Config(
+                  new TransformerConfig(
+                    undefined,
+                    new Pipeline(),
+                    new Pipeline()
+                  )
+                ),
+                type_on_ui: "standard"
+              }
+            }}>
+            <StandardTransformerStep />
+          </FormContextProvider>
+        </EuiPageContent>
       </EuiPageBody>
     </EuiPage>
   );

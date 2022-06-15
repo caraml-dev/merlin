@@ -1,13 +1,28 @@
-.config {
-  overflow-y: scroll;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  height: 70vh;
-  padding: 5px 5px 62vh 10px;
-}
-
 .config::-webkit-scrollbar {
   display: none; /* Safari and Chrome */
+}
+
+.config-sidebar {
+  overflow-y: auto;
+  position: sticky;
+  top: 75px !important;
+
+  .euiSideNavItemButton__label {
+    font-size: 0.75rem;
+    line-height: 2;
+  }
+}
+
+.toggle-panel-button {
+  overflow-y: auto;
+  position: sticky;
+  top: 90px !important;
+}
+
+.graph-sidebar {
+  overflow-y: auto;
+  position: sticky;
+  top: 75px !important;
 }
 
 .preprocessing {
@@ -16,4 +31,8 @@
 
 .postprocessing {
   background-color: #d2f1fe;
+}
+
+.simulation {
+  background-color: #eaf8ff;
 }

@@ -205,8 +205,45 @@ type StandardTransformerConfig struct {
 	BigtableCredential string             `envconfig:"FEAST_BIGTABLE_CREDENTIAL"`
 	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
 	Jaeger             JaegerConfig
+	SimulationFeast    SimulationFeastConfig
 }
 
+// SimulationFeastConfig feast config that aimed to be used only for simulation of standard transformer
+type SimulationFeastConfig struct {
+	FeastRedisURL    string `envconfig:"SIMULATION_FEAST_REDIS_URL" required:"true"`
+	FeastBigtableURL string `envconfig:"SIMULATION_FEAST_BIGTABLE_URL" required:"true"`
+}
+
+// ToFeastStorageConfigsForSimulation convert standard transformer config to feast storage config that will be used for transformer simulation
+// the difference with ToFeastStorageConfigs, this method will overwrite serving url by using serving url that can be access outside of model k8s cluster and serving type is grpc (direct storage is not supported)
+func (stc *StandardTransformerConfig) ToFeastStorageConfigsForSimulation() feast.FeastStorageConfig {
+	storageCfg := stc.ToFeastStorageConfigs()
+	servingURLs := map[spec.ServingSource]string{
+		spec.ServingSource_REDIS:    stc.SimulationFeast.FeastRedisURL,
+		spec.ServingSource_BIGTABLE: stc.SimulationFeast.FeastBigtableURL,
+	}
+	for sourceType, storage := range storageCfg {
+		storage.ServingType = spec.ServingType_FEAST_GRPC
+		if sourceType == spec.ServingSource_UNKNOWN {
+			sourceType = stc.DefaultFeastSource
+		}
+		servingURL := servingURLs[sourceType]
+		switch storage.Storage.(type) {
+		case *spec.OnlineStorage_RedisCluster:
+			redisCluster := storage.GetRedisCluster()
+			redisCluster.FeastServingUrl = servingURL
+		case *spec.OnlineStorage_Redis:
+			redis := storage.GetRedis()
+			redis.FeastServingUrl = servingURL
+		case *spec.OnlineStorage_Bigtable:
+			bigtable := storage.GetBigtable()
+			bigtable.FeastServingUrl = servingURL
+		}
+	}
+	return storageCfg
+}
+
+// ToFeastStorageConfigs convert standard transformer config into feast storage config
 func (stc *StandardTransformerConfig) ToFeastStorageConfigs() feast.FeastStorageConfig {
 	feastStorageConfig := feast.FeastStorageConfig{}
 	validate := internalValidator.NewValidator()
