@@ -11,6 +11,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/expression"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
@@ -567,7 +568,8 @@ func TestTableJoinOp_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := TableJoinOp{
-				tableJoinSpec: tt.joinSpec,
+				tableJoinSpec:    tt.joinSpec,
+				OperationTracing: NewOperationTracing(tt.joinSpec, types.TableJoinOpType),
 			}
 
 			err := c.Execute(context.Background(), tt.env)

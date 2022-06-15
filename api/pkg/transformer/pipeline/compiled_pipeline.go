@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 
 	"github.com/antonmedv/expr/vm"
@@ -19,10 +20,24 @@ type CompiledPipeline struct {
 
 	preprocessOps  []Op
 	postprocessOps []Op
+	tracingEnabled bool
 }
 
-func NewCompiledPipeline(compiledJSONPath *jsonpath.Storage, compiledExpression *expression.Storage,
-	preloadedTables map[string]table.Table, preprocessOps []Op, postprocessOps []Op) *CompiledPipeline {
+type pipelineType string
+
+const (
+	preprocess  pipelineType = "preprocess"
+	postprocess pipelineType = "postprocess"
+)
+
+func NewCompiledPipeline(
+	compiledJSONPath *jsonpath.Storage,
+	compiledExpression *expression.Storage,
+	preloadedTables map[string]table.Table,
+	preprocessOps []Op,
+	postprocessOps []Op,
+	tracingEnabled bool,
+) *CompiledPipeline {
 	return &CompiledPipeline{
 		compiledJsonpath:   compiledJSONPath,
 		compiledExpression: compiledExpression,
@@ -30,29 +45,47 @@ func NewCompiledPipeline(compiledJSONPath *jsonpath.Storage, compiledExpression 
 
 		preprocessOps:  preprocessOps,
 		postprocessOps: postprocessOps,
+		tracingEnabled: tracingEnabled,
 	}
 }
 
 func (p *CompiledPipeline) Preprocess(context context.Context, env *Environment) (types.JSONObject, error) {
-	for _, op := range p.preprocessOps {
-		err := op.Execute(context, env)
-		if err != nil {
-			return nil, errors.Wrapf(err, "error executing preprocessing operation: %T", op)
-		}
-	}
-
-	output := env.OutputJSON()
-	if output == nil {
-		return nil, errors.New("output json is not computed")
-	}
-	return output, nil
+	return p.executePipelineOp(context, preprocess, env)
 }
 
 func (p *CompiledPipeline) Postprocess(context context.Context, env *Environment) (types.JSONObject, error) {
-	for _, op := range p.postprocessOps {
-		err := op.Execute(context, env)
+	return p.executePipelineOp(context, postprocess, env)
+}
+
+func (p *CompiledPipeline) executePipelineOp(ctx context.Context, pType pipelineType, env *Environment) (types.JSONObject, error) {
+	var ops []Op
+	if pType == preprocess {
+		ops = p.preprocessOps
+	} else {
+		ops = p.postprocessOps
+	}
+
+	tracingDetails := make([]types.TracingDetail, 0)
+	for _, op := range ops {
+		err := op.Execute(ctx, env)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error executing postprocessing operation: %T", op)
+			return nil, errors.Wrapf(err, "error executing %s operation: %T", pType, op)
+		}
+
+		if p.tracingEnabled {
+			details, err := op.GetOperationTracingDetail()
+			if err != nil {
+				return nil, err
+			}
+			tracingDetails = append(tracingDetails, details...)
+		}
+	}
+
+	if p.tracingEnabled {
+		if pType == preprocess {
+			env.SymbolRegistry().SetPreprocessTracingDetail(tracingDetails)
+		} else {
+			env.SymbolRegistry().SetPostprocessTracingDetail(tracingDetails)
 		}
 	}
 
@@ -60,6 +93,7 @@ func (p *CompiledPipeline) Postprocess(context context.Context, env *Environment
 	if output == nil {
 		return nil, errors.New("output json is not computed")
 	}
+
 	return output, nil
 }
 

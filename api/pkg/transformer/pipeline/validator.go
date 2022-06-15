@@ -16,7 +16,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 	}
 
 	// compile pipeline
-	compiler := NewCompiler(symbol.NewRegistry(), nil, feastOptions, nil)
+	compiler := NewCompiler(symbol.NewRegistry(), nil, feastOptions, nil, false)
 	_, err := compiler.Compile(transformerConfig)
 	if err != nil {
 		return err

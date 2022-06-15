@@ -108,7 +108,7 @@ func main() {
 	feastOpts := feast.OverwriteFeastOptionsConfig(appConfig.Feast, appConfig.RedisOverwriteConfig, appConfig.BigtableOverwriteConfig)
 	logger.Info("feast options", zap.Any("val", feastOpts))
 
-	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureSpecs, transformerConfig, logger)
+	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureSpecs, transformerConfig)
 	if err != nil {
 		logger.Fatal("Unable to initialize Feast Clients", zap.Error(err))
 	}
@@ -124,7 +124,7 @@ func main() {
 		s.PreprocessHandler = feastTransformer.Enrich
 	} else {
 		// Standard Enricher
-		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger)
+		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger, false)
 		compiledPipeline, err := compiler.Compile(transformerConfig)
 		if err != nil {
 			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
@@ -142,8 +142,8 @@ func main() {
 func initFeastTransformer(appCfg AppConfig,
 	feastClient feast.Clients,
 	transformerConfig *spec.StandardTransformerConfig,
-	logger *zap.Logger) (*feast.Enricher, error) {
-
+	logger *zap.Logger,
+) (*feast.Enricher, error) {
 	compiledJSONPaths, err := feast.CompileJSONPaths(transformerConfig.TransformerConfig.Feast)
 	if err != nil {
 		return nil, err
