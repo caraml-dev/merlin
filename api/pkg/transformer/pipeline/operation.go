@@ -80,12 +80,15 @@ func (ot *OperationTracing) GetOperationTracingDetail() ([]types.TracingDetail, 
 	refVal := reflect.ValueOf(ot.Specs)
 	if refVal.Kind() == reflect.Slice {
 		numOfSpecs := refVal.Len()
+
 		if len(ot.Input) != numOfSpecs {
-			return nil, fmt.Errorf("number of inputs is not match with number of specs")
+			return nil, fmt.Errorf("%s: number of inputs (%d) does not match with number of specs (%d)", ot.OpType, len(ot.Input), numOfSpecs)
 		}
+
 		if len(ot.Output) != numOfSpecs {
-			return nil, fmt.Errorf("number of outputs is not match with number of specs")
+			return nil, fmt.Errorf("%s: number of outputs (%d) does not match with number of specs (%d)", ot.OpType, len(ot.Output), numOfSpecs)
 		}
+
 		result := make([]types.TracingDetail, numOfSpecs)
 		for i := 0; i < numOfSpecs; i++ {
 			result[i] = types.TracingDetail{
@@ -95,14 +98,18 @@ func (ot *OperationTracing) GetOperationTracingDetail() ([]types.TracingDetail, 
 				OpType: ot.OpType,
 			}
 		}
+
 		return result, nil
 	}
+
 	if len(ot.Input) != 1 {
-		return nil, fmt.Errorf("input should has one record")
+		return nil, fmt.Errorf("%s: input should has one record", ot.OpType)
 	}
+
 	if len(ot.Output) != 1 {
-		return nil, fmt.Errorf("output should has one record")
+		return nil, fmt.Errorf("%s: output should has one record", ot.OpType)
 	}
+
 	return []types.TracingDetail{
 		{
 			Spec:   ot.Specs,
