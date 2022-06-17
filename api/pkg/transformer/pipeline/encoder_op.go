@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 	enc "github.com/gojek/merlin/pkg/transformer/types/encoder"
 	"github.com/opentracing/opentracing-go"
 )
@@ -19,7 +20,11 @@ type Encoder interface {
 }
 
 func NewEncoderOp(encoders []*spec.Encoder, tracingEnabled bool) *EncoderOp {
-	return &EncoderOp{encoderSpecs: encoders}
+	encoderOp := &EncoderOp{encoderSpecs: encoders}
+	if tracingEnabled {
+		encoderOp.OperationTracing = NewOperationTracing(encoders, types.JsonOutputOpType)
+	}
+	return encoderOp
 }
 
 func (e *EncoderOp) Execute(ctx context.Context, env *Environment) error {
