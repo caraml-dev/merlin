@@ -8,13 +8,13 @@
 
 ## Connecting to Merlin
 
-* [Connect to Merlin - Overview](connecting-to-merlin/README.md)
+* [Connecting to Merlin](connecting-to-merlin/README.md)
 * [Python SDK](connecting-to-merlin/python-sdk.md)
 * [Merlin CLI](connecting-to-merlin/merlin-cli.md)
 
 ## User Guides
 
-* [User Guides - Overview](user-guide/README.md)
+* [User Guides](user-guide/README.md)
 * [Model](user-guide/model.md)
 * [Model Version](user-guide/model_version.md)
 * [Model Endpoint](user-guide/model_endpoint.md)
@@ -25,7 +25,7 @@
 
 ## Developer Guides
 
-* [Developer Guides - Overview](dev-guide/README.md)
+* [Developer Guides](dev-guide/README.md)
 
 ## Examples
 
