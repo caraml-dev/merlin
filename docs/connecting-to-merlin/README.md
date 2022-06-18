@@ -14,7 +14,7 @@
 
 ## Client Libraries
 
-Merlin provides [Go client library](../../api/client) to deploy and serve ML model in production.
+Merlin provides [Go client library](../../api/client/) to deploy and serve ML model in production.
 
 To connect to Merlin deployment, the client needs to be authenticated by Google OAuth2. You can use `google.DefaultClient()` to get the Application Default Credential.
 
