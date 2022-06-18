@@ -2,7 +2,7 @@
 
 ## Introduction
 * [Merlin Overview](README.md)
-* [Architecture Overview](user-guide/architecture.md)
+* [Architecture Overview](getting-started/architecture.md)
 * [Getting Started](getting-started/README.md)
 
 ## User Guide

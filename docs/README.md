@@ -1,7 +1,5 @@
 # Merlin
 
-## Context
-
 After you have built a model with high-quality training data and the perfect algorithm, it’s time to apply it to make predictions and serve the outcome for future decision making.
 For many data scientists, model training can be done easily within their Jupyter notebook. However, things become trickier when it comes to productionizing the model to serve real traffic, which is engineering intensive. There are many tools available, but learning when and how to use them requires a lot of exploration, which can be a headache.
 
