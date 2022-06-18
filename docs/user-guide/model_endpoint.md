@@ -26,5 +26,6 @@ with merlin.new_model_version() as v:
 
     version_endpoint = merlin.deploy(v, environment_name="production")
 
+# serve 100% traffic at endpoint
 model_endpoint = merlin.serve_traffic({version_endpoint: 100})
 ```

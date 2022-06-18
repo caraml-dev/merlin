@@ -1,8 +1,10 @@
 # Getting Started
 
-If you want to learn more about Merlin concepts and its architecture, see the user guide.
+To start learning about using Merlin, check out the [User Guides](user-guide/readme.md)
 
-If you would like to deploy a new installation of Merlin, then click on [Deploying Merlin](./deploying-merlin/README.md).
+To start developing for Merlin, check out the [Developer Guides](dev-guide/readme.md)
+
+(./deploying-merlin/README.md).
 
 If you would like to connect to an existing Merlin deployment then click on [Connecting to Merlin](./connecting-to-merlin/README.md).
 

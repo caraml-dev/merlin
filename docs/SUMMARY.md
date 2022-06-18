@@ -1,11 +1,12 @@
 # Table of contents
 
-* [Introduction](README.md)
+## Introduction
+* [Merlin Overview](README.md)
+* [Architecture Overview](user-guide/architecture.md)
 * [Getting Started](getting-started/README.md)
 
 ## User Guide
 
-* [Architecture](user-guide/architecture.md)
 * [Model](user-guide/model.md)
 * [Model Version](user-guide/model_version.md)
 * [Model Endpoint](user-guide/model_endpoint.md)
