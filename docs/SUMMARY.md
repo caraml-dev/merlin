@@ -1,12 +1,20 @@
 # Table of contents
 
 ## Introduction
+
 * [Merlin Overview](README.md)
 * [Architecture Overview](getting-started/architecture.md)
 * [Getting Started](getting-started/README.md)
 
-## User Guide
+## Connecting to Merlin
 
+* [Overview](connecting-to-merlin/README.md)
+* [Python SDK](connecting-to-merlin/python-sdk.md)
+* [Merlin CLI](connecting-to-merlin/merlin-cli.md)
+
+## User Guides
+
+* [Overview](user-guide/README.md)
 * [Model](user-guide/model.md)
 * [Model Version](user-guide/model_version.md)
 * [Model Endpoint](user-guide/model_endpoint.md)
@@ -14,6 +22,10 @@
 * [Model Deployment and Serving](user-guide/model_deployment_serving.md)
 * [Batch Prediction](user-guide/batch_prediction.md)
 * [Transformer](user-guide/transformer.md)
+
+## Developer Guides
+
+* [Overview](dev-guide/README.md)
 
 ## Examples
 
