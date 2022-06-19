@@ -24,7 +24,7 @@
 * [Transformer](user-guide/transformer.md)
     * [Standard Transformer](user-guide/standard_transformer.md)
     * [Custom Transformer](user-guide/custom_transformer.md)
-* [Working Examples](user-guide/examples.md)
+* [Examples](user-guide/examples.md)
     * Deploy Standard Models
         * [Deploy PyTorch model](../examples/pytorch/Sample.ipynb)
         * [Deploy SKLearn model](../examples/sklearn/Sample.ipynb)
@@ -33,7 +33,6 @@
     * Deploy PyFunc Model
         * [Deploy PyFunc model](../examples/pyfunc/Sample.ipynb)
         * [Deploy PyFunc model with custom Prometheus metrics](../examples/metrics/Sample.ipynb)
-    * Deploy Custom Model
     * Deploy Batch Prediction Job
         * [Deploy Iris Classifier batch prediction job](../examples/batch/Batch&#32;Prediction&#32;Tutorial&#32;1&#32;-&#32;Iris&#32;Classifier.ipynb)
         * [Deploy New York Taxi Fare batch prediction job](../examples/batch/Batch&#32;Prediction&#32;Tutorial&#32;2&#32;-&#32;New&#32;York&#32;Taxi.ipynb)
