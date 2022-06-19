@@ -6,8 +6,8 @@ You may want to clone the examples to your local directory and run them using Ju
 {% page-ref page="./standard_model.md" %}
 {% page-ref page="./pyfunc_model.md" %}
 {% page-ref page="./batch_prediction.md" %}
-{% page-ref page="./transformer" %}
-{% page-ref page="./Others" %}
+{% page-ref page="./transformer.md" %}
+{% page-ref page="./Others.md" %}
 
 
 
