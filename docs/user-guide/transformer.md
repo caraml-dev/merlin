@@ -6,3 +6,5 @@ Currently, Merlin has two types of Transformer: Standard and Custom Transformer.
 
 {% page-ref page="./standard_transformer.md" %}
 {% page-ref page="./custom_transformer.md" %}
+{% page-ref page="../../examples/batch/Batch&#32;Prediction&#32;Tutorial&#32;1&#32;-&#32;Iris&#32;Classifier.ipynb" %}
+
