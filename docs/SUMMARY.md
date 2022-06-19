@@ -34,6 +34,7 @@
 ## Developer Guides
 
 * [Deploying Merlin](dev-guide/deploying-merlin/README.md)
+    * [Local Development](dev-guide/deploying-merlin/local_development.md)
 
 ## Reference
 
