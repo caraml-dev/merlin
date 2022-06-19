@@ -1,7 +1,7 @@
 # Getting Started
 
 To start learning about using Merlin, check out:
-{% page-ref page="../user-guide/README.md" %}
+{% page-ref page="../user-guide/basics.md" %}
 
 To start developing for Merlin, check out:
 {% page-ref page="../dev-guide/README.md" %}

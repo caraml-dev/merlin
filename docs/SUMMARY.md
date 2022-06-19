@@ -14,7 +14,6 @@
 
 ## User Guides
 
-* [User Guides](user-guide/README.md)
 * [Basic Concepts](user-guide/basics.md)
     * [Create a Model](user-guide/model.md)
     * [Create a Model Version](user-guide/model_version.md)
