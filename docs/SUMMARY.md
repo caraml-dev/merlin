@@ -6,15 +6,14 @@
 * [Architecture Overview](getting-started/architecture.md)
 * [Getting Started](getting-started/README.md)
 
-## Connecting to Merlin
+## [Connecting to Merlin](connecting-to-merlin/README.md)
 
-* [Connecting to Merlin](connecting-to-merlin/README.md)
 * [Python SDK](connecting-to-merlin/python-sdk.md)
 * [Merlin CLI](connecting-to-merlin/merlin-cli.md)
 
-## User Guides
+## [User Guides](user-guide/README.md)
 
-* [User Guides](user-guide/README.md)
+* [Basic Model D]
 * [Model](user-guide/model.md)
 * [Model Version](user-guide/model_version.md)
 * [Model Endpoint](user-guide/model_endpoint.md)
@@ -23,9 +22,9 @@
 * [Batch Prediction](user-guide/batch_prediction.md)
 * [Transformer](user-guide/transformer.md)
 
-## Developer Guides
+## [Developer Guides](dev-guide/README.md)
 
-* [Developer Guides](dev-guide/README.md)
+* 
 
 ## Examples
 
