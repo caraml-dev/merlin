@@ -1,0 +1,30 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - tables:
+          - name: driver_table
+            baseTable:
+              fromJson:
+                jsonPath: $.drivers[*]
+                addRowNumber: true
+      - tables:
+          - name: driver_feature_table
+            baseTable:
+              fromJson:
+                jsonPath: $.drivers_features[*]
+                addRowNumber: true
+    transformations:
+      - tableJoin:
+          leftTable: driver_table
+          rightTable: driver_feature_table
+          outputTable: result_table
+          how: LEFT
+          onColumns: [id]
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: result_table
+                  format: SPLIT
