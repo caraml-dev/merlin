@@ -24,7 +24,12 @@
 * [Transformer](user-guide/transformer.md)
     * [Standard Transformer](user-guide/standard_transformer.md)
     * [Custom Transformer](user-guide/custom_transformer.md)
-* [Examples](user-guide/examples.md)
+* [Examples](user-guide/examples/README.md)
+    * [Deploy Standard Models](user-guide/examples/standard_model.md)
+    * [Deploy PyFunc Model](user-guide/examples/pyfunc_model.md)
+    * [Run Batch Prediction Job](user-guide/examples/batch_prediction.md)
+    * [Using Transformers](user-guide/examples/transformer.md)
+    * [Others](user-guide/examples/others.md)
 
 ## Developer Guides
 
