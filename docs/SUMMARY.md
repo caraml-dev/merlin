@@ -6,25 +6,27 @@
 * [Architecture Overview](getting-started/architecture.md)
 * [Getting Started](getting-started/README.md)
 
-## [Connecting to Merlin](connecting-to-merlin/README.md)
+## Connecting to Merlin
 
+* [Connection Methods](connecting-to-merlin/README.md)
 * [Python SDK](connecting-to-merlin/python-sdk.md)
 * [Merlin CLI](connecting-to-merlin/merlin-cli.md)
 
-## [User Guides](user-guide/README.md)
+## User Guides
 
-* [Basic Model D]
-* [Model](user-guide/model.md)
-* [Model Version](user-guide/model_version.md)
-* [Model Endpoint](user-guide/model_endpoint.md)
-* [Model Version Endpoint](user-guide/model_version_endpoint.md)
-* [Model Deployment and Serving](user-guide/model_deployment_serving.md)
+* [User Guides](user-guide/README.md)
+* [Basic Concepts](user-guide/basics.md)
+    * [Create a Model](user-guide/model.md)
+    * [Create a Model Version](user-guide/model_version.md)
+    * [Model Version Endpoint](user-guide/model_version_endpoint.md)
+    * [Model Endpoint](user-guide/model_endpoint.md)
+    * [Model Deployment and Serving](user-guide/model_deployment_serving.md)
 * [Batch Prediction](user-guide/batch_prediction.md)
 * [Transformer](user-guide/transformer.md)
 
-## [Developer Guides](dev-guide/README.md)
+## Developer Guides
 
-* 
+* [Developer Guides](dev-guide/README.md)
 
 ## Examples
 
