@@ -33,7 +33,7 @@
 
 ## Developer Guides
 
-* [Developer Guides](dev-guide/README.md)
+* [Deploying Merlin](dev-guide/deploying-merlin/README.md)
 
 ## Reference
 
