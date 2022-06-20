@@ -1,3 +1,4 @@
 scikit-learn
 xgboost
 merlin-sdk
+cloudpickle==2.0.0

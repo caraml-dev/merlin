@@ -1,5 +1,7 @@
+joblib==0.13.0
+numpy==1.19.5
 scikit-learn==0.23.1
 xgboost==0.82
+mlflow==1.23.0
 merlin-sdk
-numpy
 cloudpickle==2.0.0
