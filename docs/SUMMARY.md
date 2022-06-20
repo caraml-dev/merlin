@@ -3,7 +3,6 @@
 ## Introduction
 
 * [Merlin Overview](README.md)
-* [Architecture Overview](getting-started/architecture.md)
 * [Getting Started](getting-started/README.md)
 
 ## Connecting to Merlin
@@ -23,6 +22,7 @@
 * [Batch Prediction](user-guide/batch_prediction.md)
 * [Transformer](user-guide/transformer.md)
     * [Standard Transformer](user-guide/standard_transformer.md)
+        * [Standard Transformer Expression](user-guide/transformer_expressions.md)
     * [Custom Transformer](user-guide/custom_transformer.md)
 * [Examples](user-guide/examples/README.md)
     * [Deploy Standard Models](user-guide/examples/standard_model.md)
@@ -33,6 +33,7 @@
 
 ## Developer Guides
 
+* [Architecture Overview](getting-started/architecture.md)
 * [Deploying Merlin](dev-guide/deploying-merlin/README.md)
     * [Local Development](dev-guide/deploying-merlin/local_development.md)
 
