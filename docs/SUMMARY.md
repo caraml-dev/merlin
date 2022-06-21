@@ -33,7 +33,7 @@
 
 ## Developer Guides
 
-* [Architecture Overview](getting-started/architecture.md)
+* [Architecture Overview](dev-guide/architecture.md)
 * [Deploying Merlin](dev-guide/deploying-merlin/README.md)
     * [Local Development](dev-guide/deploying-merlin/local_development.md)
 
