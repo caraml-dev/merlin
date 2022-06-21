@@ -1,10 +1,13 @@
 # Getting Started
 
-If you want to learn more about Merlin concepts and its architecture, see the user guide.
+To start learning about using Merlin, check out:
+{% page-ref page="../user-guide/basics.md" %}
 
-If you would like to deploy a new installation of Merlin, then click on [Deploying Merlin](./deploying-merlin/README.md).
+To start developing for Merlin, check out:
+{% page-ref page="../dev-guide/README.md" %}
 
-If you would like to connect to an existing Merlin deployment then click on [Connecting to Merlin](./connecting-to-merlin/README.md).
+To connect to an existing Merlin deployment, check out:
+{% page-ref page="../connecting-to-merlin/README.md" %}
 
 <!-- TODO: -->
 <!-- If you are already connected to a running Merlin deployment, then have a look at our [example tutorials](../../examples). -->
