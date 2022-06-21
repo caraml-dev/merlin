@@ -1,3 +1,5 @@
 merlin-sdk==0.10.0.dev1
 pandas
+torch
+torchvision
 cloudpickle==2.0.0
