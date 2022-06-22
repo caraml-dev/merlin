@@ -34,7 +34,8 @@ REQUIRES = [
     "cloudpickle==2.0.0",
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
-    "PyYAML>=5.4"
+    "PyYAML>=5.4",
+    "protobuf>=3.20.0,<4.0.0"
 ]
 
 TEST_REQUIRES = [
