@@ -1,3 +1,4 @@
+merlin-sdk
 pandas
 torch
 torchvision
