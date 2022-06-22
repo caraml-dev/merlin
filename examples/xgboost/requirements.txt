@@ -1,3 +1,4 @@
 scikit-learn
-xgboost
+xgboost==0.82
 merlin-sdk
+cloudpickle==2.0.0

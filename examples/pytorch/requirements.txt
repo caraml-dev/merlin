@@ -1,3 +1,4 @@
 sklearn
 torch
 merlin-sdk
+cloudpickle==2.0.0

@@ -1,6 +1,6 @@
 flavors:
   python_function:
-    cloudpickle_version: 1.2.2
+    cloudpickle_version: 2.0.0
     env: conda.yaml
     loader_module: mlflow.pyfunc.model
     python_model: python_model.pkl
