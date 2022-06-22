@@ -1,3 +1,4 @@
-scikit-learn==0.20.3
+scikit-learn==1.0.1
 merlin-sdk
 joblib>=0.13.0
+cloudpickle==2.0.0
