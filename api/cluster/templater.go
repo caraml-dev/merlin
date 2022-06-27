@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"strings"
 
 	"github.com/gojek/merlin/config"
@@ -160,6 +161,19 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 					Container: corev1.Container{
 						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
+						LivenessProbe: &corev1.Probe{
+							Handler: corev1.Handler{
+								TCPSocket: &corev1.TCPSocketAction{
+									Port: intstr.IntOrString{
+										IntVal: 9000,
+									},
+								},
+							},
+							InitialDelaySeconds: 10,
+							TimeoutSeconds:      5,
+							PeriodSeconds:       10,
+							SuccessThreshold:    1,
+						},
 					},
 				},
 			},
@@ -184,6 +198,18 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 					Container: corev1.Container{
 						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
+						LivenessProbe: &corev1.Probe{
+							Handler: corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path:   fmt.Sprintf("/v1/models/%s-%s", modelService.Name),
+									Scheme: "HTTP",
+								},
+							},
+							InitialDelaySeconds: 10,
+							TimeoutSeconds:      5,
+							PeriodSeconds:       10,
+							SuccessThreshold:    1,
+						},
 					},
 				},
 			},
@@ -196,6 +222,18 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 					Container: corev1.Container{
 						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
+						LivenessProbe: &corev1.Probe{
+							Handler: corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path:   fmt.Sprintf("/v1/models/%s-%s", modelService.Name),
+									Scheme: "HTTP",
+								},
+							},
+							InitialDelaySeconds: 10,
+							TimeoutSeconds:      5,
+							PeriodSeconds:       10,
+							SuccessThreshold:    1,
+						},
 					},
 				},
 			},
@@ -208,6 +246,18 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 					Container: corev1.Container{
 						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
+						LivenessProbe: &corev1.Probe{
+							Handler: corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path:   fmt.Sprintf("/v1/models/%s-%s", modelService.Name),
+									Scheme: "HTTP",
+								},
+							},
+							InitialDelaySeconds: 10,
+							TimeoutSeconds:      5,
+							PeriodSeconds:       10,
+							SuccessThreshold:    1,
+						},
 					},
 				},
 			},
@@ -221,6 +271,18 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Image:     modelService.Options.PyFuncImageName,
 						Env:       modelService.EnvVars.ToKubernetesEnvVars(),
 						Resources: resources,
+						LivenessProbe: &corev1.Probe{
+							Handler: corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path:   fmt.Sprintf("/v1/models/%s-%s", modelService.Name),
+									Scheme: "HTTP",
+								},
+							},
+							InitialDelaySeconds: 10,
+							TimeoutSeconds:      5,
+							PeriodSeconds:       10,
+							SuccessThreshold:    1,
+						},
 					},
 				},
 			},
