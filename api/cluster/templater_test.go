@@ -645,7 +645,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 												Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
 												Scheme: "HTTP",
 												Port: intstr.IntOrString{
-													IntVal: 80,
+													IntVal: 800,
 												},
 											},
 										},
