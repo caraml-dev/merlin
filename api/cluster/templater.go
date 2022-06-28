@@ -204,7 +204,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
 									Scheme: "HTTP",
 									Port: intstr.IntOrString{
-										IntVal: 80,
+										IntVal: 8080,
 									},
 								},
 							},
@@ -231,7 +231,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
 									Scheme: "HTTP",
 									Port: intstr.IntOrString{
-										IntVal: 80,
+										IntVal: 8080,
 									},
 								},
 							},
@@ -258,7 +258,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
 									Scheme: "HTTP",
 									Port: intstr.IntOrString{
-										IntVal: 80,
+										IntVal: 8080,
 									},
 								},
 							},
@@ -286,7 +286,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
 									Scheme: "HTTP",
 									Port: intstr.IntOrString{
-										IntVal: 80,
+										IntVal: 8080,
 									},
 								},
 							},
