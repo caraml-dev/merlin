@@ -400,18 +400,21 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:      kserveconstant.InferenceServiceContainerName,
 									Resources: expDefaultModelResourceRequests,
-									//LivenessProbe: &corev1.Probe{
-									//	Handler: corev1.Handler{
-									//		HTTPGet: &corev1.HTTPGetAction{
-									//			Path:   fmt.Sprintf("/v1/models/%s-%s", model.Name, "1"),
-									//			Scheme: "HTTP",
-									//		},
-									//	},
-									//	InitialDelaySeconds: 10,
-									//	TimeoutSeconds:      5,
-									//	PeriodSeconds:       10,
-									//	SuccessThreshold:    1,
-									//},
+									LivenessProbe: &corev1.Probe{
+										Handler: corev1.Handler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
+												Scheme: "HTTP",
+												Port: intstr.IntOrString{
+													IntVal: 80,
+												},
+											},
+										},
+										InitialDelaySeconds: 10,
+										TimeoutSeconds:      5,
+										PeriodSeconds:       10,
+										SuccessThreshold:    1,
+									},
 								},
 							},
 						},
@@ -526,6 +529,9 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 											HTTPGet: &corev1.HTTPGetAction{
 												Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
 												Scheme: "HTTP",
+												Port: intstr.IntOrString{
+													IntVal: 80,
+												},
 											},
 										},
 										InitialDelaySeconds: 10,
@@ -638,6 +644,9 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 											HTTPGet: &corev1.HTTPGetAction{
 												Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
 												Scheme: "HTTP",
+												Port: intstr.IntOrString{
+													IntVal: 80,
+												},
 											},
 										},
 										InitialDelaySeconds: 10,
