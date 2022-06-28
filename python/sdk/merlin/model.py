@@ -1085,7 +1085,7 @@ class ModelVersion:
         bar.stop()
 
         if endpoint.status != "running":
-            raise ModelEndpointDeploymentError(model.name, self.id, endpoint.message)
+            raise ModelEndpointDeploymentError(model.name, self.id, endpoint.status)
 
         log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
         print(f"Model {model.name} version {self.id} is deployed."
