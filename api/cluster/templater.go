@@ -201,7 +201,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						LivenessProbe: &corev1.Probe{
 							Handler: corev1.Handler{
 								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s-%s", modelService.Name),
+									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
 									Scheme: "HTTP",
 								},
 							},
@@ -225,7 +225,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						LivenessProbe: &corev1.Probe{
 							Handler: corev1.Handler{
 								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s-%s", modelService.Name),
+									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
 									Scheme: "HTTP",
 								},
 							},
@@ -249,7 +249,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						LivenessProbe: &corev1.Probe{
 							Handler: corev1.Handler{
 								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s-%s", modelService.Name),
+									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
 									Scheme: "HTTP",
 								},
 							},
@@ -274,7 +274,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						LivenessProbe: &corev1.Probe{
 							Handler: corev1.Handler{
 								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s-%s", modelService.Name),
+									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
 									Scheme: "HTTP",
 								},
 							},
