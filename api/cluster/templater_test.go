@@ -466,7 +466,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 												Scheme: "HTTP",
 											},
 										},
-										InitialDelaySeconds: 300,
+										InitialDelaySeconds: 10,
 										TimeoutSeconds:      5,
 										PeriodSeconds:       10,
 										SuccessThreshold:    1,
