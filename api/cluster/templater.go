@@ -203,6 +203,9 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 								HTTPGet: &corev1.HTTPGetAction{
 									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
 									Scheme: "HTTP",
+									Port: intstr.IntOrString{
+										IntVal: 80,
+									},
 								},
 							},
 							InitialDelaySeconds: 10,
