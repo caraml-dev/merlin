@@ -210,18 +210,6 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 							PeriodSeconds:       10,
 							SuccessThreshold:    1,
 						},
-						ReadinessProbe: &corev1.Probe{
-							Handler: corev1.Handler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
-									Scheme: "HTTP",
-								},
-							},
-							InitialDelaySeconds: 10,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       10,
-							SuccessThreshold:    1,
-						},
 					},
 				},
 			},
