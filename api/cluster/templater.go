@@ -222,7 +222,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 					Container: corev1.Container{
 						Name:      kserveconstant.InferenceServiceContainerName,
 						Resources: resources,
-						LivenessProbe: &corev1.Probe{
+						/*	LivenessProbe: &corev1.Probe{
 							Handler: corev1.Handler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
@@ -233,7 +233,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 							TimeoutSeconds:      5,
 							PeriodSeconds:       10,
 							SuccessThreshold:    1,
-						},
+						},*/
 					},
 				},
 			},
