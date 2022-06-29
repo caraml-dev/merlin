@@ -1217,7 +1217,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
-									Resources: expDefaultTransformerResourceRequests,
+									Resources:     expDefaultTransformerResourceRequests,
+									LivenessProbe: probeConfig,
 								},
 							},
 						},
@@ -1300,7 +1301,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
-									Resources: expUserResourceRequests,
+									Resources:     expUserResourceRequests,
+									LivenessProbe: probeConfig,
 								},
 							},
 						},
@@ -1398,7 +1400,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
-									Resources: expDefaultTransformerResourceRequests,
+									Resources:     expDefaultTransformerResourceRequests,
+									LivenessProbe: probeConfig,
 								},
 							},
 						},
@@ -1614,7 +1617,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
-									Resources: expDefaultTransformerResourceRequests,
+									Resources:     expDefaultTransformerResourceRequests,
+									LivenessProbe: probeConfig,
 								},
 							},
 						},
@@ -1696,7 +1700,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
-									Resources: expDefaultTransformerResourceRequests,
+									Resources:     expDefaultTransformerResourceRequests,
+									LivenessProbe: probeConfig,
 								},
 							},
 						},
@@ -1778,7 +1783,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
-									Resources: expDefaultTransformerResourceRequests,
+									Resources:     expDefaultTransformerResourceRequests,
+									LivenessProbe: probeConfig,
 								},
 							},
 						},
@@ -1864,7 +1870,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
-									Resources: expDefaultTransformerResourceRequests,
+									Resources:     expDefaultTransformerResourceRequests,
+									LivenessProbe: probeConfig,
 								},
 							},
 						},
@@ -2150,6 +2157,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 											corev1.ResourceMemory: memoryLimit,
 										},
 									},
+									LivenessProbe: probeConfig,
 								},
 							},
 						},
@@ -2223,6 +2231,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 											corev1.ResourceMemory: memoryLimit,
 										},
 									},
+									LivenessProbe: probeConfig,
 								},
 							},
 						},
@@ -2589,6 +2598,23 @@ func TestCreateTransformerSpec(t *testing.T) {
 	memoryLimit := memoryRequest.DeepCopy()
 	memoryLimit.Add(memoryRequest)
 
+	// Liveness probe config for the model containers
+	probeConfig := &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   fmt.Sprintf("/v1/models/test-1"),
+				Scheme: "HTTP",
+				Port: intstr.IntOrString{
+					IntVal: 8080,
+				},
+			},
+		},
+		InitialDelaySeconds: 10,
+		TimeoutSeconds:      5,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+	}
+
 	type args struct {
 		modelService *models.Service
 		transformer  *models.Transformer
@@ -2653,6 +2679,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 									corev1.ResourceMemory: memoryLimit,
 								},
 							},
+							LivenessProbe: probeConfig,
 						},
 					},
 				},
@@ -2706,6 +2733,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 									corev1.ResourceMemory: memoryLimit,
 								},
 							},
+							LivenessProbe: probeConfig,
 						},
 					},
 				},
