@@ -98,7 +98,7 @@ var (
 		Handler: corev1.Handler{
 			TCPSocket: &corev1.TCPSocketAction{
 				Port: intstr.IntOrString{
-					IntVal: 9000,
+					IntVal: 8080,
 				},
 			},
 		},
