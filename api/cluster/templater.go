@@ -163,7 +163,9 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Resources: resources,
 						LivenessProbe: &corev1.Probe{
 							Handler: corev1.Handler{
-								TCPSocket: &corev1.TCPSocketAction{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
+									Scheme: "HTTP",
 									Port: intstr.IntOrString{
 										IntVal: 8080,
 									},
