@@ -435,7 +435,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 					LivenessProbe: &corev1.Probe{
 						Handler: corev1.Handler{
 							HTTPGet: &corev1.HTTPGetAction{
-								Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
+								Path:   "/",
 								Scheme: "HTTP",
 								Port: intstr.IntOrString{
 									IntVal: 8080,
