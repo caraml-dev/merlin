@@ -1148,6 +1148,23 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 		SuccessThreshold:    1,
 	}
 
+	// Liveness probe config for the transformers
+	transformerProbeConfig := &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   "/",
+				Scheme: "HTTP",
+				Port: intstr.IntOrString{
+					IntVal: 8080,
+				},
+			},
+		},
+		InitialDelaySeconds: 10,
+		TimeoutSeconds:      5,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+	}
+
 	tests := []struct {
 		name     string
 		modelSvc *models.Service
@@ -1218,7 +1235,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: transformerProbeConfig,
 								},
 							},
 						},
@@ -1302,7 +1319,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
 									Resources:     expUserResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: transformerProbeConfig,
 								},
 							},
 						},
@@ -1401,7 +1418,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: transformerProbeConfig,
 								},
 							},
 						},
@@ -1467,6 +1484,23 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
+				Scheme: "HTTP",
+				Port: intstr.IntOrString{
+					IntVal: 8080,
+				},
+			},
+		},
+		InitialDelaySeconds: 10,
+		TimeoutSeconds:      5,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+	}
+
+	// Liveness probe config for the transformers
+	transformerProbeConfig := &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   "/",
 				Scheme: "HTTP",
 				Port: intstr.IntOrString{
 					IntVal: 8080,
@@ -1618,7 +1652,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: transformerProbeConfig,
 								},
 							},
 						},
@@ -1701,7 +1735,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: transformerProbeConfig,
 								},
 							},
 						},
@@ -1784,7 +1818,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: transformerProbeConfig,
 								},
 							},
 						},
@@ -1871,7 +1905,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: transformerProbeConfig,
 								},
 							},
 						},
@@ -1934,6 +1968,23 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
+				Scheme: "HTTP",
+				Port: intstr.IntOrString{
+					IntVal: 8080,
+				},
+			},
+		},
+		InitialDelaySeconds: 10,
+		TimeoutSeconds:      5,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+	}
+
+	// Liveness probe config for the transformers
+	transformerProbeConfig := &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   "/",
 				Scheme: "HTTP",
 				Port: intstr.IntOrString{
 					IntVal: 8080,
@@ -2157,7 +2208,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 											corev1.ResourceMemory: memoryLimit,
 										},
 									},
-									LivenessProbe: probeConfig,
+									LivenessProbe: transformerProbeConfig,
 								},
 							},
 						},
@@ -2231,7 +2282,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 											corev1.ResourceMemory: memoryLimit,
 										},
 									},
-									LivenessProbe: probeConfig,
+									LivenessProbe: transformerProbeConfig,
 								},
 							},
 						},
@@ -2598,11 +2649,11 @@ func TestCreateTransformerSpec(t *testing.T) {
 	memoryLimit := memoryRequest.DeepCopy()
 	memoryLimit.Add(memoryRequest)
 
-	// Liveness probe config for the model containers
-	probeConfig := &corev1.Probe{
+	// Liveness probe config for the transformers
+	transformerProbeConfig := &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
-				Path:   fmt.Sprintf("/v1/models/test-1"),
+				Path:   "/",
 				Scheme: "HTTP",
 				Port: intstr.IntOrString{
 					IntVal: 8080,
@@ -2679,7 +2730,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 									corev1.ResourceMemory: memoryLimit,
 								},
 							},
-							LivenessProbe: probeConfig,
+							LivenessProbe: transformerProbeConfig,
 						},
 					},
 				},
@@ -2733,7 +2784,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 									corev1.ResourceMemory: memoryLimit,
 								},
 							},
-							LivenessProbe: probeConfig,
+							LivenessProbe: transformerProbeConfig,
 						},
 					},
 				},
