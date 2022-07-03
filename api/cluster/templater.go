@@ -134,8 +134,8 @@ func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kservev1bet
 }
 
 func createLivenessProbeSpec(path string, port int32, initialDelaySeconds int32,
-	timeoutSeconds int32, periodSeconds int32, successThreshold int32, failureThreshold int32) corev1.Probe {
-	return corev1.Probe{
+	timeoutSeconds int32, periodSeconds int32, successThreshold int32, failureThreshold int32) *corev1.Probe {
+	return &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   path,
@@ -157,7 +157,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	envVars := modelService.EnvVars
 
 	// Default values if env var not defined
-	defaultVars := []models.EnvVar{}
+	var defaultVars []models.EnvVar
 	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorDisableLiveness, Value: defaultPredictorDisableLiveness})
 
 	// Overwrite default values if defined
@@ -192,7 +192,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	var predictorSpec kservev1beta1.PredictorSpec
 
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
-	livenessProbeConfig := corev1.Probe{}
+	var livenessProbeConfig *corev1.Probe = nil
 	if strings.EqualFold(envVars.ToMap()[envPredictorDisableLiveness], "false") {
 		livenessProbeConfig = createLivenessProbeSpec(
 			fmt.Sprintf("/v1/models/%s", modelService.Name),
@@ -214,7 +214,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 					Container: corev1.Container{
 						Name:          kserveconstant.InferenceServiceContainerName,
 						Resources:     resources,
-						LivenessProbe: &livenessProbeConfig,
+						LivenessProbe: livenessProbeConfig,
 					},
 				},
 			},
@@ -239,7 +239,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 					Container: corev1.Container{
 						Name:          kserveconstant.InferenceServiceContainerName,
 						Resources:     resources,
-						LivenessProbe: &livenessProbeConfig,
+						LivenessProbe: livenessProbeConfig,
 					},
 				},
 			},
@@ -252,7 +252,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 					Container: corev1.Container{
 						Name:          kserveconstant.InferenceServiceContainerName,
 						Resources:     resources,
-						LivenessProbe: &livenessProbeConfig,
+						LivenessProbe: livenessProbeConfig,
 					},
 				},
 			},
@@ -265,7 +265,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 					Container: corev1.Container{
 						Name:          kserveconstant.InferenceServiceContainerName,
 						Resources:     resources,
-						LivenessProbe: &livenessProbeConfig,
+						LivenessProbe: livenessProbeConfig,
 					},
 				},
 			},
@@ -279,7 +279,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Image:         modelService.Options.PyFuncImageName,
 						Env:           envVars.ToKubernetesEnvVars(),
 						Resources:     resources,
-						LivenessProbe: &livenessProbeConfig,
+						LivenessProbe: livenessProbeConfig,
 					},
 				},
 			},
@@ -313,7 +313,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 	envVars := modelService.EnvVars
 
 	// Default values if env var not defined
-	defaultVars := []models.EnvVar{}
+	var defaultVars []models.EnvVar
 	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
 	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
 	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
@@ -379,7 +379,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	}
 
 	// Default values if env var not defined
-	defaultVars := []models.EnvVar{}
+	var defaultVars []models.EnvVar
 	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
 	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
 	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
@@ -409,7 +409,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 		}
 	}
 
-	livenessProbeConfig := corev1.Probe{}
+	var livenessProbeConfig *corev1.Probe = nil
 	if strings.EqualFold(envVars.ToMap()[envTransformerDisableLiveness], "false") {
 		livenessProbeConfig = createLivenessProbeSpec(
 			fmt.Sprintf("/"),
@@ -441,7 +441,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 					},
 					Command:       transformerCommand,
 					Args:          transformerArgs,
-					LivenessProbe: &livenessProbeConfig,
+					LivenessProbe: livenessProbeConfig,
 				},
 			},
 		},
