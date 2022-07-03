@@ -37,23 +37,34 @@ import (
 )
 
 const (
-	envTransformerPort       = "MERLIN_TRANSFORMER_PORT"
-	envTransformerModelName  = "MERLIN_TRANSFORMER_MODEL_NAME"
-	envTransformerPredictURL = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
+	envTransformerPort            = "MERLIN_TRANSFORMER_PORT"
+	envTransformerModelName       = "MERLIN_TRANSFORMER_MODEL_NAME"
+	envTransformerPredictURL      = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
+	envTransformerDisableLiveness = "MERLIN_TRANSFORMER_DISABLE_LIVENESS_PROBE"
 
 	envPredictorPort             = "MERLIN_PREDICTOR_PORT"
 	envPredictorModelName        = "MERLIN_MODEL_NAME"
 	envPredictorArtifactLocation = "MERLIN_ARTIFACT_LOCATION"
 	envPredictorStorageURI       = "STORAGE_URI"
+	envPredictorDisableLiveness  = "MERLIN_DISABLE_LIVENESS_PROBE"
 
-	defaultPredictorArtifactLocation = "/mnt/models"
-	defaultPredictorPort             = "8080"
-	defaultTransformerPort           = "8080"
+	defaultPredictorArtifactLocation  = "/mnt/models"
+	defaultPredictorPort              = "8080"
+	defaultTransformerPort            = "8080"
+	defaultPredictorDisableLiveness   = "false"
+	defaultTransformerDisableLiveness = "false"
 
 	annotationPrometheusScrapeFlag = "prometheus.io/scrape"
 	annotationPrometheusScrapePort = "prometheus.io/port"
 
 	prometheusPort = "8080"
+
+	liveProbePort             = 8080
+	liveProbeinitialDelaySec  = 60
+	liveProbeTimeoutSec       = 5
+	liveProbePeriodSec        = 10
+	liveProbeSuccessThreshold = 1
+	liveProbeFailureThreshold = 3
 )
 
 var (
@@ -122,7 +133,36 @@ func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kservev1bet
 	return orig, nil
 }
 
+func createLivenessProbeSpec(path string, port int32, initialDelaySeconds int32,
+	timeoutSeconds int32, periodSeconds int32, successThreshold int32, failureThreshold int32) corev1.Probe {
+	return corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   path,
+				Scheme: "HTTP",
+				Port: intstr.IntOrString{
+					IntVal: port,
+				},
+			},
+		},
+		InitialDelaySeconds: initialDelaySeconds,
+		TimeoutSeconds:      timeoutSeconds,
+		PeriodSeconds:       periodSeconds,
+		SuccessThreshold:    successThreshold,
+		FailureThreshold:    failureThreshold,
+	}
+}
+
 func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
+	envVars := modelService.EnvVars
+
+	// Default values if env var not defined
+	defaultVars := []models.EnvVar{}
+	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorDisableLiveness, Value: defaultPredictorDisableLiveness})
+
+	// Overwrite default values if defined
+	envVars = models.MergeEnvVars(defaultVars, envVars)
+
 	if modelService.ResourceRequest == nil {
 		modelService.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.DefaultModelResourceRequests.MinReplica,
@@ -152,6 +192,19 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	var predictorSpec kservev1beta1.PredictorSpec
 
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
+	livenessProbeConfig := corev1.Probe{}
+	if strings.EqualFold(envVars.ToMap()[envPredictorDisableLiveness], "false") {
+		livenessProbeConfig = createLivenessProbeSpec(
+			fmt.Sprintf("/v1/models/%s", modelService.Name),
+			liveProbePort,
+			liveProbeinitialDelaySec,
+			liveProbeTimeoutSec,
+			liveProbePeriodSec,
+			liveProbeSuccessThreshold,
+			liveProbeFailureThreshold,
+		)
+	}
+
 	switch modelService.Type {
 	case models.ModelTypeTensorflow:
 		predictorSpec = kservev1beta1.PredictorSpec{
@@ -159,23 +212,9 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:      kserveconstant.InferenceServiceContainerName,
-						Resources: resources,
-						LivenessProbe: &corev1.Probe{
-							Handler: corev1.Handler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
-									Scheme: "HTTP",
-									Port: intstr.IntOrString{
-										IntVal: 8080,
-									},
-								},
-							},
-							InitialDelaySeconds: 10,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       10,
-							SuccessThreshold:    1,
-						},
+						Name:          kserveconstant.InferenceServiceContainerName,
+						Resources:     resources,
+						LivenessProbe: &livenessProbeConfig,
 					},
 				},
 			},
@@ -198,23 +237,9 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:      kserveconstant.InferenceServiceContainerName,
-						Resources: resources,
-						LivenessProbe: &corev1.Probe{
-							Handler: corev1.Handler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
-									Scheme: "HTTP",
-									Port: intstr.IntOrString{
-										IntVal: 8080,
-									},
-								},
-							},
-							InitialDelaySeconds: 10,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       10,
-							SuccessThreshold:    1,
-						},
+						Name:          kserveconstant.InferenceServiceContainerName,
+						Resources:     resources,
+						LivenessProbe: &livenessProbeConfig,
 					},
 				},
 			},
@@ -225,23 +250,9 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:      kserveconstant.InferenceServiceContainerName,
-						Resources: resources,
-						LivenessProbe: &corev1.Probe{
-							Handler: corev1.Handler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
-									Scheme: "HTTP",
-									Port: intstr.IntOrString{
-										IntVal: 8080,
-									},
-								},
-							},
-							InitialDelaySeconds: 10,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       10,
-							SuccessThreshold:    1,
-						},
+						Name:          kserveconstant.InferenceServiceContainerName,
+						Resources:     resources,
+						LivenessProbe: &livenessProbeConfig,
 					},
 				},
 			},
@@ -252,23 +263,9 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 					StorageURI: &storageUri,
 					Container: corev1.Container{
-						Name:      kserveconstant.InferenceServiceContainerName,
-						Resources: resources,
-						LivenessProbe: &corev1.Probe{
-							Handler: corev1.Handler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
-									Scheme: "HTTP",
-									Port: intstr.IntOrString{
-										IntVal: 8080,
-									},
-								},
-							},
-							InitialDelaySeconds: 10,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       10,
-							SuccessThreshold:    1,
-						},
+						Name:          kserveconstant.InferenceServiceContainerName,
+						Resources:     resources,
+						LivenessProbe: &livenessProbeConfig,
 					},
 				},
 			},
@@ -278,25 +275,11 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			PodSpec: kservev1beta1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name:      kserveconstant.InferenceServiceContainerName,
-						Image:     modelService.Options.PyFuncImageName,
-						Env:       modelService.EnvVars.ToKubernetesEnvVars(),
-						Resources: resources,
-						LivenessProbe: &corev1.Probe{
-							Handler: corev1.Handler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path:   fmt.Sprintf("/v1/models/%s", modelService.Name),
-									Scheme: "HTTP",
-									Port: intstr.IntOrString{
-										IntVal: 8080,
-									},
-								},
-							},
-							InitialDelaySeconds: 10,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       10,
-							SuccessThreshold:    1,
-						},
+						Name:          kserveconstant.InferenceServiceContainerName,
+						Image:         modelService.Options.PyFuncImageName,
+						Env:           envVars.ToKubernetesEnvVars(),
+						Resources:     resources,
+						LivenessProbe: &livenessProbeConfig,
 					},
 				},
 			},
@@ -328,10 +311,16 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kserv
 
 func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
-	envVars = append(envVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
-	envVars = append(envVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
-	envVars = append(envVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
-	envVars = append(envVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
+
+	// Default values if env var not defined
+	defaultVars := []models.EnvVar{}
+	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
+	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
+	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
+	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
+
+	// Overwrite default values if defined
+	envVars = models.MergeEnvVars(defaultVars, envVars)
 
 	var containerCommand []string
 	customPredictor := modelService.Options.CustomPredictor
@@ -383,14 +372,21 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	memoryLimit.Add(transformer.ResourceRequest.MemoryRequest)
 
 	envVars := transformer.EnvVars
+
 	if transformer.TransformerType == models.StandardTransformerType {
 		transformer.Image = t.standardTransformerConfig.ImageName
 		envVars = t.enrichStandardTransformerEnvVars(envVars)
 	}
 
-	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
-	envVars = append(envVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
-	envVars = append(envVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
+	// Default values if env var not defined
+	defaultVars := []models.EnvVar{}
+	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
+	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
+	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
+	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerDisableLiveness, Value: defaultTransformerDisableLiveness})
+
+	// Overwrite default values if defined
+	envVars = models.MergeEnvVars(defaultVars, envVars)
 
 	var loggerSpec *kservev1beta1.LoggerSpec
 	if modelService.Logger != nil && modelService.Logger.Transformer != nil && modelService.Logger.Transformer.Enabled {
@@ -413,6 +409,19 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 		}
 	}
 
+	livenessProbeConfig := corev1.Probe{}
+	if strings.EqualFold(envVars.ToMap()[envTransformerDisableLiveness], "false") {
+		livenessProbeConfig = createLivenessProbeSpec(
+			fmt.Sprintf("/"),
+			liveProbePort,
+			liveProbeinitialDelaySec,
+			liveProbeTimeoutSec,
+			liveProbePeriodSec,
+			liveProbeSuccessThreshold,
+			liveProbeFailureThreshold,
+		)
+	}
+
 	transformerSpec := &kservev1beta1.TransformerSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
@@ -430,23 +439,9 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 							corev1.ResourceMemory: memoryLimit,
 						},
 					},
-					Command: transformerCommand,
-					Args:    transformerArgs,
-					LivenessProbe: &corev1.Probe{
-						Handler: corev1.Handler{
-							HTTPGet: &corev1.HTTPGetAction{
-								Path:   "/",
-								Scheme: "HTTP",
-								Port: intstr.IntOrString{
-									IntVal: 8080,
-								},
-							},
-						},
-						InitialDelaySeconds: 10,
-						TimeoutSeconds:      5,
-						PeriodSeconds:       10,
-						SuccessThreshold:    1,
-					},
+					Command:       transformerCommand,
+					Args:          transformerArgs,
+					LivenessProbe: &livenessProbeConfig,
 				},
 			},
 		},

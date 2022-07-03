@@ -16,7 +16,6 @@ package cluster
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"testing"
 	"time"
 
@@ -151,21 +150,15 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", model.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
-				Scheme: "HTTP",
-				Port: intstr.IntOrString{
-					IntVal: 8080,
-				},
-			},
-		},
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      5,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-	}
+	probeConfig := createLivenessProbeSpec(
+		fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
+		liveProbePort,
+		liveProbeinitialDelaySec,
+		liveProbeTimeoutSec,
+		liveProbePeriodSec,
+		liveProbeSuccessThreshold,
+		liveProbeFailureThreshold,
+	)
 
 	tests := []struct {
 		name               string
@@ -210,7 +203,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -259,7 +252,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -308,7 +301,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -354,7 +347,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -402,7 +395,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -450,7 +443,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -498,7 +491,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -595,11 +588,14 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Image:         "gojek/project-model:1",
-									Env:           models.PyfuncDefaultEnvVars(models.Model{Name: model.Name}, models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI}, defaultModelResourceRequests.CPURequest.Value()).ToKubernetesEnvVars(),
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envPredictorDisableLiveness, Value: "false"}},
+										models.PyfuncDefaultEnvVars(models.Model{Name: model.Name},
+											models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI},
+											defaultModelResourceRequests.CPURequest.Value())).ToKubernetesEnvVars(),
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -648,7 +644,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expUserResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -828,7 +824,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -902,7 +898,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -958,7 +954,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1014,7 +1010,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1070,7 +1066,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1132,38 +1128,26 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", model.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
-				Scheme: "HTTP",
-				Port: intstr.IntOrString{
-					IntVal: 8080,
-				},
-			},
-		},
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      5,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-	}
+	probeConfig := createLivenessProbeSpec(
+		fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
+		liveProbePort,
+		liveProbeinitialDelaySec,
+		liveProbeTimeoutSec,
+		liveProbePeriodSec,
+		liveProbeSuccessThreshold,
+		liveProbeFailureThreshold,
+	)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   "/",
-				Scheme: "HTTP",
-				Port: intstr.IntOrString{
-					IntVal: 8080,
-				},
-			},
-		},
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      5,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-	}
+	transformerProbeConfig := createLivenessProbeSpec(
+		fmt.Sprintf("/"),
+		liveProbePort,
+		liveProbeinitialDelaySec,
+		liveProbeTimeoutSec,
+		liveProbePeriodSec,
+		liveProbeSuccessThreshold,
+		liveProbeFailureThreshold,
+	)
 
 	tests := []struct {
 		name     string
@@ -1212,7 +1196,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1233,9 +1217,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envTransformerDisableLiveness, Value: "false"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: transformerProbeConfig,
+									LivenessProbe: &transformerProbeConfig,
 								},
 							},
 						},
@@ -1296,7 +1281,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1317,9 +1302,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envTransformerDisableLiveness, Value: "false"},
 									},
 									Resources:     expUserResourceRequests,
-									LivenessProbe: transformerProbeConfig,
+									LivenessProbe: &transformerProbeConfig,
 								},
 							},
 						},
@@ -1383,7 +1369,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1399,6 +1385,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
 									Env: []corev1.EnvVar{
+										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerModelName, Value: "model-1"},
+										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envTransformerDisableLiveness, Value: "false"},
 										{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
 										{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
 										{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
@@ -1413,12 +1403,9 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 											Name:  transformer.FeastStorageConfigs,
 											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 										},
-										{Name: envTransformerPort, Value: defaultTransformerPort},
-										{Name: envTransformerModelName, Value: "model-1"},
-										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: transformerProbeConfig,
+									LivenessProbe: &transformerProbeConfig,
 								},
 							},
 						},
@@ -1480,38 +1467,26 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", model.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
-				Scheme: "HTTP",
-				Port: intstr.IntOrString{
-					IntVal: 8080,
-				},
-			},
-		},
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      5,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-	}
+	probeConfig := createLivenessProbeSpec(
+		fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
+		liveProbePort,
+		liveProbeinitialDelaySec,
+		liveProbeTimeoutSec,
+		liveProbePeriodSec,
+		liveProbeSuccessThreshold,
+		liveProbeFailureThreshold,
+	)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   "/",
-				Scheme: "HTTP",
-				Port: intstr.IntOrString{
-					IntVal: 8080,
-				},
-			},
-		},
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      5,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-	}
+	transformerProbeConfig := createLivenessProbeSpec(
+		fmt.Sprintf("/"),
+		liveProbePort,
+		liveProbeinitialDelaySec,
+		liveProbeTimeoutSec,
+		liveProbePeriodSec,
+		liveProbeSuccessThreshold,
+		liveProbeFailureThreshold,
+	)
 
 	tests := []struct {
 		name     string
@@ -1561,7 +1536,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1625,7 +1600,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1650,9 +1625,10 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envTransformerDisableLiveness, Value: "false"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: transformerProbeConfig,
+									LivenessProbe: &transformerProbeConfig,
 								},
 							},
 						},
@@ -1712,7 +1688,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1733,9 +1709,10 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envTransformerDisableLiveness, Value: "false"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: transformerProbeConfig,
+									LivenessProbe: &transformerProbeConfig,
 								},
 							},
 						},
@@ -1795,7 +1772,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1816,9 +1793,10 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envTransformerDisableLiveness, Value: "false"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: transformerProbeConfig,
+									LivenessProbe: &transformerProbeConfig,
 								},
 							},
 						},
@@ -1882,7 +1860,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -1903,9 +1881,10 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envTransformerDisableLiveness, Value: "false"},
 									},
 									Resources:     expDefaultTransformerResourceRequests,
-									LivenessProbe: transformerProbeConfig,
+									LivenessProbe: &transformerProbeConfig,
 								},
 							},
 						},
@@ -1964,38 +1943,26 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", model.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
-				Scheme: "HTTP",
-				Port: intstr.IntOrString{
-					IntVal: 8080,
-				},
-			},
-		},
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      5,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-	}
+	probeConfig := createLivenessProbeSpec(
+		fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
+		liveProbePort,
+		liveProbeinitialDelaySec,
+		liveProbeTimeoutSec,
+		liveProbePeriodSec,
+		liveProbeSuccessThreshold,
+		liveProbeFailureThreshold,
+	)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   "/",
-				Scheme: "HTTP",
-				Port: intstr.IntOrString{
-					IntVal: 8080,
-				},
-			},
-		},
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      5,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-	}
+	transformerProbeConfig := createLivenessProbeSpec(
+		fmt.Sprintf("/"),
+		liveProbePort,
+		liveProbeinitialDelaySec,
+		liveProbeTimeoutSec,
+		liveProbePeriodSec,
+		liveProbeSuccessThreshold,
+		liveProbeFailureThreshold,
+	)
 
 	one := 1
 	minReplica := 1
@@ -2053,7 +2020,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2089,7 +2056,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2140,7 +2107,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2176,7 +2143,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2197,6 +2164,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
+										{Name: envTransformerDisableLiveness, Value: "false"},
 									},
 									Resources: corev1.ResourceRequirements{
 										Requests: corev1.ResourceList{
@@ -2208,7 +2176,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 											corev1.ResourceMemory: memoryLimit,
 										},
 									},
-									LivenessProbe: transformerProbeConfig,
+									LivenessProbe: &transformerProbeConfig,
 								},
 							},
 						},
@@ -2250,7 +2218,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2282,7 +2250,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 											corev1.ResourceMemory: memoryLimit,
 										},
 									},
-									LivenessProbe: transformerProbeConfig,
+									LivenessProbe: &transformerProbeConfig,
 								},
 							},
 						},
@@ -2318,7 +2286,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2477,7 +2445,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2516,7 +2484,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2563,7 +2531,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2602,7 +2570,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
-									LivenessProbe: probeConfig,
+									LivenessProbe: &probeConfig,
 								},
 							},
 						},
@@ -2650,21 +2618,15 @@ func TestCreateTransformerSpec(t *testing.T) {
 	memoryLimit.Add(memoryRequest)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   "/",
-				Scheme: "HTTP",
-				Port: intstr.IntOrString{
-					IntVal: 8080,
-				},
-			},
-		},
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      5,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-	}
+	transformerProbeConfig := createLivenessProbeSpec(
+		fmt.Sprintf("/"),
+		liveProbePort,
+		liveProbeinitialDelaySec,
+		liveProbeTimeoutSec,
+		liveProbePeriodSec,
+		liveProbeSuccessThreshold,
+		liveProbeFailureThreshold,
+	)
 
 	type args struct {
 		modelService *models.Service
@@ -2706,6 +2668,10 @@ func TestCreateTransformerSpec(t *testing.T) {
 							Command: []string{"python"},
 							Args:    []string{"main.py"},
 							Env: []corev1.EnvVar{
+								{Name: envTransformerPort, Value: defaultTransformerPort},
+								{Name: envTransformerModelName, Value: "test-1"},
+								{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
+								{Name: envTransformerDisableLiveness, Value: "false"},
 								{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
 								{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
 								{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
@@ -2716,9 +2682,6 @@ func TestCreateTransformerSpec(t *testing.T) {
 									Name:  transformer.FeastStorageConfigs,
 									Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 								},
-								{Name: envTransformerPort, Value: defaultTransformerPort},
-								{Name: envTransformerModelName, Value: "test-1"},
-								{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
 							},
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
@@ -2730,7 +2693,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 									corev1.ResourceMemory: memoryLimit,
 								},
 							},
-							LivenessProbe: transformerProbeConfig,
+							LivenessProbe: &transformerProbeConfig,
 						},
 					},
 				},
@@ -2773,6 +2736,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 								{Name: envTransformerPort, Value: defaultTransformerPort},
 								{Name: envTransformerModelName, Value: "test-1"},
 								{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
+								{Name: envTransformerDisableLiveness, Value: "false"},
 							},
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
@@ -2784,7 +2748,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 									corev1.ResourceMemory: memoryLimit,
 								},
 							},
-							LivenessProbe: transformerProbeConfig,
+							LivenessProbe: &transformerProbeConfig,
 						},
 					},
 				},
