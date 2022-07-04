@@ -156,13 +156,6 @@ func createLivenessProbeSpec(path string, port int32, initialDelaySeconds int32,
 func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
-	// Default values if env var not defined
-	var defaultVars []models.EnvVar
-	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorDisableLiveness, Value: defaultPredictorDisableLiveness})
-
-	// Overwrite default values if defined
-	envVars = models.MergeEnvVars(defaultVars, envVars)
-
 	if modelService.ResourceRequest == nil {
 		modelService.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.DefaultModelResourceRequests.MinReplica,
@@ -192,6 +185,8 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	var predictorSpec kservev1beta1.PredictorSpec
 
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
+
+	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	var livenessProbeConfig *corev1.Probe = nil
 	if !strings.EqualFold(envVars.ToMap()[envPredictorDisableLiveness], "true") {
 		livenessProbeConfig = createLivenessProbeSpec(
@@ -397,6 +392,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 		}
 	}
 
+	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	var livenessProbeConfig *corev1.Probe = nil
 	if !strings.EqualFold(envVars.ToMap()[envTransformerDisableLiveness], "true") {
 		livenessProbeConfig = createLivenessProbeSpec(
