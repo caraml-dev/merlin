@@ -32,3 +32,20 @@ with merlin.new_model_version() as v:
 
     merlin.deploy(v, environment_name="production")
 ```
+
+## Model Liveness
+When deploying a model, the model container will be built with a livenes probe by default. The liveness probe will periodically check that your model is still alive, and restart the pod automatically if it is deemed to be dead.
+
+However, should you wish to disable this probe, you may do so by providing an environment variable to the model service with the following value:
+
+```
+MERLIN_DISABLE_LIVENESS_PROBE="true"
+```
+
+This can be supplied via the deploy function. i.e.
+
+```python
+    merlin.deploy(v, env_vars={"MERLIN_DISABLE_LIVENESS_PROBE"="true"})
+```
+
+The liveness probe is also available for the transformer. Checkout [Standard Transformer Environment Variables](./standard_transformer.md) for more details.
