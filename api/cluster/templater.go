@@ -60,7 +60,7 @@ const (
 	prometheusPort = "8080"
 
 	liveProbePort             = 8080
-	liveProbeinitialDelaySec  = 60
+	liveProbeinitialDelaySec  = 30
 	liveProbeTimeoutSec       = 5
 	liveProbePeriodSec        = 10
 	liveProbeSuccessThreshold = 1
@@ -193,7 +193,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 
 	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
 	var livenessProbeConfig *corev1.Probe = nil
-	if strings.EqualFold(envVars.ToMap()[envPredictorDisableLiveness], "false") {
+	if !strings.EqualFold(envVars.ToMap()[envPredictorDisableLiveness], "true") {
 		livenessProbeConfig = createLivenessProbeSpec(
 			fmt.Sprintf("/v1/models/%s", modelService.Name),
 			liveProbePort,
@@ -311,16 +311,10 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kserv
 
 func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
-
-	// Default values if env var not defined
-	var defaultVars []models.EnvVar
-	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
-	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
-	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
-	defaultVars = append(defaultVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
-
-	// Overwrite default values if defined
-	envVars = models.MergeEnvVars(defaultVars, envVars)
+	envVars = append(envVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
+	envVars = append(envVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
+	envVars = append(envVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
+	envVars = append(envVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
 
 	var containerCommand []string
 	customPredictor := modelService.Options.CustomPredictor
@@ -378,15 +372,9 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 		envVars = t.enrichStandardTransformerEnvVars(envVars)
 	}
 
-	// Default values if env var not defined
-	var defaultVars []models.EnvVar
-	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
-	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
-	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
-	defaultVars = append(defaultVars, models.EnvVar{Name: envTransformerDisableLiveness, Value: defaultTransformerDisableLiveness})
-
-	// Overwrite default values if defined
-	envVars = models.MergeEnvVars(defaultVars, envVars)
+	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
+	envVars = append(envVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
+	envVars = append(envVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
 
 	var loggerSpec *kservev1beta1.LoggerSpec
 	if modelService.Logger != nil && modelService.Logger.Transformer != nil && modelService.Logger.Transformer.Enabled {
@@ -410,7 +398,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	}
 
 	var livenessProbeConfig *corev1.Probe = nil
-	if strings.EqualFold(envVars.ToMap()[envTransformerDisableLiveness], "false") {
+	if !strings.EqualFold(envVars.ToMap()[envTransformerDisableLiveness], "true") {
 		livenessProbeConfig = createLivenessProbeSpec(
 			fmt.Sprintf("/"),
 			liveProbePort,
