@@ -48,11 +48,9 @@ const (
 	envPredictorStorageURI       = "STORAGE_URI"
 	envPredictorDisableLiveness  = "MERLIN_DISABLE_LIVENESS_PROBE"
 
-	defaultPredictorArtifactLocation  = "/mnt/models"
-	defaultPredictorPort              = "8080"
-	defaultTransformerPort            = "8080"
-	defaultPredictorDisableLiveness   = "false"
-	defaultTransformerDisableLiveness = "false"
+	defaultPredictorArtifactLocation = "/mnt/models"
+	defaultPredictorPort             = "8080"
+	defaultTransformerPort           = "8080"
 
 	annotationPrometheusScrapeFlag = "prometheus.io/scrape"
 	annotationPrometheusScrapePort = "prometheus.io/port"
@@ -306,10 +304,15 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kserv
 
 func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
-	envVars = append(envVars, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
-	envVars = append(envVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
-	envVars = append(envVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
-	envVars = append(envVars, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
+
+	// Add default env var (Overwrite by user not allowed)
+	defaultEnvVar := models.EnvVars{}
+	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
+	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
+	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
+	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
+
+	envVars = models.MergeEnvVars(envVars, defaultEnvVar)
 
 	var containerCommand []string
 	customPredictor := modelService.Options.CustomPredictor
@@ -362,14 +365,18 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 
 	envVars := transformer.EnvVars
 
+	// Put in defaults if not provided by users (user's input is used)
 	if transformer.TransformerType == models.StandardTransformerType {
 		transformer.Image = t.standardTransformerConfig.ImageName
 		envVars = t.enrichStandardTransformerEnvVars(envVars)
 	}
 
-	envVars = append(envVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
-	envVars = append(envVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
-	envVars = append(envVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
+	// Overwrite user's values with defaults, if provided (overwrite by user not allowed)
+	defaultEnvVars := models.EnvVars{}
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
+	envVars = models.MergeEnvVars(envVars, defaultEnvVars)
 
 	var loggerSpec *kservev1beta1.LoggerSpec
 	if modelService.Logger != nil && modelService.Logger.Transformer != nil && modelService.Logger.Transformer.Enabled {
@@ -455,13 +462,15 @@ func (t *KFServingResourceTemplater) enrichStandardTransformerEnvVars(envVars mo
 		}
 	}
 
-	envVars = append(envVars, models.EnvVar{Name: transformerpkg.DefaultFeastSource, Value: t.standardTransformerConfig.DefaultFeastSource.String()})
+	// Additional env var to add
+	addEnvVar := models.EnvVars{}
+	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.DefaultFeastSource, Value: t.standardTransformerConfig.DefaultFeastSource.String()})
 
 	// adding feast storage config env variable
 	feastStorageConfig := t.standardTransformerConfig.ToFeastStorageConfigs()
 
 	if feastStorageConfigJsonByte, err := json.Marshal(feastStorageConfig); err == nil {
-		envVars = append(envVars, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
 	}
 
 	jaegerCfg := t.standardTransformerConfig.Jaeger
@@ -472,8 +481,12 @@ func (t *KFServingResourceTemplater) enrichStandardTransformerEnvVars(envVars mo
 		{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType},
 		{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
 	}
-	// We want Jaeger's env vars to be on the first order so these values could be overriden by users.
-	envVars = append(jaegerEnvVars, envVars...)
+
+	addEnvVar = append(addEnvVar, jaegerEnvVars...)
+
+	// merge back to envVars (default above will be overriden by users if provided)
+	envVars = models.MergeEnvVars(addEnvVar, envVars)
+
 	return envVars
 }
 
