@@ -253,7 +253,7 @@ func (s *Server) Run() {
 	s.router.Use(recoveryHandler)
 
 	health := healthcheck.NewHandler()
-	s.router.Handle("/", health)
+	s.router.HandleFunc("/", health.LiveEndpoint)
 
 	s.router.Handle("/metrics", promhttp.Handler())
 	s.router.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
