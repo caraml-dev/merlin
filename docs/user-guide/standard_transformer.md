@@ -641,11 +641,11 @@ tableTransformation:
      steps:
      - updateColumns:
         - column: "s2id"
-          expression: S2ID(table1.Col('lat'), table2.Col('lon'), 12)
+          expression: S2ID(myTable.Col('lat'), myTable.Col('lon'), 12)
         - column: "col2"
           conditions:
-          - if: table1.Col('col1') * 2 > 10
-            expression: table1.Col('col1')
+          - rowSelector: myTable.Col('col1') * 2 > 10
+            expression: myTable.Col('col1')
           - default:
               expression: -1
 ```
@@ -658,7 +658,7 @@ Value produced by the `expression` must be a scalar or a series that has the sam
       - column: "customer_id"
         expression: "cust_1" # the value is scalar and will be broadcasted to all the row
       - column: "s2id"
-        expression: S2ID(table1.Col('lat'), table2.Col('lon'), 12) # the value is array or series that the length should be the same with the rest of the columns in a table 
+        expression: S2ID(myTable.Col('lat'), myTable.Col('lon'), 12) # the value is array or series that the length should be the same with the rest of the columns in a table 
   ```
 * Update subset of rows in the columns given some row selector condition. For this users can set multiple `rowSelector` with `expression` and also default value if none of conditions are match. For example users have following table
 
@@ -712,7 +712,7 @@ tableTransformation:
         condition: myTable.Col('total_booking_1w') < 5
 ```
 
-### Slice Row
+#### Slice Row
 Slice row is an operation to slice a table based on start(lower bound) and end index(upper bound) that given by the user. The result includes starting index but excluding end index. Below is the example of this operation
 ```
 tableTransformation:
@@ -1036,6 +1036,7 @@ Below are supported environment variables to configure your Transformer.
 | `FEAST_REDIS_READ_TIMEOUT` | Timeout for read commands from redis. If reached commands will fails | 3s |
 | `FEAST_REDIS_WRITE_TIMEOUT` | Timeout for write commands to redis. If reached commands will fails | 3s |
 | `FEAST_BIGTABLE_DIRECT_STORAGE_ENABLED` | Enable features retrieval by querying direcly from bigtable | false | 
-| `FEAST_BIGTABLE_POOL_SIZE` | Number of bigtable grpc connections established in one replica of standard transformer |  |
+| `FEAST_BIGTABLE_POOL_SIZE` | Number of bigtable grpc connections established in one replica of standard transformer |
+| `MERLIN_DISABLE_LIVENESS_PROBE` | Disable liveness probe of transformer if set to true |  |
 
 

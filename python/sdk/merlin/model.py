@@ -1030,16 +1030,15 @@ class ModelVersion:
             resource_request.cpu_request, resource_request.memory_request)
 
         target_env_vars = []
-        if self._model.type == ModelType.PYFUNC or self._model.type == ModelType.CUSTOM:
-            if env_vars is not None:
-                if not isinstance(env_vars, dict):
-                    raise ValueError(
-                        f"env_vars should be dictionary, got: {type(env_vars)}")
+        if env_vars is not None:
+            if not isinstance(env_vars, dict):
+                raise ValueError(
+                    f"env_vars should be dictionary, got: {type(env_vars)}")
 
-                if len(env_vars) > 0:
-                    for name, value in env_vars.items():
-                        target_env_vars.append(
-                            client.EnvVar(str(name), str(value)))
+            if len(env_vars) > 0:
+                for name, value in env_vars.items():
+                    target_env_vars.append(
+                        client.EnvVar(str(name), str(value)))
 
         target_transformer = None
         if transformer is not None:
