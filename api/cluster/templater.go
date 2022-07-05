@@ -40,7 +40,7 @@ const (
 	envTransformerPort            = "MERLIN_TRANSFORMER_PORT"
 	envTransformerModelName       = "MERLIN_TRANSFORMER_MODEL_NAME"
 	envTransformerPredictURL      = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
-	envTransformerDisableLiveness = "MERLIN_TRANSFORMER_DISABLE_LIVENESS_PROBE"
+	envTransformerDisableLiveness = "MERLIN_DISABLE_LIVENESS_PROBE"
 
 	envPredictorPort             = "MERLIN_PREDICTOR_PORT"
 	envPredictorModelName        = "MERLIN_MODEL_NAME"

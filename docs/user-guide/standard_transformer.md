@@ -1037,6 +1037,6 @@ Below are supported environment variables to configure your Transformer.
 | `FEAST_REDIS_WRITE_TIMEOUT` | Timeout for write commands to redis. If reached commands will fails | 3s |
 | `FEAST_BIGTABLE_DIRECT_STORAGE_ENABLED` | Enable features retrieval by querying direcly from bigtable | false | 
 | `FEAST_BIGTABLE_POOL_SIZE` | Number of bigtable grpc connections established in one replica of standard transformer |
-| `MERLIN_TRANSFORMER_DISABLE_LIVENESS_PROBE` | Disable liveness probe of transformer if set to true |  |
+| `MERLIN_DISABLE_LIVENESS_PROBE` | Disable liveness probe of transformer if set to true |  |
 
 
