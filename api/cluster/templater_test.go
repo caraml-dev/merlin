@@ -670,6 +670,13 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						Image: "gcr.io/custom-model:v0.1",
 					},
 				},
+				// Env var below will be overwritten by default values to prevent user overwrite
+				EnvVars: models.EnvVars{
+					models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "1234"},
+					models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: "rubbish-model"},
+					models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models/wrong-path"},
+					models.EnvVar{Name: "STORAGE_URI", Value: "invalid_uri"},
+				},
 				Metadata: model.Metadata,
 			},
 			resourcePercentage: queueResourcePercentage,
@@ -1171,6 +1178,11 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Image:   "ghcr.io/gojek/merlin-transformer-test",
 					Command: "python",
 					Args:    "main.py",
+					EnvVars: models.EnvVars{
+						{Name: envTransformerPort, Value: "1234"},                                      // should be replace by default
+						{Name: envTransformerModelName, Value: "model-1234"},                           // should be replace by default
+						{Name: envTransformerPredictURL, Value: "model-112-predictor-default.project"}, // should be replace by default
+					},
 				},
 			},
 			exp: &kservev1beta1.InferenceService{
@@ -1385,12 +1397,6 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:  "transformer",
 									Image: standardTransformerConfig.ImageName,
 									Env: []corev1.EnvVar{
-										{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
-										{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
-										{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
-										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
-										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
-										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 										{
 											Name:  transformer.DefaultFeastSource,
 											Value: standardTransformerConfig.DefaultFeastSource.String(),
@@ -1399,6 +1405,12 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 											Name:  transformer.FeastStorageConfigs,
 											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 										},
+										{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
+										{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+										{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
+										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
+										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 										{Name: envTransformerPort, Value: defaultTransformerPort},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
@@ -2650,6 +2662,9 @@ func TestCreateTransformerSpec(t *testing.T) {
 						CPURequest:    cpuRequest,
 						MemoryRequest: memoryRequest,
 					},
+					EnvVars: models.EnvVars{
+						{Name: transformer.JaegerAgentHost, Value: "NEW_HOST"}, //test user overwrite
+					},
 				},
 				&config.DeploymentConfig{},
 			},
@@ -2662,16 +2677,16 @@ func TestCreateTransformerSpec(t *testing.T) {
 							Command: []string{"python"},
 							Args:    []string{"main.py"},
 							Env: []corev1.EnvVar{
-								{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
-								{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
-								{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
-								{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
-								{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 								{Name: transformer.DefaultFeastSource, Value: standardTransformerConfig.DefaultFeastSource.String()},
 								{
 									Name:  transformer.FeastStorageConfigs,
 									Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 								},
+								{Name: transformer.JaegerAgentHost, Value: "NEW_HOST"},
+								{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+								{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+								{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
+								{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 								{Name: envTransformerPort, Value: defaultTransformerPort},
 								{Name: envTransformerModelName, Value: "test-1"},
 								{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
