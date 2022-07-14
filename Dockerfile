@@ -45,6 +45,9 @@ FROM alpine:3.12
 COPY --from=go-builder /src/api/bin/merlin_api /usr/bin/merlin_api
 COPY --from=go-builder /src/api/db-migrations ./db-migrations
 COPY --from=go-builder /src/api/swagger.yaml ./swagger.yaml
+COPY --from=go-builder /usr/local/go/lib/time/zoneinfo.zip /zoneinfo.zip
+
+ENV ZONEINFO=/zoneinfo.zip
 
 # UI must be built outside docker
 COPY ./ui/build ./ui/build
