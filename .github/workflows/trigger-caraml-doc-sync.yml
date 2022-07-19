@@ -5,7 +5,7 @@ name: Trigger Caraml doc update
 on:
   push:
     branches: 
-    - git-sync 
+    - main 
     tags:
     - v*
   pull_request:
