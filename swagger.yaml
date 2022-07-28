@@ -1269,6 +1269,8 @@ definitions:
         $ref: "#/definitions/DeploymentMode"
       autoscaling_policy:
         $ref: "#/definitions/AutoscalingPolicy"
+      protocol:
+        $ref: "#/definitions/Protocol"
       created_at:
         type: "string"
         format: "date-time"
@@ -1664,6 +1666,12 @@ definitions:
   FreeFormObject:
     type: object
     additionalProperties: true
+
+  Protocol:
+    type: "string"
+    enum:
+      - "HTTP_JSON"
+      - "UPI_V1"
 
 securityDefinitions:
   Bearer:

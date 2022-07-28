@@ -66,6 +66,8 @@ type VersionEndpoint struct {
 	DeploymentMode deployment.Mode `json:"deployment_mode" gorm:"deployment_mode"`
 	// AutoscalingPolicy controls the conditions when autoscaling should be triggered
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy `json:"autoscaling_policy" gorm:"autoscaling_policy"`
+	// Protocol to be used when deploying the model
+	Protocol Protocol `json:"protocol" gorm:"protocol"`
 	CreatedUpdated
 }
 

@@ -32,6 +32,7 @@ type ModelEndpoint struct {
 	Rule            *ModelEndpointRule `json:"rule" gorm:"rule"`
 	Environment     *Environment       `json:"environment" gorm:"association_foreignkey:Name"`
 	EnvironmentName string             `json:"environment_name"`
+	Protocol        Protocol           `json:"protocol" gorm:"protocol"`
 	CreatedUpdated
 }
 
