@@ -17,10 +17,11 @@ import (
 )
 
 type call struct {
-	featureTableSpec *spec.FeatureTable
-	columns          []string
-	entitySet        map[string]bool
-	defaultValues    defaultValues
+	featureTableSpec  *spec.FeatureTable
+	columns           []string
+	entitySet         map[string]bool
+	defaultValues     defaultValues
+	columnTypeMapping map[string]types.ValueType_Enum
 
 	feastClient   StorageClient
 	servingSource spec.ServingSource
@@ -81,7 +82,6 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 	entities := make([]feast.Row, len(responseRows))
 	valueRows := make([]transTypes.ValueRow, len(responseRows))
 	columnTypes := make([]types.ValueType_Enum, len(fc.columns))
-	columnTypeMapping := getFeatureTypeMapping(fc.featureTableSpec)
 
 	for rowIdx, feastRow := range responseRows {
 		valueRow := make(transTypes.ValueRow, len(fc.columns))
@@ -102,7 +102,7 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 				}
 			case serving.GetOnlineFeaturesResponse_NOT_FOUND, serving.GetOnlineFeaturesResponse_NULL_VALUE, serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
 				if columnTypes[colIdx] == types.ValueType_INVALID {
-					columnTypes[colIdx] = columnTypeMapping[column]
+					columnTypes[colIdx] = fc.columnTypeMapping[column]
 				}
 				defVal, ok := fc.defaultValues.GetDefaultValue(fc.featureTableSpec.Project, column)
 				if !ok {

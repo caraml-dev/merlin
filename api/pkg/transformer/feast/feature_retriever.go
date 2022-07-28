@@ -215,10 +215,11 @@ func (fr *FeastRetriever) newCall(featureTableSpec *spec.FeatureTable, columns [
 	}
 
 	return &call{
-		featureTableSpec: featureTableSpec,
-		defaultValues:    fr.defaultValues,
-		columns:          columns,
-		entitySet:        entitySet,
+		featureTableSpec:  featureTableSpec,
+		defaultValues:     fr.defaultValues,
+		columns:           columns,
+		entitySet:         entitySet,
+		columnTypeMapping: getFeatureTypeMapping(featureTableSpec),
 
 		feastClient:   feastClient,
 		servingSource: featureTableSpec.Source,

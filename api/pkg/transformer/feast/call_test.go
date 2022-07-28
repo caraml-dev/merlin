@@ -478,6 +478,7 @@ func TestCall_do(t *testing.T) {
 				logger:                  tt.fields.logger,
 				statusMonitoringEnabled: tt.fields.statusMonitoringEnabled,
 				valueMonitoringEnabled:  tt.fields.valueMonitoringEnabled,
+				columnTypeMapping:       getFeatureTypeMapping(tt.fields.featureTableSpec),
 			}
 
 			fc.feastClient.(*feastmocks.Client).
