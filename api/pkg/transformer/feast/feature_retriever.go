@@ -208,29 +208,6 @@ func (fr *FeastRetriever) buildEntityRows(symbolRegistry symbol.Registry, config
 	return uniqueEntities, nil
 }
 
-func (fr *FeastRetriever) newCall(featureTableSpec *spec.FeatureTable, columns []string, entitySet map[string]bool) (*call, error) {
-	feastClient, err := fr.getFeastClient(featureTableSpec.Source)
-	if err != nil {
-		return nil, err
-	}
-
-	return &call{
-		featureTableSpec:  featureTableSpec,
-		defaultValues:     fr.defaultValues,
-		columns:           columns,
-		entitySet:         entitySet,
-		columnTypeMapping: getFeatureTypeMapping(featureTableSpec),
-
-		feastClient:   feastClient,
-		servingSource: featureTableSpec.Source,
-
-		logger: fr.logger,
-
-		statusMonitoringEnabled: fr.options.StatusMonitoringEnabled,
-		valueMonitoringEnabled:  fr.options.ValueMonitoringEnabled,
-	}, nil
-}
-
 func (fr *FeastRetriever) getFeastClient(source spec.ServingSource) (StorageClient, error) {
 	servingSource := source
 	if servingSource == spec.ServingSource_UNKNOWN {
@@ -268,7 +245,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		}
 		batchedEntities := entityNotInCache[startIndex:endIndex]
 
-		f, err := fr.newCall(featureTableSpec, columns, entitySet)
+		f, err := newCall(fr, featureTableSpec, columns, entitySet)
 		if err != nil {
 			return nil, err
 		}

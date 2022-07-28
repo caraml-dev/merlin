@@ -9,6 +9,7 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
 	feastmocks "github.com/gojek/merlin/pkg/transformer/feast/mocks"
@@ -28,12 +29,10 @@ func TestCall_do(t *testing.T) {
 		columns                 []string
 		entitySet               map[string]bool
 		defaultValues           defaultValues
-		feastClient             feast.Client
 		feastURL                string
 		logger                  *zap.Logger
 		statusMonitoringEnabled bool
 		valueMonitoringEnabled  bool
-		servingSource           spec.ServingSource
 	}
 
 	type args struct {
@@ -112,7 +111,6 @@ func TestCall_do(t *testing.T) {
 				columns:                 columns,
 				entitySet:               entitySet,
 				defaultValues:           defValues,
-				feastClient:             &feastmocks.Client{},
 				feastURL:                "localhost:6565",
 				logger:                  logger,
 				statusMonitoringEnabled: true,
@@ -232,7 +230,6 @@ func TestCall_do(t *testing.T) {
 				columns:                 columns,
 				entitySet:               entitySet,
 				defaultValues:           defaultValues{},
-				feastClient:             &feastmocks.Client{},
 				feastURL:                "localhost:6565",
 				logger:                  logger,
 				statusMonitoringEnabled: true,
@@ -352,7 +349,6 @@ func TestCall_do(t *testing.T) {
 				columns:                 columns,
 				entitySet:               entitySet,
 				defaultValues:           defValues,
-				feastClient:             &feastmocks.Client{},
 				feastURL:                "localhost:6565",
 				logger:                  logger,
 				statusMonitoringEnabled: true,
@@ -468,18 +464,17 @@ func TestCall_do(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fc := &call{
-				featureTableSpec:        tt.fields.featureTableSpec,
-				columns:                 tt.fields.columns,
-				entitySet:               tt.fields.entitySet,
-				defaultValues:           tt.fields.defaultValues,
-				feastClient:             tt.fields.feastClient,
-				servingSource:           tt.fields.servingSource,
-				logger:                  tt.fields.logger,
-				statusMonitoringEnabled: tt.fields.statusMonitoringEnabled,
-				valueMonitoringEnabled:  tt.fields.valueMonitoringEnabled,
-				columnTypeMapping:       getFeatureTypeMapping(tt.fields.featureTableSpec),
+			feastRetriever := &FeastRetriever{
+				feastClients: Clients{
+					spec.ServingSource_BIGTABLE: &feastmocks.Client{},
+					spec.ServingSource_REDIS:    &feastmocks.Client{},
+				},
+				defaultValues:     tt.fields.defaultValues,
+				featureTableSpecs: []*spec.FeatureTable{tt.fields.featureTableSpec},
+				options:           &Options{DefaultFeastSource: spec.ServingSource_BIGTABLE},
 			}
+			fc, err := newCall(feastRetriever, tt.fields.featureTableSpec, tt.fields.columns, tt.fields.entitySet)
+			require.NoError(t, err)
 
 			fc.feastClient.(*feastmocks.Client).
 				On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feast.OnlineFeaturesRequest) bool {

@@ -32,6 +32,33 @@ type call struct {
 	valueMonitoringEnabled  bool
 }
 
+func newCall(
+	fr *FeastRetriever,
+	featureTableSpec *spec.FeatureTable,
+	columns []string,
+	entitySet map[string]bool,
+) (*call, error) {
+	feastClient, err := fr.getFeastClient(featureTableSpec.Source)
+	if err != nil {
+		return nil, err
+	}
+	return &call{
+		featureTableSpec:  featureTableSpec,
+		defaultValues:     fr.defaultValues,
+		columns:           columns,
+		entitySet:         entitySet,
+		columnTypeMapping: getFeatureTypeMapping(featureTableSpec),
+
+		feastClient:   feastClient,
+		servingSource: featureTableSpec.Source,
+
+		logger: fr.logger,
+
+		statusMonitoringEnabled: fr.options.StatusMonitoringEnabled,
+		valueMonitoringEnabled:  fr.options.ValueMonitoringEnabled,
+	}, nil
+}
+
 // do create request to feast and return the result as table
 func (fc *call) do(ctx context.Context, entityList []feast.Row, features []string) callResult {
 	tableName := GetTableName(fc.featureTableSpec)
