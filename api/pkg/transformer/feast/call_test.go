@@ -328,10 +328,10 @@ func TestCall_do(t *testing.T) {
 					columnTypes: []types.ValueType_Enum{
 						types.ValueType_STRING,
 						types.ValueType_STRING,
-						types.ValueType_INVALID,
-						types.ValueType_INVALID,
-						types.ValueType_INVALID,
-						types.ValueType_INVALID,
+						types.ValueType_INT64,
+						types.ValueType_INT64,
+						types.ValueType_INT64,
+						types.ValueType_INT64,
 					},
 					valueRows: transTypes.ValueRows{
 						transTypes.ValueRow{

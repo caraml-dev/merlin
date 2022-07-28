@@ -65,6 +65,15 @@ func (fc *call) do(ctx context.Context, entityList []feast.Row, features []strin
 	return callResult{tableName: tableName, featureTable: featureTable, err: nil}
 }
 
+func getFeatureTypeMapping(featureTableSpec *spec.FeatureTable) map[string]types.ValueType_Enum {
+	mapping := make(map[string]types.ValueType_Enum, len(featureTableSpec.Features))
+	for _, feature := range featureTableSpec.Features {
+		feastValType := types.ValueType_Enum(types.ValueType_Enum_value[feature.ValueType])
+		mapping[feature.Name] = feastValType
+	}
+	return mapping
+}
+
 // processResponse process response from feast serving and create an internal feature table representation of it
 func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*internalFeatureTable, error) {
 	responseStatus := feastResponse.Statuses()
@@ -72,6 +81,7 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 	entities := make([]feast.Row, len(responseRows))
 	valueRows := make([]transTypes.ValueRow, len(responseRows))
 	columnTypes := make([]types.ValueType_Enum, len(fc.columns))
+	columnTypeMapping := getFeatureTypeMapping(fc.featureTableSpec)
 
 	for rowIdx, feastRow := range responseRows {
 		valueRow := make(transTypes.ValueRow, len(fc.columns))
@@ -91,6 +101,9 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 					entity[column] = rawValue
 				}
 			case serving.GetOnlineFeaturesResponse_NOT_FOUND, serving.GetOnlineFeaturesResponse_NULL_VALUE, serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
+				if columnTypes[colIdx] == types.ValueType_INVALID {
+					columnTypes[colIdx] = columnTypeMapping[column]
+				}
 				defVal, ok := fc.defaultValues.GetDefaultValue(fc.featureTableSpec.Project, column)
 				if !ok {
 					// no default value is specified, we populate with nil
@@ -98,6 +111,7 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 					continue
 				}
 				rawValue = defVal
+
 			default:
 				return nil, fmt.Errorf("unsupported feature retrieval status for column %s: %s", column, featureStatus)
 			}
