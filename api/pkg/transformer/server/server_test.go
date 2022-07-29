@@ -981,6 +981,178 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				statusCode: 200,
 			},
 		},
+		{
+			name:         "table transformation with feast (containing column that has null for all the rows) and transformation",
+			specYamlPath: "../pipeline/testdata/valid_feast_series_transform_conditional.yaml",
+			mockFeasts: []mockFeast{
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":                  feastSdk.StrVal("1"),
+										"all_time_cancellation_rate": feastSdk.DoubleVal(0.2),
+										"all_time_completion_rate":   feastSdk.DoubleVal(0.8),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":                  serving.GetOnlineFeaturesResponse_PRESENT,
+										"all_time_cancellation_rate": serving.GetOnlineFeaturesResponse_PRESENT,
+										"all_time_completion_rate":   serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":                  feastSdk.StrVal("2"),
+										"all_time_cancellation_rate": nil,
+										"all_time_completion_rate":   nil,
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":                  serving.GetOnlineFeaturesResponse_PRESENT,
+										"all_time_cancellation_rate": serving.GetOnlineFeaturesResponse_NOT_FOUND,
+										"all_time_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "statistic", // used as identifier for mocking. must match config
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":                 feastSdk.StrVal("1"),
+										"average_cancellation_rate": nil,
+										"average_completion_rate":   nil,
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":                 serving.GetOnlineFeaturesResponse_PRESENT,
+										"average_cancellation_rate": serving.GetOnlineFeaturesResponse_NULL_VALUE,
+										"average_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":                 feastSdk.StrVal("2"),
+										"average_cancellation_rate": nil,
+										"average_completion_rate":   nil,
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":                 serving.GetOnlineFeaturesResponse_PRESENT,
+										"average_cancellation_rate": serving.GetOnlineFeaturesResponse_NULL_VALUE,
+										"average_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "service", // used as identifier for mocking. must match config
+					},
+					expectedRequest: &feastSdk.OnlineFeaturesRequest{
+						Project:  "service",
+						Features: []string{"service_average_cancellation_rate", "service_average_completion_rate"},
+						Entities: []feastSdk.Row{
+							{"driver_id": feastSdk.StrVal("1"), "service_type": feastSdk.Int64Val(1)},
+							{"driver_id": feastSdk.StrVal("2"), "service_type": feastSdk.Int64Val(1)},
+						},
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":                         feastSdk.StrVal("1"),
+										"service_type":                      feastSdk.Int64Val(1),
+										"service_average_cancellation_rate": nil,
+										"service_average_completion_rate":   nil,
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":                         serving.GetOnlineFeaturesResponse_PRESENT,
+										"service_type":                      serving.GetOnlineFeaturesResponse_PRESENT,
+										"service_average_cancellation_rate": serving.GetOnlineFeaturesResponse_NULL_VALUE,
+										"service_average_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":                         feastSdk.StrVal("2"),
+										"service_type":                      feastSdk.Int64Val(1),
+										"service_average_cancellation_rate": nil,
+										"service_average_completion_rate":   nil,
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":                         serving.GetOnlineFeaturesResponse_PRESENT,
+										"service_type":                      serving.GetOnlineFeaturesResponse_PRESENT,
+										"service_average_cancellation_rate": serving.GetOnlineFeaturesResponse_NULL_VALUE,
+										"service_average_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"drivers" : [{"driver_id": 1,"name": "driver-1"},{"driver_id": 2,"name": "driver-2"}], "service_type": 1 }`),
+			},
+			expTransformedRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{
+					"instances":[
+						{
+							"driver_id": 1,
+							"service_type": 1,
+							"all_time_cancellation_rate": 0.2,
+							"all_time_completion_rate": 0.8,
+							"average_cancellation_rate": 0.2,
+							"average_completion_rate": 0.8,
+							"service_average_cancellation_rate": 0.2,
+							"service_average_completion_rate": 0.8
+						},
+						{
+							"driver_id": 2,
+							"service_type": 1,
+							"all_time_cancellation_rate": 0,
+							"all_time_completion_rate": 1,
+							"average_cancellation_rate": 0,
+							"average_completion_rate": 1,
+							"service_average_cancellation_rate": 0,
+							"service_average_completion_rate": 1
+						}
+					]
+					}`),
+			},
+			modelResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status": "ok"}`),
+				statusCode: 200,
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:       []byte(`{"status": "ok"}`),
+				statusCode: 200,
+			},
+		},
 	}
 
 	for _, tt := range tests {
