@@ -22,6 +22,6 @@ jobs:
           await github.rest.actions.createWorkflowDispatch({
             owner: 'caraml-dev',
             repo: 'docs',
-            workflow_id: 'pull_docs.yml',
+            workflow_id: 'test_pull_docs.yml',
             ref: 'sync'
           })
