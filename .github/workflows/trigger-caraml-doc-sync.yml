@@ -26,6 +26,8 @@ jobs:
     #         ref: 'main'
     #       })
       - uses: actions/checkout@v3
+      - name: checkout caraml actions
+        uses: actions/checkout@v3
         with:
           repository: caraml-dev/docs
           path: .github/actions
