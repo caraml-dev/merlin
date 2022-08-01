@@ -26,8 +26,12 @@ jobs:
     #         ref: 'main'
     #       })
       - uses: actions/checkout@v3
+        with:
+          repository: caraml-dev/docs
+          path: .github/actions
+          token: ${{ secrets.CARAML_SYNC }}
       - id: trigger-caraml
-        uses: caraml-dev/docs/.github/actions/trigger-doc-pull@sync
+        uses: ./.github/actions/trigger-doc-pull@sync
         with:
           who-to-greet: 'Mona the Octocat'
       - run: echo random-number ${{ steps.trigger-caraml.outputs.random-number }}
