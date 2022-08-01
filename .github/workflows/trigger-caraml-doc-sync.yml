@@ -15,13 +15,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/github-script@v6
-      with:
-        github-token: ${{ secrets.CARAML_SYNC }}
-        script: |
-          await github.rest.actions.createWorkflowDispatch({
-            owner: 'caraml-dev',
-            repo: 'docs',
-            workflow_id: 'test_pull_docs.yml',
-            ref: 'main'
-          })
+    # - uses: actions/github-script@v6
+    #   with:
+    #     github-token: ${{ secrets.CARAML_SYNC }}
+    #     script: |
+    #       await github.rest.actions.createWorkflowDispatch({
+    #         owner: 'caraml-dev',
+    #         repo: 'docs',
+    #         workflow_id: 'test_pull_docs.yml',
+    #         ref: 'main'
+    #       })
+      - uses: actions/checkout@v3
+      - id: trigger-caraml
+        uses: actions/trigger-doc-pull
+        with:
+          who-to-greet: 'Mona the Octocat'
+      - run: echo random-number ${{ steps.trigger-caraml.outputs.random-number }}
+        shell: bash
