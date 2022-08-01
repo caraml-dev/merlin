@@ -29,8 +29,9 @@ jobs:
       - name: checkout caraml actions
         uses: actions/checkout@v3
         with:
-          repository: caraml-dev/docs:sync
+          repository: caraml-dev/docs
           path: .github/actions
+          ref: 'sync'
           token: ${{ secrets.CARAML_SYNC }}
       - id: trigger-caraml
         uses: ./.github/actions/trigger-doc-pull/action.yml
