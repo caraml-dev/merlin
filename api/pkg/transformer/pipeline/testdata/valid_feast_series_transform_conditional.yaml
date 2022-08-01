@@ -1,0 +1,128 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - tables:
+          - name: driver
+            columns:
+              - name: driver_id
+                fromJson:
+                  jsonPath: '$.drivers[*].driver_id'
+              - name: service_type
+                fromJson:
+                  jsonPath: $.service_type
+      - feast:
+          - project: default
+            entities:
+              - name: driver_id
+                valueType: STRING
+                jsonPathConfig:
+                  jsonPath: '$.drivers[*].driver_id'
+            features:
+              - name: >-
+                  all_time_cancellation_rate
+                valueType: DOUBLE
+                defaultValue: '0'
+              - name: >-
+                  all_time_completion_rate
+                valueType: DOUBLE
+                defaultValue: '1'
+            tableName: all_time_rate
+            source: BIGTABLE
+          - project: statistic
+            entities:
+              - name: driver_id
+                valueType: STRING
+                jsonPathConfig:
+                  jsonPath: '$.drivers[*].driver_id'
+            features:
+              - name: >-
+                  average_cancellation_rate
+                valueType: DOUBLE
+                defaultValue: 'NaN'
+              - name: >-
+                  average_completion_rate
+                valueType: DOUBLE
+                defaultValue: 'NaN'
+            tableName: recent_rate
+            source: BIGTABLE
+          - project: service
+            entities:
+              - name: driver_id
+                valueType: STRING
+                jsonPathConfig:
+                  jsonPath: '$.drivers[*].driver_id'
+              - name: service_type
+                valueType: INT64
+                jsonPathConfig:
+                  jsonPath: $.service_type
+            features:
+              - name: >-
+                  service_average_cancellation_rate
+                valueType: DOUBLE
+                defaultValue: 'NaN'
+              - name: >-
+                  service_average_completion_rate
+                valueType: DOUBLE
+                defaultValue: 'NaN'
+            tableName: recent_service_type_rate
+            source: BIGTABLE
+    transformations:
+      - tableTransformation:
+      - tableJoin:
+          leftTable: driver
+          rightTable: all_time_rate
+          outputTable: driver_with_all_time
+          how: LEFT
+          onColumns:
+            - driver_id
+      - tableJoin:
+          leftTable: driver_with_all_time
+          rightTable: recent_rate
+          outputTable: all_recent_rate
+          how: LEFT
+          onColumns:
+            - driver_id
+      - tableJoin:
+          leftTable: all_recent_rate
+          rightTable: recent_service_type_rate
+          outputTable: all_rates
+          how: LEFT
+          onColumns:
+            - driver_id
+            - service_type
+      - tableTransformation:
+          inputTable: all_rates
+          outputTable: temp_final_driver
+          steps:
+          - updateColumns:
+            - column: average_cancellation_rate
+              conditions:
+                - rowSelector: all_rates.Col('average_cancellation_rate') == nil
+                  expression: all_rates.Col('all_time_cancellation_rate')
+          - updateColumns:
+            - column: average_completion_rate
+              conditions:
+                - rowSelector: all_rates.Col('average_completion_rate') == nil
+                  expression: all_rates.Col('all_time_completion_rate')
+      - tableTransformation:
+          inputTable: temp_final_driver
+          outputTable: final_driver
+          steps:
+          - updateColumns:
+            - column: service_average_cancellation_rate
+              conditions:
+                - rowSelector: temp_final_driver.Col('service_average_cancellation_rate') == nil
+                  expression: temp_final_driver.Col('average_cancellation_rate')
+            - column: service_average_completion_rate
+              conditions:
+                - rowSelector: temp_final_driver.Col('service_average_completion_rate') == nil
+                  expression: temp_final_driver.Col('average_completion_rate')
+    outputs:
+      - jsonOutput:
+          jsonTemplate:
+            fields:
+              - fieldName: instances
+                fromTable:
+                  tableName: final_driver
+                  format: RECORD
+  postprocess: {}
