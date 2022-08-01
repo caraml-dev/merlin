@@ -23,5 +23,5 @@ jobs:
             owner: 'caraml-dev',
             repo: 'docs',
             workflow_id: 'test_pull_docs.yml',
-            ref: 'sync'
+            ref: 'main'
           })
