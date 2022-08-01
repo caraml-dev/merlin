@@ -33,7 +33,7 @@ jobs:
           path: .github/actions
           token: ${{ secrets.CARAML_SYNC }}
       - id: trigger-caraml
-        uses: ./.github/actions/trigger-doc-pull@sync
+        uses: ./.github/actions/trigger-doc-pull/action.yml@sync
         with:
           who-to-greet: 'Mona the Octocat'
       - run: echo random-number ${{ steps.trigger-caraml.outputs.random-number }}
