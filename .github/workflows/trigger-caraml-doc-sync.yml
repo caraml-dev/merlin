@@ -28,6 +28,6 @@ jobs:
               module: 'model',
               git_https: 'https://github.com/gojek/merlin.git',
               doc_folder: 'docs',
-              branch: 'git-sync',
+              branch: 'main',
             },
           })
