@@ -221,6 +221,11 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 		left.EnvVars = models.MergeEnvVars(left.EnvVars, right.EnvVars)
 	}
 
+	// override protocol
+	if right.Protocol != "" {
+		left.Protocol = right.Protocol
+	}
+
 	return nil
 }
 

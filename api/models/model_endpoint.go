@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/google/uuid"
 )
 
@@ -32,7 +33,7 @@ type ModelEndpoint struct {
 	Rule            *ModelEndpointRule `json:"rule" gorm:"rule"`
 	Environment     *Environment       `json:"environment" gorm:"association_foreignkey:Name"`
 	EnvironmentName string             `json:"environment_name"`
-	Protocol        Protocol           `json:"protocol" gorm:"protocol"`
+	Protocol        protocol.Protocol  `json:"protocol" gorm:"protocol"`
 	CreatedUpdated
 }
 

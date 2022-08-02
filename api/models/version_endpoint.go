@@ -20,6 +20,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/google/uuid"
 
 	"github.com/gojek/merlin/config"
@@ -67,7 +68,7 @@ type VersionEndpoint struct {
 	// AutoscalingPolicy controls the conditions when autoscaling should be triggered
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy `json:"autoscaling_policy" gorm:"autoscaling_policy"`
 	// Protocol to be used when deploying the model
-	Protocol Protocol `json:"protocol" gorm:"protocol"`
+	Protocol protocol.Protocol `json:"protocol" gorm:"protocol"`
 	CreatedUpdated
 }
 
@@ -104,6 +105,7 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		DeploymentMode:       deploymentMode,
 		AutoscalingPolicy:    autoscalingPolicy,
 		EnvVars:              envVars,
+		Protocol:             protocol.HttpJson,
 	}
 
 	if monitoringConfig.MonitoringEnabled {
