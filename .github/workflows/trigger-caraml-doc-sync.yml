@@ -24,4 +24,10 @@ jobs:
             repo: 'docs',
             workflow_id: 'pull_docs.yml',
             ref: 'main'
+            inputs: {
+              module: 'model'
+              git-https: 'https://github.com/gojek/merlin.git'
+              doc-folder: 'docs'
+              branch: 'main'
+            }
           })
