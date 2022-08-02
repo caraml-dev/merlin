@@ -20,6 +20,8 @@ import (
 
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/gojek/merlin/pkg/protocol"
+	"knative.dev/pkg/apis"
 )
 
 type Service struct {
@@ -37,28 +39,30 @@ type Service struct {
 	Logger            *Logger
 	DeploymentMode    deployment.Mode
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy
+	Protocol          protocol.Protocol
 }
 
-func NewService(model *Model, version *Version, modelOpt *ModelOption, resource *ResourceRequest, envVars EnvVars, environment string, transformer *Transformer, logger *Logger, deploymentMode deployment.Mode, autoscalingPolicy *autoscaling.AutoscalingPolicy) *Service {
+func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint *VersionEndpoint) *Service {
 	return &Service{
 		Name:            CreateInferenceServiceName(model.Name, version.ID.String()),
 		Namespace:       model.Project.Name,
 		ArtifactURI:     version.ArtifactURI,
 		Type:            model.Type,
 		Options:         modelOpt,
-		ResourceRequest: resource,
-		EnvVars:         envVars,
+		ResourceRequest: endpoint.ResourceRequest,
+		EnvVars:         endpoint.EnvVars,
 		Metadata: Metadata{
 			Team:        model.Project.Team,
 			Stream:      model.Project.Stream,
 			App:         model.Name,
-			Environment: environment,
+			Environment: endpoint.EnvironmentName,
 			Labels:      model.Project.Labels,
 		},
-		Transformer:       transformer,
-		Logger:            logger,
-		DeploymentMode:    deploymentMode,
-		AutoscalingPolicy: autoscalingPolicy,
+		Transformer:       endpoint.Transformer,
+		Logger:            endpoint.Logger,
+		DeploymentMode:    endpoint.DeploymentMode,
+		AutoscalingPolicy: endpoint.AutoscalingPolicy,
+		Protocol:          endpoint.Protocol,
 	}
 }
 
@@ -66,13 +70,20 @@ func CreateInferenceServiceName(modelName string, versionID string) string {
 	return fmt.Sprintf("%s-%s", modelName, versionID)
 }
 
-func GetValidInferenceURL(url string, inferenceServiceName string) string {
-	modelPath := "v1/models"
-	inferenceURLSuffix := fmt.Sprintf("%s/%s", modelPath, inferenceServiceName)
+func GetInferenceURL(url *apis.URL, inferenceServiceName string, protocolValue protocol.Protocol) string {
+	switch protocolValue {
+	case protocol.UpiV1:
+		// return only host name
+		return url.Host
+	case protocol.HttpJson:
+		fallthrough
+	default:
+		modelPath := "v1/models"
+		inferenceURLSuffix := fmt.Sprintf("%s/%s", modelPath, inferenceServiceName)
+		if strings.HasSuffix(url.String(), inferenceURLSuffix) {
+			return url.String()
+		}
 
-	if strings.HasSuffix(url, inferenceURLSuffix) {
-		return url
+		return fmt.Sprintf("%s/%s", url, inferenceURLSuffix)
 	}
-
-	return fmt.Sprintf("%s/%s", url, inferenceURLSuffix)
 }

@@ -128,9 +128,8 @@ func (v *Version) GetEndpointByEnvironmentName(envName string) (endpoint *Versio
 }
 
 type ModelOption struct {
-	PyFuncImageName       string
-	PyTorchModelClassName string
-	CustomPredictor       *CustomPredictor
+	PyFuncImageName string
+	CustomPredictor *CustomPredictor
 }
 
 func NewCustomModelOption(version *Version) *ModelOption {

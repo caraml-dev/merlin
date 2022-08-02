@@ -157,37 +157,37 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		return nil, ErrUnableToCreateNamespace
 	}
 
-	svcName := modelService.Name
-	s, err := k.servingClient.InferenceServices(modelService.Namespace).Get(svcName, metav1.GetOptions{})
+	isvcName := modelService.Name
+	s, err := k.servingClient.InferenceServices(modelService.Namespace).Get(isvcName, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
-			log.Errorf("unable to check inference service %s %v", svcName, err)
+			log.Errorf("unable to check inference service %s %v", isvcName, err)
 			return nil, ErrUnableToGetInferenceServiceStatus
 		}
 
 		// create new resource
 		spec, err := k.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, k.deploymentConfig)
 		if err != nil {
-			log.Errorf("unable to create inference service spec %s %v", svcName, err)
+			log.Errorf("unable to create inference service spec %s %v", isvcName, err)
 			return nil, ErrUnableToCreateInferenceService
 		}
 
 		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(spec)
 		if err != nil {
-			log.Errorf("unable to create inference service %s %v", svcName, err)
+			log.Errorf("unable to create inference service %s %v", isvcName, err)
 			return nil, ErrUnableToCreateInferenceService
 		}
 	} else {
 		patchedSpec, err := k.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, k.deploymentConfig)
 		if err != nil {
-			log.Errorf("unable to update inference service %s %v", svcName, err)
+			log.Errorf("unable to update inference service %s %v", isvcName, err)
 			return nil, ErrUnableToUpdateInferenceService
 		}
 
 		// existing resource found, do update
 		s, err = k.servingClient.InferenceServices(modelService.Namespace).Update(patchedSpec)
 		if err != nil {
-			log.Errorf("unable to update inference service %s %v", svcName, err)
+			log.Errorf("unable to update inference service %s %v", isvcName, err)
 			return nil, ErrUnableToUpdateInferenceService
 		}
 	}
@@ -195,14 +195,14 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	s, err = k.waitInferenceServiceReady(s)
 	if err != nil {
 		// remove created inferenceservice when got error
-		if err := k.deleteInferenceService(svcName, modelService.Namespace); err != nil {
-			log.Warnf("unable to delete inference service %s with error %v", svcName, err)
+		if err := k.deleteInferenceService(isvcName, modelService.Namespace); err != nil {
+			log.Warnf("unable to delete inference service %s with error %v", isvcName, err)
 		}
 
 		return nil, err
 	}
 
-	inferenceURL := models.GetValidInferenceURL(s.Status.URL.String(), svcName)
+	inferenceURL := models.GetInferenceURL(s.Status.URL, isvcName, modelService.Protocol)
 	return &models.Service{
 		Name:        s.Name,
 		Namespace:   s.Namespace,
