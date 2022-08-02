@@ -26,8 +26,8 @@ jobs:
             ref: 'main',
             inputs: {
               module: 'model',
-              git-https: 'https://github.com/gojek/merlin.git',
-              doc-folder: 'docs',
+              git_https: 'https://github.com/gojek/merlin.git',
+              doc_folder: 'docs',
               branch: 'main',
             },
           })
