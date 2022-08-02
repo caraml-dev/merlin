@@ -71,8 +71,16 @@ type VersionEndpoint struct {
 	CreatedUpdated
 }
 
+const defaultWorkers = 1
+
+// NewVersionEndpoint create a version endpoint with default configurations
 func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, version *Version, monitoringConfig config.MonitoringConfig, deploymentMode deployment.Mode) *VersionEndpoint {
 	id := uuid.New()
+
+	var envVars EnvVars
+	if model.Type == ModelTypePyFunc {
+		envVars = PyfuncDefaultEnvVars(*model, *version, defaultWorkers)
+	}
 
 	if deploymentMode == deployment.EmptyDeploymentMode {
 		deploymentMode = deployment.ServerlessDeploymentMode
@@ -95,6 +103,7 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		ResourceRequest:      env.DefaultResourceRequest,
 		DeploymentMode:       deploymentMode,
 		AutoscalingPolicy:    autoscalingPolicy,
+		EnvVars:              envVars,
 	}
 
 	if monitoringConfig.MonitoringEnabled {

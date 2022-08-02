@@ -25,6 +25,7 @@ import (
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/autoscaling"
+	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/gojek/merlin/pkg/imagebuilder"
 	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast"
@@ -50,8 +51,6 @@ type EndpointsService interface {
 	// ListContainers list all container associated with an endpoint
 	ListContainers(ctx context.Context, model *models.Model, version *models.Version, endpointUuid uuid.UUID) ([]*models.Container, error)
 }
-
-const defaultWorkers = 1
 
 type EndpointServiceParams struct {
 	ClusterControllers        map[string]cluster.Controller
@@ -108,91 +107,23 @@ func (k *endpointService) FindByID(ctx context.Context, endpointUuid uuid.UUID) 
 }
 
 func (k *endpointService) DeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, newEndpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
+	// get existing endpoint or create a new one with default config
 	endpoint, _ := version.GetEndpointByEnvironmentName(environment.Name)
 	if endpoint == nil {
+		// create endpoint with default configurations
 		endpoint = models.NewVersionEndpoint(environment, model.Project, model, version, k.monitoringConfig, newEndpoint.DeploymentMode)
 	}
 
-	if newEndpoint.ResourceRequest != nil {
-		endpoint.ResourceRequest = newEndpoint.ResourceRequest
-	}
-
-	if newEndpoint.DeploymentMode != "" {
-		endpoint.DeploymentMode = newEndpoint.DeploymentMode
-	}
-
-	if newEndpoint.AutoscalingPolicy != nil {
-		err := autoscaling.ValidateAutoscalingPolicy(newEndpoint.AutoscalingPolicy, endpoint.DeploymentMode)
-		if err != nil {
-			return nil, err
-		}
-		endpoint.AutoscalingPolicy = newEndpoint.AutoscalingPolicy
-	}
-
-	if newEndpoint.Transformer != nil {
-		if newEndpoint.Transformer.ResourceRequest == nil {
-			newEndpoint.Transformer.ResourceRequest = environment.DefaultTransformerResourceRequest
-		}
-
-		if newEndpoint.Transformer.TransformerType == models.DefaultTransformerType {
-			newEndpoint.Transformer.TransformerType = models.CustomTransformerType
-		}
-
-		if newEndpoint.Transformer.TransformerType == models.StandardTransformerType {
-			// update standard transformer config
-			// 1. Add feature table metadata variables to transformer
-			// 2. Update feature table source if empty
-			updatedStandardTransformer, err := k.reconfigureStandardTransformer(newEndpoint.Transformer)
-			if err != nil {
-				return nil, err
-			}
-			endpoint.Transformer = updatedStandardTransformer
-		}
-
-		endpoint.Transformer = newEndpoint.Transformer
-		endpoint.Transformer.VersionEndpointID = endpoint.ID
-	}
-
-	if newEndpoint.Logger != nil {
-		endpoint.Logger = newEndpoint.Logger
-		endpoint.Logger.DestinationURL = k.loggerDestinationURL
-		modelLogger := endpoint.Logger.Model
-		if modelLogger != nil {
-			modelLogger.SanitizeMode()
-			endpoint.Logger.Model = modelLogger
-		}
-		transformerLogger := endpoint.Logger.Transformer
-		if transformerLogger != nil {
-			transformerLogger.SanitizeMode()
-			endpoint.Logger.Transformer = transformerLogger
-		}
-	}
-
-	// Configure environment variables for Pyfunc model
-	if model.Type == models.ModelTypePyFunc {
-		pyfuncDefaultEnvVars := models.PyfuncDefaultEnvVars(*model, *version, defaultWorkers)
-
-		// This section is for:
-		// 1. backward-compatibility
-		// 2. when user didn't specify any env vars config at the first time
-		if len(endpoint.EnvVars) == 0 {
-			endpoint.EnvVars = pyfuncDefaultEnvVars
-		}
-
-		if len(newEndpoint.EnvVars) > 0 {
-			if err := newEndpoint.EnvVars.CheckForProtectedEnvVars(); err != nil {
-				return nil, err
-			}
-			endpoint.EnvVars = models.MergeEnvVars(pyfuncDefaultEnvVars, newEndpoint.EnvVars)
-		}
-	} else {
-		endpoint.EnvVars = newEndpoint.EnvVars
+	// override existing endpoint configuration with the user request
+	err := k.override(endpoint, newEndpoint, environment)
+	if err != nil {
+		return nil, err
 	}
 
 	// Copy to avoid race condition
 	tobeDeployedEndpoint := *endpoint
 	endpoint.Status = models.EndpointPending
-	err := k.storage.Save(endpoint)
+	err = k.storage.Save(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -217,6 +148,80 @@ func (k *endpointService) DeployEndpoint(ctx context.Context, environment *model
 	}
 
 	return endpoint, nil
+}
+
+// override left version endpoint with values on the right version endpoint
+func (k *endpointService) override(left *models.VersionEndpoint, right *models.VersionEndpoint, environment *models.Environment) error {
+	// override deployment mode
+	if right.DeploymentMode != deployment.EmptyDeploymentMode {
+		left.DeploymentMode = right.DeploymentMode
+	}
+
+	// override autoscaling policy
+	if right.AutoscalingPolicy != nil {
+		err := autoscaling.ValidateAutoscalingPolicy(right.AutoscalingPolicy, left.DeploymentMode)
+		if err != nil {
+			return err
+		}
+		left.AutoscalingPolicy = right.AutoscalingPolicy
+	}
+
+	// override resource request
+	if right.ResourceRequest != nil {
+		left.ResourceRequest = right.ResourceRequest
+	}
+
+	// override transformer config
+	if right.Transformer != nil {
+		if right.Transformer.ResourceRequest == nil {
+			right.Transformer.ResourceRequest = environment.DefaultTransformerResourceRequest
+		}
+
+		if right.Transformer.TransformerType == models.DefaultTransformerType {
+			right.Transformer.TransformerType = models.CustomTransformerType
+		}
+
+		if right.Transformer.TransformerType == models.StandardTransformerType {
+			// update standard transformer config
+			// 1. Add feature table metadata variables to transformer
+			// 2. Update feature table source if empty
+			updatedStandardTransformer, err := k.reconfigureStandardTransformer(right.Transformer)
+			if err != nil {
+				return err
+			}
+			left.Transformer = updatedStandardTransformer
+		}
+
+		left.Transformer = right.Transformer
+		left.Transformer.VersionEndpointID = left.ID
+	}
+
+	// override logger
+	if right.Logger != nil {
+		left.Logger = right.Logger
+		left.Logger.DestinationURL = k.loggerDestinationURL
+		modelLogger := left.Logger.Model
+		if modelLogger != nil {
+			modelLogger.SanitizeMode()
+			left.Logger.Model = modelLogger
+		}
+		transformerLogger := left.Logger.Transformer
+		if transformerLogger != nil {
+			transformerLogger.SanitizeMode()
+			left.Logger.Transformer = transformerLogger
+		}
+	}
+
+	// override env vars
+	// Configure environment variables for Pyfunc model
+	if len(right.EnvVars) > 0 {
+		if err := right.EnvVars.CheckForProtectedEnvVars(); err != nil {
+			return err
+		}
+		left.EnvVars = models.MergeEnvVars(left.EnvVars, right.EnvVars)
+	}
+
+	return nil
 }
 
 func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
