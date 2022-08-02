@@ -21,6 +21,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
@@ -144,21 +145,14 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				},
 			},
 		},
+		Protocol: protocol.HttpJson,
 	}
 	versionID := 1
 	queueResourcePercentage := "2"
 	storageUri := fmt.Sprintf("%s/model", model.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(
-		fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
-		liveProbePort,
-		liveProbeinitialDelaySec,
-		liveProbeTimeoutSec,
-		liveProbePeriodSec,
-		liveProbeSuccessThreshold,
-		liveProbeFailureThreshold,
-	)
+	probeConfig := createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID))
 
 	tests := []struct {
 		name               string
@@ -176,6 +170,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypeTensorflow,
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
+				Protocol:    protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -225,6 +220,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.RawDeploymentMode,
+				Protocol:       protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -274,6 +270,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:        &models.ModelOption{},
 				Metadata:       model.Metadata,
 				DeploymentMode: deployment.ServerlessDeploymentMode,
+				Protocol:       protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -322,6 +319,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypeTensorflow,
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
+				Protocol:    protocol.HttpJson,
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -368,6 +366,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypeXgboost,
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
+				Protocol:    protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -416,6 +415,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypeSkLearn,
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
+				Protocol:    protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -463,6 +463,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				ArtifactURI: model.ArtifactURI,
 				Type:        models.ModelTypePyTorch,
 				Metadata:    model.Metadata,
+				Protocol:    protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -512,6 +513,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypeOnnx,
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
+				Protocol:    protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -565,6 +567,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI},
 						defaultModelResourceRequests.CPURequest.Value())),
 				Metadata: model.Metadata,
+				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -619,6 +622,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options:         &models.ModelOption{},
 				Metadata:        model.Metadata,
 				ResourceRequest: userResourceRequests,
+				Protocol:        protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -678,6 +682,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					models.EnvVar{Name: "STORAGE_URI", Value: "invalid_uri"},
 				},
 				Metadata: model.Metadata,
+				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -738,6 +743,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				},
 				Metadata:        model.Metadata,
 				ResourceRequest: userResourceRequests,
+				Protocol:        protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -803,6 +809,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					MetricsType: autoscaling.CPUUtilization,
 					TargetValue: 30,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -859,6 +866,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					MetricsType: autoscaling.MemoryUtilization,
 					TargetValue: 30,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			wantErr:            true,
@@ -877,6 +885,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					MetricsType: autoscaling.CPUUtilization,
 					TargetValue: 30,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -933,6 +942,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					MetricsType: autoscaling.MemoryUtilization,
 					TargetValue: 30,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -989,6 +999,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					MetricsType: autoscaling.Concurrency,
 					TargetValue: 2,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -1045,6 +1056,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					MetricsType: autoscaling.RPS,
 					TargetValue: 10,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			resourcePercentage: queueResourcePercentage,
 			exp: &kservev1beta1.InferenceService{
@@ -1076,6 +1088,163 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "tensorflow upi v1",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeTensorflow,
+				Options:     &models.ModelOption{},
+				Metadata:    model.Metadata,
+				Protocol:    protocol.UpiV1,
+			},
+			resourcePercentage: queueResourcePercentage,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						Tensorflow: &kservev1beta1.TFServingSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:      kserveconstant.InferenceServiceContainerName,
+									Resources: expDefaultModelResourceRequests,
+									Ports:     grpcContainerPorts,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "pyfunc upi v1",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypePyFunc,
+				Options: &models.ModelOption{
+					PyFuncImageName: "gojek/project-model:1",
+				},
+				EnvVars: models.PyfuncDefaultEnvVars(models.Model{Name: model.Name},
+					models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI},
+					defaultModelResourceRequests.CPURequest.Value()),
+				Metadata: model.Metadata,
+				Protocol: protocol.UpiV1,
+			},
+			resourcePercentage: queueResourcePercentage,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						"prometheus.io/scrape":                                "true",
+						"prometheus.io/port":                                  "8080",
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: models.PyfuncDefaultEnvVars(models.Model{Name: model.Name},
+										models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI},
+										defaultModelResourceRequests.CPURequest.Value()).ToKubernetesEnvVars(),
+									Resources: expDefaultModelResourceRequests,
+									Ports:     grpcContainerPorts,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "xgboost upi v1",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeXgboost,
+				Options:     &models.ModelOption{},
+				Metadata:    model.Metadata,
+				Protocol:    protocol.UpiV1,
+			},
+			resourcePercentage: queueResourcePercentage,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						XGBoost: &kservev1beta1.XGBoostSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:      kserveconstant.InferenceServiceContainerName,
+									Resources: expDefaultModelResourceRequests,
+									Ports:     grpcContainerPorts,
 								},
 							},
 						},
@@ -1137,26 +1306,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", model.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(
-		fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
-		liveProbePort,
-		liveProbeinitialDelaySec,
-		liveProbeTimeoutSec,
-		liveProbePeriodSec,
-		liveProbeSuccessThreshold,
-		liveProbeFailureThreshold,
-	)
+	probeConfig := createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID))
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(
-		fmt.Sprintf("/"),
-		liveProbePort,
-		liveProbeinitialDelaySec,
-		liveProbeTimeoutSec,
-		liveProbePeriodSec,
-		liveProbeSuccessThreshold,
-		liveProbeFailureThreshold,
-	)
+	transformerProbeConfig := createLivenessProbeSpec(fmt.Sprintf("/"))
 
 	tests := []struct {
 		name     string
@@ -1184,6 +1337,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						{Name: envTransformerPredictURL, Value: "model-112-predictor-default.project"}, // should be replace by default
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1268,6 +1422,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						Mode:    models.LogRequest,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1355,6 +1510,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						Mode:    models.LogRequest,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1478,26 +1634,10 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", model.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(
-		fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
-		liveProbePort,
-		liveProbeinitialDelaySec,
-		liveProbeTimeoutSec,
-		liveProbePeriodSec,
-		liveProbeSuccessThreshold,
-		liveProbeFailureThreshold,
-	)
+	probeConfig := createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID))
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(
-		fmt.Sprintf("/"),
-		liveProbePort,
-		liveProbeinitialDelaySec,
-		liveProbeTimeoutSec,
-		liveProbePeriodSec,
-		liveProbeSuccessThreshold,
-		liveProbeFailureThreshold,
-	)
+	transformerProbeConfig := createLivenessProbeSpec("/")
 
 	tests := []struct {
 		name     string
@@ -1521,6 +1661,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 						Mode:    models.LogAll,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1585,6 +1726,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 						Mode:    models.LogAll,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1672,6 +1814,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 						Mode:    models.LogAll,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1755,6 +1898,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 						Mode:    models.LogRequest,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1842,6 +1986,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 						Mode:    models.LogRequest,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			exp: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1950,26 +2095,10 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", model.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(
-		fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID),
-		liveProbePort,
-		liveProbeinitialDelaySec,
-		liveProbeTimeoutSec,
-		liveProbePeriodSec,
-		liveProbeSuccessThreshold,
-		liveProbeFailureThreshold,
-	)
+	probeConfig := createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s-%d", model.Name, versionID))
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(
-		fmt.Sprintf("/"),
-		liveProbePort,
-		liveProbeinitialDelaySec,
-		liveProbeTimeoutSec,
-		liveProbePeriodSec,
-		liveProbeSuccessThreshold,
-		liveProbeFailureThreshold,
-	)
+	transformerProbeConfig := createLivenessProbeSpec("/")
 
 	one := 1
 	minReplica := 1
@@ -2009,6 +2138,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 				Type:        models.ModelTypeTensorflow,
 				Options:     &models.ModelOption{},
 				Metadata:    model.Metadata,
+				Protocol:    protocol.HttpJson,
 			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -2096,6 +2226,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 						MemoryRequest: memoryRequest,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -2206,6 +2337,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 				Transformer: &models.Transformer{
 					Enabled: false,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -2321,6 +2453,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 				},
 				Metadata:        model.Metadata,
 				ResourceRequest: userResourceRequests,
+				Protocol:        protocol.HttpJson,
 			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -2433,6 +2566,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					MetricsType: autoscaling.CPUUtilization,
 					TargetValue: 30,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -2516,6 +2650,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					MetricsType: autoscaling.Concurrency,
 					TargetValue: 2,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -2624,15 +2759,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 	memoryLimit.Add(memoryRequest)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(
-		fmt.Sprintf("/"),
-		liveProbePort,
-		liveProbeinitialDelaySec,
-		liveProbeTimeoutSec,
-		liveProbePeriodSec,
-		liveProbeSuccessThreshold,
-		liveProbeFailureThreshold,
-	)
+	transformerProbeConfig := createLivenessProbeSpec("/")
 
 	type args struct {
 		modelService *models.Service
@@ -2650,6 +2777,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 				&models.Service{
 					Name:      "test-1",
 					Namespace: "test",
+					Protocol:  protocol.HttpJson,
 				},
 				&models.Transformer{
 					TransformerType: models.StandardTransformerType,
@@ -2717,6 +2845,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 				&models.Service{
 					Name:      "test-1",
 					Namespace: "test",
+					Protocol:  protocol.HttpJson,
 				},
 				&models.Transformer{
 					TransformerType: models.CustomTransformerType,

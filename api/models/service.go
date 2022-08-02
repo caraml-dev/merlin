@@ -75,8 +75,6 @@ func GetInferenceURL(url *apis.URL, inferenceServiceName string, protocolValue p
 	case protocol.UpiV1:
 		// return only host name
 		return url.Host
-	case protocol.HttpJson:
-		fallthrough
 	default:
 		modelPath := "v1/models"
 		inferenceURLSuffix := fmt.Sprintf("%s/%s", modelPath, inferenceServiceName)
