@@ -1256,6 +1256,72 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "custom model upi v1",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeCustom,
+				Options: &models.ModelOption{
+					CustomPredictor: &models.CustomPredictor{
+						Image: "gcr.io/custom-model:v0.1",
+					},
+				},
+				// Env var below will be overwritten by default values to prevent user overwrite
+				EnvVars: models.EnvVars{
+					models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "1234"},
+					models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: "rubbish-model"},
+					models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models/wrong-path"},
+					models.EnvVar{Name: "STORAGE_URI", Value: "invalid_uri"},
+				},
+				Metadata: model.Metadata,
+				Protocol: protocol.UpiV1,
+			},
+			resourcePercentage: queueResourcePercentage,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gcr.io/custom-model:v0.1",
+									Env: models.EnvVars{
+										models.EnvVar{Name: "MERLIN_PREDICTOR_PORT", Value: "8080"},
+										models.EnvVar{Name: "MERLIN_MODEL_NAME", Value: models.CreateInferenceServiceName(model.Name, "1")},
+										models.EnvVar{Name: "MERLIN_ARTIFACT_LOCATION", Value: "/mnt/models"},
+										models.EnvVar{Name: "STORAGE_URI", Value: utils.CreateModelLocation(model.ArtifactURI)},
+									}.ToKubernetesEnvVars(),
+									Resources: expDefaultModelResourceRequests,
+									Ports:     grpcContainerPorts,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
