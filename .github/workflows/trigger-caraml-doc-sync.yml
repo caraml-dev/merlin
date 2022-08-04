@@ -21,3 +21,4 @@ jobs:
           git_https: 'https://github.com/gojek/merlin.git'
           doc_folder: 'docs'
           branch: 'main'
+          credentials: ${{ secrets.CARAML_SYNC }}
