@@ -12,22 +12,30 @@ on:
 
 jobs:
   trigger-sync:
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/github-script@v6
-      with:
-        github-token: ${{ secrets.CARAML_SYNC }}
-        script: |
-          await github.rest.actions.createWorkflowDispatch({
-            owner: 'caraml-dev',
-            repo: 'docs',
-            workflow_id: 'pull_docs.yml',
-            ref: 'main',
-            inputs: {
-              module: 'model',
-              git_https: 'https://github.com/gojek/merlin.git',
-              doc_folder: 'docs',
-              branch: 'main',
-            },
-          })
+    # steps:
+    # - uses: actions/github-script@v6
+    #   with:
+    #     github-token: ${{ secrets.CARAML_SYNC }}
+    #     script: |
+    #       await github.rest.actions.createWorkflowDispatch({
+    #         owner: 'caraml-dev',
+    #         repo: 'docs',
+    #         workflow_id: 'pull_docs.yml',
+    #         ref: 'main',
+    #         inputs: {
+    #           module: 'model',
+    #           git_https: 'https://github.com/gojek/merlin.git',
+    #           doc_folder: 'docs',
+    #           branch: 'main',
+    #         },
+    #       })
+    uses: caraml/docs/.github/workflows/pull_docs.yml@master
+    secrets:
+      github-token: ${{ secrets.CARAML_SYNC }}
+    with:
+      module: 'model'
+      git_https: 'https://github.com/gojek/merlin.git'
+      doc_folder: 'docs'
+      branch: 'main'
