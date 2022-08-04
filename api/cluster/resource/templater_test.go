@@ -1674,6 +1674,87 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 			},
 		},
 		{
+			name: "custom transformer upi v1",
+			modelSvc: &models.Service{
+				Name:         modelSvc.Name,
+				ModelName:    modelSvc.ModelName,
+				ModelVersion: modelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  modelSvc.ArtifactURI,
+				Type:         models.ModelTypeTensorflow,
+				Options:      &models.ModelOption{},
+				Metadata:     modelSvc.Metadata,
+				Transformer: &models.Transformer{
+					Enabled: true,
+					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Command: "python",
+					Args:    "main.py",
+					EnvVars: models.EnvVars{
+						{Name: envTransformerPort, Value: "1234"},                                      // should be replace by default
+						{Name: envTransformerModelName, Value: "model-1234"},                           // should be replace by default
+						{Name: envTransformerPredictURL, Value: "model-112-predictor-default.project"}, // should be replace by default
+					},
+				},
+				Protocol: protocol.UpiV1,
+			},
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      modelSvc.Name,
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          modelSvc.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       modelSvc.Metadata.Stream,
+						"gojek.com/team":         modelSvc.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  modelSvc.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						Tensorflow: &kservev1beta1.TFServingSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:      kserveconstant.InferenceServiceContainerName,
+									Resources: expDefaultModelResourceRequests,
+									Env:       []corev1.EnvVar{},
+									Ports:     grpcContainerPorts,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+					Transformer: &kservev1beta1.TransformerSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:      "transformer",
+									Image:     "ghcr.io/gojek/merlin-transformer-test",
+									Command:   []string{"python"},
+									Args:      []string{"main.py"},
+									Env:       createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Resources: expDefaultTransformerResourceRequests,
+									Ports:     grpcContainerPorts,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultTransformerResourceRequests.MinReplica,
+							MaxReplicas: defaultTransformerResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "standard transformer",
 			modelSvc: &models.Service{
 				Name:         modelSvc.Name,
@@ -1762,6 +1843,106 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultTransformerResourceRequests.MinReplica,
+							MaxReplicas: defaultTransformerResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "standard transformer upi v1",
+			modelSvc: &models.Service{
+				Name:         modelSvc.Name,
+				ModelName:    modelSvc.ModelName,
+				ModelVersion: modelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  modelSvc.ArtifactURI,
+				Type:         models.ModelTypeTensorflow,
+				Options:      &models.ModelOption{},
+				Metadata:     modelSvc.Metadata,
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					TransformerType: models.StandardTransformerType,
+					EnvVars: models.EnvVars{
+						{
+							Name:  transformer.StandardTransformerConfigEnvName,
+							Value: `{"standard_transformer": null}`,
+						},
+					},
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Transformer: &models.LoggerConfig{
+						Enabled: false,
+						Mode:    models.LogRequest,
+					},
+				},
+				Protocol: protocol.UpiV1,
+			},
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      modelSvc.Name,
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          modelSvc.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       modelSvc.Metadata.Stream,
+						"gojek.com/team":         modelSvc.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  modelSvc.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						Tensorflow: &kservev1beta1.TFServingSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:      kserveconstant.InferenceServiceContainerName,
+									Resources: expDefaultModelResourceRequests,
+									Env:       []corev1.EnvVar{},
+									Ports:     grpcContainerPorts,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+					Transformer: &kservev1beta1.TransformerSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "transformer",
+									Image: standardTransformerConfig.ImageName,
+									Env: models.MergeEnvVars(models.EnvVars{
+										{
+											Name:  transformer.DefaultFeastSource,
+											Value: standardTransformerConfig.DefaultFeastSource.String(),
+										},
+										{
+											Name:  transformer.FeastStorageConfigs,
+											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
+										},
+										{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
+										{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+										{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
+										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
+										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
+									}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
+									Resources: expDefaultTransformerResourceRequests,
+									Ports:     grpcContainerPorts,
 								},
 							},
 						},
