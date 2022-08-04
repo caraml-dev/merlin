@@ -26,6 +26,8 @@ import (
 
 type Service struct {
 	Name              string
+	ModelName         string
+	ModelVersion      string
 	Namespace         string
 	ServiceName       string
 	URL               string
@@ -45,6 +47,8 @@ type Service struct {
 func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint *VersionEndpoint) *Service {
 	return &Service{
 		Name:            CreateInferenceServiceName(model.Name, version.ID.String()),
+		ModelName:       model.Name,
+		ModelVersion:    version.ID.String(),
 		Namespace:       model.Project.Name,
 		ArtifactURI:     version.ArtifactURI,
 		Type:            model.Type,

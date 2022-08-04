@@ -39,6 +39,7 @@ import (
 )
 
 const (
+	// TODO: Deprecate following env vars
 	envTransformerPort       = "MERLIN_TRANSFORMER_PORT"
 	envTransformerModelName  = "MERLIN_TRANSFORMER_MODEL_NAME"
 	envTransformerPredictURL = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
@@ -46,10 +47,17 @@ const (
 	envPredictorPort             = "MERLIN_PREDICTOR_PORT"
 	envPredictorModelName        = "MERLIN_MODEL_NAME"
 	envPredictorArtifactLocation = "MERLIN_ARTIFACT_LOCATION"
-	envPredictorStorageURI       = "STORAGE_URI"
+	envOldDisableLivenessProbe   = "MERLIN_DISABLE_LIVENESS_PROBE"
 
-	envDisableLivenessProbe          = "MERLIN_DISABLE_LIVENESS_PROBE"
-	defaultPredictorArtifactLocation = "/mnt/models"
+	envHTTPPort             = "CARAML_HTTP_PORT"
+	envGRPCPort             = "CARAML_GRPC_PORT"
+	envModelName            = "CARAML_MODEL_NAME"
+	envModelVersion         = "CARAML_MODEL_VERSION"
+	envModelFullName        = "CARAML_MODEL_FULL_NAME"
+	envPredictorHost        = "CARAML_PREDICTOR_HOST"
+	envArtifactLocation     = "CARAML_ARTIFACT_LOCATION"
+	envDisableLivenessProbe = "CARAML_DISABLE_LIVENESS_PROBE"
+	envStorageURI           = "STORAGE_URI"
 
 	annotationPrometheusScrapeFlag = "prometheus.io/scrape"
 	annotationPrometheusScrapePort = "prometheus.io/port"
@@ -60,8 +68,9 @@ const (
 	liveProbeSuccessThreshold = 1
 	liveProbeFailureThreshold = 3
 
-	defaultHTTPPort = 8080
-	defaultGrpcPort = 9000
+	defaultPredictorArtifactLocation = "/mnt/models"
+	defaultHTTPPort                  = 8080
+	defaultGRPCPort                  = 9000
 )
 
 var (
@@ -80,7 +89,7 @@ var (
 
 	grpcContainerPorts = []corev1.ContainerPort{
 		{
-			ContainerPort: defaultGrpcPort,
+			ContainerPort: defaultGRPCPort,
 			Name:          "h2c",
 			Protocol:      corev1.ProtocolTCP,
 		},
@@ -170,7 +179,9 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	// only applicable for protocol = HttpJson for now
 	var livenessProbeConfig *corev1.Probe = nil
-	if !strings.EqualFold(envVars.ToMap()[envDisableLivenessProbe], "true") &&
+	envVarsMap := envVars.ToMap()
+	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
+		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") &&
 		modelService.Protocol == protocol.HttpJson {
 		livenessProbeConfig = createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s", modelService.Name))
 	}
@@ -322,7 +333,9 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	var livenessProbeConfig *corev1.Probe = nil
-	if !strings.EqualFold(envVars.ToMap()[envDisableLivenessProbe], "true") &&
+	envVarsMap := envVars.ToMap()
+	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
+		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") &&
 		modelService.Protocol == protocol.HttpJson {
 		livenessProbeConfig = createLivenessProbeSpec(fmt.Sprintf("/"))
 	}
@@ -425,7 +438,7 @@ func createLivenessProbeSpec(path string) *corev1.Probe {
 	}
 }
 
-func createPredictURL(modelService *models.Service) string {
+func createPredictorHost(modelService *models.Service) string {
 	return modelService.Name + "-predictor-default." + modelService.Namespace
 }
 
@@ -498,21 +511,37 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kserv
 
 func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVars {
 	defaultEnvVars := models.EnvVars{}
+
+	// These env vars are to be deprecated
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)})
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictorHost(modelService)})
 
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envHTTPPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envGRPCPort, Value: fmt.Sprint(defaultGRPCPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelName, Value: modelService.ModelName})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelVersion, Value: modelService.ModelVersion})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelFullName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorHost, Value: createPredictorHost(modelService)})
 	return defaultEnvVars
 }
 
 func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars {
-	defaultEnvVar := models.EnvVars{}
-	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorPort, Value: fmt.Sprint(defaultHTTPPort)})
-	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
-	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
-	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
+	defaultEnvVars := models.EnvVars{}
 
-	return defaultEnvVar
+	// These env vars are to be deprecated
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
+
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envHTTPPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envGRPCPort, Value: fmt.Sprint(defaultGRPCPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelName, Value: modelService.ModelName})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelVersion, Value: modelService.ModelVersion})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelFullName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envArtifactLocation, Value: defaultPredictorArtifactLocation})
+	return defaultEnvVars
 }
 
 func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
