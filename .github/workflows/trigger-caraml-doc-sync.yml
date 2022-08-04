@@ -12,10 +12,12 @@ on:
 
 jobs:
   trigger-sync:
-    name: Pull Docs CI
-    uses: caraml-dev/docs/.github/actions/trigger-pull-docs.yml@sync-action
-    with:
-      module: 'model'
-      git_https: 'https://github.com/gojek/merlin.git'
-      doc_folder: 'docs'
-      branch: 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Remote Doc Pull Workflow
+        uses: caraml-dev/docs/.github/actions/trigger-pull-docs.yml@sync-action
+        with:
+          module: 'model'
+          git_https: 'https://github.com/gojek/merlin.git'
+          doc_folder: 'docs'
+          branch: 'main'
