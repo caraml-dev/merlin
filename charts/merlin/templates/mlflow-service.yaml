@@ -9,9 +9,8 @@ metadata:
 {{- end }}
   labels:
     app: {{ template "mlflow.fullname" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
 spec:
   type: {{ .Values.mlflow.service.type }}
 {{- if .Values.mlflow.service.clusterIP }}
@@ -32,6 +31,7 @@ spec:
   - port: {{ .Values.mlflow.service.externalPort }}
     targetPort: {{ .Values.mlflow.service.internalPort }}
     protocol: TCP
+    name: http
   selector:
     app: {{ template "mlflow.fullname" . }}
     release: {{ .Release.Name }}

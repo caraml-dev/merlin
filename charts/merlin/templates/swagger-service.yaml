@@ -7,22 +7,17 @@ metadata:
   labels:
     app: {{ include "merlin.name" . }}-swagger
     release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
     helm.sh/chart: {{ include "merlin.chart" . }}
     app.kubernetes.io/name: {{ include "merlin.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    gojek.com/app: merlin
-    gojek.com/team: dsp
-    gojek.com/stream: dsp
-    gojek.com/orchestrator: gitlab
-    gojek.com/environment: {{ .Values.merlin.environment }}
 spec:
   type: ClusterIP
   ports:
     - port: {{ .Values.swagger.service.externalPort }}
       targetPort: {{ .Values.swagger.service.internalPort }}
       protocol: TCP
+      name: http
   selector:
     app: {{ include "merlin.name" . }}
     release: {{ .Release.Name }}
