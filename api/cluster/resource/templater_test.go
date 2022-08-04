@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cluster
+package resource
 
 import (
 	"fmt"
@@ -199,6 +199,72 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "tensorflow wth user-provided env var",
+			modelSvc: &models.Service{
+				Name:        models.CreateInferenceServiceName(model.Name, "1"),
+				Namespace:   project.Name,
+				ArtifactURI: model.ArtifactURI,
+				Type:        models.ModelTypeTensorflow,
+				Options:     &models.ModelOption{},
+				Metadata:    model.Metadata,
+				Protocol:    protocol.HttpJson,
+				EnvVars: models.EnvVars{
+					{
+						Name: "env1", Value: "env1Value",
+					},
+					{
+						Name: "env2", Value: "env2Value",
+					},
+				},
+			},
+			resourcePercentage: queueResourcePercentage,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          model.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       model.Metadata.Stream,
+						"gojek.com/team":         model.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  model.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						Tensorflow: &kservev1beta1.TFServingSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Resources:     expDefaultModelResourceRequests,
+									LivenessProbe: probeConfig,
+									Env: []corev1.EnvVar{
+										{
+											Name: "env1", Value: "env1Value",
+										},
+										{
+											Name: "env2", Value: "env2Value",
+										},
+									},
 								},
 							},
 						},
@@ -249,6 +315,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -299,6 +366,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -346,6 +414,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -395,6 +464,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -444,6 +514,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -493,54 +564,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
-								},
-							},
-						},
-						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
-							MinReplicas: &defaultModelResourceRequests.MinReplica,
-							MaxReplicas: defaultModelResourceRequests.MaxReplica,
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "onnx spec",
-			modelSvc: &models.Service{
-				Name:        models.CreateInferenceServiceName(model.Name, "1"),
-				Namespace:   project.Name,
-				ArtifactURI: model.ArtifactURI,
-				Type:        models.ModelTypeOnnx,
-				Options:     &models.ModelOption{},
-				Metadata:    model.Metadata,
-				Protocol:    protocol.HttpJson,
-			},
-			resourcePercentage: queueResourcePercentage,
-			exp: &kservev1beta1.InferenceService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-%d", model.Name, versionID),
-					Namespace: project.Name,
-					Annotations: map[string]string{
-						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
-						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
-					},
-					Labels: map[string]string{
-						"gojek.com/app":          model.Metadata.App,
-						"gojek.com/orchestrator": "merlin",
-						"gojek.com/stream":       model.Metadata.Stream,
-						"gojek.com/team":         model.Metadata.Team,
-						"gojek.com/sample":       "true",
-						"gojek.com/environment":  model.Metadata.Environment,
-					},
-				},
-				Spec: kservev1beta1.InferenceServiceSpec{
-					Predictor: kservev1beta1.PredictorSpec{
-						ONNX: &kservev1beta1.ONNXRuntimeSpec{
-							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-								StorageURI: &storageUri,
-								Container: corev1.Container{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Resources: expDefaultModelResourceRequests,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -651,6 +675,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expUserResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -841,6 +866,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -917,6 +943,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -974,6 +1001,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1031,6 +1059,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1088,6 +1117,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1137,6 +1167,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:      kserveconstant.InferenceServiceContainerName,
 									Resources: expDefaultModelResourceRequests,
 									Ports:     grpcContainerPorts,
+									Env:       []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1245,6 +1276,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:      kserveconstant.InferenceServiceContainerName,
 									Resources: expDefaultModelResourceRequests,
 									Ports:     grpcContainerPorts,
+									Env:       []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1332,7 +1364,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				QueueResourcePercentage:            tt.resourcePercentage,
 			}
 
-			tpl := NewKFServingResourceTemplater(standardTransformerConfig)
+			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
 			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -1431,6 +1463,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1516,6 +1549,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1604,6 +1638,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1660,7 +1695,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				QueueResourcePercentage:            queueResourcePercentage,
 			}
 
-			tpl := NewKFServingResourceTemplater(standardTransformerConfig)
+			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
 			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -1755,6 +1790,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1820,6 +1856,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1908,6 +1945,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -1992,6 +2030,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2080,6 +2119,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     expDefaultModelResourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2124,7 +2164,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				QueueResourcePercentage:            queueResourcePercentage,
 			}
 
-			tpl := NewKFServingResourceTemplater(standardTransformerConfig)
+			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
 			infSvcSpec, err := tpl.CreateInferenceServiceSpec(tt.modelSvc, deployConfig)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -2224,6 +2264,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2260,6 +2301,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2312,6 +2354,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2348,6 +2391,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2423,6 +2467,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2491,6 +2536,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2652,6 +2698,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2691,6 +2738,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2739,6 +2787,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2778,6 +2827,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Name:          kserveconstant.InferenceServiceContainerName,
 									Resources:     resourceRequests,
 									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
 								},
 							},
 						},
@@ -2803,7 +2853,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 				QueueResourcePercentage: queueResourcePercentage,
 			}
 
-			tpl := NewKFServingResourceTemplater(standardTransformerConfig)
+			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
 			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -2963,7 +3013,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tpl := NewKFServingResourceTemplater(standardTransformerConfig)
+			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
 			got := tpl.createTransformerSpec(tt.args.modelService, tt.args.transformer, tt.args.config)
 			assert.Equal(t, tt.want, got)
 		})

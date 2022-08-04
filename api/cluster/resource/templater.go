@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cluster
+package resource
 
 import (
 	"bytes"
@@ -87,15 +87,15 @@ var (
 	}
 )
 
-type KFServingResourceTemplater struct {
+type InferenceServiceTemplater struct {
 	standardTransformerConfig config.StandardTransformerConfig
 }
 
-func NewKFServingResourceTemplater(standardTransformerConfig config.StandardTransformerConfig) *KFServingResourceTemplater {
-	return &KFServingResourceTemplater{standardTransformerConfig: standardTransformerConfig}
+func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTransformerConfig) *InferenceServiceTemplater {
+	return &InferenceServiceTemplater{standardTransformerConfig: standardTransformerConfig}
 }
 
-func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
 	annotations, err := createAnnotations(modelService, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
@@ -122,7 +122,7 @@ func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *mo
 	return inferenceService, nil
 }
 
-func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
 	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
 	annotations, err := createAnnotations(modelService, config)
 	if err != nil {
@@ -189,19 +189,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
 						Ports:         containerPorts,
-					},
-				},
-			},
-		}
-	case models.ModelTypeOnnx:
-		predictorSpec = kservev1beta1.PredictorSpec{
-			ONNX: &kservev1beta1.ONNXRuntimeSpec{
-				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-					StorageURI: &storageUri,
-					Container: corev1.Container{
-						Name:      kserveconstant.InferenceServiceContainerName,
-						Resources: resources,
-						Ports:     containerPorts,
+						Env:           envVars.ToKubernetesEnvVars(),
 					},
 				},
 			},
@@ -216,6 +204,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
 						Ports:         containerPorts,
+						Env:           envVars.ToKubernetesEnvVars(),
 					},
 				},
 			},
@@ -230,6 +219,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
 						Ports:         containerPorts,
+						Env:           envVars.ToKubernetesEnvVars(),
 					},
 				},
 			},
@@ -244,6 +234,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
 						Ports:         containerPorts,
+						Env:           envVars.ToKubernetesEnvVars(),
 					},
 				},
 			},
@@ -280,7 +271,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	return predictorSpec
 }
 
-func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
+func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
 	if transformer.ResourceRequest == nil {
 		transformer.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.DefaultTransformerResourceRequests.MinReplica,
@@ -305,10 +296,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	}
 
 	// Overwrite user's values with defaults, if provided (overwrite by user not allowed)
-	defaultEnvVars := models.EnvVars{}
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
+	defaultEnvVars := createDefaultTransformerEnvVars(modelService)
 	envVars = models.MergeEnvVars(envVars, defaultEnvVars)
 
 	var loggerSpec *kservev1beta1.LoggerSpec
@@ -374,7 +362,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	return transformerSpec
 }
 
-func (t *KFServingResourceTemplater) enrichStandardTransformerEnvVars(envVars models.EnvVars) models.EnvVars {
+func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(envVars models.EnvVars) models.EnvVars {
 	// compact standard transformer config
 	envVarsMap := envVars.ToMap()
 	standardTransformerSpec := envVarsMap[transformerpkg.StandardTransformerConfigEnvName]
@@ -508,16 +496,30 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kserv
 	}
 }
 
-func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
-	envVars := modelService.EnvVars
+func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVars {
+	defaultEnvVars := models.EnvVars{}
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
 
-	// Add default env var (Overwrite by user not allowed)
+	return defaultEnvVars
+}
+
+func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars {
 	defaultEnvVar := models.EnvVars{}
 	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorPort, Value: fmt.Sprint(defaultHTTPPort)})
 	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
 	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
 	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
 
+	return defaultEnvVar
+}
+
+func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
+	envVars := modelService.EnvVars
+
+	// Add default env var (Overwrite by user not allowed)
+	defaultEnvVar := createDefaultPredictorEnvVars(modelService)
 	envVars = models.MergeEnvVars(envVars, defaultEnvVar)
 
 	var containerCommand []string
@@ -552,40 +554,5 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 				},
 			},
 		},
-	}
-}
-
-func toKNativeAutoscalerMetrics(metricsType autoscaling.MetricsType) (string, error) {
-	switch metricsType {
-	case autoscaling.CPUUtilization:
-		return knautoscaling.CPU, nil
-	case autoscaling.MemoryUtilization:
-		return knautoscaling.Memory, nil
-	case autoscaling.RPS:
-		return knautoscaling.RPS, nil
-	case autoscaling.Concurrency:
-		return knautoscaling.Concurrency, nil
-	default:
-		return "", fmt.Errorf("unsuppported autoscaler metrics on serverless deployment: %s", metricsType)
-	}
-}
-
-func toKServeAutoscalerMetrics(metricsType autoscaling.MetricsType) (string, error) {
-	switch metricsType {
-	case autoscaling.CPUUtilization:
-		return string(kserveconstant.AutoScalerMetricsCPU), nil
-	default:
-		return "", fmt.Errorf("unsupported autoscaler metrics on raw deployment: %s", metricsType)
-	}
-}
-
-func toKServeDeploymentMode(deploymentMode deployment.Mode) (string, error) {
-	switch deploymentMode {
-	case deployment.RawDeploymentMode:
-		return string(kserveconstant.RawDeployment), nil
-	case deployment.ServerlessDeploymentMode, deployment.EmptyDeploymentMode:
-		return string(kserveconstant.Serverless), nil
-	default:
-		return "", fmt.Errorf("unsupported deployment mode: %s", deploymentMode)
 	}
 }

@@ -19,6 +19,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/gojek/merlin/cluster/resource"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kservev1beta1client "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
 
@@ -79,7 +80,7 @@ type controller struct {
 	batchClient                batchv1client.BatchV1Interface
 	namespaceCreator           NamespaceCreator
 	deploymentConfig           *config.DeploymentConfig
-	kfServingResourceTemplater *KFServingResourceTemplater
+	kfServingResourceTemplater *resource.InferenceServiceTemplater
 	ContainerFetcher
 }
 
@@ -114,7 +115,7 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 		GcpProject:  clusterConfig.GcpProject,
 	})
 
-	kfServingResourceTemplater := NewKFServingResourceTemplater(standardTransformerConfig)
+	kfServingResourceTemplater := resource.NewInferenceServiceTemplater(standardTransformerConfig)
 	return newController(servingClient, coreV1Client, batchV1Client, deployConfig, containerFetcher, kfServingResourceTemplater)
 }
 
@@ -123,7 +124,7 @@ func newController(kfservingClient kservev1beta1client.ServingV1beta1Interface,
 	batchV1Client batchv1client.BatchV1Interface,
 	deploymentConfig config.DeploymentConfig,
 	containerFetcher ContainerFetcher,
-	templater *KFServingResourceTemplater) (Controller, error) {
+	templater *resource.InferenceServiceTemplater) (Controller, error) {
 	return &controller{
 		servingClient:              kfservingClient,
 		clusterClient:              coreV1Client,
