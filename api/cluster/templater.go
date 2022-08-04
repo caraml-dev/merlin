@@ -39,33 +39,28 @@ import (
 )
 
 const (
-	envTransformerPort            = "MERLIN_TRANSFORMER_PORT"
-	envTransformerModelName       = "MERLIN_TRANSFORMER_MODEL_NAME"
-	envTransformerPredictURL      = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
-	envTransformerDisableLiveness = "MERLIN_DISABLE_LIVENESS_PROBE"
+	envTransformerPort       = "MERLIN_TRANSFORMER_PORT"
+	envTransformerModelName  = "MERLIN_TRANSFORMER_MODEL_NAME"
+	envTransformerPredictURL = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
 
 	envPredictorPort             = "MERLIN_PREDICTOR_PORT"
 	envPredictorModelName        = "MERLIN_MODEL_NAME"
 	envPredictorArtifactLocation = "MERLIN_ARTIFACT_LOCATION"
 	envPredictorStorageURI       = "STORAGE_URI"
-	envPredictorDisableLiveness  = "MERLIN_DISABLE_LIVENESS_PROBE"
 
+	envDisableLivenessProbe          = "MERLIN_DISABLE_LIVENESS_PROBE"
 	defaultPredictorArtifactLocation = "/mnt/models"
-	defaultPredictorPort             = "8080"
-	defaultTransformerPort           = "8080"
 
 	annotationPrometheusScrapeFlag = "prometheus.io/scrape"
 	annotationPrometheusScrapePort = "prometheus.io/port"
 
-	prometheusPort = "8080"
-
-	liveProbePort             = 8080
-	liveProbeinitialDelaySec  = 30
+	liveProbeInitialDelaySec  = 30
 	liveProbeTimeoutSec       = 5
 	liveProbePeriodSec        = 10
 	liveProbeSuccessThreshold = 1
 	liveProbeFailureThreshold = 3
 
+	defaultHTTPPort = 8080
 	defaultGrpcPort = 9000
 )
 
@@ -175,7 +170,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	// only applicable for protocol = HttpJson for now
 	var livenessProbeConfig *corev1.Probe = nil
-	if !strings.EqualFold(envVars.ToMap()[envPredictorDisableLiveness], "true") &&
+	if !strings.EqualFold(envVars.ToMap()[envDisableLivenessProbe], "true") &&
 		modelService.Protocol == protocol.HttpJson {
 		livenessProbeConfig = createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s", modelService.Name))
 	}
@@ -311,7 +306,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 
 	// Overwrite user's values with defaults, if provided (overwrite by user not allowed)
 	defaultEnvVars := models.EnvVars{}
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)})
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
 	envVars = models.MergeEnvVars(envVars, defaultEnvVars)
@@ -339,7 +334,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	var livenessProbeConfig *corev1.Probe = nil
-	if !strings.EqualFold(envVars.ToMap()[envTransformerDisableLiveness], "true") &&
+	if !strings.EqualFold(envVars.ToMap()[envDisableLivenessProbe], "true") &&
 		modelService.Protocol == protocol.HttpJson {
 		livenessProbeConfig = createLivenessProbeSpec(fmt.Sprintf("/"))
 	}
@@ -430,11 +425,11 @@ func createLivenessProbeSpec(path string) *corev1.Probe {
 				Path:   path,
 				Scheme: "HTTP",
 				Port: intstr.IntOrString{
-					IntVal: liveProbePort,
+					IntVal: defaultHTTPPort,
 				},
 			},
 		},
-		InitialDelaySeconds: liveProbeinitialDelaySec,
+		InitialDelaySeconds: liveProbeInitialDelaySec,
 		TimeoutSeconds:      liveProbeTimeoutSec,
 		PeriodSeconds:       liveProbePeriodSec,
 		SuccessThreshold:    liveProbeSuccessThreshold,
@@ -455,7 +450,7 @@ func createAnnotations(modelService *models.Service, config *config.DeploymentCo
 
 	if modelService.Type == models.ModelTypePyFunc {
 		annotations[annotationPrometheusScrapeFlag] = "true"
-		annotations[annotationPrometheusScrapePort] = prometheusPort
+		annotations[annotationPrometheusScrapePort] = fmt.Sprint(defaultHTTPPort)
 	}
 
 	deployMode, err := toKServeDeploymentMode(modelService.DeploymentMode)
@@ -518,7 +513,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 
 	// Add default env var (Overwrite by user not allowed)
 	defaultEnvVar := models.EnvVars{}
-	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
+	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorPort, Value: fmt.Sprint(defaultHTTPPort)})
 	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
 	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
 	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})

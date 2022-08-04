@@ -562,7 +562,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options: &models.ModelOption{
 					PyFuncImageName: "gojek/project-model:1",
 				},
-				EnvVars: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envPredictorDisableLiveness, Value: "true"}},
+				EnvVars: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envDisableLivenessProbe, Value: "true"}},
 					models.PyfuncDefaultEnvVars(models.Model{Name: model.Name},
 						models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI},
 						defaultModelResourceRequests.CPURequest.Value())),
@@ -596,7 +596,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 								{
 									Name:  kserveconstant.InferenceServiceContainerName,
 									Image: "gojek/project-model:1",
-									Env: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envPredictorDisableLiveness, Value: "true"}},
+									Env: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envDisableLivenessProbe, Value: "true"}},
 										models.PyfuncDefaultEnvVars(models.Model{Name: model.Name},
 											models.Version{ID: models.ID(1), ArtifactURI: model.ArtifactURI},
 											defaultModelResourceRequests.CPURequest.Value())).ToKubernetesEnvVars(),
@@ -1448,7 +1448,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []corev1.EnvVar{
-										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
@@ -1533,7 +1533,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []corev1.EnvVar{
-										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
@@ -1633,7 +1633,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
-										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
@@ -1841,7 +1841,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []corev1.EnvVar{
-										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
@@ -1925,7 +1925,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []corev1.EnvVar{
-										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
@@ -2009,7 +2009,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []corev1.EnvVar{
-										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
@@ -2097,7 +2097,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []corev1.EnvVar{
-										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
@@ -2365,7 +2365,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []corev1.EnvVar{
-										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
@@ -2440,7 +2440,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []corev1.EnvVar{
-										{Name: envTransformerPort, Value: defaultTransformerPort},
+										{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 										{Name: envTransformerModelName, Value: "model-1"},
 										{Name: envTransformerPredictURL, Value: "model-1-predictor-default.project"},
 									},
@@ -2881,7 +2881,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 								{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
 								{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 								{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
-								{Name: envTransformerPort, Value: defaultTransformerPort},
+								{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 								{Name: envTransformerModelName, Value: "test-1"},
 								{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
 							},
@@ -2936,7 +2936,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 							Command: []string{"python"},
 							Args:    []string{"main.py"},
 							Env: []corev1.EnvVar{
-								{Name: envTransformerPort, Value: defaultTransformerPort},
+								{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)},
 								{Name: envTransformerModelName, Value: "test-1"},
 								{Name: envTransformerPredictURL, Value: "test-1-predictor-default.test"},
 							},
