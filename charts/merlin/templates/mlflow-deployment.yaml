@@ -16,9 +16,6 @@ spec:
     matchLabels:
       app: {{ template "mlflow.fullname" . }}
       release: {{ .Release.Name }}
-      {{- if .Values.mlflow.podLabels}}
-        {{- toYaml .Values.mlflow.podLabels | nindent 8 }}
-      {{- end}}
   strategy:
     type: RollingUpdate
     rollingUpdate:
