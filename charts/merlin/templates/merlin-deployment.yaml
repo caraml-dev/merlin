@@ -83,33 +83,29 @@ spec:
           - name: DATABASE_NAME
             value: {{ index .Values "merlin-postgresql" "postgresqlDatabase" }}
           - name: REACT_APP_OAUTH_CLIENT_ID
-            value: "{{ .Values.merlin.oauthClientID }}"
+            value: "{{ .Values.merlin.ui.oauthClientID }}"
           - name: REACT_APP_ENVIRONMENT
             value: "{{ .Values.merlin.environment }}"
           {{- if .Values.merlin.sentry.enabled }}
           - name: REACT_APP_SENTRY_DSN
             value: "{{ .Values.merlin.sentry.dsn }}"
           {{- end }}
-          {{- if .Values.merlin.docsURL }}
+          {{- if .Values.merlin.ui.docsURL }}
           - name: REACT_APP_MERLIN_DOCS_URL
-            value: {{ .Values.merlin.docsURL | toJson | quote }}
+            value: {{ .Values.merlin.ui.docsURL | toJson | quote }}
           {{- end }}
-          - name: REACT_APP_ALERT_ENABLED
-            value: "{{ .Values.merlin.alert.enabled }}"
-          - name: REACT_APP_MONITORING_DASHBOARD_ENABLED
-            value: "{{ .Values.merlin.monitoring.enabled }}"
           - name: REACT_APP_HOMEPAGE
-            value: "{{ .Values.merlin.homepage }}"
+            value: "{{ .Values.merlin.ui.homepage }}"
           - name: REACT_APP_MERLIN_API
-            value: "{{ .Values.merlin.apiHost }}"
+            value: "{{ .Values.merlin.ui.apiHost }}"
           - name: REACT_APP_MLP_API
-            value: "{{ .Values.merlin.mlpApi.apiHost }}"
+            value: "{{ .Values.merlin.ui.mlp.apiHost }}"
           - name: REACT_APP_FEAST_CORE_API
             value: "{{ .Values.merlin.feastCoreApi.apiHost }}"
           - name: REACT_APP_DOCKER_REGISTRIES
-            value: "{{ .Values.merlin.dockerRegistries }}"
+            value: "{{ .Values.merlin.ui.dockerRegistries }}"
           - name: REACT_APP_MAX_ALLOWED_REPLICA
-            value: "{{ .Values.merlin.maxAllowedReplica }}"
+            value: "{{ .Values.merlin.ui.maxAllowedReplica }}"
           - name: IMG_BUILDER_CLUSTER_NAME
             value: "{{ .Values.merlin.imageBuilder.clusterName }}"
           - name: IMG_BUILDER_BUILD_CONTEXT_URI
