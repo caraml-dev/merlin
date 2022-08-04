@@ -12,29 +12,8 @@ on:
 
 jobs:
   trigger-sync:
-    # runs-on: ubuntu-latest
-
-    # steps:
-    # - uses: actions/github-script@v6
-    #   with:
-    #     github-token: ${{ secrets.CARAML_SYNC }}
-    #     script: |
-    #       await github.rest.actions.createWorkflowDispatch({
-    #         owner: 'caraml-dev',
-    #         repo: 'docs',
-    #         workflow_id: 'pull_docs.yml',
-    #         ref: 'main',
-    #         inputs: {
-    #           module: 'model',
-    #           git_https: 'https://github.com/gojek/merlin.git',
-    #           doc_folder: 'docs',
-    #           branch: 'main',
-    #         },
-    #       })
     name: Pull Docs CI
-    uses: caraml-dev/docs/.github/workflows/trigger-pull-docs.yml@main
-    secrets:
-      CARAML_SYNC: ${{ secrets.CARAML_SYNC }}
+    uses: caraml-dev/docs/.github/actions/trigger-pull-docs.yml@sync-action
     with:
       module: 'model'
       git_https: 'https://github.com/gojek/merlin.git'
