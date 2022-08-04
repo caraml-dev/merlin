@@ -32,7 +32,7 @@ jobs:
     #         },
     #       })#
     name: Pull Docs CI
-    uses: caraml-dev/docs/.github/template/trigger-caraml-doc-sync.yml@main
+    uses: caraml-dev/docs/.github/workflows/trigger-pull-docs.yml@main
     secrets:
       github-token: ${{ secrets.CARAML_SYNC }}
     with:
