@@ -34,7 +34,7 @@ jobs:
     name: Pull Docs CI
     uses: caraml-dev/docs/.github/workflows/trigger-pull-docs.yml@main
     secrets:
-      github-token: ${{ secrets.CARAML_SYNC }}
+      token: ${{ secrets.CARAML_SYNC }}
     with:
       module: 'model'
       git_https: 'https://github.com/gojek/merlin.git'
