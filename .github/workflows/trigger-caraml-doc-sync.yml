@@ -30,7 +30,7 @@ jobs:
     #           doc_folder: 'docs',
     #           branch: 'main',
     #         },
-    #       })#
+    #       })
     name: Pull Docs CI
     uses: caraml-dev/docs/.github/workflows/trigger-pull-docs.yml@main
     secrets:
