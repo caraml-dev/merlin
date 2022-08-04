@@ -5,18 +5,20 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "mlflow.fullname" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-  {{- if .Values.mlflow.podLabels}}
-    {{ toYaml .Values.mlflow.podLabels | nindent 4 }}
-  {{- end}}
+    {{- if .Values.mlflow.deploymentLabels}}
+      {{- toYaml .Values.mlflow.deploymentLabels | nindent 4 }}
+    {{- end}}
 spec:
   replicas: {{ .Values.mlflow.replicaCount }}
   selector:
     matchLabels:
       app: {{ template "mlflow.fullname" . }}
       release: {{ .Release.Name }}
+      {{- if .Values.mlflow.podLabels}}
+        {{- toYaml .Values.mlflow.podLabels | nindent 8 }}
+      {{- end}}
   strategy:
     type: RollingUpdate
     rollingUpdate:

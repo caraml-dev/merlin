@@ -7,6 +7,12 @@ merlin:
 
   replicaCount: "2"
 
+  # Additional labels to apply to the deployment
+  deploymentLabels: {}
+
+  # Additional labels to apply to the merlin pods
+  podLabels: {}
+
   resources:
     requests:
       cpu: "500m"
@@ -257,6 +263,12 @@ mlflow:
   ##
   name: mlflow
 
+  # Additional labels to apply to the mlflow deployment
+  deploymentLabels: {}
+
+  # Additional labels to apply to the mlflow pods
+  podLabels: {}
+
   image:
     registry: ghcr.io
     repository: gojek/mlflow
@@ -367,5 +379,5 @@ swagger:
   apiHost: "merlin.dev"
   basePath: "/api/merlin/v1"
   service:
-    internalPort: 8080
+    internalPort: 8081
     externalPort: 8080
