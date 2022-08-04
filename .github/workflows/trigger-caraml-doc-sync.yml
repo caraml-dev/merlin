@@ -31,7 +31,8 @@ jobs:
     #           branch: 'main',
     #         },
     #       })
-    uses: caraml-dev/docs/.github/workflows/pull_docs.yml@master
+    name: Pull Docs CI
+    uses: caraml-dev/docs/.github/workflows/pull_docs.yml@main
     secrets:
       github-token: ${{ secrets.CARAML_SYNC }}
     with:
