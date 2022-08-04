@@ -6,16 +6,13 @@ metadata:
   labels:
     app: {{ include "merlin.name" . }}
     release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
     helm.sh/chart: {{ include "merlin.chart" . }}
     app.kubernetes.io/name: {{ include "merlin.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    gojek.com/app: merlin
-    gojek.com/team: dsp
-    gojek.com/stream: dsp
-    gojek.com/orchestrator: gitlab
-    gojek.com/environment: {{ .Values.merlin.environment }}
+    {{- if .Values.merlin.deploymentLabels }}
+      {{- toYaml .Values.merlin.deploymentLabels | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.merlin.replicaCount }}
   selector:
@@ -32,11 +29,9 @@ spec:
       labels:
         app: {{ template "merlin.name" .}}
         release: {{ .Release.Name }}
-        gojek.com/app: merlin
-        gojek.com/team: dsp
-        gojek.com/stream: dsp
-        gojek.com/orchestrator: gitlab
-        gojek.com/environment: {{ .Values.merlin.environment }}
+        {{- if .Values.merlin.podLabels }}
+          {{- toYaml .Values.merlin.podLabels | nindent 8 }}
+        {{- end }}
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: "{{ .Values.merlin.service.internalPort }}"
