@@ -356,7 +356,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 	return svc
 }
 
-func initModelEndpointService(cfg *config.Config, vaultClient vault.Client, db *gorm.DB) service.ModelEndpointsService {
+func initModelEndpointService(cfg *config.Config, versionEndpointSvc service.EndpointsService, vaultClient vault.Client, db *gorm.DB) service.ModelEndpointsService {
 	istioClients := make(map[string]istio.Client)
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
@@ -378,7 +378,7 @@ func initModelEndpointService(cfg *config.Config, vaultClient vault.Client, db *
 		istioClients[env.Name] = istioClient
 	}
 
-	return service.NewModelEndpointsService(istioClients, db, cfg.Environment)
+	return service.NewModelEndpointsService(istioClients, storage.NewModelEndpointStorage(db), versionEndpointSvc, cfg.Environment)
 }
 
 func initBatchDeployment(cfg *config.Config, db *gorm.DB, controllers map[string]batch.Controller, builder imagebuilder.ImageBuilder) *work.BatchDeployment {

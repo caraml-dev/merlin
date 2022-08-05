@@ -217,11 +217,10 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	vaultClient := initVault(cfg.VaultConfig)
 	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg, vaultClient)
 
-	modelEndpointService := initModelEndpointService(cfg, vaultClient, db)
-
 	clusterControllers := initClusterControllers(cfg, vaultClient)
 	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db)
 	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, coreClient, dispatcher)
+	modelEndpointService := initModelEndpointService(cfg, versionEndpointService, vaultClient, db)
 
 	batchControllers := initBatchControllers(cfg, vaultClient, db, mlpAPIClient)
 	batchDeployment := initBatchDeployment(cfg, db, batchControllers, predJobBuilder)
