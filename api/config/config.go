@@ -62,18 +62,16 @@ type UIConfig struct {
 }
 
 type ReactAppConfig struct {
-	OauthClientID     string         `envconfig:"REACT_APP_OAUTH_CLIENT_ID"`
-	Environment       string         `envconfig:"REACT_APP_ENVIRONMENT"`
-	SentryDSN         string         `envconfig:"REACT_APP_SENTRY_DSN"`
-	DocURL            Documentations `envconfig:"REACT_APP_MERLIN_DOCS_URL"`
-	AlertEnabled      bool           `envconfig:"REACT_APP_ALERT_ENABLED"`
-	MonitoringEnabled bool           `envconfig:"REACT_APP_MONITORING_DASHBOARD_ENABLED"`
-	HomePage          string         `envconfig:"REACT_APP_HOMEPAGE"`
-	MerlinURL         string         `envconfig:"REACT_APP_MERLIN_API"`
-	MlpURL            string         `envconfig:"REACT_APP_MLP_API"`
-	FeastCoreURL      string         `envconfig:"REACT_APP_FEAST_CORE_API"`
-	DockerRegistries  string         `envconfig:"REACT_APP_DOCKER_REGISTRIES"`
-	MaxAllowedReplica int            `envconfig:"REACT_APP_MAX_ALLOWED_REPLICA" default:"20"`
+	DocURL            Documentations `envconfig:"REACT_APP_MERLIN_DOCS_URL" json:"REACT_APP_MERLIN_DOCS_URL,omitempty"`
+	DockerRegistries  string         `envconfig:"REACT_APP_DOCKER_REGISTRIES" json:"REACT_APP_DOCKER_REGISTRIES,omitempty"`
+	Environment       string         `envconfig:"REACT_APP_ENVIRONMENT" json:"REACT_APP_ENVIRONMENT,omitempty"`
+	FeastCoreURL      string         `envconfig:"REACT_APP_FEAST_CORE_API" json:"REACT_APP_FEAST_CORE_API,omitempty"`
+	HomePage          string         `envconfig:"REACT_APP_HOMEPAGE" json:"REACT_APP_HOMEPAGE,omitempty"`
+	MaxAllowedReplica int            `envconfig:"REACT_APP_MAX_ALLOWED_REPLICA" default:"20" json:"REACT_APP_MAX_ALLOWED_REPLICA,omitempty"`
+	MerlinURL         string         `envconfig:"REACT_APP_MERLIN_API" json:"REACT_APP_MERLIN_API,omitempty"`
+	MlpURL            string         `envconfig:"REACT_APP_MLP_API" json:"REACT_APP_MLP_API,omitempty"`
+	OauthClientID     string         `envconfig:"REACT_APP_OAUTH_CLIENT_ID" json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
+	SentryDSN         string         `envconfig:"REACT_APP_SENTRY_DSN" json:"REACT_APP_SENTRY_DSN,omitempty"`
 }
 
 type Documentations []Documentation

@@ -30,23 +30,6 @@ merlin:
 
   environment: dev
 
-  homepage: /merlin
-
-  apiHost: http://merlin.mlp/v1
-
-  docsURL:
-    [
-      {
-        "href": "https://github.com/gojek/merlin/blob/main/docs/getting-started/README.md",
-        "label": "Getting Started with Merlin",
-      },
-    ]
-
-  # Comma-separated value of Docker registries that can be chosen in deployment page
-  dockerRegistries: ghcr.io/gojek,ghcr.io/your-company
-
-  maxAllowedReplica: 20
-
   loggerDestinationURL: "http://yourDestinationLogger"
 
   queue:
@@ -218,6 +201,28 @@ merlin:
   mlflow:
     # This should be the actual DNS registered
     trackingURL: "http://www.example.com"
+
+  ui:
+    oauthClientID: ""
+
+    homepage: /merlin
+
+    apiHost: /api/merlin/v1
+
+    mlp:
+      apiHost: /api/v1
+
+    docsURL: [
+      {
+        "href": "https://github.com/gojek/merlin/blob/main/docs/getting-started/README.md",
+        "label": "Getting Started with Merlin",
+      },
+    ]
+
+    # Comma-separated value of Docker registries that can be chosen in deployment page
+    dockerRegistries: ghcr.io/gojek,ghcr.io/your-company
+
+    maxAllowedReplica: 20
 
 postgresql:
   enabled: true
