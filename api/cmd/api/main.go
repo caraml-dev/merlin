@@ -106,32 +106,20 @@ func main() {
 		http.ServeFile(w, r, cfg.SwaggerPath)
 	})
 
-	reactConfig := cfg.ReactAppConfig
 	uiEnv := uiEnvHandler{
-		OauthClientID:     reactConfig.OauthClientID,
-		Environment:       reactConfig.Environment,
-		SentryDSN:         reactConfig.SentryDSN,
-		DocURL:            reactConfig.DocURL,
-		HomePage:          reactConfig.HomePage,
-		MerlinURL:         reactConfig.MerlinURL,
-		MlpURL:            reactConfig.MlpURL,
-		DockerRegistries:  reactConfig.DockerRegistries,
-		MaxAllowedReplica: reactConfig.MaxAllowedReplica,
+		ReactAppConfig: &cfg.ReactAppConfig,
+
+		AlertEnabled: cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
 
 		DefaultFeastServingSource: cfg.StandardTransformerConfig.DefaultFeastSource.String(),
 		FeastServingURLs:          cfg.StandardTransformerConfig.FeastServingURLs,
-		FeastCoreURL:              reactConfig.FeastCoreURL,
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
-
-		AlertEnabled: cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
 	}
 
-	uiHomePage := reactConfig.HomePage
-	if !strings.HasPrefix(uiHomePage, "/") {
-		uiHomePage = "/" + uiEnv.HomePage
-	}
+	uiHomePage := fmt.Sprintf("/%s", strings.TrimPrefix(cfg.ReactAppConfig.HomePage, "/"))
+
 	router.Path(uiHomePage + "/env.js").HandlerFunc(uiEnv.handler)
 
 	ui := uiHandler{staticPath: cfg.UI.StaticPath, indexPath: cfg.UI.IndexPath}
