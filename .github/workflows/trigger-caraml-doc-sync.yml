@@ -1,0 +1,22 @@
+# This workflow triggers sync of docs to caraml-dev/docs
+
+name: Trigger CaraML Docs Sync
+
+on:
+  push:
+    tags:
+    - v*
+
+jobs:
+  trigger-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Remote Doc Sync Workflow
+        uses: caraml-dev/docs/.github/actions/trigger-remote-docs-sync@main
+        with:
+          module: 'model'
+          git_https: 'https://github.com/gojek/merlin.git'
+          doc_folder: 'docs'
+          ref_name: ${{ github.ref_name }}
+          ref_type: ${{ github.ref_type }}
+          credentials: ${{ secrets.CARAML_SYNC }}
