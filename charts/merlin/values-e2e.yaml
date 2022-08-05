@@ -4,6 +4,10 @@ merlin:
   image:
     repository: merlin
   replicaCount: 1
+
+  podLabels:
+    environment: e2e
+
   resources:
     requests:
       cpu: 25m
@@ -120,6 +124,10 @@ mlflow:
     requests:
       cpu: 25m
       memory: 64Mi
+
+  podLabels:
+    environment: e2e
+
   ingress:
     enabled: true
     class: istio
