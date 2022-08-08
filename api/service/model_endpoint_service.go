@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/gojek/merlin/pkg/protocol"
@@ -64,23 +63,23 @@ type ModelEndpointsService interface {
 }
 
 // NewModelEndpointsService returns an initialized ModelEndpointsService.
-func NewModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointService EndpointsService, environment string) ModelEndpointsService {
-	return newModelEndpointsService(istioClients, modelEndpointStorage, versionEndpointService, environment)
+func NewModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) ModelEndpointsService {
+	return newModelEndpointsService(istioClients, modelEndpointStorage, versionEndpointStorage, environment)
 }
 
 type modelEndpointsService struct {
-	istioClients         map[string]istio.Client
-	modelEndpointStorage storage.ModelEndpointStorage
-	endpointService      EndpointsService
-	environment          string
+	istioClients           map[string]istio.Client
+	modelEndpointStorage   storage.ModelEndpointStorage
+	versionEndpointStorage storage.VersionEndpointStorage
+	environment            string
 }
 
-func newModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointService EndpointsService, environment string) *modelEndpointsService {
+func newModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) *modelEndpointsService {
 	return &modelEndpointsService{
-		istioClients:         istioClients,
-		modelEndpointStorage: modelEndpointStorage,
-		endpointService:      versionEndpointService,
-		environment:          environment,
+		istioClients:           istioClients,
+		modelEndpointStorage:   modelEndpointStorage,
+		versionEndpointStorage: versionEndpointStorage,
+		environment:            environment,
 	}
 }
 
@@ -134,7 +133,7 @@ func (s *modelEndpointsService) DeployEndpoint(ctx context.Context, model *model
 	endpoint.Status = models.EndpointServing
 
 	// Update DB
-	err = s.modelEndpointStorage.Save(ctx, endpoint, nil)
+	err = s.modelEndpointStorage.Save(ctx, nil, endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +177,7 @@ func (s *modelEndpointsService) UpdateEndpoint(ctx context.Context, model *model
 	newEndpoint.Status = models.EndpointServing
 
 	// Update DB
-	err = s.modelEndpointStorage.Save(ctx, newEndpoint, oldEndpoint)
+	err = s.modelEndpointStorage.Save(ctx, oldEndpoint, newEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -202,6 +201,11 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 	}
 
 	endpoint.Status = models.EndpointTerminated
+	err = s.modelEndpointStorage.Save(ctx, nil, endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	return endpoint, nil
 }
 
@@ -244,10 +248,7 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 		modelEndpointHost = meHost
 
 		if versionEndpoint.Protocol != protocol.UpiV1 {
-			vePath, err := s.parseVersionEndpointPath(versionEndpoint)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse Version Endpoint Path (%s): %s, %s", versionEndpoint.ID, versionEndpoint.URL, err)
-			}
+			vePath := versionEndpoint.Path()
 			versionEndpointPath = vePath
 		}
 
@@ -257,7 +258,7 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 			},
 			Headers: &istiov1beta1.Headers{
 				Request: &istiov1beta1.Headers_HeaderOperations{
-					Set: map[string]string{"Host": versionEndpoint.HostURL()},
+					Set: map[string]string{"Host": versionEndpoint.Hostname()},
 				},
 			},
 			Weight: destination.Weight,
@@ -279,32 +280,13 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 
 // createModelEndpointHost create model endpoint host based on model name, project name, and domain inferred from versionEndpoint
 func (s *modelEndpointsService) createModelEndpointHost(model *models.Model, versionEndpoint *models.VersionEndpoint) (string, error) {
-	if !strings.HasPrefix(versionEndpoint.URL, "http://") {
-		versionEndpoint.URL = "//" + versionEndpoint.URL
-	}
-
-	veURL, err := url.Parse(versionEndpoint.URL)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to parse version endpoint url")
-	}
-
-	host := strings.Split(veURL.Hostname(), fmt.Sprintf(".%s.", model.Project.Name))
+	host := strings.Split(versionEndpoint.Hostname(), fmt.Sprintf(".%s.", model.Project.Name))
 	if len(host) != 2 {
 		return "", fmt.Errorf("invalid version endpoint url: %s. failed to split domain: %+v", versionEndpoint.URL, host)
 	}
 
 	domain := host[1]
 	return fmt.Sprintf("%s.%s.%s", model.Name, model.Project.Name, domain), nil
-}
-
-// parseVersionEndpointPath parse version endpoint prediction path
-func (s *modelEndpointsService) parseVersionEndpointPath(versionEndpoint *models.VersionEndpoint) (string, error) {
-	veURL, err := url.Parse(versionEndpoint.URL)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to parse version endpoint url")
-	}
-
-	return veURL.Path, nil
 }
 
 // assignVersionEndpoint fetches destination version endpoints from database and assign to model endpoint.
@@ -314,7 +296,7 @@ func (c *modelEndpointsService) assignVersionEndpoint(ctx context.Context, endpo
 	for k := range endpoint.Rule.Destination {
 		versionEndpointID := endpoint.Rule.Destination[k].VersionEndpointID
 
-		versionEndpoint, err := c.endpointService.FindByID(ctx, versionEndpointID)
+		versionEndpoint, err := c.versionEndpointStorage.Get(versionEndpointID)
 		if err != nil {
 			return nil, fmt.Errorf("version Endpoint with given `version_endpoint_id: %s` not found", versionEndpointID)
 		}

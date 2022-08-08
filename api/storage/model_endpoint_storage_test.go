@@ -120,6 +120,27 @@ func TestModelEndpointStorage_Save(t *testing.T) {
 	})
 }
 
+func TestModelEndpointStorage_SaveTerminated(t *testing.T) {
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		storage := NewModelEndpointStorage(db)
+		endpoints := populateModelEndpointTable(db)
+
+		endpoint := endpoints[0]
+		endpoint.Status = models.EndpointTerminated
+
+		ve, err := storage.(*modelEndpointStorage).versionEndpointStorage.Get(endpoint.Rule.Destination[0].VersionEndpointID)
+		assert.NoError(t, err)
+		assert.Equal(t, models.EndpointServing, ve.Status)
+
+		err = storage.Save(context.Background(), nil, endpoint)
+		assert.NoError(t, err)
+
+		ve, err = storage.(*modelEndpointStorage).versionEndpointStorage.Get(endpoint.Rule.Destination[0].VersionEndpointID)
+		assert.NoError(t, err)
+		assert.Equal(t, models.EndpointRunning, ve.Status)
+	})
+}
+
 func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 	db = db.LogMode(true)
 	isDefaultTrue := true
