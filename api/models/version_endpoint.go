@@ -122,17 +122,48 @@ func (ve *VersionEndpoint) IsServing() bool {
 	return ve.Status == EndpointServing
 }
 
-func (ve *VersionEndpoint) HostURL() string {
+func (ve *VersionEndpoint) Hostname() string {
 	if ve.URL == "" {
 		return ""
 	}
 
-	url, err := url.Parse(ve.URL)
+	parsedURL, err := url.Parse(ve.URL)
 	if err != nil {
 		return ""
 	}
 
-	return url.Hostname()
+	if parsedURL.Scheme == "" {
+		veURL := ve.URL
+		veURL = "//" + veURL
+		parsedURL, err = url.Parse(veURL)
+		if err != nil {
+			return ""
+		}
+	}
+
+	return parsedURL.Hostname()
+}
+
+func (ve *VersionEndpoint) Path() string {
+	if ve.URL == "" {
+		return ""
+	}
+
+	parsedURL, err := url.Parse(ve.URL)
+	if err != nil {
+		return ""
+	}
+
+	if parsedURL.Scheme == "" {
+		veURL := ve.URL
+		veURL = "//" + veURL
+		parsedURL, err = url.Parse(veURL)
+		if err != nil {
+			return ""
+		}
+	}
+
+	return parsedURL.Path
 }
 
 type EndpointMonitoringURLParams struct {
