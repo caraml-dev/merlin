@@ -104,7 +104,7 @@ func TestModelEndpointStorage_Save(t *testing.T) {
 		currentEndpoint, err := storage.FindByID(context.Background(), newEndpoint.ID)
 		assert.NoError(t, err)
 
-		err = storage.Save(context.Background(), newEndpoint, currentEndpoint)
+		err = storage.Save(context.Background(), currentEndpoint, newEndpoint)
 		assert.NoError(t, err)
 
 		actual, err := storage.FindByID(context.Background(), newEndpoint.ID)

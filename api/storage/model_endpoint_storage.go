@@ -18,7 +18,7 @@ type ModelEndpointStorage interface {
 	// ListModelEndpointsInProject list all model endpoints within a project given the project ID
 	ListModelEndpointsInProject(ctx context.Context, projectID models.ID, region string) ([]*models.ModelEndpoint, error)
 	// Save save newModelEndpoint and its nested version endpoint objects
-	Save(ctx context.Context, newModelEndpoint, prevModelEndpoint *models.ModelEndpoint) error
+	Save(ctx context.Context, prevModelEndpoint, newModelEndpoint *models.ModelEndpoint) error
 }
 
 type modelEndpointStorage struct {
