@@ -2165,7 +2165,7 @@ func assertElementMatchFeatureTableMetadata(t *testing.T, expectation []*spec.Fe
 	var numOfMatchElements int
 	for _, val := range visited {
 		if val {
-			numOfMatchElements = numOfMatchElements + 1
+			numOfMatchElements++
 		}
 	}
 	assert.True(t, len(expectation) == numOfMatchElements)
