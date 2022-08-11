@@ -127,18 +127,9 @@ func (ve *VersionEndpoint) Hostname() string {
 		return ""
 	}
 
-	parsedURL, err := url.Parse(ve.URL)
+	parsedURL, err := ve.ParsedURL()
 	if err != nil {
 		return ""
-	}
-
-	if parsedURL.Scheme == "" {
-		veURL := ve.URL
-		veURL = "//" + veURL
-		parsedURL, err = url.Parse(veURL)
-		if err != nil {
-			return ""
-		}
 	}
 
 	return parsedURL.Hostname()
@@ -149,9 +140,18 @@ func (ve *VersionEndpoint) Path() string {
 		return ""
 	}
 
-	parsedURL, err := url.Parse(ve.URL)
+	parsedURL, err := ve.ParsedURL()
 	if err != nil {
 		return ""
+	}
+
+	return parsedURL.Path
+}
+
+func (ve *VersionEndpoint) ParsedURL() (*url.URL, error) {
+	parsedURL, err := url.Parse(ve.URL)
+	if err != nil {
+		return nil, err
 	}
 
 	if parsedURL.Scheme == "" {
@@ -159,11 +159,11 @@ func (ve *VersionEndpoint) Path() string {
 		veURL = "//" + veURL
 		parsedURL, err = url.Parse(veURL)
 		if err != nil {
-			return ""
+			return nil, err
 		}
 	}
 
-	return parsedURL.Path
+	return parsedURL, nil
 }
 
 type EndpointMonitoringURLParams struct {
