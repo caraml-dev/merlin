@@ -20,6 +20,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/google/uuid"
 
 	"github.com/gojek/merlin/config"
@@ -66,11 +67,21 @@ type VersionEndpoint struct {
 	DeploymentMode deployment.Mode `json:"deployment_mode" gorm:"deployment_mode"`
 	// AutoscalingPolicy controls the conditions when autoscaling should be triggered
 	AutoscalingPolicy *autoscaling.AutoscalingPolicy `json:"autoscaling_policy" gorm:"autoscaling_policy"`
+	// Protocol to be used when deploying the model
+	Protocol protocol.Protocol `json:"protocol" gorm:"protocol"`
 	CreatedUpdated
 }
 
+const defaultWorkers = 1
+
+// NewVersionEndpoint create a version endpoint with default configurations
 func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, version *Version, monitoringConfig config.MonitoringConfig, deploymentMode deployment.Mode) *VersionEndpoint {
 	id := uuid.New()
+
+	var envVars EnvVars
+	if model.Type == ModelTypePyFunc {
+		envVars = PyfuncDefaultEnvVars(*model, *version, defaultWorkers)
+	}
 
 	if deploymentMode == deployment.EmptyDeploymentMode {
 		deploymentMode = deployment.ServerlessDeploymentMode
@@ -93,6 +104,8 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 		ResourceRequest:      env.DefaultResourceRequest,
 		DeploymentMode:       deploymentMode,
 		AutoscalingPolicy:    autoscalingPolicy,
+		EnvVars:              envVars,
+		Protocol:             protocol.HttpJson,
 	}
 
 	if monitoringConfig.MonitoringEnabled {
@@ -109,17 +122,48 @@ func (ve *VersionEndpoint) IsServing() bool {
 	return ve.Status == EndpointServing
 }
 
-func (ve *VersionEndpoint) HostURL() string {
+func (ve *VersionEndpoint) Hostname() string {
 	if ve.URL == "" {
 		return ""
 	}
 
-	url, err := url.Parse(ve.URL)
+	parsedURL, err := ve.ParsedURL()
 	if err != nil {
 		return ""
 	}
 
-	return url.Hostname()
+	return parsedURL.Hostname()
+}
+
+func (ve *VersionEndpoint) Path() string {
+	if ve.URL == "" {
+		return ""
+	}
+
+	parsedURL, err := ve.ParsedURL()
+	if err != nil {
+		return ""
+	}
+
+	return parsedURL.Path
+}
+
+func (ve *VersionEndpoint) ParsedURL() (*url.URL, error) {
+	parsedURL, err := url.Parse(ve.URL)
+	if err != nil {
+		return nil, err
+	}
+
+	if parsedURL.Scheme == "" {
+		veURL := ve.URL
+		veURL = "//" + veURL
+		parsedURL, err = url.Parse(veURL)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return parsedURL, nil
 }
 
 type EndpointMonitoringURLParams struct {

@@ -19,6 +19,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/gojek/merlin/cluster/resource"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kservev1beta1client "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
 
@@ -79,7 +80,7 @@ type controller struct {
 	batchClient                batchv1client.BatchV1Interface
 	namespaceCreator           NamespaceCreator
 	deploymentConfig           *config.DeploymentConfig
-	kfServingResourceTemplater *KFServingResourceTemplater
+	kfServingResourceTemplater *resource.InferenceServiceTemplater
 	ContainerFetcher
 }
 
@@ -114,7 +115,7 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 		GcpProject:  clusterConfig.GcpProject,
 	})
 
-	kfServingResourceTemplater := NewKFServingResourceTemplater(standardTransformerConfig)
+	kfServingResourceTemplater := resource.NewInferenceServiceTemplater(standardTransformerConfig)
 	return newController(servingClient, coreV1Client, batchV1Client, deployConfig, containerFetcher, kfServingResourceTemplater)
 }
 
@@ -123,7 +124,7 @@ func newController(kfservingClient kservev1beta1client.ServingV1beta1Interface,
 	batchV1Client batchv1client.BatchV1Interface,
 	deploymentConfig config.DeploymentConfig,
 	containerFetcher ContainerFetcher,
-	templater *KFServingResourceTemplater) (Controller, error) {
+	templater *resource.InferenceServiceTemplater) (Controller, error) {
 	return &controller{
 		servingClient:              kfservingClient,
 		clusterClient:              coreV1Client,
@@ -157,37 +158,37 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		return nil, ErrUnableToCreateNamespace
 	}
 
-	svcName := modelService.Name
-	s, err := k.servingClient.InferenceServices(modelService.Namespace).Get(svcName, metav1.GetOptions{})
+	isvcName := modelService.Name
+	s, err := k.servingClient.InferenceServices(modelService.Namespace).Get(isvcName, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
-			log.Errorf("unable to check inference service %s %v", svcName, err)
+			log.Errorf("unable to check inference service %s %v", isvcName, err)
 			return nil, ErrUnableToGetInferenceServiceStatus
 		}
 
 		// create new resource
 		spec, err := k.kfServingResourceTemplater.CreateInferenceServiceSpec(modelService, k.deploymentConfig)
 		if err != nil {
-			log.Errorf("unable to create inference service spec %s %v", svcName, err)
+			log.Errorf("unable to create inference service spec %s %v", isvcName, err)
 			return nil, ErrUnableToCreateInferenceService
 		}
 
 		s, err = k.servingClient.InferenceServices(modelService.Namespace).Create(spec)
 		if err != nil {
-			log.Errorf("unable to create inference service %s %v", svcName, err)
+			log.Errorf("unable to create inference service %s %v", isvcName, err)
 			return nil, ErrUnableToCreateInferenceService
 		}
 	} else {
 		patchedSpec, err := k.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, k.deploymentConfig)
 		if err != nil {
-			log.Errorf("unable to update inference service %s %v", svcName, err)
+			log.Errorf("unable to update inference service %s %v", isvcName, err)
 			return nil, ErrUnableToUpdateInferenceService
 		}
 
 		// existing resource found, do update
 		s, err = k.servingClient.InferenceServices(modelService.Namespace).Update(patchedSpec)
 		if err != nil {
-			log.Errorf("unable to update inference service %s %v", svcName, err)
+			log.Errorf("unable to update inference service %s %v", isvcName, err)
 			return nil, ErrUnableToUpdateInferenceService
 		}
 	}
@@ -195,14 +196,14 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	s, err = k.waitInferenceServiceReady(s)
 	if err != nil {
 		// remove created inferenceservice when got error
-		if err := k.deleteInferenceService(svcName, modelService.Namespace); err != nil {
-			log.Warnf("unable to delete inference service %s with error %v", svcName, err)
+		if err := k.deleteInferenceService(isvcName, modelService.Namespace); err != nil {
+			log.Warnf("unable to delete inference service %s with error %v", isvcName, err)
 		}
 
 		return nil, err
 	}
 
-	inferenceURL := models.GetValidInferenceURL(s.Status.URL.String(), svcName)
+	inferenceURL := models.GetInferenceURL(s.Status.URL, isvcName, modelService.Protocol)
 	return &models.Service{
 		Name:        s.Name,
 		Namespace:   s.Namespace,

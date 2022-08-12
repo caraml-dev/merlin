@@ -107,7 +107,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 		return err
 	}
 
-	modelService := models.NewService(model, version, modelOpt, endpoint.ResourceRequest, endpoint.EnvVars, endpoint.EnvironmentName, endpoint.Transformer, endpoint.Logger, endpoint.DeploymentMode, endpoint.AutoscalingPolicy)
+	modelService := models.NewService(model, version, modelOpt, endpoint)
 	ctl, ok := depl.ClusterControllers[endpoint.EnvironmentName]
 	if !ok {
 		return fmt.Errorf("unable to find cluster controller for environment %s", endpoint.EnvironmentName)

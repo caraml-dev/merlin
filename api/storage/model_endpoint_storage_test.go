@@ -15,7 +15,7 @@
 //go:build integration || integration_local
 // +build integration integration_local
 
-package service
+package storage
 
 import (
 	"context"
@@ -26,8 +26,6 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/istio"
-	"github.com/gojek/merlin/istio/mocks"
 	"github.com/gojek/merlin/it/database"
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/models"
@@ -36,18 +34,12 @@ import (
 var env1Name = "id-env"
 var env2Name = "th-env"
 
-func TestModelEndpointsService_FindById(t *testing.T) {
+func TestModelEndpointsStorage_FindById(t *testing.T) {
 	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
 		endpoints := populateModelEndpointTable(db)
+		storage := NewModelEndpointStorage(db)
 
-		env1Istio := &mocks.Client{}
-		env2Istio := &mocks.Client{}
-
-		controllers := map[string]istio.Client{env1Name: env1Istio, env2Name: env2Istio}
-		environment := "dev"
-		endpointSvc := newModelEndpointsService(controllers, db, environment)
-
-		actualEndpoint, err := endpointSvc.FindByID(context.Background(), endpoints[0].ID)
+		actualEndpoint, err := storage.FindByID(context.Background(), endpoints[0].ID)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, actualEndpoint)
@@ -57,47 +49,95 @@ func TestModelEndpointsService_FindById(t *testing.T) {
 	})
 }
 
-func TestModelEndpointsService_ListEndpoints(t *testing.T) {
+func TestModelEndpointsStorage_ListEndpoints(t *testing.T) {
 	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
 		endpoints := populateModelEndpointTable(db)
+		storage := NewModelEndpointStorage(db)
 
-		env1Istio := &mocks.Client{}
-		env2Istio := &mocks.Client{}
-
-		controllers := map[string]istio.Client{env1Name: env1Istio, env2Name: env2Istio}
-		environment := "dev"
-		endpointSvc := newModelEndpointsService(controllers, db, environment)
-
-		actualEndpoints, err := endpointSvc.ListModelEndpoints(context.Background(), 1)
+		actualEndpoints, err := storage.ListModelEndpoints(context.Background(), 1)
 		assert.NoError(t, err)
 		assert.Equal(t, len(endpoints), len(actualEndpoints))
 	})
 }
 
-func TestModelEndpointsService_ListModelEndpointsInProject(t *testing.T) {
+func TestModelEndpointsStorage_ListModelEndpointsInProject(t *testing.T) {
 	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
 		expectedEndpoints := populateModelEndpointTable(db)
-		expectedIndoEndpoints := []*models.ModelEndpoint{}
+		var expectedIndoEndpoints []*models.ModelEndpoint
 		for _, endpoint := range expectedEndpoints {
 			if endpoint.EnvironmentName == env1Name {
 				expectedIndoEndpoints = append(expectedIndoEndpoints, endpoint)
 			}
 		}
 
-		env1Istio := &mocks.Client{}
-		env2Istio := &mocks.Client{}
-
-		controllers := map[string]istio.Client{env1Name: env1Istio, env2Name: env2Istio}
-		environment := "dev"
-		endpointSvc := newModelEndpointsService(controllers, db, environment)
-
-		allEndpoints, err := endpointSvc.ListModelEndpointsInProject(context.Background(), 1, "")
+		storage := NewModelEndpointStorage(db)
+		allEndpoints, err := storage.ListModelEndpointsInProject(context.Background(), 1, "")
 		assert.NoError(t, err)
 		assert.Equal(t, len(expectedEndpoints), len(allEndpoints))
 
-		indonesiaEndpoints, err := endpointSvc.ListModelEndpointsInProject(context.Background(), 1, "id")
+		indonesiaEndpoints, err := storage.ListModelEndpointsInProject(context.Background(), 1, "id")
 		assert.NoError(t, err)
 		assert.Equal(t, len(expectedIndoEndpoints), len(indonesiaEndpoints))
+	})
+}
+
+func TestModelEndpointStorage_Save(t *testing.T) {
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		storage := NewModelEndpointStorage(db)
+		endpoints := populateModelEndpointTable(db)
+
+		newVersionEndpoint := &models.VersionEndpoint{
+			ID:              uuid.New(),
+			VersionID:       1,
+			VersionModelID:  1,
+			Status:          models.EndpointRunning,
+			EnvironmentName: env1Name,
+			DeploymentMode:  deployment.ServerlessDeploymentMode,
+		}
+		db.Create(newVersionEndpoint)
+
+		newEndpoint := endpoints[0]
+		oldVeId := newEndpoint.Rule.Destination[0].VersionEndpointID
+		newEndpoint.Rule.Destination[0].VersionEndpointID = newVersionEndpoint.ID
+		newEndpoint.Rule.Destination[0].VersionEndpoint = newVersionEndpoint
+
+		currentEndpoint, err := storage.FindByID(context.Background(), newEndpoint.ID)
+		assert.NoError(t, err)
+
+		err = storage.Save(context.Background(), currentEndpoint, newEndpoint)
+		assert.NoError(t, err)
+
+		actual, err := storage.FindByID(context.Background(), newEndpoint.ID)
+		assert.Equal(t, newVersionEndpoint.ID, actual.Rule.Destination[0].VersionEndpointID)
+
+		ve, err := storage.(*modelEndpointStorage).versionEndpointStorage.Get(newVersionEndpoint.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, models.EndpointServing, ve.Status)
+
+		oldVe, err := storage.(*modelEndpointStorage).versionEndpointStorage.Get(oldVeId)
+		assert.NoError(t, err)
+		assert.Equal(t, models.EndpointRunning, oldVe.Status)
+	})
+}
+
+func TestModelEndpointStorage_SaveTerminated(t *testing.T) {
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		storage := NewModelEndpointStorage(db)
+		endpoints := populateModelEndpointTable(db)
+
+		endpoint := endpoints[0]
+		endpoint.Status = models.EndpointTerminated
+
+		ve, err := storage.(*modelEndpointStorage).versionEndpointStorage.Get(endpoint.Rule.Destination[0].VersionEndpointID)
+		assert.NoError(t, err)
+		assert.Equal(t, models.EndpointServing, ve.Status)
+
+		err = storage.Save(context.Background(), nil, endpoint)
+		assert.NoError(t, err)
+
+		ve, err = storage.(*modelEndpointStorage).versionEndpointStorage.Get(endpoint.Rule.Destination[0].VersionEndpointID)
+		assert.NoError(t, err)
+		assert.Equal(t, models.EndpointRunning, ve.Status)
 	})
 }
 
@@ -146,7 +186,7 @@ func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 		ID:              uuid.New(),
 		VersionID:       v.ID,
 		VersionModelID:  m.ID,
-		Status:          "serving",
+		Status:          models.EndpointServing,
 		EnvironmentName: env1.Name,
 		DeploymentMode:  deployment.ServerlessDeploymentMode,
 	}
@@ -155,7 +195,7 @@ func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 		ID:              uuid.New(),
 		VersionID:       v.ID,
 		VersionModelID:  m.ID,
-		Status:          "serving",
+		Status:          models.EndpointServing,
 		EnvironmentName: env2.Name,
 		DeploymentMode:  deployment.ServerlessDeploymentMode,
 	}

@@ -18,10 +18,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strings"
 
-	"github.com/jinzhu/gorm"
+	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/gojek/merlin/storage"
 	"github.com/pkg/errors"
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
@@ -48,89 +48,64 @@ const (
 
 // ModelEndpointsService interface.
 type ModelEndpointsService interface {
+	// ListModelEndpoints list all model endpoints owned by a model given the model ID
 	ListModelEndpoints(ctx context.Context, modelID models.ID) ([]*models.ModelEndpoint, error)
+	// ListModelEndpointsInProject list all model endpoints within a project given the project ID
 	ListModelEndpointsInProject(ctx context.Context, projectID models.ID, region string) ([]*models.ModelEndpoint, error)
-
+	// FindByID find model endpoint given its ID
 	FindByID(ctx context.Context, id models.ID) (*models.ModelEndpoint, error)
-	Save(ctx context.Context, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
-
+	// DeployEndpoint creates new model endpoint of a model
 	DeployEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
-	UpdateEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
-
+	// UpdateEndpoint update existing model endpoint owned by model
+	UpdateEndpoint(ctx context.Context, model *models.Model, oldEndpoint *models.ModelEndpoint, newEndpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
+	// UndeployEndpoint delete model endpoint
 	UndeployEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
 }
 
 // NewModelEndpointsService returns an initialized ModelEndpointsService.
-func NewModelEndpointsService(istioClients map[string]istio.Client, db *gorm.DB, environment string) ModelEndpointsService {
-	return newModelEndpointsService(istioClients, db, environment)
+func NewModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) ModelEndpointsService {
+	return newModelEndpointsService(istioClients, modelEndpointStorage, versionEndpointStorage, environment)
 }
 
 type modelEndpointsService struct {
-	istioClients map[string]istio.Client
-	db           *gorm.DB
-	environment  string
+	istioClients           map[string]istio.Client
+	modelEndpointStorage   storage.ModelEndpointStorage
+	versionEndpointStorage storage.VersionEndpointStorage
+	environment            string
 }
 
-func newModelEndpointsService(istioClients map[string]istio.Client, db *gorm.DB, environment string) *modelEndpointsService {
+func newModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) *modelEndpointsService {
 	return &modelEndpointsService{
-		istioClients: istioClients,
-		db:           db,
-		environment:  environment,
+		istioClients:           istioClients,
+		modelEndpointStorage:   modelEndpointStorage,
+		versionEndpointStorage: versionEndpointStorage,
+		environment:            environment,
 	}
 }
 
-func (s *modelEndpointsService) query() *gorm.DB {
-	return s.db.Preload("Environment").
-		Preload("Model").
-		Joins("JOIN environments on environments.name = model_endpoints.environment_name")
-}
-
+// ListModelEndpoints list all model endpoints owned by a model given the model ID
 func (s *modelEndpointsService) ListModelEndpoints(ctx context.Context, modelID models.ID) (endpoints []*models.ModelEndpoint, err error) {
-	err = s.query().Where("model_id = ?", modelID.String()).Find(&endpoints).Error
-	return
+	return s.modelEndpointStorage.ListModelEndpoints(ctx, modelID)
 }
 
+// ListModelEndpointsInProject list all model endpoints within a project given the project ID
 func (s *modelEndpointsService) ListModelEndpointsInProject(ctx context.Context, projectID models.ID, region string) ([]*models.ModelEndpoint, error) {
-	// Run the query
-	endpoints := []*models.ModelEndpoint{}
-
-	db := s.query().
-		Joins("JOIN models on models.id = model_endpoints.model_id").
-		Where("models.project_id = ?", projectID)
-
-	// Filter by optional column
-	// Environment's region
-	if region != "" {
-		db = db.Where("environments.region = ?", region)
-	}
-
-	if err := db.Find(&endpoints).Error; err != nil {
-		log.Errorf("failed to list Model Endpoints for Project ID (%s), %v", projectID, err)
-		return nil, errors.Wrapf(err, "failed to list Model Endpoints for Project ID (%s)", projectID)
-	}
-
-	return endpoints, nil
+	return s.modelEndpointStorage.ListModelEndpointsInProject(ctx, projectID, region)
 }
 
+// FindByID find model endpoint given its ID
 func (s *modelEndpointsService) FindByID(ctx context.Context, id models.ID) (*models.ModelEndpoint, error) {
-	endpoint := &models.ModelEndpoint{}
-
-	if err := s.query().Where("model_endpoints.id = ?", id.String()).Find(&endpoint).Error; err != nil {
-		log.Errorf("failed to find model endpoint by id (%s) %v", id, err)
-		return nil, errors.Wrapf(err, "failed to find model endpoint by id (%s)", id)
-	}
-
-	return endpoint, nil
+	return s.modelEndpointStorage.FindByID(ctx, id)
 }
 
-func (s *modelEndpointsService) Save(ctx context.Context, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error) {
-	if err := s.db.Save(endpoint).Error; err != nil {
-		return nil, err
-	}
-	return s.FindByID(ctx, endpoint.ID)
-}
-
+// DeployEndpoint creates new model endpoint of a model
 func (s *modelEndpointsService) DeployEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error) {
+	endpoint, err := s.assignVersionEndpoint(ctx, endpoint)
+	if err != nil {
+		log.Errorf("failed to assign version endpoint: %v", err)
+		return nil, errors.Wrapf(err, "failed to assign version endpoint to model endpoint")
+	}
+
 	// Create Istio's VirtualService
 	vs, err := s.createVirtualService(model, endpoint)
 	if err != nil {
@@ -157,21 +132,34 @@ func (s *modelEndpointsService) DeployEndpoint(ctx context.Context, model *model
 	endpoint.URL = vs.Spec.Hosts[0]
 	endpoint.Status = models.EndpointServing
 
+	// Update DB
+	err = s.modelEndpointStorage.Save(ctx, nil, endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	return endpoint, nil
 }
 
-func (s *modelEndpointsService) UpdateEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error) {
+// UpdateEndpoint update existing model endpoint owned by model
+func (s *modelEndpointsService) UpdateEndpoint(ctx context.Context, model *models.Model, oldEndpoint *models.ModelEndpoint, newEndpoint *models.ModelEndpoint) (*models.ModelEndpoint, error) {
+	newEndpoint, err := s.assignVersionEndpoint(ctx, newEndpoint)
+	if err != nil {
+		log.Errorf("failed to assign version endpoint: %v", err)
+		return nil, errors.Wrapf(err, "failed to assign version endpoint to model endpoint")
+	}
+
 	// Patch Istio's VirtualService
-	vs, err := s.createVirtualService(model, endpoint)
+	vs, err := s.createVirtualService(model, newEndpoint)
 	if err != nil {
 		log.Errorf("failed to create VirtualService specification: %v", err)
 		return nil, errors.Wrapf(err, "failed to create VirtualService specification")
 	}
 
-	istioClient, ok := s.istioClients[endpoint.EnvironmentName]
+	istioClient, ok := s.istioClients[newEndpoint.EnvironmentName]
 	if !ok {
-		log.Errorf("unable to find istio client for environment: %s", endpoint.EnvironmentName)
-		return nil, fmt.Errorf("unable to find istio client for environment: %s", endpoint.EnvironmentName)
+		log.Errorf("unable to find istio client for environment: %s", newEndpoint.EnvironmentName)
+		return nil, fmt.Errorf("unable to find istio client for environment: %s", newEndpoint.EnvironmentName)
 	}
 
 	// Update Istio's VirtualService
@@ -185,12 +173,19 @@ func (s *modelEndpointsService) UpdateEndpoint(ctx context.Context, model *model
 	vsJSON, _ := json.Marshal(vs)
 	log.Infof("VirtualService updated: %s", vsJSON)
 
-	endpoint.URL = vs.Spec.Hosts[0]
-	endpoint.Status = models.EndpointServing
+	newEndpoint.URL = vs.Spec.Hosts[0]
+	newEndpoint.Status = models.EndpointServing
 
-	return endpoint, nil
+	// Update DB
+	err = s.modelEndpointStorage.Save(ctx, oldEndpoint, newEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	return newEndpoint, nil
 }
 
+// UndeployEndpoint delete model endpoint
 func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error) {
 	istioClient, ok := s.istioClients[endpoint.EnvironmentName]
 	if !ok {
@@ -206,6 +201,11 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 	}
 
 	endpoint.Status = models.EndpointTerminated
+	err = s.modelEndpointStorage.Save(ctx, nil, endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	return endpoint, nil
 }
 
@@ -228,28 +228,29 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 		Spec: istiov1beta1.VirtualService{},
 	}
 
-	modelEndpointHost := ""
-	versionEndpointPath := ""
-
+	var modelEndpointHost string
+	var versionEndpointPath string
+	var protocolValue protocol.Protocol
 	var httpRouteDestinations []*istiov1beta1.HTTPRouteDestination
+
 	for _, destination := range endpoint.Rule.Destination {
 		versionEndpoint := destination.VersionEndpoint
+		protocolValue = destination.VersionEndpoint.Protocol
 
 		if versionEndpoint.Status != models.EndpointRunning {
-			return nil, fmt.Errorf("Version Endpoint (%s) is not running, but %s", versionEndpoint.ID, versionEndpoint.Status)
+			return nil, fmt.Errorf("version endpoint (%s) is not running, but %s", versionEndpoint.ID, versionEndpoint.Status)
 		}
 
-		meURL, err := s.parseModelEndpointHost(model, versionEndpoint)
+		meHost, err := s.createModelEndpointHost(model, versionEndpoint)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse Version Endpoint URL (%s): %s, %s", versionEndpoint.ID, versionEndpoint.URL, err)
+			return nil, fmt.Errorf("failed to parse Version Endpoint URL (%s): %s, %s", versionEndpoint.ID, versionEndpoint.URL, err)
 		}
-		modelEndpointHost = meURL
+		modelEndpointHost = meHost
 
-		vePath, err := s.parseVersionEndpointPath(versionEndpoint)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to parse Version Endpoint Path (%s): %s, %s", versionEndpoint.ID, versionEndpoint.URL, err)
+		if versionEndpoint.Protocol != protocol.UpiV1 {
+			vePath := versionEndpoint.Path()
+			versionEndpointPath = vePath
 		}
-		versionEndpointPath = vePath
 
 		httpRouteDest := &istiov1beta1.HTTPRouteDestination{
 			Destination: &istiov1beta1.Destination{
@@ -257,7 +258,7 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 			},
 			Headers: &istiov1beta1.Headers{
 				Request: &istiov1beta1.Headers_HeaderOperations{
-					Set: map[string]string{"Host": versionEndpoint.HostURL()},
+					Set: map[string]string{"Host": versionEndpoint.Hostname()},
 				},
 			},
 			Weight: destination.Weight,
@@ -270,64 +271,80 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 		versionEndpointPath += predictPathSuffix
 	}
 
-	var mirrorDestination *istiov1beta1.Destination
-	if endpoint.Rule.Mirror != nil {
-		mirrorDestination = &istiov1beta1.Destination{
-			Host: endpoint.Rule.Mirror.ServiceName,
-		}
-	}
-
 	vs.Spec.Hosts = []string{modelEndpointHost}
-
 	vs.Spec.Gateways = []string{defaultGateway}
-
-	vs.Spec.Http = []*istiov1beta1.HTTPRoute{
-		&istiov1beta1.HTTPRoute{
-			Match: []*istiov1beta1.HTTPMatchRequest{
-				&istiov1beta1.HTTPMatchRequest{
-					Uri: &istiov1beta1.StringMatch{
-						MatchType: &istiov1beta1.StringMatch_Prefix{
-							Prefix: defaultMatchURIPrefix,
-						},
-					},
-				},
-			},
-			Rewrite: &istiov1beta1.HTTPRewrite{
-				Uri: versionEndpointPath,
-			},
-
-			Route:  httpRouteDestinations,
-			Mirror: mirrorDestination,
-		},
-	}
+	vs.Spec.Http = createHttpRoutes(versionEndpointPath, httpRouteDestinations, protocolValue)
 
 	return vs, nil
 }
 
-func (s *modelEndpointsService) parseModelEndpointHost(model *models.Model, versionEndpoint *models.VersionEndpoint) (string, error) {
-	veURL, err := url.Parse(versionEndpoint.URL)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to parse version endpoint url")
-	}
-
-	host := strings.Split(veURL.Hostname(), fmt.Sprintf(".%s.", model.Project.Name))
-
+// createModelEndpointHost create model endpoint host based on model name, project name, and domain inferred from versionEndpoint
+func (s *modelEndpointsService) createModelEndpointHost(model *models.Model, versionEndpoint *models.VersionEndpoint) (string, error) {
+	host := strings.Split(versionEndpoint.Hostname(), fmt.Sprintf(".%s.", model.Project.Name))
 	if len(host) != 2 {
 		return "", fmt.Errorf("invalid version endpoint url: %s. failed to split domain: %+v", versionEndpoint.URL, host)
 	}
 
 	domain := host[1]
-
-	modelEndpointHost := model.Name + "." + model.Project.Name + "." + domain
-
-	return modelEndpointHost, nil
+	return fmt.Sprintf("%s.%s.%s", model.Name, model.Project.Name, domain), nil
 }
 
-func (s *modelEndpointsService) parseVersionEndpointPath(versionEndpoint *models.VersionEndpoint) (string, error) {
-	veURL, err := url.Parse(versionEndpoint.URL)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to parse version endpoint url")
+// assignVersionEndpoint fetches destination version endpoints from database and assign to model endpoint.
+// assignVersionEndpoint validates version endpoint status and returns error if find no running version endpoint.
+func (c *modelEndpointsService) assignVersionEndpoint(ctx context.Context, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error) {
+	var protocolValue protocol.Protocol
+	for k := range endpoint.Rule.Destination {
+		versionEndpointID := endpoint.Rule.Destination[k].VersionEndpointID
+
+		versionEndpoint, err := c.versionEndpointStorage.Get(versionEndpointID)
+		if err != nil {
+			return nil, fmt.Errorf("version Endpoint with given `version_endpoint_id: %s` not found", versionEndpointID)
+		}
+
+		if !versionEndpoint.IsRunning() {
+			return nil, fmt.Errorf("version Endpoint %s is not running, but %s", versionEndpoint.ID, versionEndpoint.Status)
+		}
+
+		// ensure that all version endpoint destination have same protocol
+		if protocolValue != "" && protocolValue != versionEndpoint.Protocol {
+			return nil, fmt.Errorf("all version endpoint protocol must be same")
+		}
+		protocolValue = versionEndpoint.Protocol
+
+		endpoint.Protocol = protocolValue
+		endpoint.Rule.Destination[k].VersionEndpoint = versionEndpoint
 	}
 
-	return veURL.Path, nil
+	return endpoint, nil
+}
+
+func createHttpRoutes(versionEndpointPath string, httpRouteDestinations []*istiov1beta1.HTTPRouteDestination, value protocol.Protocol) []*istiov1beta1.HTTPRoute {
+	switch value {
+	case protocol.UpiV1:
+		return []*istiov1beta1.HTTPRoute{
+			{
+				Route: httpRouteDestinations,
+			},
+		}
+
+	default:
+		return []*istiov1beta1.HTTPRoute{
+			{
+				Match: []*istiov1beta1.HTTPMatchRequest{
+					{
+						Uri: &istiov1beta1.StringMatch{
+							MatchType: &istiov1beta1.StringMatch_Prefix{
+								Prefix: defaultMatchURIPrefix,
+							},
+						},
+					},
+				},
+				Rewrite: &istiov1beta1.HTTPRewrite{
+					Uri: versionEndpointPath,
+				},
+
+				Route: httpRouteDestinations,
+			},
+		}
+	}
 }

@@ -378,7 +378,7 @@ func initModelEndpointService(cfg *config.Config, vaultClient vault.Client, db *
 		istioClients[env.Name] = istioClient
 	}
 
-	return service.NewModelEndpointsService(istioClients, db, cfg.Environment)
+	return service.NewModelEndpointsService(istioClients, storage.NewModelEndpointStorage(db), storage.NewVersionEndpointStorage(db), cfg.Environment)
 }
 
 func initBatchDeployment(cfg *config.Config, db *gorm.DB, controllers map[string]batch.Controller, builder imagebuilder.ImageBuilder) *work.BatchDeployment {

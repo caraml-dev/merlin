@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cluster
+package resource
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"strings"
+
+	"github.com/gojek/merlin/pkg/protocol"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
@@ -37,37 +39,43 @@ import (
 )
 
 const (
-	envTransformerPort            = "MERLIN_TRANSFORMER_PORT"
-	envTransformerModelName       = "MERLIN_TRANSFORMER_MODEL_NAME"
-	envTransformerPredictURL      = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
-	envTransformerDisableLiveness = "MERLIN_DISABLE_LIVENESS_PROBE"
+	// TODO: Deprecate following env vars
+	envTransformerPort       = "MERLIN_TRANSFORMER_PORT"
+	envTransformerModelName  = "MERLIN_TRANSFORMER_MODEL_NAME"
+	envTransformerPredictURL = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
 
 	envPredictorPort             = "MERLIN_PREDICTOR_PORT"
 	envPredictorModelName        = "MERLIN_MODEL_NAME"
 	envPredictorArtifactLocation = "MERLIN_ARTIFACT_LOCATION"
-	envPredictorStorageURI       = "STORAGE_URI"
-	envPredictorDisableLiveness  = "MERLIN_DISABLE_LIVENESS_PROBE"
+	envOldDisableLivenessProbe   = "MERLIN_DISABLE_LIVENESS_PROBE"
 
-	defaultPredictorArtifactLocation = "/mnt/models"
-	defaultPredictorPort             = "8080"
-	defaultTransformerPort           = "8080"
+	envHTTPPort             = "CARAML_HTTP_PORT"
+	envGRPCPort             = "CARAML_GRPC_PORT"
+	envModelName            = "CARAML_MODEL_NAME"
+	envModelVersion         = "CARAML_MODEL_VERSION"
+	envModelFullName        = "CARAML_MODEL_FULL_NAME"
+	envPredictorHost        = "CARAML_PREDICTOR_HOST"
+	envArtifactLocation     = "CARAML_ARTIFACT_LOCATION"
+	envDisableLivenessProbe = "CARAML_DISABLE_LIVENESS_PROBE"
+	envStorageURI           = "STORAGE_URI"
 
 	annotationPrometheusScrapeFlag = "prometheus.io/scrape"
 	annotationPrometheusScrapePort = "prometheus.io/port"
 
-	prometheusPort = "8080"
-
-	liveProbePort             = 8080
-	liveProbeinitialDelaySec  = 30
+	liveProbeInitialDelaySec  = 30
 	liveProbeTimeoutSec       = 5
 	liveProbePeriodSec        = 10
 	liveProbeSuccessThreshold = 1
 	liveProbeFailureThreshold = 3
+
+	defaultPredictorArtifactLocation = "/mnt/models"
+	defaultHTTPPort                  = 8080
+	defaultGRPCPort                  = 9000
 )
 
 var (
 	// list of configuration stored as annotations
-	configAnnotationkeys = []string{
+	configAnnotationKeys = []string{
 		annotationPrometheusScrapeFlag,
 		annotationPrometheusScrapePort,
 		knserving.QueueSidecarResourcePercentageAnnotationKey,
@@ -78,17 +86,25 @@ var (
 		knautoscaling.MetricAnnotationKey,
 		knautoscaling.TargetAnnotationKey,
 	}
+
+	grpcContainerPorts = []corev1.ContainerPort{
+		{
+			ContainerPort: defaultGRPCPort,
+			Name:          "h2c",
+			Protocol:      corev1.ProtocolTCP,
+		},
+	}
 )
 
-type KFServingResourceTemplater struct {
+type InferenceServiceTemplater struct {
 	standardTransformerConfig config.StandardTransformerConfig
 }
 
-func NewKFServingResourceTemplater(standardTransformerConfig config.StandardTransformerConfig) *KFServingResourceTemplater {
-	return &KFServingResourceTemplater{standardTransformerConfig: standardTransformerConfig}
+func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTransformerConfig) *InferenceServiceTemplater {
+	return &InferenceServiceTemplater{standardTransformerConfig: standardTransformerConfig}
 }
 
-func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
 	annotations, err := createAnnotations(modelService, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
@@ -115,13 +131,13 @@ func (t *KFServingResourceTemplater) CreateInferenceServiceSpec(modelService *mo
 	return inferenceService, nil
 }
 
-func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
 	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
 	annotations, err := createAnnotations(modelService, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
 	}
-	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationkeys), annotations)
+	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
 	orig.Spec.Predictor = createPredictorSpec(modelService, config)
 
 	orig.Spec.Transformer = nil
@@ -129,26 +145,6 @@ func (t *KFServingResourceTemplater) PatchInferenceServiceSpec(orig *kservev1bet
 		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 	}
 	return orig, nil
-}
-
-func createLivenessProbeSpec(path string, port int32, initialDelaySeconds int32,
-	timeoutSeconds int32, periodSeconds int32, successThreshold int32, failureThreshold int32) *corev1.Probe {
-	return &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   path,
-				Scheme: "HTTP",
-				Port: intstr.IntOrString{
-					IntVal: port,
-				},
-			},
-		},
-		InitialDelaySeconds: initialDelaySeconds,
-		TimeoutSeconds:      timeoutSeconds,
-		PeriodSeconds:       periodSeconds,
-		SuccessThreshold:    successThreshold,
-		FailureThreshold:    failureThreshold,
-	}
 }
 
 func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
@@ -180,24 +176,19 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		},
 	}
 
-	var predictorSpec kservev1beta1.PredictorSpec
-
-	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
-
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
+	// only applicable for protocol = HttpJson for now
 	var livenessProbeConfig *corev1.Probe = nil
-	if !strings.EqualFold(envVars.ToMap()[envPredictorDisableLiveness], "true") {
-		livenessProbeConfig = createLivenessProbeSpec(
-			fmt.Sprintf("/v1/models/%s", modelService.Name),
-			liveProbePort,
-			liveProbeinitialDelaySec,
-			liveProbeTimeoutSec,
-			liveProbePeriodSec,
-			liveProbeSuccessThreshold,
-			liveProbeFailureThreshold,
-		)
+	envVarsMap := envVars.ToMap()
+	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
+		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") &&
+		modelService.Protocol == protocol.HttpJson {
+		livenessProbeConfig = createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s", modelService.Name))
 	}
 
+	containerPorts := createContainerPorts(modelService.Protocol)
+	storageUri := utils.CreateModelLocation(modelService.ArtifactURI)
+	var predictorSpec kservev1beta1.PredictorSpec
 	switch modelService.Type {
 	case models.ModelTypeTensorflow:
 		predictorSpec = kservev1beta1.PredictorSpec{
@@ -208,18 +199,8 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Name:          kserveconstant.InferenceServiceContainerName,
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
-					},
-				},
-			},
-		}
-	case models.ModelTypeOnnx:
-		predictorSpec = kservev1beta1.PredictorSpec{
-			ONNX: &kservev1beta1.ONNXRuntimeSpec{
-				PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
-					StorageURI: &storageUri,
-					Container: corev1.Container{
-						Name:      kserveconstant.InferenceServiceContainerName,
-						Resources: resources,
+						Ports:         containerPorts,
+						Env:           envVars.ToKubernetesEnvVars(),
 					},
 				},
 			},
@@ -233,6 +214,8 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Name:          kserveconstant.InferenceServiceContainerName,
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
+						Ports:         containerPorts,
+						Env:           envVars.ToKubernetesEnvVars(),
 					},
 				},
 			},
@@ -246,6 +229,8 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Name:          kserveconstant.InferenceServiceContainerName,
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
+						Ports:         containerPorts,
+						Env:           envVars.ToKubernetesEnvVars(),
 					},
 				},
 			},
@@ -259,6 +244,8 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Name:          kserveconstant.InferenceServiceContainerName,
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
+						Ports:         containerPorts,
+						Env:           envVars.ToKubernetesEnvVars(),
 					},
 				},
 			},
@@ -273,6 +260,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 						Env:           envVars.ToKubernetesEnvVars(),
 						Resources:     resources,
 						LivenessProbe: livenessProbeConfig,
+						Ports:         containerPorts,
 					},
 				},
 			},
@@ -294,60 +282,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	return predictorSpec
 }
 
-func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kservev1beta1.LoggerSpec {
-	loggerMode := models.ToKFServingLoggerMode(loggerConfig.Mode)
-	return &kservev1beta1.LoggerSpec{
-		URL:  &loggerURL,
-		Mode: loggerMode,
-	}
-}
-
-func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
-	envVars := modelService.EnvVars
-
-	// Add default env var (Overwrite by user not allowed)
-	defaultEnvVar := models.EnvVars{}
-	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorPort, Value: defaultPredictorPort})
-	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
-	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
-	defaultEnvVar = append(defaultEnvVar, models.EnvVar{Name: envPredictorStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
-
-	envVars = models.MergeEnvVars(envVars, defaultEnvVar)
-
-	var containerCommand []string
-	customPredictor := modelService.Options.CustomPredictor
-	if customPredictor.Command != "" {
-		command := strings.Split(customPredictor.Command, " ")
-		if len(command) > 0 {
-			containerCommand = command
-		}
-	}
-
-	var containerArgs []string
-	if customPredictor.Args != "" {
-		args := strings.Split(customPredictor.Args, " ")
-		if len(args) > 0 {
-			containerArgs = args
-		}
-	}
-	return kservev1beta1.PredictorSpec{
-		PodSpec: kservev1beta1.PodSpec{
-			Containers: []corev1.Container{
-				{
-
-					Image:     customPredictor.Image,
-					Env:       envVars.ToKubernetesEnvVars(),
-					Resources: resources,
-					Command:   containerCommand,
-					Args:      containerArgs,
-					Name:      kserveconstant.InferenceServiceContainerName,
-				},
-			},
-		},
-	}
-}
-
-func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
+func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
 	if transformer.ResourceRequest == nil {
 		transformer.ResourceRequest = &models.ResourceRequest{
 			MinReplica:    config.DefaultTransformerResourceRequests.MinReplica,
@@ -372,10 +307,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	}
 
 	// Overwrite user's values with defaults, if provided (overwrite by user not allowed)
-	defaultEnvVars := models.EnvVars{}
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPort, Value: defaultTransformerPort})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
-	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictURL(modelService)})
+	defaultEnvVars := createDefaultTransformerEnvVars(modelService)
 	envVars = models.MergeEnvVars(envVars, defaultEnvVars)
 
 	var loggerSpec *kservev1beta1.LoggerSpec
@@ -401,18 +333,14 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	var livenessProbeConfig *corev1.Probe = nil
-	if !strings.EqualFold(envVars.ToMap()[envTransformerDisableLiveness], "true") {
-		livenessProbeConfig = createLivenessProbeSpec(
-			fmt.Sprintf("/"),
-			liveProbePort,
-			liveProbeinitialDelaySec,
-			liveProbeTimeoutSec,
-			liveProbePeriodSec,
-			liveProbeSuccessThreshold,
-			liveProbeFailureThreshold,
-		)
+	envVarsMap := envVars.ToMap()
+	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
+		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") &&
+		modelService.Protocol == protocol.HttpJson {
+		livenessProbeConfig = createLivenessProbeSpec(fmt.Sprintf("/"))
 	}
 
+	containerPorts := createContainerPorts(modelService.Protocol)
 	transformerSpec := &kservev1beta1.TransformerSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
@@ -433,6 +361,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 					Command:       transformerCommand,
 					Args:          transformerArgs,
 					LivenessProbe: livenessProbeConfig,
+					Ports:         containerPorts,
 				},
 			},
 		},
@@ -446,7 +375,7 @@ func (t *KFServingResourceTemplater) createTransformerSpec(modelService *models.
 	return transformerSpec
 }
 
-func (t *KFServingResourceTemplater) enrichStandardTransformerEnvVars(envVars models.EnvVars) models.EnvVars {
+func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(envVars models.EnvVars) models.EnvVars {
 	// compact standard transformer config
 	envVarsMap := envVars.ToMap()
 	standardTransformerSpec := envVarsMap[transformerpkg.StandardTransformerConfigEnvName]
@@ -490,7 +419,26 @@ func (t *KFServingResourceTemplater) enrichStandardTransformerEnvVars(envVars mo
 	return envVars
 }
 
-func createPredictURL(modelService *models.Service) string {
+func createLivenessProbeSpec(path string) *corev1.Probe {
+	return &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   path,
+				Scheme: "HTTP",
+				Port: intstr.IntOrString{
+					IntVal: defaultHTTPPort,
+				},
+			},
+		},
+		InitialDelaySeconds: liveProbeInitialDelaySec,
+		TimeoutSeconds:      liveProbeTimeoutSec,
+		PeriodSeconds:       liveProbePeriodSec,
+		SuccessThreshold:    liveProbeSuccessThreshold,
+		FailureThreshold:    liveProbeFailureThreshold,
+	}
+}
+
+func createPredictorHost(modelService *models.Service) string {
 	return modelService.Name + "-predictor-default." + modelService.Namespace
 }
 
@@ -503,7 +451,7 @@ func createAnnotations(modelService *models.Service, config *config.DeploymentCo
 
 	if modelService.Type == models.ModelTypePyFunc {
 		annotations[annotationPrometheusScrapeFlag] = "true"
-		annotations[annotationPrometheusScrapePort] = prometheusPort
+		annotations[annotationPrometheusScrapePort] = fmt.Sprint(defaultHTTPPort)
 	}
 
 	deployMode, err := toKServeDeploymentMode(modelService.DeploymentMode)
@@ -543,37 +491,97 @@ func createAnnotations(modelService *models.Service, config *config.DeploymentCo
 	return annotations, nil
 }
 
-func toKNativeAutoscalerMetrics(metricsType autoscaling.MetricsType) (string, error) {
-	switch metricsType {
-	case autoscaling.CPUUtilization:
-		return knautoscaling.CPU, nil
-	case autoscaling.MemoryUtilization:
-		return knautoscaling.Memory, nil
-	case autoscaling.RPS:
-		return knautoscaling.RPS, nil
-	case autoscaling.Concurrency:
-		return knautoscaling.Concurrency, nil
+func createContainerPorts(protocolValue protocol.Protocol) []corev1.ContainerPort {
+	var containerPorts []corev1.ContainerPort = nil
+	switch protocolValue {
+	case protocol.UpiV1:
+		containerPorts = grpcContainerPorts
 	default:
-		return "", fmt.Errorf("unsuppported autoscaler metrics on serverless deployment: %s", metricsType)
+	}
+	return containerPorts
+}
+
+func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kservev1beta1.LoggerSpec {
+	loggerMode := models.ToKFServingLoggerMode(loggerConfig.Mode)
+	return &kservev1beta1.LoggerSpec{
+		URL:  &loggerURL,
+		Mode: loggerMode,
 	}
 }
 
-func toKServeAutoscalerMetrics(metricsType autoscaling.MetricsType) (string, error) {
-	switch metricsType {
-	case autoscaling.CPUUtilization:
-		return string(kserveconstant.AutoScalerMetricsCPU), nil
-	default:
-		return "", fmt.Errorf("unsupported autoscaler metrics on raw deployment: %s", metricsType)
-	}
+func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVars {
+	defaultEnvVars := models.EnvVars{}
+
+	// These env vars are to be deprecated
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerModelName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envTransformerPredictURL, Value: createPredictorHost(modelService)})
+
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envHTTPPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envGRPCPort, Value: fmt.Sprint(defaultGRPCPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelName, Value: modelService.ModelName})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelVersion, Value: modelService.ModelVersion})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelFullName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorHost, Value: createPredictorHost(modelService)})
+	return defaultEnvVars
 }
 
-func toKServeDeploymentMode(deploymentMode deployment.Mode) (string, error) {
-	switch deploymentMode {
-	case deployment.RawDeploymentMode:
-		return string(kserveconstant.RawDeployment), nil
-	case deployment.ServerlessDeploymentMode, deployment.EmptyDeploymentMode:
-		return string(kserveconstant.Serverless), nil
-	default:
-		return "", fmt.Errorf("unsupported deployment mode: %s", deploymentMode)
+func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars {
+	defaultEnvVars := models.EnvVars{}
+
+	// These env vars are to be deprecated
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorModelName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorArtifactLocation, Value: defaultPredictorArtifactLocation})
+
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envStorageURI, Value: utils.CreateModelLocation(modelService.ArtifactURI)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envHTTPPort, Value: fmt.Sprint(defaultHTTPPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envGRPCPort, Value: fmt.Sprint(defaultGRPCPort)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelName, Value: modelService.ModelName})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelVersion, Value: modelService.ModelVersion})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelFullName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envArtifactLocation, Value: defaultPredictorArtifactLocation})
+	return defaultEnvVars
+}
+
+func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
+	envVars := modelService.EnvVars
+
+	// Add default env var (Overwrite by user not allowed)
+	defaultEnvVar := createDefaultPredictorEnvVars(modelService)
+	envVars = models.MergeEnvVars(envVars, defaultEnvVar)
+
+	var containerCommand []string
+	customPredictor := modelService.Options.CustomPredictor
+	if customPredictor.Command != "" {
+		command := strings.Split(customPredictor.Command, " ")
+		if len(command) > 0 {
+			containerCommand = command
+		}
+	}
+
+	var containerArgs []string
+	if customPredictor.Args != "" {
+		args := strings.Split(customPredictor.Args, " ")
+		if len(args) > 0 {
+			containerArgs = args
+		}
+	}
+
+	containerPorts := createContainerPorts(modelService.Protocol)
+	return kservev1beta1.PredictorSpec{
+		PodSpec: kservev1beta1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Image:     customPredictor.Image,
+					Env:       envVars.ToKubernetesEnvVars(),
+					Resources: resources,
+					Command:   containerCommand,
+					Args:      containerArgs,
+					Name:      kserveconstant.InferenceServiceContainerName,
+					Ports:     containerPorts,
+				},
+			},
+		},
 	}
 }
