@@ -130,7 +130,7 @@ func TestVersionEndpoint_UpdateMonitoringUrl(t *testing.T) {
 	}
 }
 
-func TestVersionEndpoint_HostURL(t *testing.T) {
+func TestVersionEndpoint_Hostname(t *testing.T) {
 	type fields struct {
 		URL string
 	}
@@ -147,16 +147,23 @@ func TestVersionEndpoint_HostURL(t *testing.T) {
 			"",
 		},
 		{
-			"https://gojek.com",
+			"valid url",
 			fields{
 				URL: "https://gojek.com",
 			},
 			"gojek.com",
 		},
 		{
-			"https://gojek.com/v1/models/gojek-1:predict",
+			"valid url with path",
 			fields{
 				URL: "https://gojek.com/v1/models/gojek-1:predict",
+			},
+			"gojek.com",
+		},
+		{
+			"no scheme",
+			fields{
+				URL: "gojek.com",
 			},
 			"gojek.com",
 		},
@@ -166,8 +173,65 @@ func TestVersionEndpoint_HostURL(t *testing.T) {
 			errRaised := &VersionEndpoint{
 				URL: tt.fields.URL,
 			}
-			if got := errRaised.HostURL(); got != tt.want {
-				t.Errorf("VersionEndpoint.HostURL() = %v, want %v", got, tt.want)
+			if got := errRaised.Hostname(); got != tt.want {
+				t.Errorf("VersionEndpoint.Hostname() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestVersionEndpoint_Path(t *testing.T) {
+	type fields struct {
+		URL string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			"empty url",
+			fields{
+				URL: "",
+			},
+			"",
+		},
+		{
+			"valid url",
+			fields{
+				URL: "https://gojek.com",
+			},
+			"",
+		},
+		{
+			"valid url with path",
+			fields{
+				URL: "https://gojek.com/v1/models/gojek-1:predict",
+			},
+			"/v1/models/gojek-1:predict",
+		},
+		{
+			"no scheme",
+			fields{
+				URL: "gojek.com/v1/models/gojek-1:predict",
+			},
+			"/v1/models/gojek-1:predict",
+		},
+		{
+			"no scheme and no path",
+			fields{
+				URL: "gojek.com",
+			},
+			"",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errRaised := &VersionEndpoint{
+				URL: tt.fields.URL,
+			}
+			if got := errRaised.Path(); got != tt.want {
+				t.Errorf("VersionEndpoint.Hostname() = %v, want %v", got, tt.want)
 			}
 		})
 	}

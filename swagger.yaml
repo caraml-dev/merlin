@@ -1067,13 +1067,10 @@ definitions:
           - "xgboost"
           - "tensorflow"
           - "sklearn"
-          - "h2o"
           - "pytorch"
           - "pyfunc"
-          - "onnx"
           - "pyfunc_v2"
           - "custom"
-          - "other"
       mlflow_url:
         type: "string"
       endpoints:
@@ -1109,6 +1106,8 @@ definitions:
         type: "string"
       environment:
         $ref: "#/definitions/Environment"
+      protocol:
+        $ref: "#/definitions/Protocol"
       created_at:
         type: "string"
         format: "date-time"
@@ -1269,6 +1268,8 @@ definitions:
         $ref: "#/definitions/DeploymentMode"
       autoscaling_policy:
         $ref: "#/definitions/AutoscalingPolicy"
+      protocol:
+        $ref: "#/definitions/Protocol"
       created_at:
         type: "string"
         format: "date-time"
@@ -1664,6 +1665,12 @@ definitions:
   FreeFormObject:
     type: object
     additionalProperties: true
+
+  Protocol:
+    type: "string"
+    enum:
+      - "HTTP_JSON"
+      - "UPI_V1"
 
 securityDefinitions:
   Bearer:

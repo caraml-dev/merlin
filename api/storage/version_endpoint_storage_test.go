@@ -20,6 +20,7 @@ package storage
 import (
 	"testing"
 
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -35,12 +36,16 @@ func TestVersionEndpointsStorage_Get(t *testing.T) {
 		endpoints := populateVersionEndpointTable(db)
 		endpointSvc := NewVersionEndpointStorage(db)
 
-		actualEndpoint, err := endpointSvc.Get(endpoints[0].ID)
+		for _, ve := range endpoints {
+			actualEndpoint, err := endpointSvc.Get(ve.ID)
 
-		assert.NoError(t, err)
-		assert.NotNil(t, actualEndpoint)
-		assert.NotNil(t, actualEndpoint.Environment)
-		assert.Equal(t, actualEndpoint.ID, endpoints[0].ID)
+			assert.NoError(t, err)
+			assert.NotNil(t, actualEndpoint)
+			assert.NotNil(t, actualEndpoint.Environment)
+			assert.Equal(t, actualEndpoint.ID, ve.ID)
+			assert.Equal(t, actualEndpoint.Protocol, ve.Protocol)
+		}
+
 	})
 }
 
@@ -161,6 +166,7 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 		Status:          "pending",
 		EnvironmentName: env1.Name,
 		DeploymentMode:  deployment.ServerlessDeploymentMode,
+		Protocol:        protocol.UpiV1,
 	}
 	db.Create(&ep1)
 	ep2 := models.VersionEndpoint{
@@ -170,6 +176,7 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 		Status:          "terminated",
 		EnvironmentName: env1.Name,
 		DeploymentMode:  deployment.ServerlessDeploymentMode,
+		Protocol:        protocol.HttpJson,
 	}
 	db.Create(&ep2)
 	ep3 := models.VersionEndpoint{

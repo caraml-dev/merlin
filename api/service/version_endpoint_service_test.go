@@ -26,6 +26,7 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -102,6 +103,7 @@ func TestDeployEndpoint(t *testing.T) {
 				Namespace:            project.Name,
 				URL:                  "",
 				Status:               models.EndpointPending,
+				Protocol:             protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -133,6 +135,7 @@ func TestDeployEndpoint(t *testing.T) {
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -152,6 +155,7 @@ func TestDeployEndpoint(t *testing.T) {
 				Namespace:            project.Name,
 				URL:                  "",
 				Status:               models.EndpointPending,
+				Protocol:             protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -173,6 +177,7 @@ func TestDeployEndpoint(t *testing.T) {
 				Namespace:            project.Name,
 				URL:                  "",
 				Status:               models.EndpointPending,
+				Protocol:             protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -208,6 +213,7 @@ func TestDeployEndpoint(t *testing.T) {
 						Value: "1",
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -235,6 +241,7 @@ func TestDeployEndpoint(t *testing.T) {
 							Value: "1",
 						},
 					},
+					Protocol: protocol.HttpJson,
 				},
 			},
 			expectedEndpoint: &models.VersionEndpoint{
@@ -255,6 +262,7 @@ func TestDeployEndpoint(t *testing.T) {
 						Value: "1",
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -296,6 +304,7 @@ func TestDeployEndpoint(t *testing.T) {
 					Image:           "ghcr.io/gojek/merlin-transformer-test",
 					ResourceRequest: env.DefaultResourceRequest,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -322,6 +331,7 @@ func TestDeployEndpoint(t *testing.T) {
 							Mode:    models.LoggerMode("randomString"),
 						},
 					},
+					Protocol: protocol.HttpJson,
 				},
 			},
 			expectedEndpoint: &models.VersionEndpoint{
@@ -348,6 +358,7 @@ func TestDeployEndpoint(t *testing.T) {
 						Mode:    models.LogAll,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -392,6 +403,7 @@ func TestDeployEndpoint(t *testing.T) {
 						Mode:    models.LogRequest,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -436,6 +448,7 @@ func TestDeployEndpoint(t *testing.T) {
 						Mode:    models.LogResponse,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -488,6 +501,7 @@ func TestDeployEndpoint(t *testing.T) {
 						Mode:    models.LogResponse,
 					},
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -541,6 +555,7 @@ func TestDeployEndpoint(t *testing.T) {
 				},
 				DeploymentMode:    deployment.RawDeploymentMode,
 				AutoscalingPolicy: autoscaling.DefaultRawDeploymentAutoscalingPolicy,
+				Protocol:          protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -601,6 +616,7 @@ func TestDeployEndpoint(t *testing.T) {
 					MetricsType: autoscaling.RPS,
 					TargetValue: 100,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -661,6 +677,7 @@ func TestDeployEndpoint(t *testing.T) {
 					MetricsType: autoscaling.RPS,
 					TargetValue: 100,
 				},
+				Protocol: protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -750,6 +767,44 @@ func TestDeployEndpoint(t *testing.T) {
 					MetricsType: autoscaling.CPUUtilization,
 					TargetValue: 10,
 				},
+				Protocol: protocol.HttpJson,
+			},
+			wantDeployError: false,
+		},
+		{
+			name: "success: pyfunc upi v1 model",
+			args: args{
+				env,
+				&models.Model{Name: "model", Project: project, Type: models.ModelTypePyFunc},
+				&models.Version{ID: 1},
+				&models.VersionEndpoint{
+					ResourceRequest: env.DefaultResourceRequest,
+					Protocol:        protocol.UpiV1,
+				},
+			},
+			expectedEndpoint: &models.VersionEndpoint{
+				InferenceServiceName: iSvcName,
+				DeploymentMode:       deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy:    autoscaling.DefaultServerlessAutoscalingPolicy,
+				ResourceRequest:      env.DefaultResourceRequest,
+				Namespace:            project.Name,
+				URL:                  "",
+				Status:               models.EndpointPending,
+				EnvVars: models.EnvVars{
+					{
+						Name:  "MODEL_NAME",
+						Value: "model-1",
+					},
+					{
+						Name:  "MODEL_DIR",
+						Value: "/model",
+					},
+					{
+						Name:  "WORKERS",
+						Value: "1",
+					},
+				},
+				Protocol: protocol.UpiV1,
 			},
 			wantDeployError: false,
 		},
@@ -805,6 +860,7 @@ func TestDeployEndpoint(t *testing.T) {
 			assert.Equal(t, tt.expectedEndpoint.InferenceServiceName, actualEndpoint.InferenceServiceName)
 			assert.Equal(t, tt.expectedEndpoint.DeploymentMode, actualEndpoint.DeploymentMode)
 			assert.Equal(t, tt.expectedEndpoint.AutoscalingPolicy, actualEndpoint.AutoscalingPolicy)
+			assert.Equal(t, tt.expectedEndpoint.Protocol, actualEndpoint.Protocol)
 
 			// Resource request will be populated
 			if tt.args.endpoint.ResourceRequest != nil {
@@ -1960,28 +2016,6 @@ func TestDeployEndpoint_StandardTransformer(t *testing.T) {
 	}
 }
 
-func assertElementMatchFeatureTableMetadata(t *testing.T, expectation []*spec.FeatureTableMetadata, got []*spec.FeatureTableMetadata) {
-	visited := make(map[int]bool)
-	for _, protoMsg := range got {
-		for i, expProtoMsg := range expectation {
-			if visited[i] {
-				continue
-			}
-			isEqual := proto.Equal(expProtoMsg, protoMsg)
-			if isEqual {
-				visited[i] = true
-			}
-		}
-	}
-	var numOfMatchElements int
-	for _, val := range visited {
-		if val {
-			numOfMatchElements = numOfMatchElements + 1
-		}
-	}
-	assert.True(t, len(expectation) == numOfMatchElements)
-}
-
 func TestListContainers(t *testing.T) {
 	project := mlp.Project{Id: 1, Name: "my-project"}
 	model := &models.Model{ID: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectID: models.ID(project.Id)}
@@ -2113,4 +2147,26 @@ func TestListContainers(t *testing.T) {
 		}
 		assert.Equal(t, expContainer, len(containers))
 	}
+}
+
+func assertElementMatchFeatureTableMetadata(t *testing.T, expectation []*spec.FeatureTableMetadata, got []*spec.FeatureTableMetadata) {
+	visited := make(map[int]bool)
+	for _, protoMsg := range got {
+		for i, expProtoMsg := range expectation {
+			if visited[i] {
+				continue
+			}
+			isEqual := proto.Equal(expProtoMsg, protoMsg)
+			if isEqual {
+				visited[i] = true
+			}
+		}
+	}
+	var numOfMatchElements int
+	for _, val := range visited {
+		if val {
+			numOfMatchElements++
+		}
+	}
+	assert.True(t, len(expectation) == numOfMatchElements)
 }
