@@ -23,6 +23,7 @@ from merlin.client import MerlinClient
 from merlin.endpoint import ModelEndpoint, VersionEndpoint
 from merlin.environment import Environment
 from merlin.model import Model, ModelType, ModelVersion, Project
+from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 from merlin.logger import Logger
@@ -352,6 +353,7 @@ def deploy(model_version: ModelVersion = None,
            logger: Logger = None,
            deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
            autoscaling_policy: AutoscalingPolicy = None,
+           protocol: Protocol = Protocol.HTTP_JSON
            ) -> VersionEndpoint:
     """
     Deploy a model version.
@@ -364,6 +366,7 @@ def deploy(model_version: ModelVersion = None,
         :param logger: Response/Request logging configuration for model or transformer.
         :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
         :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
+        :param protocol: protocol to be used by the deployed model (default: HTTP_JSON)
         :return: VersionEndpoint object
     """
     _check_active_client()
@@ -375,7 +378,8 @@ def deploy(model_version: ModelVersion = None,
                                             transformer,
                                             logger,
                                             deployment_mode,
-                                            autoscaling_policy)
+                                            autoscaling_policy,
+                                            protocol)
 
     return _merlin_client.deploy(model_version,  # type: ignore
                                  environment_name,
@@ -384,7 +388,8 @@ def deploy(model_version: ModelVersion = None,
                                  transformer,
                                  logger,
                                  deployment_mode,
-                                 autoscaling_policy)
+                                 autoscaling_policy,
+                                 protocol)
 
 
 def undeploy(model_version=None,

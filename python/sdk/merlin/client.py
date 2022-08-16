@@ -26,6 +26,7 @@ from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import VersionEndpoint
 from merlin.environment import Environment
 from merlin.model import Model, ModelType, ModelVersion, Project
+from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 from merlin.logger import Logger
@@ -233,9 +234,10 @@ class MerlinClient:
                transformer: Transformer = None,
                logger: Logger = None,
                deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
-               autoscaling_policy: AutoscalingPolicy = None) -> VersionEndpoint:
+               autoscaling_policy: AutoscalingPolicy = None,
+               protocol: Protocol = Protocol.HTTP_JSON) -> VersionEndpoint:
         return model_version.deploy(environment_name, resource_request, env_vars, transformer, logger, deployment_mode,
-                                    autoscaling_policy)
+                                    autoscaling_policy, protocol)
 
     def undeploy(self, model_version: ModelVersion,
                  environment_name: str = None):

@@ -44,6 +44,7 @@ from merlin.batch.source import BigQuerySource
 from merlin.deployment_mode import DeploymentMode
 from merlin.docker.docker import copy_pyfunc_dockerfile, copy_standard_dockerfile
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
+from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 from merlin.logger import Logger
@@ -53,8 +54,12 @@ from merlin.version import VERSION
 from merlin import pyfunc
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
+# This allows users to do following import statement
+#
+# from merlin.model import PyFuncModel, PyFuncV2Model
+#
 PyFuncModel = pyfunc.PyFuncModel
-PyFuncModelV2 = pyfunc.PyFuncV2Model
+PyFuncV2Model = pyfunc.PyFuncV2Model
 PYFUNC_EXTRA_ARGS_KEY = pyfunc.PYFUNC_EXTRA_ARGS_KEY
 PYFUNC_MODEL_INPUT_KEY = pyfunc.PYFUNC_MODEL_INPUT_KEY
 
@@ -983,7 +988,9 @@ class ModelVersion:
                transformer: Transformer = None,
                logger: Logger = None,
                deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
-               autoscaling_policy: AutoscalingPolicy = None) -> VersionEndpoint:
+               autoscaling_policy: AutoscalingPolicy = None,
+               protocol: Protocol = Protocol.HTTP_JSON
+               ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
         and log_pyfunc_model has to be called beforehand
@@ -995,7 +1002,8 @@ class ModelVersion:
         :param logger: Response/Request logging configuration for model or transformer.
         :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
         :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
-        :return: Endpoint object
+        :param protocol: protocol to be used for deploying the model (default: HTTP_JSON)
+        :return: VersionEndpoint object
         """
 
         target_env_name = environment_name
@@ -1065,7 +1073,9 @@ class ModelVersion:
                                           logger=target_logger,
                                           deployment_mode=deployment_mode.value,
                                           autoscaling_policy=client.AutoscalingPolicy(autoscaling_policy.metrics_type.value,
-                                                                                      autoscaling_policy.target_value))
+                                                                                      autoscaling_policy.target_value),
+                                          protocol=protocol.value
+                                          )
         endpoint = endpoint_api \
             .models_model_id_versions_version_id_endpoint_post(int(model.id),
                                                                int(self.id),
