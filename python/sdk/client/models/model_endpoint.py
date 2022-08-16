@@ -41,6 +41,7 @@ class ModelEndpoint(object):
         'rule': 'ModelEndpointRule',
         'environment_name': 'str',
         'environment': 'Environment',
+        'protocol': 'Protocol',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -54,11 +55,12 @@ class ModelEndpoint(object):
         'rule': 'rule',
         'environment_name': 'environment_name',
         'environment': 'environment',
+        'protocol': 'protocol',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, model_id=None, model=None, status=None, url=None, rule=None, environment_name=None, environment=None, created_at=None, updated_at=None, _configuration=None):  # noqa: E501
+    def __init__(self, id=None, model_id=None, model=None, status=None, url=None, rule=None, environment_name=None, environment=None, protocol=None, created_at=None, updated_at=None, _configuration=None):  # noqa: E501
         """ModelEndpoint - a model defined in Swagger"""  # noqa: E501
         if _configuration is None:
             _configuration = Configuration()
@@ -72,6 +74,7 @@ class ModelEndpoint(object):
         self._rule = None
         self._environment_name = None
         self._environment = None
+        self._protocol = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -92,6 +95,8 @@ class ModelEndpoint(object):
             self.environment_name = environment_name
         if environment is not None:
             self.environment = environment
+        if protocol is not None:
+            self.protocol = protocol
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -264,6 +269,27 @@ class ModelEndpoint(object):
         """
 
         self._environment = environment
+
+    @property
+    def protocol(self):
+        """Gets the protocol of this ModelEndpoint.  # noqa: E501
+
+
+        :return: The protocol of this ModelEndpoint.  # noqa: E501
+        :rtype: Protocol
+        """
+        return self._protocol
+
+    @protocol.setter
+    def protocol(self, protocol):
+        """Sets the protocol of this ModelEndpoint.
+
+
+        :param protocol: The protocol of this ModelEndpoint.  # noqa: E501
+        :type: Protocol
+        """
+
+        self._protocol = protocol
 
     @property
     def created_at(self):

@@ -12,4 +12,5 @@ from client.api.models_api import ModelsApi
 from client.api.prediction_jobs_api import PredictionJobsApi
 from client.api.project_api import ProjectApi
 from client.api.secret_api import SecretApi
+from client.api.standard_transformer_api import StandardTransformerApi
 from client.api.version_api import VersionApi
