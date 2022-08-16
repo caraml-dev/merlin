@@ -26,10 +26,12 @@ from time import sleep
 from typing import Dict, List, Optional, Union, Tuple
 
 import docker
+import grpc
 import mlflow
 import numpy
 import pandas
 import pyprind
+from caraml.upi.v1 import upi_pb2
 from docker import APIClient
 from docker.errors import BuildError
 from docker.models.containers import Container
@@ -1514,9 +1516,10 @@ class PyFuncModel(PythonModel):
     @abstractmethod
     def infer(self, request: dict, **kwargs) -> dict:
         """
-        Do inference
+        Do inference.
+
         This method MUST be implemented by concrete implementation of
-        PyFuncModel.
+        PyFuncModel to support HTTP_JSON protocol.
         This method accept 'request' which is the body content of incoming
         request.
         Implementation should return inference a json object of response.
@@ -1529,7 +1532,21 @@ class PyFuncModel(PythonModel):
         :keyword arguments:
         * headers (dict): Dictionary containing incoming HTTP request headers
         """
-        pass
+        raise NotImplementedError("infer is not implemented")
+
+    @abstractmethod
+    def upiv1_infer(self, request: upi_pb2.PredictValuesRequest, context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
+        """
+        Do inference.
+
+        This method MUST be implemented by concrete implementation of PyFunModel to support UPI_V1 protocol.
+        The method accept request in for of PredictValuesRequest proto and should return PredictValuesResponse response proto.
+
+        :param request: Inference request as PredictValuesRequest
+        :param context: grpc context
+        :return: Prediction result as PredictValuesResponse proto
+        """
+        raise NotImplementedError("upiv1_infer is not implemented")
 
 
 class PyFuncV2Model(PythonModel):
