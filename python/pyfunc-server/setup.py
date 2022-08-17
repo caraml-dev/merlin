@@ -43,7 +43,7 @@ setup(
                  Not intended for use outside KFServing Frameworks Images',
     long_description=open('README.md').read(),
     python_requires='>=3.7',
-    packages=find_packages("pyfuncserver"),
+    packages=find_packages(exclude=["tests"]),
     install_requires=REQUIRE,
     tests_require=tests_require,
     extras_require={'test': tests_require}
