@@ -60,7 +60,7 @@ docker run -e MODEL_NAME=model -p 8080:8080 mymodel:latest
 ```
 ├── benchmark          <- Benchmarking artifacts
 ├── echo-model         <- Simple model for testing
-├── tests              <- Test package
+├── test               <- Test package
 ├── pyfuncserver       <- Source code of this workflow
 │   ├── __main__.py    <- Entry point of pyfuncserver
 │   ├── config.py      <- Pyfuncserver configurations
