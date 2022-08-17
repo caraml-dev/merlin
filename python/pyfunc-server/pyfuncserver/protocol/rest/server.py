@@ -9,7 +9,7 @@ class HTTPServer:
     def __init__(self, port: int, workers: int):
         self.workers = workers
         self.http_port = port
-        self.registered_models = {}
+        self.registered_models : dict = {}
 
     def create_application(self):
         return tornado.web.Application([

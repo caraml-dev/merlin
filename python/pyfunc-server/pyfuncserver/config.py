@@ -33,8 +33,8 @@ class Config:
     Server Configuration
     """
     def __init__(self, model_dir: str):
-        self.http_port = os.getenv(HTTP_PORT, DEFAULT_HTTP_PORT)
-        self.grpc_port = os.getenv(GRPC_PORT, DEFAULT_GRPC_PORT)
+        self.http_port = int(os.getenv(HTTP_PORT, DEFAULT_HTTP_PORT))
+        self.grpc_port = int(os.getenv(GRPC_PORT, DEFAULT_GRPC_PORT))
 
         # Model manifest
         model_name = os.getenv(MODEL_NAME, DEFAULT_MODEL_NAME)
