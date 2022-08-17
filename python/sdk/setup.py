@@ -35,7 +35,8 @@ REQUIRES = [
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "PyYAML>=5.4",
-    "protobuf<4.0.0"
+    "protobuf<4.0.0",
+    "caraml-upi-protos"
 ]
 
 TEST_REQUIRES = [
