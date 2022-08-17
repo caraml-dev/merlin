@@ -17,8 +17,8 @@ from kfserving import KFServer
 from kfserving.handlers.http import ExplainHandler
 from kfserving.kfserver import HealthHandler, ListHandler, LivenessHandler
 
-from pyfuncserver.http import CustomPredictHandler
-from pyfuncserver.prometheus import MetricsHandler
+from pyfuncserver.protocol.rest.handler import CustomPredictHandler
+from pyfuncserver.metrics.handler import MetricsHandler
 
 
 class PyFuncServer(KFServer):

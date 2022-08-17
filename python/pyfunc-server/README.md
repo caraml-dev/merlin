@@ -54,3 +54,33 @@ And run the model service
 ```bash
 docker run -e MODEL_NAME=model -p 8080:8080 mymodel:latest
 ```
+
+## Directory Structure
+
+```
+├── benchmark          <- Benchmarking artifacts
+├── echo-model         <- Simple model for testing
+├── tests              <- Test package
+├── pyfuncserver       <- Source code of this workflow
+│   ├── __main__.py    <- Entry point of pyfuncserver
+│   ├── config.py      <- Pyfuncserver configurations
+│   ├── server.py      <- Main server that orchestrate the initialization of all server within pyfuncserver
+│   ├── metrics        <- Module related to pubishing prometheus metrics
+│   ├── utils          <- Utility package
+│   ├── model          <- Model package
+│   └── protocol           <- Protocol implementations
+│       └── rest       <- Server implementation for HTTP_JSON protocol
+│       └── upi        <- Server implementation for UPI_V1 protocol
+├── .gitignore
+├── Dockerfile         <- Dockerfile that will be used by kaniko to build user image in the cluster
+├── base.Dockerfile    <- Base docker image that will be used by `Dockerfile` and `local.Dockerfile`
+├── local.Dockerfile   <- Dockerfile that can be used to perform local testing
+├── Makefile           <- Makefile 
+├── README.md          <- The top-level README for developers using this project.
+├── requirements.txt   <- pyfuncserver dependencies
+├── environment.yaml   <- Conda environment that will be created within `base.Dockerfile`
+├── setup.py           <- setup.py
+├── run.sh             <- Script to activate `merlin-model` environment and run pyfuncserver when `docker run` is invoked
+
+
+```

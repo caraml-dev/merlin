@@ -26,7 +26,7 @@ import tornado.web
 from prometheus_client import Counter, Gauge
 
 from pyfuncserver import PyFuncModel
-from pyfuncserver.model import EXTRA_ARGS_KEY, MODEL_INPUT_KEY
+from pyfuncserver.model.model import EXTRA_ARGS_KEY, MODEL_INPUT_KEY
 
 class NewModelImpl(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
