@@ -25,7 +25,8 @@ import requests
 import tornado.web
 from prometheus_client import Counter, Gauge
 
-from pyfuncserver import PyFuncModel
+from pyfuncserver.config import HTTP_PORT, ModelManifest, WORKER
+from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.model.model import EXTRA_ARGS_KEY, MODEL_INPUT_KEY
 
 class NewModelImpl(mlflow.pyfunc.PythonModel):
@@ -197,7 +198,12 @@ class NewHttpErrorModel(NewModelImpl):
 def test_model(model):
     mlflow.pyfunc.log_model("model", python_model=model)
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
-    model = PyFuncModel("echo-model", model_path)
+    model_manifest = ModelManifest(model_name="echo-model",
+                                   model_version="1",
+                                   model_full_name="echo-model-1",
+                                   model_dir=model_path)
+
+    model = PyFuncModel(model_manifest)
     model.load()
 
     assert model.ready
@@ -219,8 +225,9 @@ def test_model_int(model):
     try:
         # use mlruns folder to store prometheus multiprocess files
         env["prometheus_multiproc_dir"] = "mlruns"
-        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir",
-                              model_path, "--http_port", "8081", "--workers", "1"], env=env)
+        env[HTTP_PORT] = "8081"
+        env[WORKER] = "1"
+        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
         _wait_server_ready("http://localhost:8081/")
@@ -232,7 +239,7 @@ def test_model_int(model):
             with open(os.path.join("benchmark", request_file_json), "r") as f:
                 req = json.load(f)
 
-            resp = requests.post("http://localhost:8081/v1/models/model:predict",
+            resp = requests.post("http://localhost:8081/v1/models/model-1:predict",
                                  json=req)
             assert resp.status_code == 200
             assert req == resp.json()
@@ -254,8 +261,9 @@ def test_model_headers(model):
     try:
         # use mlruns folder to store prometheus multiprocess files
         env["prometheus_multiproc_dir"] = "mlruns"
-        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir",
-                              model_path, "--http_port", "8081", "--workers", "1"], env=env)
+        env[HTTP_PORT] = "8081"
+        env[WORKER] = "1"
+        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
         _wait_server_ready("http://localhost:8081/")
@@ -263,7 +271,7 @@ def test_model_headers(model):
         with open(os.path.join("benchmark", "small.json"), "r") as f:
             req = json.load(f)
 
-        resp = requests.post("http://localhost:8081/v1/models/model:predict",
+        resp = requests.post("http://localhost:8081/v1/models/model-1:predict",
                              json=req, headers={'Foo': 'bar'})
         assert resp.status_code == 200
         assert resp.json()["Foo"] == "bar"
@@ -292,14 +300,15 @@ def test_error_model_int(error_core, message, model):
     try:
         # use mlruns folder to store prometheus multiprocess files
         env["prometheus_multiproc_dir"] = "mlruns"
-        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir",
-                              model_path, "--http_port", "8081", "--workers", "1"], env=env)
+        env[HTTP_PORT] = "8081"
+        env[WORKER] = "1"
+        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
         _wait_server_ready("http://localhost:8081/")
         
         req = {"status_code": error_core.value, "reason": message}
-        resp = requests.post("http://localhost:8081/v1/models/model:predict",
+        resp = requests.post("http://localhost:8081/v1/models/model-1:predict",
                              json=req)
         assert resp.status_code == error_core.value
         assert resp.json() == {"status_code": error_core.value, "reason": message}
@@ -308,7 +317,7 @@ def test_error_model_int(error_core, message, model):
         c.kill()
 
 
-def _wait_server_ready(url, timeout_second=300, tick_second=5):
+def _wait_server_ready(url, timeout_second=10, tick_second=2):
     ellapsed_second = 0
     while (ellapsed_second < timeout_second):
         try:
