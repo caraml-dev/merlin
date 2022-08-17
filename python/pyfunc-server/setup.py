@@ -39,8 +39,7 @@ setup(
     name='pyfuncserver',
     version='0.5.2',
     author_email='merlin-dev@gojek.com',
-    description='Model Server implementation for mlflow pyfunc model. \
-                 Not intended for use outside KFServing Frameworks Images',
+    description='Model Server implementation for mlflow pyfunc model',
     long_description=open('README.md').read(),
     python_requires='>=3.7',
     packages=find_packages(exclude=["tests"]),

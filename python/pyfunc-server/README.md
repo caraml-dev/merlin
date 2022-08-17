@@ -1,15 +1,19 @@
 # PyFunc Server
 
-PyFunc Server is KFServing Inference service extension for deploying user-defined python function model.
+PyFunc Server is Kserve extension for deploying user-defined python function model.
 It leverages mlflow.pyfunc model for model loading.
 
 ## Usage
 
+Start model server and load `echo-model`
 ```bash
-python -m pyfuncserver --model_dir $MODEL_DIR
+python -m pyfuncserver --model_dir echo-model/model
 ```
 
-where MODEL_DIR is URL pointing to serialized mlflow.pyfunc model.
+This will start http server at port 8080 which you can test using curl command
+```bash
+curl localhost:8080/v1/models/model-1:predict -H "Content-Encoding: gzip" -H "Accept-Encoding: gzip" -H "Content-Type: application/json" -d '{}'
+```
 
 ## Development
 

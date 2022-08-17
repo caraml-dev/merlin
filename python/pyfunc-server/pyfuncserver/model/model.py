@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfserving
-from mlflow import pyfunc
-from enum import Enum
 import inspect
+from enum import Enum
+
+from mlflow import pyfunc
+
+from pyfuncserver.config import ModelManifest
 
 EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
 MODEL_INPUT_KEY = "__INPUT__"
@@ -44,12 +46,13 @@ def _is_latest_pyfunc_model_version(func):
     return len(full_args.args) == NUM_OF_LATEST_PREDICT_FUNC_ARGS
 
 
-class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
+class PyFuncModel:  # pylint:disable=c-extension-no-member
 
-    def __init__(self, name: str, artifact_dir: str):
-        super().__init__(name)
-        self.name = name
-        self.artifact_dir = artifact_dir
+    def __init__(self, model_manifest: ModelManifest):
+        self.name = model_manifest.model_name
+        self.version = model_manifest.model_version
+        self.full_name = model_manifest.model_full_name
+        self.artifact_dir = model_manifest.model_dir
         self.ready = False
         self.pyfunc_type = PyFuncModelVersion.LATEST
 

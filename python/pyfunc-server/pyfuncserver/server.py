@@ -11,33 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import tornado
-from kfserving import KFServer
-from kfserving.handlers.http import ExplainHandler
-from kfserving.kfserver import HealthHandler, ListHandler, LivenessHandler
-
-from pyfuncserver.protocol.rest.handler import CustomPredictHandler
-from pyfuncserver.metrics.handler import MetricsHandler
+from pyfuncserver.config import Config
+from pyfuncserver.model.model import PyFuncModel
+from pyfuncserver.protocol.rest.server import HTTPServer
 
 
-class PyFuncServer(KFServer):
-    def __init__(self, registry):
-        super().__init__()
-        self.registry = registry
+class PyFuncServer:
+    def __init__(self, config: Config):
+        self.config = config
 
-    def create_application(self):
-        return tornado.web.Application([
-            # Server Liveness API returns 200 if server is alive.
-            (r"/", LivenessHandler),
-            (r"/v1/models",
-             ListHandler, dict(models=self.registered_models)),
-            # Model Health API returns 200 if model is ready to serve.
-            (r"/v1/models/([a-zA-Z0-9_-]+)",
-             HealthHandler, dict(models=self.registered_models)),
-            (r"/v1/models/([a-zA-Z0-9_-]+):predict",
-             CustomPredictHandler, dict(models=self.registered_models)),
-            (r"/v1/models/([a-zA-Z0-9_-]+):explain",
-             ExplainHandler, dict(models=self.registered_models)),
-            (r"/metrics", MetricsHandler, dict(registry=self.registry))
-        ])
+    def start(self, model: PyFuncModel):
+        http_server = HTTPServer(port=self.config.http_port, workers=self.config.workers)
+        http_server.start(model=model)

@@ -19,26 +19,27 @@ from typing import Any, Dict
 
 import orjson
 import tornado.web
-from kfserving.kfmodel import KFModel
+
+from pyfuncserver.model.model import PyFuncModel
 
 
-class HTTPHandler(tornado.web.RequestHandler):
-    def initialize(self, models: Dict[str, KFModel]):
+class PredictHandler(tornado.web.RequestHandler):
+    def initialize(self, models):
         self.models = models  # pylint:disable=attribute-defined-outside-init
 
-    def get_model(self, name: str):
-        if name not in self.models:
+    def get_model(self, full_name: str):
+        if full_name not in self.models:
             raise tornado.web.HTTPError(
                 status_code=HTTPStatus.NOT_FOUND,
-                reason="Model with name %s does not exist." % name
+                reason="Model with full name %s does not exist." % full_name
             )
-        model = self.models[name]
+        model = self.models[full_name]
         if not model.ready:
             model.load()
         return model
 
     def get_headers(self, request):
-        return {k:v for (k, v) in request.headers.get_all()}
+        return {k: v for (k, v) in request.headers.get_all()}
 
     def validate(self, request):
         try:
@@ -50,17 +51,13 @@ class HTTPHandler(tornado.web.RequestHandler):
             )
         return body
 
-
-class CustomPredictHandler(HTTPHandler):
-    def post(self, name: str):
-        model = self.get_model(name)
+    def post(self, full_name: str):
+        model = self.get_model(full_name)
 
         request = self.validate(self.request)
         headers = self.get_headers(self.request)
 
-        request = model.preprocess(request)
         response = model.predict(request, headers=headers)
-        response = model.postprocess(response)
 
         response_json = orjson.dumps(response)
         self.write(response_json)
@@ -69,3 +66,27 @@ class CustomPredictHandler(HTTPHandler):
     def write_error(self, status_code: int, **kwargs: Any) -> None:
         logging.error(self._reason)
         self.write({"status_code": status_code, "reason": self._reason})
+
+
+class LivenessHandler(tornado.web.RequestHandler):  # pylint:disable=too-few-public-methods
+    def get(self):
+        self.write("Alive")
+
+
+class HealthHandler(tornado.web.RequestHandler):
+    def initialize(self, models: Dict[str, PyFuncModel]):
+        self.models = models  # pylint:disable=attribute-defined-outside-init
+
+    def get(self, full_name: str):
+        if full_name not in self.models:
+            raise tornado.web.HTTPError(
+                status_code=404,
+                reason="Model with full name %s does not exist." % full_name
+            )
+
+        model = self.models[full_name]
+        self.write(json.dumps({
+            "name": model.full_name,
+            "ready": model.ready
+        }))
+

@@ -17,28 +17,26 @@ import asyncio
 import logging
 import traceback
 
-import kfserving
 import uvloop
 from prometheus_client import CollectorRegistry, multiprocess
 
-from pyfuncserver import PyFuncModel
+from pyfuncserver.config import Config
+from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.server import PyFuncServer
 from pyfuncserver.utils.contants import ERR_DRY_RUN
 
 DEFAULT_MODEL_NAME = "model"
-DEFAULT_LOCAL_MODEL_DIR = "/tmp/model"
 
-parser = argparse.ArgumentParser(parents=[kfserving.kfserver.parser])
+parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', required=True,
                     help='A URI pointer to the model binary')
-parser.add_argument('--model_name', default=DEFAULT_MODEL_NAME,
-                    help='The name that the model is served under.')
 parser.add_argument('--dry_run', default=False, action='store_true', required=False,
                     help="Dry run pyfunc server by loading the specified model "
                          "in --model_dir without starting webserver")
 args, _ = parser.parse_known_args()
 
 logging.getLogger('tornado.access').disabled = True
+
 
 if __name__ == "__main__":
     # initialize prometheus
@@ -49,8 +47,10 @@ if __name__ == "__main__":
     # use uvloop as the event loop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
+    config = Config(args.model_dir)
+    logging.basicConfig(level=config.log_level)
     # load model
-    model = PyFuncModel(args.model_name, args.model_dir)
+    model = PyFuncModel(config.model_manifest)
 
     try:
         model.load()
@@ -63,6 +63,5 @@ if __name__ == "__main__":
     if args.dry_run:
         logging.info("dry run success")
         exit(0)
-        
 
-    PyFuncServer(registry).start([model])
+    PyFuncServer(config).start(model)

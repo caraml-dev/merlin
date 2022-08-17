@@ -28,6 +28,8 @@ from prometheus_client import Counter, Gauge
 from pyfuncserver.config import HTTP_PORT, ModelManifest, WORKER
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.model.model import EXTRA_ARGS_KEY, MODEL_INPUT_KEY
+from test.utils import wait_server_ready
+
 
 class NewModelImpl(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
@@ -79,6 +81,7 @@ class NewModelImpl(mlflow.pyfunc.PythonModel):
         """
         pass
 
+
 class ModelImpl(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
         self.initialize(context.artifacts)
@@ -122,7 +125,6 @@ class ModelImpl(mlflow.pyfunc.PythonModel):
         pass
 
 
-
 class EchoModel(ModelImpl):
     def initialize(self, artifacts):
         self._req_count = Counter("my_req_count", "Number of incoming request")
@@ -133,6 +135,7 @@ class EchoModel(ModelImpl):
         self._temp.set(10)
         return model_input
 
+
 class NewEchoModel(NewModelImpl):
     def initialize(self, artifacts):
         self._req_count = Counter("new_my_req_count", "Number of incoming request")
@@ -142,6 +145,7 @@ class NewEchoModel(NewModelImpl):
         self._req_count.inc()
         self._temp.set(10)
         return model_input
+
 
 class NonEmptyEchoModel(NewModelImpl):
     def initialize(self, artifacts):
@@ -163,6 +167,7 @@ class HeadersModel(ModelImpl):
     def infer(self, model_input, **kwargs):
         return kwargs.get('headers', {})
 
+
 class NewHeadersModel(NewModelImpl):
     def initialize(self, artifacts):
         pass
@@ -180,6 +185,7 @@ class HttpErrorModel(ModelImpl):
             status_code=model_input["status_code"],
             reason=model_input["reason"]
         )
+
 
 class NewHttpErrorModel(NewModelImpl):
     def initialize(self, artifacts):
@@ -230,7 +236,7 @@ def test_model_int(model):
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
-        _wait_server_ready("http://localhost:8081/")
+        wait_server_ready("http://localhost:8081/")
 
         for request_file_json in os.listdir("benchmark"):
             if not request_file_json.endswith(".json"):
@@ -266,7 +272,7 @@ def test_model_headers(model):
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
-        _wait_server_ready("http://localhost:8081/")
+        wait_server_ready("http://localhost:8081/")
 
         with open(os.path.join("benchmark", "small.json"), "r") as f:
             req = json.load(f)
@@ -305,7 +311,7 @@ def test_error_model_int(error_core, message, model):
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
-        _wait_server_ready("http://localhost:8081/")
+        wait_server_ready("http://localhost:8081/")
         
         req = {"status_code": error_core.value, "reason": message}
         resp = requests.post("http://localhost:8081/v1/models/model-1:predict",
@@ -317,18 +323,3 @@ def test_error_model_int(error_core, message, model):
         c.kill()
 
 
-def _wait_server_ready(url, timeout_second=10, tick_second=2):
-    ellapsed_second = 0
-    while (ellapsed_second < timeout_second):
-        try:
-            resp = requests.get(url)
-            if resp.status_code == 200:
-                return
-        except Exception as e:
-            print(f"{url} is not ready: {e}")
-
-        time.sleep(tick_second)
-        ellapsed_second += tick_second
-
-    if ellapsed_second >= timeout_second:
-        raise TimeoutError("server is not ready within specified timeout duration")
