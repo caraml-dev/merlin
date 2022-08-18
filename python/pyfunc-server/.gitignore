@@ -168,4 +168,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# prometheus
+**/*.db
+
 # End of https://www.gitignore.io/api/python,pycharm

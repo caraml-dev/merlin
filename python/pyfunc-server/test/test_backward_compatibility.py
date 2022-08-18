@@ -229,8 +229,7 @@ def test_model_int(model):
     mlflow.end_run()
 
     try:
-        # use mlruns folder to store prometheus multiprocess files
-        env["prometheus_multiproc_dir"] = "mlruns"
+        env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
         env[HTTP_PORT] = "8081"
         env[WORKER] = "1"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
@@ -265,8 +264,7 @@ def test_model_headers(model):
     mlflow.end_run()
 
     try:
-        # use mlruns folder to store prometheus multiprocess files
-        env["prometheus_multiproc_dir"] = "mlruns"
+        env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
         env[HTTP_PORT] = "8081"
         env[WORKER] = "1"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
@@ -304,8 +302,7 @@ def test_error_model_int(error_core, message, model):
     mlflow.end_run()
 
     try:
-        # use mlruns folder to store prometheus multiprocess files
-        env["prometheus_multiproc_dir"] = "mlruns"
+        env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
         env[HTTP_PORT] = "8081"
         env[WORKER] = "1"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)

@@ -7,7 +7,7 @@ set -o nounset
 trap "kill 0" EXIT
 
 mkdir -p prometheus_multiproc_dir
-export prometheus_multiproc_dir=prometheus_multiproc_dir
+export PROMETHEUS_MULTIPROC_DIR=prometheus_multiproc_dir
 
 python -m pyfuncserver --model_dir echo-model/model --workers 1 &
 

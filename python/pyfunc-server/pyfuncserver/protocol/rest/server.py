@@ -1,14 +1,17 @@
 import logging
 import tornado
+from prometheus_client import CollectorRegistry
 
+from pyfuncserver.metrics.handler import MetricsHandler
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.handler import HealthHandler, LivenessHandler, PredictHandler
 
 
 class HTTPServer:
-    def __init__(self, port: int, workers: int):
+    def __init__(self, port: int, workers: int, metrics_registry: CollectorRegistry):
         self.workers = workers
         self.http_port = port
+        self.metrics_registry = metrics_registry
         self.registered_models : dict = {}
 
     def create_application(self):
@@ -20,6 +23,7 @@ class HTTPServer:
              HealthHandler, dict(models=self.registered_models)),
             (r"/v1/models/([a-zA-Z0-9_-]+):predict",
              PredictHandler, dict(models=self.registered_models)),
+            (r"/metrics", MetricsHandler, dict(metrics_registry=self.metrics_registry))
         ])
 
     def start(self, model: PyFuncModel):

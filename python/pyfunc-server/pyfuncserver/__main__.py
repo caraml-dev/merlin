@@ -18,7 +18,6 @@ import logging
 import traceback
 
 import uvloop
-from prometheus_client import CollectorRegistry, multiprocess
 
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
@@ -39,11 +38,6 @@ logging.getLogger('tornado.access').disabled = True
 
 
 if __name__ == "__main__":
-    # initialize prometheus
-    # register to MultiProcessCollector as PyFuncServer will run in multiple process
-    registry = CollectorRegistry()
-    multiprocess.MultiProcessCollector(registry)
-
     # use uvloop as the event loop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 

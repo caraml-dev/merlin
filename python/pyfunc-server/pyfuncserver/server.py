@@ -11,6 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import threading
+
+from prometheus_client import CollectorRegistry, multiprocess
+
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.server import HTTPServer
@@ -21,5 +25,10 @@ class PyFuncServer:
         self.config = config
 
     def start(self, model: PyFuncModel):
-        http_server = HTTPServer(port=self.config.http_port, workers=self.config.workers)
+        # initialize prometheus
+        # register to MultiProcessCollector as PyFuncServer will run in multiple process
+        registry = CollectorRegistry()
+        multiprocess.MultiProcessCollector(registry)
+
+        http_server = HTTPServer(port=self.config.http_port, workers=self.config.workers, metrics_registry=registry)
         http_server.start(model=model)

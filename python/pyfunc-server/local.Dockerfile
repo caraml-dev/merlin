@@ -19,7 +19,7 @@ ENV PATH=$PATH:/google-cloud-sdk/bin
 COPY . .
 
 RUN mkdir /prom_dir
-ENV prometheus_multiproc_dir=/prom_dir
+ENV PROMETHEUS_MULTIPROC_DIR=/prom_dir
 RUN conda env create -f ./environment.yaml && \
     rm -rf /root/.cache
 
