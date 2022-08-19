@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -12,6 +13,7 @@ MODEL_FULL_NAME = "CARAML_MODEL_FULL_NAME"
 PROTOCOL = "CARAML_PROTOCOL"
 WORKER = "WORKER"
 LOG_LEVEL = "LOG_LEVEL"
+GRPC_OPTIONS = "GRPC_OPTIONS"
 
 DEFAULT_HTTP_PORT = 8080
 DEFAULT_GRPC_PORT = 9000
@@ -20,6 +22,7 @@ DEFAULT_MODEL_VERSION = "1"
 DEFAULT_FULL_NAME = f"{DEFAULT_MODEL_NAME}-{DEFAULT_MODEL_VERSION}"
 DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_PROTOCOL = "HTTP_JSON"
+DEFAULT_GRPC_OPTIONS = "{}"
 
 class ModelManifest:
     """
@@ -49,6 +52,9 @@ class Config:
 
         self.workers = int(os.getenv(WORKER, 1))
         self.log_level = self._log_level()
+
+        grpc_options = os.getenv(GRPC_OPTIONS, DEFAULT_GRPC_OPTIONS)
+        self.grpc_options = json.loads(grpc_options)
 
     def _log_level(self):
         log_level = os.getenv(LOG_LEVEL, DEFAULT_LOG_LEVEL)

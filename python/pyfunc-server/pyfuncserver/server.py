@@ -43,7 +43,7 @@ class PyFuncServer:
             prometheus_client.start_http_server(self._config.http_port, registry=registry)
 
             # start grpc/upi server and listen at grpc port
-            upi_server = UPIServer(model=model, grpc_port=self._config.grpc_port)
+            upi_server = UPIServer(model=model, config=self._config)
             upi_server.start()
         else:
             raise ValueError(f"unknown protocol {self._config.protocol}")
