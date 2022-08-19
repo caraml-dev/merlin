@@ -2,11 +2,14 @@ import logging
 import os
 
 # Following environment variables are expected to be populated by Merlin
+from merlin.protocol import Protocol
+
 HTTP_PORT = "CARAML_HTTP_PORT"
 GRPC_PORT = "CARAML_GRPC_PORT"
 MODEL_NAME = "CARAML_MODEL_NAME"
 MODEL_VERSION = "CARAML_MODEL_VERSION"
 MODEL_FULL_NAME = "CARAML_MODEL_FULL_NAME"
+PROTOCOL = "CARAML_PROTOCOL"
 WORKER = "WORKER"
 LOG_LEVEL = "LOG_LEVEL"
 
@@ -16,6 +19,7 @@ DEFAULT_MODEL_NAME = "model"
 DEFAULT_MODEL_VERSION = "1"
 DEFAULT_FULL_NAME = f"{DEFAULT_MODEL_NAME}-{DEFAULT_MODEL_VERSION}"
 DEFAULT_LOG_LEVEL = "INFO"
+DEFAULT_PROTOCOL = "HTTP_JSON"
 
 class ModelManifest:
     """
@@ -33,6 +37,7 @@ class Config:
     Server Configuration
     """
     def __init__(self, model_dir: str):
+        self.protocol = Protocol(os.getenv(PROTOCOL, DEFAULT_PROTOCOL))
         self.http_port = int(os.getenv(HTTP_PORT, DEFAULT_HTTP_PORT))
         self.grpc_port = int(os.getenv(GRPC_PORT, DEFAULT_GRPC_PORT))
 

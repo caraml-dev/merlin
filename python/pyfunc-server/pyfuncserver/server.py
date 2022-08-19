@@ -13,16 +13,19 @@
 # limitations under the License.
 import threading
 
+import prometheus_client
+from merlin.protocol import Protocol
 from prometheus_client import CollectorRegistry, multiprocess
 
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.server import HTTPServer
+from pyfuncserver.protocol.upi.server import UPIServer
 
 
 class PyFuncServer:
     def __init__(self, config: Config):
-        self.config = config
+        self._config = config
 
     def start(self, model: PyFuncModel):
         # initialize prometheus
@@ -30,5 +33,17 @@ class PyFuncServer:
         registry = CollectorRegistry()
         multiprocess.MultiProcessCollector(registry)
 
-        http_server = HTTPServer(port=self.config.http_port, workers=self.config.workers, metrics_registry=registry)
-        http_server.start(model=model)
+        # start only one server depending on the chosen protocol
+        # the intent is to save memory consumption
+        if self._config.protocol == Protocol.HTTP_JSON:
+            http_server = HTTPServer(port=self._config.http_port, workers=self._config.workers, metrics_registry=registry)
+            http_server.start(model=model)
+        elif self._config.protocol == Protocol.UPI_V1:
+            # start prometheus metrics server and listen at http port
+            prometheus_client.start_http_server(self._config.http_port, registry=registry)
+
+            # start grpc/upi server and listen at grpc port
+            upi_server = UPIServer(model=model, grpc_port=self._config.grpc_port)
+            upi_server.start()
+        else:
+            raise ValueError(f"unknown protocol {self._config.protocol}")

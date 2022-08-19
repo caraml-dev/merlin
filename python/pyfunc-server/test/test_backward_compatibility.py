@@ -27,8 +27,8 @@ from prometheus_client import Counter, Gauge
 
 from pyfuncserver.config import HTTP_PORT, ModelManifest, WORKER
 from pyfuncserver.model.model import PyFuncModel
-from pyfuncserver.model.model import EXTRA_ARGS_KEY, MODEL_INPUT_KEY
 from test.utils import wait_server_ready
+from merlin.pyfunc import PYFUNC_MODEL_INPUT_KEY, PYFUNC_EXTRA_ARGS_KEY
 
 
 class NewModelImpl(mlflow.pyfunc.PythonModel):
@@ -37,8 +37,8 @@ class NewModelImpl(mlflow.pyfunc.PythonModel):
         self._use_kwargs_infer = True
 
     def predict(self, context, model_input):
-        extra_args = model_input.get(EXTRA_ARGS_KEY, {})
-        input = model_input.get(MODEL_INPUT_KEY, {})
+        extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
+        input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
         if extra_args is not None:
             return self._do_predict(input, **extra_args)
 
