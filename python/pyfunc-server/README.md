@@ -5,8 +5,11 @@ It leverages mlflow.pyfunc model for model loading.
 
 ## Usage
 
-Start model server and load `echo-model`
+### HTTP Server 
+
+Run following command to load sample `echo-model` model and start HTTP server:
 ```bash
+export PROMETHEUS_MULTIPROC_DIR=prometheus
 python -m pyfuncserver --model_dir echo-model/model
 ```
 
@@ -14,6 +17,22 @@ This will start http server at port 8080 which you can test using curl command
 ```bash
 curl localhost:8080/v1/models/model-1:predict -H "Content-Encoding: gzip" -H "Accept-Encoding: gzip" -H "Content-Type: application/json" -d '{}'
 ```
+
+### UPI V1 Server
+
+Run following command to load sample `echo-model` model and start UPI v1 server:
+```bash
+export PROMETHEUS_MULTIPROC_DIR=prometheus
+export CARAML_PROTOCOL=UPI_V1
+python -m pyfuncserver --model_dir echo-model/model
+```
+
+
+Since UPI v1 interface is gRPC then you can use grpcurl to send request
+```bash
+grpcurl -plaintext -d '{}'  localhost:9000 caraml.upi.v1.UniversalPredictionService/PredictValues
+```
+
 
 ## Development
 
