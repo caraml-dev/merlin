@@ -111,7 +111,7 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, 
 	defer span.Finish()
 
 	sr := symbol.NewRegistryWithCompiledJSONPath(fr.entityExtractor.compiledJsonPath)
-	sr.SetRawRequestJSON(requestJson)
+	sr.SetRawRequest(requestJson)
 
 	return fr.RetrieveFeatureOfEntityInSymbolRegistry(ctx, sr)
 }

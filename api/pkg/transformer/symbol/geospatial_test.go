@@ -17,8 +17,8 @@ func TestSymbolRegistry_Geohash(t *testing.T) {
 	requestJSONObject, responseJSONObject := getTestJSONObjects()
 
 	sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
-	sr.SetRawRequestJSON(requestJSONObject)
-	sr.SetModelResponseJSON(responseJSONObject)
+	sr.SetRawRequest(requestJSONObject)
+	sr.SetModelResponse(responseJSONObject)
 
 	type args struct {
 		latitude  interface{}
@@ -186,8 +186,8 @@ func TestSymbolRegistry_S2ID(t *testing.T) {
 	requestJSONObject, responseJSONObject := getTestJSONObjects()
 
 	sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
-	sr.SetRawRequestJSON(requestJSONObject)
-	sr.SetModelResponseJSON(responseJSONObject)
+	sr.SetRawRequest(requestJSONObject)
+	sr.SetModelResponse(responseJSONObject)
 
 	type args struct {
 		latitude  interface{}
@@ -492,10 +492,10 @@ func TestSymbolRegistry_HaversineDistance(t *testing.T) {
 			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
 			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
 			if requestJSONObj != nil {
-				sr.SetRawRequestJSON(requestJSONObj)
+				sr.SetRawRequest(requestJSONObj)
 			}
 			if responseJSONObj != nil {
-				sr.SetModelResponseJSON(responseJSONObj)
+				sr.SetModelResponse(responseJSONObj)
 			}
 
 			if tC.err != nil {
@@ -678,10 +678,10 @@ func TestSymbolRegistry_HaversineDistanceWithUnit(t *testing.T) {
 			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
 			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
 			if requestJSONObj != nil {
-				sr.SetRawRequestJSON(requestJSONObj)
+				sr.SetRawRequest(requestJSONObj)
 			}
 			if responseJSONObj != nil {
-				sr.SetModelResponseJSON(responseJSONObj)
+				sr.SetModelResponse(responseJSONObj)
 			}
 
 			if tC.err != nil {
@@ -855,10 +855,10 @@ func TestSymbolRegistry_PolarAngle(t *testing.T) {
 			sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
 			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
 			if requestJSONObj != nil {
-				sr.SetRawRequestJSON(requestJSONObj)
+				sr.SetRawRequest(requestJSONObj)
 			}
 			if responseJSONObj != nil {
-				sr.SetModelResponseJSON(responseJSONObj)
+				sr.SetModelResponse(responseJSONObj)
 			}
 
 			if tC.err != nil {
@@ -877,8 +877,8 @@ func TestRegistry_GeohashDistance(t *testing.T) {
 	requestJSONObject, responseJSONObject := getTestJSONObjects()
 
 	sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
-	sr.SetRawRequestJSON(requestJSONObject)
-	sr.SetModelResponseJSON(responseJSONObject)
+	sr.SetRawRequest(requestJSONObject)
+	sr.SetModelResponse(responseJSONObject)
 
 	type args struct {
 		firstGeohash  interface{}
@@ -942,8 +942,8 @@ func TestRegistry_GeohashAllNeighbors(t *testing.T) {
 	requestJSONObject, responseJSONObject := getTestJSONObjects()
 
 	sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
-	sr.SetRawRequestJSON(requestJSONObject)
-	sr.SetModelResponseJSON(responseJSONObject)
+	sr.SetRawRequest(requestJSONObject)
+	sr.SetModelResponse(responseJSONObject)
 
 	type args struct {
 		targetGeohash interface{}
@@ -993,8 +993,8 @@ func TestRegistry_GeohashNeighborForDirection(t *testing.T) {
 	requestJSONObject, responseJSONObject := getTestJSONObjects()
 
 	sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
-	sr.SetRawRequestJSON(requestJSONObject)
-	sr.SetModelResponseJSON(responseJSONObject)
+	sr.SetRawRequest(requestJSONObject)
+	sr.SetModelResponse(responseJSONObject)
 
 	type args struct {
 		targetGeohash interface{}

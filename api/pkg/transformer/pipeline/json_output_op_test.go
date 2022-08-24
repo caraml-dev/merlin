@@ -80,8 +80,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -114,8 +114,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -144,8 +144,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -171,8 +171,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -199,8 +199,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -245,8 +245,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -296,8 +296,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				env.SetSymbol("default_latitude", -6.1313)
 				return env
 			},
@@ -338,8 +338,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				env.SetSymbol("default_latitude", -6.1313)
 				return env
 			},
@@ -396,8 +396,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				env.SetSymbol("default_latitude", -6.1313)
 				env.SetSymbol("default_longitude", 106.1111)
 				env.SetSymbol("prediction_table", table.New(
@@ -562,8 +562,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				env.SetSymbol("prediction_table", table.New(
 					series.New([]string{"1111", "2222"}, series.String, "string_col"),
 					series.New([]int{4, 5}, series.Int, "int_col"),
@@ -626,8 +626,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -650,8 +650,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -684,8 +684,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -718,8 +718,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				env.SetSymbol("prediction_table", "ok")
 				return env
 			},
@@ -750,8 +750,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					compiledExpression: compiledExpression,
 				}, logger)
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				return env
 			},
 			outputSpec: &spec.JsonOutput{
@@ -781,8 +781,8 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 				}, logger)
 
 				requestJsonObject, responseJsonObject := getTestJSONObjects()
-				env.symbolRegistry.SetRawRequestJSON(requestJsonObject)
-				env.symbolRegistry.SetModelResponseJSON(responseJsonObject)
+				env.symbolRegistry.SetRawRequest(requestJsonObject)
+				env.symbolRegistry.SetModelResponse(responseJsonObject)
 				env.SetSymbol("prediction_table", table.New(
 					series.New([]interface{}{"1111", nil}, series.String, "string_col"),
 					series.New([]int{4, 5}, series.Int, "int_col"),
@@ -856,7 +856,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 			if tC.err != nil {
 				assert.Equal(t, tC.err.Error(), err.Error())
 			} else {
-				output := env.OutputJSON()
+				output := env.Output()
 				assert.Equal(t, tC.want, output)
 			}
 		})

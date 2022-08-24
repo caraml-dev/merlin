@@ -49,15 +49,15 @@ func NewCompiledPipeline(
 	}
 }
 
-func (p *CompiledPipeline) Preprocess(context context.Context, env *Environment) (types.JSONObject, error) {
+func (p *CompiledPipeline) Preprocess(context context.Context, env *Environment) (types.Payload, error) {
 	return p.executePipelineOp(context, preprocess, env)
 }
 
-func (p *CompiledPipeline) Postprocess(context context.Context, env *Environment) (types.JSONObject, error) {
+func (p *CompiledPipeline) Postprocess(context context.Context, env *Environment) (types.Payload, error) {
 	return p.executePipelineOp(context, postprocess, env)
 }
 
-func (p *CompiledPipeline) executePipelineOp(ctx context.Context, pType pipelineType, env *Environment) (types.JSONObject, error) {
+func (p *CompiledPipeline) executePipelineOp(ctx context.Context, pType pipelineType, env *Environment) (types.Payload, error) {
 	var ops []Op
 	if pType == preprocess {
 		ops = p.preprocessOps
@@ -89,7 +89,7 @@ func (p *CompiledPipeline) executePipelineOp(ctx context.Context, pType pipeline
 		}
 	}
 
-	output := env.OutputJSON()
+	output := env.Output()
 	if output == nil {
 		return nil, errors.New("output json is not computed")
 	}

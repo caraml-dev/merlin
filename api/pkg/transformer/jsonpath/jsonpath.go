@@ -101,8 +101,8 @@ type Compiled struct {
 	defaultValue interface{}
 }
 
-func (c *Compiled) Lookup(jsonObj types.JSONObject) (interface{}, error) {
-	val, err := c.cpl.Lookup(jsonObj)
+func (c *Compiled) Lookup(obj types.Payload) (interface{}, error) {
+	val, err := c.cpl.Lookup(obj)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (c *Compiled) Lookup(jsonObj types.JSONObject) (interface{}, error) {
 	return val, nil
 }
 
-func (c *Compiled) LookupFromContainer(container types.JSONObjectContainer) (interface{}, error) {
+func (c *Compiled) LookupFromContainer(container types.PayloadObjectContainer) (interface{}, error) {
 	sourceJson := container[c.source]
 	if sourceJson == nil {
 		return nil, fmt.Errorf("container json is not set: %s", c.source.String())

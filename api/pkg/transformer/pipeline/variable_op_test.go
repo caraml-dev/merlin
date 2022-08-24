@@ -111,7 +111,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 	}
 
 	symbolRegistry := symbol.NewRegistryWithCompiledJSONPath(compiledJsonPath)
-	symbolRegistry.SetRawRequestJSON(rawRequestJSON)
+	symbolRegistry.SetRawRequest(rawRequestJSON)
 	tests := []struct {
 		name         string
 		fields       fields

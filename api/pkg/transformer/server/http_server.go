@@ -15,9 +15,6 @@ import (
 	"time"
 
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
-	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/heimdall/v7/httpclient"
-	"github.com/gojek/heimdall/v7/hystrix"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -27,7 +24,9 @@ import (
 	"go.uber.org/zap"
 
 	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
+	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/server/response"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"
@@ -41,14 +40,17 @@ var hystrixCommandName = "model_predict"
 
 // Options for the server.
 type Options struct {
-	Port            string `envconfig:"MERLIN_TRANSFORMER_PORT" default:"8081"`
-	ModelName       string `envconfig:"MERLIN_TRANSFORMER_MODEL_NAME" default:"model"`
-	ModelPredictURL string `envconfig:"MERLIN_TRANSFORMER_MODEL_PREDICT_URL" default:"localhost:8080"`
+	HTTPPort        string `envconfig:"CARAML_HTTP_PORT" default:"8081"`
+	GRPCPort        string `envconfig:"CARAML_GRPC_PORT" default:"9000"`
+	ModelFullName   string `envconfig:"CARAML_MODEL_FULL_NAME" default:"model"`
+	ModelPredictURL string `envconfig:"CARAML_PREDICTOR_HOST" default:"localhost:8080"`
 
-	HTTPServerTimeout time.Duration `envconfig:"HTTP_SERVER_TIMEOUT" default:"30s"`
-	HTTPClientTimeout time.Duration `envconfig:"HTTP_CLIENT_TIMEOUT" default:"1s"`
+	ServerTimeout time.Duration `envconfig:"SERVER_TIMEOUT" default:"30s"`
+	ClientTimeout time.Duration `envconfig:"CLIENT_TIMEOUT" default:"1s"`
 
 	ModelTimeout                         time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
+	ModelHTTPHystrixCommandName          string        `envconfig:"MODEL_HTTP_HYSTRIX_COMMAND_NAME" default:"http_model_predict"`
+	ModelGRPCHystrixCommandName          string        `envconfig:"MODEL_GRPC_HYSTRIX_COMMAND_NAME" default:"grpc_model_predict"`
 	ModelHystrixMaxConcurrentRequests    int           `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
 	ModelHystrixRetryCount               int           `envconfig:"MODEL_HYSTRIX_RETRY_COUNT" default:"0"`
 	ModelHystrixRetryBackoffInterval     time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
@@ -56,11 +58,10 @@ type Options struct {
 	ModelHystrixErrorPercentageThreshold int           `envconfig:"MODEL_HYSTRIX_ERROR_PERCENTAGE_THRESHOLD" default:"25"`
 	ModelHystrixRequestVolumeThreshold   int           `envconfig:"MODEL_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
 	ModelHystrixSleepWindowMs            int           `envconfig:"MODEL_HYSTRIX_SLEEP_WINDOW_MS" default:"10"`
-	ModelHystrixHeimdallDisabled         bool          `envconfig:"MODEL_HYSTRIX_HEIMDALL_DISABLED" default:"true"`
 }
 
 // Server serves various HTTP endpoints of Feast transformer.
-type Server struct {
+type HTTPServer struct {
 	options    *Options
 	httpClient hystrixHttpClient
 	router     *mux.Router
@@ -68,8 +69,8 @@ type Server struct {
 	modelURL   string
 
 	ContextModifier    func(ctx context.Context) context.Context
-	PreprocessHandler  func(ctx context.Context, request []byte, requestHeaders map[string]string) ([]byte, error)
-	PostprocessHandler func(ctx context.Context, response []byte, responseHeaders map[string]string) ([]byte, error)
+	PreprocessHandler  func(ctx context.Context, request types.Payload, requestHeaders map[string]string) (types.Payload, error)
+	PostprocessHandler func(ctx context.Context, response types.Payload, responseHeaders map[string]string) (types.Payload, error)
 }
 
 type hystrixHttpClient interface {
@@ -77,27 +78,33 @@ type hystrixHttpClient interface {
 }
 
 // New initializes a new Server.
-func New(o *Options, logger *zap.Logger) *Server {
-	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelName)
+func New(o *Options, logger *zap.Logger) *HTTPServer {
+	return NewWithHandler(o, nil, logger)
+}
+
+func NewWithHandler(o *Options, handler *pipeline.Handler, logger *zap.Logger) *HTTPServer {
+	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelFullName)
 	if !strings.Contains(predictURL, "http://") {
 		predictURL = "http://" + predictURL
 	}
 
 	var modelHttpClient hystrixHttpClient
 	hystrixGo.SetLogger(newHystrixLogger(logger))
-	if o.ModelHystrixHeimdallDisabled {
-		modelHttpClient = newHTTPHystrixClient(hystrixCommandName, o)
-	} else {
-		modelHttpClient = newHeimdallClient(hystrixCommandName, o)
-	}
+	modelHttpClient = newHTTPHystrixClient(hystrixCommandName, o)
 
-	return &Server{
+	srv := &HTTPServer{
 		options:    o,
 		httpClient: modelHttpClient,
 		modelURL:   predictURL,
 		router:     mux.NewRouter(),
 		logger:     logger,
 	}
+	if handler != nil {
+		srv.PreprocessHandler = handler.Preprocess
+		srv.PostprocessHandler = handler.Postprocess
+		srv.ContextModifier = handler.EmbedEnvironment
+	}
+	return srv
 }
 
 func newHTTPHystrixClient(commandName string, o *Options) *hystrixpkg.Client {
@@ -114,36 +121,8 @@ func newHTTPHystrixClient(commandName string, o *Options) *hystrixpkg.Client {
 	return hystrixpkg.NewClient(cl, &hystrixConfig, hystrixCommandName)
 }
 
-func newHeimdallClient(commandName string, o *Options) *hystrix.Client {
-	hystrixOptions := []hystrix.Option{
-		hystrix.WithCommandName(commandName),
-		hystrix.WithHTTPClient(httpclient.NewClient(httpclient.WithHTTPTimeout(o.ModelTimeout))),
-		hystrix.WithHTTPTimeout(o.ModelTimeout),
-		hystrix.WithHystrixTimeout(o.ModelTimeout),
-		hystrix.WithMaxConcurrentRequests(o.ModelHystrixMaxConcurrentRequests),
-		hystrix.WithErrorPercentThreshold(o.ModelHystrixErrorPercentageThreshold),
-		hystrix.WithRequestVolumeThreshold(o.ModelHystrixRequestVolumeThreshold),
-		hystrix.WithSleepWindow(o.ModelHystrixSleepWindowMs),
-	}
-
-	if o.ModelHystrixRetryCount > 0 {
-		backoffInterval := o.ModelHystrixRetryMaxJitterInterval
-		maximumJitterInterval := o.ModelHystrixRetryBackoffInterval
-		backoff := heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval)
-		retrier := heimdall.NewRetrier(backoff)
-
-		hystrixOptions = append(hystrixOptions,
-			hystrix.WithRetrier(retrier),
-			hystrix.WithRetryCount(int(o.ModelHystrixRetryCount)),
-		)
-	}
-
-	client := hystrix.NewClient(hystrixOptions...)
-	return client
-}
-
 // PredictHandler handles prediction request to the transformer and model.
-func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	if s.ContextModifier != nil {
 		ctx = s.ContextModifier(ctx)
@@ -161,10 +140,11 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	s.logger.Debug("raw request_body", zap.ByteString("request_body", requestBody))
 
-	preprocessedRequestBody := requestBody
+	var preprocessedRequestBody types.Payload
+	preprocessedRequestBody = types.BytePayload(requestBody)
 	if s.PreprocessHandler != nil {
 		preprocessStartTime := time.Now()
-		preprocessedRequestBody, err = s.preprocess(ctx, requestBody, r.Header)
+		preprocessedRequestBody, err = s.preprocess(ctx, preprocessedRequestBody, r.Header)
 		durationMs := time.Since(preprocessStartTime).Milliseconds()
 		if err != nil {
 			pipelineLatency.WithLabelValues(errorResult, preprocessStep).Observe(float64(durationMs))
@@ -172,8 +152,9 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
 			return
 		}
+
 		pipelineLatency.WithLabelValues(successResult, preprocessStep).Observe(float64(durationMs))
-		s.logger.Debug("preprocess response", zap.ByteString("preprocess_response", preprocessedRequestBody))
+		s.logger.Debug("preprocess response", zap.Reflect("preprocess_response", preprocessedRequestBody))
 	}
 
 	predictStartTime := time.Now()
@@ -189,13 +170,15 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	pipelineLatency.WithLabelValues(successResult, predictStep).Observe(float64(predictionDurationMs))
 
-	postprocessedRequestBody, err := ioutil.ReadAll(resp.Body)
+	var postprocessedRequestBody types.Payload
+	requestBody, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		s.logger.Error("error reading model response", zap.Error(err))
 		response.NewError(http.StatusInternalServerError, err).Write(w)
 		return
 	}
-	s.logger.Debug("predict response", zap.ByteString("predict_response", postprocessedRequestBody))
+	postprocessedRequestBody = types.BytePayload(requestBody)
+	s.logger.Debug("predict response", zap.Reflect("predict_response", postprocessedRequestBody))
 
 	if s.PostprocessHandler != nil {
 		postprocessStartTime := time.Now()
@@ -208,48 +191,57 @@ func (s *Server) PredictHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		pipelineLatency.WithLabelValues(successResult, postprocessStep).Observe(float64(postprocessDurationMs))
-		s.logger.Debug("postprocess response", zap.ByteString("postprocess_response", postprocessedRequestBody))
+		s.logger.Debug("postprocess response", zap.Reflect("postprocess_response", postprocessedRequestBody))
 	}
 
+	wiredPayload, valid := postprocessedRequestBody.(types.BytePayload)
+	if !valid {
+		response.NewError(http.StatusInternalServerError, fmt.Errorf("postprocess output type is not supported: %T", postprocessedRequestBody)).Write(w)
+		return
+	}
 	copyHeader(w.Header(), resp.Header)
-	w.Header().Set("Content-Length", fmt.Sprint(len(postprocessedRequestBody)))
+	w.Header().Set("Content-Length", fmt.Sprint(len(wiredPayload)))
 
 	w.WriteHeader(resp.StatusCode)
-	w.Write(postprocessedRequestBody)
+	w.Write(wiredPayload)
 }
 
-func (s *Server) preprocess(ctx context.Context, request []byte, requestHeader http.Header) ([]byte, error) {
+func (s *HTTPServer) preprocess(ctx context.Context, request types.Payload, requestHeader http.Header) (types.Payload, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "preprocess")
 	defer span.Finish()
 
 	return s.PreprocessHandler(ctx, request, getHeaders(requestHeader))
 }
 
-func (s *Server) postprocess(ctx context.Context, response []byte, responseHeader http.Header) ([]byte, error) {
+func (s *HTTPServer) postprocess(ctx context.Context, response types.Payload, responseHeader http.Header) (types.Payload, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "postprocess")
 	defer span.Finish()
 
 	return s.PostprocessHandler(ctx, response, getHeaders(responseHeader))
 }
 
-func (s *Server) predict(ctx context.Context, r *http.Request, request []byte) (*http.Response, error) {
+func (s *HTTPServer) predict(ctx context.Context, r *http.Request, request types.Payload) (*http.Response, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
 	defer span.Finish()
 
-	req, err := http.NewRequest("POST", s.modelURL, bytes.NewBuffer(request))
+	wiredPayload, valid := request.(types.BytePayload)
+	if !valid {
+		return nil, fmt.Errorf("not valid payload for http server")
+	}
+	req, err := http.NewRequest("POST", s.modelURL, bytes.NewBuffer(wiredPayload))
 	if err != nil {
 		return nil, err
 	}
 
 	// propagate headers
 	copyHeader(req.Header, r.Header)
-	r.Header.Set("Content-Length", fmt.Sprint(len(request)))
+	r.Header.Set("Content-Length", fmt.Sprint(len(wiredPayload)))
 
 	return s.httpClient.Do(req)
 }
 
 // Run serves the HTTP endpoints.
-func (s *Server) Run() {
+func (s *HTTPServer) Run() {
 	s.router.Use(recoveryHandler)
 
 	health := healthcheck.NewHandler()
@@ -260,19 +252,19 @@ func (s *Server) Run() {
 	s.router.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
 	s.router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 
-	s.router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelName), s.PredictHandler).Methods("POST")
+	s.router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelFullName), s.PredictHandler).Methods("POST")
 
 	operationName := nethttp.OperationNameFunc(func(r *http.Request) string {
 		return fmt.Sprintf("%s %s", r.Method, r.URL.Path)
 	})
 
-	addr := fmt.Sprintf(":%s", s.options.Port)
+	addr := fmt.Sprintf(":%s", s.options.HTTPPort)
 	srv := &http.Server{
 		Addr:         addr,
 		Handler:      nethttp.Middleware(opentracing.GlobalTracer(), s.router, operationName),
-		WriteTimeout: s.options.HTTPServerTimeout,
-		ReadTimeout:  s.options.HTTPServerTimeout,
-		IdleTimeout:  2 * s.options.HTTPServerTimeout,
+		WriteTimeout: s.options.ServerTimeout,
+		ReadTimeout:  s.options.ServerTimeout,
+		IdleTimeout:  2 * s.options.ServerTimeout,
 	}
 
 	stopCh := setupSignalHandler()

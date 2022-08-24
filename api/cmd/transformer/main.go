@@ -18,12 +18,10 @@ import (
 
 	"github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/server"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
-	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 func init() {
@@ -68,7 +66,7 @@ func main() {
 
 	logger.Info("configuration loaded", zap.Any("appConfig", appConfig))
 
-	closer, err := initTracing(appConfig.Server.ModelName + "-transformer")
+	closer, err := initTracing(appConfig.Server.ModelFullName + "-transformer")
 	if err != nil {
 		logger.Error("Unable to initialize tracing", zap.Error(err))
 	}
@@ -76,11 +74,22 @@ func main() {
 		defer closer.Close()
 	}
 
-	transformerConfig := &spec.StandardTransformerConfig{}
-	if err := jsonpb.UnmarshalString(appConfig.StandardTransformerConfigJSON, transformerConfig); err != nil {
-		logger.Fatal("Unable to parse standard transformer transformerConfig", zap.Error(err))
+	handler, err := createPipelineHandler(appConfig, logger)
+	if err != nil {
+		logger.Fatal("Got error when creating handler", zap.Error(err))
 	}
 
+	runHTTPServer(&appConfig.Server, handler, logger)
+	runGrpcServer(&appConfig.Server, handler, logger)
+}
+
+func createPipelineHandler(appConfig AppConfig, logger *zap.Logger) (*pipeline.Handler, error) {
+	transformerConfig := &spec.StandardTransformerConfig{}
+	if err := jsonpb.UnmarshalString(appConfig.StandardTransformerConfigJSON, transformerConfig); err != nil {
+		return nil, errors.Wrap(err, "unable to parse standard transformer transformerConfig")
+	}
+
+	// TODO Refactor this
 	featureSpecs := make([]*spec.FeatureTableMetadata, 0)
 	if appConfig.FeatureTableSpecJsons != "" {
 		featureTableSpecJsons := make([]map[string]interface{}, 0)
@@ -95,11 +104,7 @@ func main() {
 			featureSpec := &spec.FeatureTableMetadata{}
 			err = jsonpb.UnmarshalString(string(s), featureSpec)
 			if err != nil {
-				return
-			}
-
-			if err != nil {
-				logger.Fatal("Unable to parse standard transformer featureTableSpecs config", zap.Error(err))
+				return nil, errors.Wrap(err, "unable to parse standard transformer featureTableSpecs config")
 			}
 			featureSpecs = append(featureSpecs, featureSpec)
 		}
@@ -110,63 +115,31 @@ func main() {
 
 	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureSpecs, transformerConfig)
 	if err != nil {
-		logger.Fatal("Unable to initialize Feast Clients", zap.Error(err))
+		return nil, errors.Wrap(err, "unable to initialize feast clients")
 	}
 
-	s := server.New(&appConfig.Server, logger)
-
-	if transformerConfig.TransformerConfig.Feast != nil {
-		// Feast Enricher
-		feastTransformer, err := initFeastTransformer(appConfig, feastServingClients, transformerConfig, logger)
-		if err != nil {
-			logger.Fatal("Unable to initialize transformer", zap.Error(err))
-		}
-		s.PreprocessHandler = feastTransformer.Enrich
-	} else {
-		// Standard Enricher
-		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger, false)
-		compiledPipeline, err := compiler.Compile(transformerConfig)
-		if err != nil {
-			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
-		}
-
-		handler := pipeline.NewHandler(compiledPipeline, logger)
-		s.PreprocessHandler = handler.Preprocess
-		s.PostprocessHandler = handler.Postprocess
-		s.ContextModifier = handler.EmbedEnvironment
+	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger, false)
+	compiledPipeline, err := compiler.Compile(transformerConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to compile standard transformer")
 	}
 
+	handler := pipeline.NewHandler(compiledPipeline, logger)
+	return handler, nil
+}
+
+func runHTTPServer(opts *server.Options, handler *pipeline.Handler, logger *zap.Logger) {
+	s := server.NewWithHandler(opts, handler, logger)
 	s.Run()
 }
 
-func initFeastTransformer(appCfg AppConfig,
-	feastClient feast.Clients,
-	transformerConfig *spec.StandardTransformerConfig,
-	logger *zap.Logger,
-) (*feast.Enricher, error) {
-	compiledJSONPaths, err := feast.CompileJSONPaths(transformerConfig.TransformerConfig.Feast)
+func runGrpcServer(opts *server.Options, handler *pipeline.Handler, logger *zap.Logger) error {
+	s, err := server.NewUPIServer(opts, handler, logger)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	compiledExpressions, err := feast.CompileExpressions(transformerConfig.TransformerConfig.Feast, symbol.NewRegistry())
-	if err != nil {
-		return nil, err
-	}
-
-	jsonPathStorage := jsonpath.NewStorage()
-	jsonPathStorage.AddAll(compiledJSONPaths)
-	expressionStorage := expression.NewStorage()
-	expressionStorage.AddAll(compiledExpressions)
-	entityExtractor := feast.NewEntityExtractor(jsonPathStorage, expressionStorage)
-	featureRetriever := feast.NewFeastRetriever(feastClient,
-		entityExtractor,
-		transformerConfig.TransformerConfig.Feast,
-		&appCfg.Feast,
-		logger,
-	)
-
-	return feast.NewEnricher(featureRetriever, logger)
+	s.RunServer()
+	return nil
 }
 
 func initTracing(serviceName string) (io.Closer, error) {

@@ -67,7 +67,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 
 	env.SetSymbol("existing_table", existingTable)
 	env.SetSymbol("not_a_table", 12345)
-	env.SymbolRegistry().SetRawRequestJSON(rawRequestJSON)
+	env.SymbolRegistry().SetRawRequest(rawRequestJSON)
 
 	tests := []struct {
 		name         string

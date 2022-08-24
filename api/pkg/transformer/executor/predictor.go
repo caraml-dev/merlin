@@ -2,18 +2,17 @@ package executor
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 // ModelPredictor
 type ModelPredictor interface {
-	ModelPrediction(ctx context.Context, requestBody []byte, requestHeader map[string]string) (respBody types.JSONObject, respHeaders map[string]string, err error)
+	ModelPrediction(ctx context.Context, requestBody types.Payload, requestHeader map[string]string) (respBody types.Payload, respHeaders map[string]string, err error)
 }
 
 type mockModelPredictor struct {
-	mockResponseBody   types.JSONObject
+	mockResponseBody   types.Payload
 	mockResponseHeader map[string]string
 }
 
@@ -21,7 +20,7 @@ func newEchoMockPredictor() *mockModelPredictor {
 	return &mockModelPredictor{}
 }
 
-func NewMockModelPredictor(respBody types.JSONObject, respHeader map[string]string) *mockModelPredictor {
+func NewMockModelPredictor(respBody types.Payload, respHeader map[string]string) *mockModelPredictor {
 	return &mockModelPredictor{
 		mockResponseBody:   respBody,
 		mockResponseHeader: respHeader,
@@ -30,14 +29,14 @@ func NewMockModelPredictor(respBody types.JSONObject, respHeader map[string]stri
 
 var _ ModelPredictor = (*mockModelPredictor)(nil)
 
-func (mock *mockModelPredictor) ModelPrediction(ctx context.Context, requestBody []byte, requestHeader map[string]string) (respBody types.JSONObject, respHeaders map[string]string, err error) {
-	var reqBodyObj types.JSONObject
-	if err := json.Unmarshal(requestBody, &reqBodyObj); err != nil {
+func (mock *mockModelPredictor) ModelPrediction(ctx context.Context, requestBody types.Payload, requestHeader map[string]string) (respBody types.Payload, respHeaders map[string]string, err error) {
+	reqBodyObj, err := requestBody.AsInput()
+	if err != nil {
 		return nil, nil, err
 	}
 
 	respBody = reqBodyObj
-	if mock.mockResponseBody != nil {
+	if mock.mockResponseBody != nil && !mock.mockResponseBody.IsNil() {
 		respBody = mock.mockResponseBody
 	}
 
