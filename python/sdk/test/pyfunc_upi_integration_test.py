@@ -149,7 +149,7 @@ def test_upi_infer():
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth, requests):
+def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-sample", ModelType.PYFUNC)
@@ -170,6 +170,52 @@ def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth, 
     assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
 
     channel = grpc.insecure_channel(endpoint.url)
+    stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
+
+    request = create_upi_request_from_iris_dataset()
+    response = stub.PredictValues(request=request)
+
+    assert response.metadata.prediction_id == request.metadata.prediction_id
+    assert response.target_name == request.target_name
+
+    # verify row_id
+    for idx, row in enumerate(request.prediction_rows):
+        assert response.prediction_result_rows[idx].row_id == row.row_id
+
+    # verify prediction results
+    X = load_iris()['data']
+    y = model.predict(xgb.DMatrix(X))
+    for row_id, row in enumerate(y.tolist()):
+        for col_id, val in enumerate(row):
+            assert response.prediction_result_rows[row_id].values[col_id].name == IrisClassifier.target_names[col_id]
+            assert response.prediction_result_rows[row_id].values[col_id].double_value == val
+
+    merlin.undeploy(v)
+
+@pytest.mark.pyfunc
+@pytest.mark.integration
+def test_serve_traffic(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("pyfunc-sample", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        xgb_path, model = train_xgboost_model()
+
+        v.log_pyfunc_model(model_instance=IrisClassifier(),
+                           conda_env="test/pyfunc/env.yaml",
+                           code_dir=["test"],
+                           artifacts={"xgb_model": xgb_path})
+
+    endpoint = merlin.deploy(v, protocol=Protocol.UPI_V1)
+    model_endpoint = merlin.serve_traffic({endpoint:100})
+
+    assert model_endpoint.protocol == Protocol.UPI_V1
+    assert model_endpoint.status == Status.RUNNING
+    assert model_endpoint.deployment_mode == DeploymentMode.SERVERLESS
+
+    channel = grpc.insecure_channel(model_endpoint.url)
     stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
 
     request = create_upi_request_from_iris_dataset()
