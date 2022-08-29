@@ -4,6 +4,7 @@ cloudpickle==2.0.0
 prometheus_client==0.14.1
 uvloop>=0.15.2
 orjson==2.6.8
+tornado
 caraml-upi-protos
 grpcio-reflection
 file:../sdk#egg=merlin-sdk
