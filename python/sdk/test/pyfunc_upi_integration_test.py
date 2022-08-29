@@ -169,7 +169,7 @@ def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
     assert endpoint.status == Status.RUNNING
     assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
 
-    channel = grpc.insecure_channel(endpoint.url)
+    channel = grpc.insecure_channel(f"{endpoint.url}:80")
     stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
 
     request = create_upi_request_from_iris_dataset()
@@ -215,7 +215,7 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
     assert model_endpoint.status == Status.RUNNING
     assert model_endpoint.deployment_mode == DeploymentMode.SERVERLESS
 
-    channel = grpc.insecure_channel(model_endpoint.url)
+    channel = grpc.insecure_channel(f"{model_endpoint.url}:80")
     stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
 
     request = create_upi_request_from_iris_dataset()
