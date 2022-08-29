@@ -152,7 +152,7 @@ def test_upi_infer():
 def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("pyfunc-sample", ModelType.PYFUNC)
+    merlin.set_model("pyfunc-upi", ModelType.PYFUNC)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
@@ -197,7 +197,7 @@ def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
 def test_serve_traffic(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("pyfunc-sample", ModelType.PYFUNC)
+    merlin.set_model("pyfunc-upi-serve", ModelType.PYFUNC)
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
