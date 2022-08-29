@@ -25,8 +25,7 @@ from sklearn.datasets import load_iris
 
 import merlin
 from merlin.model import PyFuncModel, ModelType
-from merlin.endpoint import Status
-
+from test.utils import undeploy_all_version
 
 warnings.filterwarnings('ignore')
 
@@ -36,14 +35,6 @@ request_json = {
         [3.1, 1.4, 4.5, 1.6]
     ]
 }
-
-
-def undeploy_all_version():
-    for v in merlin.active_model().list_version():
-        ve = v.endpoint
-        if ve is not None and ve.status == Status.RUNNING:
-            merlin.undeploy(v)
-
 
 class EnsembleModel(PyFuncModel):
     def initialize(self, artifacts):
