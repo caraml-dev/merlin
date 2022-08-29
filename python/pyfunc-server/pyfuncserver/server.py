@@ -36,8 +36,8 @@ class PyFuncServer:
         # start only one server depending on the chosen protocol
         # the intent is to save memory consumption
         if self._config.protocol == Protocol.HTTP_JSON:
-            http_server = HTTPServer(port=self._config.http_port, workers=self._config.workers, metrics_registry=registry)
-            http_server.start(model=model)
+            http_server = HTTPServer(model=model, config=self._config, metrics_registry=registry)
+            http_server.start()
         elif self._config.protocol == Protocol.UPI_V1:
             # start prometheus metrics server and listen at http port
             prometheus_client.start_http_server(self._config.http_port, registry=registry)

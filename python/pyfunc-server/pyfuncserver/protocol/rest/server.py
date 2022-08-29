@@ -2,17 +2,19 @@ import logging
 import tornado
 from prometheus_client import CollectorRegistry
 
+from pyfuncserver.config import Config
 from pyfuncserver.metrics.handler import MetricsHandler
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.handler import HealthHandler, LivenessHandler, PredictHandler
 
 
 class HTTPServer:
-    def __init__(self, port: int, workers: int, metrics_registry: CollectorRegistry):
-        self.workers = workers
-        self.http_port = port
+    def __init__(self, model: PyFuncModel, config: Config, metrics_registry: CollectorRegistry):
+        self.workers = config.workers
+        self.http_port = config.http_port
         self.metrics_registry = metrics_registry
         self.registered_models : dict = {}
+        self.register_model(model)
 
     def create_application(self):
         return tornado.web.Application([
@@ -26,9 +28,7 @@ class HTTPServer:
             (r"/metrics", MetricsHandler, dict(metrics_registry=self.metrics_registry))
         ])
 
-    def start(self, model: PyFuncModel):
-        self.register_model(model)
-
+    def start(self, ):
         self._http_server = tornado.httpserver.HTTPServer(
             self.create_application())
 
