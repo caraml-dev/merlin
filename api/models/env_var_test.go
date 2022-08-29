@@ -21,41 +21,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func TestEnvVars_CheckForProtectedEnvVars(t *testing.T) {
-	tests := []struct {
-		name    string
-		evs     EnvVars
-		wantErr bool
-	}{
-		{
-			"no protected",
-			EnvVars{
-				EnvVar{"foo", "bar"},
-			},
-			false,
-		},
-		{
-			"protected exist",
-			EnvVars{
-				EnvVar{envModelName, "test"},
-			},
-			true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.evs.CheckForProtectedEnvVars(); (err != nil) != tt.wantErr {
-				t.Errorf("EnvVars.CheckForProtectedEnvVars() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func TestEnvVars_ToKubernetesEnvVars(t *testing.T) {
 	tests := []struct {
-		name string
-		errRaised    EnvVars
-		want []v1.EnvVar
+		name      string
+		errRaised EnvVars
+		want      []v1.EnvVar
 	}{
 		{
 			"empty",
