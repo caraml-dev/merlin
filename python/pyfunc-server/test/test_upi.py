@@ -1,25 +1,39 @@
 import os
+import pathlib
+import re
+import shutil
 import subprocess
 from typing import List
 
 import grpc
 import mlflow
 import pandas as pd
+import requests
 from caraml.upi.v1 import upi_pb2, upi_pb2_grpc, value_pb2
 from merlin.model import PyFuncModel
 from merlin.protocol import Protocol
+from prometheus_client import Counter, Gauge
 
 from pyfuncserver.config import GRPC_PORT, HTTP_PORT, MODEL_FULL_NAME, MODEL_NAME, MODEL_VERSION, PROTOCOL, WORKER
 from test.utils import df_to_prediction_rows, wait_server_ready, prediction_result_rows_to_df
 
 
 class EchoUPIModel(PyFuncModel):
+    GAUGE_VALUE = 42
+
     def __init__(self, model_name, model_version):
         self._model_name = model_name
         self._model_version = model_version
 
+    def initialize(self, artifacts: dict):
+        self._req_count = Counter("request_count", "Number of incoming request")
+        self._temp = Gauge("some_gauge", "Number of incoming request")
+
     def upiv1_infer(self, request: upi_pb2.PredictValuesRequest,
                     context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
+        self._req_count.inc()
+        self._temp.set(EchoUPIModel.GAUGE_VALUE)
+
         result_rows: List[upi_pb2.PredictionResultRow] = []
         for row in request.prediction_rows:
             result_rows.append(upi_pb2.PredictionResultRow(row_id=row.row_id, values=row.model_inputs))
@@ -49,8 +63,11 @@ def test_basic_upi():
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
     env = os.environ.copy()
     mlflow.end_run()
+    metrics_path = "metrics_test"
 
     try:
+        pathlib.Path(metrics_path).mkdir(exist_ok=True)
+
         env[PROTOCOL] = Protocol.UPI_V1.value
         env[HTTP_PORT] = http_port
         env[GRPC_PORT] = grpc_port
@@ -58,7 +75,7 @@ def test_basic_upi():
         env[MODEL_VERSION] = model_version
         env[MODEL_FULL_NAME] = model_full_name
         env[WORKER] = "1"
-        env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
+        env["PROMETHEUS_MULTIPROC_DIR"] = metrics_path
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
@@ -92,5 +109,24 @@ def test_basic_upi():
         assert response.target_name == target_name
         assert df.equals(prediction_result_rows_to_df(response.prediction_result_rows))
 
+        # test metrics
+        resp = requests.get(f"http://localhost:{http_port}/metrics")
+        assert resp.status_code == 200
+
+        # Check request_count counter
+        matches = re.findall(r"request_count_total\s(\d\.\d)", resp.text)
+        assert len(matches) == 1
+        assert 1 == int(float(matches[0]))
+
+        # Check some_gauge gauge value
+        matches = re.findall(r"some_gauge\{pid=\"\d+\"\}\s(\d+.\d+)", resp.text)
+        assert len(matches) > 0
+        for match in matches:
+            gauge_value = int(float(match))
+            assert gauge_value == EchoUPIModel.GAUGE_VALUE or gauge_value == 0
+
+
+
     finally:
         c.kill()
+        shutil.rmtree(metrics_path)

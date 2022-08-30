@@ -130,7 +130,7 @@ def test_metrics():
         assert predict_count == int(float(matches[0]))
 
         # Check some_gauge gauge value
-        matches = re.findall(r"some_gauge\{pid=\"\d+\"\}\s(\d.\d)", resp.text)
+        matches = re.findall(r"some_gauge\{pid=\"\d+\"\}\s(\d+.\d+)", resp.text)
         assert len(matches) > 0
         for match in matches:
             gauge_value = int(float(match))
