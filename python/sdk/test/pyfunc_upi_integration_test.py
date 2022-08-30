@@ -212,7 +212,7 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
     model_endpoint = merlin.serve_traffic({endpoint:100})
 
     assert model_endpoint.protocol == Protocol.UPI_V1
-    assert model_endpoint.status == Status.RUNNING
+    assert model_endpoint.status == Status.SERVING
     assert model_endpoint.deployment_mode == DeploymentMode.SERVERLESS
 
     channel = grpc.insecure_channel(f"{model_endpoint.url}:80")
