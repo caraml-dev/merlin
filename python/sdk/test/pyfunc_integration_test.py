@@ -36,6 +36,7 @@ request_json = {
     ]
 }
 
+
 class EnsembleModel(PyFuncModel):
     def initialize(self, artifacts):
         self._model_1 = xgb.Booster(model_file=artifacts["xgb_model"])
@@ -48,6 +49,16 @@ class EnsembleModel(PyFuncModel):
         result_2 = self._model_2.predict_proba(inputs)
         return {"predictions": ((result_1 + result_2) / 2).tolist()}
 
+
+class EnvVarModel(PyFuncModel):
+    def initialize(self, artifacts):
+        self.env_var = {}
+        self.env_var["workers"] = os.environ.get("WORKERS")
+        self.env_var["env_var_1"] = os.environ.get("ENV_VAR_1")
+        self.env_var["env_var_2"] = os.environ.get("ENV_VAR_2")
+
+    def infer(self, model_input):
+        return self.env_var
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
@@ -84,82 +95,6 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth, requests):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_old_merlin_latest_mlflow(integration_test_url, project_name, use_google_oauth, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
-    merlin.set_project(project_name)
-    merlin.set_model("pf-old-merlin-new-mlflow", ModelType.PYFUNC)
-
-    undeploy_all_version()
-    with merlin.new_model_version() as v:
-        iris = load_iris()
-        y = iris['target']
-        X = iris['data']
-        xgb_path = train_xgboost_model(X, y)
-        sklearn_path = train_sklearn_model(X, y)
-
-        v.log_pyfunc_model(model_instance=EnsembleModel(),
-                           conda_env="test/pyfunc/env-old-merlin-latest-mlflow.yaml",
-                           code_dir=["test"],
-                           artifacts={"xgb_model": xgb_path,
-                                      "sklearn_model": sklearn_path})
-
-    endpoint = merlin.deploy(v)
-
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
-
-    merlin.undeploy(v)
-
-
-@pytest.mark.pyfunc
-@pytest.mark.integration
-def test_pyfunc_old_merlin_old_mlflow(integration_test_url, project_name, use_google_oauth, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
-    merlin.set_project(project_name)
-    merlin.set_model("pf-old-merlin-mlflow", ModelType.PYFUNC)
-
-    undeploy_all_version()
-    with merlin.new_model_version() as v:
-        iris = load_iris()
-        y = iris['target']
-        X = iris['data']
-        xgb_path = train_xgboost_model(X, y)
-        sklearn_path = train_sklearn_model(X, y)
-
-        v.log_pyfunc_model(model_instance=EnsembleModel(),
-                           conda_env="test/pyfunc/env-old-merlin-old-mlflow.yaml",
-                           code_dir=["test"],
-                           artifacts={"xgb_model": xgb_path,
-                                      "sklearn_model": sklearn_path})
-
-    endpoint = merlin.deploy(v)
-
-    resp = requests.post(f"{endpoint.url}", json=request_json)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()['predictions']) == len(request_json['instances'])
-
-    merlin.undeploy(v)
-
-    assert resp.status_code == 404
-
-class EnvVarModel(PyFuncModel):
-    def initialize(self, artifacts):
-        self.env_var = {}
-        self.env_var["workers"] = os.environ.get("WORKERS")
-        self.env_var["env_var_1"] = os.environ.get("ENV_VAR_1")
-        self.env_var["env_var_2"] = os.environ.get("ENV_VAR_2")
-
-    def infer(self, model_input):
-        return self.env_var
-
-
-@pytest.mark.pyfunc
-@pytest.mark.integration
 def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -185,10 +120,9 @@ def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth, r
 
     merlin.undeploy(v)
 
+
 # This implementation of PyFuncModel uses the old infer method (no keyword arguments).
 # The keywords arguments for infer() method introduced in Merlin 0.5.2.
-
-
 class OldInferModel(PyFuncModel):
     def initialize(self, artifacts):
         pass
