@@ -139,6 +139,8 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
     print(model_endpoint.url)
     sleep(5)
     validate_iris_upi(xgb_model, stub)
+
+    merlin.stop_serving_traffic(model_endpoint.environment_name)
     merlin.undeploy(v)
 
 
