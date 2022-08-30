@@ -1,5 +1,6 @@
 import os
 import uuid
+from time import sleep
 from typing import List
 
 import grpc
@@ -134,6 +135,9 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
 
     channel = grpc.insecure_channel(f"{model_endpoint.url}:80")
     stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
+
+    print(model_endpoint.url)
+    sleep(5)
     validate_iris_upi(xgb_model, stub)
     merlin.undeploy(v)
 
@@ -141,6 +145,7 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
 def validate_iris_upi(model, stub):
     request = create_upi_request_from_iris_dataset()
     response = stub.PredictValues(request=request)
+
     assert response.metadata.prediction_id == request.metadata.prediction_id
     assert response.target_name == request.target_name
     # verify row_id
