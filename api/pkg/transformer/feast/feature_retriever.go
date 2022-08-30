@@ -237,31 +237,33 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 	numOfBatch := int(math.Ceil(numOfBatchBeforeCeil))
 	batchResultChan := make(chan callResult, numOfBatch)
 
-	for i := 0; i < numOfBatch; i++ {
-		startIndex := i * fr.options.BatchSize
-		endIndex := len(entityNotInCache)
-		if endIndex > startIndex+fr.options.BatchSize {
-			endIndex = startIndex + fr.options.BatchSize
-		}
-		batchedEntities := entityNotInCache[startIndex:endIndex]
+	go func() {
+		for i := 0; i < numOfBatch; i++ {
+			startIndex := i * fr.options.BatchSize
+			endIndex := len(entityNotInCache)
+			if endIndex > startIndex+fr.options.BatchSize {
+				endIndex = startIndex + fr.options.BatchSize
+			}
+			batchedEntities := entityNotInCache[startIndex:endIndex]
 
-		f, err := newCall(fr, featureTableSpec, columns, entitySet)
-		if err != nil {
-			return nil, err
-		}
+			f, err := newCall(fr, featureTableSpec, columns, entitySet)
+			if err != nil {
+				batchResultChan <- callResult{err: err}
+				return
+			}
 
-		hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
-			batchResultChan <- f.do(ctx, batchedEntities, features)
-			return nil
-		}, func(ctx context.Context, err error) error {
-			batchResultChan <- callResult{featureTable: nil, err: err}
-			return nil
-		})
-	}
+			hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
+				batchResultChan <- f.do(ctx, batchedEntities, features)
+				return nil
+			}, func(ctx context.Context, err error) error {
+				batchResultChan <- callResult{featureTable: nil, err: err}
+				return nil
+			})
+		}
+	}()
 
 	// merge result from all batch, including the cached one
-	for i := 0; i < numOfBatch; i++ {
-		res := <-batchResultChan
+	for res := range batchResultChan {
 		if res.err != nil {
 			return nil, res.err
 		}
