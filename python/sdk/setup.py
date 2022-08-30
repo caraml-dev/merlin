@@ -72,6 +72,8 @@ setup(
     tests_require=TEST_REQUIRES,
     extras_require={'test': TEST_REQUIRES},
     python_requires='>=3.7',
+    long_description=open("README.md").read(),
+    long_description_content_type='text/markdown',
     entry_points='''
         [console_scripts]
         merlin=merlin.merlin:cli
