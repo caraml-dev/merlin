@@ -36,7 +36,6 @@ args, _ = parser.parse_known_args()
 
 logging.getLogger('tornado.access').disabled = True
 
-
 if __name__ == "__main__":
     # use uvloop as the event loop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())

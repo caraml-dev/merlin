@@ -16,12 +16,12 @@ import inspect
 from enum import Enum
 
 import grpc
+from caraml.upi.v1 import upi_pb2
 from merlin.protocol import Protocol
+from merlin.pyfunc import PYFUNC_EXTRA_ARGS_KEY, PYFUNC_GRPC_CONTEXT, PYFUNC_MODEL_INPUT_KEY, PYFUNC_PROTOCOL_KEY
 from mlflow import pyfunc
 
 from pyfuncserver.config import ModelManifest
-from caraml.upi.v1 import upi_pb2
-from merlin.pyfunc import PYFUNC_EXTRA_ARGS_KEY, PYFUNC_MODEL_INPUT_KEY, PYFUNC_PROTOCOL_KEY, PYFUNC_GRPC_CONTEXT
 
 NUM_OF_LATEST_PREDICT_FUNC_ARGS = 3
 
@@ -91,7 +91,8 @@ class PyFuncModel:  # pylint:disable=c-extension-no-member
 
             return self._model.predict(model_inputs)
 
-    def upiv1_predict(self, request: upi_pb2.PredictValuesRequest, context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
+    def upiv1_predict(self, request: upi_pb2.PredictValuesRequest,
+                      context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
         model_inputs = {
             PYFUNC_PROTOCOL_KEY: Protocol.UPI_V1,
             PYFUNC_MODEL_INPUT_KEY: request,

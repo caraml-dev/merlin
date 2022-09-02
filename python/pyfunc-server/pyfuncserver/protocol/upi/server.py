@@ -1,9 +1,9 @@
 import logging
 from concurrent import futures
 
-from caraml.upi.v1 import upi_pb2_grpc, upi_pb2
-from grpc_reflection.v1alpha import reflection
 import grpc
+from caraml.upi.v1 import upi_pb2, upi_pb2_grpc
+from grpc_reflection.v1alpha import reflection
 
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
@@ -35,7 +35,8 @@ class UPIServer:
         )
         reflection.enable_server_reflection(SERVICE_NAMES, server)
 
-        logging.info(f"Starting grpc service at port {self._config.grpc_port} with options {self._config.grpc_options}")
+        logging.info(
+            f"Starting grpc service at port {self._config.grpc_port} with options {self._config.grpc_options}")
         server.add_insecure_port(f"[::]:{self._config.grpc_port}")
         server.start()
         server.wait_for_termination()

@@ -89,4 +89,3 @@ class HealthHandler(tornado.web.RequestHandler):
             "name": model.full_name,
             "ready": model.ready
         }))
-

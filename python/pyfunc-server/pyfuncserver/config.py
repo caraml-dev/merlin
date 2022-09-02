@@ -24,10 +24,12 @@ DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_PROTOCOL = "HTTP_JSON"
 DEFAULT_GRPC_OPTIONS = "{}"
 
+
 class ModelManifest:
     """
     Model Manifest
     """
+
     def __init__(self, model_name: str, model_version: str, model_full_name: str, model_dir: str):
         self.model_name = model_name
         self.model_version = model_version
@@ -39,6 +41,7 @@ class Config:
     """
     Server Configuration
     """
+
     def __init__(self, model_dir: str):
         self.protocol = Protocol(os.getenv(PROTOCOL, DEFAULT_PROTOCOL))
         self.http_port = int(os.getenv(HTTP_PORT, DEFAULT_HTTP_PORT))
@@ -63,4 +66,3 @@ class Config:
             logging.warning(f"invalid log level {log_level}")
             return logging.INFO
         return numeric_level
-

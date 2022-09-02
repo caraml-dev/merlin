@@ -1,4 +1,5 @@
 import logging
+
 import tornado
 from prometheus_client import CollectorRegistry
 
@@ -13,7 +14,7 @@ class HTTPServer:
         self.workers = config.workers
         self.http_port = config.http_port
         self.metrics_registry = metrics_registry
-        self.registered_models : dict = {}
+        self.registered_models: dict = {}
         self.register_model(model)
 
     def create_application(self):
@@ -28,7 +29,7 @@ class HTTPServer:
             (r"/metrics", MetricsHandler, dict(metrics_registry=self.metrics_registry))
         ])
 
-    def start(self, ):
+    def start(self):
         self._http_server = tornado.httpserver.HTTPServer(
             self.create_application())
 
