@@ -11,7 +11,7 @@ MODEL_NAME = "CARAML_MODEL_NAME"
 MODEL_VERSION = "CARAML_MODEL_VERSION"
 MODEL_FULL_NAME = "CARAML_MODEL_FULL_NAME"
 PROTOCOL = "CARAML_PROTOCOL"
-WORKER = "WORKER"
+WORKERS = "WORKERS"
 LOG_LEVEL = "LOG_LEVEL"
 GRPC_OPTIONS = "GRPC_OPTIONS"
 
@@ -50,7 +50,7 @@ class Config:
         model_full_name = os.getenv(MODEL_FULL_NAME, DEFAULT_FULL_NAME)
         self.model_manifest = ModelManifest(model_name, model_version, model_full_name, model_dir)
 
-        self.workers = int(os.getenv(WORKER, 1))
+        self.workers = int(os.getenv(WORKERS, 1))
         self.log_level = self._log_level()
 
         grpc_options = os.getenv(GRPC_OPTIONS, DEFAULT_GRPC_OPTIONS)

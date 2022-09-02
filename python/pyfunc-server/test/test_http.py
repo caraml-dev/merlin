@@ -11,7 +11,7 @@ import requests
 from merlin.model import PyFuncModel
 from prometheus_client.metrics import Counter, Gauge
 
-from pyfuncserver.config import HTTP_PORT, WORKER, MODEL_NAME, MODEL_VERSION, MODEL_FULL_NAME
+from pyfuncserver.config import HTTP_PORT, WORKERS, MODEL_NAME, MODEL_VERSION, MODEL_FULL_NAME
 from test.utils import wait_server_ready
 
 
@@ -48,7 +48,7 @@ def test_http_protocol():
         env[MODEL_NAME] = model_name
         env[MODEL_VERSION] = model_version
         env[MODEL_FULL_NAME] = model_full_name
-        env[WORKER] = "1"
+        env[WORKERS] = "1"
         env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
@@ -99,7 +99,7 @@ def test_metrics():
         env[MODEL_NAME] = model_name
         env[MODEL_VERSION] = model_version
         env[MODEL_FULL_NAME] = model_full_name
-        env[WORKER] = "4"
+        env[WORKERS] = "4"
         env["PROMETHEUS_MULTIPROC_DIR"] = metrics_path
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env, start_new_session=True)
         # wait till the server is up

@@ -14,7 +14,7 @@ from merlin.model import PyFuncModel
 from merlin.protocol import Protocol
 from prometheus_client import Counter, Gauge
 
-from pyfuncserver.config import GRPC_PORT, HTTP_PORT, MODEL_FULL_NAME, MODEL_NAME, MODEL_VERSION, PROTOCOL, WORKER
+from pyfuncserver.config import GRPC_PORT, HTTP_PORT, MODEL_FULL_NAME, MODEL_NAME, MODEL_VERSION, PROTOCOL, WORKERS
 from test.utils import df_to_prediction_rows, wait_server_ready, prediction_result_rows_to_df
 
 
@@ -74,7 +74,7 @@ def test_basic_upi():
         env[MODEL_NAME] = model_name
         env[MODEL_VERSION] = model_version
         env[MODEL_FULL_NAME] = model_full_name
-        env[WORKER] = "1"
+        env[WORKERS] = "1"
         env["PROMETHEUS_MULTIPROC_DIR"] = metrics_path
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 

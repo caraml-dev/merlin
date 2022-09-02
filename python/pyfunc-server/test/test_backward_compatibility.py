@@ -25,7 +25,7 @@ import requests
 import tornado.web
 from prometheus_client import Counter, Gauge
 
-from pyfuncserver.config import HTTP_PORT, ModelManifest, WORKER
+from pyfuncserver.config import HTTP_PORT, ModelManifest, WORKERS
 from pyfuncserver.model.model import PyFuncModel
 from test.utils import wait_server_ready
 from merlin.pyfunc import PYFUNC_MODEL_INPUT_KEY, PYFUNC_EXTRA_ARGS_KEY
@@ -231,7 +231,7 @@ def test_model_int(model):
     try:
         env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
         env[HTTP_PORT] = "8081"
-        env[WORKER] = "1"
+        env[WORKERS] = "1"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
@@ -266,7 +266,7 @@ def test_model_headers(model):
     try:
         env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
         env[HTTP_PORT] = "8081"
-        env[WORKER] = "1"
+        env[WORKERS] = "1"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
@@ -304,7 +304,7 @@ def test_error_model_int(error_core, message, model):
     try:
         env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
         env[HTTP_PORT] = "8081"
-        env[WORKER] = "1"
+        env[WORKERS] = "1"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
