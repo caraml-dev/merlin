@@ -78,8 +78,8 @@ func (e *Environment) Output() types.Payload {
 	return e.output
 }
 
-func (e *Environment) JSONContainer() types.PayloadObjectContainer {
-	return e.symbolRegistry.JSONContainer()
+func (e *Environment) PayloadContainer() types.PayloadObjectContainer {
+	return e.symbolRegistry.PayloadContainer()
 }
 
 func (e *Environment) SetSymbol(name string, value interface{}) {

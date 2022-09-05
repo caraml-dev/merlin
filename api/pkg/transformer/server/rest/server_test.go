@@ -1,4 +1,4 @@
-package server
+package rest
 
 import (
 	"bytes"
@@ -27,6 +27,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
+	"github.com/gojek/merlin/pkg/transformer/server/config"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types"
@@ -48,7 +49,7 @@ func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	options := &Options{
+	options := &config.Options{
 		ModelPredictURL: ts.URL,
 	}
 	logger, _ := zap.NewDevelopment()
@@ -125,7 +126,7 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			options := &Options{
+			options := &config.Options{
 				ModelPredictURL: ts.URL,
 			}
 			logger, _ := zap.NewDevelopment()
@@ -175,7 +176,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	}{
 		{
 			name:         "postprocess output only",
-			specYamlPath: "../pipeline/testdata/postprocess_output_only.yaml",
+			specYamlPath: "../../pipeline/testdata/postprocess_output_only.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -207,7 +208,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "passthrough",
-			specYamlPath: "../pipeline/testdata/valid_passthrough.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_passthrough.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -239,7 +240,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "simple preprocess",
-			specYamlPath: "../pipeline/testdata/valid_simple_preprocess.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_simple_preprocess_child.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -280,7 +281,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "simple postproces",
-			specYamlPath: "../pipeline/testdata/valid_simple_postprocess.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_simple_postprocess.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -312,7 +313,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation",
-			specYamlPath: "../pipeline/testdata/valid_table_transform_preprocess.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_table_transform_preprocess.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -344,7 +345,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation with conditional update, filter row and slice row",
-			specYamlPath: "../pipeline/testdata/valid_table_transform_conditional_filtering.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_table_transform_conditional_filtering.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -376,7 +377,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation with feast",
-			specYamlPath: "../pipeline/testdata/valid_feast_preprocess.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_feast_preprocess.yaml",
 			mockFeasts: []mockFeast{
 				{
 					request: &feastSdk.OnlineFeaturesRequest{
@@ -459,7 +460,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation with feast and series transformation",
-			specYamlPath: "../pipeline/testdata/valid_feast_series_transform.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_feast_series_transform.yaml",
 			mockFeasts: []mockFeast{
 				{
 					request: &feastSdk.OnlineFeaturesRequest{
@@ -896,7 +897,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "multiple columns table join with feast",
-			specYamlPath: "../pipeline/testdata/valid_table_join_multiple_columns.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_table_join_multiple_columns.yaml",
 			mockFeasts: []mockFeast{
 				{
 					request: &feastSdk.OnlineFeaturesRequest{
@@ -984,7 +985,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation with feast (containing column that has null for all the rows) and transformation",
-			specYamlPath: "../pipeline/testdata/valid_feast_series_transform_conditional.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_feast_series_transform_conditional.yaml",
 			mockFeasts: []mockFeast{
 				{
 					request: &feastSdk.OnlineFeaturesRequest{
@@ -1201,7 +1202,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				})).Return(m.response, nil)
 			}
 
-			options := &Options{
+			options := &config.Options{
 				ModelPredictURL: modelServer.URL,
 			}
 			transformerServer, err := createTransformerServer(tt.specYamlPath, feastClients, options)
@@ -1234,7 +1235,7 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 	defaultResponseBodyString := `{ "response": "ok" }`
 
 	type args struct {
-		o *Options
+		o *config.Options
 	}
 	tests := []struct {
 		name              string
@@ -1247,7 +1248,7 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 		{
 			name: "get success",
 			args: args{
-				o: &Options{},
+				o: &config.Options{},
 			},
 			handler: func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, http.MethodGet, r.Method)
@@ -1262,7 +1263,7 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 		{
 			name: "post success",
 			args: args{
-				o: &Options{},
+				o: &config.Options{},
 			},
 			handler: func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, http.MethodPost, r.Method)
@@ -1327,7 +1328,7 @@ func Test_recoveryHandler(t *testing.T) {
 	s := &HTTPServer{
 		router: router,
 		logger: logger,
-		options: &Options{
+		options: &config.Options{
 			HTTPPort:      port,
 			ModelFullName: modelName,
 		},
@@ -1383,7 +1384,7 @@ func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, act
 	}
 }
 
-func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *Options) (*HTTPServer, error) {
+func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *config.Options) (*HTTPServer, error) {
 	yamlBytes, err := ioutil.ReadFile(transformerConfigPath)
 	if err != nil {
 		return nil, err

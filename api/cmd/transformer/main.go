@@ -17,9 +17,13 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/hystrix"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
-	"github.com/gojek/merlin/pkg/transformer/server"
+	serverConf "github.com/gojek/merlin/pkg/transformer/server/config"
+	grpc "github.com/gojek/merlin/pkg/transformer/server/grpc"
+	rest "github.com/gojek/merlin/pkg/transformer/server/rest"
+
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
@@ -32,7 +36,7 @@ func init() {
 }
 
 type AppConfig struct {
-	Server server.Options
+	Server serverConf.Options
 	Feast  feast.Options
 
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
@@ -79,8 +83,12 @@ func main() {
 		logger.Fatal("Got error when creating handler", zap.Error(err))
 	}
 
-	runHTTPServer(&appConfig.Server, handler, logger)
-	runGrpcServer(&appConfig.Server, handler, logger)
+	if appConfig.Server.Protocol == protocol.HttpJson {
+		runHTTPServer(&appConfig.Server, handler, logger)
+	} else {
+		runGrpcServer(&appConfig.Server, handler, logger)
+	}
+
 }
 
 func createPipelineHandler(appConfig AppConfig, logger *zap.Logger) (*pipeline.Handler, error) {
@@ -89,7 +97,6 @@ func createPipelineHandler(appConfig AppConfig, logger *zap.Logger) (*pipeline.H
 		return nil, errors.Wrap(err, "unable to parse standard transformer transformerConfig")
 	}
 
-	// TODO Refactor this
 	featureSpecs := make([]*spec.FeatureTableMetadata, 0)
 	if appConfig.FeatureTableSpecJsons != "" {
 		featureTableSpecJsons := make([]map[string]interface{}, 0)
@@ -128,18 +135,17 @@ func createPipelineHandler(appConfig AppConfig, logger *zap.Logger) (*pipeline.H
 	return handler, nil
 }
 
-func runHTTPServer(opts *server.Options, handler *pipeline.Handler, logger *zap.Logger) {
-	s := server.NewWithHandler(opts, handler, logger)
+func runHTTPServer(opts *serverConf.Options, handler *pipeline.Handler, logger *zap.Logger) {
+	s := rest.NewWithHandler(opts, handler, logger)
 	s.Run()
 }
 
-func runGrpcServer(opts *server.Options, handler *pipeline.Handler, logger *zap.Logger) error {
-	s, err := server.NewUPIServer(opts, handler, logger)
+func runGrpcServer(opts *serverConf.Options, handler *pipeline.Handler, logger *zap.Logger) {
+	s, err := grpc.NewUPIServer(opts, handler, logger)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	s.RunServer()
-	return nil
 }
 
 func initTracing(serviceName string) (io.Closer, error) {

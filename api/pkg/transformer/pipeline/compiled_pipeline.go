@@ -23,13 +23,6 @@ type CompiledPipeline struct {
 	tracingEnabled bool
 }
 
-type pipelineType string
-
-const (
-	preprocess  pipelineType = "preprocess"
-	postprocess pipelineType = "postprocess"
-)
-
 func NewCompiledPipeline(
 	compiledJSONPath *jsonpath.Storage,
 	compiledExpression *expression.Storage,
@@ -50,21 +43,14 @@ func NewCompiledPipeline(
 }
 
 func (p *CompiledPipeline) Preprocess(context context.Context, env *Environment) (types.Payload, error) {
-	return p.executePipelineOp(context, preprocess, env)
+	return p.executePipelineOp(context, types.Preprocess, p.preprocessOps, env)
 }
 
 func (p *CompiledPipeline) Postprocess(context context.Context, env *Environment) (types.Payload, error) {
-	return p.executePipelineOp(context, postprocess, env)
+	return p.executePipelineOp(context, types.Postprocess, p.postprocessOps, env)
 }
 
-func (p *CompiledPipeline) executePipelineOp(ctx context.Context, pType pipelineType, env *Environment) (types.Payload, error) {
-	var ops []Op
-	if pType == preprocess {
-		ops = p.preprocessOps
-	} else {
-		ops = p.postprocessOps
-	}
-
+func (p *CompiledPipeline) executePipelineOp(ctx context.Context, pType types.Pipeline, ops []Op, env *Environment) (types.Payload, error) {
 	tracingDetails := make([]types.TracingDetail, 0)
 	for _, op := range ops {
 		err := op.Execute(ctx, env)
@@ -82,7 +68,7 @@ func (p *CompiledPipeline) executePipelineOp(ctx context.Context, pType pipeline
 	}
 
 	if p.tracingEnabled {
-		if pType == preprocess {
+		if pType == types.Preprocess {
 			env.SymbolRegistry().SetPreprocessTracingDetail(tracingDetails)
 		} else {
 			env.SymbolRegistry().SetPostprocessTracingDetail(tracingDetails)

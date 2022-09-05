@@ -6,17 +6,18 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/url"
+	"os"
+	"reflect"
+	"sort"
+
 	goparquet "github.com/fraugster/parquet-go"
 	"github.com/fraugster/parquet-go/parquet"
 	"github.com/go-gota/gota/dataframe"
 	gota "github.com/go-gota/gota/series"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
-	"io"
-	"net/url"
-	"os"
-	"reflect"
-	"sort"
 
 	"github.com/bboughton/gcp-helpers/gsutil"
 )

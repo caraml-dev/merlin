@@ -51,7 +51,7 @@ func (sr Registry) SetModelResponse(obj types.Payload) {
 	sr[sourceKey].(types.PayloadObjectContainer)[spec.JsonType_MODEL_RESPONSE] = obj
 }
 
-func (sr Registry) JSONContainer() types.PayloadObjectContainer {
+func (sr Registry) PayloadContainer() types.PayloadObjectContainer {
 	return sr[sourceKey].(types.PayloadObjectContainer)
 }
 

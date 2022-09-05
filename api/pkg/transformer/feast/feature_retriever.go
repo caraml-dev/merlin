@@ -8,17 +8,17 @@ import (
 	"math"
 	"time"
 
+	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/symbol"
+	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/cespare/xxhash"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
-
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
-
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
 
 const (
@@ -68,7 +68,7 @@ func NewFeastRetriever(
 	defaultValues := compileDefaultValues(featureTableSpecs)
 
 	hystrix.ConfigureCommand(options.FeastClientHystrixCommandName, hystrix.CommandConfig{
-		Timeout:                durationToInt(options.FeastTimeout, time.Millisecond),
+		Timeout:                hystrixpkg.DurationToInt(options.FeastTimeout, time.Millisecond),
 		MaxConcurrentRequests:  options.FeastClientMaxConcurrentRequests,
 		RequestVolumeThreshold: options.FeastClientRequestVolumeThreshold,
 		SleepWindow:            options.FeastClientSleepWindow,
@@ -319,18 +319,6 @@ func getEntitySet(columns []string, entitiesConfig []*spec.Entity) map[string]bo
 		}
 	}
 	return entitySet
-}
-
-func durationToInt(duration, unit time.Duration) int {
-	durationAsNumber := duration / unit
-
-	if int64(durationAsNumber) > int64(maxInt) {
-		// Returning max possible value seems like best possible solution here
-		// the alternative is to panic as there is no way of returning an error
-		// without changing the NewClient API
-		return maxInt
-	}
-	return int(durationAsNumber)
 }
 
 func dedupEntities(rows []feast.Row) ([]feast.Row, error) {

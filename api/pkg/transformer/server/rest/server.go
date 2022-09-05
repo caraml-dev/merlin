@@ -1,4 +1,4 @@
-package server
+package rest
 
 import (
 	"bytes"
@@ -25,6 +25,8 @@ import (
 
 	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
+	"github.com/gojek/merlin/pkg/transformer/server/config"
+	"github.com/gojek/merlin/pkg/transformer/server/instrumentation"
 	"github.com/gojek/merlin/pkg/transformer/server/response"
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
@@ -38,58 +40,38 @@ var (
 
 var hystrixCommandName = "model_predict"
 
-// Options for the server.
-type Options struct {
-	HTTPPort        string `envconfig:"CARAML_HTTP_PORT" default:"8081"`
-	GRPCPort        string `envconfig:"CARAML_GRPC_PORT" default:"9000"`
-	ModelFullName   string `envconfig:"CARAML_MODEL_FULL_NAME" default:"model"`
-	ModelPredictURL string `envconfig:"CARAML_PREDICTOR_HOST" default:"localhost:8080"`
-
-	ServerTimeout time.Duration `envconfig:"SERVER_TIMEOUT" default:"30s"`
-	ClientTimeout time.Duration `envconfig:"CLIENT_TIMEOUT" default:"1s"`
-
-	ModelTimeout                         time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
-	ModelHTTPHystrixCommandName          string        `envconfig:"MODEL_HTTP_HYSTRIX_COMMAND_NAME" default:"http_model_predict"`
-	ModelGRPCHystrixCommandName          string        `envconfig:"MODEL_GRPC_HYSTRIX_COMMAND_NAME" default:"grpc_model_predict"`
-	ModelHystrixMaxConcurrentRequests    int           `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
-	ModelHystrixRetryCount               int           `envconfig:"MODEL_HYSTRIX_RETRY_COUNT" default:"0"`
-	ModelHystrixRetryBackoffInterval     time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
-	ModelHystrixRetryMaxJitterInterval   time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_MAX_JITTER_INTERVAL" default:"5ms"`
-	ModelHystrixErrorPercentageThreshold int           `envconfig:"MODEL_HYSTRIX_ERROR_PERCENTAGE_THRESHOLD" default:"25"`
-	ModelHystrixRequestVolumeThreshold   int           `envconfig:"MODEL_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
-	ModelHystrixSleepWindowMs            int           `envconfig:"MODEL_HYSTRIX_SLEEP_WINDOW_MS" default:"10"`
-}
-
 // Server serves various HTTP endpoints of Feast transformer.
 type HTTPServer struct {
-	options    *Options
+	options    *config.Options
 	httpClient hystrixHttpClient
 	router     *mux.Router
 	logger     *zap.Logger
 	modelURL   string
 
 	ContextModifier    func(ctx context.Context) context.Context
-	PreprocessHandler  func(ctx context.Context, request types.Payload, requestHeaders map[string]string) (types.Payload, error)
-	PostprocessHandler func(ctx context.Context, response types.Payload, responseHeaders map[string]string) (types.Payload, error)
+	PreprocessHandler  pipelineHandler
+	PostprocessHandler pipelineHandler
 }
+
+type pipelineHandler func(ctx context.Context, request types.Payload, requestHeaders map[string]string) (types.Payload, error)
 
 type hystrixHttpClient interface {
 	Do(request *http.Request) (*http.Response, error)
 }
 
 // New initializes a new Server.
-func New(o *Options, logger *zap.Logger) *HTTPServer {
+func New(o *config.Options, logger *zap.Logger) *HTTPServer {
 	return NewWithHandler(o, nil, logger)
 }
 
-func NewWithHandler(o *Options, handler *pipeline.Handler, logger *zap.Logger) *HTTPServer {
+func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Logger) *HTTPServer {
 	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelFullName)
 	if !strings.Contains(predictURL, "http://") {
 		predictURL = "http://" + predictURL
 	}
 
 	var modelHttpClient hystrixHttpClient
-	hystrixGo.SetLogger(newHystrixLogger(logger))
+	hystrixGo.SetLogger(hystrixpkg.NewHystrixLogger(logger))
 	modelHttpClient = newHTTPHystrixClient(hystrixCommandName, o)
 
 	srv := &HTTPServer{
@@ -107,7 +89,7 @@ func NewWithHandler(o *Options, handler *pipeline.Handler, logger *zap.Logger) *
 	return srv
 }
 
-func newHTTPHystrixClient(commandName string, o *Options) *hystrixpkg.Client {
+func newHTTPHystrixClient(commandName string, o *config.Options) *hystrixpkg.Client {
 	hystrixConfig := hystrixGo.CommandConfig{
 		Timeout:                int(o.ModelTimeout / time.Millisecond),
 		MaxConcurrentRequests:  o.ModelHystrixMaxConcurrentRequests,
@@ -140,104 +122,116 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	s.logger.Debug("raw request_body", zap.ByteString("request_body", requestBody))
 
-	var preprocessedRequestBody types.Payload
-	preprocessedRequestBody = types.BytePayload(requestBody)
-	if s.PreprocessHandler != nil {
-		preprocessStartTime := time.Now()
-		preprocessedRequestBody, err = s.preprocess(ctx, preprocessedRequestBody, r.Header)
-		durationMs := time.Since(preprocessStartTime).Milliseconds()
-		if err != nil {
-			pipelineLatency.WithLabelValues(errorResult, preprocessStep).Observe(float64(durationMs))
-			s.logger.Error("preprocess error", zap.Error(err))
-			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
-			return
-		}
-
-		pipelineLatency.WithLabelValues(successResult, preprocessStep).Observe(float64(durationMs))
-		s.logger.Debug("preprocess response", zap.Reflect("preprocess_response", preprocessedRequestBody))
-	}
-
-	predictStartTime := time.Now()
-	resp, err := s.predict(ctx, r, preprocessedRequestBody)
-	predictionDurationMs := time.Since(predictStartTime).Milliseconds()
+	preprocessOutput, err := s.preprocess(ctx, requestBody, r.Header)
 	if err != nil {
-		pipelineLatency.WithLabelValues(errorResult, predictStep).Observe(float64(predictionDurationMs))
+		s.logger.Error("preprocess error", zap.Error(err))
+		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
+		return
+	}
+	s.logger.Debug("preprocess response", zap.ByteString("preprocess_response", preprocessOutput))
+
+	resp, err := s.predict(ctx, r, preprocessOutput)
+	if err != nil {
 		s.logger.Error("predict error", zap.Error(err))
 		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
 		return
 	}
 	defer resp.Body.Close()
 
-	pipelineLatency.WithLabelValues(successResult, predictStep).Observe(float64(predictionDurationMs))
-
-	var postprocessedRequestBody types.Payload
-	requestBody, err = ioutil.ReadAll(resp.Body)
+	modelResponseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		s.logger.Error("error reading model response", zap.Error(err))
 		response.NewError(http.StatusInternalServerError, err).Write(w)
 		return
 	}
-	postprocessedRequestBody = types.BytePayload(requestBody)
-	s.logger.Debug("predict response", zap.Reflect("predict_response", postprocessedRequestBody))
+	s.logger.Debug("predict response", zap.ByteString("predict_response", modelResponseBody))
 
-	if s.PostprocessHandler != nil {
-		postprocessStartTime := time.Now()
-		postprocessedRequestBody, err = s.postprocess(ctx, postprocessedRequestBody, resp.Header)
-		postprocessDurationMs := time.Since(postprocessStartTime).Milliseconds()
-		if err != nil {
-			pipelineLatency.WithLabelValues(errorResult, postprocessStep).Observe(float64(postprocessDurationMs))
-			s.logger.Error("postprocess error", zap.Error(err))
-			response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "postprocessing error")).Write(w)
-			return
-		}
-		pipelineLatency.WithLabelValues(successResult, postprocessStep).Observe(float64(postprocessDurationMs))
-		s.logger.Debug("postprocess response", zap.Reflect("postprocess_response", postprocessedRequestBody))
-	}
-
-	wiredPayload, valid := postprocessedRequestBody.(types.BytePayload)
-	if !valid {
-		response.NewError(http.StatusInternalServerError, fmt.Errorf("postprocess output type is not supported: %T", postprocessedRequestBody)).Write(w)
+	postprocessOutput, err := s.postprocess(ctx, types.BytePayload(modelResponseBody), resp.Header)
+	if err != nil {
+		s.logger.Error("postprocess error", zap.Error(err))
+		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "postprocessing error")).Write(w)
 		return
 	}
+	s.logger.Debug("postprocess response", zap.ByteString("postprocess_response", postprocessOutput))
+
 	copyHeader(w.Header(), resp.Header)
-	w.Header().Set("Content-Length", fmt.Sprint(len(wiredPayload)))
+	w.Header().Set("Content-Length", fmt.Sprint(len(postprocessOutput)))
 
 	w.WriteHeader(resp.StatusCode)
-	w.Write(wiredPayload)
+	w.Write(postprocessOutput)
 }
 
-func (s *HTTPServer) preprocess(ctx context.Context, request types.Payload, requestHeader http.Header) (types.Payload, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "preprocess")
+func (s *HTTPServer) preprocess(ctx context.Context, request []byte, requestHeader http.Header) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, string(types.Preprocess))
 	defer span.Finish()
 
-	return s.PreprocessHandler(ctx, request, getHeaders(requestHeader))
+	if s.PreprocessHandler == nil {
+		return request, nil
+	}
+
+	startTime := time.Now()
+	output, err := s.PreprocessHandler(ctx, types.BytePayload(request), getHeaders(requestHeader))
+	durationMs := time.Since(startTime).Milliseconds()
+	if err != nil {
+		instrumentation.RecordPreprocessLatency(false, float64(durationMs))
+		return nil, err
+	}
+	out, validOutput := output.(types.BytePayload)
+	if !validOutput {
+		instrumentation.RecordPreprocessLatency(false, float64(durationMs))
+		return nil, fmt.Errorf("unknown type for preprocess output %T", output)
+	}
+	instrumentation.RecordPreprocessLatency(true, float64(durationMs))
+	return out, nil
 }
 
-func (s *HTTPServer) postprocess(ctx context.Context, response types.Payload, responseHeader http.Header) (types.Payload, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "postprocess")
+func (s *HTTPServer) postprocess(ctx context.Context, response []byte, responseHeader http.Header) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, string(types.Preprocess))
 	defer span.Finish()
 
-	return s.PostprocessHandler(ctx, response, getHeaders(responseHeader))
+	if s.PostprocessHandler == nil {
+		return response, nil
+	}
+
+	startTime := time.Now()
+	output, err := s.PostprocessHandler(ctx, types.BytePayload(response), getHeaders(responseHeader))
+	durationMs := time.Since(startTime).Milliseconds()
+	if err != nil {
+		instrumentation.RecordPostprocessLatency(false, float64(durationMs))
+		return nil, err
+	}
+	out, validOutput := output.(types.BytePayload)
+	if !validOutput {
+		instrumentation.RecordPostprocessLatency(false, float64(durationMs))
+		return nil, fmt.Errorf("unknown type for postprocess output %T", output)
+	}
+	instrumentation.RecordPostprocessLatency(true, float64(durationMs))
+	return out, nil
 }
 
-func (s *HTTPServer) predict(ctx context.Context, r *http.Request, request types.Payload) (*http.Response, error) {
+func (s *HTTPServer) predict(ctx context.Context, r *http.Request, payload []byte) (*http.Response, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
 	defer span.Finish()
 
-	wiredPayload, valid := request.(types.BytePayload)
-	if !valid {
-		return nil, fmt.Errorf("not valid payload for http server")
-	}
-	req, err := http.NewRequest("POST", s.modelURL, bytes.NewBuffer(wiredPayload))
+	predictStartTime := time.Now()
+
+	req, err := http.NewRequest("POST", s.modelURL, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, err
 	}
 
 	// propagate headers
 	copyHeader(req.Header, r.Header)
-	r.Header.Set("Content-Length", fmt.Sprint(len(wiredPayload)))
+	r.Header.Set("Content-Length", fmt.Sprint(len(payload)))
 
-	return s.httpClient.Do(req)
+	res, err := s.httpClient.Do(req)
+	predictionDurationMs := time.Since(predictStartTime).Milliseconds()
+	if err != nil {
+		instrumentation.RecordPredictionLatency(false, float64(predictionDurationMs))
+		return nil, err
+	}
+	instrumentation.RecordPredictionLatency(true, float64(predictionDurationMs))
+	return res, nil
 }
 
 // Run serves the HTTP endpoints.
