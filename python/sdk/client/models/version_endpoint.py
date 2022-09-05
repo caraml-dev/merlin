@@ -48,6 +48,7 @@ class VersionEndpoint(object):
         'logger': 'Logger',
         'deployment_mode': 'DeploymentMode',
         'autoscaling_policy': 'AutoscalingPolicy',
+        'protocol': 'Protocol',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -68,11 +69,12 @@ class VersionEndpoint(object):
         'logger': 'logger',
         'deployment_mode': 'deployment_mode',
         'autoscaling_policy': 'autoscaling_policy',
+        'protocol': 'protocol',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, env_vars=None, transformer=None, logger=None, deployment_mode=None, autoscaling_policy=None, created_at=None, updated_at=None, _configuration=None):  # noqa: E501
+    def __init__(self, id=None, version_id=None, status=None, url=None, service_name=None, environment_name=None, environment=None, monitoring_url=None, message=None, resource_request=None, env_vars=None, transformer=None, logger=None, deployment_mode=None, autoscaling_policy=None, protocol=None, created_at=None, updated_at=None, _configuration=None):  # noqa: E501
         """VersionEndpoint - a model defined in Swagger"""  # noqa: E501
         if _configuration is None:
             _configuration = Configuration()
@@ -93,6 +95,7 @@ class VersionEndpoint(object):
         self._logger = None
         self._deployment_mode = None
         self._autoscaling_policy = None
+        self._protocol = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -127,6 +130,8 @@ class VersionEndpoint(object):
             self.deployment_mode = deployment_mode
         if autoscaling_policy is not None:
             self.autoscaling_policy = autoscaling_policy
+        if protocol is not None:
+            self.protocol = protocol
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -446,6 +451,27 @@ class VersionEndpoint(object):
         """
 
         self._autoscaling_policy = autoscaling_policy
+
+    @property
+    def protocol(self):
+        """Gets the protocol of this VersionEndpoint.  # noqa: E501
+
+
+        :return: The protocol of this VersionEndpoint.  # noqa: E501
+        :rtype: Protocol
+        """
+        return self._protocol
+
+    @protocol.setter
+    def protocol(self, protocol):
+        """Sets the protocol of this VersionEndpoint.
+
+
+        :param protocol: The protocol of this VersionEndpoint.  # noqa: E501
+        :type: Protocol
+        """
+
+        self._protocol = protocol
 
     @property
     def created_at(self):

@@ -16,4 +16,4 @@ type_check:
 
 .PHONY: benchmark
 benchmark:
-	./benchmark.sh
+	cd benchmark && ./benchmark.sh

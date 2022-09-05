@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kfserving
-from mlflow import pyfunc
-from enum import Enum
 import inspect
+from enum import Enum
 
-EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
-MODEL_INPUT_KEY = "__INPUT__"
+import grpc
+from caraml.upi.v1 import upi_pb2
+from merlin.protocol import Protocol
+from merlin.pyfunc import PYFUNC_EXTRA_ARGS_KEY, PYFUNC_GRPC_CONTEXT, PYFUNC_MODEL_INPUT_KEY, PYFUNC_PROTOCOL_KEY
+from mlflow import pyfunc
+
+from pyfuncserver.config import ModelManifest
+
 NUM_OF_LATEST_PREDICT_FUNC_ARGS = 3
 
 
@@ -44,12 +48,13 @@ def _is_latest_pyfunc_model_version(func):
     return len(full_args.args) == NUM_OF_LATEST_PREDICT_FUNC_ARGS
 
 
-class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
+class PyFuncModel:  # pylint:disable=c-extension-no-member
 
-    def __init__(self, name: str, artifact_dir: str):
-        super().__init__(name)
-        self.name = name
-        self.artifact_dir = artifact_dir
+    def __init__(self, model_manifest: ModelManifest):
+        self.name = model_manifest.model_name
+        self.version = model_manifest.model_version
+        self.full_name = model_manifest.model_full_name
+        self.artifact_dir = model_manifest.model_dir
         self.ready = False
         self.pyfunc_type = PyFuncModelVersion.LATEST
 
@@ -80,8 +85,17 @@ class PyFuncModel(kfserving.KFModel):  # pylint:disable=c-extension-no-member
             return self._model.python_model.predict(inputs, **kwargs)
         else:
             # for case user doesn't specify merlin-sdk as dependency
-            model_inputs = {MODEL_INPUT_KEY: inputs}
+            model_inputs = {PYFUNC_MODEL_INPUT_KEY: inputs}
             if kwargs is not None:
-                model_inputs[EXTRA_ARGS_KEY] = kwargs
+                model_inputs[PYFUNC_EXTRA_ARGS_KEY] = kwargs
 
             return self._model.predict(model_inputs)
+
+    def upiv1_predict(self, request: upi_pb2.PredictValuesRequest,
+                      context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
+        model_inputs = {
+            PYFUNC_PROTOCOL_KEY: Protocol.UPI_V1,
+            PYFUNC_MODEL_INPUT_KEY: request,
+            PYFUNC_GRPC_CONTEXT: context,
+        }
+        return self._model.predict(model_inputs)

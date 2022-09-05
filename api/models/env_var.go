@@ -18,22 +18,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"strconv"
 
-	"github.com/gojek/merlin/utils"
 	v1 "k8s.io/api/core/v1"
-)
-
-var (
-	envModelName = "MODEL_NAME"
-	envModelDir  = "MODEL_DIR"
-	envWorkers   = "WORKERS"
-
-	pyfuncProtectedEnvVars = map[string]bool{
-		envModelName: true,
-		envModelDir:  true,
-	}
 )
 
 // EnvVar represents an environment variable present in a container.
@@ -71,17 +57,6 @@ func (evs *EnvVars) Scan(value interface{}) error {
 	return json.Unmarshal(b, &evs)
 }
 
-// CheckForProtectedEnvVars makes sure that user didn't change protected environment variables.
-// Should be called by new environment variables request.
-func (evs EnvVars) CheckForProtectedEnvVars() error {
-	for _, ev := range evs {
-		if _, exist := pyfuncProtectedEnvVars[ev.Name]; exist {
-			return fmt.Errorf("Environment variable '%s' cannot be changed", ev.Name)
-		}
-	}
-	return nil
-}
-
 // ToKubernetesEnvVars returns the representation of Kubernetes'
 // v1.EnvVars.
 func (evs EnvVars) ToKubernetesEnvVars() []v1.EnvVar {
@@ -110,23 +85,4 @@ func MergeEnvVars(left, right EnvVars) EnvVars {
 		}
 	}
 	return left
-}
-
-// PyfuncDefaultEnvVars return default env vars for Pyfunc model.
-func PyfuncDefaultEnvVars(model Model, version Version, workers int64) EnvVars {
-	envVars := EnvVars{
-		EnvVar{
-			Name:  envModelName,
-			Value: CreateInferenceServiceName(model.Name, version.ID.String()),
-		},
-		EnvVar{
-			Name:  envModelDir,
-			Value: utils.CreateModelLocation(version.ArtifactURI),
-		},
-		EnvVar{
-			Name:  envWorkers,
-			Value: strconv.Itoa(int(workers)),
-		},
-	}
-	return envVars
 }

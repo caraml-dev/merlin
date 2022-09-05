@@ -28,6 +28,6 @@ curl "${E2E_MERLIN_URL}/v1/projects"
 kubectl create namespace ${E2E_PROJECT_NAME} --dry-run=client -o yaml | kubectl apply -f -
 
 cd ../../python/sdk
-pip install pipenv
+pip install pipenv==2022.8.19
 pipenv install --dev --skip-lock
 pipenv run pytest -n=4 -W=ignore --cov=merlin -m "not (feast or batch or pyfunc or local_server_test or cli or customtransformer)"

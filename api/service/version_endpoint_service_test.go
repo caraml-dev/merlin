@@ -199,21 +199,7 @@ func TestDeployEndpoint(t *testing.T) {
 				Namespace:            project.Name,
 				URL:                  "",
 				Status:               models.EndpointPending,
-				EnvVars: models.EnvVars{
-					{
-						Name:  "MODEL_NAME",
-						Value: "model-1",
-					},
-					{
-						Name:  "MODEL_DIR",
-						Value: "/model",
-					},
-					{
-						Name:  "WORKERS",
-						Value: "1",
-					},
-				},
-				Protocol: protocol.HttpJson,
+				Protocol:             protocol.HttpJson,
 			},
 			wantDeployError: false,
 		},
@@ -790,21 +776,7 @@ func TestDeployEndpoint(t *testing.T) {
 				Namespace:            project.Name,
 				URL:                  "",
 				Status:               models.EndpointPending,
-				EnvVars: models.EnvVars{
-					{
-						Name:  "MODEL_NAME",
-						Value: "model-1",
-					},
-					{
-						Name:  "MODEL_DIR",
-						Value: "/model",
-					},
-					{
-						Name:  "WORKERS",
-						Value: "1",
-					},
-				},
-				Protocol: protocol.UpiV1,
+				Protocol:             protocol.UpiV1,
 			},
 			wantDeployError: false,
 		},

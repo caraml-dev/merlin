@@ -49,6 +49,7 @@ const (
 	envPredictorArtifactLocation = "MERLIN_ARTIFACT_LOCATION"
 	envOldDisableLivenessProbe   = "MERLIN_DISABLE_LIVENESS_PROBE"
 
+	envProtocol             = "CARAML_PROTOCOL"
 	envHTTPPort             = "CARAML_HTTP_PORT"
 	envGRPCPort             = "CARAML_GRPC_PORT"
 	envModelName            = "CARAML_MODEL_NAME"
@@ -251,6 +252,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			},
 		}
 	case models.ModelTypePyFunc:
+		envVars := models.MergeEnvVars(modelService.EnvVars, createPyFuncDefaultEnvVars(modelService))
 		predictorSpec = kservev1beta1.PredictorSpec{
 			PodSpec: kservev1beta1.PodSpec{
 				Containers: []corev1.Container{
@@ -584,4 +586,35 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 			},
 		},
 	}
+}
+
+// createPyFuncDefaultEnvVars return default env vars for Pyfunc model.
+func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
+	envVars := models.EnvVars{
+		models.EnvVar{
+			Name:  envModelName,
+			Value: svc.ModelName,
+		},
+		models.EnvVar{
+			Name:  envModelVersion,
+			Value: svc.ModelVersion,
+		},
+		models.EnvVar{
+			Name:  envModelFullName,
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+		},
+		models.EnvVar{
+			Name:  envHTTPPort,
+			Value: fmt.Sprint(defaultHTTPPort),
+		},
+		models.EnvVar{
+			Name:  envGRPCPort,
+			Value: fmt.Sprint(defaultGRPCPort),
+		},
+		models.EnvVar{
+			Name:  envProtocol,
+			Value: fmt.Sprint(svc.Protocol),
+		},
+	}
+	return envVars
 }

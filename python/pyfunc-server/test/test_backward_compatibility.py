@@ -25,8 +25,11 @@ import requests
 import tornado.web
 from prometheus_client import Counter, Gauge
 
-from pyfuncserver import PyFuncModel
-from pyfuncserver.model import EXTRA_ARGS_KEY, MODEL_INPUT_KEY
+from pyfuncserver.config import HTTP_PORT, ModelManifest, WORKERS
+from pyfuncserver.model.model import PyFuncModel
+from test.utils import wait_server_ready
+from merlin.pyfunc import PYFUNC_MODEL_INPUT_KEY, PYFUNC_EXTRA_ARGS_KEY
+
 
 class NewModelImpl(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
@@ -34,8 +37,8 @@ class NewModelImpl(mlflow.pyfunc.PythonModel):
         self._use_kwargs_infer = True
 
     def predict(self, context, model_input):
-        extra_args = model_input.get(EXTRA_ARGS_KEY, {})
-        input = model_input.get(MODEL_INPUT_KEY, {})
+        extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
+        input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
         if extra_args is not None:
             return self._do_predict(input, **extra_args)
 
@@ -77,6 +80,7 @@ class NewModelImpl(mlflow.pyfunc.PythonModel):
         :return: Dictionary containing response body
         """
         pass
+
 
 class ModelImpl(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
@@ -121,7 +125,6 @@ class ModelImpl(mlflow.pyfunc.PythonModel):
         pass
 
 
-
 class EchoModel(ModelImpl):
     def initialize(self, artifacts):
         self._req_count = Counter("my_req_count", "Number of incoming request")
@@ -132,6 +135,7 @@ class EchoModel(ModelImpl):
         self._temp.set(10)
         return model_input
 
+
 class NewEchoModel(NewModelImpl):
     def initialize(self, artifacts):
         self._req_count = Counter("new_my_req_count", "Number of incoming request")
@@ -141,6 +145,7 @@ class NewEchoModel(NewModelImpl):
         self._req_count.inc()
         self._temp.set(10)
         return model_input
+
 
 class NonEmptyEchoModel(NewModelImpl):
     def initialize(self, artifacts):
@@ -162,6 +167,7 @@ class HeadersModel(ModelImpl):
     def infer(self, model_input, **kwargs):
         return kwargs.get('headers', {})
 
+
 class NewHeadersModel(NewModelImpl):
     def initialize(self, artifacts):
         pass
@@ -180,6 +186,7 @@ class HttpErrorModel(ModelImpl):
             reason=model_input["reason"]
         )
 
+
 class NewHttpErrorModel(NewModelImpl):
     def initialize(self, artifacts):
         pass
@@ -197,7 +204,12 @@ class NewHttpErrorModel(NewModelImpl):
 def test_model(model):
     mlflow.pyfunc.log_model("model", python_model=model)
     model_path = os.path.join(mlflow.get_artifact_uri(), "model")
-    model = PyFuncModel("echo-model", model_path)
+    model_manifest = ModelManifest(model_name="echo-model",
+                                   model_version="1",
+                                   model_full_name="echo-model-1",
+                                   model_dir=model_path)
+
+    model = PyFuncModel(model_manifest)
     model.load()
 
     assert model.ready
@@ -217,13 +229,13 @@ def test_model_int(model):
     mlflow.end_run()
 
     try:
-        # use mlruns folder to store prometheus multiprocess files
-        env["prometheus_multiproc_dir"] = "mlruns"
-        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir",
-                              model_path, "--http_port", "8081", "--workers", "1"], env=env)
+        env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
+        env[HTTP_PORT] = "8081"
+        env[WORKERS] = "1"
+        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
-        _wait_server_ready("http://localhost:8081/")
+        wait_server_ready("http://localhost:8081/")
 
         for request_file_json in os.listdir("benchmark"):
             if not request_file_json.endswith(".json"):
@@ -232,7 +244,7 @@ def test_model_int(model):
             with open(os.path.join("benchmark", request_file_json), "r") as f:
                 req = json.load(f)
 
-            resp = requests.post("http://localhost:8081/v1/models/model:predict",
+            resp = requests.post("http://localhost:8081/v1/models/model-1:predict",
                                  json=req)
             assert resp.status_code == 200
             assert req == resp.json()
@@ -252,18 +264,18 @@ def test_model_headers(model):
     mlflow.end_run()
 
     try:
-        # use mlruns folder to store prometheus multiprocess files
-        env["prometheus_multiproc_dir"] = "mlruns"
-        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir",
-                              model_path, "--http_port", "8081", "--workers", "1"], env=env)
+        env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
+        env[HTTP_PORT] = "8081"
+        env[WORKERS] = "1"
+        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
-        _wait_server_ready("http://localhost:8081/")
+        wait_server_ready("http://localhost:8081/")
 
         with open(os.path.join("benchmark", "small.json"), "r") as f:
             req = json.load(f)
 
-        resp = requests.post("http://localhost:8081/v1/models/model:predict",
+        resp = requests.post("http://localhost:8081/v1/models/model-1:predict",
                              json=req, headers={'Foo': 'bar'})
         assert resp.status_code == 200
         assert resp.json()["Foo"] == "bar"
@@ -290,16 +302,16 @@ def test_error_model_int(error_core, message, model):
     mlflow.end_run()
 
     try:
-        # use mlruns folder to store prometheus multiprocess files
-        env["prometheus_multiproc_dir"] = "mlruns"
-        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir",
-                              model_path, "--http_port", "8081", "--workers", "1"], env=env)
+        env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
+        env[HTTP_PORT] = "8081"
+        env[WORKERS] = "1"
+        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
-        _wait_server_ready("http://localhost:8081/")
+        wait_server_ready("http://localhost:8081/")
         
         req = {"status_code": error_core.value, "reason": message}
-        resp = requests.post("http://localhost:8081/v1/models/model:predict",
+        resp = requests.post("http://localhost:8081/v1/models/model-1:predict",
                              json=req)
         assert resp.status_code == error_core.value
         assert resp.json() == {"status_code": error_core.value, "reason": message}
@@ -308,18 +320,3 @@ def test_error_model_int(error_core, message, model):
         c.kill()
 
 
-def _wait_server_ready(url, timeout_second=300, tick_second=5):
-    ellapsed_second = 0
-    while (ellapsed_second < timeout_second):
-        try:
-            resp = requests.get(url)
-            if resp.status_code == 200:
-                return
-        except Exception as e:
-            print(f"{url} is not ready: {e}")
-
-        time.sleep(tick_second)
-        ellapsed_second += tick_second
-
-    if ellapsed_second >= timeout_second:
-        raise TimeoutError("server is not ready within specified timeout duration")

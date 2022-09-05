@@ -30,12 +30,13 @@ REQUIRES = [
     "urllib3>=1.23",
     "PyPrind>=2.11.2",
     "google-auth>=1.11.0,<2.0dev",
-    'Click>=7.0',
+    "Click>=7.0",
     "cloudpickle==2.0.0",
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "PyYAML>=5.4",
-    "protobuf<4.0.0"
+    "protobuf<4.0.0",
+    "caraml-upi-protos"
 ]
 
 TEST_REQUIRES = [
@@ -71,6 +72,8 @@ setup(
     tests_require=TEST_REQUIRES,
     extras_require={'test': TEST_REQUIRES},
     python_requires='>=3.7',
+    long_description=open("README.md").read(),
+    long_description_content_type='text/markdown',
     entry_points='''
         [console_scripts]
         merlin=merlin.merlin:cli

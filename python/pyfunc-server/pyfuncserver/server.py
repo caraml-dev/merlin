@@ -12,32 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tornado
-from kfserving import KFServer
-from kfserving.handlers.http import ExplainHandler
-from kfserving.kfserver import HealthHandler, ListHandler, LivenessHandler
+import prometheus_client
+from merlin.protocol import Protocol
+from prometheus_client import CollectorRegistry, multiprocess
 
-from pyfuncserver.http import CustomPredictHandler
-from pyfuncserver.prometheus import MetricsHandler
+from pyfuncserver.config import Config
+from pyfuncserver.model.model import PyFuncModel
+from pyfuncserver.protocol.rest.server import HTTPServer
+from pyfuncserver.protocol.upi.server import UPIServer
 
 
-class PyFuncServer(KFServer):
-    def __init__(self, registry):
-        super().__init__()
-        self.registry = registry
+class PyFuncServer:
+    def __init__(self, config: Config):
+        self._config = config
 
-    def create_application(self):
-        return tornado.web.Application([
-            # Server Liveness API returns 200 if server is alive.
-            (r"/", LivenessHandler),
-            (r"/v1/models",
-             ListHandler, dict(models=self.registered_models)),
-            # Model Health API returns 200 if model is ready to serve.
-            (r"/v1/models/([a-zA-Z0-9_-]+)",
-             HealthHandler, dict(models=self.registered_models)),
-            (r"/v1/models/([a-zA-Z0-9_-]+):predict",
-             CustomPredictHandler, dict(models=self.registered_models)),
-            (r"/v1/models/([a-zA-Z0-9_-]+):explain",
-             ExplainHandler, dict(models=self.registered_models)),
-            (r"/metrics", MetricsHandler, dict(registry=self.registry))
-        ])
+    def start(self, model: PyFuncModel):
+        # initialize prometheus
+        # register to MultiProcessCollector as PyFuncServer will run in multiple process
+        registry = CollectorRegistry()
+        multiprocess.MultiProcessCollector(registry)
+
+        # start only one server depending on the chosen protocol
+        # the intent is to save memory consumption
+        if self._config.protocol == Protocol.HTTP_JSON:
+            http_server = HTTPServer(model=model, config=self._config, metrics_registry=registry)
+            http_server.start()
+        elif self._config.protocol == Protocol.UPI_V1:
+            # start prometheus metrics server and listen at http port
+            prometheus_client.start_http_server(self._config.http_port, registry=registry)
+
+            # start grpc/upi server and listen at grpc port
+            upi_server = UPIServer(model=model, config=self._config)
+            upi_server.start()
+        else:
+            raise ValueError(f"unknown protocol {self._config.protocol}")

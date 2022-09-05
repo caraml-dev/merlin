@@ -15,4 +15,4 @@
 
 
 source activate merlin-model
-python -m pyfuncserver --model_dir ./model --model_name $MODEL_NAME --workers $WORKERS
+python -m pyfuncserver --model_dir ./model

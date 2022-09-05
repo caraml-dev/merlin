@@ -1,7 +1,7 @@
 # Merlin SDK
 
 This project contains python library for interacting with Merlin, machine
-learning model serving component of Gojek MLP.
+learning model serving component of CaraML.
 It provides interface to:
 
 - Manage ML project resources

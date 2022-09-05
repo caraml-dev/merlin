@@ -840,54 +840,6 @@ def test_custom_model_with_artifact(
     undeploy_all_version()
 
 
-@pytest.mark.raw_deployment
-@pytest.mark.integration
-def test_deployment_mode(integration_test_url, project_name, use_google_oauth, requests):
-    """
-    Validate that user can redeploy a model version using different deployment mode
-    """
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
-    merlin.set_project(project_name)
-    merlin.set_model("raw-deployment", ModelType.TENSORFLOW)
-    model_dir = "test/tensorflow-model"
-
-    undeploy_all_version()
-
-    with merlin.new_model_version() as v:
-        merlin.log_model(model_dir=model_dir)
-
-    # Deploy using raw_deployment
-    new_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.RAW_DEPLOYMENT,
-                                 autoscaling_policy=merlin.AutoscalingPolicy(
-                                     metrics_type=merlin.MetricsType.CPU_UTILIZATION,
-                                     target_value=20))
-
-    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
-
-    # TODO: Ideally we should redeploy instead of undeploy
-    merlin.undeploy(v)
-    sleep(15)
-    # Deploy using serverless
-    initial_endpoint = merlin.deploy(v, deployment_mode=DeploymentMode.SERVERLESS,
-                                 autoscaling_policy=merlin.AutoscalingPolicy(
-                                     metrics_type=merlin.MetricsType.CONCURRENCY,
-                                     target_value=2))
-
-    resp = requests.post(f"{initial_endpoint.url}", json=tensorflow_request_json)
-
-    assert resp.status_code == 200
-    assert resp.json() is not None
-    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
-    
-    assert new_endpoint.url == initial_endpoint.url
-
-    undeploy_all_version()
-
-
 
 @pytest.mark.raw_deployment
 @pytest.mark.integration

@@ -79,9 +79,6 @@ func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, ver
 	id := uuid.New()
 
 	var envVars EnvVars
-	if model.Type == ModelTypePyFunc {
-		envVars = PyfuncDefaultEnvVars(*model, *version, defaultWorkers)
-	}
 
 	if deploymentMode == deployment.EmptyDeploymentMode {
 		deploymentMode = deployment.ServerlessDeploymentMode
