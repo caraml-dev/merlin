@@ -31,6 +31,7 @@ from merlin.batch.job import JobStatus
 from merlin.batch.sink import BigQuerySink, SaveMode
 from merlin.batch.source import BigQuerySource
 from merlin.endpoint import VersionEndpoint
+from merlin.protocol import Protocol
 
 responses = Responses('requests.packages.urllib3')
 
@@ -47,6 +48,9 @@ ep4 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
                          env_1.name, env_1, "grafana.com",
                          autoscaling_policy=client.AutoscalingPolicy(metrics_type=cl.MetricsType.CPU_UTILIZATION,
                                                                      target_value=10))
+upi_ep = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
+                         env_1.name, env_1, "grafana.com", protocol=cl.Protocol.UPI_V1)
+
 rule_1 = cl.ModelEndpointRule(destinations=[cl.ModelEndpointRuleDestination(
     ep1.id, weight=100)])
 rule_2 = cl.ModelEndpointRule(destinations=[cl.ModelEndpointRuleDestination(
@@ -55,6 +59,8 @@ mdl_endpoint_1 = cl.ModelEndpoint(1, 1, None, "serving", "localhost/1", rule_1,
                                   env_1.name, env_1)
 mdl_endpoint_2 = cl.ModelEndpoint(2, 1, None, "serving", "localhost/2", rule_2,
                                   env_2.name, env_2)
+mdl_endpoint_upi = cl.ModelEndpoint(1, 1, None, "serving", "localhost/1", rule_1,
+                                  env_1.name, env_1, protocol=cl.Protocol.UPI_V1)
 
 config = {
     "job_config": {
@@ -243,6 +249,29 @@ class TestModelVersion:
         assert endpoint.environment.name == env_1.name
         assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
         assert endpoint.autoscaling_policy == SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+        assert endpoint.protocol == Protocol.HTTP_JSON
+
+    @responses.activate
+    def test_deploy_upiv1(self, version):
+        responses.add("GET", '/v1/environments',
+                      body=json.dumps(
+                          [env_1.to_dict(), env_2.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("POST", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps(upi_ep.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = version.deploy(environment_name=env_1.name)
+
+        assert endpoint.id == upi_ep.id
+        assert endpoint.status.value == upi_ep.status
+        assert endpoint.environment_name == upi_ep.environment_name
+        assert endpoint.environment.cluster == env_1.cluster
+        assert endpoint.environment.name == env_1.name
+        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+        assert endpoint.autoscaling_policy == SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+        assert endpoint.protocol == Protocol.UPI_V1
 
     @responses.activate
     def test_deploy_using_raw_deployment_mode(self, version):
@@ -702,175 +731,210 @@ class TestModel:
         assert versions[0].id == 3
         assert versions[0].labels["model"] == "T-800"
 
-        @responses.activate
-        def test_list_endpoint(self, model):
-            responses.add("GET", '/v1/models/1/endpoints',
-                          body=json.dumps(
-                              [mdl_endpoint_1.to_dict(),
-                               mdl_endpoint_2.to_dict()]),
-                          status=200,
-                          content_type='application/json')
+    @responses.activate
+    def test_list_endpoint(self, model):
+        responses.add("GET", '/v1/models/1/endpoints',
+                      body=json.dumps(
+                          [mdl_endpoint_1.to_dict(),
+                           mdl_endpoint_2.to_dict()]),
+                      status=200,
+                      content_type='application/json')
 
-            endpoints = model.list_endpoint()
-            assert len(endpoints) == 2
-            assert endpoints[0].id == str(mdl_endpoint_1.id)
-            assert endpoints[1].id == str(mdl_endpoint_2.id)
+        endpoints = model.list_endpoint()
+        assert len(endpoints) == 2
+        assert endpoints[0].id == str(mdl_endpoint_1.id)
+        assert endpoints[1].id == str(mdl_endpoint_2.id)
 
-            v = model.get_version(1)
-            assert v.id == 1
-            assert model.get_version(3) is None
+    @responses.activate
+    def test_serve_traffic(self, model):
+        ve = VersionEndpoint(ep1)
+        with pytest.raises(ValueError):
+            model.serve_traffic([ve], environment_name=env_1.name)
 
-        @responses.activate
-        def test_serve_traffic(self, model):
-            ve = VersionEndpoint(ep1)
-            with pytest.raises(ValueError):
-                model.serve_traffic([ve], environment_name=env_1.name)
+        with pytest.raises(ValueError):
+            model.serve_traffic({ve: -1}, environment_name=env_1.name)
 
-            with pytest.raises(ValueError):
-                model.serve_traffic({ve: -1}, environment_name=env_1.name)
+        with pytest.raises(ValueError):
+            model.serve_traffic({ve: 101}, environment_name=env_1.name)
 
-            with pytest.raises(ValueError):
-                model.serve_traffic({ve: 101}, environment_name=env_1.name)
+        with pytest.raises(ValueError):
+            model.serve_traffic({VersionEndpoint(ep2): 100},
+                                environment_name=env_1.name)
 
-            with pytest.raises(ValueError):
-                model.serve_traffic({VersionEndpoint(ep2): 100},
-                                    environment_name=env_1.name)
+        # test create
+        responses.add("GET", '/v1/models/1/endpoints',
+                      body=json.dumps(
+                          []),
+                      status=200,
+                      content_type='application/json')
+        responses.add("POST", '/v1/models/1/endpoints',
+                      body=json.dumps(mdl_endpoint_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+        assert endpoint.protocol == Protocol.HTTP_JSON
 
-            # test create
-            responses.add("GET", '/v1/models/1/endpoints',
-                          body=json.dumps(
-                              []),
-                          status=200,
-                          content_type='application/json')
-            responses.add("POST", '/v1/models/1/endpoints',
-                          body=json.dumps(mdl_endpoint_1.to_dict()),
-                          status=200,
-                          content_type='application/json')
-            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-            assert endpoint.id == str(mdl_endpoint_1.id)
-            assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+        responses.reset()
 
-            responses.reset()
+        # test update
+        responses.add("GET", '/v1/models/1/endpoints',
+                      body=json.dumps([mdl_endpoint_1.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("GET", '/v1/models/1/endpoints/1',
+                      body=json.dumps(mdl_endpoint_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        responses.add("PUT", '/v1/models/1/endpoints/1',
+                      body=json.dumps(mdl_endpoint_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
 
-            # test update
-            responses.add("GET", '/v1/models/1/endpoints',
-                          body=json.dumps([mdl_endpoint_1.to_dict()]),
-                          status=200,
-                          content_type='application/json')
-            responses.add("GET", '/v1/models/1/endpoints/1',
-                          body=json.dumps(mdl_endpoint_1.to_dict()),
-                          status=200,
-                          content_type='application/json')
-            responses.add("PUT", '/v1/models/1/endpoints/1',
-                          body=json.dumps(mdl_endpoint_1.to_dict()),
-                          status=200,
-                          content_type='application/json')
-            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-            assert endpoint.id == str(mdl_endpoint_1.id)
-            assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+    @responses.activate
+    def test_stop_serving_traffic(self, model):
+        ve = VersionEndpoint(ep1)
+        with pytest.raises(ValueError):
+            model.serve_traffic([ve], environment_name=env_1.name)
 
-        @responses.activate
-        def test_stop_serving_traffic(self, model):
-            ve = VersionEndpoint(ep1)
-            with pytest.raises(ValueError):
-                model.serve_traffic([ve], environment_name=env_1.name)
+        with pytest.raises(ValueError):
+            model.serve_traffic({ve: -1}, environment_name=env_1.name)
 
-            with pytest.raises(ValueError):
-                model.serve_traffic({ve: -1}, environment_name=env_1.name)
+        with pytest.raises(ValueError):
+            model.serve_traffic({ve: 101}, environment_name=env_1.name)
 
-            with pytest.raises(ValueError):
-                model.serve_traffic({ve: 101}, environment_name=env_1.name)
+        with pytest.raises(ValueError):
+            model.serve_traffic({VersionEndpoint(ep2): 100},
+                                environment_name=env_1.name)
 
-            with pytest.raises(ValueError):
-                model.serve_traffic({VersionEndpoint(ep2): 100},
-                                    environment_name=env_1.name)
+        # test create
+        responses.add("GET", '/v1/models/1/endpoints',
+                      body=json.dumps(
+                          []),
+                      status=200,
+                      content_type='application/json')
+        responses.add("POST", '/v1/models/1/endpoints',
+                      body=json.dumps(mdl_endpoint_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
 
-            # test create
-            responses.add("GET", '/v1/models/1/endpoints',
-                          body=json.dumps(
-                              []),
-                          status=200,
-                          content_type='application/json')
-            responses.add("POST", '/v1/models/1/endpoints',
-                          body=json.dumps(mdl_endpoint_1.to_dict()),
-                          status=200,
-                          content_type='application/json')
-            endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
-            assert endpoint.id == str(mdl_endpoint_1.id)
-            assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+        responses.reset()
 
-            responses.reset()
+        # test DELETE
+        responses.reset()
+        responses.add("GET", '/v1/models/1/endpoints',
+                      body=json.dumps([mdl_endpoint_1.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("GET", '/v1/models/1/endpoints/1',
+                      body=json.dumps(mdl_endpoint_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        responses.add("DELETE", '/v1/models/1/endpoints/1',
+                      status=200,
+                      content_type='application/json')
+        model.stop_serving_traffic(endpoint.environment_name)
+        assert len(responses.calls) == 2
 
-            # test DELETE
-            responses.reset()
-            responses.add("GET", '/v1/models/1/endpoints',
-                          body=json.dumps([mdl_endpoint_1.to_dict()]),
-                          status=200,
-                          content_type='application/json')
-            responses.add("GET", '/v1/models/1/endpoints/1',
-                          body=json.dumps(mdl_endpoint_1.to_dict()),
-                          status=200,
-                          content_type='application/json')
-            responses.add("DELETE", '/v1/models/1/endpoints/1',
-                          status=200,
-                          content_type='application/json')
-            model.stop_serving_traffic(endpoint.environment_name)
-            assert len(responses.calls) == 2
+    @responses.activate
+    def test_serve_traffic_default_env(self, model):
+        ve = VersionEndpoint(ep1)
 
-        @responses.activate
-        def test_serve_traffic_default_env(self, model):
-            ve = VersionEndpoint(ep1)
+        # no default environment
+        responses.add("GET", '/v1/environments',
+                      body=json.dumps(
+                          [env_2.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        with pytest.raises(ValueError):
+            model.serve_traffic({ve: 100})
 
-            # no default environment
-            responses.add("GET", '/v1/environments',
-                          body=json.dumps(
-                              [env_2.to_dict()]),
-                          status=200,
-                          content_type='application/json')
-            with pytest.raises(ValueError):
-                model.serve_traffic({ve: 100})
+        responses.reset()
 
-            responses.reset()
+        # test create
+        responses.add("GET", '/v1/environments',
+                      body=json.dumps(
+                          [env_1.to_dict(), env_2.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("GET", '/v1/models/1/endpoints',
+                      body=json.dumps(
+                          []),
+                      status=200,
+                      content_type='application/json')
+        responses.add("POST", '/v1/models/1/endpoints',
+                      body=json.dumps(mdl_endpoint_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = model.serve_traffic({ve: 100})
+        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
 
-            # test create
-            responses.add("GET", '/v1/environments',
-                          body=json.dumps(
-                              [env_1.to_dict(), env_2.to_dict()]),
-                          status=200,
-                          content_type='application/json')
-            responses.add("GET", '/v1/models/1/endpoints',
-                          body=json.dumps(
-                              []),
-                          status=200,
-                          content_type='application/json')
-            responses.add("POST", '/v1/models/1/endpoints',
-                          body=json.dumps(mdl_endpoint_1.to_dict()),
-                          status=200,
-                          content_type='application/json')
-            endpoint = model.serve_traffic({ve: 100})
-            assert endpoint.id == str(mdl_endpoint_1.id)
-            assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+        responses.reset()
 
-            responses.reset()
+        # test update
+        responses.add("GET", '/v1/environments',
+                      body=json.dumps(
+                          [env_1.to_dict(), env_2.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("GET", '/v1/models/1/endpoints',
+                      body=json.dumps([mdl_endpoint_1.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("GET", '/v1/models/1/endpoints/1',
+                      body=json.dumps(mdl_endpoint_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        responses.add("PUT", '/v1/models/1/endpoints/1',
+                      body=json.dumps(mdl_endpoint_1.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = model.serve_traffic({ve: 100})
+        assert endpoint.id == str(mdl_endpoint_1.id)
+        assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
 
-            # test update
-            responses.add("GET", '/v1/environments',
-                          body=json.dumps(
-                              [env_1.to_dict(), env_2.to_dict()]),
-                          status=200,
-                          content_type='application/json')
-            responses.add("GET", '/v1/models/1/endpoints',
-                          body=json.dumps([mdl_endpoint_1.to_dict()]),
-                          status=200,
-                          content_type='application/json')
-            responses.add("GET", '/v1/models/1/endpoints/1',
-                          body=json.dumps(mdl_endpoint_1.to_dict()),
-                          status=200,
-                          content_type='application/json')
-            responses.add("PUT", '/v1/models/1/endpoints/1',
-                          body=json.dumps(mdl_endpoint_1.to_dict()),
-                          status=200,
-                          content_type='application/json')
-            endpoint = model.serve_traffic({ve: 100})
-            assert endpoint.id == str(mdl_endpoint_1.id)
-            assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+    @responses.activate
+    def test_serve_traffic_upi(self, model):
+        ve = VersionEndpoint(upi_ep)
+        # test create
+        responses.add("GET", '/v1/models/1/endpoints',
+                      body=json.dumps(
+                          []),
+                      status=200,
+                      content_type='application/json')
+        responses.add("POST", '/v1/models/1/endpoints',
+                      body=json.dumps(mdl_endpoint_upi.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+        assert endpoint.id == str(mdl_endpoint_upi.id)
+        assert endpoint.environment_name == env_1.name == mdl_endpoint_1.environment_name
+        assert endpoint.protocol == Protocol.UPI_V1
+
+        responses.reset()
+
+        # test update
+        responses.add("GET", '/v1/models/1/endpoints',
+                      body=json.dumps([mdl_endpoint_upi.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("GET", '/v1/models/1/endpoints/1',
+                      body=json.dumps(mdl_endpoint_upi.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        responses.add("PUT", '/v1/models/1/endpoints/1',
+                      body=json.dumps(mdl_endpoint_upi.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        endpoint = model.serve_traffic({ve: 100}, environment_name=env_1.name)
+        assert endpoint.id == str(mdl_endpoint_upi.id)
+        assert endpoint.environment_name == env_1.name == mdl_endpoint_upi.environment_name
+        assert endpoint.protocol == Protocol.UPI_V1

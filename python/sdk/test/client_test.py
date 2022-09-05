@@ -46,10 +46,10 @@ created_at = "2019-08-29T08:13:12.377Z"
 updated_at = "2019-08-29T08:13:12.377Z"
 
 default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
-env_1 = cl.Environment(1, "dev", "cluster-1", True, default_resource_request=default_resource_request)
-env_2 = cl.Environment(2, "dev-2", "cluster-2", False, default_resource_request=default_resource_request)
-mdl_endpoint_1 = cl.ModelEndpoint(1, 1, None, "serving", "localhost", None,
-                                  env_1.name, env_1, created_at, updated_at)
+env_1 = cl.Environment(id=1, name="dev", cluster="cluster-1", is_default=True, default_resource_request=default_resource_request)
+env_2 = cl.Environment(id=2, name="dev-2", cluster="cluster-2", is_default=False, default_resource_request=default_resource_request)
+mdl_endpoint_1 = cl.ModelEndpoint(id=1, model_id=1, model=None, status="serving", url="localhost", rule=None,
+                                  environment_name=env_1.name, environment=env_1, created_at=created_at, updated_at=updated_at)
 
 
 @responses.activate

@@ -21,6 +21,7 @@ from merlin.autoscaling import AutoscalingPolicy, MetricsType, RAW_DEPLOYMENT_DE
 from merlin.deployment_mode import DeploymentMode
 from merlin.environment import Environment
 from merlin.logger import Logger
+from merlin.protocol import Protocol
 from merlin.util import autostr
 
 
@@ -35,8 +36,12 @@ class Status(Enum):
 @autostr
 class VersionEndpoint:
     def __init__(self, endpoint: client.VersionEndpoint, log_url: str = None):
-        self._url = f"{endpoint.url}"
-        if ":predict" not in endpoint.url:
+        self._protocol = Protocol.HTTP_JSON
+        if endpoint.protocol:
+            self._protocol = Protocol(endpoint.protocol)
+
+        self._url = endpoint.url
+        if self._protocol == Protocol.HTTP_JSON and ":predict" not in endpoint.url:
             self._url = f"{endpoint.url}:predict"
 
         self._status = Status(endpoint.status)
@@ -103,6 +108,10 @@ class VersionEndpoint:
     def autoscaling_policy(self) -> AutoscalingPolicy:
         return self._autoscaling_policy
 
+    @property
+    def protocol(self) -> Protocol:
+        return self._protocol
+
     def _repr_html_(self):
         return f"""<a href="{self._url}">{self._url}</a>"""
 
@@ -110,13 +119,21 @@ class VersionEndpoint:
 @autostr
 class ModelEndpoint:
     def __init__(self, endpoint: client.ModelEndpoint):
-        self._url = f"{endpoint.url}/v1/predict" \
-            if endpoint.url.startswith("http://") \
-            else f"http://{endpoint.url}/v1/predict"
+        self._protocol = Protocol.HTTP_JSON
+        if endpoint.protocol:
+            self._protocol = Protocol(endpoint.protocol)
+
+        if self._protocol == Protocol.HTTP_JSON:
+            self._url = f"{endpoint.url}/v1/predict" \
+                if endpoint.url.startswith("http://") \
+                else f"http://{endpoint.url}/v1/predict"
+        else:
+            self._url = endpoint.url
         self._status = Status(endpoint.status)
         self._id = endpoint.id
         self._environment_name = endpoint.environment_name
         self._environment = Environment(endpoint.environment)
+
 
     @property
     def url(self):
@@ -137,6 +154,10 @@ class ModelEndpoint:
     @property
     def environment(self) -> Environment:
         return self._environment
+
+    @property
+    def protocol(self) -> Protocol:
+        return self._protocol
 
     def _repr_html_(self):
         return f"""<a href="{self._url}">{self._url}</a>"""

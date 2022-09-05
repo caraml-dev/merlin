@@ -19,23 +19,19 @@ import shutil
 import tempfile
 import warnings
 
-from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
 from time import sleep
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import docker
 import mlflow
-import numpy
-import pandas
 import pyprind
 from docker import APIClient
 from docker.errors import BuildError
 from docker.models.containers import Container
 from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
-from mlflow.pyfunc import PythonModel
 
 import client
 from client import EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi, SecretApi, VersionApi
@@ -48,12 +44,24 @@ from merlin.batch.source import BigQuerySource
 from merlin.deployment_mode import DeploymentMode
 from merlin.docker.docker import copy_pyfunc_dockerfile, copy_standard_dockerfile
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
+from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
 from merlin.logger import Logger
 from merlin.util import autostr, download_files_from_gcs, guess_mlp_ui_url, valid_name_check
 from merlin.validation import validate_model_dir
 from merlin.version import VERSION
+from merlin import pyfunc
+
+# Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
+# This allows users to do following import statement
+#
+# from merlin.model import PyFuncModel, PyFuncV2Model
+#
+PyFuncModel = pyfunc.PyFuncModel
+PyFuncV2Model = pyfunc.PyFuncV2Model
+PYFUNC_EXTRA_ARGS_KEY = pyfunc.PYFUNC_EXTRA_ARGS_KEY
+PYFUNC_MODEL_INPUT_KEY = pyfunc.PYFUNC_MODEL_INPUT_KEY
 
 DEFAULT_MODEL_PATH = "model"
 DEFAULT_MODEL_VERSION_LIMIT = 50
@@ -62,8 +70,6 @@ DEFAULT_PREDICTION_JOB_DELAY = 5
 DEFAULT_PREDICTION_JOB_RETRY_DELAY = 30
 V1 = "v1"
 PREDICTION_JOB = "PredictionJob"
-PYFUNC_EXTRA_ARGS_KEY = "__EXTRA_ARGS__"
-PYFUNC_MODEL_INPUT_KEY = "__INPUT__"
 
 
 class ModelEndpointDeploymentError(Exception):
@@ -982,7 +988,9 @@ class ModelVersion:
                transformer: Transformer = None,
                logger: Logger = None,
                deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
-               autoscaling_policy: AutoscalingPolicy = None) -> VersionEndpoint:
+               autoscaling_policy: AutoscalingPolicy = None,
+               protocol: Protocol = Protocol.HTTP_JSON
+               ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
         and log_pyfunc_model has to be called beforehand
@@ -994,7 +1002,8 @@ class ModelVersion:
         :param logger: Response/Request logging configuration for model or transformer.
         :param deployment_mode: mode of deployment for the endpoint (default: DeploymentMode.SERVERLESS)
         :param autoscaling_policy: autoscaling policy to be used for the deployment (default: None)
-        :return: Endpoint object
+        :param protocol: protocol to be used for deploying the model (default: HTTP_JSON)
+        :return: VersionEndpoint object
         """
 
         target_env_name = environment_name
@@ -1064,7 +1073,9 @@ class ModelVersion:
                                           logger=target_logger,
                                           deployment_mode=deployment_mode.value,
                                           autoscaling_policy=client.AutoscalingPolicy(autoscaling_policy.metrics_type.value,
-                                                                                      autoscaling_policy.target_value))
+                                                                                      autoscaling_policy.target_value),
+                                          protocol=protocol.value
+                                          )
         endpoint = endpoint_api \
             .models_model_id_versions_version_id_endpoint_post(int(model.id),
                                                                int(self.id),
@@ -1456,169 +1467,3 @@ class ModelVersion:
         if image_id:
             return
         raise BuildError('Unknown', logs)
-
-
-class PyFuncModel(PythonModel):
-    
-    def load_context(self, context):
-        """
-        Override method of PythonModel `load_context`. This method load artifacts from context 
-        that can be used in predict function. This method is called by internal MLflow when an MLflow 
-        is loaded.
-
-        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
-                        can use to perform inference
-        """
-        self.initialize(context.artifacts)
-        self._use_kwargs_infer = True
-
-    def predict(self, context,  model_input):
-        """
-        Implementation of PythonModel `predict` method. This method evaluates model input and produces model output.
-        
-        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
-                        can use to perform inference
-        :param model_input: A pyfunc-compatible input for the model to evaluate.
-        """
-        extra_args = model_input.get(PYFUNC_EXTRA_ARGS_KEY, {})
-        input = model_input.get(PYFUNC_MODEL_INPUT_KEY, {})
-        if extra_args is not None:
-            return self._do_predict(input, **extra_args)
-        
-        return self._do_predict(input)
-
-    def _do_predict(self, model_input, **kwargs):
-        if self._use_kwargs_infer:
-            try:
-                return self.infer(model_input, **kwargs)
-            except TypeError as e:
-                if "infer() got an unexpected keyword argument" in str(e):
-                    print(
-                        'Fallback to the old infer() method, got TypeError exception: {}'.format(e))
-                    self._use_kwargs_infer = False
-                else:
-                    raise e
-
-        return self.infer(model_input)
-
-    @abstractmethod
-    def initialize(self, artifacts: dict):
-        """
-        Implementation of PyFuncModel can specify initialization step which
-        will be called one time during model initialization.
-
-        :param artifacts: dictionary of artifacts passed to log_model method
-        """
-        pass
-
-    @abstractmethod
-    def infer(self, request: dict, **kwargs) -> dict:
-        """
-        Do inference
-        This method MUST be implemented by concrete implementation of
-        PyFuncModel.
-        This method accept 'request' which is the body content of incoming
-        request.
-        Implementation should return inference a json object of response.
-
-        :param request: Dictionary containing incoming request body content
-        :param **kwargs: See below.
-
-        :return: Dictionary containing response body
-
-        :keyword arguments:
-        * headers (dict): Dictionary containing incoming HTTP request headers
-        """
-        pass
-
-
-class PyFuncV2Model(PythonModel):
-    def load_context(self, context):
-        """
-        Override method of PythonModel `load_context`. This method load artifacts from context 
-        that can be used in predict function. This method is called by internal MLflow when an MLflow 
-        is loaded.
-
-        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
-                        can use to perform inference
-        """
-        self.initialize(context.artifacts)
-
-    def predict(self, context, model_input):
-        """
-        Implementation of PythonModel `predict` method. This method evaluates model input and produces model output.
-        
-        :param context: A :class:`~PythonModelContext` instance containing artifacts that the model
-                        can use to perform inference
-        :param model_input: A pyfunc-compatible input for the model to evaluate.
-        """
-        return self.infer(model_input)
-
-    def initialize(self, artifacts: dict):
-        """
-        Implementation of PyFuncModel can specify initialization step which
-        will be called one time during model initialization.
-
-        :param artifacts: dictionary of artifacts passed to log_model method
-        """
-        pass
-
-    def infer(self, model_input: pandas.DataFrame) -> Union[numpy.ndarray,
-                                                            pandas.Series,
-                                                            pandas.DataFrame]:
-        """
-        Infer method is the main method that will be called when calculating
-        the inference result for both online prediction and batch
-        prediction. The method accepts pandas Dataframe and returns either
-        another panda Dataframe / pandas Series / ndarray of the same length
-        as the input. In the batch prediction case the model_input will
-        contain an arbitrary partition of the whole dataset that the user
-        defines as the data source. As such, it is advisable not to do
-        aggregation within the infer method, as it will be incorrect since
-        it will only apply to the partition in contrary to the whole dataset.
-
-        :param model_input: input to the model (pandas.DataFrame)
-        :return: inference result as numpy.ndarray or pandas.Series or pandas.DataFrame
-
-        """
-        raise NotImplementedError("infer is not implemented")
-
-    def preprocess(self, request: dict) -> pandas.DataFrame:
-        """
-        Preprocess incoming request into a pandas Dataframe that will be
-        passed to the infer method.
-        This method will not be called during batch prediction.
-
-        :param request: dictionary representing the incoming request body
-        :return: pandas.DataFrame that will be passed to infer method
-        """
-        raise NotImplementedError("preprocess is not implemented")
-
-    def postprocess(self, model_result: Union[numpy.ndarray,
-                                              pandas.Series,
-                                              pandas.DataFrame]) -> dict:
-        """
-        Postprocess prediction result returned by infer method into
-        dictionary representing the response body of the model.
-        This method will not be called during batch prediction.
-
-        :param model_result: output of the model's infer method
-        :return: dictionary containing the response body
-        """
-        raise NotImplementedError("postprocess is not implemented")
-
-    def raw_infer(self, request: dict) -> dict:
-        """
-        Do inference
-        This method MUST be implemented by concrete implementation of
-        PyFuncV2Model.
-        This method accept 'request' which is the body content of incoming
-        request.
-        This method will not be called during batch prediction.
-
-        Implementation should return inference a json object of response.
-
-        :param request: Dictionary containing incoming request body content
-        :return: Dictionary containing response body
-        """
-        raise NotImplementedError("raw_infer is not implemented")

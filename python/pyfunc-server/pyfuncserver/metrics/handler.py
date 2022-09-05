@@ -17,10 +17,10 @@ from tornado.web import RequestHandler
 
 
 class MetricsHandler(RequestHandler):
-    def initialize(self, registry) -> None:
-        self.registry = registry  # pylint:disable=attribute-defined-outside-init
+    def initialize(self, metrics_registry) -> None:
+        self.metrics_registry = metrics_registry
 
     def get(self):
         encoder, content_type = choose_encoder(self.request.headers.get('accept'))
         self.set_header("Content-Type", content_type)
-        self.write(encoder(self.registry))
+        self.write(encoder(self.metrics_registry))

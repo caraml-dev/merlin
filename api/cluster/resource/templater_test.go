@@ -605,10 +605,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options: &models.ModelOption{
 					PyFuncImageName: "gojek/project-model:1",
 				},
-				EnvVars: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envOldDisableLivenessProbe, Value: "true"}},
-					models.PyfuncDefaultEnvVars(models.Model{Name: modelSvc.Name},
-						models.Version{ID: models.ID(1), ArtifactURI: modelSvc.ArtifactURI},
-						defaultModelResourceRequests.CPURequest.Value())),
+				EnvVars:  models.EnvVars{models.EnvVar{Name: envOldDisableLivenessProbe, Value: "true"}},
 				Metadata: modelSvc.Metadata,
 				Protocol: protocol.HttpJson,
 			},
@@ -640,9 +637,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:  kserveconstant.InferenceServiceContainerName,
 									Image: "gojek/project-model:1",
 									Env: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envOldDisableLivenessProbe, Value: "true"}},
-										models.PyfuncDefaultEnvVars(models.Model{Name: modelSvc.Name},
-											models.Version{ID: models.ID(1), ArtifactURI: modelSvc.ArtifactURI},
-											defaultModelResourceRequests.CPURequest.Value())).ToKubernetesEnvVars(),
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson)).ToKubernetesEnvVars(),
 									Resources: expDefaultModelResourceRequests,
 								},
 							},
@@ -667,10 +662,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options: &models.ModelOption{
 					PyFuncImageName: "gojek/project-model:1",
 				},
-				EnvVars: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envDisableLivenessProbe, Value: "true"}},
-					models.PyfuncDefaultEnvVars(models.Model{Name: modelSvc.Name},
-						models.Version{ID: models.ID(1), ArtifactURI: modelSvc.ArtifactURI},
-						defaultModelResourceRequests.CPURequest.Value())),
+				EnvVars:  models.EnvVars{models.EnvVar{Name: envDisableLivenessProbe, Value: "true"}},
 				Metadata: modelSvc.Metadata,
 				Protocol: protocol.HttpJson,
 			},
@@ -702,9 +694,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Name:  kserveconstant.InferenceServiceContainerName,
 									Image: "gojek/project-model:1",
 									Env: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envDisableLivenessProbe, Value: "true"}},
-										models.PyfuncDefaultEnvVars(models.Model{Name: modelSvc.Name},
-											models.Version{ID: models.ID(1), ArtifactURI: modelSvc.ArtifactURI},
-											defaultModelResourceRequests.CPURequest.Value())).ToKubernetesEnvVars(),
+										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson)).ToKubernetesEnvVars(),
 									Resources: expDefaultModelResourceRequests,
 								},
 							},
@@ -1280,9 +1270,6 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				Options: &models.ModelOption{
 					PyFuncImageName: "gojek/project-model:1",
 				},
-				EnvVars: models.PyfuncDefaultEnvVars(models.Model{Name: modelSvc.Name},
-					models.Version{ID: models.ID(1), ArtifactURI: modelSvc.ArtifactURI},
-					defaultModelResourceRequests.CPURequest.Value()),
 				Metadata: modelSvc.Metadata,
 				Protocol: protocol.UpiV1,
 			},
@@ -1311,13 +1298,11 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:  kserveconstant.InferenceServiceContainerName,
-									Image: "gojek/project-model:1",
-									Env: models.PyfuncDefaultEnvVars(models.Model{Name: modelSvc.Name},
-										models.Version{ID: models.ID(1), ArtifactURI: modelSvc.ArtifactURI},
-										defaultModelResourceRequests.CPURequest.Value()).ToKubernetesEnvVars(),
+									Name:      kserveconstant.InferenceServiceContainerName,
+									Image:     "gojek/project-model:1",
 									Resources: expDefaultModelResourceRequests,
 									Ports:     grpcContainerPorts,
+									Env:       createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1).ToKubernetesEnvVars(),
 								},
 							},
 						},
@@ -3302,4 +3287,34 @@ func getLimit(quantity resource.Quantity) resource.Quantity {
 	limit := quantity.DeepCopy()
 	limit.Add(quantity)
 	return limit
+}
+
+func createPyFuncDefaultEnvVarsWithProtocol(svc *models.Service, protocolValue protocol.Protocol) models.EnvVars {
+	envVars := models.EnvVars{
+		models.EnvVar{
+			Name:  envModelName,
+			Value: svc.ModelName,
+		},
+		models.EnvVar{
+			Name:  envModelVersion,
+			Value: svc.ModelVersion,
+		},
+		models.EnvVar{
+			Name:  envModelFullName,
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+		},
+		models.EnvVar{
+			Name:  envHTTPPort,
+			Value: fmt.Sprint(defaultHTTPPort),
+		},
+		models.EnvVar{
+			Name:  envGRPCPort,
+			Value: fmt.Sprint(defaultGRPCPort),
+		},
+		models.EnvVar{
+			Name:  envProtocol,
+			Value: fmt.Sprint(protocolValue),
+		},
+	}
+	return envVars
 }

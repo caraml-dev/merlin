@@ -19,7 +19,7 @@ FROM ${BASE_IMAGE}
 ARG MODEL_URL
 ENV WORKERS 1
 
-ENV prometheus_multiproc_dir=/prom_dir
+ENV PROMETHEUS_MULTIPROC_DIR=/prom_dir
 
 WORKDIR /pyfunc-server
 RUN gsutil cp -r ${MODEL_URL} .
