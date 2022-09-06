@@ -13,6 +13,7 @@ import (
 	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/server/config"
+	"github.com/gojek/merlin/pkg/transformer/server/grpc/interceptors"
 	"github.com/gojek/merlin/pkg/transformer/server/instrumentation"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/opentracing/opentracing-go"
@@ -42,8 +43,11 @@ type UPIServer struct {
 	conn        *grpc.ClientConn
 	logger      *zap.Logger
 
-	ContextModifier    func(ctx context.Context) context.Context
-	PreprocessHandler  func(ctx context.Context, request types.Payload, requestHeaders map[string]string) (types.Payload, error)
+	// ContextModifier function to modify or store value in a context
+	ContextModifier func(ctx context.Context) context.Context
+	// PreprocessHandler function to run all preprocess operation
+	PreprocessHandler func(ctx context.Context, request types.Payload, requestHeaders map[string]string) (types.Payload, error)
+	// PostprocessHandler function to run all preprocess operation
 	PostprocessHandler func(ctx context.Context, response types.Payload, responseHeaders map[string]string) (types.Payload, error)
 }
 
@@ -82,8 +86,8 @@ func NewUPIServer(opts *config.Options, handler *pipeline.Handler, logger *zap.L
 	return svr, nil
 }
 
-// RunServer running GRPC Server
-func (us *UPIServer) RunServer() {
+// Run running GRPC Server
+func (us *UPIServer) Run() {
 	// defer us.conn.Close()
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", us.opts.GRPCPort))
 	if err != nil {
@@ -91,7 +95,7 @@ func (us *UPIServer) RunServer() {
 		return
 	}
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(PanicRecoveryInterceptor()),
+		grpc.UnaryInterceptor(interceptors.PanicRecoveryInterceptor()),
 	}
 	grpcServer := grpc.NewServer(opts...)
 	reflection.Register(grpcServer)
@@ -101,13 +105,13 @@ func (us *UPIServer) RunServer() {
 	errCh := make(chan error, 1)
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil && err != grpc.ErrServerStopped {
-			errCh <- errors.Wrap(err, "server failed")
+			errCh <- errors.Wrap(err, "GRPC server failed")
 		}
 	}()
 
 	select {
 	case <-stopCh:
-		us.logger.Info("got signal to stop server")
+		us.logger.Info("got signal to stop GRPC server")
 	case err := <-errCh:
 		us.logger.Error(fmt.Sprintf("failed to run GRPC server %v", err))
 	}

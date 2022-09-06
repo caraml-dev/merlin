@@ -48,8 +48,11 @@ type HTTPServer struct {
 	logger     *zap.Logger
 	modelURL   string
 
-	ContextModifier    func(ctx context.Context) context.Context
-	PreprocessHandler  pipelineHandler
+	// ContextModifier function to modify or store value in a context
+	ContextModifier func(ctx context.Context) context.Context
+	// PreprocessHandler function to run all preprocess operation
+	PreprocessHandler pipelineHandler
+	// PostprocessHandler function to run all preprocess operation
 	PostprocessHandler pipelineHandler
 }
 
@@ -64,6 +67,7 @@ func New(o *config.Options, logger *zap.Logger) *HTTPServer {
 	return NewWithHandler(o, nil, logger)
 }
 
+// New initializes a new Server with pipeline handler
 func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Logger) *HTTPServer {
 	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelFullName)
 	if !strings.Contains(predictURL, "http://") {
@@ -234,56 +238,73 @@ func (s *HTTPServer) predict(ctx context.Context, r *http.Request, payload []byt
 	return res, nil
 }
 
+// RunInstrumentationServer running http server that only serve endpoints that related to instrumentation
+// e.g prometheus scape metric endpoint or pprof endpoint
+func RunInstrumentationServer(opt *config.Options, logger *zap.Logger) {
+	router := mux.NewRouter()
+
+	setDefaultRouter(router)
+
+	run("instrumentation", router, opt, logger)
+}
+
 // Run serves the HTTP endpoints.
 func (s *HTTPServer) Run() {
-	s.router.Use(recoveryHandler)
+	router := s.router
+	setDefaultRouter(router)
 
-	health := healthcheck.NewHandler()
-	s.router.HandleFunc("/", health.LiveEndpoint)
+	router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelFullName), s.PredictHandler).Methods("POST")
+	run("standard transformer", router, s.options, s.logger)
+}
 
-	s.router.Handle("/metrics", promhttp.Handler())
-	s.router.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
-	s.router.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
-	s.router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
-
-	s.router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelFullName), s.PredictHandler).Methods("POST")
-
+func run(name string, handler http.Handler, opt *config.Options, logger *zap.Logger) {
 	operationName := nethttp.OperationNameFunc(func(r *http.Request) string {
 		return fmt.Sprintf("%s %s", r.Method, r.URL.Path)
 	})
 
-	addr := fmt.Sprintf(":%s", s.options.HTTPPort)
+	addr := fmt.Sprintf(":%s", opt.HTTPPort)
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      nethttp.Middleware(opentracing.GlobalTracer(), s.router, operationName),
-		WriteTimeout: s.options.ServerTimeout,
-		ReadTimeout:  s.options.ServerTimeout,
-		IdleTimeout:  2 * s.options.ServerTimeout,
+		Handler:      nethttp.Middleware(opentracing.GlobalTracer(), handler, operationName),
+		WriteTimeout: opt.ServerTimeout,
+		ReadTimeout:  opt.ServerTimeout,
+		IdleTimeout:  2 * opt.ServerTimeout,
 	}
 
 	stopCh := setupSignalHandler()
 	errCh := make(chan error, 1)
 	go func() {
-		s.logger.Info("starting standard transformer at : " + addr)
+		logger.Info(fmt.Sprintf("starting %s at : %s", name, addr))
 		// Don't forward ErrServerClosed as that indicates we're already shutting down.
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errCh <- errors.Wrapf(err, "server failed")
 		}
-		s.logger.Info("server shut down successfully")
+		logger.Info(fmt.Sprintf("%s server shut down successfully", name))
 	}()
 
 	// Exit as soon as we see a shutdown signal or the server failed.
 	select {
 	case <-stopCh:
 	case err := <-errCh:
-		s.logger.Error(fmt.Sprintf("failed to run HTTP server: %v", err))
+		logger.Error(fmt.Sprintf("failed to run %s HTTP server: %v", name, err))
 	}
 
-	s.logger.Info("server shutting down...")
+	logger.Info(fmt.Sprintf("%s server shutting down...", name))
 
 	if err := srv.Shutdown(context.Background()); err != nil {
-		s.logger.Error(fmt.Sprintf("failed to shutdown HTTP server: %v", err))
+		logger.Error(fmt.Sprintf("failed to shutdown %s HTTP server: %v", name, err))
 	}
+}
+
+func setDefaultRouter(router *mux.Router) {
+	router.Use(recoveryHandler)
+
+	health := healthcheck.NewHandler()
+	router.HandleFunc("/", health.LiveEndpoint)
+	router.Handle("/metrics", promhttp.Handler())
+	router.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
+	router.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
+	router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 }
 
 func recoveryHandler(next http.Handler) http.Handler {

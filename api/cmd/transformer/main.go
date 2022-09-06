@@ -37,15 +37,22 @@ func init() {
 	metricCollector.Registry.Register(hystrixCollector)
 }
 
+// AppConfig holds configuration for standard transformer
 type AppConfig struct {
+	// Server configuration either HTTP or GRPC
 	Server serverConf.Options
-	Feast  feast.Options
-
+	// Feast configuration
+	Feast feast.Options
+	// StandardTransformerConfigJSON is standard transformer configuration in JSON string format
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
-	FeatureTableSpecJsons         string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
-	LogLevel                      string `envconfig:"LOG_LEVEL"`
-	RedisOverwriteConfig          feast.RedisOverwriteConfig
-	BigtableOverwriteConfig       feast.BigtableOverwriteConfig
+	// FeatureTableSpecJsons is feature table metadata specs in JSON string format
+	FeatureTableSpecJsons string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
+	// LogLevel
+	LogLevel string `envconfig:"LOG_LEVEL"`
+	// RedisOverwriteConfig is user configuration for redis that will overwrite default configuration supplied by merlin
+	RedisOverwriteConfig feast.RedisOverwriteConfig
+	// BigtableOverwriteConfig is user configuration for bigtable that will overwrite default configuration supplied by merlin
+	BigtableOverwriteConfig feast.BigtableOverwriteConfig
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
@@ -82,29 +89,32 @@ func main() {
 
 	transformerConfig := &spec.StandardTransformerConfig{}
 	if err := jsonpb.UnmarshalString(appConfig.StandardTransformerConfigJSON, transformerConfig); err != nil {
-		panic(errors.Wrap(err, "unable to parse standard transformer transformerConfig"))
+		logger.Fatal("unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
 	featureTableMetadata, err := parseFeatureTableMetadata(appConfig.FeatureTableSpecJsons)
 	if err != nil {
-		panic(err)
+		logger.Fatal("unable to parse feature table metadata", zap.Error(err))
 	}
 
 	if transformerConfig.TransformerConfig.Feast != nil {
 		// Feast Enricher
 		runFeastEnricherServer(appConfig, transformerConfig, featureTableMetadata, logger)
-	} else {
-		handler, err := createPipelineHandler(appConfig, transformerConfig, featureTableMetadata, logger)
-		if err != nil {
-			logger.Fatal("Got error when creating handler", zap.Error(err))
-		}
-
-		if appConfig.Server.Protocol == protocol.HttpJson {
-			runHTTPServer(&appConfig.Server, handler, logger)
-		} else {
-			runGrpcServer(&appConfig.Server, handler, logger)
-		}
+		return
 	}
+
+	handler, err := createPipelineHandler(appConfig, transformerConfig, featureTableMetadata, logger)
+	if err != nil {
+		logger.Fatal("got error when creating handler", zap.Error(err))
+	}
+
+	if appConfig.Server.Protocol == protocol.HttpJson {
+		runHTTPServer(&appConfig.Server, handler, logger)
+	} else {
+		go rest.RunInstrumentationServer(&appConfig.Server, logger)
+		runGrpcServer(&appConfig.Server, handler, logger)
+	}
+
 }
 
 // TODO: Feast enricher will be deprecated soon all associated functions will be deleted
@@ -114,7 +124,7 @@ func runFeastEnricherServer(appConfig AppConfig, transformerConfig *spec.Standar
 
 	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureTableMetadata, transformerConfig)
 	if err != nil {
-		panic(errors.Wrap(err, "unable to initialize feast clients"))
+		logger.Fatal("unable to initialize feast clients", zap.Error(err))
 	}
 	feastTransformer, err := initFeastTransformer(appConfig, feastServingClients, transformerConfig, logger)
 	if err != nil {
@@ -209,7 +219,7 @@ func runGrpcServer(opts *serverConf.Options, handler *pipeline.Handler, logger *
 	if err != nil {
 		panic(err)
 	}
-	s.RunServer()
+	s.Run()
 }
 
 func initTracing(serviceName string) (io.Closer, error) {

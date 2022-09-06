@@ -1,4 +1,4 @@
-package grpc
+package interceptors
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// PanicRecoveryInterceptor interceptor to recover after facing panic
 func PanicRecoveryInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		defer func(ctx context.Context) {
