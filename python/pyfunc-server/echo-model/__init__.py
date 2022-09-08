@@ -4,18 +4,26 @@ import grpc
 import mlflow
 from caraml.upi.v1 import upi_pb2
 from merlin.model import PyFuncModel
+from prometheus_client import Counter, Gauge
 
 
 class EchoUPIModel(PyFuncModel):
+    GAUGE_VALUE = 42
+
     def __init__(self, model_name, model_version):
         self._model_name = model_name
         self._model_version = model_version
 
-    def infer(self, request):
-        return request
+    def initialize(self, artifacts: dict):
+        self._req_count = Counter("request_count", "Number of incoming request")
+        self._temp = Gauge("some_gauge", "Number of incoming request")
 
     def upiv1_infer(self, request: upi_pb2.PredictValuesRequest,
                     context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
+
+        self._req_count.inc()
+        self._temp.set(EchoUPIModel.GAUGE_VALUE)
+
         result_rows: List[upi_pb2.PredictionResultRow] = []
         for row in request.prediction_rows:
             result_rows.append(upi_pb2.PredictionResultRow(row_id=row.row_id, values=row.model_inputs))
