@@ -78,6 +78,23 @@ And run the model service
 docker run -e MODEL_NAME=model -p 8080:8080 mymodel:latest
 ```
 
+## Configuration
+
+Pyfunc server can be configured via following environment variables
+
+| Environment Variable      | Description                                                                                                                                                                                                                                | 
+| ------------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| 
+| CARAML_PROTOCOL | Protocol to be used, the valid values are `HTTP_JSON` and `UPI_V1`                                                                                                                                                                         | 
+| CARAML_HTTP_PORT | Pyfunc server will start http server listening to this port when `CARAML_PROTOCOL` = `HTTP_JSON`                                                                                                                                           | 
+| CARAML_GRPC_PORT | Pyfunc server will start  grpc server listening to this port when `CARAML_PROTOCOL` = `UPI_V1`                                                                                                                                             | 
+| CARAML_MODEL_NAME | Model name                                                                                                                                                                                                                                 |
+| CARAML_MODEL_VERSION | Model version                                                                                                                                                                                                                              | 
+| CARAML_MODEL_FULL_NAME | Model full name in the format of `${CARAML_MODEL_NAME}-${CARAML_MODEL_FULL_NAME}`                                                                                                                                                          |
+| WORKERS | Number of Python processes that will be created to allow multi processing (default = 1)                                                                                                                                                    | 
+| LOG_LEVEL | Log level, valid values are `INFO`, `ERROR`, `DEBUG`, `WARN`, `CRITICAL`  (default='INFO')                                                                                                                                                 | 
+| GRPC_OPTIONS | GRPC options to configure UPI server as json string. The possible options can be found in [grpc_types.h](https://github.com/grpc/grpc/blob/v1.46.x/include/grpc/impl/codegen/grpc_types.h). Example: '{"grpc.max_concurrent_streams":100}' | 
+| GRPC_CONCURRENCY | Size of grpc handler threadpool per worker (default = 10) |
+
 ## Directory Structure
 
 ```
@@ -104,6 +121,5 @@ docker run -e MODEL_NAME=model -p 8080:8080 mymodel:latest
 ├── environment.yaml   <- Conda environment that will be created within `base.Dockerfile`
 ├── setup.py           <- setup.py
 ├── run.sh             <- Script to activate `merlin-model` environment and run pyfuncserver when `docker run` is invoked
-
 
 ```

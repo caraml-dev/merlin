@@ -2,12 +2,15 @@ import os
 import pathlib
 import re
 import shutil
+import signal
 import subprocess
+import time
 from typing import List
 
 import grpc
 import mlflow
 import pandas as pd
+import pytest
 import requests
 from caraml.upi.v1 import upi_pb2, upi_pb2_grpc, value_pb2
 from merlin.model import PyFuncModel
@@ -31,6 +34,7 @@ class EchoUPIModel(PyFuncModel):
 
     def upiv1_infer(self, request: upi_pb2.PredictValuesRequest,
                     context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
+
         self._req_count.inc()
         self._temp.set(EchoUPIModel.GAUGE_VALUE)
 
@@ -49,13 +53,13 @@ class EchoUPIModel(PyFuncModel):
             )
         )
 
-
-def test_basic_upi():
+@pytest.mark.parametrize("workers", [(1), (4)])
+def test_upi(workers):
     model_name = "my-model"
-    model_version = "2"
-    target_name = "echo"
-
+    model_version = "1"
     model_full_name = f"{model_name}-{model_version}"
+
+    target_name = "echo"
     http_port = "8081"
     grpc_port = "9001"
 
@@ -74,9 +78,9 @@ def test_basic_upi():
         env[MODEL_NAME] = model_name
         env[MODEL_VERSION] = model_version
         env[MODEL_FULL_NAME] = model_full_name
-        env[WORKERS] = "1"
+        env[WORKERS] = str(workers)
         env["PROMETHEUS_MULTIPROC_DIR"] = metrics_path
-        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
+        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env, start_new_session=True)
 
         # wait till the server is up
         wait_server_ready(f"http://localhost:{http_port}/")
@@ -125,8 +129,8 @@ def test_basic_upi():
             gauge_value = int(float(match))
             assert gauge_value == EchoUPIModel.GAUGE_VALUE or gauge_value == 0
 
-
-
     finally:
-        c.kill()
+        os.killpg(os.getpgid(c.pid), signal.SIGTERM)
         shutil.rmtree(metrics_path)
+        # Wait until the previous server have been terminated completely
+        time.sleep(5)
