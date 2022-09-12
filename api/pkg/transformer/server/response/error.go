@@ -3,6 +3,7 @@ package response
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -40,7 +41,8 @@ func write(w http.ResponseWriter, d interface{}, c int) error {
 		return e
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Length", fmt.Sprint(len(b)))
 	w.WriteHeader(c)
 
 	if _, e := w.Write(b); e != nil {

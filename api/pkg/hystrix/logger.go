@@ -1,4 +1,4 @@
-package server
+package hystrix
 
 import "go.uber.org/zap"
 
@@ -8,7 +8,7 @@ type hystrixLogger struct {
 }
 
 // newHystrixLogger create new instance of hystrixLogger backed by zap sugared logger.
-func newHystrixLogger(zapLogger *zap.Logger) *hystrixLogger {
+func NewHystrixLogger(zapLogger *zap.Logger) *hystrixLogger {
 	return &hystrixLogger{zapLogger: zapLogger.Sugar()}
 }
 

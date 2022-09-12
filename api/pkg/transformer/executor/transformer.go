@@ -2,7 +2,6 @@ package executor
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
@@ -22,7 +21,7 @@ type standardTransformer struct {
 
 // Transformer have predict function that process all the preprocess, model prediction and postproces
 type Transformer interface {
-	Execute(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error)
+	Execute(ctx context.Context, requestBody types.Payload, requestHeaders map[string]string) (*types.PredictResponse, error)
 }
 
 type transformerExecutorConfig struct {
@@ -66,7 +65,7 @@ func NewStandardTransformerWithConfig(ctx context.Context, transformerConfig *sp
 }
 
 // Predict will process all standard transformer request including preprocessing, model prediction and postprocess
-func (st *standardTransformer) Execute(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
+func (st *standardTransformer) Execute(ctx context.Context, requestBody types.Payload, requestHeaders map[string]string) (*types.PredictResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "st.Execute")
 	defer span.Finish()
 
@@ -84,7 +83,7 @@ func (st *standardTransformer) Execute(ctx context.Context, requestBody types.JS
 		st.logger.Debug("preprocess response", zap.Any("preprocess_response", preprocessOut))
 	}
 
-	reqBody, err := json.Marshal(preprocessOut)
+	reqBody, err := preprocessOut.AsOutput()
 	if err != nil {
 		return generateErrorResponse(err), err
 	}

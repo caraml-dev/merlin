@@ -95,7 +95,7 @@ func Test_mockModelPredictor_ModelPrediction(t *testing.T) {
 				mockResponseBody:   tt.fields.mockResponseBody,
 				mockResponseHeader: tt.fields.mockResponseHeader,
 			}
-			gotRespBody, gotRespHeaders, err := mock.ModelPrediction(tt.args.ctx, tt.args.requestBody, tt.args.requestHeader)
+			gotRespBody, gotRespHeaders, err := mock.ModelPrediction(tt.args.ctx, types.BytePayload(tt.args.requestBody), tt.args.requestHeader)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("mockModelPredictor.ModelPrediction() error = %v, wantErr %v", err, tt.wantErr)
 				return

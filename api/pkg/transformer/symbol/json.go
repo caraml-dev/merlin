@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 // JsonExtract extract json field pointed by nestedJsonPath within a json string pointed by nestedJsonPath
@@ -24,7 +25,7 @@ func (sr Registry) JsonExtract(parentJsonPath, nestedJsonPath string) interface{
 		cplJsonPath = c
 	}
 
-	var js map[string]interface{}
+	var js types.JSONObject
 	jsonBodyStr, ok := jsonBody.(string)
 	if !ok {
 		panic(fmt.Errorf("the value specified in path `%s` should be of string type", parentJsonPath))

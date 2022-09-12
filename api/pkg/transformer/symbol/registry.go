@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	sourceJSONKey       = "__source_json_key__"
+	sourceKey           = "__source_json_key__"
 	compiledJSONPathKey = "__compiled_jsonpath_key__"
 
 	rawRequestHeadersKey    = "raw_request_headers"
@@ -30,7 +30,7 @@ type Registry map[string]interface{}
 func NewRegistryWithCompiledJSONPath(compiledJSONPaths *jsonpath.Storage) Registry {
 	r := Registry{}
 	r[compiledJSONPathKey] = compiledJSONPaths
-	r[sourceJSONKey] = types.JSONObjectContainer{}
+	r[sourceKey] = types.PayloadObjectContainer{}
 
 	return r
 }
@@ -38,21 +38,21 @@ func NewRegistryWithCompiledJSONPath(compiledJSONPaths *jsonpath.Storage) Regist
 func NewRegistry() Registry {
 	r := Registry{}
 	r[compiledJSONPathKey] = jsonpath.NewStorage()
-	r[sourceJSONKey] = types.JSONObjectContainer{}
+	r[sourceKey] = types.PayloadObjectContainer{}
 
 	return r
 }
 
-func (sr Registry) SetRawRequestJSON(jsonObj types.JSONObject) {
-	sr[sourceJSONKey].(types.JSONObjectContainer)[spec.JsonType_RAW_REQUEST] = jsonObj
+func (sr Registry) SetRawRequest(obj types.Payload) {
+	sr[sourceKey].(types.PayloadObjectContainer)[spec.JsonType_RAW_REQUEST] = obj
 }
 
-func (sr Registry) SetModelResponseJSON(jsonObj types.JSONObject) {
-	sr[sourceJSONKey].(types.JSONObjectContainer)[spec.JsonType_MODEL_RESPONSE] = jsonObj
+func (sr Registry) SetModelResponse(obj types.Payload) {
+	sr[sourceKey].(types.PayloadObjectContainer)[spec.JsonType_MODEL_RESPONSE] = obj
 }
 
-func (sr Registry) JSONContainer() types.JSONObjectContainer {
-	return sr[sourceJSONKey].(types.JSONObjectContainer)
+func (sr Registry) PayloadContainer() types.PayloadObjectContainer {
+	return sr[sourceKey].(types.PayloadObjectContainer)
 }
 
 func (sr Registry) PreprocessTracingDetail() ([]types.TracingDetail, error) {
@@ -108,7 +108,7 @@ func (sr Registry) evalArg(arg interface{}) (interface{}, error) {
 			cplJsonPath = c
 		}
 
-		return cplJsonPath.LookupFromContainer(sr.jsonObjectContainer())
+		return cplJsonPath.LookupFromContainer(sr.objectContainer())
 	case *series.Series:
 		return val.GetRecords(), nil
 	case *operation.OperationNode:
@@ -141,10 +141,10 @@ func (sr Registry) addCompiledJsonPath(jsonPath string, c *jsonpath.Compiled) {
 	sr[compiledJSONPathKey].(*jsonpath.Storage).Set(jsonPath, c)
 }
 
-func (sr Registry) jsonObjectContainer() types.JSONObjectContainer {
-	p, ok := sr[sourceJSONKey]
+func (sr Registry) objectContainer() types.PayloadObjectContainer {
+	p, ok := sr[sourceKey]
 	if !ok {
 		return nil
 	}
-	return p.(types.JSONObjectContainer)
+	return p.(types.PayloadObjectContainer)
 }

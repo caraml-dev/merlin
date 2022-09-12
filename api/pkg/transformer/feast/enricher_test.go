@@ -13,6 +13,7 @@ import (
 
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
 )
 
@@ -617,12 +618,12 @@ func TestTransformer_Transform(t *testing.T) {
 			f, err := NewEnricher(mockFeatureRetriever, logger)
 			assert.NoError(t, err)
 
-			got, err := f.Enrich(tt.args.ctx, tt.args.request, nil)
+			got, err := f.Enrich(tt.args.ctx, types.BytePayload(tt.args.request), nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("spec.Enrich() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !reflect.DeepEqual(got, types.BytePayload(tt.want)) {
 				t.Errorf("spec.Enrich() = %s, want %s", got, tt.want)
 			}
 

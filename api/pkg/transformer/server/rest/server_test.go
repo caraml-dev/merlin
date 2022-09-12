@@ -1,4 +1,4 @@
-package server
+package rest
 
 import (
 	"bytes"
@@ -27,8 +27,10 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
+	"github.com/gojek/merlin/pkg/transformer/server/config"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
+	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 func TestServer_PredictHandler_NoTransformation(t *testing.T) {
@@ -47,7 +49,7 @@ func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	options := &Options{
+	options := &config.Options{
 		ModelPredictURL: ts.URL,
 	}
 	logger, _ := zap.NewDevelopment()
@@ -84,15 +86,15 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 			[]byte(`{"predictions": [2, 2]}`),
 			map[string]string{MerlinLogIdHeader: "1234"},
 			[]byte(`{"driver_id":"1001","preprocess":true}`),
-			[]byte(`{"predictions": [2, 2]}`),
+			[]byte(`{"code":500,"message":"prediction error: got 5xx response code: 500"}`),
 			500,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mockPreprocessHandler := func(ctx context.Context, request []byte, requestHeaders map[string]string) ([]byte, error) {
-				return test.expModelRequest, nil
+			mockPreprocessHandler := func(ctx context.Context, request types.Payload, requestHeaders map[string]string) (types.Payload, error) {
+				return types.BytePayload(test.expModelRequest), nil
 			}
 
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -124,7 +126,7 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			options := &Options{
+			options := &config.Options{
 				ModelPredictURL: ts.URL,
 			}
 			logger, _ := zap.NewDevelopment()
@@ -174,7 +176,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	}{
 		{
 			name:         "postprocess output only",
-			specYamlPath: "../pipeline/testdata/postprocess_output_only.yaml",
+			specYamlPath: "../../pipeline/testdata/postprocess_output_only.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -206,7 +208,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "passthrough",
-			specYamlPath: "../pipeline/testdata/valid_passthrough.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_passthrough.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -238,7 +240,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "simple preprocess",
-			specYamlPath: "../pipeline/testdata/valid_simple_preprocess.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_simple_preprocess_child.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -279,7 +281,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "simple postproces",
-			specYamlPath: "../pipeline/testdata/valid_simple_postprocess.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_simple_postprocess.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -311,7 +313,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation",
-			specYamlPath: "../pipeline/testdata/valid_table_transform_preprocess.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_table_transform_preprocess.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -343,7 +345,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation with conditional update, filter row and slice row",
-			specYamlPath: "../pipeline/testdata/valid_table_transform_conditional_filtering.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_table_transform_conditional_filtering.yaml",
 			mockFeasts:   []mockFeast{},
 			rawRequest: request{
 				headers: map[string]string{
@@ -375,7 +377,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation with feast",
-			specYamlPath: "../pipeline/testdata/valid_feast_preprocess.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_feast_preprocess.yaml",
 			mockFeasts: []mockFeast{
 				{
 					request: &feastSdk.OnlineFeaturesRequest{
@@ -458,7 +460,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation with feast and series transformation",
-			specYamlPath: "../pipeline/testdata/valid_feast_series_transform.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_feast_series_transform.yaml",
 			mockFeasts: []mockFeast{
 				{
 					request: &feastSdk.OnlineFeaturesRequest{
@@ -895,7 +897,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "multiple columns table join with feast",
-			specYamlPath: "../pipeline/testdata/valid_table_join_multiple_columns.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_table_join_multiple_columns.yaml",
 			mockFeasts: []mockFeast{
 				{
 					request: &feastSdk.OnlineFeaturesRequest{
@@ -983,7 +985,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 		},
 		{
 			name:         "table transformation with feast (containing column that has null for all the rows) and transformation",
-			specYamlPath: "../pipeline/testdata/valid_feast_series_transform_conditional.yaml",
+			specYamlPath: "../../pipeline/testdata/valid_feast_series_transform_conditional.yaml",
 			mockFeasts: []mockFeast{
 				{
 					request: &feastSdk.OnlineFeaturesRequest{
@@ -1200,7 +1202,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				})).Return(m.response, nil)
 			}
 
-			options := &Options{
+			options := &config.Options{
 				ModelPredictURL: modelServer.URL,
 			}
 			transformerServer, err := createTransformerServer(tt.specYamlPath, feastClients, options)
@@ -1228,97 +1230,12 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	}
 }
 
-func Test_newHeimdallClient(t *testing.T) {
-	defaultRequestBodyString := `{ "name": "merlin" }`
-	defaultResponseBodyString := `{ "response": "ok" }`
-
-	type args struct {
-		o *Options
-	}
-	tests := []struct {
-		name              string
-		args              args
-		handler           func(w http.ResponseWriter, r *http.Request)
-		requestMethod     string
-		requestBodyString string
-		response          string
-	}{
-		{
-			name: "get success",
-			args: args{
-				o: &Options{},
-			},
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, http.MethodGet, r.Method)
-				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
-
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(defaultResponseBodyString))
-			},
-			requestMethod: http.MethodGet,
-			response:      defaultResponseBodyString,
-		},
-		{
-			name: "post success",
-			args: args{
-				o: &Options{},
-			},
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, http.MethodPost, r.Method)
-				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
-
-				rBody, err := ioutil.ReadAll(r.Body)
-				assert.NoError(t, err, "should not have failed to extract request body")
-
-				assert.Equal(t, defaultRequestBodyString, string(rBody))
-
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(defaultResponseBodyString))
-			},
-			requestMethod:     http.MethodPost,
-			requestBodyString: defaultRequestBodyString,
-			response:          defaultResponseBodyString,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			client := newHeimdallClient(tt.name, tt.args.o)
-			assert.NotNil(t, client)
-
-			if tt.handler != nil {
-				server := httptest.NewServer(http.HandlerFunc(tt.handler))
-				defer server.Close()
-
-				requestBody := bytes.NewReader([]byte(nil))
-				if tt.requestBodyString != "" {
-					requestBody = bytes.NewReader([]byte(tt.requestBodyString))
-				}
-
-				headers := http.Header{}
-				headers.Set("Content-Type", "application/json")
-
-				req, err := http.NewRequest(tt.requestMethod, server.URL, requestBody)
-				assert.NoError(t, err)
-				req.Header.Set("Content-Type", "application/json")
-
-				response, err := client.Do(req)
-				assert.NoError(t, err)
-				assert.Equal(t, http.StatusOK, response.StatusCode)
-
-				body, err := ioutil.ReadAll(response.Body)
-				assert.NoError(t, err)
-				assert.Equal(t, tt.response, string(body))
-			}
-		})
-	}
-}
-
 func Test_newHTTPHystrixClient(t *testing.T) {
 	defaultRequestBodyString := `{ "name": "merlin" }`
 	defaultResponseBodyString := `{ "response": "ok" }`
 
 	type args struct {
-		o *Options
+		o *config.Options
 	}
 	tests := []struct {
 		name              string
@@ -1331,7 +1248,7 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 		{
 			name: "get success",
 			args: args{
-				o: &Options{},
+				o: &config.Options{},
 			},
 			handler: func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, http.MethodGet, r.Method)
@@ -1346,7 +1263,7 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 		{
 			name: "post success",
 			args: args{
-				o: &Options{},
+				o: &config.Options{},
 			},
 			handler: func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, http.MethodPost, r.Method)
@@ -1398,35 +1315,6 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 	}
 }
 
-func Test_newHystrixClient_RetriesGetOnFailure5xx(t *testing.T) {
-	count := 0
-
-	client := newHeimdallClient("retries-on-5xx", &Options{
-		ModelTimeout:                       10 * time.Millisecond,
-		ModelHystrixMaxConcurrentRequests:  100,
-		ModelHystrixRetryMaxJitterInterval: 1 * time.Millisecond,
-		ModelHystrixRetryBackoffInterval:   1 * time.Millisecond,
-		ModelHystrixRetryCount:             5,
-	})
-
-	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(`{ "response": "something went wrong" }`))
-		count = count + 1
-	}
-
-	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
-	defer server.Close()
-
-	response, err := client.Get(server.URL, http.Header{})
-	assert.NoError(t, err)
-
-	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
-	assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
-
-	assert.Equal(t, 6, count)
-}
-
 func Test_recoveryHandler(t *testing.T) {
 	router := mux.NewRouter()
 	logger, _ := zap.NewDevelopment()
@@ -1437,16 +1325,15 @@ func Test_recoveryHandler(t *testing.T) {
 
 	modelName := "test-panic"
 
-	s := &Server{
+	s := &HTTPServer{
 		router: router,
 		logger: logger,
-		options: &Options{
-			Port:      port,
-			ModelName: modelName,
+		options: &config.Options{
+			HTTPPort:      port,
+			ModelFullName: modelName,
 		},
-		PreprocessHandler: func(ctx context.Context, rawRequest []byte, rawRequestHeaders map[string]string) ([]byte, error) {
+		PreprocessHandler: func(ctx context.Context, rawRequest types.Payload, rawRequestHeaders map[string]string) (types.Payload, error) {
 			panic("panic at preprocess")
-			return nil, nil
 		},
 	}
 	go s.Run()
@@ -1497,7 +1384,7 @@ func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, act
 	}
 }
 
-func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *Options) (*Server, error) {
+func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *config.Options) (*HTTPServer, error) {
 	yamlBytes, err := ioutil.ReadFile(transformerConfigPath)
 	if err != nil {
 		return nil, err
@@ -1552,11 +1439,8 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 		logger.Fatal("Unable to compile standard transformer", zap.Error(err))
 	}
 
-	transformerServer := New(options, logger)
 	handler := pipeline.NewHandler(compiledPipeline, logger)
-	transformerServer.PreprocessHandler = handler.Preprocess
-	transformerServer.PostprocessHandler = handler.Postprocess
-	transformerServer.ContextModifier = handler.EmbedEnvironment
+	transformerServer := NewWithHandler(options, handler, logger)
 
 	return transformerServer, nil
 }
