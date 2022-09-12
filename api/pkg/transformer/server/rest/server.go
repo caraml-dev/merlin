@@ -51,8 +51,12 @@ type HTTPServer struct {
 	// ContextModifier function to modify or store value in a context
 	ContextModifier func(ctx context.Context) context.Context
 	// PreprocessHandler function to run all preprocess operation
+	// request parameter for this function must be in types.BytePayload type
+	// output payload  of this function must be in types.BytePayload type
 	PreprocessHandler pipelineHandler
-	// PostprocessHandler function to run all preprocess operation
+	// PostprocessHandler function to run all postprocess operation
+	// request parameter for this function must be in types.BytePayload type
+	// output payload  of this function must be in types.BytePayload type
 	PostprocessHandler pipelineHandler
 }
 

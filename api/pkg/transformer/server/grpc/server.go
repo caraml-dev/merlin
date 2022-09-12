@@ -46,8 +46,12 @@ type UPIServer struct {
 	// ContextModifier function to modify or store value in a context
 	ContextModifier func(ctx context.Context) context.Context
 	// PreprocessHandler function to run all preprocess operation
+	// request parameter for this function must be in types.UPIPredictionRequest type
+	// output payload  of this function must be in types.UPIPredictionRequest type
 	PreprocessHandler func(ctx context.Context, request types.Payload, requestHeaders map[string]string) (types.Payload, error)
-	// PostprocessHandler function to run all preprocess operation
+	// PostprocessHandler function to run all postprocess operation
+	// response parameter for this function must be in types.UPIPredictionResponse type
+	// output payload of this function must be in types.UPIPredictionResponse type
 	PostprocessHandler func(ctx context.Context, response types.Payload, responseHeaders map[string]string) (types.Payload, error)
 }
 
