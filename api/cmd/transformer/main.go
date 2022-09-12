@@ -17,13 +17,17 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gojek/merlin/pkg/hystrix"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/jsonpath"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
-	"github.com/gojek/merlin/pkg/transformer/server"
+	serverConf "github.com/gojek/merlin/pkg/transformer/server/config"
+	grpc "github.com/gojek/merlin/pkg/transformer/server/grpc"
+	rest "github.com/gojek/merlin/pkg/transformer/server/rest"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
+
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
-	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 func init() {
@@ -33,15 +37,22 @@ func init() {
 	metricCollector.Registry.Register(hystrixCollector)
 }
 
+// AppConfig holds configuration for standard transformer
 type AppConfig struct {
-	Server server.Options
-	Feast  feast.Options
-
+	// Server configuration either HTTP or GRPC
+	Server serverConf.Options
+	// Feast configuration
+	Feast feast.Options
+	// StandardTransformerConfigJSON is standard transformer configuration in JSON string format
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
-	FeatureTableSpecJsons         string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
-	LogLevel                      string `envconfig:"LOG_LEVEL"`
-	RedisOverwriteConfig          feast.RedisOverwriteConfig
-	BigtableOverwriteConfig       feast.BigtableOverwriteConfig
+	// FeatureTableSpecJsons is feature table metadata specs in JSON string format
+	FeatureTableSpecJsons string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
+	// LogLevel
+	LogLevel string `envconfig:"LOG_LEVEL"`
+	// RedisOverwriteConfig is user configuration for redis that will overwrite default configuration supplied by merlin
+	RedisOverwriteConfig feast.RedisOverwriteConfig
+	// BigtableOverwriteConfig is user configuration for bigtable that will overwrite default configuration supplied by merlin
+	BigtableOverwriteConfig feast.BigtableOverwriteConfig
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
@@ -68,7 +79,7 @@ func main() {
 
 	logger.Info("configuration loaded", zap.Any("appConfig", appConfig))
 
-	closer, err := initTracing(appConfig.Server.ModelName + "-transformer")
+	closer, err := initTracing(appConfig.Server.ModelFullName + "-transformer")
 	if err != nil {
 		logger.Error("Unable to initialize tracing", zap.Error(err))
 	}
@@ -78,67 +89,53 @@ func main() {
 
 	transformerConfig := &spec.StandardTransformerConfig{}
 	if err := jsonpb.UnmarshalString(appConfig.StandardTransformerConfigJSON, transformerConfig); err != nil {
-		logger.Fatal("Unable to parse standard transformer transformerConfig", zap.Error(err))
+		logger.Fatal("unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
-	featureSpecs := make([]*spec.FeatureTableMetadata, 0)
-	if appConfig.FeatureTableSpecJsons != "" {
-		featureTableSpecJsons := make([]map[string]interface{}, 0)
-		if err := json.Unmarshal([]byte(appConfig.FeatureTableSpecJsons), &featureTableSpecJsons); err != nil {
-			panic(err)
-		}
-		for _, specJson := range featureTableSpecJsons {
-			s, err := json.Marshal(specJson)
-			if err != nil {
-				panic(err)
-			}
-			featureSpec := &spec.FeatureTableMetadata{}
-			err = jsonpb.UnmarshalString(string(s), featureSpec)
-			if err != nil {
-				return
-			}
-
-			if err != nil {
-				logger.Fatal("Unable to parse standard transformer featureTableSpecs config", zap.Error(err))
-			}
-			featureSpecs = append(featureSpecs, featureSpec)
-		}
-	}
-
-	feastOpts := feast.OverwriteFeastOptionsConfig(appConfig.Feast, appConfig.RedisOverwriteConfig, appConfig.BigtableOverwriteConfig)
-	logger.Info("feast options", zap.Any("val", feastOpts))
-
-	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureSpecs, transformerConfig)
+	featureTableMetadata, err := parseFeatureTableMetadata(appConfig.FeatureTableSpecJsons)
 	if err != nil {
-		logger.Fatal("Unable to initialize Feast Clients", zap.Error(err))
+		logger.Fatal("unable to parse feature table metadata", zap.Error(err))
 	}
-
-	s := server.New(&appConfig.Server, logger)
 
 	if transformerConfig.TransformerConfig.Feast != nil {
 		// Feast Enricher
-		feastTransformer, err := initFeastTransformer(appConfig, feastServingClients, transformerConfig, logger)
-		if err != nil {
-			logger.Fatal("Unable to initialize transformer", zap.Error(err))
-		}
-		s.PreprocessHandler = feastTransformer.Enrich
-	} else {
-		// Standard Enricher
-		compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger, false)
-		compiledPipeline, err := compiler.Compile(transformerConfig)
-		if err != nil {
-			logger.Fatal("Unable to compile standard transformer", zap.Error(err))
-		}
-
-		handler := pipeline.NewHandler(compiledPipeline, logger)
-		s.PreprocessHandler = handler.Preprocess
-		s.PostprocessHandler = handler.Postprocess
-		s.ContextModifier = handler.EmbedEnvironment
+		runFeastEnricherServer(appConfig, transformerConfig, featureTableMetadata, logger)
+		return
 	}
 
-	s.Run()
+	handler, err := createPipelineHandler(appConfig, transformerConfig, featureTableMetadata, logger)
+	if err != nil {
+		logger.Fatal("got error when creating handler", zap.Error(err))
+	}
+
+	if appConfig.Server.Protocol == protocol.HttpJson {
+		runHTTPServer(&appConfig.Server, handler, logger)
+	} else {
+		go rest.RunInstrumentationServer(&appConfig.Server, logger)
+		runGrpcServer(&appConfig.Server, handler, logger)
+	}
+
 }
 
+// TODO: Feast enricher will be deprecated soon all associated functions will be deleted
+func runFeastEnricherServer(appConfig AppConfig, transformerConfig *spec.StandardTransformerConfig, featureTableMetadata []*spec.FeatureTableMetadata, logger *zap.Logger) {
+	feastOpts := feast.OverwriteFeastOptionsConfig(appConfig.Feast, appConfig.RedisOverwriteConfig, appConfig.BigtableOverwriteConfig)
+	logger.Info("feast options", zap.Any("val", feastOpts))
+
+	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureTableMetadata, transformerConfig)
+	if err != nil {
+		logger.Fatal("unable to initialize feast clients", zap.Error(err))
+	}
+	feastTransformer, err := initFeastTransformer(appConfig, feastServingClients, transformerConfig, logger)
+	if err != nil {
+		logger.Fatal("Unable to initialize transformer", zap.Error(err))
+	}
+	feastEnricherServer := rest.New(&appConfig.Server, logger)
+	feastEnricherServer.PreprocessHandler = feastTransformer.Enrich
+	feastEnricherServer.Run()
+}
+
+// TODO: Feast enricher will be deprecated soon all associated functions will be deleted
 func initFeastTransformer(appCfg AppConfig,
 	feastClient feast.Clients,
 	transformerConfig *spec.StandardTransformerConfig,
@@ -167,6 +164,62 @@ func initFeastTransformer(appCfg AppConfig,
 	)
 
 	return feast.NewEnricher(featureRetriever, logger)
+}
+
+func parseFeatureTableMetadata(featureTableSpecsJson string) ([]*spec.FeatureTableMetadata, error) {
+	featureSpecs := make([]*spec.FeatureTableMetadata, 0)
+	if featureTableSpecsJson != "" {
+		featureTableSpec := make([]map[string]interface{}, 0)
+		if err := json.Unmarshal([]byte(featureTableSpecsJson), &featureTableSpec); err != nil {
+			return nil, err
+		}
+		for _, specJson := range featureTableSpec {
+			s, err := json.Marshal(specJson)
+			if err != nil {
+				return nil, err
+			}
+			featureSpec := &spec.FeatureTableMetadata{}
+			err = jsonpb.UnmarshalString(string(s), featureSpec)
+			if err != nil {
+				return nil, errors.Wrap(err, "unable to parse standard transformer featureTableSpecs config")
+			}
+			featureSpecs = append(featureSpecs, featureSpec)
+		}
+	}
+	return featureSpecs, nil
+}
+
+func createPipelineHandler(appConfig AppConfig, transformerConfig *spec.StandardTransformerConfig, featureTableMetadata []*spec.FeatureTableMetadata, logger *zap.Logger) (*pipeline.Handler, error) {
+
+	feastOpts := feast.OverwriteFeastOptionsConfig(appConfig.Feast, appConfig.RedisOverwriteConfig, appConfig.BigtableOverwriteConfig)
+	logger.Info("feast options", zap.Any("val", feastOpts))
+
+	feastServingClients, err := feast.InitFeastServingClients(feastOpts, featureTableMetadata, transformerConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to initialize feast clients")
+	}
+
+	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger, false)
+	compiledPipeline, err := compiler.Compile(transformerConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to compile standard transformer")
+	}
+
+	handler := pipeline.NewHandler(compiledPipeline, logger)
+	return handler, nil
+}
+
+func runHTTPServer(opts *serverConf.Options, handler *pipeline.Handler, logger *zap.Logger) {
+	s := rest.NewWithHandler(opts, handler, logger)
+	s.Run()
+}
+
+func runGrpcServer(opts *serverConf.Options, handler *pipeline.Handler, logger *zap.Logger) {
+	s, err := grpc.NewUPIServer(opts, handler, logger)
+	if err != nil {
+		panic(err)
+	}
+	s.Run()
 }
 
 func initTracing(serviceName string) (io.Closer, error) {

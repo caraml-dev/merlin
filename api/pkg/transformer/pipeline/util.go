@@ -14,7 +14,7 @@ func evalJSONPath(env *Environment, jsonPath string) (interface{}, error) {
 		return nil, fmt.Errorf("compiled jsonpath %s not found", jsonPath)
 	}
 
-	return c.LookupFromContainer(env.JSONContainer())
+	return c.LookupFromContainer(env.PayloadContainer())
 }
 
 func evalExpression(env *Environment, expression string) (interface{}, error) {

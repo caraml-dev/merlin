@@ -72,6 +72,7 @@ const (
 	defaultPredictorArtifactLocation = "/mnt/models"
 	defaultHTTPPort                  = 8080
 	defaultGRPCPort                  = 9000
+	defaultPredictorPort             = 80
 )
 
 var (
@@ -441,7 +442,7 @@ func createLivenessProbeSpec(path string) *corev1.Probe {
 }
 
 func createPredictorHost(modelService *models.Service) string {
-	return modelService.Name + "-predictor-default." + modelService.Namespace
+	return fmt.Sprintf("%s-predictor-default.%s:%d", modelService.Name, modelService.Namespace, defaultPredictorPort)
 }
 
 func createAnnotations(modelService *models.Service, config *config.DeploymentConfig) (map[string]string, error) {
@@ -525,6 +526,7 @@ func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVar
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelVersion, Value: modelService.ModelVersion})
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelFullName, Value: modelService.Name})
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorHost, Value: createPredictorHost(modelService)})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envProtocol, Value: fmt.Sprint(modelService.Protocol)})
 	return defaultEnvVars
 }
 

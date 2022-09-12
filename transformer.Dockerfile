@@ -15,7 +15,7 @@
 # ============================================================
 # Build stage 1: Build web server
 # ============================================================
-FROM golang:1.17-alpine as go-builder
+FROM golang:1.18-alpine as go-builder
 
 ARG BRANCH
 ARG REVISION

@@ -16,7 +16,7 @@ import (
 type Environment struct {
 	symbolRegistry   symbol.Registry
 	compiledPipeline *CompiledPipeline
-	outputJSON       types.JSONObject
+	output           types.Payload
 	logger           *zap.Logger
 }
 
@@ -36,24 +36,24 @@ func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Env
 	return env
 }
 
-func (e *Environment) Preprocess(ctx context.Context, rawRequest types.JSONObject, rawRequestHeaders map[string]string) (types.JSONObject, error) {
+func (e *Environment) Preprocess(ctx context.Context, rawRequest types.Payload, rawRequestHeaders map[string]string) (types.Payload, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "environment.Preprocess")
 	defer span.Finish()
 
-	e.symbolRegistry.SetRawRequestJSON(rawRequest)
+	e.symbolRegistry.SetRawRequest(rawRequest)
 	e.symbolRegistry.SetRawRequestHeaders(rawRequestHeaders)
-	e.SetOutputJSON(rawRequest)
+	e.SetOutput(rawRequest)
 
 	return e.compiledPipeline.Preprocess(ctx, e)
 }
 
-func (e *Environment) Postprocess(ctx context.Context, modelResponse types.JSONObject, modelResponseHeaders map[string]string) (types.JSONObject, error) {
+func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Payload, modelResponseHeaders map[string]string) (types.Payload, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "environment.Postprocess")
 	defer span.Finish()
 
-	e.symbolRegistry.SetModelResponseJSON(modelResponse)
+	e.symbolRegistry.SetModelResponse(modelResponse)
 	e.symbolRegistry.SetModelResponseHeaders(modelResponseHeaders)
-	e.SetOutputJSON(modelResponse)
+	e.SetOutput(modelResponse)
 
 	return e.compiledPipeline.Postprocess(ctx, e)
 }
@@ -70,16 +70,16 @@ func (e *Environment) IsPreprocessOpExist() bool {
 	return len(e.compiledPipeline.preprocessOps) > 0
 }
 
-func (e *Environment) SetOutputJSON(jsonObj types.JSONObject) {
-	e.outputJSON = jsonObj
+func (e *Environment) SetOutput(payload types.Payload) {
+	e.output = payload
 }
 
-func (e *Environment) OutputJSON() types.JSONObject {
-	return e.outputJSON
+func (e *Environment) Output() types.Payload {
+	return e.output
 }
 
-func (e *Environment) JSONContainer() types.JSONObjectContainer {
-	return e.symbolRegistry.JSONContainer()
+func (e *Environment) PayloadContainer() types.PayloadObjectContainer {
+	return e.symbolRegistry.PayloadContainer()
 }
 
 func (e *Environment) SetSymbol(name string, value interface{}) {

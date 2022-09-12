@@ -81,10 +81,10 @@ func TestSymbolRegistry_ParseTimestamp(t *testing.T) {
 
 			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
 			if requestJSONObj != nil {
-				sr.SetRawRequestJSON(requestJSONObj)
+				sr.SetRawRequest(requestJSONObj)
 			}
 			if responseJSONObj != nil {
-				sr.SetModelResponseJSON(responseJSONObj)
+				sr.SetModelResponse(responseJSONObj)
 			}
 
 			got := sr.ParseTimestamp(tC.timestamp)
@@ -237,10 +237,10 @@ func TestSymbolRegistry_IsWeekend(t *testing.T) {
 
 			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
 			if requestJSONObj != nil {
-				sr.SetRawRequestJSON(requestJSONObj)
+				sr.SetRawRequest(requestJSONObj)
 			}
 			if responseJSONObj != nil {
-				sr.SetModelResponseJSON(responseJSONObj)
+				sr.SetModelResponse(responseJSONObj)
 			}
 
 			got := sr.IsWeekend(tC.timestamp, tC.timezone)
@@ -344,10 +344,10 @@ func TestSymbolRegistry_FormatTimestamp(t *testing.T) {
 
 			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
 			if requestJSONObj != nil {
-				sr.SetRawRequestJSON(requestJSONObj)
+				sr.SetRawRequest(requestJSONObj)
 			}
 			if responseJSONObj != nil {
-				sr.SetModelResponseJSON(responseJSONObj)
+				sr.SetModelResponse(responseJSONObj)
 			}
 
 			got := sr.FormatTimestamp(tC.timestamp, tC.timezone, tC.format)
@@ -500,10 +500,10 @@ func TestSymbolRegistry_DayOfWeek(t *testing.T) {
 
 			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
 			if requestJSONObj != nil {
-				sr.SetRawRequestJSON(requestJSONObj)
+				sr.SetRawRequest(requestJSONObj)
 			}
 			if responseJSONObj != nil {
-				sr.SetModelResponseJSON(responseJSONObj)
+				sr.SetModelResponse(responseJSONObj)
 			}
 
 			got := sr.DayOfWeek(tC.timestamp, tC.timezone)
@@ -839,10 +839,10 @@ func TestRegistry_ParseDateTime(t *testing.T) {
 
 			requestJSONObj, responseJSONObj := createTestJSONObjects(tC.requestJSON, tC.responseJSON)
 			if requestJSONObj != nil {
-				sr.SetRawRequestJSON(requestJSONObj)
+				sr.SetRawRequest(requestJSONObj)
 			}
 			if responseJSONObj != nil {
-				sr.SetModelResponseJSON(responseJSONObj)
+				sr.SetModelResponse(responseJSONObj)
 			}
 
 			got := sr.ParseDateTime(tC.dateTime, tC.dateTimeLocation, tC.dateTimeFormat)
