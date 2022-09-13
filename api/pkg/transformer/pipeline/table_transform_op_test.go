@@ -89,7 +89,7 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 		panic(err)
 	}
 
-	env.SymbolRegistry().SetRawRequestJSON(rawRequestJSON)
+	env.SymbolRegistry().SetRawRequest(rawRequestJSON)
 
 	encImpl := &encoder.OrdinalEncoder{
 		DefaultValue: 0,

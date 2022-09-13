@@ -2227,7 +2227,7 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
-			sr.SetRawRequestJSON(requestJson)
+			sr.SetRawRequest(requestJson)
 
 			got, err := fr.buildEntityRows(sr, tt.args.entitySpecs)
 			if (err != nil) != tt.wantErr {

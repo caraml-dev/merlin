@@ -15,7 +15,7 @@
 # ============================================================
 # Build stage 1: Build API
 # ============================================================
-FROM golang:1.17-alpine as go-builder
+FROM golang:1.18-alpine as go-builder
 
 RUN apk update && apk add --no-cache git ca-certificates bash
 RUN mkdir -p src/api

@@ -615,7 +615,7 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 			}
 
 			sr := symbol.NewRegistryWithCompiledJSONPath(compiledJsonPaths)
-			sr.SetRawRequestJSON(nodesBody)
+			sr.SetRawRequest(nodesBody)
 			for name, value := range test.variables {
 				sr[name] = value
 			}
@@ -777,7 +777,7 @@ func doRunBenchmark(b *testing.B, entityConfig *spec.Entity) {
 	}
 
 	sr := symbol.NewRegistryWithCompiledJSONPath(compiledJsonPaths)
-	sr.SetRawRequestJSON(nodesBody)
+	sr.SetRawRequest(nodesBody)
 	er := NewEntityExtractor(compiledJsonPaths, compiledExpressions)
 
 	b.ReportAllocs()

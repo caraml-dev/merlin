@@ -211,14 +211,14 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
 	json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
 
-	jsonContainer := types.JSONObjectContainer{
+	jsonContainer := types.PayloadObjectContainer{
 		spec.JsonType_RAW_REQUEST:    rawRequestData,
 		spec.JsonType_MODEL_RESPONSE: modelResponseData,
 	}
 	testCases := []struct {
 		desc        string
 		opt         JsonPathOption
-		sourceJSONs types.JSONObjectContainer
+		sourceJSONs types.PayloadObjectContainer
 		want        interface{}
 		wantErr     bool
 		err         error
@@ -396,7 +396,7 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
 	json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
 
-	jsonContainer := types.JSONObjectContainer{
+	jsonContainer := types.PayloadObjectContainer{
 		spec.JsonType_RAW_REQUEST:    rawRequestData,
 		spec.JsonType_MODEL_RESPONSE: modelResponseData,
 	}
@@ -408,7 +408,7 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 	tests := []struct {
 		name        string
 		fields      fields
-		sourceJSONs types.JSONObjectContainer
+		sourceJSONs types.PayloadObjectContainer
 		want        interface{}
 		wantErr     bool
 		expErr      error

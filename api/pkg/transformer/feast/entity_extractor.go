@@ -40,7 +40,7 @@ func (er *EntityExtractor) ExtractValuesFromSymbolRegistry(symbolRegistry symbol
 			return nil, fmt.Errorf("jsonpath %s in entity %s is not found", entitySpec.GetJsonPath(), entitySpec.Name)
 		}
 
-		entityValFromJsonPath, err := compiledJsonPath.LookupFromContainer(symbolRegistry.JSONContainer())
+		entityValFromJsonPath, err := compiledJsonPath.LookupFromContainer(symbolRegistry.PayloadContainer())
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +51,7 @@ func (er *EntityExtractor) ExtractValuesFromSymbolRegistry(symbolRegistry symbol
 			return nil, fmt.Errorf("jsonpath %s in entity %s is not found", entitySpec.GetJsonPathConfig().GetJsonPath(), entitySpec.Name)
 		}
 
-		entityValFromJsonPath, err := compiledJsonPath.LookupFromContainer(symbolRegistry.JSONContainer())
+		entityValFromJsonPath, err := compiledJsonPath.LookupFromContainer(symbolRegistry.PayloadContainer())
 		if err != nil {
 			return nil, err
 		}

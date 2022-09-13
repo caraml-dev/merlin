@@ -36,7 +36,7 @@ REQUIRES = [
     "docker>=4.2.1",
     "PyYAML>=5.4",
     "protobuf<4.0.0",
-    "caraml-upi-protos"
+    "caraml-upi-protos==0.1.0"
 ]
 
 TEST_REQUIRES = [

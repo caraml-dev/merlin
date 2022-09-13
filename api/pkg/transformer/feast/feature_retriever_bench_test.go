@@ -82,7 +82,7 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
-	sr.SetRawRequestJSON(requestJson)
+	sr.SetRawRequest(requestJson)
 
 	b.StartTimer()
 	b.ReportAllocs()
