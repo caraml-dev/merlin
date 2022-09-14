@@ -9,7 +9,7 @@ It leverages mlflow.pyfunc model for model loading.
 
 Run following command to load sample `echo-model` model and start HTTP server:
 ```bash
-export PROMETHEUS_MULTIPROC_DIR=prometheus
+PROMETHEUS_MULTIPROC_DIR=prometheus \
 python -m pyfuncserver --model_dir echo-model/model
 ```
 
@@ -22,9 +22,9 @@ curl localhost:8080/v1/models/model-1:predict -H "Content-Type: application/json
 
 Run following command to load sample `echo-model` model and start UPI v1 server:
 ```bash
-export PROMETHEUS_MULTIPROC_DIR=prometheus
-export CARAML_PROTOCOL=UPI_V1
-python -m pyfuncserver --model_dir echo-model/model
+PROMETHEUS_MULTIPROC_DIR=prometheus \
+CARAML_PROTOCOL=UPI_V1 \
+WORKERS=2 python -m pyfuncserver --model_dir echo-model/model
 ```
 
 
