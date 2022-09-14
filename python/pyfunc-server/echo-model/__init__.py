@@ -1,7 +1,9 @@
+import os
 from typing import List
 
 import grpc
 import mlflow
+import logging
 from caraml.upi.v1 import upi_pb2
 from merlin.model import PyFuncModel
 from prometheus_client import Counter, Gauge
@@ -20,7 +22,7 @@ class EchoUPIModel(PyFuncModel):
 
     def upiv1_infer(self, request: upi_pb2.PredictValuesRequest,
                     context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
-
+        logging.info(f"PID: {os.getpid()}")
         return upi_pb2.PredictValuesResponse(
             prediction_result_table=request.prediction_table,
             target_name=request.target_name,
