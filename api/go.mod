@@ -15,7 +15,7 @@ require (
 	github.com/cespare/xxhash v1.1.0
 	github.com/coocood/freecache v1.1.1
 	github.com/fatih/color v1.9.0
-	github.com/feast-dev/feast/sdk/go v0.9.2
+	github.com/feast-dev/feast/sdk/go v0.9.4
 	github.com/fraugster/parquet-go v0.10.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-gota/gota v0.0.0-00010101000000-000000000000
