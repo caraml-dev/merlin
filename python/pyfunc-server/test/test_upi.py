@@ -5,7 +5,6 @@ import shutil
 import signal
 import subprocess
 import time
-from typing import List
 
 import grpc
 import mlflow
@@ -50,6 +49,57 @@ class EchoUPIModel(PyFuncModel):
             )
         )
 
+
+@pytest.mark.parametrize("workers", [(1), (4), (8)])
+@pytest.mark.benchmark
+def test_benchmark_multiprocess(workers, benchmark):
+    model_name = "my-model"
+    model_version = "1"
+    grpc_port = 9001
+    http_port = 8081
+    target_name = "echo"
+    metrics_path = "metrics_test"
+
+    try:
+        c = start_upi_server(model_name, model_version, http_port, grpc_port, workers, metrics_path)
+
+        channel = grpc.insecure_channel(f'localhost:{grpc_port}')
+        stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
+        df = pd.DataFrame([[4, 1, "hi"]] * 3,
+                          columns=['int_value', 'int_value_2', 'string_value'],
+                          index=["0000", "1111", "2222"])
+        prediction_id = "12345"
+
+        prediction_context = [
+            variable_pb2.Variable(name="int_context", type=type_pb2.TYPE_INTEGER, integer_value=1),
+            variable_pb2.Variable(name="double_context", type=type_pb2.TYPE_DOUBLE, double_value=1.1),
+            variable_pb2.Variable(name="string_context", type=type_pb2.TYPE_STRING, string_value="hello")
+        ]
+
+        def send_request():
+            return stub.PredictValues(
+                request=upi_pb2.PredictValuesRequest(prediction_table=df_to_table(df, "predict"),
+                                                     target_name=target_name,
+                                                     prediction_context=prediction_context,
+                                                     metadata=upi_pb2.RequestMetadata(
+                                                         prediction_id=prediction_id, )
+                                                     )
+            )
+
+        response = benchmark(send_request)
+
+        assert response.metadata.prediction_id == prediction_id
+        assert response.metadata.models[0].name == model_name
+        assert response.metadata.models[0].version == model_version
+        assert list(response.prediction_context) == prediction_context
+        assert response.target_name == target_name
+        assert df_to_table(df, "predict") == response.prediction_result_table
+
+    finally:
+        os.killpg(os.getpgid(c.pid), signal.SIGTERM)
+        shutil.rmtree(metrics_path)
+        # Wait until the previous server have been terminated completely
+        time.sleep(5)
 
 @pytest.mark.parametrize("workers", [(1), (4)])
 def test_upi(workers):
