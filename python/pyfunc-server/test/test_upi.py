@@ -50,37 +50,18 @@ class EchoUPIModel(PyFuncModel):
             )
         )
 
+
 @pytest.mark.parametrize("workers", [(1), (4)])
 def test_upi(workers):
     model_name = "my-model"
     model_version = "1"
-    model_full_name = f"{model_name}-{model_version}"
-
+    grpc_port = 9001
+    http_port = 8081
     target_name = "echo"
-    http_port = "8081"
-    grpc_port = "9001"
-
-    mlflow.pyfunc.log_model("model", python_model=EchoUPIModel(model_name, model_version))
-    model_path = os.path.join(mlflow.get_artifact_uri(), "model")
-    env = os.environ.copy()
-    mlflow.end_run()
     metrics_path = "metrics_test"
 
     try:
-        pathlib.Path(metrics_path).mkdir(exist_ok=True)
-
-        env[PROTOCOL] = Protocol.UPI_V1.value
-        env[HTTP_PORT] = http_port
-        env[GRPC_PORT] = grpc_port
-        env[MODEL_NAME] = model_name
-        env[MODEL_VERSION] = model_version
-        env[MODEL_FULL_NAME] = model_full_name
-        env[WORKERS] = str(workers)
-        env["PROMETHEUS_MULTIPROC_DIR"] = metrics_path
-        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env, start_new_session=True)
-
-        # wait till the server is up
-        wait_server_ready(f"http://localhost:{http_port}/")
+        c = start_upi_server(model_name, model_version, http_port, grpc_port, workers, metrics_path)
 
         channel = grpc.insecure_channel(f'localhost:{grpc_port}')
         stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
@@ -131,3 +112,27 @@ def test_upi(workers):
         shutil.rmtree(metrics_path)
         # Wait until the previous server have been terminated completely
         time.sleep(5)
+
+
+def start_upi_server(model_name="my-model", model_version="1", http_port=8080, grpc_port=8081, workers=1, metrics_path="prometheus"):
+    model_full_name = f"{model_name}-{model_version}"
+
+    mlflow.pyfunc.log_model("model", python_model=EchoUPIModel(model_name, model_version))
+    model_path = os.path.join(mlflow.get_artifact_uri(), "model")
+    env = os.environ.copy()
+    mlflow.end_run()
+    pathlib.Path(metrics_path).mkdir(exist_ok=True)
+
+    env[PROTOCOL] = Protocol.UPI_V1.value
+    env[HTTP_PORT] = str(http_port)
+    env[GRPC_PORT] = str(grpc_port)
+    env[MODEL_NAME] = model_name
+    env[MODEL_VERSION] = model_version
+    env[MODEL_FULL_NAME] = model_full_name
+    env[WORKERS] = str(workers)
+    env["PROMETHEUS_MULTIPROC_DIR"] = metrics_path
+    pid = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env, start_new_session=True)
+
+    # wait till the server is up
+    wait_server_ready(f"http://localhost:{http_port}/")
+    return pid
