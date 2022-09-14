@@ -59,6 +59,6 @@ class UPIServer:
 
         logging.info(
             f"Starting grpc service at port {self._config.grpc_port} with options {self._config.grpc_options}")
-        server.add_insecure_port(f"localhost:{self._config.grpc_port}")
+        server.add_insecure_port(f"[::]:{self._config.grpc_port}")
         server.start()
         server.wait_for_termination()
