@@ -19,7 +19,7 @@ const (
 )
 
 type PredictResponse struct {
-	Response JSONObject        `json:"response"`
+	Response Payload           `json:"response"`
 	Tracing  *OperationTracing `json:"operation_tracing"`
 }
 

@@ -12,13 +12,14 @@ import mlflow
 import pandas as pd
 import pytest
 import requests
-from caraml.upi.v1 import upi_pb2, upi_pb2_grpc, value_pb2
+from caraml.upi.utils import df_to_table
+from caraml.upi.v1 import upi_pb2, upi_pb2_grpc, variable_pb2, type_pb2
 from merlin.model import PyFuncModel
 from merlin.protocol import Protocol
 from prometheus_client import Counter, Gauge
 
 from pyfuncserver.config import GRPC_PORT, HTTP_PORT, MODEL_FULL_NAME, MODEL_NAME, MODEL_VERSION, PROTOCOL, WORKERS
-from test.utils import df_to_prediction_rows, wait_server_ready, prediction_result_rows_to_df
+from test.utils import wait_server_ready
 
 
 class EchoUPIModel(PyFuncModel):
@@ -38,12 +39,8 @@ class EchoUPIModel(PyFuncModel):
         self._req_count.inc()
         self._temp.set(EchoUPIModel.GAUGE_VALUE)
 
-        result_rows: List[upi_pb2.PredictionResultRow] = []
-        for row in request.prediction_rows:
-            result_rows.append(upi_pb2.PredictionResultRow(row_id=row.row_id, values=row.model_inputs))
-
         return upi_pb2.PredictValuesResponse(
-            prediction_result_rows=result_rows,
+            prediction_result_table=request.prediction_table,
             target_name=request.target_name,
             prediction_context=request.prediction_context,
             metadata=upi_pb2.ResponseMetadata(
@@ -93,12 +90,12 @@ def test_upi(workers):
         prediction_id = "12345"
 
         prediction_context = [
-            value_pb2.NamedValue(name="int_context", type=value_pb2.NamedValue.TYPE_INTEGER, integer_value=1),
-            value_pb2.NamedValue(name="double_context", type=value_pb2.NamedValue.TYPE_DOUBLE, double_value=1.1),
-            value_pb2.NamedValue(name="string_context", type=value_pb2.NamedValue.TYPE_STRING, string_value="hello")
+            variable_pb2.Variable(name="int_context", type=type_pb2.TYPE_INTEGER, integer_value=1),
+            variable_pb2.Variable(name="double_context", type=type_pb2.TYPE_DOUBLE, double_value=1.1),
+            variable_pb2.Variable(name="string_context", type=type_pb2.TYPE_STRING, string_value="hello")
         ]
         response: upi_pb2.PredictValuesResponse = stub.PredictValues(
-            request=upi_pb2.PredictValuesRequest(prediction_rows=df_to_prediction_rows(df),
+            request=upi_pb2.PredictValuesRequest(prediction_table=df_to_table(df, "predict"),
                                                  target_name=target_name,
                                                  prediction_context=prediction_context,
                                                  metadata=upi_pb2.RequestMetadata(
@@ -111,7 +108,7 @@ def test_upi(workers):
         assert response.metadata.models[0].version == model_version
         assert list(response.prediction_context) == prediction_context
         assert response.target_name == target_name
-        assert df.equals(prediction_result_rows_to_df(response.prediction_result_rows))
+        assert df_to_table(df, "predict") == response.prediction_result_table
 
         # test metrics
         resp = requests.get(f"http://localhost:{http_port}/metrics")

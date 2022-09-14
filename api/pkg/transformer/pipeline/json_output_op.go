@@ -46,7 +46,7 @@ func (j JsonOutputOp) Execute(ctx context.Context, env *Environment) error {
 		}
 	}
 
-	env.SetOutputJSON(outputJson)
+	env.SetOutput(outputJson)
 	if j.OperationTracing != nil {
 		return j.AddInputOutput(nil, outputJson)
 	}

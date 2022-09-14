@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
@@ -24,7 +23,7 @@ func NewHandler(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Handler
 	}
 }
 
-func (h *Handler) Preprocess(ctx context.Context, rawRequest []byte, rawRequestHeaders map[string]string) ([]byte, error) {
+func (h *Handler) Preprocess(ctx context.Context, rawRequest types.Payload, rawRequestHeaders map[string]string) (types.Payload, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pipeline.Preprocess")
 	defer span.Finish()
 
@@ -33,25 +32,23 @@ func (h *Handler) Preprocess(ctx context.Context, rawRequest []byte, rawRequestH
 		return rawRequest, nil
 	}
 
-	var rawRequestObj types.JSONObject
-	err := json.Unmarshal(rawRequest, &rawRequestObj)
+	rawRequestObj, err := rawRequest.AsInput()
 	if err != nil {
 		return nil, err
 	}
 
-	transformedRequest, err := env.Preprocess(ctx, rawRequestObj, rawRequestHeaders)
+	result, err := env.Preprocess(ctx, rawRequestObj, rawRequestHeaders)
 	if err != nil {
 		return nil, err
 	}
 
 	jsonSpan, _ := opentracing.StartSpanFromContext(ctx, "pipeline.Preprocess.JsonMarshall")
-	preprocessJson, err := json.Marshal(transformedRequest)
 	jsonSpan.Finish()
 
-	return preprocessJson, err
+	return result.AsOutput()
 }
 
-func (h *Handler) Postprocess(ctx context.Context, modelResponse []byte, modelResponseHeaders map[string]string) ([]byte, error) {
+func (h *Handler) Postprocess(ctx context.Context, modelResponse types.Payload, modelResponseHeaders map[string]string) (types.Payload, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pipeline.Postprocess")
 	defer span.Finish()
 
@@ -60,8 +57,7 @@ func (h *Handler) Postprocess(ctx context.Context, modelResponse []byte, modelRe
 		return modelResponse, nil
 	}
 
-	var modelResponseObj types.JSONObject
-	err := json.Unmarshal(modelResponse, &modelResponseObj)
+	modelResponseObj, err := modelResponse.AsInput()
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +67,7 @@ func (h *Handler) Postprocess(ctx context.Context, modelResponse []byte, modelRe
 		return nil, err
 	}
 
-	return json.Marshal(transformedResponse)
+	return transformedResponse.AsOutput()
 }
 
 func (h *Handler) EmbedEnvironment(ctx context.Context) context.Context {

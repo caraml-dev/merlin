@@ -1476,6 +1476,28 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				},
 			},
 		},
+		Protocol: protocol.HttpJson,
+	}
+
+	modelSvcGRPC := &models.Service{
+		Name:         "model-1",
+		ModelName:    "model",
+		ModelVersion: "1",
+		Namespace:    "project",
+		ArtifactURI:  "gs://my-artifacet",
+		Metadata: models.Metadata{
+			Team:        "dsp",
+			Stream:      "dsp",
+			App:         "model",
+			Environment: "dev",
+			Labels: mlp.Labels{
+				{
+					Key:   "sample",
+					Value: "true",
+				},
+			},
+		},
+		Protocol: protocol.UpiV1,
 	}
 
 	queueResourcePercentage := "2"
@@ -1725,7 +1747,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Image:     "ghcr.io/gojek/merlin-transformer-test",
 									Command:   []string{"python"},
 									Args:      []string{"main.py"},
-									Env:       createDefaultTransformerEnvVars(modelSvc).ToKubernetesEnvVars(),
+									Env:       createDefaultTransformerEnvVars(modelSvcGRPC).ToKubernetesEnvVars(),
 									Resources: expDefaultTransformerResourceRequests,
 									Ports:     grpcContainerPorts,
 								},
@@ -1925,7 +1947,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
-									}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
+									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
 									Resources: expDefaultTransformerResourceRequests,
 									Ports:     grpcContainerPorts,
 								},
@@ -1986,6 +2008,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				},
 			},
 		},
+		Protocol: protocol.HttpJson,
 	}
 
 	queueResourcePercentage := "2"
@@ -2450,6 +2473,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 				},
 			},
 		},
+		Protocol: protocol.HttpJson,
 	}
 
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
@@ -3141,6 +3165,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 				},
 			},
 		},
+		Protocol: protocol.HttpJson,
 	}
 
 	type args struct {

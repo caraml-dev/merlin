@@ -21,15 +21,8 @@ class EchoUPIModel(PyFuncModel):
     def upiv1_infer(self, request: upi_pb2.PredictValuesRequest,
                     context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
 
-        self._req_count.inc()
-        self._temp.set(EchoUPIModel.GAUGE_VALUE)
-
-        result_rows: List[upi_pb2.PredictionResultRow] = []
-        for row in request.prediction_rows:
-            result_rows.append(upi_pb2.PredictionResultRow(row_id=row.row_id, values=row.model_inputs))
-
         return upi_pb2.PredictValuesResponse(
-            prediction_result_rows=result_rows,
+            prediction_result_table=request.prediction_table,
             target_name=request.target_name,
             prediction_context=request.prediction_context,
             metadata=upi_pb2.ResponseMetadata(

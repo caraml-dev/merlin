@@ -28,7 +28,7 @@ func TestSymbolRegistry_JsonExtract(t *testing.T) {
 	}
 
 	sr := NewRegistryWithCompiledJSONPath(jsonpath.NewStorage())
-	sr.SetRawRequestJSON(jsonObject)
+	sr.SetRawRequest(jsonObject)
 
 	type args struct {
 		parentJsonPath string
