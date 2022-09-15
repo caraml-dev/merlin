@@ -3,12 +3,12 @@ package bigtablestore
 import (
 	"context"
 	"fmt"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/bigtable"
 	feast "github.com/feast-dev/feast/sdk/go"
-	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/golang/protobuf/proto"
@@ -115,19 +115,16 @@ func TestGetOnlineFeatures(t *testing.T) {
 				Features: []string{"driver_trips:trips_today", "driver_trips:total_distance"},
 			},
 			expected: &feast.OnlineFeaturesResponse{
-				RawResponse: &serving.GetOnlineFeaturesResponse{
-					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				RawResponse: &serving.GetOnlineFeaturesResponseV2{
+					Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+						FieldNames: &serving.FieldList{
+							Val: []string{"driver_id", "driver_trips:trips_today", "driver_trips:total_distance"},
+						},
+					},
+					Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 						{
-							Fields: map[string]*types.Value{
-								"driver_id":                   feast.Int64Val(2),
-								"driver_trips:trips_today":    feast.Int32Val(1),
-								"driver_trips:total_distance": feast.DoubleVal(2.2),
-							},
-							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-								"driver_id":                   serving.GetOnlineFeaturesResponse_PRESENT,
-								"driver_trips:trips_today":    serving.GetOnlineFeaturesResponse_PRESENT,
-								"driver_trips:total_distance": serving.GetOnlineFeaturesResponse_PRESENT,
-							},
+							Values:   []*types.Value{feast.Int64Val(2), feast.Int32Val(1), feast.DoubleVal(2.2)},
+							Statuses: []serving.FieldStatus{serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT},
 						},
 					},
 				},
