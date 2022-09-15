@@ -22,7 +22,7 @@ from merlin.deployment_mode import DeploymentMode
 from merlin.environment import Environment
 from merlin.logger import Logger
 from merlin.protocol import Protocol
-from merlin.util import autostr
+from merlin.util import autostr, get_url
 
 
 class Status(Enum):
@@ -124,7 +124,7 @@ class ModelEndpoint:
             self._protocol = Protocol(endpoint.protocol)
 
         if self._protocol == Protocol.HTTP_JSON:
-            self._url = f"{endpoint.url}/v1/predict"
+            self._url = get_url(f"{endpoint.url}/v1/predict")
         else:
             self._url = endpoint.url
         self._status = Status(endpoint.status)

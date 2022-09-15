@@ -16,12 +16,25 @@ import re
 import os
 from urllib.parse import urlparse
 from google.cloud import storage
-from os.path import basename, exists, dirname
+from os.path import dirname
 from os import makedirs
 
 
 def guess_mlp_ui_url(mlp_api_url: str) -> str:
-    return mlp_api_url.replace("/api", "")
+    raw_url = mlp_api_url.replace("/api", "")
+    return get_url(raw_url)
+
+
+def get_url(raw_url, scheme='http'):
+    """
+    Get url or prefix with default scheme if it doesn't have one
+    """
+    parsed_url = urlparse(raw_url)
+    if not parsed_url.scheme:
+        # if scheme is not provided then assume it's http
+        raw_url = f"{scheme}://{raw_url}"
+    return raw_url
+
 
 def autostr(cls):
     def __str__(self):
@@ -52,9 +65,11 @@ def valid_name_check(input_name: str) -> bool:
         matching_group = match.group(0)
     return matching_group == input_name
 
+
 def get_bucket_name(gcs_uri: str) -> str:
     parsed_result = urlparse(gcs_uri)
     return parsed_result.netloc
+
 
 def get_gcs_path(gcs_uri: str) -> str:
     parsed_result = urlparse(gcs_uri)
@@ -79,4 +94,3 @@ def download_files_from_gcs(gcs_uri: str, destination_path: str):
         dir = os.path.join(destination_path, dirname(artifact_path))
         makedirs(dir, exist_ok=True)
         blob.download_to_filename(os.path.join(destination_path, artifact_path))
-
