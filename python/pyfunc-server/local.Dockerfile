@@ -12,20 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM continuumio/miniconda3
+ARG BASE_IMAGE
 
-RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz  | tar xzf -
-ENV PATH=$PATH:/google-cloud-sdk/bin
-COPY . .
+FROM ${BASE_IMAGE}
 
-RUN mkdir /prom_dir
-ENV PROMETHEUS_MULTIPROC_DIR=/prom_dir
-RUN conda env create -f ./environment.yaml && \
-    rm -rf /root/.cache
-
+WORKDIR /pyfunc-server
+COPY pyfunc-server/echo-model/model model
 RUN /bin/bash -c ". activate merlin-model && \
-    sed -i 's/mlflow$/mlflow==1.6.0/' /model/conda.yaml && \
-    conda env update --name merlin-model --file /model/conda.yaml && \
-    python -m pyfuncserver --model_dir /model --dry_run"
+    sed -i 's/pip$/pip=20.2.4/' model/conda.yaml && \
+    conda env update --name merlin-model --file model/conda.yaml && \
+    python -m pyfuncserver --model_dir model --dry_run"
 
 CMD ["/bin/bash", "./run.sh"]
