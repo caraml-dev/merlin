@@ -98,16 +98,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
-										"driver_id":                        feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_trips:average_daily_rides",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(1.1),
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -180,16 +188,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
-										"driver_id":                        feast.Int32Val(1001),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_trips:average_daily_rides",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(1.1),
+										feast.Int32Val(1001),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -263,26 +279,34 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
-										"driver_id":                        feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_trips:average_daily_rides",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(1.1),
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": feast.DoubleVal(2.2),
-										"driver_id":                        feast.StrVal("2002"),
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(2.2),
+										feast.StrVal("2002"),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -358,26 +382,34 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
-										"driver_id":                        feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_trips:average_daily_rides",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(1.1),
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": nil,
-										"driver_id":                        feast.StrVal("2002"),
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(2.2),
+										feast.StrVal("2002"),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_NULL_VALUE,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -455,26 +487,34 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
-										"driver_id":                        feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_trips:average_daily_rides",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(1.1),
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": nil,
-										"driver_id":                        feast.StrVal("2002"),
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(2.2),
+										feast.StrVal("2002"),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_NULL_VALUE,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -572,16 +612,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "driver_id", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
-										"driver_id":                        feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_trips:average_daily_rides",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(1.1),
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -593,16 +641,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "customer_id", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"customer_trips:average_daily_rides": feast.DoubleVal(2.2),
-										"customer_id":                        feast.StrVal("2002"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"customer_trips:average_daily_rides",
+										"customer_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(2.2),
+										feast.StrVal("2002"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -698,16 +754,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "geohash",
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
-										"geohash":                                feast.StrVal(geohash.Encode(1.0, 2.0)),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"geohash_statistics:average_daily_rides",
+										"geohash",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"geohash":                                serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(3.2),
+										feast.StrVal(geohash.Encode(1.0, 2.0)),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -763,16 +827,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "jsonextract",
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
-										"jsonextract":                            feast.StrVal("9001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"geohash_statistics:average_daily_rides",
+										"jsonextract",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"jsonextract":                            serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(3.2),
+										feast.StrVal("9001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -845,16 +917,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "s2id",
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
-										"s2id":                                   feast.StrVal("1154732743855177728"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"geohash_statistics:average_daily_rides",
+										"s2id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"s2id":                                   serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(3.2),
+										feast.StrVal("1154732743855177728"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -928,16 +1008,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "s2id",
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"geohash_statistics:average_daily_rides": feast.DoubleVal(3.2),
-										"s2id":                                   feast.StrVal("1154732743855177728"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"geohash_statistics:average_daily_rides",
+										"s2id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"geohash_statistics:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"s2id":                                   serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(3.2),
+										feast.StrVal("1154732743855177728"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -1011,26 +1099,34 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
-										"driver_id":                        feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_trips:average_daily_rides",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(1.1),
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_trips:average_daily_rides": feast.DoubleVal(2.2),
-										"driver_id":                        feast.StrVal("2002"),
+									Values: []*feastTypes.Value{
+										feast.DoubleVal(2.2),
+										feast.StrVal("2002"),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -1108,16 +1204,30 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"double_list_feature": {Val: &feastTypes.Value_DoubleListVal{DoubleListVal: &feastTypes.DoubleList{Val: []float64{111.1111, 222.2222}}}},
-										"driver_id":           feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"double_list_feature",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"double_list_feature": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										{
+											Val: &feastTypes.Value_DoubleListVal{
+												DoubleListVal: &feastTypes.DoubleList{
+													Val: []float64{111.1111, 222.2222},
+												},
+											},
+										},
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -1212,16 +1322,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"double_list_feature": {Val: &feastTypes.Value_DoubleListVal{DoubleListVal: &feastTypes.DoubleList{Val: []float64{111.1111, 222.2222}}}},
-										"driver_id":           feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"double_list_feature",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"double_list_feature": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										{Val: &feastTypes.Value_DoubleListVal{DoubleListVal: &feastTypes.DoubleList{Val: []float64{111.1111, 222.2222}}}},
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -1233,16 +1351,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"double_list_feature": {Val: &feastTypes.Value_DoubleListVal{DoubleListVal: &feastTypes.DoubleList{Val: []float64{111.1111, 222.2222}}}},
-										"driver_id":           feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"double_list_feature",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"double_list_feature": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										{Val: &feastTypes.Value_DoubleListVal{DoubleListVal: &feastTypes.DoubleList{Val: []float64{111.1111, 222.2222}}}},
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -1345,16 +1471,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default_redis", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"double_list_feature": nil,
-										"driver_id":           feast.StrVal("1001"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"double_list_feature",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"double_list_feature": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										nil,
+										feast.StrVal("1001"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_NULL_VALUE,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -1366,16 +1500,24 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 						Project: "default_bt", // used as identifier for mocking. must match config
 					},
 					response: &feast.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"double_list_feature": nil,
-										"driver_id":           feast.StrVal("1002"),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"double_list_feature",
+										"driver_id",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"double_list_feature": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										nil,
+										feast.StrVal("1002"),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_NULL_VALUE,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -1608,23 +1750,36 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_Batching(t *testing.T
 				},
 
 				response: &feast.OnlineFeaturesResponse{
-					RawResponse: &serving.GetOnlineFeaturesResponse{},
+					RawResponse: &serving.GetOnlineFeaturesResponseV2{
+						Metadata: &serving.GetOnlineFeaturesResponseMetadata{},
+						Results:  []*serving.GetOnlineFeaturesResponseV2_FieldVector{},
+					},
 				},
 			}
 			for i := 0; i < batchSize && entityId < numberOfEntity; i++ {
 				call.request.Entities = append(call.request.Entities, feast.Row{
 					"driver_id": feast.StrVal(fmt.Sprintf("%d", entityId)),
 				})
-				call.response.RawResponse.FieldValues = append(call.response.RawResponse.FieldValues, &serving.GetOnlineFeaturesResponse_FieldValues{
-					Fields: map[string]*feastTypes.Value{
-						"driver_trips:average_daily_rides": feast.Int32Val(int32(entityId)),
-						"driver_id":                        feast.StrVal(fmt.Sprintf("%d", entityId)),
+
+				call.response.RawResponse.Metadata = &serving.GetOnlineFeaturesResponseMetadata{
+					FieldNames: &serving.FieldList{
+						Val: []string{
+							"driver_trips:average_daily_rides",
+							"driver_id",
+						},
 					},
-					Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-						"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-						"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+				}
+				call.response.RawResponse.Results = append(call.response.RawResponse.Results, &serving.GetOnlineFeaturesResponseV2_FieldVector{
+					Values: []*feastTypes.Value{
+						feast.Int32Val(int32(entityId)),
+						feast.StrVal(fmt.Sprintf("%d", entityId)),
+					},
+					Statuses: []serving.FieldStatus{
+						serving.FieldStatus_PRESENT,
+						serving.FieldStatus_PRESENT,
 					},
 				})
+
 				entityId += 1
 			}
 			mockFeastCalls = append(mockFeastCalls, call)
@@ -2245,16 +2400,24 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 
 var (
 	defaultMockFeastResponse = &feast.OnlineFeaturesResponse{
-		RawResponse: &serving.GetOnlineFeaturesResponse{
-			FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-				{
-					Fields: map[string]*feastTypes.Value{
-						"driver_trips:average_daily_rides": feast.DoubleVal(1.1),
-						"driver_id":                        feast.StrVal("1001"),
+		RawResponse: &serving.GetOnlineFeaturesResponseV2{
+			Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+				FieldNames: &serving.FieldList{
+					Val: []string{
+						"driver_trips:average_daily_rides",
+						"driver_id",
 					},
-					Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-						"driver_trips:average_daily_rides": serving.GetOnlineFeaturesResponse_PRESENT,
-						"driver_id":                        serving.GetOnlineFeaturesResponse_PRESENT,
+				},
+			},
+			Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+				{
+					Values: []*feastTypes.Value{
+						feast.DoubleVal(1.1),
+						feast.StrVal("1001"),
+					},
+					Statuses: []serving.FieldStatus{
+						serving.FieldStatus_PRESENT,
+						serving.FieldStatus_PRESENT,
 					},
 				},
 			},

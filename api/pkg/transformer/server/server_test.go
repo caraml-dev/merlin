@@ -382,14 +382,24 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_id",
+										"driver_feature_1",
+										"driver_feature_2",
+										"driver_feature_3",
+									},
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.Int64Val(1),
-										"driver_feature_1": feastSdk.DoubleVal(1111),
-										"driver_feature_2": feastSdk.DoubleVal(2222),
-										"driver_feature_3": {
+									Values: []*feastTypes.Value{
+										feastSdk.Int64Val(1),
+										feastSdk.DoubleVal(1111),
+										feastSdk.DoubleVal(2222),
+										{
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
 													Val: []string{"A", "B", "C"},
@@ -397,19 +407,19 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 											},
 										},
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.Int64Val(2),
-										"driver_feature_1": feastSdk.DoubleVal(3333),
-										"driver_feature_2": feastSdk.DoubleVal(4444),
-										"driver_feature_3": {
+									Values: []*feastTypes.Value{
+										feastSdk.Int64Val(2),
+										feastSdk.DoubleVal(3333),
+										feastSdk.DoubleVal(4444),
+										{
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
 													Val: []string{"X", "Y", "Z"},
@@ -417,11 +427,11 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 											},
 										},
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -465,50 +475,61 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_id",
+										"driver_feature_1",
+										"driver_feature_2",
+										"driver_feature_3",
+										"driver_score",
+									},
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.StrVal("1"),
-										"driver_feature_1": feastSdk.DoubleVal(1111),
-										"driver_feature_2": feastSdk.DoubleVal(2222),
-										"driver_feature_3": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("1"),
+										feastSdk.DoubleVal(1111),
+										feastSdk.DoubleVal(2222),
+										{
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
 													Val: []string{"A"},
 												},
 											},
 										},
-										"driver_score": feastSdk.DoubleVal(95.0),
+										feastSdk.DoubleVal(95.0),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_score":     serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.StrVal("2"),
-										"driver_feature_1": feastSdk.DoubleVal(3333),
-										"driver_feature_2": feastSdk.DoubleVal(4444),
-										"driver_feature_3": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("2"),
+										feastSdk.DoubleVal(3333),
+										feastSdk.DoubleVal(4444),
+										{
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
 													Val: []string{"X"},
 												},
 											},
 										},
-										"driver_score": feastSdk.DoubleVal(98.0),
+										feastSdk.DoubleVal(98.0),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_score":     serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -520,58 +541,68 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 						Project: "driver_partner", // used as identifier for mocking. must match config
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_id",
+										"customers_picked_up",
+										"top_customer",
+										"total_tips",
+									},
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id": feastSdk.StrVal("1"),
-										"customers_picked_up": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("1"),
+										{
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
 													Val: []string{"C111", "C222", "C222", "C333"},
 												},
 											},
 										},
-										"top_customer": {
+										{
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
 													Val: []string{"C233"},
 												},
 											},
 										},
-										"total_tips": feastSdk.DoubleVal(1000000),
+										feastSdk.DoubleVal(1000000),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
-										"customers_picked_up": serving.GetOnlineFeaturesResponse_PRESENT,
-										"top_customer":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"total_tips":          serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id": feastSdk.StrVal("2"),
-										"customers_picked_up": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("2"),
+										{
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
 													Val: []string{"U111", "U222", "U222", "U333"},
 												},
 											},
 										},
-										"top_customer": {
+										{
 											Val: &feastTypes.Value_StringListVal{
 												StringListVal: &feastTypes.StringList{
 													Val: []string{"U309"},
 												},
 											},
 										},
-										"total_tips": feastSdk.DoubleVal(1000000),
+										feastSdk.DoubleVal(1000000),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":           serving.GetOnlineFeaturesResponse_PRESENT,
-										"customers_picked_up": serving.GetOnlineFeaturesResponse_PRESENT,
-										"top_customer":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"total_tips":          serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -595,13 +626,22 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 						},
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"customer_id",
+										"customer_name",
+										"customer_phones",
+									},
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 								{
-									Fields: map[string]*feastTypes.Value{
-										"customer_id":   feastSdk.StrVal("C111"),
-										"customer_name": feastSdk.StrVal("Customer 1"),
-										"customer_phones": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("C111"),
+										feastSdk.StrVal("Customer 1"),
+										{
 											Val: &feastTypes.Value_DoubleListVal{
 												DoubleListVal: &feastTypes.DoubleList{
 													Val: []float64{111111, 100001},
@@ -609,17 +649,17 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 											},
 										},
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"customer_id":   feastSdk.StrVal("C222"),
-										"customer_name": feastSdk.StrVal("Customer 2"),
-										"customer_phones": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("C222"),
+										feastSdk.StrVal("Customer 2"),
+										{
 											Val: &feastTypes.Value_DoubleListVal{
 												DoubleListVal: &feastTypes.DoubleList{
 													Val: []float64{222222, 200002},
@@ -627,17 +667,17 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 											},
 										},
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"customer_id":   feastSdk.StrVal("C333"),
-										"customer_name": feastSdk.StrVal("Customer 3"),
-										"customer_phones": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("C333"),
+										feastSdk.StrVal("Customer 3"),
+										{
 											Val: &feastTypes.Value_DoubleListVal{
 												DoubleListVal: &feastTypes.DoubleList{
 													Val: []float64{333333, 300003},
@@ -645,17 +685,17 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 											},
 										},
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"customer_id":   feastSdk.StrVal("U111"),
-										"customer_name": feastSdk.StrVal("Customer U1"),
-										"customer_phones": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("U111"),
+										feastSdk.StrVal("Customer U1"),
+										{
 											Val: &feastTypes.Value_DoubleListVal{
 												DoubleListVal: &feastTypes.DoubleList{
 													Val: []float64{111111, 100001},
@@ -663,17 +703,17 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 											},
 										},
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"customer_id":   feastSdk.StrVal("U222"),
-										"customer_name": feastSdk.StrVal("Customer U2"),
-										"customer_phones": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("U222"),
+										feastSdk.StrVal("Customer U2"),
+										{
 											Val: &feastTypes.Value_DoubleListVal{
 												DoubleListVal: &feastTypes.DoubleList{
 													Val: []float64{111111, 100001},
@@ -681,17 +721,17 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 											},
 										},
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"customer_id":   feastSdk.StrVal("U333"),
-										"customer_name": feastSdk.StrVal("Customer U3"),
-										"customer_phones": {
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("U333"),
+										feastSdk.StrVal("Customer U3"),
+										{
 											Val: &feastTypes.Value_DoubleListVal{
 												DoubleListVal: &feastTypes.DoubleList{
 													Val: []float64{111111, 100001},
@@ -699,10 +739,10 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 											},
 										},
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"customer_id":     serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_name":   serving.GetOnlineFeaturesResponse_PRESENT,
-										"customer_phones": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
@@ -902,38 +942,49 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.Int64Val(1),
-										"name":             feastSdk.StrVal("driver-1"),
-										"driver_feature_1": feastSdk.Int64Val(1),
-										"driver_feature_2": feastSdk.Int64Val(2),
-										"driver_feature_3": feastSdk.Int64Val(3),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_id",
+										"name",
+										"driver_feature_1",
+										"driver_feature_2",
+										"driver_feature_3",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"name":             serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feastSdk.Int64Val(1),
+										feastSdk.StrVal("driver-1"),
+										feastSdk.Int64Val(1),
+										feastSdk.Int64Val(2),
+										feastSdk.Int64Val(3),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.Int64Val(2),
-										"name":             feastSdk.StrVal("driver-2"),
-										"driver_feature_1": feastSdk.Int64Val(10),
-										"driver_feature_2": feastSdk.Int64Val(20),
-										"driver_feature_3": feastSdk.Int64Val(30),
+									Values: []*feastTypes.Value{
+										feastSdk.Int64Val(2),
+										feastSdk.StrVal("driver-2"),
+										feastSdk.Int64Val(10),
+										feastSdk.Int64Val(20),
+										feastSdk.Int64Val(30),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"name":             serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},

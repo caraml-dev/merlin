@@ -125,46 +125,62 @@ func (e RedisEncoder) getFeatureTableMaxAge(featureTable, project string) int64 
 	return e.specs[lookupKey].MaxAge.GetSeconds()
 }
 
-func (e RedisEncoder) buildFieldValues(entity feast.Row, project string, featureValues map[string]*types.Value, eventTimestamps map[string]*timestamppb.Timestamp) *serving.GetOnlineFeaturesResponse_FieldValues {
-	entityFeatureValue := make(map[string]*types.Value)
-	status := make(map[string]serving.GetOnlineFeaturesResponse_FieldStatus)
-	for entityName, entityValue := range entity {
-		entityFeatureValue[entityName] = entityValue
-		status[entityName] = serving.GetOnlineFeaturesResponse_PRESENT
+func (e RedisEncoder) buildFieldVector(sortedEntityFieldName []string, featureReference []string, entity feast.Row, project string, featureValues []*types.Value, eventTimestamps map[string]*timestamppb.Timestamp) *serving.GetOnlineFeaturesResponseV2_FieldVector {
+	entityFeatureValue := make([]*types.Value, len(sortedEntityFieldName)+len(featureValues))
+	status := make([]serving.FieldStatus, len(entityFeatureValue))
+	cnt := 0
+	for _, field := range sortedEntityFieldName {
+		entityFeatureValue[cnt] = entity[field]
+		status[cnt] = serving.FieldStatus_PRESENT
+		cnt++
 	}
-	for featureReference, featureValue := range featureValues {
-		entityFeatureValue[featureReference] = featureValue
-		featureTable := getFeatureTableFromFeatureRef(featureReference)
+	for index, featureValue := range featureValues {
+		entityFeatureValue[cnt] = featureValue
+		featureTable := getFeatureTableFromFeatureRef(featureReference[index])
 		eventTimestamp := eventTimestamps[featureTable]
 		maxAge := e.getFeatureTableMaxAge(featureTable, project)
 
 		if proto.Equal(featureValue, &types.Value{}) {
-			status[featureReference] = serving.GetOnlineFeaturesResponse_NOT_FOUND
+			status[cnt] = serving.FieldStatus_NOT_FOUND
 		} else if maxAge > 0 && eventTimestamp.AsTime().Add(time.Duration(maxAge)*time.Second).Before(time.Now()) {
-			status[featureReference] = serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE
-			entityFeatureValue[featureReference] = &types.Value{}
+			status[cnt] = serving.FieldStatus_OUTSIDE_MAX_AGE
+			entityFeatureValue[cnt] = &types.Value{}
 		} else {
-			status[featureReference] = serving.GetOnlineFeaturesResponse_PRESENT
+			status[cnt] = serving.FieldStatus_PRESENT
 		}
+		cnt++
 	}
-	return &serving.GetOnlineFeaturesResponse_FieldValues{
-		Fields:   entityFeatureValue,
+	return &serving.GetOnlineFeaturesResponseV2_FieldVector{
+		Values:   entityFeatureValue,
 		Statuses: status,
 	}
 }
 
 func (e RedisEncoder) DecodeStoredRedisValue(redisHashMaps [][]interface{}, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error) {
-	fieldValues := make([]*serving.GetOnlineFeaturesResponse_FieldValues, len(redisHashMaps))
+	sortedEntityFieldNames := make([]string, len(req.Entities[0]))
+	cnt := 0
+	for fieldName := range req.Entities[0] {
+		sortedEntityFieldNames[cnt] = fieldName
+		cnt++
+	}
+	sort.Strings(sortedEntityFieldNames)
+
+	fieldVectors := make([]*serving.GetOnlineFeaturesResponseV2_FieldVector, len(redisHashMaps))
 	for index, encodedHashMap := range redisHashMaps {
-		decodedHashMap, eventTimestamps, err := e.decodeHashMap(encodedHashMap, req.Features)
+		decodedValues, eventTimestamps, err := e.decodeHashMap(encodedHashMap, req.Features)
 		if err != nil {
 			return nil, err
 		}
-		fieldValues[index] = e.buildFieldValues(req.Entities[index], req.Project, decodedHashMap, eventTimestamps)
+		fieldVectors[index] = e.buildFieldVector(sortedEntityFieldNames, req.Features, req.Entities[index], req.Project, decodedValues, eventTimestamps)
 	}
 	return &feast.OnlineFeaturesResponse{
-		RawResponse: &serving.GetOnlineFeaturesResponse{
-			FieldValues: fieldValues,
+		RawResponse: &serving.GetOnlineFeaturesResponseV2{
+			Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+				FieldNames: &serving.FieldList{
+					Val: append(sortedEntityFieldNames, req.Features...),
+				},
+			},
+			Results: fieldVectors,
 		},
 	}, nil
 }
@@ -191,14 +207,14 @@ func (e RedisEncoder) decodeEventTimestamp(encodedTimestamp interface{}) (*times
 	return &eventTimestamp, nil
 }
 
-func (e RedisEncoder) decodeHashMap(encodedHashMap []interface{}, featureReferences []string) (map[string]*types.Value, map[string]*timestamppb.Timestamp, error) {
-	featureValues := make(map[string]*types.Value)
+func (e RedisEncoder) decodeHashMap(encodedHashMap []interface{}, featureReferences []string) ([]*types.Value, map[string]*timestamppb.Timestamp, error) {
+	featureValues := make([]*types.Value, len(featureReferences))
 	for index, encodedField := range encodedHashMap[:len(featureReferences)] {
 		featureValue, err := e.decodeFeature(encodedField)
 		if err != nil {
 			return nil, nil, err
 		}
-		featureValues[featureReferences[index]] = featureValue
+		featureValues[index] = featureValue
 	}
 
 	eventTimestamps := make(map[string]*timestamppb.Timestamp)

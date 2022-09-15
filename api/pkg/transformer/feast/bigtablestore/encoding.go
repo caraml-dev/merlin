@@ -354,6 +354,14 @@ func (e *Encoder) decodeAvro(ctx context.Context, row bigtable.Row, project stri
 // the assumption that the column values are stored as the concatenation of
 // schema reference hash (4 bytes) and feature values serialized in Avro format.
 func (e *Encoder) Decode(ctx context.Context, rows []bigtable.Row, req *feast.OnlineFeaturesRequest, entityKeys []*spec.Entity) (*feast.OnlineFeaturesResponse, error) {
+	sortedEntityFieldNames := make([]string, len(req.Entities[0]))
+	cnt := 0
+	for fieldName := range req.Entities[0] {
+		sortedEntityFieldNames[cnt] = fieldName
+		cnt++
+	}
+	sort.Strings(sortedEntityFieldNames)
+
 	avroValueByKey := make(map[string]map[featureTableKey]map[string]interface{})
 	timestampByKey := make(map[string]map[featureTableKey]time.Time)
 	for _, row := range rows {
@@ -365,108 +373,121 @@ func (e *Encoder) Decode(ctx context.Context, rows []bigtable.Row, req *feast.On
 		timestampByKey[row.Key()] = timestamps
 	}
 
-	fieldValues := make([]*serving.GetOnlineFeaturesResponse_FieldValues, len(req.Entities))
+	fieldVectors := make([]*serving.GetOnlineFeaturesResponseV2_FieldVector, len(req.Entities))
 	for i, entity := range req.Entities {
-		bigtableKey, err := feastRowToBigTableKey(entity, entityKeys)
+		fieldVector, err := e.buildFieldVector(sortedEntityFieldNames, req.Features, entity, req.Project, avroValueByKey, timestampByKey, entityKeys)
+		if err != nil {
+			return nil, err
+		}
+		fieldVectors[i] = fieldVector
+	}
+
+	return &feast.OnlineFeaturesResponse{
+		RawResponse: &serving.GetOnlineFeaturesResponseV2{
+			Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+				FieldNames: &serving.FieldList{
+					Val: append(sortedEntityFieldNames, req.Features...),
+				},
+			},
+			Results: fieldVectors,
+		},
+	}, nil
+}
+
+func (e Encoder) buildFieldVector(sortedEntityFieldNames []string, featureReference []string, entity feast.Row, project string, avroValueByKey map[string]map[featureTableKey]map[string]interface{}, timestampByKey map[string]map[featureTableKey]time.Time, entityKeys []*spec.Entity) (*serving.GetOnlineFeaturesResponseV2_FieldVector, error) {
+	bigtableKey, err := feastRowToBigTableKey(entity, entityKeys)
+	if err != nil {
+		return nil, err
+	}
+	entityFeatureValue := make([]*types.Value, len(sortedEntityFieldNames)+len(featureReference))
+	status := make([]serving.FieldStatus, len(entityFeatureValue))
+	cnt := 0
+	for _, field := range sortedEntityFieldNames {
+		entityFeatureValue[cnt] = entity[field]
+		status[cnt] = serving.FieldStatus_PRESENT
+		cnt++
+	}
+	avroValues := avroValueByKey[bigtableKey]
+	timestamp := timestampByKey[bigtableKey]
+
+	if avroValues == nil {
+		for i := 0; i < len(featureReference); i++ {
+			entityFeatureValue[len(sortedEntityFieldNames)+i] = &types.Value{}
+			status[len(sortedEntityFieldNames)+i] = serving.FieldStatus_NOT_FOUND
+			cnt++
+		}
+		return &serving.GetOnlineFeaturesResponseV2_FieldVector{
+			Values:   entityFeatureValue,
+			Statuses: status,
+		}, nil
+	}
+
+	for _, fr := range featureReference {
+		featureRef, err := ParseFeatureRef(fr)
+		if err != nil {
+			return nil, err
+		}
+		maxAge := e.featureMetadata[featureTableKey{
+			project: project,
+			table:   featureRef.FeatureTable,
+		}].MaxAge
+
+		ts, found := timestamp[featureTableKey{
+			project: project,
+			table:   featureRef.FeatureTable,
+		}]
+
+		// if no timestamp row are retrieved from bigtable, we treated this as NOT_FOUND
+		if !found {
+			entityFeatureValue[cnt] = &types.Value{}
+			status[cnt] = serving.FieldStatus_NOT_FOUND
+			cnt++
+			continue
+		}
+		if maxAge != nil && maxAge.GetSeconds() > 0 && ts.Add(time.Duration(maxAge.GetSeconds())*time.Second).Before(time.Now()) {
+			entityFeatureValue[cnt] = &types.Value{}
+			status[cnt] = serving.FieldStatus_OUTSIDE_MAX_AGE
+			cnt++
+			continue
+		}
+
+		avroValue := avroValueByKey[bigtableKey][featureTableKey{
+			project: project,
+			table:   featureRef.FeatureTable,
+		}][featureRef.Feature]
+
+		// if avroValue is nil, the status of that feature is NULL
+		if avroValue == nil {
+			entityFeatureValue[cnt] = &types.Value{}
+			status[cnt] = serving.FieldStatus_NULL_VALUE
+			cnt++
+			continue
+		}
+
+		featureSpec := e.featureSpecs[featureTableKey{
+			project: project,
+			table:   featureRef.FeatureTable,
+		}]
+
+		featureType, err := getFeatureType(e.featureTypes, featureSpec.Project, fr)
+		if err != nil {
+			return nil, err
+		}
+		val, err := avroToValueConversion(avroValue, featureType)
 		if err != nil {
 			return nil, err
 		}
 
-		fields := make(map[string]*types.Value)
-		status := make(map[string]serving.GetOnlineFeaturesResponse_FieldStatus)
-		for k, v := range entity {
-			fields[k] = v
-			status[k] = serving.GetOnlineFeaturesResponse_PRESENT
-		}
-		avroValues := avroValueByKey[bigtableKey]
-		timestamp := timestampByKey[bigtableKey]
-
-		if avroValues == nil {
-			for _, fr := range req.Features {
-				fields[fr] = &types.Value{}
-				status[fr] = serving.GetOnlineFeaturesResponse_NOT_FOUND
-			}
-			fieldValues[i] = &serving.GetOnlineFeaturesResponse_FieldValues{
-				Fields:   fields,
-				Statuses: status,
-			}
-			continue
-		}
-		for _, fr := range req.Features {
-			featureRef, err := ParseFeatureRef(fr)
-			if err != nil {
-				return nil, err
-			}
-			maxAge := e.featureMetadata[featureTableKey{
-				project: req.Project,
-				table:   featureRef.FeatureTable,
-			}].MaxAge
-
-			ts, found := timestamp[featureTableKey{
-				project: req.Project,
-				table:   featureRef.FeatureTable,
-			}]
-
-			// if no timestamp row are retrieved from bigtable, we treated this as NOT_FOUND
-			if !found {
-				fields[fr] = &types.Value{}
-				status[fr] = serving.GetOnlineFeaturesResponse_NOT_FOUND
-				fieldValues[i] = &serving.GetOnlineFeaturesResponse_FieldValues{
-					Fields:   fields,
-					Statuses: status,
-				}
-				continue
-			}
-			if maxAge != nil && maxAge.GetSeconds() > 0 && ts.Add(time.Duration(maxAge.GetSeconds())*time.Second).Before(time.Now()) {
-				fields[fr] = &types.Value{}
-				status[fr] = serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE
-				fieldValues[i] = &serving.GetOnlineFeaturesResponse_FieldValues{
-					Fields:   fields,
-					Statuses: status,
-				}
-				continue
-			}
-
-			avroValue := avroValueByKey[bigtableKey][featureTableKey{
-				project: req.Project,
-				table:   featureRef.FeatureTable,
-			}][featureRef.Feature]
-
-			// if avroValue is nil, the status of that feature is NULL
-			if avroValue == nil {
-				fields[fr] = &types.Value{}
-				status[fr] = serving.GetOnlineFeaturesResponse_NULL_VALUE
-				continue
-			}
-
-			featureSpec := e.featureSpecs[featureTableKey{
-				project: req.Project,
-				table:   featureRef.FeatureTable,
-			}]
-
-			featureType, err := getFeatureType(e.featureTypes, featureSpec.Project, fr)
-			if err != nil {
-				return nil, err
-			}
-			val, err := avroToValueConversion(avroValue, featureType)
-			if err != nil {
-				return nil, err
-			}
-
-			fields[fr] = val
-			status[fr] = serving.GetOnlineFeaturesResponse_PRESENT
-		}
-		fieldValues[i] = &serving.GetOnlineFeaturesResponse_FieldValues{
-			Fields:   fields,
-			Statuses: status,
-		}
+		entityFeatureValue[cnt] = val
+		status[cnt] = serving.FieldStatus_PRESENT
+		cnt++
 	}
 
-	return &feast.OnlineFeaturesResponse{
-		RawResponse: &serving.GetOnlineFeaturesResponse{
-			FieldValues: fieldValues,
-		},
+	return &serving.GetOnlineFeaturesResponseV2_FieldVector{
+		Values:   entityFeatureValue,
+		Statuses: status,
 	}, nil
+
 }
 
 // CodecRegistry returns an Avro codec given a schema reference hash in byte array
