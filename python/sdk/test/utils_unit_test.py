@@ -50,8 +50,8 @@ def test_get_gcs_path():
 
 
 @pytest.mark.parametrize("mlp_api_url,expected", [
-    # ("http://console.mydomain.com/merlin/api", "http://console.mydomain.com/merlin"),
-    # ("https://console.mydomain.com/merlin/api", "https://console.mydomain.com/merlin"),
+    ("http://console.mydomain.com/merlin/api", "http://console.mydomain.com/merlin"),
+    ("https://console.mydomain.com/merlin/api", "https://console.mydomain.com/merlin"),
     ("console.mydomain.com/merlin/api", "http://console.mydomain.com/merlin"),
 ])
 @pytest.mark.unit
