@@ -140,42 +140,54 @@ func TestCall_do(t *testing.T) {
 					Project: project, // used as identifier for mocking. must match config
 				},
 				response: &feast.OnlineFeaturesResponse{
-					RawResponse: &serving.GetOnlineFeaturesResponse{
-						FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-							{
-								Fields: map[string]*types.Value{
-									"entity_1":  feast.StrVal("1001"),
-									"entity_2":  feast.StrVal("1002"),
-									"feature_1": feast.Int64Val(1111),
-									"feature_2": feast.Int64Val(2222),
-									"feature_3": feast.Int64Val(3333),
-									"feature_4": feast.Int64Val(4444),
+					RawResponse: &serving.GetOnlineFeaturesResponseV2{
+						Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+							FieldNames: &serving.FieldList{
+								Val: []string{
+									"entity_1",
+									"entity_2",
+									"feature_1",
+									"feature_2",
+									"feature_3",
+									"feature_4",
 								},
-								Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-									"entity_1":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"entity_2":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_4": serving.GetOnlineFeaturesResponse_PRESENT,
+							},
+						},
+						Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+							{
+								Values: []*types.Value{
+									feast.StrVal("1001"),
+									feast.StrVal("1002"),
+									feast.Int64Val(1111),
+									feast.Int64Val(2222),
+									feast.Int64Val(3333),
+									feast.Int64Val(4444),
+								},
+								Statuses: []serving.FieldStatus{
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
 								},
 							},
 							{
-								Fields: map[string]*types.Value{
-									"entity_1":  feast.StrVal("2001"),
-									"entity_2":  feast.StrVal("2002"),
-									"feature_1": feast.Int64Val(5555),
-									"feature_2": feast.Int64Val(6666),
-									"feature_3": feast.Int64Val(7777),
-									"feature_4": feast.Int64Val(8888),
+								Values: []*types.Value{
+									feast.StrVal("2001"),
+									feast.StrVal("2002"),
+									feast.Int64Val(5555),
+									feast.Int64Val(6666),
+									feast.Int64Val(7777),
+									feast.Int64Val(8888),
 								},
-								Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-									"entity_1":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"entity_2":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_3": serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_4": serving.GetOnlineFeaturesResponse_PRESENT,
+								Statuses: []serving.FieldStatus{
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
 								},
 							},
 						},
@@ -259,42 +271,54 @@ func TestCall_do(t *testing.T) {
 					Project: "default", // used as identifier for mocking. must match config
 				},
 				response: &feast.OnlineFeaturesResponse{
-					RawResponse: &serving.GetOnlineFeaturesResponse{
-						FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-							{
-								Fields: map[string]*types.Value{
-									"entity_1":  feast.StrVal("1001"),
-									"entity_2":  feast.StrVal("1002"),
-									"feature_1": feast.Int64Val(1111),
-									"feature_2": feast.Int64Val(2222),
-									"feature_3": feast.Int64Val(3333),
-									"feature_4": feast.Int64Val(4444),
+					RawResponse: &serving.GetOnlineFeaturesResponseV2{
+						Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+							FieldNames: &serving.FieldList{
+								Val: []string{
+									"entity_1",
+									"entity_2",
+									"feature_1",
+									"feature_2",
+									"feature_3",
+									"feature_4",
 								},
-								Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-									"entity_1":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"entity_2":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_1": serving.GetOnlineFeaturesResponse_NOT_FOUND,
-									"feature_2": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-									"feature_3": serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE,
-									"feature_4": serving.GetOnlineFeaturesResponse_NOT_FOUND,
+							},
+						},
+						Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+							{
+								Values: []*types.Value{
+									feast.StrVal("1001"),
+									feast.StrVal("1002"),
+									feast.Int64Val(1111),
+									feast.Int64Val(2222),
+									feast.Int64Val(3333),
+									feast.Int64Val(4444),
+								},
+								Statuses: []serving.FieldStatus{
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_NOT_FOUND,
+									serving.FieldStatus_NULL_VALUE,
+									serving.FieldStatus_OUTSIDE_MAX_AGE,
+									serving.FieldStatus_NOT_FOUND,
 								},
 							},
 							{
-								Fields: map[string]*types.Value{
-									"entity_1":  feast.StrVal("2001"),
-									"entity_2":  feast.StrVal("2002"),
-									"feature_1": feast.Int64Val(5555),
-									"feature_2": feast.Int64Val(6666),
-									"feature_3": feast.Int64Val(7777),
-									"feature_4": feast.Int64Val(8888),
+								Values: []*types.Value{
+									feast.StrVal("2001"),
+									feast.StrVal("2002"),
+									feast.Int64Val(5555),
+									feast.Int64Val(6666),
+									feast.Int64Val(7777),
+									feast.Int64Val(8888),
 								},
-								Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-									"entity_1":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"entity_2":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_1": serving.GetOnlineFeaturesResponse_NOT_FOUND,
-									"feature_2": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-									"feature_3": serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE,
-									"feature_4": serving.GetOnlineFeaturesResponse_NOT_FOUND,
+								Statuses: []serving.FieldStatus{
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_NOT_FOUND,
+									serving.FieldStatus_NULL_VALUE,
+									serving.FieldStatus_OUTSIDE_MAX_AGE,
+									serving.FieldStatus_NOT_FOUND,
 								},
 							},
 						},
@@ -378,42 +402,54 @@ func TestCall_do(t *testing.T) {
 					Project: "default", // used as identifier for mocking. must match config
 				},
 				response: &feast.OnlineFeaturesResponse{
-					RawResponse: &serving.GetOnlineFeaturesResponse{
-						FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-							{
-								Fields: map[string]*types.Value{
-									"entity_1":  feast.StrVal("1001"),
-									"entity_2":  feast.StrVal("1002"),
-									"feature_1": feast.Int64Val(1111),
-									"feature_2": feast.Int64Val(2222),
-									"feature_3": feast.Int64Val(3333),
-									"feature_4": feast.Int64Val(4444),
+					RawResponse: &serving.GetOnlineFeaturesResponseV2{
+						Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+							FieldNames: &serving.FieldList{
+								Val: []string{
+									"entity_1",
+									"entity_2",
+									"feature_1",
+									"feature_2",
+									"feature_3",
+									"feature_4",
 								},
-								Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-									"entity_1":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"entity_2":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_1": serving.GetOnlineFeaturesResponse_NOT_FOUND,
-									"feature_2": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-									"feature_3": serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE,
-									"feature_4": serving.GetOnlineFeaturesResponse_NOT_FOUND,
+							},
+						},
+						Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+							{
+								Values: []*types.Value{
+									feast.StrVal("1001"),
+									feast.StrVal("1002"),
+									feast.Int64Val(1111),
+									feast.Int64Val(2222),
+									feast.Int64Val(3333),
+									feast.Int64Val(4444),
+								},
+								Statuses: []serving.FieldStatus{
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_NOT_FOUND,
+									serving.FieldStatus_NULL_VALUE,
+									serving.FieldStatus_OUTSIDE_MAX_AGE,
+									serving.FieldStatus_NOT_FOUND,
 								},
 							},
 							{
-								Fields: map[string]*types.Value{
-									"entity_1":  feast.StrVal("2001"),
-									"entity_2":  feast.StrVal("2002"),
-									"feature_1": feast.Int64Val(5555),
-									"feature_2": feast.Int64Val(6666),
-									"feature_3": feast.Int64Val(7777),
-									"feature_4": feast.Int64Val(8888),
+								Values: []*types.Value{
+									feast.StrVal("2001"),
+									feast.StrVal("2002"),
+									feast.Int64Val(5555),
+									feast.Int64Val(6666),
+									feast.Int64Val(7777),
+									feast.Int64Val(8888),
 								},
-								Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-									"entity_1":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"entity_2":  serving.GetOnlineFeaturesResponse_PRESENT,
-									"feature_1": serving.GetOnlineFeaturesResponse_NOT_FOUND,
-									"feature_2": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-									"feature_3": serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE,
-									"feature_4": serving.GetOnlineFeaturesResponse_NOT_FOUND,
+								Statuses: []serving.FieldStatus{
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_PRESENT,
+									serving.FieldStatus_NOT_FOUND,
+									serving.FieldStatus_NULL_VALUE,
+									serving.FieldStatus_OUTSIDE_MAX_AGE,
+									serving.FieldStatus_NOT_FOUND,
 								},
 							},
 						},
