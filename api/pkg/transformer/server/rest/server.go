@@ -360,6 +360,7 @@ func getHeaders(headers http.Header) map[string]string {
 	return resultHeaders
 }
 
+// getUrl return url or add default http scheme if scheme is not specified
 func getUrl(rawUrl string) (string, error) {
 	parsedURL, err := url.Parse(rawUrl)
 	if err != nil {
