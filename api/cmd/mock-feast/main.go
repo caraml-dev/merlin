@@ -9,10 +9,9 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"google.golang.org/grpc"
-
 	"github.com/gojek/merlin/log"
 	feastType2 "github.com/gojek/merlin/pkg/transformer/types/feast"
+	"google.golang.org/grpc"
 )
 
 const (
