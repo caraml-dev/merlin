@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
+	"net/url"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -67,13 +68,16 @@ type hystrixHttpClient interface {
 }
 
 // New initializes a new Server.
-func New(o *config.Options, logger *zap.Logger) *HTTPServer {
+func New(o *config.Options, logger *zap.Logger) (*HTTPServer, error) {
 	return NewWithHandler(o, nil, logger)
 }
 
 // New initializes a new Server with pipeline handler
-func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Logger) *HTTPServer {
-	predictURL := fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelFullName)
+func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Logger) (*HTTPServer, error) {
+	predictURL, err := getUrl(fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelFullName))
+	if err != nil {
+		return nil, err
+	}
 
 	var modelHttpClient hystrixHttpClient
 	hystrixGo.SetLogger(hystrixpkg.NewHystrixLogger(logger))
@@ -91,7 +95,7 @@ func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Lo
 		srv.PostprocessHandler = handler.Postprocess
 		srv.ContextModifier = handler.EmbedEnvironment
 	}
-	return srv
+	return srv, nil
 }
 
 func newHTTPHystrixClient(commandName string, o *config.Options) *hystrixpkg.Client {
@@ -354,4 +358,18 @@ func getHeaders(headers http.Header) map[string]string {
 		resultHeaders[k] = strings.Join(v, ",")
 	}
 	return resultHeaders
+}
+
+func getUrl(rawUrl string) (string, error) {
+	parsedURL, err := url.Parse(rawUrl)
+	if err != nil {
+		return "", err
+	}
+
+	urlStr := parsedURL.String()
+	if parsedURL.Scheme == "" {
+		urlStr = "http://" + rawUrl
+	}
+
+	return urlStr, nil
 }

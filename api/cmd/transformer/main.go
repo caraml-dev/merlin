@@ -130,7 +130,10 @@ func runFeastEnricherServer(appConfig AppConfig, transformerConfig *spec.Standar
 	if err != nil {
 		logger.Fatal("Unable to initialize transformer", zap.Error(err))
 	}
-	feastEnricherServer := rest.New(&appConfig.Server, logger)
+	feastEnricherServer, err := rest.New(&appConfig.Server, logger)
+	if err != nil {
+		logger.Fatal("Unable to http server", zap.Error(err))
+	}
 	feastEnricherServer.PreprocessHandler = feastTransformer.Enrich
 	feastEnricherServer.Run()
 }
@@ -210,7 +213,10 @@ func createPipelineHandler(appConfig AppConfig, transformerConfig *spec.Standard
 }
 
 func runHTTPServer(opts *serverConf.Options, handler *pipeline.Handler, logger *zap.Logger) {
-	s := rest.NewWithHandler(opts, handler, logger)
+	s, err := rest.NewWithHandler(opts, handler, logger)
+	if err != nil {
+		logger.Fatal("Unable to http server", zap.Error(err))
+	}
 	s.Run()
 }
 
