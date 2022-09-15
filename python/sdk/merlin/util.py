@@ -21,11 +21,7 @@ from os import makedirs
 
 
 def guess_mlp_ui_url(mlp_api_url: str) -> str:
-    url = mlp_api_url.replace("/api", "")
-    if not url.startswith("http://"):
-        return f"http://{url}"
-    return url
-
+    return mlp_api_url.replace("/api", "")
 
 def autostr(cls):
     def __str__(self):

@@ -124,9 +124,7 @@ class ModelEndpoint:
             self._protocol = Protocol(endpoint.protocol)
 
         if self._protocol == Protocol.HTTP_JSON:
-            self._url = f"{endpoint.url}/v1/predict" \
-                if endpoint.url.startswith("http://") \
-                else f"http://{endpoint.url}/v1/predict"
+            self._url = f"{endpoint.url}/v1/predict"
         else:
             self._url = endpoint.url
         self._status = Status(endpoint.status)
