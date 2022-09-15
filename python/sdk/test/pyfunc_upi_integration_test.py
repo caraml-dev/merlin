@@ -1,13 +1,14 @@
+import numpy as np
 import os
 import uuid
 from time import sleep
-from typing import List
 
 import grpc
-import numpy as np
+import pandas as pd
 import pytest
 import xgboost as xgb
-from caraml.upi.v1 import upi_pb2, value_pb2, upi_pb2_grpc
+from caraml.upi.utils import df_to_table, table_to_df
+from caraml.upi.v1 import upi_pb2, upi_pb2_grpc
 from sklearn.datasets import load_iris
 
 import merlin
@@ -19,13 +20,6 @@ from test.utils import undeploy_all_version
 
 
 class IrisClassifier(PyFuncModel):
-    feature_names = [
-        "sepal-length",
-        "sepal-width",
-        "petal-length",
-        "petal-width"
-    ]
-
     target_names = [
         "setosa",
         "versicolor",
@@ -39,47 +33,24 @@ class IrisClassifier(PyFuncModel):
 
     def infer(self, request: dict, **kwargs):
         result = self._predict(request['instances'])
-        return {"predictions": result.tolist()}
+        return {
+            "predictions": result.tolist()
+        }
 
     def upiv1_infer(self, request: upi_pb2.PredictValuesRequest,
                     context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
-        features = self._get_features_from_request(request)
-        predictions = self._predict(features)
-        return self._create_response(predictions, request)
+        features_df, _ = table_to_df(request.prediction_table)
+        prediction_result_df = self._predict(features_df)
+        return self._create_response(prediction_result_df, request)
 
-    def _create_response(self, predictions: np.ndarray, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse:
-        result_rows = self._predictions_to_result_rows(predictions, request)
+    def _create_response(self, predictions: pd.DataFrame, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse:
+        prediction_result_table = df_to_table(predictions, "prediction_result")
         response_metadata = upi_pb2.ResponseMetadata(prediction_id=request.metadata.prediction_id)
-        return upi_pb2.PredictValuesResponse(prediction_result_rows=result_rows, target_name=self.target_name, metadata=response_metadata)
+        return upi_pb2.PredictValuesResponse(prediction_result_table=prediction_result_table, target_name=self.target_name, metadata=response_metadata)
 
-    def _get_features_from_request(self, request: upi_pb2.PredictValuesRequest) -> List[List[float]]:
-        features = []
-        for row in request.prediction_rows:
-            if len(row.model_inputs) != len(self.feature_names):
-                raise ValueError(f"invalid features length, got {len(row.model_inputs)} expected: {len(self.feature_names)}")
-
-            feature = []
-            for idx, model_input in enumerate(row.model_inputs):
-                if model_input.name != self.feature_names[idx]:
-                    raise ValueError(f"invalid feature names at index {idx}, got {model_input.name} expected: {self.feature_names[idx]}")
-                feature.append(model_input.double_value)
-            features.append(feature)
-
-        return features
-
-    def _predictions_to_result_rows(self, predictions: np.ndarray, request: upi_pb2.PredictValuesRequest):
-        result_rows = []
-        for row_idx, row in enumerate(predictions):
-            result_row = []
-            for idx, col in enumerate(row):
-                val = value_pb2.NamedValue(name=self.target_names[idx], double_value=col)
-                result_row.append(val)
-            result_rows.append(upi_pb2.PredictionResultRow(row_id=request.prediction_rows[row_idx].row_id, values=result_row))
-        return result_rows
-
-    def _predict(self, features: List[List[float]]) -> List[List[float]]:
+    def _predict(self, features: pd.DataFrame) -> pd.DataFrame:
         features_matrix = xgb.DMatrix(features)
-        return self._model.predict(features_matrix)
+        return pd.DataFrame(self._model.predict(features_matrix), columns = self.target_names)
 
 
 @pytest.mark.pyfunc
@@ -144,22 +115,34 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
     merlin.undeploy(v)
 
 
+def test_model():
+    model_path, xgb_model = train_xgboost_model()
+    pyfunc_model = IrisClassifier()
+    pyfunc_model.initialize({"xgb_model": model_path})
+    request = create_upi_request_from_iris_dataset()
+    response = pyfunc_model.upiv1_infer(request, {})
+
+    X = load_iris()['data']
+    y = xgb_model.predict(xgb.DMatrix(X))
+    exp_df = pd.DataFrame(y, columns=IrisClassifier.target_names)
+    exp_table = df_to_table(exp_df, "prediction_result")
+
+    assert exp_table == response.prediction_result_table
+
+
 def validate_iris_upi(model, stub):
     request = create_upi_request_from_iris_dataset()
     response = stub.PredictValues(request=request)
 
     assert response.metadata.prediction_id == request.metadata.prediction_id
     assert response.target_name == request.target_name
-    # verify row_id
-    for idx, row in enumerate(request.prediction_rows):
-        assert response.prediction_result_rows[idx].row_id == row.row_id
-    # verify prediction results
+
     X = load_iris()['data']
     y = model.predict(xgb.DMatrix(X))
-    for row_id, row in enumerate(y.tolist()):
-        for col_id, val in enumerate(row):
-            assert response.prediction_result_rows[row_id].values[col_id].name == IrisClassifier.target_names[col_id]
-            assert response.prediction_result_rows[row_id].values[col_id].double_value == val
+    exp_df = pd.DataFrame(y, columns=IrisClassifier.target_names)
+    exp_table = df_to_table(exp_df, "prediction_result")
+
+    assert exp_table == response.prediction_result_table
 
 
 def train_xgboost_model():
@@ -188,17 +171,12 @@ def create_upi_request_from_iris_dataset() -> upi_pb2.PredictValuesRequest:
     target_name = IrisClassifier.target_name
     iris_dataset = load_iris()
     X = iris_dataset['data']
-    prediction_rows = []
-    for row_id, row in enumerate(X.tolist()):
-        model_inputs = []
-        for idx, val in enumerate(row):
-            named_val = value_pb2.NamedValue(name=IrisClassifier.feature_names[idx], type=value_pb2.NamedValue.TYPE_DOUBLE, double_value=val)
-            model_inputs.append(named_val)
-        prediction_rows.append(upi_pb2.PredictionRow(model_inputs=model_inputs, row_id=str(row_id)))
+    df = pd.DataFrame(X, columns=iris_dataset.feature_names)
 
+    prediction_table = df_to_table(df, "features")
     return upi_pb2.PredictValuesRequest(
         target_name=target_name,
-        prediction_rows=prediction_rows,
+        prediction_table=prediction_table,
         metadata=upi_pb2.RequestMetadata(
             prediction_id=str(uuid.uuid1())
         )

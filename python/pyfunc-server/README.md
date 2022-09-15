@@ -15,7 +15,7 @@ python -m pyfuncserver --model_dir echo-model/model
 
 This will start http server at port 8080 which you can test using curl command
 ```bash
-curl localhost:8080/v1/models/model-1:predict -H "Content-Encoding: gzip" -H "Accept-Encoding: gzip" -H "Content-Type: application/json" -d '{}'
+curl localhost:8080/v1/models/model-1:predict -H "Content-Type: application/json" -d '{}'
 ```
 
 ### UPI V1 Server
