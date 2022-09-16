@@ -75,7 +75,7 @@ func main() {
 	if appConfig.LogLevel == "DEBUG" {
 		logger, _ = zap.NewDevelopment()
 	}
-	defer logger.Sync()
+	defer logger.Sync() //nolint:errcheck
 
 	logger.Info("configuration loaded", zap.Any("appConfig", appConfig))
 
@@ -84,7 +84,7 @@ func main() {
 		logger.Error("Unable to initialize tracing", zap.Error(err))
 	}
 	if closer != nil {
-		defer closer.Close()
+		defer closer.Close() //nolint:errcheck
 	}
 
 	transformerConfig := &spec.StandardTransformerConfig{}

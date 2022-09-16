@@ -244,7 +244,7 @@ func (stc *StandardTransformerConfig) ToFeastStorageConfigsForSimulation() feast
 // ToFeastStorageConfigs convert standard transformer config into feast storage config
 func (stc *StandardTransformerConfig) ToFeastStorageConfigs() feast.FeastStorageConfig {
 	feastStorageConfig := feast.FeastStorageConfig{}
-	validate := internalValidator.NewValidator()
+	validate, _ := internalValidator.NewValidator()
 
 	// need to validate redis and big table config, because of `FeastRedisConfig` and `FeastBigtableConfig` wont be null when environment variables not set
 	// this is due to bug in envconfig library https://github.com/kelseyhightower/envconfig/issues/113

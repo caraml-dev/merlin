@@ -81,7 +81,7 @@ func (redisCfg *FeastRedisConfig) Decode(value string) error {
 	if err := json.Unmarshal([]byte(value), &cfg); err != nil {
 		return err
 	}
-	validate := internalValidator.NewValidator()
+	validate, _ := internalValidator.NewValidator()
 	if err := validate.Struct(cfg); err != nil {
 		translatedErr := err.(validator.ValidationErrors)[0].Translate(internalValidator.EN)
 		return fmt.Errorf(translatedErr)
@@ -159,7 +159,7 @@ func (bigtableCfg *FeastBigtableConfig) Decode(value string) error {
 	if err := json.Unmarshal([]byte(value), &cfg); err != nil {
 		return err
 	}
-	validate := internalValidator.NewValidator()
+	validate, _ := internalValidator.NewValidator()
 	if err := validate.Struct(cfg); err != nil {
 		translatedErr := err.(validator.ValidationErrors)[0].Translate(internalValidator.EN)
 		return fmt.Errorf(translatedErr)

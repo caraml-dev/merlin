@@ -108,7 +108,7 @@ func (v *Version) BeforeCreate(scope *gorm.Scope) {
 			Select("COALESCE(MAX(id), 0)").
 			Where("model_id = ?", v.ModelID).
 			Row().
-			Scan(&maxModelVersionID)
+			Scan(&maxModelVersionID) //nolint:errcheck
 
 		v.ID = ID(maxModelVersionID + 1)
 	}

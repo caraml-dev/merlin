@@ -70,7 +70,7 @@ func (p *predictionJobStorage) GetFirstSuccessModelVersionPerModel() (map[models
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint: errcheck
 
 	resultMap := make(map[models.ID]models.ID)
 	for rows.Next() {

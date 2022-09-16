@@ -77,7 +77,7 @@ func RecordsFromParquet(filePath *url.URL) ([][]string, map[string]gota.Type, er
 			return nil, nil, err
 		}
 		r = file
-		defer file.Close()
+		defer file.Close() //nolint:errcheck
 	}
 
 	fr, err := goparquet.NewFileReader(r)
@@ -158,7 +158,7 @@ func RecordsFromCsv(filePath *url.URL) ([][]string, error) {
 			return nil, err
 		}
 		r = file
-		defer file.Close()
+		defer file.Close() //nolint:errcheck
 	}
 
 	csvReader := csv.NewReader(r)

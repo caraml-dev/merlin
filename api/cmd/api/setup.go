@@ -55,7 +55,7 @@ func initDB(cfg config.DatabaseConfig) (*gorm.DB, func()) {
 		panic(err)
 	}
 	db.LogMode(false)
-	return db, func() { db.Close() }
+	return db, func() { db.Close() } //nolint:errcheck
 }
 
 func runDBMigration(db *gorm.DB, migrationPath string) {

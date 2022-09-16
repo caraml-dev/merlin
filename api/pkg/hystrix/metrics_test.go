@@ -97,7 +97,8 @@ func TestPrometheusCollector_Update(t *testing.T) {
 		for _, metric := range gauges {
 			value := &dto.Metric{}
 			gauge := t.collector.gauges[metric]
-			gauge.Write(value)
+			err := gauge.Write(value)
+			assert.NoError(err)
 
 			switch metric {
 			case metricCircuitOpen:
@@ -118,7 +119,9 @@ func TestPrometheusCollector_Update(t *testing.T) {
 		for _, metric := range counters {
 			value := &dto.Metric{}
 			counter := t.collector.counters[metric]
-			counter.Write(value)
+			err := counter.Write(value)
+			assert.NoError(err)
+
 			switch metric {
 			case metricSuccesses:
 				assert.Equal(t.input.Successes, float64(*value.Counter.Value))

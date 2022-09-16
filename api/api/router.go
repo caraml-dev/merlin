@@ -131,8 +131,11 @@ type RawRoutes struct {
 	name    string
 }
 
-func NewRouter(appCtx AppContext) *mux.Router {
-	validate := internalValidator.NewValidator()
+func NewRouter(appCtx AppContext) (*mux.Router, error) {
+	validate, err := internalValidator.NewValidator()
+	if err != nil {
+		return nil, err
+	}
 	environmentController := EnvironmentController{&appCtx}
 	projectsController := ProjectsController{&appCtx}
 	modelsController := ModelsController{&appCtx}
@@ -249,7 +252,7 @@ func NewRouter(appCtx AppContext) *mux.Router {
 
 	router.Use(recoveryHandler)
 
-	return router
+	return router, nil
 }
 
 func recoveryHandler(next http.Handler) http.Handler {

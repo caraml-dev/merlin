@@ -160,7 +160,8 @@ func TestMustCompileJsonPath(t *testing.T) {
 
 func TestCompiled_Lookup(t *testing.T) {
 	var rawRequestData types.JSONObject
-	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
+	err := json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
+	assert.NoError(t, err)
 
 	type fields struct {
 		cpl    *jsonpath.Compiled
@@ -208,8 +209,10 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 	var rawRequestData types.JSONObject
 	var modelResponseData types.JSONObject
 
-	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
-	json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
+	err := json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
+	assert.NoError(t, err)
+	err = json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
+	assert.NoError(t, err)
 
 	jsonContainer := types.PayloadObjectContainer{
 		spec.JsonType_RAW_REQUEST:    rawRequestData,
@@ -393,8 +396,10 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 	var rawRequestData types.JSONObject
 	var modelResponseData types.JSONObject
 
-	json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
-	json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
+	err := json.Unmarshal([]byte(rawRequestJson), &rawRequestData)
+	assert.NoError(t, err)
+	err = json.Unmarshal([]byte(modelResponseJson), &modelResponseData)
+	assert.NoError(t, err)
 
 	jsonContainer := types.PayloadObjectContainer{
 		spec.JsonType_RAW_REQUEST:    rawRequestData,
