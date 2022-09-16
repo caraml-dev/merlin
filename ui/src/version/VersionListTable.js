@@ -330,7 +330,7 @@ const VersionListTable = ({
               <EuiLink onClick={() => navigate(versionPageUrl)}>{name}</EuiLink>
             </span>{" "}
             {moment().diff(version.created_at, "hour") <= 1 && (
-              <EuiBadge color="secondary">
+              <EuiBadge color="success">
                 <EuiText size="xs">New</EuiText>
               </EuiBadge>
             )}

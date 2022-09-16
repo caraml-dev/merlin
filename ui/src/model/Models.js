@@ -15,15 +15,7 @@
  */
 
 import React, { useEffect } from "react";
-import {
-  EuiIcon,
-  EuiPage,
-  EuiPageBody,
-  EuiPageSection,
-  EuiPageHeader,
-  EuiPageHeaderSection,
-  EuiTitle
-} from "@elastic/eui";
+import { EuiPageTemplate, EuiPanel, EuiSpacer } from "@elastic/eui";
 import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import mocks from "../mocks";
@@ -47,19 +39,17 @@ const Models = ({ projectId }) => {
   }, [projectId]);
 
   return (
-    <EuiPage>
-      <EuiPageBody>
-        <EuiPageHeader>
-          <EuiPageHeaderSection>
-            <EuiTitle size="l">
-              <h1>
-                <EuiIcon type="graphApp" size="xl" /> Models
-              </h1>
-            </EuiTitle>
-          </EuiPageHeaderSection>
-        </EuiPageHeader>
-
-        <EuiPageSection>
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Header
+        bottomBorder={false}
+        iconType={"graphApp"}
+        pageTitle="Models"
+      />
+      
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Section color={"transparent"}>
+        <EuiPanel>
           <ModelListTable
             projectId={projectId}
             error={error}
@@ -67,9 +57,10 @@ const Models = ({ projectId }) => {
             items={data}
             fetchModels={fetchModels}
           />
-        </EuiPageSection>
-      </EuiPageBody>
-    </EuiPage>
+        </EuiPanel>
+      </EuiPageTemplate.Section>
+      <EuiSpacer size="l" />
+    </EuiPageTemplate>
   );
 };
 

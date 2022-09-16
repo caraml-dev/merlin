@@ -175,7 +175,7 @@ export const ContainerLogsView = ({
   return (
     <Fragment>
       <EuiTitle size="s">
-        <EuiTextColor color="secondary">Logs</EuiTextColor>
+        <EuiTextColor color="success">Logs</EuiTextColor>
       </EuiTitle>
 
       <EuiPageSection>
