@@ -99,9 +99,9 @@ func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search stri
 		switch key {
 		case "environment_name":
 			searchQuery = searchQuery.Joins(
-				"JOIN version_endpoints on version_endpoints.version_id = versions.id " +
-					"AND version_endpoints.version_model_id = versions.model_id " +
-					"AND version_endpoints.environment_name=? " +
+				"JOIN version_endpoints on version_endpoints.version_id = versions.id "+
+					"AND version_endpoints.version_model_id = versions.model_id "+
+					"AND version_endpoints.environment_name=? "+
 					"AND version_endpoints.status != ?", val, models.EndpointTerminated)
 		case "labels":
 			query, args := generateLabelsWhereQuery(val)
@@ -123,13 +123,13 @@ func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search stri
 func getVersionSearchTerms(query string) map[string]string {
 	terms := map[string]string{}
 	tokens := strings.Split(query, ":")
-	key, val, nextKey := "", "" , ""
+	key, val, nextKey := "", "", ""
 	for i, token := range tokens {
 		token = strings.TrimSpace(token)
 		if i == 0 {
 			// First token is always the search key
 			key = token
-		} else if i == len(tokens) - 1 {
+		} else if i == len(tokens)-1 {
 			// Last token is always the search value
 			val = token
 		} else {
@@ -176,7 +176,7 @@ var versionLabelsRegex = regexp.MustCompile(`(?i)([a-z0-9A-Z-_]+)\s+in\s+\(([a-z
 // this SQL statement:
 //   ( labels @> {"animal": "cat"} OR labels @> {"animal": "dog"} ) AND ( labels @> {"color": "white"} )
 // where the labels column is assumed to be in "jsonb" data type in Postgresql database.
-func generateLabelsWhereQuery(freeTextQuery string) (query string, args []interface{})  {
+func generateLabelsWhereQuery(freeTextQuery string) (query string, args []interface{}) {
 	// queryParts from the SQL to match pair(s) of label key-value(s).
 	var queryParts []string
 	for _, match := range versionLabelsRegex.FindAllStringSubmatch(freeTextQuery, -1) {

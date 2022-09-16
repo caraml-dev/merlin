@@ -50,9 +50,9 @@ var (
 			Hosts:    []string{"valid.default.com"},
 			Gateways: []string{"default-gateway.default"},
 			Http: []*istionetv1beta1.HTTPRoute{
-				&istionetv1beta1.HTTPRoute{
+				{
 					Route: []*istionetv1beta1.HTTPRouteDestination{
-						&istionetv1beta1.HTTPRouteDestination{
+						{
 							Destination: &istionetv1beta1.Destination{
 								Host: "valid.default.svc.cluster.local",
 							},
