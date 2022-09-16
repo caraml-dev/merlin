@@ -17,9 +17,10 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/gojek/merlin/log"
 	"regexp"
 	"strings"
+
+	"github.com/gojek/merlin/log"
 
 	"github.com/jinzhu/gorm"
 

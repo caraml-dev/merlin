@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/afex/hystrix-go/hystrix/metric_collector"
+	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

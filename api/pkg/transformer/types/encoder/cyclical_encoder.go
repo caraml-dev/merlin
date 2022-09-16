@@ -2,10 +2,11 @@ package encoder
 
 import (
 	"fmt"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
 	"math"
 	"time"
+
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
 const (
