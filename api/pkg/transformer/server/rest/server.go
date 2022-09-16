@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
-	"net/url"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -362,14 +361,9 @@ func getHeaders(headers http.Header) map[string]string {
 
 // getUrl return url or add default http scheme if scheme is not specified
 func getUrl(rawUrl string) (string, error) {
-	parsedURL, err := url.Parse(rawUrl)
-	if err != nil {
-		return "", err
-	}
-
-	urlStr := parsedURL.String()
-	if parsedURL.Scheme == "" {
-		urlStr = "http://" + rawUrl
+	urlStr := rawUrl
+	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
+		urlStr = "http://" + urlStr
 	}
 
 	return urlStr, nil

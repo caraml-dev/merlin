@@ -1380,6 +1380,12 @@ func Test_getUrl(t *testing.T) {
 			want:    "http://my-model.my-domain.com/predict",
 			wantErr: false,
 		},
+		{
+			name:    "no scheme with port",
+			rawUrl:  "std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
+			want:    "http://std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
