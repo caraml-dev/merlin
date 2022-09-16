@@ -16,7 +16,7 @@ func initCronJob(dependencies deps, db *gorm.DB) error {
 		storage.NewPredictionJobStorage(db),
 		storage.NewDeploymentStorage(db))
 	if err != nil {
-		return fmt.Errorf("unable to create tracker %s", err)
+		return fmt.Errorf("unable to create tracker %w", err)
 	}
 
 	imageBuilderJanitor := dependencies.imageBuilderJanitor

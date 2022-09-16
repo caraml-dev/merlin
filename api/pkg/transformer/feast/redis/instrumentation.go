@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -88,5 +89,5 @@ func (h *redisHook) AfterProcessPipeline(ctx context.Context, cmds []redis.Cmder
 }
 
 func isActualError(err error) bool {
-	return err != nil && err != redis.Nil
+	return err != nil && !errors.Is(err, redis.Nil)
 }

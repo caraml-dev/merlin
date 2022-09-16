@@ -157,7 +157,7 @@ func (fr *FeastRetriever) buildEntityRows(symbolRegistry symbol.Registry, config
 	for k, configEntity := range configEntities {
 		vals, err := fr.entityExtractor.ExtractValuesFromSymbolRegistry(symbolRegistry, configEntity)
 		if err != nil {
-			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
+			return nil, fmt.Errorf("unable to extract entity %s: %w", configEntity.Name, err)
 		}
 
 		seriesLength := len(vals)

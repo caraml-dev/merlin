@@ -16,6 +16,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -99,7 +100,7 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 			if bodyType != nil {
 				body = reflect.New(bodyType).Interface()
 				err := json.NewDecoder(r.Body).Decode(body)
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					// empty body
 					return route.handler(r, vars, body)
 				}
@@ -109,7 +110,7 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 				}
 
 				if err := validate.Struct(body); err != nil {
-					s := err.(validator.ValidationErrors)[0].Translate(internalValidator.EN)
+					s := err.(validator.ValidationErrors)[0].Translate(internalValidator.EN) // nolint:errorlint
 					return BadRequest(s)
 				}
 			}

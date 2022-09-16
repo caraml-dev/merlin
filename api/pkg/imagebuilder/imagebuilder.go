@@ -16,6 +16,7 @@ package imagebuilder
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -230,12 +231,13 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 
 	repo, err := name.NewRepository(imageName)
 	if err != nil {
-		return false, fmt.Errorf("unable to parse docker repository %s: %s", imageName, err.Error())
+		return false, fmt.Errorf("unable to parse docker repository %s: %w", imageName, err)
 	}
 
 	tags, err := remote.List(repo, remote.WithAuthFromKeychain(keychain))
 	if err != nil {
-		if terr, ok := err.(*transport.Error); ok {
+		var terr *transport.Error
+		if errors.As(err, &terr) {
 			// If image not found, it's not exist yet
 			if terr.StatusCode == http.StatusNotFound {
 				log.Errorf("image (%s) not found", imageName)
@@ -243,11 +245,11 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 			}
 
 			// Otherwise, it's another transport error
-			return false, fmt.Errorf("transport error on listing tags for %s: status code: %d, error: %s", imageName, terr.StatusCode, terr.Error())
+			return false, fmt.Errorf("transport error on listing tags for %s: status code: %d, error: %w", imageName, terr.StatusCode, terr)
 		}
 
 		// If it's not transport error, raise error
-		return false, fmt.Errorf("error getting image tags for %s: %s", repo, err.Error())
+		return false, fmt.Errorf("error getting image tags for %s: %w", repo, err)
 	}
 
 	for _, tag := range tags {

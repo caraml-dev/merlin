@@ -140,7 +140,7 @@ func main() {
 	go func() {
 		// Don't forward ErrServerClosed as that indicates we're already shutting down.
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			errCh <- fmt.Errorf("server failed: %+v", err)
+			errCh <- fmt.Errorf("server failed: %w", err)
 		}
 	}()
 
