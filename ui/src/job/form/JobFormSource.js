@@ -18,7 +18,6 @@ import React, { Fragment, useContext, useState } from "react";
 import {
   EuiAccordion,
   EuiCode,
-  EuiCodeEditor,
   EuiFieldNumber,
   EuiFieldText,
   EuiFlexGroup,
@@ -30,6 +29,7 @@ import {
   EuiSwitch,
   EuiText
 } from "@elastic/eui";
+import Editor from "@monaco-editor/react"
 import { validateBigqueryTable } from "../../validation/validateBigquery";
 import { JobFormContext } from "./context";
 import { FeatureComboBox } from "./components/FeaturesComboBox";
@@ -168,7 +168,7 @@ export const JobFormSource = () => {
                   <EuiCode>_PARTITIONDATE > '2020-01-01'</EuiCode>.
                 </p>
               }>
-              <EuiCodeEditor
+              <Editor
                 width="100%"
                 height="100px"
                 aria-label="Data Source Table Filter"

@@ -18,7 +18,7 @@ import React from "react";
 import { Redirect, Router } from "@reach/router";
 import {
   AuthProvider,
-  Empty,
+  Page404,
   ErrorBoundary,
   Login,
   MlpApiContextProvider,
@@ -147,7 +147,7 @@ export default () => (
           <TransformerTools path={`${config.HOMEPAGE}/-/tools/transformer`} />
 
           {/* DEFAULT */}
-          <Empty default />
+          <Page404 default />
         </Router>
         <Toast />
       </AuthProvider>

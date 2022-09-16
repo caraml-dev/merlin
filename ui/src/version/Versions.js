@@ -19,7 +19,7 @@ import {
   EuiIcon,
   EuiPage,
   EuiPageBody,
-  EuiPageContent,
+  EuiPageSection,
   EuiPageHeader,
   EuiPageHeaderSection,
   EuiTitle,
@@ -114,7 +114,7 @@ const Versions = ({ projectId, modelId, ...props }) => {
           </EuiPageHeaderSection>
         </EuiPageHeader>
 
-        <EuiPageContent>
+        <EuiPageSection>
           <VersionListTable
             projectId={projectId}
             versions={versions.data}
@@ -144,7 +144,7 @@ const Versions = ({ projectId, modelId, ...props }) => {
               setSelectedCursor={setSelectedCursor}
             />
           )}
-        </EuiPageContent>
+        </EuiPageSection>
       </EuiPageBody>
 
       {isUndeployEndpointModalVisible && (

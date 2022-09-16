@@ -21,7 +21,7 @@ import {
   EuiIcon,
   EuiPage,
   EuiPageBody,
-  EuiPageContent,
+  EuiPageSection,
   EuiPageHeader,
   EuiPageHeaderSection,
   EuiText,
@@ -86,7 +86,7 @@ const Jobs = ({ projectId, modelId }) => {
           </EuiPageHeaderSection>
         </EuiPageHeader>
 
-        <EuiPageContent>
+        <EuiPageSection>
           <JobListTable
             projectId={projectId}
             modelId={modelId}
@@ -94,7 +94,7 @@ const Jobs = ({ projectId, modelId }) => {
             isLoaded={isLoaded}
             error={error}
           />
-        </EuiPageContent>
+        </EuiPageSection>
       </EuiPageBody>
     </EuiPage>
   );

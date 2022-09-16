@@ -3,7 +3,7 @@ import {
   EuiLoadingContent,
   EuiPage,
   EuiPageBody,
-  EuiPageContentBody,
+  EuiPageSection,
   EuiPageHeader,
   EuiPageHeaderSection
 } from "@elastic/eui";
@@ -77,7 +77,7 @@ const RedeployModelVersionView = ({
           </EuiPageHeaderSection>
         </EuiPageHeader>
 
-        <EuiPageContentBody>
+        <EuiPageSection>
           {modelLoaded && versionLoaded ? (
             <FormContextProvider
               data={VersionEndpoint.fromJson(
@@ -97,7 +97,7 @@ const RedeployModelVersionView = ({
           ) : (
             <EuiLoadingContent lines={3} />
           )}
-        </EuiPageContentBody>
+        </EuiPageSection>
       </EuiPageBody>
     </EuiPage>
   );

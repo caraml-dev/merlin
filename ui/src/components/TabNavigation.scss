@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-@import "~@elastic/eui/src/global_styling/variables/index";
+@import "@elastic/eui/src/themes/amsterdam/colors_light";
+@import "@elastic/eui/src/themes/amsterdam/globals";
 @import "~@elastic/eui/src/components/context_menu/context_menu";
 
 .euiContextPanel--moreActions {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { EuiPage, EuiPageBody, EuiPageContent } from "@elastic/eui";
+import { EuiPage, EuiPageBody, EuiPageSection } from "@elastic/eui";
 import { FormContextProvider } from "@gojek/mlp-ui";
 import React from "react";
 import {
@@ -28,7 +28,7 @@ const TransformerTools = () => {
   return (
     <EuiPage>
       <EuiPageBody>
-        <EuiPageContent hasBorder={false} hasShadow={false} color="transparent">
+        <EuiPageSection hasBorder={false} hasShadow={false} color="transparent">
           <FormContextProvider
             data={{
               transformer: {
@@ -44,7 +44,7 @@ const TransformerTools = () => {
             }}>
             <StandardTransformerStep />
           </FormContextProvider>
-        </EuiPageContent>
+        </EuiPageSection>
       </EuiPageBody>
     </EuiPage>
   );

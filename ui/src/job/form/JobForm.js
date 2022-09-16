@@ -20,7 +20,7 @@ import {
   EuiIcon,
   EuiPage,
   EuiPageBody,
-  EuiPageContent,
+  EuiPageSection,
   EuiPageHeader,
   EuiPageHeaderSection,
   EuiSteps,
@@ -222,7 +222,7 @@ export const JobForm = ({ projectId, modelId, versionId, isNewJob = true }) => {
           </EuiPageHeaderSection>
         </EuiPageHeader>
 
-        <EuiPageContent>
+        <EuiPageSection>
           <EuiSteps
             headingElement="div"
             steps={steps.map((step, index) => {
@@ -243,7 +243,7 @@ export const JobForm = ({ projectId, modelId, versionId, isNewJob = true }) => {
               return step;
             })}
           />
-        </EuiPageContent>
+        </EuiPageSection>
       </EuiPageBody>
     </EuiPage>
   );

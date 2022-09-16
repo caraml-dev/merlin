@@ -22,7 +22,7 @@ import {
   EuiLoadingContent,
   EuiPage,
   EuiPageBody,
-  EuiPageContent,
+  EuiPageSection,
   EuiPageHeader,
   EuiPageHeaderSection,
   EuiTitle
@@ -35,9 +35,9 @@ import { featureToggleConfig } from "../config";
 import PropTypes from "prop-types";
 
 const LoadingContent = () => (
-  <EuiPageContent>
+  <EuiPageSection>
     <EuiLoadingContent lines={3} />
-  </EuiPageContent>
+  </EuiPageSection>
 );
 
 export const ModelDetails = ({ projectId, modelId, location: { state } }) => {

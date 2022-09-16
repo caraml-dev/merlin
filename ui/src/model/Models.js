@@ -19,7 +19,7 @@ import {
   EuiIcon,
   EuiPage,
   EuiPageBody,
-  EuiPageContent,
+  EuiPageSection,
   EuiPageHeader,
   EuiPageHeaderSection,
   EuiTitle
@@ -59,7 +59,7 @@ const Models = ({ projectId }) => {
           </EuiPageHeaderSection>
         </EuiPageHeader>
 
-        <EuiPageContent>
+        <EuiPageSection>
           <ModelListTable
             projectId={projectId}
             error={error}
@@ -67,7 +67,7 @@ const Models = ({ projectId }) => {
             items={data}
             fetchModels={fetchModels}
           />
-        </EuiPageContent>
+        </EuiPageSection>
       </EuiPageBody>
     </EuiPage>
   );
