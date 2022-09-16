@@ -121,7 +121,6 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
 	defer span.Finish()
-
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -146,17 +145,18 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	s.logger.Debug("preprocess response", zap.ByteString("preprocess_response", preprocessOutput))
 
 	resp, err := s.predict(ctx, r, preprocessOutput)
+	if err != nil {
+		s.logger.Error("predict error", zap.Error(err))
+		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
+		return
+	}
+
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
 			s.logger.Error("unable to close model response", zap.Error(err))
 		}
 	}(resp.Body)
-	if err != nil {
-		s.logger.Error("predict error", zap.Error(err))
-		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
-		return
-	}
 	modelResponseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		s.logger.Error("error reading model response", zap.Error(err))
