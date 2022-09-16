@@ -17,7 +17,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"regexp"
 
 	"github.com/jinzhu/gorm"
 
@@ -26,8 +25,6 @@ import (
 	"github.com/gojek/merlin/service"
 	"github.com/gojek/merlin/utils"
 )
-
-var labelsCheck = regexp.MustCompile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")
 
 type VersionsController struct {
 	*AppContext

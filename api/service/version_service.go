@@ -49,11 +49,6 @@ type PaginationQuery struct {
 	Cursor string `schema:"cursor"`
 }
 
-type cursorPagination struct {
-	versionID      models.ID
-	versionModelID models.ID
-}
-
 type versionsService struct {
 	db           *gorm.DB
 	mlpAPIClient mlp.APIClient

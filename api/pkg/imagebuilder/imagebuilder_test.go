@@ -76,22 +76,6 @@ var (
 	timeoutInSecond = int64(timeout / time.Second)
 	jobBackOffLimit = int32(3)
 
-	volumesSpec = []v1.Volume{
-		{
-			Name: "kaniko-secret",
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: "kaniko-secret",
-				},
-			},
-		},
-	}
-	volumeMountsSpec = []v1.VolumeMount{
-		{
-			Name:      "kaniko-secret",
-			MountPath: "/secret",
-		},
-	}
 	config = Config{
 		BuildContextURL:      buildContextURL,
 		DockerfilePath:       "./Dockerfile",

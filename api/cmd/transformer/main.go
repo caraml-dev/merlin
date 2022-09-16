@@ -59,7 +59,7 @@ type AppConfig struct {
 }
 
 // Trick GC frequency based on this https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap-26c2462549a2/
-var initialHeapAllocation []byte
+var initialHeapAllocation []byte //nolint:unused
 
 func main() {
 	appConfig := AppConfig{}

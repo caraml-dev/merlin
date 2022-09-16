@@ -72,15 +72,6 @@ const (
 		  "details":"{\"points\": [{\"distanceInMeter\": 0.0}, {\"distanceInMeter\": 8976.0}, {\"distanceInMeter\": 729.0}, {\"distanceInMeter\": 8573.0}]}"
 		}
 		`
-
-	modelResponseJson = `
-		{
-		  "predictions": [
-			1, 2
-		  ],
-          "model_name" : "iris-classifier"
-		}
-    `
 )
 
 func TestVariableDeclarationOp_Execute(t *testing.T) {

@@ -16,7 +16,6 @@ package istio
 
 import (
 	"context"
-	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -38,9 +37,7 @@ func TestNewClient(t *testing.T) {
 }
 
 var (
-	emptyVirtualService        = &istiov1beta1.VirtualService{}
-	emptyVirtualServiceJSON, _ = json.Marshal(emptyVirtualService)
-
+	emptyVirtualService = &istiov1beta1.VirtualService{}
 	validVirtualService = &istiov1beta1.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "valid",
@@ -63,7 +60,6 @@ var (
 			},
 		},
 	}
-	validVirtualServiceJSON, _ = json.Marshal(validVirtualService)
 )
 
 func Test_client_CreateVirtualService(t *testing.T) {

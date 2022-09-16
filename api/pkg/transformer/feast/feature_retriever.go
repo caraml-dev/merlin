@@ -21,17 +21,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	maxUint = ^uint(0)
-	maxInt  = int(maxUint >> 1)
-
-	// DefaultClientURLKey defines a key used to store and retrieve
-	// the default Feast gRPC client from Clients map.
-	// Used for backward compatibility (transformer will use this default client
-	// if standard transformer config does not specify Feast's serving url).
-	DefaultClientURLKey URL = "default"
-)
-
 type StorageClient interface {
 	GetOnlineFeatures(ctx context.Context, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error)
 }
