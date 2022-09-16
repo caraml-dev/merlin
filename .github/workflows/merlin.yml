@@ -117,6 +117,20 @@ jobs:
         working-directory: ./python/sdk
         run: make unit-test
 
+  lint-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # Ensure the same version as the one defined in Makefile
+          version: v1.49
+          working-directory: api
+
   test-api:
     runs-on: ubuntu-latest
     services:
