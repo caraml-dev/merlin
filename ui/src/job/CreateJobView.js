@@ -15,6 +15,7 @@
  */
 
 import React from "react";
+import { EuiPageTemplate, EuiSpacer } from "@elastic/eui";
 import { JobFormContextProvider } from "./form/context";
 import { JobForm } from "./form/JobForm";
 import { Job } from "./job";
@@ -22,9 +23,19 @@ import PropTypes from "prop-types";
 
 export const CreateJobView = ({ projectId, modelId, versionId }) => {
   return (
-    <JobFormContextProvider job={new Job(projectId, modelId, versionId)}>
-      <JobForm projectId={projectId} modelId={modelId} versionId={versionId} />
-    </JobFormContextProvider>
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Header
+        bottomBorder={false}
+        iconType={"machineLearningApp"}
+        pageTitle="Prediction Jobs"
+      />
+      <EuiPageTemplate.Section color="transparent">
+        <JobFormContextProvider job={new Job(projectId, modelId, versionId)}>
+          <JobForm projectId={projectId} modelId={modelId} versionId={versionId} />
+        </JobFormContextProvider>
+      </EuiPageTemplate.Section>
+    </EuiPageTemplate>
   );
 };
 

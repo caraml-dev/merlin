@@ -4,7 +4,8 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiLoadingContent,
-  EuiPageSection,
+  EuiPageTemplate,
+  EuiPanel,
   EuiSpacer,
   EuiTextColor,
   EuiTitle
@@ -175,10 +176,12 @@ export const ContainerLogsView = ({
   return (
     <Fragment>
       <EuiTitle size="s">
-        <EuiTextColor color="success">Logs</EuiTextColor>
+        <span>
+          <EuiTextColor color="success">&nbsp; Logs</EuiTextColor>
+        </span>
       </EuiTitle>
-
-      <EuiPageSection>
+      <EuiSpacer size="s" />
+      <EuiPanel>
         {!containerHaveBeenLoaded &&
         componentTypes &&
         componentTypes.length === 0 ? (
@@ -230,7 +233,7 @@ export const ContainerLogsView = ({
             }
           />
         )}
-      </EuiPageSection>
+      </EuiPanel>
     </Fragment>
   );
 };

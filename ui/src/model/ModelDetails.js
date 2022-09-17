@@ -16,16 +16,10 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  EuiFlexGroup,
-  EuiFlexItem,
-  EuiIcon,
   EuiLoadingContent,
-  EuiPage,
-  EuiPageBody,
-  EuiPageSection,
-  EuiPageHeader,
-  EuiPageHeaderSection,
-  EuiTitle
+  EuiPageTemplate,
+  EuiPanel,
+  EuiSpacer
 } from "@elastic/eui";
 import { Router } from "@reach/router";
 import { get } from "@gojek/mlp-ui";
@@ -35,9 +29,9 @@ import { featureToggleConfig } from "../config";
 import PropTypes from "prop-types";
 
 const LoadingContent = () => (
-  <EuiPageSection>
+  <EuiPageTemplate.Section>
     <EuiLoadingContent lines={3} />
-  </EuiPageSection>
+  </EuiPageTemplate.Section>
 );
 
 export const ModelDetails = ({ projectId, modelId, location: { state } }) => {
@@ -70,40 +64,34 @@ export const ModelDetails = ({ projectId, modelId, location: { state } }) => {
   }, [projectId, model]);
 
   return (
-    <EuiPage>
-      <EuiPageBody>
-        <EuiPageHeader>
-          <EuiPageHeaderSection>
-            <EuiFlexGroup alignItems="center" gutterSize="s">
-              <EuiFlexItem grow={false}>
-                <EuiIcon type="graphApp" size="xl" />
-              </EuiFlexItem>
-
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Header
+        bottomBorder={false}
+        iconType={"machineLearningApp"}
+        pageTitle={model.name}
+      />
+      
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Section color={"transparent"}>
+        <EuiPanel>
+          {featureToggleConfig.alertEnabled && (
+            <Router>
               {model && (
-                <EuiFlexItem grow={2}>
-                  <EuiTitle size="l">
-                    <h1>{model.name}</h1>
-                  </EuiTitle>
-                </EuiFlexItem>
+                <ModelAlert
+                  path="endpoints/:endpointId/alert"
+                  breadcrumbs={breadcrumbs}
+                  model={model}
+                />
               )}
-            </EuiFlexGroup>
-          </EuiPageHeaderSection>
-        </EuiPageHeader>
-        {featureToggleConfig.alertEnabled && (
-          <Router>
-            {model && (
-              <ModelAlert
-                path="endpoints/:endpointId/alert"
-                breadcrumbs={breadcrumbs}
-                model={model}
-              />
-            )}
 
-            <LoadingContent default />
-          </Router>
-        )}
-      </EuiPageBody>
-    </EuiPage>
+              <LoadingContent default />
+            </Router>
+          )}
+        </EuiPanel>
+      </EuiPageTemplate.Section>
+      <EuiSpacer size="l" />
+    </EuiPageTemplate>
   );
 };
 

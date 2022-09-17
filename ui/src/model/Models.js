@@ -43,7 +43,7 @@ const Models = ({ projectId }) => {
       <EuiSpacer size="l" />
       <EuiPageTemplate.Header
         bottomBorder={false}
-        iconType={"graphApp"}
+        iconType={"machineLearningApp"}
         pageTitle="Models"
       />
       

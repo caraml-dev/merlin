@@ -22,10 +22,7 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiLoadingContent,
-  EuiPage,
-  EuiPageBody,
-  EuiPageHeader,
-  EuiPageHeaderSection,
+  EuiPageTemplate,
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
@@ -119,9 +116,9 @@ const VersionDetails = ({
   }, [modelLoaded, model, versionLoaded, version, endpoint]);
 
   return (
-    <EuiPage>
-      <EuiPageBody>
-        {!modelLoaded && !versionLoaded ? (
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiSpacer size="l" />
+      {!modelLoaded && !versionLoaded ? (
           <EuiFlexGroup direction="row">
             <EuiFlexItem grow={true}>
               <EuiLoadingContent lines={3} />
@@ -129,47 +126,47 @@ const VersionDetails = ({
           </EuiFlexGroup>
         ) : (
           <Fragment>
-            <EuiPageHeader>
-              <EuiPageHeaderSection>
-                <PageTitle
-                  title={
-                    <Fragment>
-                      {model.name}
-                      {" version "}
-                      <strong>{version.id}</strong>
-                    </Fragment>
-                  }
-                />
-              </EuiPageHeaderSection>
-            </EuiPageHeader>
-
-            {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
-              model &&
-              modelLoaded &&
-              version &&
-              versionLoaded && (
+            <EuiPageTemplate.Header
+              bottomBorder={false}
+              iconType={"machineLearningApp"}
+              pageTitle={
                 <Fragment>
-                  <ModelVersionPanelHeader model={model} version={version} />
-                  <EuiSpacer size="m" />
+                  {model.name}
+                  {" version "}
+                  <strong>{version.id}</strong>
                 </Fragment>
+              }
+            />
+
+            <EuiPageTemplate.Section>
+              <EuiSpacer size="l" />
+              {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+                model &&
+                modelLoaded &&
+                version &&
+                versionLoaded && (
+                  <Fragment>
+                    <ModelVersionPanelHeader model={model} version={version} />
+                    <EuiSpacer size="m" />
+                  </Fragment>
               )}
 
-            {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
-              model &&
-              modelLoaded &&
-              version &&
-              versionLoaded &&
-              environments &&
-              isDeployed && (
-                <Fragment>
-                  <DeploymentPanelHeader
-                    model={model}
-                    version={version}
-                    endpoint={endpoint}
-                    environments={environments}
-                  />
-                  <EuiSpacer size="m" />
-                </Fragment>
+              {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+                model &&
+                modelLoaded &&
+                version &&
+                versionLoaded &&
+                environments &&
+                isDeployed && (
+                  <Fragment>
+                    <DeploymentPanelHeader
+                      model={model}
+                      version={version}
+                      endpoint={endpoint}
+                      environments={environments}
+                    />
+                    <EuiSpacer size="m" />
+                  </Fragment>
               )}
 
             {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
@@ -211,27 +208,28 @@ const VersionDetails = ({
                 />
               )}
 
-            {model && modelLoaded && version && versionLoaded && endpoint && (
-              <Router primary={false}>
-                <EndpointDetails
-                  path="details"
-                  model={model}
-                  version={version}
-                  endpoint={endpoint}
-                />
+              {model && modelLoaded && version && versionLoaded && endpoint && (
+                <Router primary={false}>
+                  <EndpointDetails
+                    path="details"
+                    model={model}
+                    version={version}
+                    endpoint={endpoint}
+                  />
 
-                <ContainerLogsView
-                  path="logs"
-                  model={model}
-                  versionId={versionId}
-                  fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
-                />
-              </Router>
-            )}
+                  <ContainerLogsView
+                    path="logs"
+                    model={model}
+                    versionId={versionId}
+                    fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
+                  />
+                </Router>
+              )}
+            </EuiPageTemplate.Section>
           </Fragment>
         )}
-      </EuiPageBody>
-    </EuiPage>
+
+    </EuiPageTemplate>
   );
 };
 

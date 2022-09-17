@@ -1,14 +1,11 @@
-import React, { useEffect } from "react";
+import React, { Fragment, useEffect } from "react";
 import {
   EuiLoadingContent,
-  EuiPage,
-  EuiPageBody,
-  EuiPageSection,
-  EuiPageHeader,
-  EuiPageHeaderSection
+  EuiPageTemplate,
+  EuiPanel,
+  EuiSpacer
 } from "@elastic/eui";
 import { FormContextProvider, replaceBreadcrumbs } from "@gojek/mlp-ui";
-import { PageTitle } from "../../../components/PageTitle";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import mocks from "../../../mocks";
 import { Version } from "../../../services/version/Version";
@@ -59,24 +56,24 @@ const DeployModelVersionView = ({
   );
 
   return (
-    <EuiPage>
-      <EuiPageBody>
-        <EuiPageHeader>
-          <EuiPageHeaderSection>
-            <PageTitle
-              title={
-                <>
-                  {"Deploy "}
-                  {model.name}
-                  {" version "}
-                  <strong>{version.id}</strong>
-                </>
-              }
-            />
-          </EuiPageHeaderSection>
-        </EuiPageHeader>
-
-        <EuiPageSection>
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Header
+        bottomBorder={false}
+        iconType={"machineLearningApp"}
+        pageTitle={
+          <Fragment>
+            {"Deploy "}
+            {model.name}
+            {" version "}
+            <strong>{version.id}</strong>
+          </Fragment>
+        }
+      />
+      
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Section color={"transparent"}>
+        <EuiPanel color={"transparent"}>
           {modelLoaded && versionLoaded ? (
             <FormContextProvider data={new VersionEndpoint()}>
               <DeployModelVersionForm
@@ -92,9 +89,10 @@ const DeployModelVersionView = ({
           ) : (
             <EuiLoadingContent lines={3} />
           )}
-        </EuiPageSection>
-      </EuiPageBody>
-    </EuiPage>
+        </EuiPanel>
+      </EuiPageTemplate.Section>
+      <EuiSpacer size="l" />
+    </EuiPageTemplate>
   );
 };
 
