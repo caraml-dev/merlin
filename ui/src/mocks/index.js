@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export default {
+const config = {
   container: require("./data/container"),
   containerList: require("./data/containerList"),
   environmentList: require("./data/environmentList"),
@@ -30,4 +30,6 @@ export default {
   jobList: require("./data/jobList"),
   job: require("./data/job"),
   transformerSimulation: require("./data/transformerSimulationOutput.json")
-};
+}
+
+export default config;

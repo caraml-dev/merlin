@@ -89,7 +89,4 @@ const config = {
   OAUTH_CLIENT_ID: getEnv("REACT_APP_OAUTH_CLIENT_ID")
 };
 
-export default {
-  // Add common config values here
-  ...config
-};
+export default config;
