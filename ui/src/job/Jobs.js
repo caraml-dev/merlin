@@ -15,7 +15,6 @@
  */
 
 import React, { useEffect } from "react";
-import { navigate } from "@reach/router";
 import {
   EuiButton,
   EuiPageTemplate,

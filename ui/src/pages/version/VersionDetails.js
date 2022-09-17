@@ -31,7 +31,6 @@ import config from "../../config";
 import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import { ContainerLogsView } from "../../components/logs/ContainerLogsView";
-import { PageTitle } from "../../components/PageTitle";
 import { DeploymentPanelHeader } from "./DeploymentPanelHeader";
 import { ModelVersionPanelHeader } from "./ModelVersionPanelHeader";
 import { EndpointDetails } from "./EndpointDetails";

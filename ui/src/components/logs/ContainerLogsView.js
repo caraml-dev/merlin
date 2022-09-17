@@ -4,7 +4,6 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiLoadingContent,
-  EuiPageTemplate,
   EuiPanel,
   EuiSpacer,
   EuiTextColor,
