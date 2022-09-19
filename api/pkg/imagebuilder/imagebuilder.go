@@ -183,11 +183,11 @@ func (c *imageBuilder) GetContainers(ctx context.Context, project mlp.Project, m
 // means. As such, `Ref` also includes all `Name` values.
 //
 // Examples (stringified):
-//  * alpine:3.5
-//  * library/alpine:3.5
-//  * docker.io/fluxcd/flux:1.1.0
-//  * gojek/merlin-api:1.0.0
-//  * localhost:5000/arbitrary/path/to/repo:revision-sha1
+// * alpine:3.5
+// * library/alpine:3.5
+// * docker.io/fluxcd/flux:1.1.0
+// * gojek/merlin-api:1.0.0
+// * localhost:5000/arbitrary/path/to/repo:revision-sha1
 func (c *imageBuilder) imageRef(project mlp.Project, model *models.Model, version *models.Version) string {
 	return fmt.Sprintf("%s:%s", c.nameGenerator.generateDockerImageName(project, model), version.ID)
 }

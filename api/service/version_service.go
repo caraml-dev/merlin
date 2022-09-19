@@ -110,7 +110,7 @@ func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search stri
 }
 
 // getVersionSearchTerms parses a search query in this string format:
-//   <SEARCH_KEY_1>:<SEARCH_VAL_1> <SEARCH_KEY_2>:<SEARCH_VAL_2> ...
+// <SEARCH_KEY_1>:<SEARCH_VAL_1> <SEARCH_KEY_2>:<SEARCH_VAL_2> ...
 // where pairs of search key-value are separated by whitespace, and returns
 // the search terms, a map of search key and the corresponding value.
 //
