@@ -340,7 +340,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
 		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") &&
 		modelService.Protocol == protocol.HttpJson {
-		livenessProbeConfig = createLivenessProbeSpec(fmt.Sprintf("/"))
+		livenessProbeConfig = createLivenessProbeSpec("/")
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)

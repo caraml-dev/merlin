@@ -405,7 +405,7 @@ func (c *EndpointsController) validateTransformer(ctx context.Context, trans *mo
 
 		return c.validateStandardTransformerConfig(ctx, cfg)
 	default:
-		return errors.New(fmt.Sprintf("Unknown transformer type: %s", trans.TransformerType))
+		return fmt.Errorf("Unknown transformer type: %s", trans.TransformerType)
 	}
 
 	return nil
