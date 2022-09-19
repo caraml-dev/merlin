@@ -231,7 +231,7 @@ func (s *HTTPServer) postprocess(ctx context.Context, response []byte, responseH
 }
 
 func (s *HTTPServer) predict(ctx context.Context, r *http.Request, payload []byte) (*http.Response, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "predict") // nolint: all
 	defer span.Finish()
 
 	predictStartTime := time.Now()

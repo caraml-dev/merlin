@@ -45,7 +45,7 @@ func TestTable_Col(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, series.New([]string{"1111", "2222"}, series.String, "string_col"), col)
 
-	col, err = table.GetColumn("col_not_exists")
+	_, err = table.GetColumn("col_not_exists")
 	assert.Error(t, err, "unknown column name")
 }
 

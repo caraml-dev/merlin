@@ -167,6 +167,7 @@ func TestCreatePredictionJob(t *testing.T) {
 	// test positive case
 	savedJob := new(models.PredictionJob)
 	err := copier.Copy(savedJob, job)
+	assert.NoError(t, err)
 	savedJob.Config.ImageRef = imageRef
 
 	mockStorage.On("Save", job).Return(nil)
@@ -187,6 +188,7 @@ func TestStopPredictionJob(t *testing.T) {
 	// test positive case
 	savedJob := new(models.PredictionJob)
 	err := copier.Copy(savedJob, job)
+	assert.NoError(t, err)
 	savedJob.Config.ImageRef = imageRef
 
 	mockStorage.On("Get", job.ID).Return(job, nil)

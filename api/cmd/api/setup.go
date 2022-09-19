@@ -196,6 +196,10 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		Retention:      cfg.ImageBuilderConfig.Retention,
 	})
 
+	if err != nil {
+		log.Panicf("unable to initialize cluster controller")
+	}
+
 	return
 }
 

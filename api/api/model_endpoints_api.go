@@ -234,7 +234,7 @@ func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map
 		return InternalServerError(fmt.Sprintf("Error while getting model endpoint with id %s", modelEndpointID))
 	}
 
-	modelEndpoint, err = c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
+	_, err = c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
 	}
