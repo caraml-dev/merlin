@@ -159,7 +159,7 @@ func getVersionSearchTerms(query string) map[string]string {
 var versionLabelsRegex = regexp.MustCompile(`(?i)([a-z0-9A-Z-_]+)\s+in\s+\(([a-z0-9A-Z-_ ,]+)\),?\s*`)
 
 // generateLabelsWhereQuery parses the labels free text query in this format:
-//   <LABEL_KEY_1> IN (LABEL_VAL_1, LABEL_VAL_2,...), <LABEL_KEY_2> IN (LABEL_VAL1, LABEL_VAL2,...)
+// <LABEL_KEY_1> IN (LABEL_VAL_1, LABEL_VAL_2,...), <LABEL_KEY_2> IN (LABEL_VAL1, LABEL_VAL2,...)
 // into a pair of SQL query template and arguments. The query template and arguments are
 // intended to be passed as arguments to go-orm db.Where method to filter rows by matching labels.
 //
