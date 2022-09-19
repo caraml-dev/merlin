@@ -11,7 +11,7 @@ VERSION := $(or ${VERSION}, $(shell git describe --tags --always --first-parent)
 
 GOLANGCI_LINT_VERSION="v1.49.0"
 PROTOC_GEN_GO_JSON_VERSION="v1.1.0"
-PROTOC_GEN_GO_VERSION="v1.2.6"
+PROTOC_GEN_GO_VERSION="v1.26"
 
 all: setup init-dep lint test clean build run
 
@@ -25,7 +25,8 @@ setup:
 	@test -x ${GOPATH}/bin/gotest || go install github.com/rakyll/gotest@latest
 	@test -x ${GOPATH}/bin/protoc-gen-go-json || go install github.com/mitchellh/protoc-gen-go-json@${PROTOC_GEN_GO_JSON_VERSION}
 	@test -x ${GOPATH}/bin/protoc-gen-go || go install google.golang.org/protobuf/cmd/protoc-gen-go@${PROTOC_GEN_GO_VERSION}
-	
+	@command -v golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.49.0
+
 .PHONY: init-dep
 init-dep: init-dep-ui init-dep-api
 
