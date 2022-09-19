@@ -23,6 +23,8 @@ import (
 	"strings"
 
 	"github.com/prometheus/prometheus/promql"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	yamlv3 "gopkg.in/yaml.v3"
 )
 
@@ -300,7 +302,8 @@ type AlertCondition struct {
 
 func (ac AlertCondition) alertName(modelName string) string {
 	metricType := strings.Replace(string(ac.MetricType), "_", " ", -1)
-	metricType = strings.ToUpper(metricType)
+	caser := cases.Title(language.English)
+	metricType = caser.String(metricType)
 
 	name := fmt.Sprintf("[merlin] %s: %s %s", modelName, metricType, strings.ToLower(string(ac.Severity)))
 	if ac.MetricType == AlertConditionTypeLatency {
