@@ -112,7 +112,6 @@ func (v *Version) BeforeCreate(scope *gorm.Scope) {
 
 		v.ID = ID(maxModelVersionID + 1)
 	}
-	return
 }
 
 // GetEndpointByEnvironmentName return endpoint of this model version which is deployed in environment name

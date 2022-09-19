@@ -35,7 +35,7 @@ func NewTable(df *dataframe.DataFrame) *Table {
 }
 
 func New(se ...*series.Series) *Table {
-	ss := make([]gota.Series, 0, 0)
+	ss := make([]gota.Series, 0)
 	for _, gs := range se {
 		ss = append(ss, *gs.Series())
 	}
