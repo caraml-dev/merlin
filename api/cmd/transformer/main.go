@@ -6,7 +6,6 @@ import (
 	"log"
 
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/kelseyhightower/envconfig"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -15,6 +14,7 @@ import (
 	jcfg "github.com/uber/jaeger-client-go/config"
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/protocol"
@@ -88,7 +88,7 @@ func main() {
 	}
 
 	transformerConfig := &spec.StandardTransformerConfig{}
-	if err := jsonpb.UnmarshalString(appConfig.StandardTransformerConfigJSON, transformerConfig); err != nil {
+	if err := protojson.Unmarshal([]byte(appConfig.StandardTransformerConfigJSON), transformerConfig); err != nil {
 		logger.Fatal("unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
@@ -179,7 +179,7 @@ func parseFeatureTableMetadata(featureTableSpecsJson string) ([]*spec.FeatureTab
 				return nil, err
 			}
 			featureSpec := &spec.FeatureTableMetadata{}
-			err = jsonpb.UnmarshalString(string(s), featureSpec)
+			err = protojson.Unmarshal(s, featureSpec)
 			if err != nil {
 				return nil, errors.Wrap(err, "unable to parse standard transformer featureTableSpecs config")
 			}

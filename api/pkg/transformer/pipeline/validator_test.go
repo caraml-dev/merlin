@@ -254,7 +254,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 										{
 											Name: "customer_id",
 											Value: &spec.Variable_JsonPath{
-												"$.customer_id",
+												JsonPath: "$.customer_id",
 											},
 										},
 										{

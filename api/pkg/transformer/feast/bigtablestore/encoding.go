@@ -18,9 +18,9 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
-	"github.com/golang/protobuf/proto"
 	"github.com/linkedin/goavro/v2"
 	"github.com/spaolacci/murmur3"
+	"google.golang.org/protobuf/proto"
 )
 
 // Encoder is used to encode OnlineFeaturesRequest into RowQuery

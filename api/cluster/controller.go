@@ -237,14 +237,14 @@ func (k *controller) deleteInferenceService(serviceName string, namespace string
 
 func (k *controller) waitInferenceServiceReady(service *kservev1beta1.InferenceService) (*kservev1beta1.InferenceService, error) {
 	timeout := time.After(k.deploymentConfig.DeploymentTimeout)
-	ticker := time.Tick(time.Second * tickDurationSecond)
+	ticker := time.NewTicker(time.Second * tickDurationSecond)
 
 	for {
 		select {
 		case <-timeout:
 			log.Errorf("timeout waiting for inference service to be ready %s", service.Name)
 			return nil, ErrTimeoutCreateInferenceService
-		case <-ticker:
+		case <-ticker.C:
 			s, err := k.servingClient.InferenceServices(service.Namespace).Get(service.Name, metav1.GetOptions{})
 			if err != nil {
 				log.Errorf("unable to get inference service status %s %v", service.Name, err)

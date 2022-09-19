@@ -58,7 +58,7 @@ func TestTable_Row(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, table.DataFrame().Subset(0), *row.DataFrame())
 
-	row, err = table.GetRow(2)
+	_, err = table.GetRow(2)
 	assert.Error(t, err)
 	assert.Equal(t, "invalid row number, expected: 0 <= row < 2, got: 2", err.Error())
 }

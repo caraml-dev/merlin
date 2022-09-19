@@ -300,7 +300,7 @@ type AlertCondition struct {
 
 func (ac AlertCondition) alertName(modelName string) string {
 	metricType := strings.Replace(string(ac.MetricType), "_", " ", -1)
-	metricType = strings.Title(metricType)
+	metricType = strings.ToUpper(metricType)
 
 	name := fmt.Sprintf("[merlin] %s: %s %s", modelName, metricType, strings.ToLower(string(ac.Severity)))
 	if ac.MetricType == AlertConditionTypeLatency {

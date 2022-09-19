@@ -167,10 +167,13 @@ var versionLabelsRegex = regexp.MustCompile(`(?i)([a-z0-9A-Z-_]+)\s+in\s+\(([a-z
 // Multiple label values for the same key are separated by "," character.
 //
 // For example, with the following labels query:
-//   animal in (cat, dog), color in (white)
+// `animal in (cat, dog), color in (white)`
+//
 // generateLabelsWhereQuery will return query and args pairs which can be used to generate
 // this SQL statement:
-//   ( labels @> {"animal": "cat"} OR labels @> {"animal": "dog"} ) AND ( labels @> {"color": "white"} )
+//
+// `( labels @> {"animal": "cat"} OR labels @> {"animal": "dog"} ) AND ( labels @> {"color": "white"} )`
+//
 // where the labels column is assumed to be in "jsonb" data type in Postgresql database.
 func generateLabelsWhereQuery(freeTextQuery string) (query string, args []interface{}) {
 	// queryParts from the SQL to match pair(s) of label key-value(s).

@@ -72,7 +72,7 @@ func (h *Handler) Postprocess(ctx context.Context, modelResponse types.Payload, 
 
 func (h *Handler) EmbedEnvironment(ctx context.Context) context.Context {
 	env := NewEnvironment(h.compiledPipeline, h.logger)
-	return context.WithValue(ctx, PipelineEnvironmentContext, env)
+	return context.WithValue(ctx, PipelineEnvironmentContext, env) //nolint: staticcheck
 }
 
 func getEnvironment(ctx context.Context) *Environment {

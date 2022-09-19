@@ -263,7 +263,7 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 
 func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) error {
 	timeout := time.After(c.config.BuildTimeoutDuration)
-	ticker := time.Tick(time.Second * tickDurationSecond)
+	ticker := time.NewTicker(time.Second * tickDurationSecond)
 	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
 	podClient := c.kubeClient.CoreV1().Pods(c.config.BuildNamespace)
 
@@ -272,7 +272,7 @@ func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) e
 		case <-timeout:
 			log.Errorf("timeout waiting for kaniko job completion %s", job.Name)
 			return ErrTimeoutBuilImage
-		case <-ticker:
+		case <-ticker.C:
 			j, err := jobClient.Get(ctx, job.Name, metav1.GetOptions{})
 			if err != nil {
 				log.Errorf("unable to get job status for job %s: %v", job.Name, err)
