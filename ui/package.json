@@ -15,7 +15,7 @@
     "@emotion/react": "^11.9.0",
     "@emotion/cache": "11.10.3",
     "eslint": "^8.1.0",
-    "@gojek/mlp-ui": "1.6.1",
+    "@gojek/mlp-ui": "1.6.2",
     "js-yaml": "^4.1.0",
     "levenary": "1.1.1",
     "moment": "2.29.4",
