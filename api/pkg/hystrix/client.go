@@ -34,7 +34,7 @@ func (cl *Client) Do(request *http.Request) (*http.Response, error) {
 	var err error
 
 	err = hystrix.Do(cl.commandName, func() error {
-		response, err = cl.client.Do(request)
+		response, err = cl.client.Do(request) // nolint: bodyclose
 		if err != nil {
 			return err
 		}

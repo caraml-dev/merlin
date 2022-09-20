@@ -11,6 +11,7 @@ linters:
     - errorlint
     - goimports
     - gofmt
+    - bodyclose
 
 issues:
   exclude-use-default: false

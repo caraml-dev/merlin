@@ -1309,6 +1309,8 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 
 				response, err := client.Do(req)
 				assert.NoError(t, err)
+				defer response.Body.Close() //nolint: errcheck
+				assert.NoError(t, err)
 				assert.Equal(t, http.StatusOK, response.StatusCode)
 
 				body, err := ioutil.ReadAll(response.Body)
@@ -1346,7 +1348,8 @@ func Test_recoveryHandler(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	resp, err := http.Post(fmt.Sprintf("http://localhost:%s/v1/models/%s:predict", port, modelName), "", strings.NewReader("{}"))
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+	defer resp.Body.Close() // nolint: errcheck
 	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 
 	respBody, err := ioutil.ReadAll(resp.Body)
