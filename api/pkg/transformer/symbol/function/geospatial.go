@@ -55,12 +55,12 @@ func (l *LatLong) toS2ID(level int) interface{} {
 
 // Geohash convert latitude longitude to geohash value
 func Geohash(lat interface{}, lon interface{}, precision uint) (interface{}, error) {
-	ll, err := extractLatLong(lat, lon)
+	rawLatLong, err := extractLatLong(lat, lon)
 	if err != nil {
 		panic(err)
 	}
 
-	switch latLong := ll.(type) {
+	switch latLong := rawLatLong.(type) {
 	case []*LatLong:
 		var value []interface{}
 		for _, ll := range latLong {
@@ -71,18 +71,18 @@ func Geohash(lat interface{}, lon interface{}, precision uint) (interface{}, err
 		value := latLong.toGeoHash(precision)
 		return value, nil
 	default:
-		return nil, fmt.Errorf("unknown type: %T", ll)
+		return nil, fmt.Errorf("unknown type: %T", rawLatLong)
 	}
 }
 
 // S2ID convert latitude and longitude to S2ID in certain level
 func S2ID(lat interface{}, lon interface{}, level int) (interface{}, error) {
-	ll, err := extractLatLong(lat, lon)
+	rawLatLong, err := extractLatLong(lat, lon)
 	if err != nil {
 		panic(err)
 	}
 
-	switch latLong := ll.(type) {
+	switch latLong := rawLatLong.(type) {
 	case []*LatLong:
 		var value []interface{}
 		for _, ll := range latLong {
@@ -93,7 +93,7 @@ func S2ID(lat interface{}, lon interface{}, level int) (interface{}, error) {
 		value := latLong.toS2ID(level)
 		return value, nil
 	default:
-		return nil, fmt.Errorf("unknown type: %T", ll)
+		return nil, fmt.Errorf("unknown type: %T", rawLatLong)
 	}
 }
 
@@ -109,28 +109,28 @@ func PolarAngle(lat1 interface{}, lon1 interface{}, lat2 interface{}, lon2 inter
 		return nil, err
 	}
 
-	switch point := firstPoint.(type) {
+	switch fp := firstPoint.(type) {
 	case []*LatLong:
 		secondPoints, ok := secondPoint.([]*LatLong)
 		if !ok {
 			return nil, errors.New("first point and second point has different format")
 		}
-		if len(secondPoints) != len(point) {
+		if len(secondPoints) != len(fp) {
 			return nil, errors.New("both first point and second point arrays must have the same length")
 		}
 		var values []interface{}
-		for idx, point1 := range point {
+		for idx, point1 := range fp {
 			point2 := secondPoints[idx]
 			values = append(values, calculatePolarAngle(point1, point2))
 		}
 		return values, nil
 
 	case *LatLong:
-		secondPoint, ok := secondPoint.(*LatLong)
+		sp, ok := secondPoint.(*LatLong)
 		if !ok {
 			return nil, errors.New("first point and second point has different format")
 		}
-		value := calculatePolarAngle(point, secondPoint)
+		value := calculatePolarAngle(fp, sp)
 		return value, nil
 
 	default:
@@ -138,7 +138,7 @@ func PolarAngle(lat1 interface{}, lon1 interface{}, lat2 interface{}, lon2 inter
 	}
 }
 
-// Haversine distance calculate distance between to points (lat, lon) in km
+// HaversineDistance calculate distance between to points (lat, lon) in km
 // lat1, lon1, lat2, lon2 should be float64 or []float64 or any value that can be converted to those types (float64 or []float64)
 func HaversineDistance(lat1 interface{}, lon1 interface{}, lat2 interface{}, lon2 interface{}, distanceUnit string) (interface{}, error) {
 	firstPoint, err := extractLatLong(lat1, lon1)
@@ -173,12 +173,12 @@ func distanceBetweenPoints(firstPoint, secondPoint interface{}, distanceUnit str
 		return values, nil
 
 	case *LatLong:
-		firstPoint := firstPoint.(*LatLong)
-		secondPoint, ok := secondPoint.(*LatLong)
+		fp := firstPoint.(*LatLong)
+		sp, ok := secondPoint.(*LatLong)
 		if !ok {
 			return nil, errors.New("first point and second point has different format")
 		}
-		value := calculateDistance(firstPoint, secondPoint, distanceUnit)
+		value := calculateDistance(fp, sp, distanceUnit)
 		return value, nil
 
 	default:
