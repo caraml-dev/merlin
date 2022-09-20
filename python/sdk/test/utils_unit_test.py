@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from merlin.util import valid_name_check, get_bucket_name, get_gcs_path
+from merlin.util import guess_mlp_ui_url, valid_name_check, get_bucket_name, get_gcs_path
 import pytest
 
 
@@ -47,3 +47,13 @@ def test_get_gcs_path():
 
     double_slash_uri_path = 'gs://some-bucket//mlflow/81/ddd'
     assert get_gcs_path(double_slash_uri_path) == 'mlflow/81/ddd'
+
+
+@pytest.mark.parametrize("mlp_api_url,expected", [
+    ("http://console.mydomain.com/merlin/api", "http://console.mydomain.com/merlin"),
+    ("https://console.mydomain.com/merlin/api", "https://console.mydomain.com/merlin"),
+    ("console.mydomain.com/merlin/api", "http://console.mydomain.com/merlin"),
+])
+@pytest.mark.unit
+def test_guess_mlp_ui_url(mlp_api_url, expected):
+    assert guess_mlp_ui_url(mlp_api_url) == expected
