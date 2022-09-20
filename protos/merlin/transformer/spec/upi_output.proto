@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
+
+
+message UPIPreprocessOutput {
+    string predictionTableName = 1;
+    repeated string transformerInputTableNames = 2;
+}
+
+message UPIPostprocessOutput {
+    string predictionResultTableName = 1;
+}
+

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
+
+message UPIAutoload {
+    repeated string tableNames = 1;
+    repeated string variableNames = 2;
+}
+

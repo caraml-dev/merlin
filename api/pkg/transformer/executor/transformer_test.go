@@ -10,6 +10,7 @@ import (
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
@@ -318,7 +319,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 						},
 					},
 				},
-			}, logger, true)
+			}, logger, true, protocol.HttpJson)
 
 			compiledPipeline, err := compiler.Compile(transformerConfig)
 			if err != nil {

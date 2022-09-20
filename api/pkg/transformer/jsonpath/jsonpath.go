@@ -1,18 +1,25 @@
 package jsonpath
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
 
-	"github.com/gojekfarm/jsonpath"
-
+	"github.com/caraml-dev/protopath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
+	"github.com/gojekfarm/jsonpath"
+	"google.golang.org/protobuf/proto"
 )
 
+type SourceType int
+
 const (
+	Map SourceType = iota
+	Proto
+
 	Prefix = "$."
 
 	RawRequestPrefix    = "$.raw_request"
@@ -21,11 +28,26 @@ const (
 
 var sourceJsonPattern = regexp.MustCompile(`\$\.raw_request|\$.model_response`)
 
+// JsonpathExtractor is interface that extract value given the source and path
+type JsonpathExtractor interface {
+	Lookup(obj any) (any, error)
+}
+
+// protopathImpl JsonpathExtractor for proto source type
+type protopathImpl struct {
+	compiled *protopath.Compiled
+}
+
+func (p *protopathImpl) Lookup(obj any) (any, error) {
+	return p.compiled.Lookup(context.TODO(), obj.(proto.Message))
+}
+
 // JsonPathOption holds information about the required jsonpath value and the optional default value
 type JsonPathOption struct {
 	JsonPath     string
 	DefaultValue string
 	TargetType   spec.ValueType
+	SrcType      SourceType
 }
 
 // Compile compile a jsonPath string into a jsonpath.Compiled instance
@@ -37,7 +59,7 @@ type JsonPathOption struct {
 // "$.book" : Compiled.LookupFromContainer extract "book" field from raw request payload
 // "$.raw_request.book" : Compiled.LookupFromContainer extract "book" field from raw request payload
 // "$.model_response.book" : Compiled.LookupFromContainer extract "book" field from model response payload
-func Compile(jsonPath string) (*Compiled, error) {
+func compile(jsonPath string, sourceType SourceType) (*Compiled, error) {
 	source := spec.JsonType_RAW_REQUEST
 	match := sourceJsonPattern.FindString(jsonPath)
 	if match != "" {
@@ -48,7 +70,7 @@ func Compile(jsonPath string) (*Compiled, error) {
 		jsonPath = sourceJsonPattern.ReplaceAllString(jsonPath, "$")
 	}
 
-	compiledJsonpath, err := jsonpath.Compile(jsonPath)
+	compiledJsonpath, err := createJsonpathCompiler(jsonPath, sourceType)
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +81,21 @@ func Compile(jsonPath string) (*Compiled, error) {
 	}, nil
 }
 
+func createJsonpathCompiler(path string, sourceType SourceType) (JsonpathExtractor, error) {
+	if sourceType == Map {
+		return jsonpath.Compile(path)
+	}
+	compiledJsonpath, err := protopath.NewJsonPathCompiler(path)
+	if err != nil {
+		return nil, err
+	}
+	return &protopathImpl{compiledJsonpath}, nil
+}
+
 // CompileWithOption compiles JsonPathOption into a jsonpath.Compiled instance
 // JsonPathOption allow setting default value when existing value of given jsonpath is nil
 func CompileWithOption(option JsonPathOption) (*Compiled, error) {
-	compiled, err := Compile(option.JsonPath)
+	compiled, err := compile(option.JsonPath, option.SrcType)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +113,7 @@ func CompileWithOption(option JsonPathOption) (*Compiled, error) {
 }
 
 func MustCompileJsonPath(jsonPath string) *Compiled {
-	cpl, err := Compile(jsonPath)
+	cpl, err := compile(jsonPath, Map)
 	if err != nil {
 		panic(err)
 	}
@@ -96,13 +129,13 @@ func MustCompileJsonPathWithOption(option JsonPathOption) *Compiled {
 }
 
 type Compiled struct {
-	cpl          *jsonpath.Compiled
+	cpl          JsonpathExtractor
 	source       spec.JsonType
 	defaultValue interface{}
 }
 
 func (c *Compiled) Lookup(obj types.Payload) (interface{}, error) {
-	val, err := c.cpl.Lookup(obj)
+	val, err := c.cpl.Lookup(obj.OriginalValue())
 	if err != nil {
 		return nil, err
 	}

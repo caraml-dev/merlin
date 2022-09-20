@@ -51,7 +51,7 @@ func Benchmark_buildEntitiesRequest_geohashArrays(b *testing.B) {
 			},
 		},
 	}
-	compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs)
+	compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs, jsonpath.Map)
 	if err != nil {
 		panic(err)
 	}

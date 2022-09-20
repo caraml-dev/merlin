@@ -103,7 +103,7 @@ func main() {
 		return
 	}
 
-	handler, err := createPipelineHandler(appConfig, transformerConfig, featureTableMetadata, logger)
+	handler, err := createPipelineHandler(appConfig, transformerConfig, featureTableMetadata, logger, appConfig.Server.Protocol)
 	if err != nil {
 		logger.Fatal("got error when creating handler", zap.Error(err))
 	}
@@ -141,7 +141,8 @@ func initFeastTransformer(appCfg AppConfig,
 	transformerConfig *spec.StandardTransformerConfig,
 	logger *zap.Logger,
 ) (*feast.Enricher, error) {
-	compiledJSONPaths, err := feast.CompileJSONPaths(transformerConfig.TransformerConfig.Feast)
+	// for feast enricher the only supported protocol is http_json hence json source type is Map
+	compiledJSONPaths, err := feast.CompileJSONPaths(transformerConfig.TransformerConfig.Feast, jsonpath.Map)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +190,7 @@ func parseFeatureTableMetadata(featureTableSpecsJson string) ([]*spec.FeatureTab
 	return featureSpecs, nil
 }
 
-func createPipelineHandler(appConfig AppConfig, transformerConfig *spec.StandardTransformerConfig, featureTableMetadata []*spec.FeatureTableMetadata, logger *zap.Logger) (*pipeline.Handler, error) {
+func createPipelineHandler(appConfig AppConfig, transformerConfig *spec.StandardTransformerConfig, featureTableMetadata []*spec.FeatureTableMetadata, logger *zap.Logger, protocol protocol.Protocol) (*pipeline.Handler, error) {
 
 	feastOpts := feast.OverwriteFeastOptionsConfig(appConfig.Feast, appConfig.RedisOverwriteConfig, appConfig.BigtableOverwriteConfig)
 	logger.Info("feast options", zap.Any("val", feastOpts))
@@ -199,7 +200,7 @@ func createPipelineHandler(appConfig AppConfig, transformerConfig *spec.Standard
 		return nil, errors.Wrap(err, "unable to initialize feast clients")
 	}
 
-	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger, false)
+	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger, false, protocol)
 	compiledPipeline, err := compiler.Compile(transformerConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to compile standard transformer")

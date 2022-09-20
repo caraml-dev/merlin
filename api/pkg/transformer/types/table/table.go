@@ -293,6 +293,27 @@ func (t *Table) Columns() []*series.Series {
 	return columns
 }
 
+func (t *Table) ColumnsWithExcluding(excludingCols []string) []*series.Series {
+	columnNames := t.ColumnNames()
+	columns := make([]*series.Series, 0)
+	for _, colName := range columnNames {
+		isExcluded := false
+		for _, excludingCol := range excludingCols {
+			if excludingCol == colName {
+				isExcluded = true
+				break
+			}
+		}
+
+		if isExcluded {
+			continue
+		}
+		col, _ := t.GetColumn(colName)
+		columns = append(columns, col)
+	}
+	return columns
+}
+
 // DataFrame return internal representation of table
 func (t *Table) DataFrame() *dataframe.DataFrame {
 	return t.dataFrame

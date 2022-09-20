@@ -17,7 +17,9 @@ func (sr Registry) JsonExtract(parentJsonPath, nestedJsonPath string) interface{
 
 	cplJsonPath := sr.getCompiledJSONPath(nestedJsonPath)
 	if cplJsonPath == nil {
-		c, err := jsonpath.Compile(nestedJsonPath)
+		c, err := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+			JsonPath: nestedJsonPath,
+		})
 		if err != nil {
 			panic(err)
 		}

@@ -1,0 +1,22 @@
+transformerConfig:
+  preprocess:
+    inputs:
+    - autoload:
+        tableNames:
+          - table1
+          - table2
+          - table3
+        variableNames:
+          - var1
+          - var2
+    transformations:
+      - tableTransformation:
+          inputTable: table2
+          outputTable: output_table
+          steps:
+            - updateColumns:
+              - column: col1
+                expression: var3
+    outputs:
+      - upiPreprocessOutput:
+          predictionTableName: output_table

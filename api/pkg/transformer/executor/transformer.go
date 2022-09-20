@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 
+	prt "github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -31,6 +32,7 @@ type transformerExecutorConfig struct {
 	feastOpts            feast.Options
 	logger               *zap.Logger
 	modelPredictor       ModelPredictor
+	protocol             prt.Protocol
 }
 
 // NewStandardTransformerWithConfig initialize standard transformer executor object
@@ -50,7 +52,7 @@ func NewStandardTransformerWithConfig(ctx context.Context, transformerConfig *sp
 		return nil, err
 	}
 
-	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &executorConfig.feastOpts, executorConfig.logger, executorConfig.traceEnabled)
+	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &executorConfig.feastOpts, executorConfig.logger, executorConfig.traceEnabled, executorConfig.protocol)
 	compiledPipeline, err := compiler.Compile(transformerConfig)
 	if err != nil {
 		return nil, err

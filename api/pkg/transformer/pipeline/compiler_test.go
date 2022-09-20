@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	prt "github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 
@@ -25,6 +26,7 @@ func TestCompiler_Compile(t *testing.T) {
 			feastClients feast.Clients
 			feastOptions *feast.Options
 			logger       *zap.Logger
+			protocol     prt.Protocol
 		}
 
 		want struct {
@@ -58,7 +60,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/valid_preprocess_input_only.yaml",
 			want: want{
@@ -91,6 +94,99 @@ func TestCompiler_Compile(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "upi simple preprocess & postprocess",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.UpiV1,
+			},
+			specYamlFilePath: "./testdata/upi/simple_preprocess_postprocess.yaml",
+			want: want{
+				expressions: []string{},
+				jsonPaths: []string{
+					"$.prediction_context[0].string_value",
+				},
+				preprocessOps: []Op{
+					&VariableDeclarationOp{},
+				},
+				postprocessOps: []Op{
+					&UPIAutoloadingOp{},
+					&TableTransformOp{},
+					&UPIPostprocessOutputOp{},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid upi preprocess",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.UpiV1,
+			},
+			specYamlFilePath: "./testdata/upi/invalid_preprocess.yaml",
+			wantErr:          true,
+			expError:         errors.New("unable to compile preprocessing pipeline: unknown name var3 (1:1)\n | var3\n | ^"),
+		},
+		{
+			name: "invalid upi preprocess output",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.UpiV1,
+			},
+			specYamlFilePath: "./testdata/upi/invalid_preprocess_output.yaml",
+			wantErr:          true,
+			expError:         errors.New("UPIPostprocessOutput is not supported in preprocess step"),
+		},
+		{
+			name: "invalid upi postprocess output",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.UpiV1,
+			},
+			specYamlFilePath: "./testdata/upi/invalid_postprocess_output.yaml",
+			wantErr:          true,
+			expError:         errors.New("UPIPreprocessOutput is not supported in postprocess step"),
+		},
+		{
+			name: "invalid upi using jsonOutput",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.UpiV1,
+			},
+			specYamlFilePath: "./testdata/upi/invalid_using_json_output.yaml",
+			wantErr:          true,
+			expError:         errors.New("json output is not supported"),
+		},
+		{
 			name: "no pipeline",
 			fields: fields{
 				sr:           symbol.NewRegistry(),
@@ -99,7 +195,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/valid_no_pipeline.yaml",
 			want: want{
@@ -120,7 +217,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/valid_input_only.yaml",
 			want: want{
@@ -172,7 +270,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/valid_preprocess_input_and_transformation.yaml",
 			want: want{
@@ -211,7 +310,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/valid_sequential_table_dependency.yaml",
 			want: want{
@@ -248,6 +348,7 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/valid_table_transform_conditional_filtering.yaml",
 			want: want{
@@ -282,7 +383,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/input_output.yaml",
 			want: want{
@@ -321,7 +423,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/valid_feast_preprocess.yaml",
 			want: want{
@@ -354,7 +457,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/valid_feast_expression.yaml",
 			want: want{
@@ -389,7 +493,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/invalid_output.yaml",
 			wantErr:          true,
@@ -404,7 +509,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/invalid_standard_scale_column.yaml",
 			wantErr:          true,
@@ -419,7 +525,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/invalid_min_max_scale_column.yaml",
 			wantErr:          true,
@@ -434,7 +541,8 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/invalid_encode_column.yaml",
 			wantErr:          true,
@@ -449,21 +557,49 @@ func TestCompiler_Compile(t *testing.T) {
 					CacheEnabled:  true,
 					CacheSizeInMB: 100,
 				},
-				logger: logger,
+				logger:   logger,
+				protocol: prt.HttpJson,
 			},
 			specYamlFilePath: "./testdata/invalid_variables_in_transformations.yaml",
 			wantErr:          true,
 			expError:         errors.New("unable to compile preprocessing pipeline: unknown name transformed_entity_100_table (1:1)\n | transformed_entity_100_table.Col('col5').Mean()\n | ^"),
 		},
+		{
+			name: "invalid - using UPIPreprocessOutput for http_json protocol",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.HttpJson,
+			},
+			specYamlFilePath: "./testdata/invalid_preprocess_output.yaml",
+			wantErr:          true,
+			expError:         errors.New("jsonOutput is only supported for http protocol"),
+		},
+		{
+			name: "invalid - using aut0load for http_json protocol",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.HttpJson,
+			},
+			specYamlFilePath: "./testdata/invalid_using_autoload.yaml",
+			wantErr:          true,
+			expError:         errors.New("autoload is only supported for upi_v1 protocol"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Compiler{
-				sr:           tt.fields.sr,
-				feastClients: tt.fields.feastClients,
-				feastOptions: tt.fields.feastOptions,
-				logger:       tt.fields.logger,
-			}
+			c := NewCompiler(tt.fields.sr, tt.fields.feastClients, tt.fields.feastOptions, tt.fields.logger, false, tt.fields.protocol)
 
 			yamlBytes, err := ioutil.ReadFile(tt.specYamlFilePath)
 			assert.NoError(t, err)

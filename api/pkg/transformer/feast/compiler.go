@@ -11,13 +11,16 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 )
 
-func CompileJSONPaths(featureTableSpecs []*spec.FeatureTable) (map[string]*jsonpath.Compiled, error) {
+func CompileJSONPaths(featureTableSpecs []*spec.FeatureTable, jsonpathSourceType jsonpath.SourceType) (map[string]*jsonpath.Compiled, error) {
 	compiledJsonPath := make(map[string]*jsonpath.Compiled)
 	for _, ft := range featureTableSpecs {
 		for _, configEntity := range ft.Entities {
 			switch configEntity.Extractor.(type) {
 			case *spec.Entity_JsonPath:
-				c, err := jsonpath.Compile(configEntity.GetJsonPath())
+				c, err := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+					JsonPath: configEntity.GetJsonPath(),
+					SrcType:  jsonpathSourceType,
+				})
 				if err != nil {
 					return nil, fmt.Errorf("unable to compile jsonpath for entity %s: %s", configEntity.Name, configEntity.GetJsonPath())
 				}
@@ -28,6 +31,7 @@ func CompileJSONPaths(featureTableSpecs []*spec.FeatureTable) (map[string]*jsonp
 					JsonPath:     jsonPathCfg.JsonPath,
 					DefaultValue: jsonPathCfg.DefaultValue,
 					TargetType:   jsonPathCfg.ValueType,
+					SrcType:      jsonpathSourceType,
 				})
 				if err != nil {
 					return nil, fmt.Errorf("unable to compile jsonpath config for entity %s: %s. err: %w", configEntity.Name, jsonPathCfg, err)

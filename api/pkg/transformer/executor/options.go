@@ -1,6 +1,7 @@
 package executor
 
 import (
+	prt "github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"go.uber.org/zap"
 )
@@ -28,5 +29,11 @@ func WithLogger(logger *zap.Logger) TransformerOptions {
 func WithModelPredictor(modelPredictor ModelPredictor) TransformerOptions {
 	return func(cfg *transformerExecutorConfig) {
 		cfg.modelPredictor = modelPredictor
+	}
+}
+
+func WithProtocol(protocol prt.Protocol) TransformerOptions {
+	return func(cfg *transformerExecutorConfig) {
+		cfg.protocol = protocol
 	}
 }
