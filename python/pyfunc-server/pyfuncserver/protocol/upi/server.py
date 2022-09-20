@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 from concurrent import futures
 
 import grpc
@@ -25,7 +26,28 @@ class UPIServer:
         self._config = config
 
     def start(self):
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        logging.info(f"Starting {self._config.workers} workers")
+
+        if self._config.workers > 1:
+            # multiprocessing based on https://github.com/grpc/grpc/tree/master/examples/python/multiprocessing
+            workers = []
+            for _ in range(self._config.workers - 1):
+                worker = multiprocessing.Process(target=self._run_server)
+                worker.start()
+                workers.append(worker)
+
+        self._run_server()
+
+    def _run_server(self):
+        """
+            Start a server in a subprocess.
+
+        """
+        options = self._config.grpc_options
+        options.append(('grpc.so_reuseport', 1))
+
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=self._config.grpc_concurrency),
+                             options=options)
         upi_pb2_grpc.add_UniversalPredictionServiceServicer_to_server(self._predict_service, server)
 
         # Enable reflection server for debugging
