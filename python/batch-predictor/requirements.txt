@@ -1,5 +1,5 @@
 pyspark==2.4.5
-mlflow==1.6.0
+mlflow>=1.2.0,<=1.23.0
 cloudpickle==2.0.0
 pyarrow==0.14.1
 protobuf>=3.0,<4.0.0dev

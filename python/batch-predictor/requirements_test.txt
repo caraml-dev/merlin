@@ -3,6 +3,6 @@ pytest-cov
 mypy
 google-cloud-bigquery
 scikit-learn==0.20.3
-joblib==0.13.0
+joblib>=0.13.0
 mypy-protobuf>=1.19
 types-PyYAML

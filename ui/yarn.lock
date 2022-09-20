@@ -1570,10 +1570,10 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
-"@gojek/mlp-ui@1.6.1":
-  version "1.6.1"
-  resolved "https://registry.yarnpkg.com/@gojek/mlp-ui/-/mlp-ui-1.6.1.tgz#6dcc9363d34ab0562eb2a11ba92688ff984b4ce1"
-  integrity sha512-Q/huAIwKZUfP5qJe94H7xYLK57N9DFFQ/Eo0mBEHRR0W0fXGp7eF+JVFAIuh/jj3VzCx4+8iOrUrLltbz+dOVA==
+"@gojek/mlp-ui@1.6.2":
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/@gojek/mlp-ui/-/mlp-ui-1.6.2.tgz#19fdb36f5615235f7d50e764402f85f37c7f6126"
+  integrity sha512-K+dpI7VAsWSMZ20ts101ovQkQJsJNfyNnNVV/9LWt8LMjvR4iEBMOTpxs1eoHvde8/WEYjkIS1Gf+5azKres0g==
   dependencies:
     "@react-oauth/google" "0.2.6"
     classnames "^2.2.6"
