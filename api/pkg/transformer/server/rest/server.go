@@ -73,10 +73,7 @@ func New(o *config.Options, logger *zap.Logger) (*HTTPServer, error) {
 
 // New initializes a new Server with pipeline handler
 func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Logger) (*HTTPServer, error) {
-	predictURL, err := getUrl(fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelFullName))
-	if err != nil {
-		return nil, err
-	}
+	predictURL := getUrl(fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelFullName))
 
 	var modelHttpClient hystrixHttpClient
 	hystrixGo.SetLogger(hystrixpkg.NewHystrixLogger(logger))
@@ -360,11 +357,11 @@ func getHeaders(headers http.Header) map[string]string {
 }
 
 // getUrl return url or add default http scheme if scheme is not specified
-func getUrl(rawUrl string) (string, error) {
+func getUrl(rawUrl string) string {
 	urlStr := rawUrl
 	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
 		urlStr = "http://" + urlStr
 	}
 
-	return urlStr, nil
+	return urlStr
 }
