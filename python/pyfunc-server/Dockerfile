@@ -13,13 +13,9 @@
 # limitations under the License.
 
 ARG BASE_IMAGE
+ARG MODEL_URL
 
 FROM ${BASE_IMAGE}
-
-ARG MODEL_URL
-ENV WORKERS 1
-
-ENV PROMETHEUS_MULTIPROC_DIR=/prom_dir
 
 WORKDIR /pyfunc-server
 RUN gsutil cp -r ${MODEL_URL} .

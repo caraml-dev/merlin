@@ -6,14 +6,15 @@ import os
 from merlin.protocol import Protocol
 
 HTTP_PORT = "CARAML_HTTP_PORT"
-GRPC_PORT = "CARAML_GRPC_PORT"
 MODEL_NAME = "CARAML_MODEL_NAME"
 MODEL_VERSION = "CARAML_MODEL_VERSION"
 MODEL_FULL_NAME = "CARAML_MODEL_FULL_NAME"
 PROTOCOL = "CARAML_PROTOCOL"
 WORKERS = "WORKERS"
+GRPC_PORT = "CARAML_GRPC_PORT"
 LOG_LEVEL = "LOG_LEVEL"
 GRPC_OPTIONS = "GRPC_OPTIONS"
+GRPC_CONCURRENCY = "GRPC_CONCURRENCY"
 
 DEFAULT_HTTP_PORT = 8080
 DEFAULT_GRPC_PORT = 9000
@@ -23,6 +24,7 @@ DEFAULT_FULL_NAME = f"{DEFAULT_MODEL_NAME}-{DEFAULT_MODEL_VERSION}"
 DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_PROTOCOL = "HTTP_JSON"
 DEFAULT_GRPC_OPTIONS = "{}"
+DEFAULT_GRPC_CONCURRENCY = "10"
 
 
 class ModelManifest:
@@ -56,8 +58,8 @@ class Config:
         self.workers = int(os.getenv(WORKERS, 1))
         self.log_level = self._log_level()
 
-        grpc_options = os.getenv(GRPC_OPTIONS, DEFAULT_GRPC_OPTIONS)
-        self.grpc_options = json.loads(grpc_options)
+        self.grpc_options = self._to_grpc_options(os.getenv(GRPC_OPTIONS, DEFAULT_GRPC_OPTIONS))
+        self.grpc_concurrency = int(os.getenv(GRPC_CONCURRENCY, DEFAULT_GRPC_CONCURRENCY))
 
     def _log_level(self):
         log_level = os.getenv(LOG_LEVEL, DEFAULT_LOG_LEVEL)
@@ -66,3 +68,10 @@ class Config:
             logging.warning(f"invalid log level {log_level}")
             return logging.INFO
         return numeric_level
+
+    def _to_grpc_options(self, raw_options: str):
+        options = json.loads(raw_options)
+        grpc_options = []
+        for k, v in options.items():
+            grpc_options.append((k, v))
+        return grpc_options
