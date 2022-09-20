@@ -67,12 +67,12 @@ type hystrixHttpClient interface {
 }
 
 // New initializes a new Server.
-func New(o *config.Options, logger *zap.Logger) (*HTTPServer, error) {
+func New(o *config.Options, logger *zap.Logger) *HTTPServer {
 	return NewWithHandler(o, nil, logger)
 }
 
-// New initializes a new Server with pipeline handler
-func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Logger) (*HTTPServer, error) {
+// NewWithHandler initializes a new Server with pipeline handler
+func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Logger) *HTTPServer {
 	predictURL := getUrl(fmt.Sprintf("%s/v1/models/%s:predict", o.ModelPredictURL, o.ModelFullName))
 
 	var modelHttpClient hystrixHttpClient
@@ -91,7 +91,7 @@ func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Lo
 		srv.PostprocessHandler = handler.Postprocess
 		srv.ContextModifier = handler.EmbedEnvironment
 	}
-	return srv, nil
+	return srv
 }
 
 func newHTTPHystrixClient(commandName string, o *config.Options) *hystrixpkg.Client {

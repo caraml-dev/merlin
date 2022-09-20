@@ -53,8 +53,7 @@ func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 		ModelPredictURL: ts.URL,
 	}
 	logger, _ := zap.NewDevelopment()
-	server, err := New(options, logger)
-	assert.NoError(t, err)
+	server := New(options, logger)
 
 	server.PredictHandler(rr, req)
 
@@ -131,9 +130,7 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 				ModelPredictURL: ts.URL,
 			}
 			logger, _ := zap.NewDevelopment()
-			server, err := New(options, logger)
-			assert.NoError(t, err)
-
+			server := New(options, logger)
 			server.PreprocessHandler = mockPreprocessHandler
 
 			server.PredictHandler(rr, req)
@@ -1479,7 +1476,7 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 
 	handler := pipeline.NewHandler(compiledPipeline, logger)
 
-	return NewWithHandler(options, handler, logger)
+	return NewWithHandler(options, handler, logger), nil
 }
 
 func assertHasHeaders(t *testing.T, expected map[string]string, actual http.Header) bool {
