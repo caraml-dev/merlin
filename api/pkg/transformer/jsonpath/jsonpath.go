@@ -64,11 +64,11 @@ type JsonPathOption struct {
 // "$.raw_request.book" : Compiled.LookupFromContainer extract "book" field from raw request payload
 // "$.model_response.book" : Compiled.LookupFromContainer extract "book" field from model response payload
 func compile(jsonPath string, sourceType SourceType) (*Compiled, error) {
-	source := spec.JsonType_RAW_REQUEST
+	source := spec.PayloadType_RAW_REQUEST
 	match := sourceJsonPattern.FindString(jsonPath)
 	if match != "" {
 		if match == ModelResponsePrefix {
-			source = spec.JsonType_MODEL_RESPONSE
+			source = spec.PayloadType_MODEL_RESPONSE
 		}
 
 		jsonPath = sourceJsonPattern.ReplaceAllString(jsonPath, "$")
@@ -139,7 +139,7 @@ func MustCompileJsonPathWithOption(option JsonPathOption) *Compiled {
 // Compiled contains information about the compilation of operation based on given jsonpath syntax
 type Compiled struct {
 	cpl          JsonpathExtractor
-	source       spec.JsonType
+	source       spec.PayloadType
 	defaultValue interface{}
 }
 
