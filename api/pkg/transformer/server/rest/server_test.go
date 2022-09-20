@@ -58,7 +58,7 @@ func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 	server.PredictHandler(rr, req)
 
 	response, err := ioutil.ReadAll(rr.Body)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, mockPredictResponse, response)
 	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
 	assert.Equal(t, fmt.Sprint(len(mockPredictResponse)), rr.Header().Get("Content-Length"))
@@ -136,7 +136,7 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 			server.PredictHandler(rr, req)
 
 			response, err := ioutil.ReadAll(rr.Body)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, test.modelResponse, response)
 			assert.Equal(t, test.modelStatusCode, rr.Code)
 			assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
@@ -1352,6 +1352,41 @@ func Test_recoveryHandler(t *testing.T) {
 	assert.Equal(t, `{"code":500,"message":"panic: panic at preprocess"}`, string(respBody))
 }
 
+func Test_getUrl(t *testing.T) {
+	tests := []struct {
+		name   string
+		rawUrl string
+		want   string
+	}{
+		{
+			name:   "http scheme",
+			rawUrl: "http://my-model.my-domain.com/predict",
+			want:   "http://my-model.my-domain.com/predict",
+		},
+		{
+			name:   "https scheme",
+			rawUrl: "https://my-model.my-domain.com/predict",
+			want:   "https://my-model.my-domain.com/predict",
+		},
+		{
+			name:   "no scheme",
+			rawUrl: "my-model.my-domain.com/predict",
+			want:   "http://my-model.my-domain.com/predict",
+		},
+		{
+			name:   "no scheme with port",
+			rawUrl: "std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
+			want:   "http://std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getUrl(tt.rawUrl)
+			assert.Equalf(t, tt.want, got, "getUrl(%v)", tt.rawUrl)
+		})
+	}
+}
+
 // Function to assert that 2 JSONs are the same, with considerations of delta in float values
 // inputs are map[string]interface{} converted from json, and delta which is th tolerance of error for the float
 // function will first confirm that the number of items in map are same
@@ -1440,9 +1475,8 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 	}
 
 	handler := pipeline.NewHandler(compiledPipeline, logger)
-	transformerServer := NewWithHandler(options, handler, logger)
 
-	return transformerServer, nil
+	return NewWithHandler(options, handler, logger), nil
 }
 
 func assertHasHeaders(t *testing.T, expected map[string]string, actual http.Header) bool {
