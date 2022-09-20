@@ -121,7 +121,7 @@ export const ContainerLogsView = ({
   const authCtx = useContext(AuthContext);
   const fetchOptions = {
     headers: {
-      Authorization: `Bearer ${authCtx.state.accessToken}`
+      Authorization: `Bearer ${authCtx.state.jwt}`
     }
   };
 
