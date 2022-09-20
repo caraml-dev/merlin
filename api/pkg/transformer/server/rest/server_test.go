@@ -1357,43 +1357,34 @@ func Test_recoveryHandler(t *testing.T) {
 
 func Test_getUrl(t *testing.T) {
 	tests := []struct {
-		name    string
-		rawUrl  string
-		want    string
-		wantErr bool
+		name   string
+		rawUrl string
+		want   string
 	}{
 		{
-			name:    "http scheme",
-			rawUrl:  "http://my-model.my-domain.com/predict",
-			want:    "http://my-model.my-domain.com/predict",
-			wantErr: false,
+			name:   "http scheme",
+			rawUrl: "http://my-model.my-domain.com/predict",
+			want:   "http://my-model.my-domain.com/predict",
 		},
 		{
-			name:    "https scheme",
-			rawUrl:  "https://my-model.my-domain.com/predict",
-			want:    "https://my-model.my-domain.com/predict",
-			wantErr: false,
+			name:   "https scheme",
+			rawUrl: "https://my-model.my-domain.com/predict",
+			want:   "https://my-model.my-domain.com/predict",
 		},
 		{
-			name:    "no scheme",
-			rawUrl:  "my-model.my-domain.com/predict",
-			want:    "http://my-model.my-domain.com/predict",
-			wantErr: false,
+			name:   "no scheme",
+			rawUrl: "my-model.my-domain.com/predict",
+			want:   "http://my-model.my-domain.com/predict",
 		},
 		{
-			name:    "no scheme with port",
-			rawUrl:  "std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
-			want:    "http://std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
-			wantErr: false,
+			name:   "no scheme with port",
+			rawUrl: "std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
+			want:   "http://std-transformer-s-1-predictor-default.merlin-e2e:80/v1/models/std-transformer-s-1:predict",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getUrl(tt.rawUrl)
-			if tt.wantErr {
-				assert.Error(t, err)
-				return
-			}
+			got := getUrl(tt.rawUrl)
 			assert.Equalf(t, tt.want, got, "getUrl(%v)", tt.rawUrl)
 		})
 	}
