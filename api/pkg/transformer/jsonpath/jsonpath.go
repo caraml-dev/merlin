@@ -14,10 +14,13 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// SourceType indicates type of source for jsonpath value extraction
 type SourceType int
 
 const (
+	// Map source type is in map type
 	Map SourceType = iota
+	// Proto source type is in protobuf.Message type
 	Proto
 
 	Prefix = "$."
@@ -38,6 +41,7 @@ type protopathImpl struct {
 	compiled *protopath.Compiled
 }
 
+// Lookup extract value based on the compiled jsonpath syntax
 func (p *protopathImpl) Lookup(obj any) (any, error) {
 	return p.compiled.Lookup(context.TODO(), obj.(proto.Message))
 }
@@ -112,6 +116,8 @@ func CompileWithOption(option JsonPathOption) (*Compiled, error) {
 	return compiled, nil
 }
 
+// MustCompileJsonPath will compile jsonpath using map as source type
+// will panic if got error
 func MustCompileJsonPath(jsonPath string) *Compiled {
 	cpl, err := compile(jsonPath, Map)
 	if err != nil {
@@ -120,6 +126,8 @@ func MustCompileJsonPath(jsonPath string) *Compiled {
 	return cpl
 }
 
+// MustCompileJsonPathWithOption will compile jsonpath by specifying the option
+// will panic if got error
 func MustCompileJsonPathWithOption(option JsonPathOption) *Compiled {
 	cpl, err := CompileWithOption(option)
 	if err != nil {
@@ -128,12 +136,14 @@ func MustCompileJsonPathWithOption(option JsonPathOption) *Compiled {
 	return cpl
 }
 
+// Compiled contains information about the compilation of operation based on given jsonpath syntax
 type Compiled struct {
 	cpl          JsonpathExtractor
 	source       spec.JsonType
 	defaultValue interface{}
 }
 
+// Lookup extract value based on the compiled jsonpath syntax by giving the source object
 func (c *Compiled) Lookup(obj types.Payload) (interface{}, error) {
 	val, err := c.cpl.Lookup(obj.OriginalValue())
 	if err != nil {
@@ -161,6 +171,7 @@ func (c *Compiled) Lookup(obj types.Payload) (interface{}, error) {
 	return val, nil
 }
 
+// LookupFromContainer extract the value from payload container where it contains request and model response payload
 func (c *Compiled) LookupFromContainer(container types.PayloadObjectContainer) (interface{}, error) {
 	sourceJson := container[c.source]
 	if sourceJson == nil {

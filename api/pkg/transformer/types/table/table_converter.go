@@ -53,7 +53,7 @@ func convertToUPIColumns(cols []*series.Series) ([]*upiv1.Column, error) {
 		case series.String:
 			upiColType = upiv1.Type_TYPE_STRING
 		default:
-			return nil, fmt.Errorf("type %v not supported in UPI", col.Type())
+			return nil, fmt.Errorf("type %v is not supported in UPI", col.Type())
 		}
 
 		upiCols[idx] = &upiv1.Column{

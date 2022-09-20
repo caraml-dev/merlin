@@ -15,6 +15,7 @@ type UPIAutoloadingOp struct {
 	*OperationTracing
 }
 
+// NewUPIAutoloadingOp function to initialize new UPIAutoloadingOp
 func NewUPIAutoloadingOp(pipelineType types.Pipeline, tracingEnabled bool) *UPIAutoloadingOp {
 	op := &UPIAutoloadingOp{
 		pipelineType: pipelineType,
@@ -25,6 +26,10 @@ func NewUPIAutoloadingOp(pipelineType types.Pipeline, tracingEnabled bool) *UPIA
 	return op
 }
 
+// Execute autoloading operation
+// Contains 2 types of operation
+//  1. Preprocess. Load transformer input table and variables
+//  2. Postprocess. Load model prediction response table
 func (ua *UPIAutoloadingOp) Execute(ctx context.Context, env *Environment) error {
 	if ua.pipelineType == types.Preprocess {
 		return ua.autoLoadingPreprocessInput(ctx, env)

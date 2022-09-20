@@ -10,12 +10,13 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
-// UPIPreprocessOutputOp
+// UPIPreprocessOutputOp operation to convert all the preprocess result into types.UPIPredictionRequest
 type UPIPreprocessOutputOp struct {
 	outputSpec *spec.UPIPreprocessOutput
 	*OperationTracing
 }
 
+// NewUPIPreprocessOutputOp function to initialize new operation
 func NewUPIPreprocessOutputOp(outputSpec *spec.UPIPreprocessOutput, tracingEnabled bool) *UPIPreprocessOutputOp {
 	output := &UPIPreprocessOutputOp{outputSpec: outputSpec}
 	if tracingEnabled {
@@ -24,6 +25,10 @@ func NewUPIPreprocessOutputOp(outputSpec *spec.UPIPreprocessOutput, tracingEnabl
 	return output
 }
 
+// Execute output operation
+// The only fields that modified in this output are
+// 1. transformer_input
+// 2. prediction_table
 func (up *UPIPreprocessOutputOp) Execute(ctx context.Context, env *Environment) error {
 	request := env.symbolRegistry.RawRequest()
 	enrichedRequest, valid := request.(*types.UPIPredictionRequest)

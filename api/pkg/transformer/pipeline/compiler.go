@@ -26,6 +26,7 @@ const (
 	envPredictorStorageURI = "STORAGE_URI"
 )
 
+// Compiler handle compilation series of operation involved in standard transformer
 type Compiler struct {
 	sr symbol.Registry
 
@@ -38,6 +39,7 @@ type Compiler struct {
 	jsonpathSourceType      jsonpath.SourceType
 }
 
+// NewCompiler create new compiler instance
 func NewCompiler(sr symbol.Registry,
 	feastClients feast.Clients,
 	feastOptions *feast.Options,
@@ -47,11 +49,11 @@ func NewCompiler(sr symbol.Registry,
 
 	var validationFn func(*spec.StandardTransformerConfig) error
 	jsonpathSourceType := jsonpath.Map
-	if protocol == ptc.HttpJson {
-		validationFn = httpTransformerValidation
-	} else {
+	if protocol == ptc.UpiV1 {
 		validationFn = upiTransformerValidation
 		jsonpathSourceType = jsonpath.Proto
+	} else {
+		validationFn = httpTransformerValidation
 	}
 	return &Compiler{
 		sr:                      sr,
@@ -64,6 +66,7 @@ func NewCompiler(sr symbol.Registry,
 	}
 }
 
+// Compile does compilation of operation for standard transformer including validation whether the configuration is valid or not
 func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipeline, error) {
 	preprocessOps := make([]Op, 0)
 	postprocessOps := make([]Op, 0)
@@ -143,12 +146,24 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, pipelineType types
 			ops = append(ops, tableOp)
 			for k, v := range loadedTables {
 				preloadedTables[k] = v
-				if c.operationTracingEnabled {
-					if err := tableOp.AddInputOutput(nil, map[string]interface{}{k: &v}); err != nil {
+			}
+
+			if c.operationTracingEnabled {
+				for _, tbl := range input.Tables {
+					if tbl.BaseTable.GetFromFile() == nil {
+						continue
+					}
+					name := tbl.Name
+					loadedTbl, exist := loadedTables[name]
+					if !exist {
+						continue
+					}
+					if err := tableOp.AddInputOutput(nil, map[string]interface{}{name: &loadedTbl}); err != nil {
 						return nil, nil, err
 					}
 				}
 			}
+
 		}
 
 		if input.Feast != nil {

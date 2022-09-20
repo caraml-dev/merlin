@@ -10,6 +10,8 @@ import (
 
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
+	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	feastMocks "github.com/gojek/merlin/pkg/transformer/feast/mocks"
@@ -1341,6 +1343,286 @@ func TestUPIServer_PredictValues(t *testing.T) {
 							},
 						},
 					},
+					Variables: []*upiv1.Variable{},
+				},
+			},
+			modelOutput: &upiv1.PredictValuesResponse{
+				PredictionResultTable: &upiv1.Table{
+					Name: "model_prediction_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "probability",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "1",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.2,
+								},
+							},
+						},
+						{
+							RowId: "2",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.3,
+								},
+							},
+						},
+						{
+							RowId: "3",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.4,
+								},
+							},
+						},
+						{
+							RowId: "4",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.5,
+								},
+							},
+						},
+						{
+							RowId: "5",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.6,
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &upiv1.PredictValuesResponse{
+				PredictionResultTable: &upiv1.Table{
+					Name: "model_prediction_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "probability",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "1",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.2,
+								},
+							},
+						},
+						{
+							RowId: "2",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.3,
+								},
+							},
+						},
+						{
+							RowId: "3",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.4,
+								},
+							},
+						},
+						{
+							RowId: "4",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.5,
+								},
+							},
+						},
+						{
+							RowId: "5",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.6,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:         "table_transformations with feast",
+			specYamlPath: "../../pipeline/testdata/upi/valid_feast_preprocess.yaml",
+			mockFeasts: []mockFeast{
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					response: &feastSdk.OnlineFeaturesResponse{
+						RawResponse: &serving.GetOnlineFeaturesResponse{
+							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(1),
+										"driver_feature_1": feastSdk.DoubleVal(1111),
+										"driver_feature_2": feastSdk.DoubleVal(2222),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+								{
+									Fields: map[string]*feastTypes.Value{
+										"driver_id":        feastSdk.Int64Val(2),
+										"driver_feature_1": feastSdk.DoubleVal(3333),
+										"driver_feature_2": feastSdk.DoubleVal(4444),
+									},
+									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
+										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
+										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			request: &upiv1.PredictValuesRequest{
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{
+						{
+							Name:         "customer_id",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 1111,
+						},
+					},
+				},
+			},
+			preprocessOutput: &upiv1.PredictValuesRequest{
+				PredictionTable: &upiv1.Table{
+					Name: "result_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "rank",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "driver_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "customer_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "driver_feature_1",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "driver_feature_2",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 0,
+								},
+								{
+									IntegerValue: 1,
+								},
+								{
+									IntegerValue: 1111,
+								},
+								{
+									DoubleValue: 1111,
+								},
+								{
+									DoubleValue: 2222,
+								},
+							},
+						},
+						{
+							RowId: "",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1,
+								},
+								{
+									IntegerValue: 2,
+								},
+								{
+									IntegerValue: 1111,
+								},
+								{
+									DoubleValue: 3333,
+								},
+								{
+									DoubleValue: 4444,
+								},
+							},
+						},
+					},
+				},
+				TransformerInput: &upiv1.TransformerInput{
+					Tables:    []*upiv1.Table{},
 					Variables: []*upiv1.Variable{},
 				},
 			},

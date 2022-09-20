@@ -1,6 +1,7 @@
 package table
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -282,6 +283,62 @@ func Test_ToUPITable(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "simple conversion containing nil",
+			table: New(
+				series.New([]any{1.2, nil}, series.Float, "col1"),
+				series.New([]int{2, 4}, series.Int, "col2"),
+				series.New([]string{"row1", "row2"}, series.String, "row_id"),
+			),
+			tableName: "new_table",
+			want: &upiv1.Table{
+				Name: "new_table",
+				Columns: []*upiv1.Column{
+					{
+						Name: "col1",
+						Type: upiv1.Type_TYPE_DOUBLE,
+					},
+					{
+						Name: "col2",
+						Type: upiv1.Type_TYPE_INTEGER,
+					},
+				},
+				Rows: []*upiv1.Row{
+					{
+						RowId: "row1",
+						Values: []*upiv1.Value{
+							{
+								DoubleValue: 1.2,
+							},
+							{
+								IntegerValue: 2,
+							},
+						},
+					},
+					{
+						RowId: "row2",
+						Values: []*upiv1.Value{
+							{
+								IsNull: true,
+							},
+							{
+								IntegerValue: 4,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "failed due to unrecognized type",
+			table: New(
+				series.New([]any{1.2, 2.4}, series.Float, "col1"),
+				series.New([]bool{true, false}, series.Bool, "col2"),
+				series.New([]string{"row1", "row2"}, series.String, "row_id"),
+			),
+			tableName:   "new_table",
+			expectedErr: fmt.Errorf("type bool is not supported in UPI"),
 		},
 	}
 	for _, tt := range tests {

@@ -346,7 +346,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			gotByte, err := json.Marshal(got)
 			require.NoError(t, err)
 
-			assert.Equal(t, string(tt.wantResponseByte), string(gotByte))
+			assert.JSONEq(t, string(tt.wantResponseByte), string(gotByte))
 		})
 	}
 }
