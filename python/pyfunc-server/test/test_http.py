@@ -15,8 +15,6 @@ from pyfuncserver.config import HTTP_PORT, WORKERS, MODEL_NAME, MODEL_VERSION, M
 from test.utils import wait_server_ready
 
 
-
-
 class EchoModel(PyFuncModel):
     GAUGE_VALUE = 5
 
@@ -101,7 +99,8 @@ def test_metrics():
         env[MODEL_FULL_NAME] = model_full_name
         env[WORKERS] = "4"
         env["PROMETHEUS_MULTIPROC_DIR"] = metrics_path
-        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env, start_new_session=True)
+        c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env,
+                             start_new_session=True)
         # wait till the server is up
         wait_server_ready(f"http://localhost:{port}/")
 

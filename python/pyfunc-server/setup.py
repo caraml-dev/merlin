@@ -20,7 +20,8 @@ tests_require = [
     'pytest-tornasync',
     'requests',
     'types-requests',
-    'mypy'
+    'mypy',
+    'pytest-benchmark',
 ]
 
 with open('requirements.txt') as f:
