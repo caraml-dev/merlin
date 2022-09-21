@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -47,7 +48,7 @@ func (w *worker) processJob(job *Job) {
 	var refreshedJob Job
 	tx := w.db.Begin()
 	err := tx.Raw(findJobQuery, job.ID, false).Scan(&refreshedJob).Error
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		tx.Rollback()
 		log.Warnf("Job with ID:%d is still running in other process or already ran successfully", job.ID)
 		return
@@ -74,8 +75,7 @@ func (w *worker) processJob(job *Job) {
 	}
 	if err := jobFn(job); err != nil {
 		log.Errorf("Job execution is failed, with id:%d and error: %v", job.ID, err)
-		switch err.(type) {
-		case RetryableError:
+		if errors.As(err, &RetryableError{}) {
 			w.requeueJob(job)
 			return
 		}

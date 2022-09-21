@@ -88,7 +88,7 @@ func (e RedisEncoder) encodeFeatureReferences(featureReferences []string) []stri
 	}
 	encodedTimestamps := e.encodeTimestamp(featureReferences)
 	serializedFeatureWithTimestamp := make([]string, len(encodedFeatures)+len(encodedTimestamps))
-	for index, encodedFeature := range encodedFeatures {
+	for index, encodedFeature := range encodedFeatures { // nolint: gosimple
 		serializedFeatureWithTimestamp[index] = encodedFeature
 	}
 	for index, encodedTimestamp := range encodedTimestamps {

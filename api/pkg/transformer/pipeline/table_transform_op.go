@@ -130,7 +130,7 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 		if step.FilterRow != nil {
 			rowIndexes, err := getRowIndexes(env, step.FilterRow.Condition)
 			if err != nil {
-				return fmt.Errorf("error evaluating filter row expresion: %s. Err: %s", step.FilterRow, err)
+				return fmt.Errorf("error evaluating filter row expresion: %s: %w", step.FilterRow, err)
 			}
 			if err := resultTable.FilterRow(rowIndexes); err != nil {
 				return err
@@ -193,7 +193,7 @@ func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *ta
 		if len(updateSpec.Conditions) == 0 {
 			values, err := seriesFromExpression(env, updateSpec.Expression)
 			if err != nil {
-				return nil, fmt.Errorf("error evaluating expression for column %s: %v. Err: %s", columnName, updateSpec.Expression, err)
+				return nil, fmt.Errorf("error evaluating expression for column %s: %v. Err: %w", columnName, updateSpec.Expression, err)
 			}
 
 			rule.RowValues = []table.RowValues{
@@ -270,7 +270,7 @@ func getDefaultRowIndexes() *series.Series {
 func getRowIndexes(env *Environment, ifCondition string) (*series.Series, error) {
 	rowIndexes, err := seriesFromExpression(env, ifCondition)
 	if err != nil {
-		return nil, fmt.Errorf("error evaluating expression for condition: %s with err: %s", ifCondition, err)
+		return nil, fmt.Errorf("error evaluating expression for condition: %s with err: %w", ifCondition, err)
 	}
 	if !rowIndexes.IsBoolean() {
 		return nil, fmt.Errorf("result of the condition is not boolean or series of boolean")

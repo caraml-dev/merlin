@@ -21,9 +21,9 @@ import (
 	"net/http"
 
 	merror "github.com/gojek/merlin/pkg/errors"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/log"
@@ -175,6 +175,10 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 
 	// check that the model version quota
 	deployedModelVersionCount, err := c.EndpointsService.CountEndpoints(ctx, env, model)
+	if err != nil {
+		return InternalServerError(fmt.Sprintf("Unable to count number of endpoint: %s", env.Name))
+	}
+
 	if deployedModelVersionCount >= config.MaxDeployedVersion {
 		return BadRequest(fmt.Sprintf("Max deployed endpoint reached. Max: %d Current: %d, undeploy existing endpoint before continuing", config.MaxDeployedVersion, deployedModelVersionCount))
 	}
@@ -340,7 +344,7 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 		return BadRequest(fmt.Sprintf("Version Endpoints %s is still serving traffic. Please route the traffic to another model version first", rawEndpointID))
 	}
 
-	endpoint, err = c.EndpointsService.UndeployEndpoint(ctx, env, model, version, endpoint)
+	_, err = c.EndpointsService.UndeployEndpoint(ctx, env, model, version, endpoint)
 	if err != nil {
 		log.Errorf("error undeploying version endpoint %s: %v", rawEndpointID, err)
 		return InternalServerError(fmt.Sprintf("Unable to undeploy version endpoint %s", rawEndpointID))
@@ -405,7 +409,7 @@ func (c *EndpointsController) validateTransformer(ctx context.Context, trans *mo
 
 		return c.validateStandardTransformerConfig(ctx, cfg)
 	default:
-		return errors.New(fmt.Sprintf("Unknown transformer type: %s", trans.TransformerType))
+		return fmt.Errorf("Unknown transformer type: %s", trans.TransformerType)
 	}
 
 	return nil
@@ -421,7 +425,7 @@ func (c *EndpointsController) validateCustomPredictor(ctx context.Context, versi
 
 func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Context, cfg string) error {
 	stdTransformerConfig := &spec.StandardTransformerConfig{}
-	err := jsonpb.UnmarshalString(cfg, stdTransformerConfig)
+	err := protojson.Unmarshal([]byte(cfg), stdTransformerConfig)
 	if err != nil {
 		return err
 	}

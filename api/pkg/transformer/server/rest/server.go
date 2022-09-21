@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
@@ -117,6 +118,12 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
 	defer span.Finish()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			s.logger.Error("unable to close request_body", zap.Error(err))
+		}
+	}(r.Body)
 
 	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -124,7 +131,6 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		response.NewError(http.StatusInternalServerError, err).Write(w)
 		return
 	}
-	defer r.Body.Close()
 	s.logger.Debug("raw request_body", zap.ByteString("request_body", requestBody))
 
 	preprocessOutput, err := s.preprocess(ctx, requestBody, r.Header)
@@ -141,7 +147,8 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
 		return
 	}
-	defer resp.Body.Close()
+
+	defer resp.Body.Close() //nolint: errcheck
 
 	modelResponseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -161,9 +168,11 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	copyHeader(w.Header(), resp.Header)
 	w.Header().Set("Content-Length", fmt.Sprint(len(postprocessOutput)))
-
 	w.WriteHeader(resp.StatusCode)
-	w.Write(postprocessOutput)
+	_, err = w.Write(postprocessOutput)
+	if err != nil {
+		s.logger.Error("failed writing postprocess response", zap.Error(err))
+	}
 }
 
 func (s *HTTPServer) preprocess(ctx context.Context, request []byte, requestHeader http.Header) ([]byte, error) {
@@ -215,7 +224,7 @@ func (s *HTTPServer) postprocess(ctx context.Context, response []byte, responseH
 }
 
 func (s *HTTPServer) predict(ctx context.Context, r *http.Request, payload []byte) (*http.Response, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "predict") // nolint: all
 	defer span.Finish()
 
 	predictStartTime := time.Now()

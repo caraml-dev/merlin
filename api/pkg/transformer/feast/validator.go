@@ -63,7 +63,7 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 				}
 				_, err = jsonpath.Compile(entity.GetJsonPath())
 				if err != nil {
-					return fmt.Errorf("jsonpath compilation failed: %v", err)
+					return fmt.Errorf("jsonpath compilation failed: %w", err)
 				}
 			case *spec.Entity_JsonPathConfig:
 				jsonpathConfig := entity.GetJsonPathConfig()
@@ -76,13 +76,13 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 					TargetType:   jsonpathConfig.ValueType,
 				})
 				if err != nil {
-					return fmt.Errorf("jsonpath compilation failed: %v", err)
+					return fmt.Errorf("jsonpath compilation failed: %w", err)
 				}
 			case *spec.Entity_Udf, *spec.Entity_Expression:
 				expressionExtractor := getExpressionExtractor(entity)
 				_, err = expr.Compile(expressionExtractor, expr.Env(symbolRegistry))
 				if err != nil {
-					return fmt.Errorf("udf compilation failed: %v", err)
+					return fmt.Errorf("udf compilation failed: %w", err)
 				}
 			default:
 				return fmt.Errorf("one of json_path, udf must be specified")

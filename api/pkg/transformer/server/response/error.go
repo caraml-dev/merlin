@@ -22,7 +22,7 @@ func NewError(code int, err error) *Error {
 
 // Write calls `write` function to write error response.
 func (e *Error) Write(w http.ResponseWriter) {
-	write(w, e, e.Code)
+	write(w, e, e.Code) //nolint:errcheck
 }
 
 // Write writes final response.

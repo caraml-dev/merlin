@@ -58,10 +58,6 @@ func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Paylo
 	return e.compiledPipeline.Postprocess(ctx, e)
 }
 
-func (e *Environment) GetPreprocessTracingDetail(ctx context.Context) {
-	e.symbolRegistry.PreprocessTracingDetail()
-}
-
 func (e *Environment) IsPostProcessOpExist() bool {
 	return len(e.compiledPipeline.postprocessOps) > 0
 }

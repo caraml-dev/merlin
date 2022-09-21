@@ -77,7 +77,7 @@ func (fc *call) do(ctx context.Context, entityList []feast.Row, features []strin
 
 	startTime := time.Now()
 	feastResponse, err := fc.feastClient.GetOnlineFeatures(ctx, &feastRequest)
-	durationMs := time.Now().Sub(startTime).Milliseconds()
+	durationMs := time.Since(startTime).Milliseconds()
 	if err != nil {
 		feastLatency.WithLabelValues("error", feastSource).Observe(float64(durationMs))
 		feastError.WithLabelValues(feastSource).Inc()

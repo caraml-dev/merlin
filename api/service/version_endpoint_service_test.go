@@ -27,11 +27,11 @@ import (
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/gojek/merlin/pkg/protocol"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -1963,7 +1963,7 @@ func TestDeployEndpoint_StandardTransformer(t *testing.T) {
 				if tC.expectedStandardTransformerConfig != nil {
 					stdTransformerCfgStr := envVarMap[transformer.StandardTransformerConfigEnvName]
 					stdTransformer := &spec.StandardTransformerConfig{}
-					err := jsonpb.UnmarshalString(stdTransformerCfgStr, stdTransformer)
+					err := protojson.Unmarshal([]byte(stdTransformerCfgStr), stdTransformer)
 					require.NoError(t, err)
 					assert.True(t, proto.Equal(tC.expectedStandardTransformerConfig, stdTransformer))
 				}

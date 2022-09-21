@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gojek/merlin/cluster"
 	"github.com/gojek/merlin/cluster/mocks"
 )
 
@@ -141,7 +140,6 @@ func TestJanitor_CleanJobs(t *testing.T) {
 
 func TestJanitor_getExpiredJobs(t *testing.T) {
 	type fields struct {
-		cc  cluster.Controller
 		cfg JanitorConfig
 	}
 	tests := []struct {

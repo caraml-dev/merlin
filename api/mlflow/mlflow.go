@@ -65,6 +65,7 @@ func (mlflow *client) doCall(req *request, resp interface{}) error {
 	if err != nil {
 		return err
 	}
+	defer httpResp.Body.Close() // nolint: errcheck
 
 	decoder := json.NewDecoder(httpResp.Body)
 	if httpResp.StatusCode >= http.StatusOK && httpResp.StatusCode < http.StatusMultipleChoices {

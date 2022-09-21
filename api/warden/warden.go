@@ -72,7 +72,7 @@ func (c *client) GetAllTeams() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

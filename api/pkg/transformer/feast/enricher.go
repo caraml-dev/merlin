@@ -60,7 +60,7 @@ func (t *Enricher) Enrich(ctx context.Context, request types.Payload, _ map[stri
 }
 
 func enrichRequest(ctx context.Context, request []byte, feastFeatures []*types.FeatureTable) ([]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.enrichRequest")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.enrichRequest") //nolint: all
 	defer span.Finish()
 
 	feastFeatureMap := make(map[string]*types.FeatureTable)

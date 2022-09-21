@@ -1507,7 +1507,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 	probeConfig := createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s", modelSvc.Name))
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(fmt.Sprintf("/"))
+	transformerProbeConfig := createLivenessProbeSpec("/")
 
 	tests := []struct {
 		name     string

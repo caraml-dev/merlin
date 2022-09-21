@@ -33,8 +33,8 @@ import (
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/queue/work"
 	"github.com/gojek/merlin/storage"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type EndpointsService interface {
@@ -296,7 +296,7 @@ func (k *endpointService) reconfigureStandardTransformer(standardTransformer *mo
 	envVarsMap := envVars.ToMap()
 	stdTransformerConfigString := envVarsMap[transformer.StandardTransformerConfigEnvName]
 	stdTransformerConfig := &spec.StandardTransformerConfig{}
-	err := jsonpb.UnmarshalString(stdTransformerConfigString, stdTransformerConfig)
+	err := protojson.Unmarshal([]byte(stdTransformerConfigString), stdTransformerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -326,8 +326,7 @@ func (k *endpointService) updateFeatureTableSource(standardTransformer *models.T
 
 	feast.UpdateFeatureTableSource(standardTransformerConfig, sourceFromServingURL, k.standardTransformerConfig.DefaultFeastSource)
 
-	marshaler := jsonpb.Marshaler{}
-	transformerCfgString, err := marshaler.MarshalToString(standardTransformerConfig)
+	tc, err := protojson.Marshal(standardTransformerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +334,7 @@ func (k *endpointService) updateFeatureTableSource(standardTransformer *models.T
 	envVars = models.MergeEnvVars(envVars, models.EnvVars{
 		{
 			Name:  transformer.StandardTransformerConfigEnvName,
-			Value: transformerCfgString,
+			Value: string(tc),
 		},
 	})
 	standardTransformer.EnvVars = envVars

@@ -19,7 +19,7 @@ const (
 	ModelResponsePrefix = "$.model_response"
 )
 
-var sourceJsonPattern = regexp.MustCompile("\\$\\.raw_request|\\$\\.model_response")
+var sourceJsonPattern = regexp.MustCompile(`\$\.raw_request|\$.model_response`)
 
 // JsonPathOption holds information about the required jsonpath value and the optional default value
 type JsonPathOption struct {

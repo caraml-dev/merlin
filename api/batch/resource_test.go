@@ -552,7 +552,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				},
 			},
 			wantErr:        true,
-			wantErrMessage: fmt.Sprintf("invalid executor cpu request: 1500x"),
+			wantErrMessage: "invalid executor cpu request: 1500x",
 		},
 		{
 			name: "invalid driver cpu request",
@@ -581,7 +581,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				},
 			},
 			wantErr:        true,
-			wantErrMessage: fmt.Sprintf("invalid driver cpu request: 500x"),
+			wantErrMessage: "invalid driver cpu request: 500x",
 		},
 		{
 			name: "user override default environment variables",
@@ -616,7 +616,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				},
 			},
 			wantErr:        true,
-			wantErrMessage: fmt.Sprintf("environment variable 'GOOGLE_APPLICATION_CREDENTIALS' cannot be changed"),
+			wantErrMessage: "environment variable 'GOOGLE_APPLICATION_CREDENTIALS' cannot be changed",
 		},
 	}
 	for _, test := range tests {

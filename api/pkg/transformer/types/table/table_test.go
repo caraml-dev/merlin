@@ -45,7 +45,7 @@ func TestTable_Col(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, series.New([]string{"1111", "2222"}, series.String, "string_col"), col)
 
-	col, err = table.GetColumn("col_not_exists")
+	_, err = table.GetColumn("col_not_exists")
 	assert.Error(t, err, "unknown column name")
 }
 
@@ -58,7 +58,7 @@ func TestTable_Row(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, table.DataFrame().Subset(0), *row.DataFrame())
 
-	row, err = table.GetRow(2)
+	_, err = table.GetRow(2)
 	assert.Error(t, err)
 	assert.Equal(t, "invalid row number, expected: 0 <= row < 2, got: 2", err.Error())
 }
@@ -1379,7 +1379,7 @@ func TestTable_NewFromRecords(t *testing.T) {
 				series.New([]bool{true, false, true, false, false}, series.Bool, "Is VIP"),
 			),
 			wantError: false,
-					},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

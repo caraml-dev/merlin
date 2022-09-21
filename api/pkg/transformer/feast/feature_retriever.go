@@ -21,17 +21,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	maxUint = ^uint(0)
-	maxInt  = int(maxUint >> 1)
-
-	// DefaultClientURLKey defines a key used to store and retrieve
-	// the default Feast gRPC client from Clients map.
-	// Used for backward compatibility (transformer will use this default client
-	// if standard transformer config does not specify Feast's serving url).
-	DefaultClientURLKey URL = "default"
-)
-
 type StorageClient interface {
 	GetOnlineFeatures(ctx context.Context, req *feast.OnlineFeaturesRequest) (*feast.OnlineFeaturesResponse, error)
 }
@@ -168,7 +157,7 @@ func (fr *FeastRetriever) buildEntityRows(symbolRegistry symbol.Registry, config
 	for k, configEntity := range configEntities {
 		vals, err := fr.entityExtractor.ExtractValuesFromSymbolRegistry(symbolRegistry, configEntity)
 		if err != nil {
-			return nil, fmt.Errorf("unable to extract entity %s: %v", configEntity.Name, err)
+			return nil, fmt.Errorf("unable to extract entity %s: %w", configEntity.Name, err)
 		}
 
 		seriesLength := len(vals)

@@ -27,12 +27,12 @@ func Test_getVersionSearchTerms(t *testing.T) {
 		{
 			name: "single key empty value",
 			args: args{"foo:"},
-			want: map[string]string{"foo":""},
+			want: map[string]string{"foo": ""},
 		},
 		{
 			name: "single key empty value with whitespaces",
 			args: args{"foo :    "},
-			want: map[string]string{"foo":""},
+			want: map[string]string{"foo": ""},
 		},
 		{
 			name: "single key non-empty value",

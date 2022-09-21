@@ -49,7 +49,7 @@ func (r *Response) WriteTo(w http.ResponseWriter) {
 
 	if r.data != nil {
 		encoder := json.NewEncoder(w)
-		encoder.Encode(r.data)
+		encoder.Encode(r.data) //nolint:errcheck
 	}
 }
 
