@@ -350,7 +350,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 			[]*core.ListFeaturesResponse{
 				{
 					Features: map[string]*core.FeatureSpecV2{
-						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+						"customer_feature_table:total_booking": {
 							Name:      "total_booking",
 							ValueType: types.ValueType_INT64,
 						},
@@ -412,7 +412,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 			[]*core.ListFeaturesResponse{
 				{
 					Features: map[string]*core.FeatureSpecV2{
-						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+						"customer_feature_table:total_booking": {
 							Name:      "total_booking",
 							ValueType: types.ValueType_INT64,
 						},
@@ -474,7 +474,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 			[]*core.ListFeaturesResponse{
 				{
 					Features: map[string]*core.FeatureSpecV2{
-						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+						"customer_feature_table:total_booking": {
 							Name:      "total_booking",
 							ValueType: types.ValueType_INT32,
 						},
@@ -536,7 +536,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 			[]*core.ListFeaturesResponse{
 				{
 					Features: map[string]*core.FeatureSpecV2{
-						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+						"customer_feature_table:total_booking": {
 							Name:      "total_booking",
 							ValueType: types.ValueType_INT32,
 						},
@@ -609,7 +609,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 			[]*core.ListFeaturesResponse{
 				{
 					Features: map[string]*core.FeatureSpecV2{
-						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+						"customer_feature_table:total_booking": {
 							Name:      "total_booking",
 							ValueType: types.ValueType_INT32,
 						},
@@ -795,7 +795,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 			[]*core.ListFeaturesResponse{
 				{
 					Features: map[string]*core.FeatureSpecV2{
-						"customer_feature_table:total_booking": &core.FeatureSpecV2{
+						"customer_feature_table:total_booking": {
 							Name:      "total_booking",
 							ValueType: types.ValueType_INT32,
 						},

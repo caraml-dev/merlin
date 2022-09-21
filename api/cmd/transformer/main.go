@@ -6,7 +6,6 @@ import (
 	"log"
 
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/kelseyhightower/envconfig"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -15,6 +14,7 @@ import (
 	jcfg "github.com/uber/jaeger-client-go/config"
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/protocol"
@@ -59,7 +59,7 @@ type AppConfig struct {
 }
 
 // Trick GC frequency based on this https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap-26c2462549a2/
-var initialHeapAllocation []byte
+var initialHeapAllocation []byte //nolint:unused
 
 func main() {
 	appConfig := AppConfig{}
@@ -75,7 +75,7 @@ func main() {
 	if appConfig.LogLevel == "DEBUG" {
 		logger, _ = zap.NewDevelopment()
 	}
-	defer logger.Sync()
+	defer logger.Sync() //nolint:errcheck
 
 	logger.Info("configuration loaded", zap.Any("appConfig", appConfig))
 
@@ -84,11 +84,11 @@ func main() {
 		logger.Error("Unable to initialize tracing", zap.Error(err))
 	}
 	if closer != nil {
-		defer closer.Close()
+		defer closer.Close() //nolint:errcheck
 	}
 
 	transformerConfig := &spec.StandardTransformerConfig{}
-	if err := jsonpb.UnmarshalString(appConfig.StandardTransformerConfigJSON, transformerConfig); err != nil {
+	if err := protojson.Unmarshal([]byte(appConfig.StandardTransformerConfigJSON), transformerConfig); err != nil {
 		logger.Fatal("unable to parse standard transformer transformerConfig", zap.Error(err))
 	}
 
@@ -179,7 +179,7 @@ func parseFeatureTableMetadata(featureTableSpecsJson string) ([]*spec.FeatureTab
 				return nil, err
 			}
 			featureSpec := &spec.FeatureTableMetadata{}
-			err = jsonpb.UnmarshalString(string(s), featureSpec)
+			err = protojson.Unmarshal(s, featureSpec)
 			if err != nil {
 				return nil, errors.Wrap(err, "unable to parse standard transformer featureTableSpecs config")
 			}

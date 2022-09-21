@@ -72,15 +72,6 @@ const (
 		  "details":"{\"points\": [{\"distanceInMeter\": 0.0}, {\"distanceInMeter\": 8976.0}, {\"distanceInMeter\": 729.0}, {\"distanceInMeter\": 8573.0}]}"
 		}
 		`
-
-	modelResponseJson = `
-		{
-		  "predictions": [
-			1, 2
-		  ],
-          "model_name" : "iris-classifier"
-		}
-    `
 )
 
 func TestVariableDeclarationOp_Execute(t *testing.T) {
@@ -127,7 +118,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 						Name: "myIntegerLiteral",
 						Value: &spec.Variable_Literal{
 							Literal: &spec.Literal{
-								LiteralValue: &spec.Literal_IntValue{1},
+								LiteralValue: &spec.Literal_IntValue{IntValue: 1},
 							},
 						},
 					},
@@ -135,7 +126,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 						Name: "myFloatLiteral",
 						Value: &spec.Variable_Literal{
 							Literal: &spec.Literal{
-								LiteralValue: &spec.Literal_FloatValue{1.2345},
+								LiteralValue: &spec.Literal_FloatValue{FloatValue: 1.2345},
 							},
 						},
 					},
@@ -143,7 +134,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 						Name: "myStringLiteral",
 						Value: &spec.Variable_Literal{
 							Literal: &spec.Literal{
-								LiteralValue: &spec.Literal_StringValue{"hello world"},
+								LiteralValue: &spec.Literal_StringValue{StringValue: "hello world"},
 							},
 						},
 					},
@@ -151,7 +142,7 @@ func TestVariableDeclarationOp_Execute(t *testing.T) {
 						Name: "myBoolLiteral",
 						Value: &spec.Variable_Literal{
 							Literal: &spec.Literal{
-								LiteralValue: &spec.Literal_BoolValue{true},
+								LiteralValue: &spec.Literal_BoolValue{BoolValue: true},
 							},
 						},
 					},

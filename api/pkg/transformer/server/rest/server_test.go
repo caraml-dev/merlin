@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -37,7 +38,8 @@ func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 	mockPredictResponse := []byte(`{"predictions": [2, 2]}`)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(mockPredictResponse)
+		_, err := w.Write(mockPredictResponse)
+		assert.NoError(t, err)
 	}))
 	defer ts.Close()
 
@@ -110,7 +112,8 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(test.modelStatusCode)
-				w.Write(test.modelResponse)
+				_, err = w.Write(test.modelResponse)
+				assert.NoError(t, err)
 			}))
 			defer ts.Close()
 
@@ -1174,7 +1177,8 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(tt.modelResponse.statusCode)
-				w.Write(tt.modelResponse.body)
+				_, err = w.Write(tt.modelResponse.body)
+				assert.NoError(t, err)
 			}))
 			defer modelServer.Close()
 
@@ -1305,6 +1309,8 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 
 				response, err := client.Do(req)
 				assert.NoError(t, err)
+				defer response.Body.Close() //nolint: errcheck
+				assert.NoError(t, err)
 				assert.Equal(t, http.StatusOK, response.StatusCode)
 
 				body, err := ioutil.ReadAll(response.Body)
@@ -1342,11 +1348,14 @@ func Test_recoveryHandler(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	resp, err := http.Post(fmt.Sprintf("http://localhost:%s/v1/models/%s:predict", port, modelName), "", strings.NewReader("{}"))
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+	defer resp.Body.Close() // nolint: errcheck
 	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 
 	respBody, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	assert.Nil(t, err)
 	assert.Equal(t, `{"code":500,"message":"panic: panic at preprocess"}`, string(respBody))
@@ -1484,17 +1493,4 @@ func assertHasHeaders(t *testing.T, expected map[string]string, actual http.Head
 		assert.Equal(t, v, actual.Get(k))
 	}
 	return true
-}
-
-func respBody(t *testing.T, response *http.Response) string {
-	if response.Body != nil {
-		defer func() {
-			_ = response.Body.Close()
-		}()
-	}
-
-	respBody, err := ioutil.ReadAll(response.Body)
-	assert.NoError(t, err, "should not have failed to read response body")
-
-	return string(respBody)
 }

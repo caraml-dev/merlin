@@ -57,7 +57,7 @@ func (d *deploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint: errcheck
 
 	resultMap := make(map[models.ID]models.ID)
 	for rows.Next() {

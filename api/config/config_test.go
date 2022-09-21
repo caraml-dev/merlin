@@ -52,6 +52,7 @@ func TestFeastServingURLs_URLs(t *testing.T) {
 	}
 }
 
+//nolint:errcheck
 func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing.T) {
 	redisCfg := `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`
 	bigtableCfg := `{"serving_url":"10.1.1.3","project":"gcp-project","is_using_direct_storage":true,"instance":"instance","app_profile":"default","pool_size":3,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`
@@ -188,6 +189,7 @@ func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing
 	}
 }
 
+//nolint:errcheck
 func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
 	redisCfg := `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`
 	bigtableCfg := `{"serving_url":"10.1.1.3","project":"gcp-project","is_using_direct_storage":true,"instance":"instance","app_profile":"default","pool_size":3,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`

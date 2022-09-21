@@ -17,9 +17,10 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/gojek/merlin/log"
 	"regexp"
 	"strings"
+
+	"github.com/gojek/merlin/log"
 
 	"github.com/jinzhu/gorm"
 
@@ -46,11 +47,6 @@ type VersionQuery struct {
 type PaginationQuery struct {
 	Limit  int    `schema:"limit"`
 	Cursor string `schema:"cursor"`
-}
-
-type cursorPagination struct {
-	versionID      models.ID
-	versionModelID models.ID
 }
 
 type versionsService struct {
@@ -99,9 +95,9 @@ func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search stri
 		switch key {
 		case "environment_name":
 			searchQuery = searchQuery.Joins(
-				"JOIN version_endpoints on version_endpoints.version_id = versions.id " +
-					"AND version_endpoints.version_model_id = versions.model_id " +
-					"AND version_endpoints.environment_name=? " +
+				"JOIN version_endpoints on version_endpoints.version_id = versions.id "+
+					"AND version_endpoints.version_model_id = versions.model_id "+
+					"AND version_endpoints.environment_name=? "+
 					"AND version_endpoints.status != ?", val, models.EndpointTerminated)
 		case "labels":
 			query, args := generateLabelsWhereQuery(val)
@@ -114,7 +110,7 @@ func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search stri
 }
 
 // getVersionSearchTerms parses a search query in this string format:
-//   <SEARCH_KEY_1>:<SEARCH_VAL_1> <SEARCH_KEY_2>:<SEARCH_VAL_2> ...
+// <SEARCH_KEY_1>:<SEARCH_VAL_1> <SEARCH_KEY_2>:<SEARCH_VAL_2> ...
 // where pairs of search key-value are separated by whitespace, and returns
 // the search terms, a map of search key and the corresponding value.
 //
@@ -123,13 +119,13 @@ func (service *versionsService) buildSearchQuery(listQuery *gorm.DB, search stri
 func getVersionSearchTerms(query string) map[string]string {
 	terms := map[string]string{}
 	tokens := strings.Split(query, ":")
-	key, val, nextKey := "", "" , ""
+	key, val, nextKey := "", "", ""
 	for i, token := range tokens {
 		token = strings.TrimSpace(token)
 		if i == 0 {
 			// First token is always the search key
 			key = token
-		} else if i == len(tokens) - 1 {
+		} else if i == len(tokens)-1 {
 			// Last token is always the search value
 			val = token
 		} else {
@@ -163,7 +159,7 @@ func getVersionSearchTerms(query string) map[string]string {
 var versionLabelsRegex = regexp.MustCompile(`(?i)([a-z0-9A-Z-_]+)\s+in\s+\(([a-z0-9A-Z-_ ,]+)\),?\s*`)
 
 // generateLabelsWhereQuery parses the labels free text query in this format:
-//   <LABEL_KEY_1> IN (LABEL_VAL_1, LABEL_VAL_2,...), <LABEL_KEY_2> IN (LABEL_VAL1, LABEL_VAL2,...)
+// <LABEL_KEY_1> IN (LABEL_VAL_1, LABEL_VAL_2,...), <LABEL_KEY_2> IN (LABEL_VAL1, LABEL_VAL2,...)
 // into a pair of SQL query template and arguments. The query template and arguments are
 // intended to be passed as arguments to go-orm db.Where method to filter rows by matching labels.
 //
@@ -171,12 +167,15 @@ var versionLabelsRegex = regexp.MustCompile(`(?i)([a-z0-9A-Z-_]+)\s+in\s+\(([a-z
 // Multiple label values for the same key are separated by "," character.
 //
 // For example, with the following labels query:
-//   animal in (cat, dog), color in (white)
+// `animal in (cat, dog), color in (white)`
+//
 // generateLabelsWhereQuery will return query and args pairs which can be used to generate
 // this SQL statement:
-//   ( labels @> {"animal": "cat"} OR labels @> {"animal": "dog"} ) AND ( labels @> {"color": "white"} )
+//
+// `( labels @> {"animal": "cat"} OR labels @> {"animal": "dog"} ) AND ( labels @> {"color": "white"} )`
+//
 // where the labels column is assumed to be in "jsonb" data type in Postgresql database.
-func generateLabelsWhereQuery(freeTextQuery string) (query string, args []interface{})  {
+func generateLabelsWhereQuery(freeTextQuery string) (query string, args []interface{}) {
 	// queryParts from the SQL to match pair(s) of label key-value(s).
 	var queryParts []string
 	for _, match := range versionLabelsRegex.FindAllStringSubmatch(freeTextQuery, -1) {

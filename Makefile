@@ -9,6 +9,10 @@ API_PATH=api
 API_ALL_PACKAGES := $(shell cd ${API_PATH} && go list ./... | grep -v github.com/gojek/mlp/api/client | grep -v -e mocks -e client)
 VERSION := $(or ${VERSION}, $(shell git describe --tags --always --first-parent))
 
+GOLANGCI_LINT_VERSION="v1.49.0"
+PROTOC_GEN_GO_JSON_VERSION="v1.1.0"
+PROTOC_GEN_GO_VERSION="v1.26"
+
 all: setup init-dep lint test clean build run
 
 # ============================================================
@@ -18,10 +22,10 @@ all: setup init-dep lint test clean build run
 setup:
 	@echo "> Setting up tools ..."
 	@test -x ${GOPATH}/bin/goimports || go install golang.org/x/tools/cmd/goimports@latest
-	@test -x ${GOPATH}/bin/golint || go install golang.org/x/lint/golint@latest
 	@test -x ${GOPATH}/bin/gotest || go install github.com/rakyll/gotest@latest
-	@test -x ${GOPATH}/bin/protoc-gen-go-json || go install github.com/mitchellh/protoc-gen-go-json@v1.1.0
-	@test -x ${GOPATH}/bin/protoc-gen-go || go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
+	@test -x ${GOPATH}/bin/protoc-gen-go-json || go install github.com/mitchellh/protoc-gen-go-json@${PROTOC_GEN_GO_JSON_VERSION}
+	@test -x ${GOPATH}/bin/protoc-gen-go || go install google.golang.org/protobuf/cmd/protoc-gen-go@${PROTOC_GEN_GO_VERSION}
+	@command -v golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin ${GOLANGCI_LINT_VERSION}
 
 .PHONY: init-dep
 init-dep: init-dep-ui init-dep-api
@@ -51,7 +55,7 @@ lint-ui:
 .PHONY: lint-api
 lint-api:
 	@echo "> Analyzing API source code..."
-	@cd ${API_PATH} && golint ${API_ALL_PACKAGES}
+	@cd ${API_PATH} && golangci-lint run 
 
 # ============================================================
 # Testing recipes

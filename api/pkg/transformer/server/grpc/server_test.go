@@ -19,10 +19,6 @@ import (
 
 func TestUPIServer_PredictValues_WithMockPreprocessAndPostprocessHandler(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
-	type args struct {
-		ctx     context.Context
-		request *upiV1.PredictValuesRequest
-	}
 	tests := []struct {
 		name                      string
 		request                   *upiV1.PredictValuesRequest

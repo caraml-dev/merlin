@@ -72,8 +72,6 @@ type VersionEndpoint struct {
 	CreatedUpdated
 }
 
-const defaultWorkers = 1
-
 // NewVersionEndpoint create a version endpoint with default configurations
 func NewVersionEndpoint(env *Environment, project mlp.Project, model *Model, version *Version, monitoringConfig config.MonitoringConfig, deploymentMode deployment.Mode) *VersionEndpoint {
 	id := uuid.New()

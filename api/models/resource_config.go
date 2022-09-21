@@ -36,9 +36,8 @@ func (v *ResourceConfig) BeforeCreate(scope *gorm.Scope) {
 			Select("COALESCE(MAX(version), 0)").
 			Where("endpoint_id = ?", v.EndpointID).
 			Row().
-			Scan(&maxVersion)
+			Scan(&maxVersion) //nolint:errcheck
 
 		v.Version = ID(maxVersion + 1)
 	}
-	return
 }

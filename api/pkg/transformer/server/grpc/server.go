@@ -108,7 +108,7 @@ func (us *UPIServer) Run() {
 	stopCh := setupSignalHandler()
 	errCh := make(chan error, 1)
 	go func() {
-		if err := grpcServer.Serve(lis); err != nil && err != grpc.ErrServerStopped {
+		if err := grpcServer.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			errCh <- errors.Wrap(err, "GRPC server failed")
 		}
 	}()

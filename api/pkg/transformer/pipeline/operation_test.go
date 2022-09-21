@@ -163,7 +163,8 @@ func TestOperationTracing_AddInputOutput(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ot := tt.operationTracing
-			ot.AddInputOutput(tt.args.input, tt.args.output)
+			err := ot.AddInputOutput(tt.args.input, tt.args.output)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedInput, ot.Input)
 			assert.Equal(t, tt.expectedOutput, ot.Output)
 		})

@@ -97,8 +97,12 @@ func main() {
 
 	router := mux.NewRouter()
 
+	apiRouter, err := api.NewRouter(dependencies.apiContext)
+	if err != nil {
+		log.Fatalf("Unable to initialize /v1 router: %v", err)
+	}
 	mount(router, "/v1/internal", healthcheck.NewHandler())
-	mount(router, "/v1", api.NewRouter(dependencies.apiContext))
+	mount(router, "/v1", apiRouter)
 	mount(router, "/metrics", promhttp.Handler())
 	mount(router, "/debug", newPprofRouter())
 
@@ -136,7 +140,7 @@ func main() {
 	go func() {
 		// Don't forward ErrServerClosed as that indicates we're already shutting down.
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			errCh <- fmt.Errorf("server failed: %+v", err)
+			errCh <- fmt.Errorf("server failed: %w", err)
 		}
 	}()
 

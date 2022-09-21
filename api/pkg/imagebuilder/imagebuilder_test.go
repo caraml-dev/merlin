@@ -76,22 +76,6 @@ var (
 	timeoutInSecond = int64(timeout / time.Second)
 	jobBackOffLimit = int32(3)
 
-	volumesSpec = []v1.Volume{
-		{
-			Name: "kaniko-secret",
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: "kaniko-secret",
-				},
-			},
-		},
-	}
-	volumeMountsSpec = []v1.VolumeMount{
-		{
-			Name:      "kaniko-secret",
-			MountPath: "/secret",
-		},
-	}
 	config = Config{
 		BuildContextURL:      buildContextURL,
 		DockerfilePath:       "./Dockerfile",
@@ -1112,7 +1096,8 @@ func Test_kanikoBuilder_imageExists(t *testing.T) {
 						t.Errorf("Method; got %v, want %v", r.Method, http.MethodGet)
 					}
 
-					w.Write(tt.responseBody)
+					_, err := w.Write(tt.responseBody)
+					assert.NoError(t, err)
 				default:
 					t.Fatalf("Unexpected path: %v", r.URL.Path)
 				}
@@ -1153,7 +1138,8 @@ func Test_kanikoBuilder_imageExists_retry_success(t *testing.T) {
 				return
 			} else if retryCounter == 1 {
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"tags":["test"]}`))
+				_, err := w.Write([]byte(`{"tags":["test"]}`))
+				assert.NoError(t, err)
 				retryCounter += 1
 				return
 			}
@@ -1184,7 +1170,8 @@ func Test_kanikoBuilder_imageExists_noretry(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		case tagsPath:
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"tags":["test"]}`))
+			_, err := w.Write([]byte(`{"tags":["test"]}`))
+			assert.NoError(t, err)
 			retryCounter += 1
 		}
 	}))

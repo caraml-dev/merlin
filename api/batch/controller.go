@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/apis/sparkoperator.k8s.io/v1beta2"
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned"
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/informers/externalversions"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -138,38 +137,38 @@ func (c *controller) Submit(ctx context.Context, predictionJob *models.Predictio
 
 	_, err = c.namespaceCreator.CreateNamespace(ctx, namespace)
 	if err != nil {
-		return fmt.Errorf("failed creating namespace %s: %v", namespace, err)
+		return fmt.Errorf("failed creating namespace %s: %w", namespace, err)
 	}
 
 	driverServiceAccount, err := c.manifestManager.CreateDriverAuthorization(ctx, namespace)
 	if err != nil {
-		return fmt.Errorf("failed creating spark driver authorization in namespace %s: %v", namespace, err)
+		return fmt.Errorf("failed creating spark driver authorization in namespace %s: %w", namespace, err)
 	}
 
 	secret, err := c.mlpAPIClient.GetPlainSecretByNameAndProjectID(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectID))
 	if err != nil {
-		return fmt.Errorf("service account %s is not found within %s project: %s", predictionJob.Config.ServiceAccountName, namespace, err)
+		return fmt.Errorf("service account %s is not found within %s project: %w", predictionJob.Config.ServiceAccountName, namespace, err)
 	}
 
 	_, err = c.manifestManager.CreateSecret(ctx, predictionJob.Name, namespace, secret.Data)
 	if err != nil {
-		return fmt.Errorf("failed creating secret for job %s in namespace %s: %v", predictionJob.Name, namespace, err)
+		return fmt.Errorf("failed creating secret for job %s in namespace %s: %w", predictionJob.Name, namespace, err)
 	}
 
 	_, err = c.manifestManager.CreateJobSpec(ctx, predictionJob.Name, namespace, predictionJob.Config.JobConfig)
 	if err != nil {
-		return fmt.Errorf("failed creating job specification configmap for job %s in namespace %s: %v", predictionJob.Name, namespace, err)
+		return fmt.Errorf("failed creating job specification configmap for job %s in namespace %s: %w", predictionJob.Name, namespace, err)
 	}
 
 	sparkResource, err := CreateSparkApplicationResource(predictionJob)
 	if err != nil {
-		return fmt.Errorf("failed creating spark application resource for job %s in namespace %s: %v", predictionJob.Name, namespace, err)
+		return fmt.Errorf("failed creating spark application resource for job %s in namespace %s: %w", predictionJob.Name, namespace, err)
 	}
 
 	sparkResource.Spec.Driver.ServiceAccount = &driverServiceAccount
 	_, err = c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).Create(ctx, sparkResource, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("failed submitting spark application to spark controller for job %s in namespace %s: %v", predictionJob.Name, namespace, err)
+		return fmt.Errorf("failed submitting spark application to spark controller for job %s in namespace %s: %w", predictionJob.Name, namespace, err)
 	}
 
 	return c.store.Save(predictionJob)
@@ -200,7 +199,7 @@ func (c *controller) Stop(ctx context.Context, predictionJob *models.PredictionJ
 	for _, resource := range sparkResources.Items {
 		err := c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).Delete(ctx, resource.Name, metav1.DeleteOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to delete spark application resource %s for job %s in namespace %s: %v", resource.Name, predictionJob.Name, namespace, err)
+			return fmt.Errorf("failed to delete spark application resource %s for job %s in namespace %s: %w", resource.Name, predictionJob.Name, namespace, err)
 		}
 	}
 
@@ -213,12 +212,12 @@ func (c *controller) Stop(ctx context.Context, predictionJob *models.PredictionJ
 func (c *controller) cleanup(ctx context.Context, job *models.PredictionJob, namespace string) {
 	err := c.manifestManager.DeleteSecret(ctx, job.Name, namespace)
 	if err != nil {
-		log.Warnf("failed deleting secret %s in namespace %s: %v", job.Name, namespace, err)
+		log.Warnf("failed deleting secret %s in namespace %s: %w", job.Name, namespace, err)
 	}
 
 	err = c.manifestManager.DeleteJobSpec(ctx, job.Name, namespace)
 	if err != nil {
-		log.Warnf("failed deleting job spec %s in namespace %s: %v", job.Name, namespace, err)
+		log.Warnf("failed deleting job spec %s in namespace %s: %w", job.Name, namespace, err)
 	}
 }
 
@@ -261,17 +260,20 @@ func (c *controller) processNextItem() bool {
 func (c *controller) syncStatus(ctx context.Context, key string) error {
 	obj, _, err := c.informer.GetIndexer().GetByKey(key)
 	if err != nil {
-		return fmt.Errorf("error fetching object with key %s from store: %v", key, err)
+		return fmt.Errorf("error fetching object with key %s from store: %w", key, err)
 	}
 
-	sparkApp, _ := obj.(*v1beta2.SparkApplication)
+	sparkApp, ok := obj.(*v1beta2.SparkApplication)
+	if !ok {
+		return fmt.Errorf("not spark application %v", obj)
+	}
 	predictionJobID, err := models.ParseID(sparkApp.Labels[labelPredictionJobID])
 	if err != nil {
-		return errors.Wrapf(err, "unable to parse prediction job id")
+		return fmt.Errorf("unable to parse prediction job id: %w", err)
 	}
 	predictionJob, err := c.store.Get(predictionJobID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to find prediction job with id: %s", predictionJobID)
+		return fmt.Errorf("unable to find prediction job with id %s %w", predictionJobID, err)
 	}
 
 	if predictionJob.Status != models.JobTerminated {

@@ -38,7 +38,7 @@ func TestEnvVars_ToKubernetesEnvVars(t *testing.T) {
 				EnvVar{Name: "foo", Value: "bar"},
 			},
 			[]v1.EnvVar{
-				v1.EnvVar{Name: "foo", Value: "bar"},
+				{Name: "foo", Value: "bar"},
 			},
 		},
 		{
@@ -48,8 +48,8 @@ func TestEnvVars_ToKubernetesEnvVars(t *testing.T) {
 				EnvVar{Name: "2", Value: "2"},
 			},
 			[]v1.EnvVar{
-				v1.EnvVar{Name: "1", Value: "1"},
-				v1.EnvVar{Name: "2", Value: "2"},
+				{Name: "1", Value: "1"},
+				{Name: "2", Value: "2"},
 			},
 		},
 	}

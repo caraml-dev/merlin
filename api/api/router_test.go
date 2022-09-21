@@ -351,7 +351,7 @@ func TestRejectAuthorization(t *testing.T) {
 			mockEnforcer := &enforcerMock.Enforcer{}
 			mockModelService := &mocks.ModelsService{}
 			mockEndpointService := &mocks.EndpointsService{}
-			r := NewRouter(AppContext{
+			r, err := NewRouter(AppContext{
 				EnvironmentService:    &mocks.EnvironmentService{},
 				ProjectsService:       &mocks.ProjectsService{},
 				ModelsService:         mockModelService,
@@ -368,6 +368,7 @@ func TestRejectAuthorization(t *testing.T) {
 				},
 				AlertEnabled: true,
 			})
+			assert.NoError(t, err)
 			if tt.model != nil {
 				mockModelService.On("FindByID", mock.Anything, tt.model.ID).Return(tt.model, nil)
 			}

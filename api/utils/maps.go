@@ -26,7 +26,7 @@ func ExcludeKeys(srcMap map[string]string, keysToExclude []string) map[string]st
 	}
 
 	for k, v := range srcMap {
-		if keysToExcludeMap[k] == true {
+		if keysToExcludeMap[k] {
 			continue
 		}
 		output[k] = v

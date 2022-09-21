@@ -180,7 +180,7 @@ func TestExecuteDeployment(t *testing.T) {
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything).
-					Return(fmt.Sprintf("gojek/mymodel-1:latest"), nil)
+					Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
 			},
 		},
@@ -225,7 +225,7 @@ func TestExecuteDeployment(t *testing.T) {
 			imageBuilder: func() *imageBuilderMock.ImageBuilder {
 				mockImgBuilder := &imageBuilderMock.ImageBuilder{}
 				mockImgBuilder.On("BuildImage", context.Background(), project, mock.Anything, mock.Anything).
-					Return(fmt.Sprintf("gojek/mymodel-1:latest"), nil)
+					Return("gojek/mymodel-1:latest", nil)
 				return mockImgBuilder
 			},
 		},

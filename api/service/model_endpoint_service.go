@@ -243,7 +243,7 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 
 		meHost, err := s.createModelEndpointHost(model, versionEndpoint)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse Version Endpoint URL (%s): %s, %s", versionEndpoint.ID, versionEndpoint.URL, err)
+			return nil, fmt.Errorf("failed to parse Version Endpoint URL (%s): %s, %w", versionEndpoint.ID, versionEndpoint.URL, err)
 		}
 		modelEndpointHost = meHost
 

@@ -2,10 +2,11 @@ package encoder
 
 import (
 	"fmt"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
 	"math"
 	"time"
+
+	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
 const (
@@ -101,7 +102,7 @@ func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, e
 
 	// by epoch time
 	byEpochTime := config.GetByEpochTime()
-	var min, max float64 = 0, 0
+	var min, max float64
 	var period spec.PeriodType
 
 	if byEpochTime != nil {
