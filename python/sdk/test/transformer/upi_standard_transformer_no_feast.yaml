@@ -56,11 +56,3 @@ transformerConfig:
     outputs:
       - upiPreprocessOutput:
           predictionTableName: transformed_driver_table
-  postprocess:
-    inputs:
-      - autoload:
-          tableNames:
-          - prediction_table
-    outputs:
-      - upiPostprocessOutput:
-          predictionResultTableName: final_table

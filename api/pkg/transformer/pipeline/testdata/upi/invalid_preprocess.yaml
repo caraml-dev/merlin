@@ -16,7 +16,7 @@ transformerConfig:
           steps:
             - updateColumns:
               - column: col1
-                expression: var3
+                expression: var3 # failed the compilation since `var3` hasn't been declared before
     outputs:
       - upiPreprocessOutput:
           predictionTableName: output_table

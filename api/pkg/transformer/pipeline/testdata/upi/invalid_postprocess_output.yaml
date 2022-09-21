@@ -24,5 +24,5 @@ transformerConfig:
                 - column: country
                   expression: country
     outputs:
-      - upiPreprocessOutput:
+      - upiPreprocessOutput: # invalid: upiPreprocessOutput is not applicable for postprocess step
           predictionTableName: output_table

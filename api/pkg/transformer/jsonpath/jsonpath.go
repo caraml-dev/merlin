@@ -22,7 +22,9 @@ const (
 	Map SourceType = iota
 	// Proto source type is in protobuf.Message type
 	Proto
+)
 
+const (
 	Prefix = "$."
 
 	RawRequestPrefix    = "$.raw_request"

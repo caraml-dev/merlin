@@ -8,7 +8,7 @@ transformerConfig:
         - name: country
           jsonPath: $.prediction_context[0].string_value
     outputs:
-      - upiPostprocessOutput:
+      - upiPostprocessOutput: # invalid: upiPostprocessOutput is not applicable for preprocess step
           predictionResultTableName: request_table
   postprocess:
     inputs:

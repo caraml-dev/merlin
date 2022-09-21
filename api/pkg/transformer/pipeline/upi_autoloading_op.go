@@ -133,7 +133,7 @@ func generateVariableFromRequest(requestPayload *types.UPIPredictionRequest, env
 func generateTableFromRequest(requestPayload *types.UPIPredictionRequest, env *Environment) (map[string]any, error) {
 	tables := make(map[string]any)
 	if requestPayload.PredictionTable != nil {
-		predictionTable, err := table.FromUPITable(requestPayload.PredictionTable)
+		predictionTable, err := table.NewFromUPITable(requestPayload.PredictionTable)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +145,7 @@ func generateTableFromRequest(requestPayload *types.UPIPredictionRequest, env *E
 	}
 
 	for _, upiTbl := range requestPayload.TransformerInput.Tables {
-		table, err := table.FromUPITable(upiTbl)
+		table, err := table.NewFromUPITable(upiTbl)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +181,7 @@ func (ua *UPIAutoloadingOp) autoloadingPostprocessInput(ctx context.Context, env
 }
 
 func generateTableFromModelResponse(modelResponse *types.UPIPredictionResponse, env *Environment) (map[string]any, error) {
-	tbl, err := table.FromUPITable(modelResponse.PredictionResultTable)
+	tbl, err := table.NewFromUPITable(modelResponse.PredictionResultTable)
 	if err != nil {
 		return nil, err
 	}

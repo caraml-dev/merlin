@@ -7,7 +7,6 @@ import (
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
-	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
 // UPIPreprocessOutputOp operation to convert all the preprocess result into types.UPIPredictionRequest
@@ -69,7 +68,7 @@ func getUPITableFromName(name string, env *Environment) (*upiv1.Table, error) {
 	if err != nil {
 		return nil, err
 	}
-	upiTbl, err := table.ToUPITable(tbl, name)
+	upiTbl, err := tbl.ToUPITable(name)
 	if err != nil {
 		return nil, err
 	}

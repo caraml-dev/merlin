@@ -12,11 +12,13 @@ import (
 	"reflect"
 	"sort"
 
+	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	goparquet "github.com/fraugster/parquet-go"
 	"github.com/fraugster/parquet-go/parquet"
 	"github.com/go-gota/gota/dataframe"
 	gota "github.com/go-gota/gota/series"
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/converter"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 
 	"github.com/bboughton/gcp-helpers/gsutil"
@@ -51,6 +53,78 @@ func NewRaw(columnValues map[string]interface{}) (*Table, error) {
 	}
 
 	return New(newColumns...), nil
+}
+
+// NewFromUPITable convert UPI table into standard transformer table
+func NewFromUPITable(tbl *upiv1.Table) (*Table, error) {
+	cols := tbl.Columns
+	lastColsIdx := len(cols)
+	colTypeLookup := make(map[int]upiv1.Type)
+
+	// adding +1 to add `row_id column`
+	columnNames := make([]string, lastColsIdx+1)
+	for i, col := range cols {
+		colTypeLookup[i] = col.Type
+		columnNames[i] = col.Name
+	}
+	// adding row_id column
+	colTypeLookup[lastColsIdx] = upiv1.Type_TYPE_STRING
+	columnNames[lastColsIdx] = RowIDColumn
+
+	seriesVals := make([][]any, len(columnNames))
+	for idx, row := range tbl.Rows {
+		if lastColsIdx != len(row.Values) {
+			return nil, fmt.Errorf("length column in a row: %d doesn't match with defined columns length %d", len(row.Values), len(cols))
+		}
+		for colIdx, val := range row.Values {
+			colType := colTypeLookup[colIdx]
+			currSeriesVal := seriesVals[colIdx]
+			if currSeriesVal == nil {
+				currSeriesVal = make([]any, len(tbl.Rows))
+			}
+			val, err := getUPIValue(val, colType)
+			if err != nil {
+				return nil, err
+			}
+			currSeriesVal[idx] = val
+			seriesVals[colIdx] = currSeriesVal
+		}
+		// adding row_id series
+		rowIdSeriesVal := seriesVals[lastColsIdx]
+		if rowIdSeriesVal == nil {
+			rowIdSeriesVal = make([]any, len(tbl.Rows))
+		}
+		rowIdSeriesVal[idx] = row.RowId
+		seriesVals[len(cols)] = rowIdSeriesVal
+	}
+	generatedSeries := make([]*series.Series, len(seriesVals))
+	for i, vals := range seriesVals {
+		colType := colTypeLookup[i]
+		seriesType := series.String
+		if colType == upiv1.Type_TYPE_INTEGER {
+			seriesType = series.Int
+		} else if colType == upiv1.Type_TYPE_DOUBLE {
+			seriesType = series.Float
+		}
+		generatedSeries[i] = series.New(vals, seriesType, columnNames[i])
+	}
+	return New(generatedSeries...), nil
+}
+
+func getUPIValue(value *upiv1.Value, cType upiv1.Type) (any, error) {
+	if value.IsNull {
+		return nil, nil
+	}
+	switch cType {
+	case upiv1.Type_TYPE_INTEGER:
+		return value.IntegerValue, nil
+	case upiv1.Type_TYPE_STRING:
+		return value.StringValue, nil
+	case upiv1.Type_TYPE_DOUBLE:
+		return value.DoubleValue, nil
+	default:
+		return nil, fmt.Errorf("got unexpected type %v", cType)
+	}
 }
 
 // RecordsFromParquet reads a parquet file which may be local (uploaded together with model) or global (from gcs).
@@ -227,6 +301,78 @@ func NewFromRecords(records [][]string, colType map[string]gota.Type, schema []*
 	return NewTable(&df), nil
 }
 
+// ToUPITable converts table into upi table
+// will exclude row_id columns from upi columns
+func (t *Table) ToUPITable(name string) (*upiv1.Table, error) {
+	cols := t.ColumnsExcluding([]string{RowIDColumn})
+	upiCols, err := convertToUPIColumns(cols)
+	if err != nil {
+		return nil, err
+	}
+
+	rowIDValues := getRowIDValues(t)
+	allColValues, err := getTableRecordsForColumns(cols)
+	if err != nil {
+		return nil, err
+	}
+
+	upiRows := make([]*upiv1.Row, t.NRow())
+	rowIDColExist := t.NRow() == len(rowIDValues)
+	for rowIdx := 0; rowIdx < t.NRow(); rowIdx++ {
+		vals := make([]*upiv1.Value, len(cols))
+		for colIdx, col := range upiCols {
+			colValues := allColValues[col.Name]
+			colVal := colValues[rowIdx]
+			val := &upiv1.Value{}
+			if colVal == nil {
+				val.IsNull = true
+				vals[colIdx] = val
+				continue
+			}
+
+			switch col.Type {
+			case upiv1.Type_TYPE_INTEGER:
+				intVal, err := converter.ToInt64(colVal)
+				if err != nil {
+					return nil, err
+				}
+				val.IntegerValue = intVal
+			case upiv1.Type_TYPE_DOUBLE:
+				floatVal, err := converter.ToFloat64(colVal)
+				if err != nil {
+					return nil, err
+				}
+				val.DoubleValue = floatVal
+			case upiv1.Type_TYPE_STRING:
+				strVal, err := converter.ToString(colVal)
+				if err != nil {
+					return nil, err
+				}
+				val.StringValue = strVal
+			default:
+				return nil, fmt.Errorf("not supported type")
+			}
+			vals[colIdx] = val
+		}
+		var rowID string
+		if rowIDColExist {
+			rowID = rowIDValues[rowIdx]
+		}
+		rowVal := &upiv1.Row{
+			RowId:  rowID,
+			Values: vals,
+		}
+		upiRows[rowIdx] = rowVal
+	}
+
+	upiTbl := &upiv1.Table{
+		Name:    name,
+		Columns: upiCols,
+		Rows:    upiRows,
+	}
+	return upiTbl, nil
+}
+
 // Row return a table containing only the specified row
 // It's similar to GetRow, however it will panic if the specified row doesn't exists in the table
 // Intended to be used as built-in function in expression
@@ -293,21 +439,19 @@ func (t *Table) Columns() []*series.Series {
 	return columns
 }
 
-func (t *Table) ColumnsWithExcluding(excludingCols []string) []*series.Series {
+// ColumnsExcluding retrieve all the columns values except given excluding columns
+func (t *Table) ColumnsExcluding(excludingCols []string) []*series.Series {
 	columnNames := t.ColumnNames()
 	columns := make([]*series.Series, 0)
+	exludingColLookup := make(map[string]bool)
+	for _, col := range excludingCols {
+		exludingColLookup[col] = true
+	}
 	for _, colName := range columnNames {
-		isExcluded := false
-		for _, excludingCol := range excludingCols {
-			if excludingCol == colName {
-				isExcluded = true
-				break
-			}
-		}
-
-		if isExcluded {
+		if exludingColLookup[colName] {
 			continue
 		}
+
 		col, _ := t.GetColumn(colName)
 		columns = append(columns, col)
 	}

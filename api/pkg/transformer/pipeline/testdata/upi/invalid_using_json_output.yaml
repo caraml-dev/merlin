@@ -8,7 +8,7 @@ transformerConfig:
         - name: country
           jsonPath: $.prediction_context[0].string_value
     outputs:
-      - jsonOutput:
+      - jsonOutput: # json output is not supported for upi_v1 protocol
           jsonTemplate:
             fields:
               - fieldName: instances

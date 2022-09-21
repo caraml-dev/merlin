@@ -581,7 +581,7 @@ func TestCompiler_Compile(t *testing.T) {
 			expError:         errors.New("jsonOutput is only supported for http protocol"),
 		},
 		{
-			name: "invalid - using aut0load for http_json protocol",
+			name: "invalid - using autoload for http_json protocol",
 			fields: fields{
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
