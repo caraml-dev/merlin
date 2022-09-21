@@ -1,4 +1,5 @@
-@import "~@elastic/eui/src/global_styling/variables/index";
+@import "@elastic/eui/src/themes/amsterdam/colors_light";
+@import "@elastic/eui/src/themes/amsterdam/globals";
 
 // The `SelectDockerImageComboBox.scss` got overwritten. So we need to re-declare it again.
 // https://github.com/gojek/mlp/blob/main/ui/packages/lib/src/components/form/docker_image_combo_box/SelectDockerImageComboBox.scss

@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { Fragment, useContext, useEffect, useState } from "react";
 import { navigate } from "@reach/router";
 import {
-  EuiIcon,
-  EuiPage,
-  EuiPageBody,
-  EuiPageContent,
-  EuiPageHeader,
-  EuiPageHeaderSection,
+  EuiPageTemplate,
+  EuiPanel,
+  EuiSpacer,
   EuiSteps,
-  EuiTitle
 } from "@elastic/eui";
 import { addToast, replaceBreadcrumbs } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
@@ -209,20 +205,20 @@ export const JobForm = ({ projectId, modelId, versionId, isNewJob = true }) => {
   ];
 
   return (
-    <EuiPage>
-      <EuiPageBody>
-        <EuiPageHeader>
-          <EuiPageHeaderSection>
-            <EuiTitle size="l">
-              <h1>
-                <EuiIcon type="storage" size="xl" />
-                &nbsp; {isNewJob ? "Start Batch Job" : "Recreate Batch Job"}
-              </h1>
-            </EuiTitle>
-          </EuiPageHeaderSection>
-        </EuiPageHeader>
-
-        <EuiPageContent>
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiPageTemplate.Header
+        bottomBorder={false}
+        iconType={"storage"}
+        pageTitle={
+          <Fragment>
+          &nbsp; {isNewJob ? "Start Batch Job" : "Recreate Batch Job"}
+          </Fragment>
+        }
+      />
+      
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Section color={"transparent"}>
+        <EuiPanel>
           <EuiSteps
             headingElement="div"
             steps={steps.map((step, index) => {
@@ -243,9 +239,10 @@ export const JobForm = ({ projectId, modelId, versionId, isNewJob = true }) => {
               return step;
             })}
           />
-        </EuiPageContent>
-      </EuiPageBody>
-    </EuiPage>
+        </EuiPanel>
+      </EuiPageTemplate.Section>
+      <EuiSpacer size="l" />
+    </EuiPageTemplate>
   );
 };
 

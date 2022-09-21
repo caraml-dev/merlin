@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { EuiPage, EuiPageBody, EuiPageContent } from "@elastic/eui";
+import { EuiPageTemplate, EuiPanel, EuiSpacer } from "@elastic/eui";
 import { FormContextProvider } from "@gojek/mlp-ui";
 import React from "react";
 import {
@@ -26,9 +26,9 @@ import { StandardTransformerStep } from "../version/components/forms/steps/Stand
 
 const TransformerTools = () => {
   return (
-    <EuiPage>
-      <EuiPageBody>
-        <EuiPageContent hasBorder={false} hasShadow={false} color="transparent">
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiPageTemplate.Section color={"transparent"}>
+        <EuiPanel>
           <FormContextProvider
             data={{
               transformer: {
@@ -44,9 +44,10 @@ const TransformerTools = () => {
             }}>
             <StandardTransformerStep />
           </FormContextProvider>
-        </EuiPageContent>
-      </EuiPageBody>
-    </EuiPage>
+        </EuiPanel>
+      </EuiPageTemplate.Section>
+      <EuiSpacer size="l" />
+    </EuiPageTemplate>
   );
 };
 

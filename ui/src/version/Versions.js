@@ -16,13 +16,8 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  EuiIcon,
-  EuiPage,
-  EuiPageBody,
-  EuiPageContent,
-  EuiPageHeader,
-  EuiPageHeaderSection,
-  EuiTitle,
+  EuiPageTemplate,
+  EuiPanel,
   EuiSpacer
 } from "@elastic/eui";
 import VersionListTable from "./VersionListTable";
@@ -101,20 +96,17 @@ const Versions = ({ projectId, modelId, ...props }) => {
   }, [models.data, modelId]);
 
   return (
-    <EuiPage>
-      <EuiPageBody>
-        <EuiPageHeader>
-          <EuiPageHeaderSection>
-            <EuiTitle size="l">
-              <h1>
-                <EuiIcon type="graphApp" size="xl" />{" "}
-                {activeModel ? activeModel.name : ""}
-              </h1>
-            </EuiTitle>
-          </EuiPageHeaderSection>
-        </EuiPageHeader>
-
-        <EuiPageContent>
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Header
+        bottomBorder={false}
+        iconType={"machineLearningApp"}
+        pageTitle={activeModel ? activeModel.name : ""}
+      />
+      
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Section color={"transparent"}>
+        <EuiPanel>
           <VersionListTable
             projectId={projectId}
             versions={versions.data}
@@ -144,9 +136,8 @@ const Versions = ({ projectId, modelId, ...props }) => {
               setSelectedCursor={setSelectedCursor}
             />
           )}
-        </EuiPageContent>
-      </EuiPageBody>
-
+        </EuiPanel>
+      </EuiPageTemplate.Section>
       {isUndeployEndpointModalVisible && (
         <UndeployVersionEndpointModal
           versionEndpoint={activeVersionEndpoint}
@@ -166,7 +157,8 @@ const Versions = ({ projectId, modelId, ...props }) => {
           closeModal={toggleServeEndpointModal}
         />
       )}
-    </EuiPage>
+      <EuiSpacer size="l" />
+    </EuiPageTemplate>
   );
 };
 

@@ -18,7 +18,7 @@ import React from "react";
 import { Redirect, Router } from "@reach/router";
 import {
   AuthProvider,
-  Empty,
+  Page404,
   ErrorBoundary,
   Login,
   MlpApiContextProvider,
@@ -34,6 +34,7 @@ import Jobs from "./job/Jobs";
 import JobDetails from "./job/JobDetails";
 import { CreateJobView } from "./job/CreateJobView";
 import { PrivateLayout } from "./PrivateLayout";
+import { EuiProvider } from "@elastic/eui";
 
 // The new UI architecture will have all UI pages inside of `pages` folder
 import {
@@ -43,114 +44,121 @@ import {
   TransformerTools
 } from "./pages";
 
-export default () => (
-  <ErrorBoundary>
-    <MlpApiContextProvider
-      mlpApiUrl={config.MLP_API}
-      timeout={config.TIMEOUT}
-      useMockData={config.USE_MOCK_DATA}>
-      <AuthProvider clientId={config.OAUTH_CLIENT_ID}>
-        <Router role="group">
-          <Login path="/login" />
+const App = () => {
 
-          <Redirect from="/" to={config.HOMEPAGE} noThrow />
+  return(
+    <EuiProvider>
+      <ErrorBoundary>
+        <MlpApiContextProvider
+          mlpApiUrl={config.MLP_API}
+          timeout={config.TIMEOUT}
+          useMockData={config.USE_MOCK_DATA}>
+          <AuthProvider clientId={config.OAUTH_CLIENT_ID}>
+            <Router role="group">
+              <Login path="/login" />
 
-          <PrivateRoute path={config.HOMEPAGE} render={PrivateLayout(Home)} />
+              <Redirect from="/" to={config.HOMEPAGE} noThrow />
 
-          <Redirect
-            from={`${config.HOMEPAGE}/projects/:projectId`}
-            to={`${config.HOMEPAGE}/projects/:projectId/models`}
-            noThrow
-          />
+              <PrivateRoute path={config.HOMEPAGE} render={PrivateLayout(Home)} />
 
-          {/* MODELS */}
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models`}
-            render={PrivateLayout(Models)}
-          />
+              <Redirect
+                from={`${config.HOMEPAGE}/projects/:projectId`}
+                to={`${config.HOMEPAGE}/projects/:projectId/models`}
+                noThrow
+              />
 
-          {/* MODELS DETAILS (Sub-router) */}
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/*`}
-            render={PrivateLayout(ModelDetails)}
-          />
-          <Redirect
-            from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId`}
-            to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions`}
-            noThrow
-          />
+              {/* MODELS */}
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models`}
+                render={PrivateLayout(Models)}
+              />
 
-          {/* VERSIONS */}
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions`}
-            render={PrivateLayout(Versions)}
-          />
+              {/* MODELS DETAILS (Sub-router) */}
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/*`}
+                render={PrivateLayout(ModelDetails)}
+              />
+              <Redirect
+                from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId`}
+                to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions`}
+                noThrow
+              />
 
-          {/* Deploy model version */}
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/deploy`}
-            render={PrivateLayout(DeployModelVersionView)}
-          />
+              {/* VERSIONS */}
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions`}
+                render={PrivateLayout(Versions)}
+              />
 
-          {/* Redeploy model version */}
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/redeploy`}
-            render={PrivateLayout(RedeployModelVersionView)}
-          />
+              {/* Deploy model version */}
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/deploy`}
+                render={PrivateLayout(DeployModelVersionView)}
+              />
 
-          {/* Version pages (and its sub-routers) */}
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/*`}
-            render={PrivateLayout(VersionDetails)}
-          />
+              {/* Redeploy model version */}
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/redeploy`}
+                render={PrivateLayout(RedeployModelVersionView)}
+              />
 
-          <Redirect
-            from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId`}
-            to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/details`}
-            noThrow
-          />
+              {/* Version pages (and its sub-routers) */}
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/*`}
+                render={PrivateLayout(VersionDetails)}
+              />
 
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/*`}
-            render={PrivateLayout(VersionDetails)}
-          />
+              <Redirect
+                from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId`}
+                to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/details`}
+                noThrow
+              />
 
-          <Redirect
-            from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId`}
-            to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/details`}
-            noThrow
-          />
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/*`}
+                render={PrivateLayout(VersionDetails)}
+              />
 
-          {/* Prediction Job */}
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/jobs`}
-            render={PrivateLayout(Jobs)}
-          />
+              <Redirect
+                from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId`}
+                to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/details`}
+                noThrow
+              />
 
-          {/* Prediction Job Details (Sub-router) */}
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/jobs/:jobId/*`}
-            render={PrivateLayout(JobDetails)}
-          />
+              {/* Prediction Job */}
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/jobs`}
+                render={PrivateLayout(Jobs)}
+              />
 
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/create-job`}
-            render={PrivateLayout(CreateJobView)}
-          />
+              {/* Prediction Job Details (Sub-router) */}
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/jobs/:jobId/*`}
+                render={PrivateLayout(JobDetails)}
+              />
 
-          <PrivateRoute
-            path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/create-job`}
-            render={PrivateLayout(CreateJobView)}
-          />
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/create-job`}
+                render={PrivateLayout(CreateJobView)}
+              />
 
-          {/* Tools */}
-          <TransformerTools path={`${config.HOMEPAGE}/-/tools/transformer`} />
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/create-job`}
+                render={PrivateLayout(CreateJobView)}
+              />
 
-          {/* DEFAULT */}
-          <Empty default />
-        </Router>
-        <Toast />
-      </AuthProvider>
-    </MlpApiContextProvider>
-  </ErrorBoundary>
-);
+              {/* Tools */}
+              <TransformerTools path={`${config.HOMEPAGE}/-/tools/transformer`} />
+
+              {/* DEFAULT */}
+              <Page404 default />
+            </Router>
+            <Toast />
+          </AuthProvider>
+        </MlpApiContextProvider>
+      </ErrorBoundary>
+    </EuiProvider>
+  );
+};
+
+export default App;

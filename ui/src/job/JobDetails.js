@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
+import React, { Fragment, useEffect } from "react";
 import {
-  EuiIcon,
-  EuiPage,
-  EuiPageBody,
-  EuiPageHeader,
-  EuiPageHeaderSection,
-  EuiTitle,
-  EuiFlexItem,
-  EuiFlexGroup
+  EuiPageTemplate,
+  EuiSpacer
 } from "@elastic/eui";
 import { Router } from "@reach/router";
 import JobConfig from "./JobConfig";
@@ -42,13 +36,16 @@ const JobLog = ({ projectId, model, versionId, jobId, breadcrumbs }) => {
   const containerURL = `/models/${model.id}/versions/${versionId}/jobs/${jobId}/containers`;
 
   return (
-    <ContainerLogsView
-      projectId={projectId}
-      model={model}
-      versionId={versionId}
-      jobId={jobId}
-      fetchContainerURL={containerURL}
-    />
+    <Fragment>
+      <EuiSpacer size="l" />
+      <ContainerLogsView
+        projectId={projectId}
+        model={model}
+        versionId={versionId}
+        jobId={jobId}
+        fetchContainerURL={containerURL}
+      />
+    </Fragment>
   );
 };
 
@@ -87,25 +84,19 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
   ];
 
   return (
-    <EuiPage>
-      <EuiPageBody>
-        <EuiPageHeader>
-          <EuiPageHeaderSection>
-            <EuiFlexGroup alignItems="center" gutterSize="s">
-              <EuiFlexItem grow={false}>
-                <EuiIcon type="graphApp" size="xl" />
-              </EuiFlexItem>
-
-              <EuiFlexItem grow={2}>
-                <EuiTitle size="m">
-                  <h1>
-                    Prediction Job <strong>{jobId}</strong>
-                  </h1>
-                </EuiTitle>
-              </EuiFlexItem>
-            </EuiFlexGroup>
-          </EuiPageHeaderSection>
-        </EuiPageHeader>
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Header
+        bottomBorder={false}
+        iconType={"machineLearningApp"}
+        pageTitle={
+          <Fragment>
+            Prediction Job {jobId}
+          </Fragment>
+        }
+      />
+    
+      <EuiPageTemplate.Section color={"transparent"}>
         <Router>
           <JobConfig path="/" breadcrumbs={breadcrumbs} />
 
@@ -119,11 +110,12 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
               breadcrumbs={breadcrumbs}
             />
           )}
-
           <RecreateJobView path="recreate" breadcrumbs={breadcrumbs} />
         </Router>
-      </EuiPageBody>
-    </EuiPage>
+   
+      </EuiPageTemplate.Section>
+      <EuiSpacer size="l" />
+    </EuiPageTemplate>
   );
 };
 

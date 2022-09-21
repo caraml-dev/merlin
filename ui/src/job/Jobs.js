@@ -15,17 +15,11 @@
  */
 
 import React, { useEffect } from "react";
-import { navigate } from "@reach/router";
 import {
   EuiButton,
-  EuiIcon,
-  EuiPage,
-  EuiPageBody,
-  EuiPageContent,
-  EuiPageHeader,
-  EuiPageHeaderSection,
-  EuiText,
-  EuiTitle
+  EuiPageTemplate,
+  EuiPanel,
+  EuiSpacer
 } from "@elastic/eui";
 import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../hooks/useMerlinApi";
@@ -64,29 +58,22 @@ const Jobs = ({ projectId, modelId }) => {
   }, [projectId, modelId, model.data.name]);
 
   return (
-    <EuiPage>
-      <EuiPageBody>
-        <EuiPageHeader>
-          <EuiPageHeaderSection>
-            <EuiTitle size="l">
-              <h1>
-                <EuiIcon type="graphApp" size="xl" /> Prediction Jobs
-              </h1>
-            </EuiTitle>
-          </EuiPageHeaderSection>
-
-          <EuiPageHeaderSection>
-            <EuiButton
-              fill
-              size="s"
-              color="primary"
-              onClick={() => navigate(createJobURL)}>
-              <EuiText size="s">Start Batch Job</EuiText>
-            </EuiButton>
-          </EuiPageHeaderSection>
-        </EuiPageHeader>
-
-        <EuiPageContent>
+    <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Header
+        bottomBorder={false}
+        iconType={"machineLearningApp"}
+        pageTitle="Prediction Jobs"
+        rightSideItems={[
+          <EuiButton fill href={createJobURL}>
+            Start Batch Job
+          </EuiButton>,
+        ]}
+      />
+      
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Section color={"transparent"}>
+        <EuiPanel>
           <JobListTable
             projectId={projectId}
             modelId={modelId}
@@ -94,9 +81,10 @@ const Jobs = ({ projectId, modelId }) => {
             isLoaded={isLoaded}
             error={error}
           />
-        </EuiPageContent>
-      </EuiPageBody>
-    </EuiPage>
+        </EuiPanel>
+      </EuiPageTemplate.Section>
+      <EuiSpacer size="l" />
+    </EuiPageTemplate>
   );
 };
 

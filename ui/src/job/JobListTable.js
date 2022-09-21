@@ -37,7 +37,6 @@ import { featureToggleConfig } from "../config";
 import PropTypes from "prop-types";
 
 const moment = require("moment");
-const querystring = require("querystring");
 
 const defaultTextSize = "s";
 const defaultIconSize = "xs";
@@ -81,7 +80,7 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
       "var-project": project.name,
       "var-job": job.name
     };
-    const queryParams = querystring.stringify(query);
+    const queryParams = new URLSearchParams(query).toString();
     return `${baseURL}?${queryParams}`;
   }
 
@@ -109,7 +108,7 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
             {name}
           </span>
           {moment().diff(item.created_at, "hours") <= 1 && (
-            <EuiBadge color="secondary">New</EuiBadge>
+            <EuiBadge color="success">New</EuiBadge>
           )}
         </Link>
       )
