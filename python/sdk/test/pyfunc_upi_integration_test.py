@@ -53,6 +53,55 @@ class IrisClassifier(PyFuncModel):
         return pd.DataFrame(self._model.predict(features_matrix), columns = self.target_names)
 
 
+class SimpleForwarder(PyFuncModel):
+    target_name = "iris-species"
+
+    def initialize(self, artifacts):
+
+    def infer(self, request: dict, **kwargs):
+        return request
+
+    def upiv1_infer(self, request: upi_pb2.PredictValuesRequest,
+                    context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
+        features = self._get_features_from_request(request)
+        predictions = self._predict(features)
+        return self._create_response(predictions, request)
+
+    def _create_response(self, predictions: np.ndarray, request: upi_pb2.PredictValuesRequest) -> upi_pb2.PredictValuesResponse:
+        result_rows = self._predictions_to_result_rows(predictions, request)
+        response_metadata = upi_pb2.ResponseMetadata(prediction_id=request.metadata.prediction_id)
+        return upi_pb2.PredictValuesResponse(prediction_result_rows=result_rows, target_name=self.target_name, metadata=response_metadata)
+
+    def _get_features_from_request(self, request: upi_pb2.PredictValuesRequest) -> List[List[float]]:
+        features = []
+        for row in request.prediction_rows:
+            if len(row.model_inputs) != len(self.feature_names):
+                raise ValueError(f"invalid features length, got {len(row.model_inputs)} expected: {len(self.feature_names)}")
+
+            feature = []
+            for idx, model_input in enumerate(row.model_inputs):
+                if model_input.name != self.feature_names[idx]:
+                    raise ValueError(f"invalid feature names at index {idx}, got {model_input.name} expected: {self.feature_names[idx]}")
+                feature.append(model_input.double_value)
+            features.append(feature)
+
+        return features
+
+    def _predictions_to_result_rows(self, predictions: np.ndarray, request: upi_pb2.PredictValuesRequest):
+        result_rows = []
+        for row_idx, row in enumerate(predictions):
+            result_row = []
+            for idx, col in enumerate(row):
+                val = value_pb2.NamedValue(name=self.target_names[idx], double_value=col)
+                result_row.append(val)
+            result_rows.append(upi_pb2.PredictionResultRow(row_id=request.prediction_rows[row_idx].row_id, values=result_row))
+        return result_rows
+
+    def _predict(self, features: List[List[float]]) -> List[List[float]]:
+        features_matrix = xgb.DMatrix(features)
+        return self._model.predict(features_matrix)
+
+
 @pytest.mark.pyfunc
 @pytest.mark.integration
 def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
@@ -79,6 +128,43 @@ def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
     stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
 
     validate_iris_upi(xgb_model, stub)
+    merlin.undeploy(v)
+
+@pytest.mark.pyfunc
+@pytest.mark.integration
+def test_pyfunc_with_standard_transformer(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("pyfunc-upi-std", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        xgb_path, xgb_model = train_xgboost_model()
+
+        v.log_pyfunc_model(model_instance=SimpleForwarder(),
+                           conda_env="test/pyfunc/env.yaml",
+                           code_dir=["test"])
+
+    transformer_config_path = os.path.join(
+        "test/transformer", "upi_standard_transformer_without_feast.yaml"
+    )
+    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
+    endpoint = merlin.deploy(v, transformer=transformer, protocol=Protocol.UPI_V1)
+
+    assert model_endpoint.protocol == Protocol.UPI_V1
+    assert endpoint.status == Status.RUNNING
+
+    channel = grpc.insecure_channel(f"{model_endpoint.url}:80")
+    stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
+
+    print(model_endpoint.url)
+    sleep(5)
+    request = create_upi_request_from_iris_dataset()
+    response = stub.PredictValues(request=request)
+
+    assert response.metadata.prediction_id == request.metadata.prediction_id
+    assert response.target_name == request.target_name
+
     merlin.undeploy(v)
 
 
