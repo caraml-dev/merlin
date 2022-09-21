@@ -5,12 +5,17 @@ package merlin.transformer;
 option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
 
+// UPIPreprocessOutput output specificiation only for preprocess step
 message UPIPreprocessOutput {
+    // predictioTableName is name of the table in standard transformer that will  be assigned to field `prediction_table` of `PredictionValuesRequest`
     string predictionTableName = 1;
+    // transformerInpuTableNames is list of table names in standard transformer that will be assigned to field `transformer_input`.`tables` field of `PredictionValuesRequest`
     repeated string transformerInputTableNames = 2;
 }
 
+// UPIPostrocessOutput output specificiation only for postprocess step
 message UPIPostprocessOutput {
+    // predictionResultTableName is name of the table in standard transformer that will be assigned to field `prediction_result_table` of `PredictionValuesResponse`
     string predictionResultTableName = 1;
 }
 

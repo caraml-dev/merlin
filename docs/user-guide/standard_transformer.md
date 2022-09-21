@@ -550,7 +550,7 @@ To learn more about cyclical encoding, you may find this page useful: [Cyclical 
 
 ### Autoload
 
-Autoload loads tables and variables that explicitly declared in the request or response interface. This operation only applicable for **upi_v1** protocol. Below is specification of autoload
+Autoload declares tables and variables that need to be loaded to standard transformer runtime from incoming request/response. This operation is only applicable for **upi_v1** protocol. Below is specification of autoload
 ```yaml
 autoload:
   tableNames:
@@ -560,7 +560,7 @@ autoload:
     - var_name_1
     - var_name_2
 ```
-`tableNames` and `variableNames` are fields that list of table name and variables that declared on request or response payload, if `autoload` part of `preprocess` it will try to load information from request payload, otherwise it will load from response payload.
+`tableNames` and `variableNames` are fields that list table name and variables declaration. If `autoload` is part of `preprocess` pipeline, it will try to load those declared table and variables from request payload, otherwise it will load from model response payload.
 
 ## Transformation Stage
 
