@@ -2,9 +2,7 @@ package table
 
 import (
 	"errors"
-	"fmt"
 
-	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
@@ -37,30 +35,6 @@ func getRowIDValues(tbl *Table) []string {
 		rowIDValues = rowIDSeries.Series().Records()
 	}
 	return rowIDValues
-}
-
-func convertToUPIColumns(cols []*series.Series) ([]*upiv1.Column, error) {
-	upiCols := make([]*upiv1.Column, len(cols))
-	for idx, col := range cols {
-		colName := col.Series().Name
-		upiColType := upiv1.Type_TYPE_STRING
-		switch col.Type() {
-		case series.Int:
-			upiColType = upiv1.Type_TYPE_INTEGER
-		case series.Float:
-			upiColType = upiv1.Type_TYPE_DOUBLE
-		case series.String:
-			upiColType = upiv1.Type_TYPE_STRING
-		default:
-			return nil, fmt.Errorf("type %v is not supported in UPI", col.Type())
-		}
-
-		upiCols[idx] = &upiv1.Column{
-			Name: colName,
-			Type: upiColType,
-		}
-	}
-	return upiCols, nil
 }
 
 func tableToJsonRecordFormat(tbl *Table) (interface{}, error) {

@@ -32,13 +32,13 @@ func (up *UPIPostprocessOutputOp) Execute(ctx context.Context, env *Environment)
 		return fmt.Errorf("not valid type %T", modelResponse)
 	}
 
-	copiedResponse := *upiModelResponse
+	copiedResponse := upiModelResponse
 	predictionResultTable, err := getUPITableFromName(up.outputSpec.PredictionResultTableName, env)
 	if err != nil {
 		return err
 	}
 	copiedResponse.PredictionResultTable = predictionResultTable
-	env.SetOutput(&copiedResponse)
+	env.SetOutput(copiedResponse)
 	if up.OperationTracing != nil {
 		return up.OperationTracing.AddInputOutput(nil, map[string]any{
 			"output": &copiedResponse,

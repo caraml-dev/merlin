@@ -51,11 +51,11 @@ func (up *UPIPreprocessOutputOp) Execute(ctx context.Context, env *Environment) 
 
 	transformerInput := &upiv1.TransformerInput{}
 	transformerInput.Tables = transformerInputTables
-	copiedRequest := *enrichedRequest
+	copiedRequest := enrichedRequest
 	copiedRequest.PredictionTable = predictionTable
 	copiedRequest.TransformerInput = transformerInput
 
-	env.SetOutput(&copiedRequest)
+	env.SetOutput(copiedRequest)
 
 	return nil
 }

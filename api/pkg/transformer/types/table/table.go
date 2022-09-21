@@ -305,7 +305,7 @@ func NewFromRecords(records [][]string, colType map[string]gota.Type, schema []*
 // will exclude row_id columns from upi columns
 func (t *Table) ToUPITable(name string) (*upiv1.Table, error) {
 	cols := t.ColumnsExcluding([]string{RowIDColumn})
-	upiCols, err := convertToUPIColumns(cols)
+	upiCols, err := series.ConvertToUPIColumns(cols)
 	if err != nil {
 		return nil, err
 	}
