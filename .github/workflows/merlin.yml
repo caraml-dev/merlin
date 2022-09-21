@@ -387,6 +387,7 @@ jobs:
         run: ./run-e2e.sh ${{ env.INGRESS_HOST }}
       - name: "Debug"
         if: always()
+        continue-on-error: true
         run: |
           echo "::group::Get deployment mlp namespace"
           kubectl get deployment -n mlp
