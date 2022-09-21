@@ -64,7 +64,7 @@ export const ModelVersionPanelHeader = ({ model, version }) => {
               <EllipsisText text={val} length={16} />
             </EuiBadge>
           ))
-        : ""
+        : "-"
     }
   ];
 

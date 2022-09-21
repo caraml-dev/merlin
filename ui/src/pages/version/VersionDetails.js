@@ -137,7 +137,7 @@ const VersionDetails = ({
               }
             />
 
-            <EuiPageTemplate.Section>
+            <EuiPageTemplate.Section color={"transparent"}>
               <EuiSpacer size="l" />
               {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
                 model &&
