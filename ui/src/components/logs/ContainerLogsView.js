@@ -4,7 +4,7 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiLoadingContent,
-  EuiPageContent,
+  EuiPanel,
   EuiSpacer,
   EuiTextColor,
   EuiTitle
@@ -17,8 +17,6 @@ import { LogsSearchBar } from "./LogsSearchBar";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import StackdriverLink from "./StackdriverLink";
 import { createStackdriverUrl } from "../../utils/createStackdriverUrl";
-
-const querystring = require("querystring");
 
 const componentOrder = [
   "image_builder",
@@ -123,7 +121,7 @@ export const ContainerLogsView = ({
   const authCtx = useContext(AuthContext);
   const fetchOptions = {
     headers: {
-      Authorization: `Bearer ${authCtx.state.accessToken}`
+      Authorization: `Bearer ${authCtx.state.jwt}`
     }
   };
 
@@ -149,7 +147,7 @@ export const ContainerLogsView = ({
             version_id: versionId,
             prediction_job_id: jobId
           };
-          const logParams = querystring.stringify(containerQuery);
+          const logParams = new URLSearchParams(containerQuery).toString();
           const newLogUrl = config.MERLIN_API + "/logs?" + logParams;
           if (newLogUrl !== logUrl) {
             setLogUrl(newLogUrl);
@@ -177,10 +175,12 @@ export const ContainerLogsView = ({
   return (
     <Fragment>
       <EuiTitle size="s">
-        <EuiTextColor color="secondary">Logs</EuiTextColor>
+        <span>
+          <EuiTextColor color="success">&nbsp; Logs</EuiTextColor>
+        </span>
       </EuiTitle>
-
-      <EuiPageContent>
+      <EuiSpacer size="s" />
+      <EuiPanel>
         {!containerHaveBeenLoaded &&
         componentTypes &&
         componentTypes.length === 0 ? (
@@ -232,7 +232,7 @@ export const ContainerLogsView = ({
             }
           />
         )}
-      </EuiPageContent>
+      </EuiPanel>
     </Fragment>
   );
 };

@@ -15,18 +15,20 @@
  */
 
 import React, { Fragment } from "react";
-import { EuiEmptyPrompt } from "@elastic/eui";
+import { EuiPageTemplate } from "@elastic/eui";
 
 const Home = () => (
-  <EuiEmptyPrompt
-    iconType="machineLearningApp"
-    title={<h2>Machine Learning Platform</h2>}
-    body={
-      <Fragment>
-        <p>To start off, please select a project from the dropdown.</p>
-      </Fragment>
-    }
-  />
+  <EuiPageTemplate>
+      <EuiPageTemplate.EmptyPrompt
+        iconType="machineLearningApp"
+        title={<h2>Machine Learning Platform</h2>}
+        body={
+          <Fragment>
+            <p>To start off, please select a project from the dropdown.</p>
+          </Fragment>
+        }
+      />
+  </EuiPageTemplate>
 );
 
 export default Home;

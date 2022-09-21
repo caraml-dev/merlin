@@ -239,7 +239,7 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
             {name}
           </span>
           {moment().diff(item.created_at, "hours") <= 1 && (
-            <EuiBadge color="secondary">New</EuiBadge>
+            <EuiBadge color="success">New</EuiBadge>
           )}
         </Link>
       )

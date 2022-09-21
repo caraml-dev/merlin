@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-const querystring = require("querystring");
-
 const stackdriverAPI = "https://console.cloud.google.com/logs/viewer";
 
 const stackdriverFilter = query => {
@@ -36,6 +34,6 @@ export const createStackdriverUrl = query => {
     advancedFilter: advanceFilter
   };
 
-  const stackdriverParams = querystring.stringify(url);
+  const stackdriverParams = new URLSearchParams(url).toString();
   return stackdriverAPI + "?" + stackdriverParams;
 };

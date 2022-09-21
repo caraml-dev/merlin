@@ -41,11 +41,9 @@ export const PrivateLayout = Component => {
               navigate(`${config.HOMEPAGE}/projects/${projectId}/models`)
             }
           />
-          <div className="main-component-layout">
-            <EnvironmentsContextProvider>
-              <Component {...props} />
-            </EnvironmentsContextProvider>
-          </div>
+          <EnvironmentsContextProvider>
+            <Component {...props} />
+          </EnvironmentsContextProvider>
         </CurrentProjectContextProvider>
       </ProjectsContextProvider>
     </ApplicationsContextProvider>

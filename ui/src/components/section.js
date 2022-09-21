@@ -19,6 +19,7 @@ import {
   EuiHorizontalRule,
   EuiIcon,
   EuiPanel,
+  EuiSpacer,
   EuiTextColor,
   EuiTitle
 } from "@elastic/eui";
@@ -26,14 +27,17 @@ import "./section.scss";
 
 export const ConfigSectionTitle = ({ title, iconType }) => (
   <EuiTitle size="s">
-    <EuiTextColor color="secondary">
-      <span>
-        {!!iconType && (
-          <EuiIcon className="eui-alignBaseline" type={iconType} size="m" />
-        )}
-        &nbsp;{title}
-      </span>
-    </EuiTextColor>
+    <span>
+      <EuiTextColor color="success">
+        <span>
+          {!!iconType && (
+            <EuiIcon className="eui-alignBaseline" type={iconType} size="m" />
+          )}
+          &nbsp;{title}
+        </span>
+        <EuiSpacer size="s" />
+      </EuiTextColor>
+    </span>
   </EuiTitle>
 );
 
