@@ -77,18 +77,18 @@ func (c *apiClient) ListProjects(ctx context.Context, projectName string) (Proje
 		opt = &client.ProjectApiProjectsGetOpts{Name: optional.NewString(projectName)}
 	}
 
-	projects, _, err := c.client.ProjectApi.ProjectsGet(ctx, opt)
+	projects, _, err := c.client.ProjectApi.ProjectsGet(ctx, opt) // nolint: bodyclose
 	if err != nil {
-		return nil, fmt.Errorf("mlp-api_ListProjects: %s", err)
+		return nil, fmt.Errorf("mlp-api_ListProjects: %w", err)
 	}
 
 	return projects, nil
 }
 
 func (c *apiClient) GetProjectByID(ctx context.Context, projectID int32) (Project, error) {
-	project, _, err := c.client.ProjectApi.ProjectsProjectIdGet(ctx, projectID)
+	project, _, err := c.client.ProjectApi.ProjectsProjectIdGet(ctx, projectID) // nolint: bodyclose
 	if err != nil {
-		return Project{}, fmt.Errorf("mlp-api_GetProjectByID: %s", err)
+		return Project{}, fmt.Errorf("mlp-api_GetProjectByID: %w", err)
 	}
 
 	return Project(project), nil
@@ -99,9 +99,9 @@ func (c *apiClient) GetProjectByName(ctx context.Context, projectName string) (P
 		Name: optional.NewString(projectName),
 	}
 
-	projects, _, err := c.client.ProjectApi.ProjectsGet(ctx, opt)
+	projects, _, err := c.client.ProjectApi.ProjectsGet(ctx, opt) // nolint: bodyclose
 	if err != nil {
-		return Project{}, fmt.Errorf("mlp-api_GetProjectByName: %s", err)
+		return Project{}, fmt.Errorf("mlp-api_GetProjectByName: %w", err)
 	}
 
 	if len(projects) == 0 {
@@ -112,17 +112,17 @@ func (c *apiClient) GetProjectByName(ctx context.Context, projectName string) (P
 }
 
 func (c *apiClient) CreateProject(ctx context.Context, project Project) (Project, error) {
-	newProject, _, err := c.client.ProjectApi.ProjectsPost(ctx, client.Project(project))
+	newProject, _, err := c.client.ProjectApi.ProjectsPost(ctx, client.Project(project)) // nolint: bodyclose
 	if err != nil {
-		return Project{}, fmt.Errorf("mlp-api_CreateProject: %s", err)
+		return Project{}, fmt.Errorf("mlp-api_CreateProject: %w", err)
 	}
 	return Project(newProject), nil
 }
 
 func (c *apiClient) UpdateProject(ctx context.Context, project Project) (Project, error) {
-	updatedProject, _, err := c.client.ProjectApi.ProjectsProjectIdPut(ctx, project.Id, client.Project(project))
+	updatedProject, _, err := c.client.ProjectApi.ProjectsProjectIdPut(ctx, project.Id, client.Project(project)) // nolint: bodyclose
 	if err != nil {
-		return Project{}, fmt.Errorf("mlp-api_UpdateProject: %s", err)
+		return Project{}, fmt.Errorf("mlp-api_UpdateProject: %w", err)
 	}
 	return Project(updatedProject), nil
 }

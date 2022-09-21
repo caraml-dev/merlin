@@ -34,27 +34,31 @@ func TestSecret(t *testing.T) {
 		switch r.URL.Path {
 		case "/projects/1/secrets":
 			if r.Method == "POST" {
-				w.Write([]byte(`{
+				_, err := w.Write([]byte(`{
 					"id": 1,
 					"name": "secret-1",
 					"data": "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA=="
 				}`))
+				assert.NoError(t, err)
 			} else if r.Method == "GET" {
-				w.Write([]byte(`[{
+				_, err := w.Write([]byte(`[{
 					"id": 1,
 					"name": "secret-1",
 					"data": "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA=="
 				}]`))
+				assert.NoError(t, err)
 			}
 		case "/projects/1/secrets/1":
 			if r.Method == "PATCH" {
-				w.Write([]byte(`{
+				_, err := w.Write([]byte(`{
 					"id": 1,
 					"name": "secret-1",
 					"data": "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA=="
 				}`))
+				assert.NoError(t, err)
 			} else if r.Method == "DELETE" {
-				w.Write([]byte(`ok`))
+				_, err := w.Write([]byte(`ok`))
+				assert.NoError(t, err)
 			}
 		}
 	}))

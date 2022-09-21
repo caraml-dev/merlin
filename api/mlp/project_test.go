@@ -31,28 +31,32 @@ func TestProject(t *testing.T) {
 		switch r.URL.Path {
 		case "/projects":
 			if r.Method == "GET" {
-				w.Write([]byte(`[{
+				_, err := w.Write([]byte(`[{
 					"id": 1,
 					"name": "project-1"
 				}]`))
+				assert.NoError(t, err)
 			} else if r.Method == "POST" {
-				w.Write([]byte(`{
+				_, err := w.Write([]byte(`{
 					"id": 1,
 					"name": "project-1"
 				}`))
+				assert.NoError(t, err)
 			}
 		case "/projects/1":
 			if r.Method == "GET" {
-				w.Write([]byte(`{
+				_, err := w.Write([]byte(`{
 					"id": 1,
 					"name": "project-1"
 				}`))
+				assert.NoError(t, err)
 			} else if r.Method == "PUT" {
-				w.Write([]byte(`{
+				_, err := w.Write([]byte(`{
 					"id": 1,
 					"name": "project-1",
 					"readers": ["user@domain.com"]
 				}`))
+				assert.NoError(t, err)
 			}
 		}
 	}))

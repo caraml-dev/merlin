@@ -203,11 +203,9 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 
 // DeleteModelEndpoint stops model endpoint for serving.
 // To be more precise, it will do the following:
-// 1. Delete the corresponding Istio's VirtualService
-// 2. Update the model endpoint database
-//    - Update the model endpoint status to terminated
-// 3. Update the version endpoint database
-//    - Update the version endpoint status from serving to running
+// 1. Delete the corresponding Istio's VirtualService.
+// 2. Update the model endpoint database. Update the model endpoint status to "terminated".
+// 3. Update the version endpoint database. Update the version endpoint status from serving to "running".
 func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	ctx := r.Context()
 
@@ -234,7 +232,7 @@ func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map
 		return InternalServerError(fmt.Sprintf("Error while getting model endpoint with id %s", modelEndpointID))
 	}
 
-	modelEndpoint, err = c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
+	_, err = c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
 	}

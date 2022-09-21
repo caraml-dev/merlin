@@ -282,7 +282,11 @@ func (c *Compiler) parseTablesSpec(tableSpecs []*spec.Table, compiledJsonPaths *
 				} else if tableSpec.BaseTable.GetFromFile().GetFormat() == spec.FromFile_PARQUET {
 					records, colType, err = table.RecordsFromParquet(filePath)
 				} else {
-					return nil, nil, fmt.Errorf("Unsupported/Unspecified file type")
+					return nil, nil, fmt.Errorf("unsupported/unspecified file type: %s", tableSpec.BaseTable.GetFromFile().GetFormat())
+				}
+
+				if err != nil {
+					return nil, nil, fmt.Errorf("failed creating records from file %w", err)
 				}
 
 				loadedTable, err := table.NewFromRecords(records, colType, tableSpec.BaseTable.GetFromFile().GetSchema())

@@ -167,6 +167,7 @@ func TestCreatePredictionJob(t *testing.T) {
 	// test positive case
 	savedJob := new(models.PredictionJob)
 	err := copier.Copy(savedJob, job)
+	assert.NoError(t, err)
 	savedJob.Config.ImageRef = imageRef
 
 	mockStorage.On("Save", job).Return(nil)
@@ -187,6 +188,7 @@ func TestStopPredictionJob(t *testing.T) {
 	// test positive case
 	savedJob := new(models.PredictionJob)
 	err := copier.Copy(savedJob, job)
+	assert.NoError(t, err)
 	savedJob.Config.ImageRef = imageRef
 
 	mockStorage.On("Get", job.ID).Return(job, nil)
@@ -214,35 +216,35 @@ func TestInvalidResourceRequest(t *testing.T) {
 			resourceRequest: &models.PredictionJobResourceRequest{
 				DriverCPURequest: "1x",
 			},
-			wantErrMsg: fmt.Sprintf("invalid driver cpu request: 1x"),
+			wantErrMsg: "invalid driver cpu request: 1x",
 		},
 		{
 			name: "invalid driver memory request",
 			resourceRequest: &models.PredictionJobResourceRequest{
 				DriverMemoryRequest: "1x",
 			},
-			wantErrMsg: fmt.Sprintf("invalid driver memory request: 1x"),
+			wantErrMsg: "invalid driver memory request: 1x",
 		},
 		{
 			name: "invalid executor cpu request",
 			resourceRequest: &models.PredictionJobResourceRequest{
 				ExecutorCPURequest: "1x",
 			},
-			wantErrMsg: fmt.Sprintf("invalid executor cpu request: 1x"),
+			wantErrMsg: "invalid executor cpu request: 1x",
 		},
 		{
 			name: "invalid executor memory request",
 			resourceRequest: &models.PredictionJobResourceRequest{
 				ExecutorMemoryRequest: "1x",
 			},
-			wantErrMsg: fmt.Sprintf("invalid executor memory request: 1x"),
+			wantErrMsg: "invalid executor memory request: 1x",
 		},
 		{
 			name: "invalid executor replica",
 			resourceRequest: &models.PredictionJobResourceRequest{
 				ExecutorReplica: -1,
 			},
-			wantErrMsg: fmt.Sprintf("invalid executor replica: -1"),
+			wantErrMsg: "invalid executor replica: -1",
 		},
 	}
 	for _, test := range tests {

@@ -93,18 +93,6 @@ var (
 		},
 		Status: models.JobPending,
 	}
-	reqJob = &models.PredictionJob{
-		VersionID:      3,
-		VersionModelID: 1,
-		Config: &models.Config{
-			EnvVars: models.EnvVars{
-				{
-					Name:  "key",
-					Value: "value",
-				},
-			},
-		},
-	}
 )
 
 func TestBatchDeployment_Deploy(t *testing.T) {

@@ -893,10 +893,10 @@ func ToFeastValue(v interface{}, valueType feastType.ValueType_Enum) (*feastType
 		}
 		return feast.BoolVal(val), nil
 	case feastType.ValueType_STRING:
-		switch v.(type) {
+		switch inType := v.(type) {
 		case float64:
 			// we'll truncate decimal point as number in json is treated as float64 and it doesn't make sense to have decimal as entity id
-			return feast.StrVal(fmt.Sprintf("%.0f", v.(float64))), nil
+			return feast.StrVal(fmt.Sprintf("%.0f", inType)), nil
 		default:
 			val, err := ToString(v)
 			if err != nil {

@@ -62,7 +62,7 @@ func (c *ProjectsController) GetProject(r *http.Request, vars map[string]string,
 
 func (c *ProjectsController) filterAuthorizedProjects(user string, projects mlp.Projects, action string) (mlp.Projects, error) {
 	if c.AuthorizationEnabled {
-		projectIDs := make([]string, 0, 0)
+		projectIDs := make([]string, 0)
 		allowedProjects := mlp.Projects{}
 		projectMap := make(map[string]mlp.Project)
 		for _, project := range projects {

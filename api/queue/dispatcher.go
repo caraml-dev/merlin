@@ -71,7 +71,7 @@ func (d *Dispatcher) RegisterJob(jobName string, jobFn JobFn) {
 
 func (d *Dispatcher) Start() {
 	// When start workers make sure all incomplete jobs which is not currently running is rerun
-	d.reQueueIncompleteJobs()
+	d.queueIncompleteJobs()
 	for _, w := range d.workers {
 		w.start()
 	}
@@ -83,15 +83,19 @@ func (d *Dispatcher) Stop() {
 	}
 }
 
-func (d *Dispatcher) reQueueIncompleteJobs() {
+func (d *Dispatcher) queueIncompleteJobs() {
 	var jobs []Job
 
 	err := d.db.Raw(allIncompleteJobsQuery, false).Scan(&jobs).Error
 	if err != nil {
+		log.Errorf("unable to queueIncompleteJobs %v", err)
 		return
 	}
 	for _, job := range jobs {
-		d.EnqueueJob(&job)
+		err = d.EnqueueJob(&job)
+		if err != nil {
+			log.Errorf("unable to queueIncompleteJobs %v", err)
+		}
 	}
 }
 

@@ -194,6 +194,11 @@ func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[str
 
 	var query service.ListPredictionJobQuery
 	err := decoder.Decode(&query, r.URL.Query())
+	if err != nil {
+		log.Errorf("unable to decode query: %s", r.URL.Query(), err)
+		return BadRequest(fmt.Sprintf("Bad query %s", r.URL.Query()))
+	}
+
 	projectID, _ := models.ParseID(vars["project_id"])
 
 	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))

@@ -15,6 +15,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -55,7 +56,7 @@ func initDB(cfg config.DatabaseConfig) (*gorm.DB, func()) {
 		panic(err)
 	}
 	db.LogMode(false)
-	return db, func() { db.Close() }
+	return db, func() { db.Close() } //nolint:errcheck
 }
 
 func runDBMigration(db *gorm.DB, migrationPath string) {
@@ -86,7 +87,7 @@ func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClien
 }
 
 func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool) core.CoreServiceClient {
-	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
+	dialOpts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	if enableAuth {
 		cred, err := feast.NewGoogleCredential(feastAuthAudience)
 		if err != nil {
@@ -195,6 +196,10 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 		BuildNamespace: cfg.ImageBuilderConfig.BuildNamespace,
 		Retention:      cfg.ImageBuilderConfig.Retention,
 	})
+
+	if err != nil {
+		log.Panicf("unable to initialize cluster controller")
+	}
 
 	return
 }

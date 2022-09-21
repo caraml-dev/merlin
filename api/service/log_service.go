@@ -152,7 +152,7 @@ func (l logService) getPodsLogs(ctx context.Context, clusterController cluster.C
 
 	pods, err := clusterController.ListPods(ctx, namespace, labelSelector)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list pods: %s", err.Error())
+		return nil, fmt.Errorf("failed to list pods: %w", err)
 	}
 
 	allLogLines := []*LogLine{}

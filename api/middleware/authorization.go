@@ -124,6 +124,6 @@ func jsonError(w http.ResponseWriter, msg string, status int) {
 			Error string `json:"error"`
 		}{msg})
 
-		w.Write(errJSON)
+		w.Write(errJSON) //nolint:errcheck
 	}
 }

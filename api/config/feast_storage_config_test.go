@@ -68,7 +68,7 @@ func TestFeastRedisConfig(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
-			os.Setenv("FEAST_REDIS_CONFIG", tC.redisConfigString)
+			os.Setenv("FEAST_REDIS_CONFIG", tC.redisConfigString) //nolint:errcheck
 
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
@@ -128,7 +128,7 @@ func TestFeastBigtableConfig(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
-			os.Setenv("FEAST_BIG_TABLE_CONFIG", tC.bigtableString)
+			os.Setenv("FEAST_BIG_TABLE_CONFIG", tC.bigtableString) //nolint:errcheck
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
 			if err == nil {
@@ -343,6 +343,7 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 	}
 }
 
+//nolint:errcheck
 func setRequiredEnvironmentVariables() {
 	os.Setenv("STANDARD_TRANSFORMER_IMAGE_NAME", "image:1")
 	os.Setenv("DEFAULT_FEAST_SERVING_URL", "localhost")

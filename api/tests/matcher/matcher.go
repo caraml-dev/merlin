@@ -16,8 +16,9 @@ package matcher
 
 import (
 	"database/sql/driver"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // AnyTime match any time.Time-like value

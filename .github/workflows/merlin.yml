@@ -11,6 +11,8 @@ on:
 env:
   ARTIFACT_RETENTION_DAYS: 7
   DOCKER_BUILDKIT: 1
+  GO_VERSION: 1.18
+  PYTHON_VERSION: 3.7
 
 jobs:
   create-version:
@@ -43,7 +45,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: ${{ env.PYTHON_VERSION }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
@@ -69,7 +71,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: ${{ env.PYTHON_VERSION }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
@@ -95,7 +97,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: ${{ env.PYTHON_VERSION }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
@@ -117,6 +119,20 @@ jobs:
         working-directory: ./python/sdk
         run: make unit-test
 
+  lint-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # Ensure the same version as the one defined in Makefile
+          version: v1.49
+          working-directory: api
+
   test-api:
     runs-on: ubuntu-latest
     services:
@@ -132,7 +148,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: ${{ env.GO_VERSION }}
       - uses: actions/cache@v3
         with:
           path: |
@@ -270,7 +286,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: ${{ env.GO_VERSION }}
       - uses: actions/cache@v3
         with:
           path: |
@@ -318,10 +334,10 @@ jobs:
           path: merlin/scripts/e2e/mlp
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: ${{ env.GO_VERSION }}
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: ${{ env.PYTHON_VERSION }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
@@ -371,6 +387,7 @@ jobs:
         run: ./run-e2e.sh ${{ env.INGRESS_HOST }}
       - name: "Debug"
         if: always()
+        continue-on-error: true
         run: |
           echo "::group::Get deployment mlp namespace"
           kubectl get deployment -n mlp

@@ -18,11 +18,6 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-const (
-	authorEmail = "merlin-dev@gojek.com"
-	authorName  = "merlin-dev"
-)
-
 // Client for GitLab interface.
 type Client interface {
 	GetFileContent(opt GetFileContentOptions) (string, error)

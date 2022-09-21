@@ -16,6 +16,7 @@ package imagebuilder
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -182,11 +183,11 @@ func (c *imageBuilder) GetContainers(ctx context.Context, project mlp.Project, m
 // means. As such, `Ref` also includes all `Name` values.
 //
 // Examples (stringified):
-//  * alpine:3.5
-//  * library/alpine:3.5
-//  * docker.io/fluxcd/flux:1.1.0
-//  * gojek/merlin-api:1.0.0
-//  * localhost:5000/arbitrary/path/to/repo:revision-sha1
+// * alpine:3.5
+// * library/alpine:3.5
+// * docker.io/fluxcd/flux:1.1.0
+// * gojek/merlin-api:1.0.0
+// * localhost:5000/arbitrary/path/to/repo:revision-sha1
 func (c *imageBuilder) imageRef(project mlp.Project, model *models.Model, version *models.Version) string {
 	return fmt.Sprintf("%s:%s", c.nameGenerator.generateDockerImageName(project, model), version.ID)
 }
@@ -230,12 +231,13 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 
 	repo, err := name.NewRepository(imageName)
 	if err != nil {
-		return false, fmt.Errorf("unable to parse docker repository %s: %s", imageName, err.Error())
+		return false, fmt.Errorf("unable to parse docker repository %s: %w", imageName, err)
 	}
 
 	tags, err := remote.List(repo, remote.WithAuthFromKeychain(keychain))
 	if err != nil {
-		if terr, ok := err.(*transport.Error); ok {
+		var terr *transport.Error
+		if errors.As(err, &terr) {
 			// If image not found, it's not exist yet
 			if terr.StatusCode == http.StatusNotFound {
 				log.Errorf("image (%s) not found", imageName)
@@ -243,11 +245,11 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 			}
 
 			// Otherwise, it's another transport error
-			return false, fmt.Errorf("transport error on listing tags for %s: status code: %d, error: %s", imageName, terr.StatusCode, terr.Error())
+			return false, fmt.Errorf("transport error on listing tags for %s: status code: %d, error: %w", imageName, terr.StatusCode, terr)
 		}
 
 		// If it's not transport error, raise error
-		return false, fmt.Errorf("error getting image tags for %s: %s", repo, err.Error())
+		return false, fmt.Errorf("error getting image tags for %s: %w", repo, err)
 	}
 
 	for _, tag := range tags {
@@ -261,7 +263,7 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 
 func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) error {
 	timeout := time.After(c.config.BuildTimeoutDuration)
-	ticker := time.Tick(time.Second * tickDurationSecond)
+	ticker := time.NewTicker(time.Second * tickDurationSecond)
 	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
 	podClient := c.kubeClient.CoreV1().Pods(c.config.BuildNamespace)
 
@@ -270,7 +272,7 @@ func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) e
 		case <-timeout:
 			log.Errorf("timeout waiting for kaniko job completion %s", job.Name)
 			return ErrTimeoutBuilImage
-		case <-ticker:
+		case <-ticker.C:
 			j, err := jobClient.Get(ctx, job.Name, metav1.GetOptions{})
 			if err != nil {
 				log.Errorf("unable to get job status for job %s: %v", job.Name, err)
