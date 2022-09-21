@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/apis/sparkoperator.k8s.io/v1beta2"
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned"
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/informers/externalversions"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -264,14 +263,17 @@ func (c *controller) syncStatus(ctx context.Context, key string) error {
 		return fmt.Errorf("error fetching object with key %s from store: %w", key, err)
 	}
 
-	sparkApp, _ := obj.(*v1beta2.SparkApplication)
+	sparkApp, ok := obj.(*v1beta2.SparkApplication)
+	if !ok {
+		return fmt.Errorf("not spark application %v", obj)
+	}
 	predictionJobID, err := models.ParseID(sparkApp.Labels[labelPredictionJobID])
 	if err != nil {
-		return errors.Wrapf(err, "unable to parse prediction job id")
+		return fmt.Errorf("unable to parse prediction job id: %w", err)
 	}
 	predictionJob, err := c.store.Get(predictionJobID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to find prediction job with id: %s", predictionJobID)
+		return fmt.Errorf("unable to find prediction job with id %s %w", predictionJobID, err)
 	}
 
 	if predictionJob.Status != models.JobTerminated {
