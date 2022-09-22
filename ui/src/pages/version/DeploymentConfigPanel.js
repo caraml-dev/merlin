@@ -28,33 +28,44 @@ export const DeploymentConfigPanel = ({ endpoint }) => {
     concurrency: "Concurrency",
     cpu_utilization: "CPU Utilization",
     memory_utilization: "Memory Utilization",
-    rps: "Request Per Second"
+    rps: "Request Per Second",
   };
 
   const deploymentModeDesc = {
     raw_deployment: "Raw Deployment",
-    serverless: "Serverless"
+    serverless: "Serverless",
+  };
+
+  const protocolDesc = {
+    UPI_V1: "Universal Prediction Interface (gRPC)",
+    HTTP_JSON: "JSON over HTTP",
   };
 
   const deploymentConfig = [
     {
+      title: "Protocol",
+      description: endpoint.protocol
+        ? protocolDesc[endpoint.protocol]
+        : protocolDesc["HTTP_JSON"],
+    },
+    {
       title: "Deployment Mode",
       description: endpoint.deployment_mode
         ? deploymentModeDesc[endpoint.deployment_mode]
-        : deploymentModeDesc["serverless"]
+        : deploymentModeDesc["serverless"],
     },
     {
       title: "Autoscaling Metrics",
       description: endpoint.autoscaling_policy
         ? autoscalingMetricsDesc[endpoint.autoscaling_policy.metrics_type]
-        : autoscalingMetricsDesc["concurrency"]
+        : autoscalingMetricsDesc["concurrency"],
     },
     {
       title: "Autoscaling Target",
       description: endpoint.autoscaling_policy
         ? endpoint.autoscaling_policy.target_value
-        : 1
-    }
+        : 1,
+    },
   ];
 
   return (
@@ -63,12 +74,13 @@ export const DeploymentConfigPanel = ({ endpoint }) => {
         <EuiDescriptionList
           compressed
           type="responsiveColumn"
-          listItems={deploymentConfig}></EuiDescriptionList>
+          listItems={deploymentConfig}
+        ></EuiDescriptionList>
       </ConfigSectionPanel>
     </ConfigSection>
   );
 };
 
 DeploymentConfigPanel.propTypes = {
-  endpoint: PropTypes.object.isRequired
+  endpoint: PropTypes.object.isRequired,
 };
