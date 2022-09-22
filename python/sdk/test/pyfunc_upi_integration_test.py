@@ -104,8 +104,6 @@ def test_pyfunc_with_standard_transformer(integration_test_url, project_name, us
 
     undeploy_all_version()
     with merlin.new_model_version() as v:
-        xgb_path, xgb_model = train_xgboost_model()
-
         v.log_pyfunc_model(model_instance=SimpleForwarder(),
                            conda_env="test/pyfunc/env.yaml",
                            code_dir=["test"])

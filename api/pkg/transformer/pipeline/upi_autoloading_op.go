@@ -56,12 +56,22 @@ func validateRequest(payload *types.UPIPredictionRequest) error {
 			return err
 		}
 	}
+
+	for _, variable := range payload.TransformerInput.Variables {
+		if variable.Name == "" {
+			return fmt.Errorf("variable name must be specified")
+		}
+	}
 	return nil
 }
 
 func validateUPITable(tbl *upiv1.Table) error {
 	// if user defined row_id in the columns then it will fail
 	// since row_id will be automated created from row entry
+	// if table doesn't have name we will throw error
+	if tbl.Name == "" {
+		return fmt.Errorf("table name must be specified")
+	}
 	for _, col := range tbl.Columns {
 		if col.Name == table.RowIDColumn {
 			return fmt.Errorf("row_id column is reserved, user is not allowed to define explicitly row_id column")

@@ -509,6 +509,272 @@ func TestUPIAutoloadingOp_Execute(t *testing.T) {
 			expectedErr: fmt.Errorf("row_id column is reserved, user is not allowed to define explicitly row_id column"),
 		},
 		{
+			name:         "got error; prediction_table name is specified",
+			pipelineType: types.Preprocess,
+			request: &upiv1.PredictValuesRequest{
+				PredictionTable: &upiv1.Table{
+					Name: "prediction_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "feature1",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "feature2",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "row1",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1,
+								},
+								{
+									DoubleValue: 1.1,
+								},
+							},
+						},
+						{
+							RowId: "row2",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 2,
+								},
+								{
+									DoubleValue: 2.2,
+								},
+							},
+						},
+					},
+				},
+				TransformerInput: &upiv1.TransformerInput{
+					Variables: []*upiv1.Variable{
+						{
+							Name:        "var1",
+							Type:        upiv1.Type_TYPE_STRING,
+							StringValue: "var1",
+						},
+						{
+							Name:         "var2",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 2,
+						},
+						{
+							Name:        "var3",
+							Type:        upiv1.Type_TYPE_DOUBLE,
+							DoubleValue: 3.3,
+						},
+					},
+					Tables: []*upiv1.Table{
+						{
+							Name: "",
+							Columns: []*upiv1.Column{
+								{
+									Name: "driver_id",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "customer_name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "customer_id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											StringValue: "driver1",
+										},
+										{
+											StringValue: "customer1",
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											StringValue: "driver2",
+										},
+										{
+											StringValue: "customer2",
+										},
+										{
+											IntegerValue: 2,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				PredictionContext: []*upiv1.Variable{
+					{
+						Name:        "country",
+						Type:        upiv1.Type_TYPE_STRING,
+						StringValue: "indonesia",
+					},
+					{
+						Name:        "timezone",
+						Type:        upiv1.Type_TYPE_STRING,
+						StringValue: "asia/jakarta",
+					},
+				},
+			},
+			modelResponse: response,
+			env: &Environment{
+				symbolRegistry: symbolRegistry,
+				compiledPipeline: &CompiledPipeline{
+					compiledExpression: compiledExpression,
+					compiledJsonpath:   compiledJsonPath,
+				},
+				logger: logger,
+			},
+			expectedErr: fmt.Errorf("table name must be specified"),
+		},
+		{
+			name:         "got error; prediction_table name is specified",
+			pipelineType: types.Preprocess,
+			request: &upiv1.PredictValuesRequest{
+				PredictionTable: &upiv1.Table{
+					Name: "prediction_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "feature1",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "feature2",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "row1",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1,
+								},
+								{
+									DoubleValue: 1.1,
+								},
+							},
+						},
+						{
+							RowId: "row2",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 2,
+								},
+								{
+									DoubleValue: 2.2,
+								},
+							},
+						},
+					},
+				},
+				TransformerInput: &upiv1.TransformerInput{
+					Variables: []*upiv1.Variable{
+						{
+							Name:        "", // failed due to empty name
+							Type:        upiv1.Type_TYPE_STRING,
+							StringValue: "var1",
+						},
+						{
+							Name:         "var2",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 2,
+						},
+						{
+							Name:        "var3",
+							Type:        upiv1.Type_TYPE_DOUBLE,
+							DoubleValue: 3.3,
+						},
+					},
+					Tables: []*upiv1.Table{
+						{
+							Name: "table1",
+							Columns: []*upiv1.Column{
+								{
+									Name: "driver_id",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "customer_name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "customer_id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											StringValue: "driver1",
+										},
+										{
+											StringValue: "customer1",
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											StringValue: "driver2",
+										},
+										{
+											StringValue: "customer2",
+										},
+										{
+											IntegerValue: 2,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				PredictionContext: []*upiv1.Variable{
+					{
+						Name:        "country",
+						Type:        upiv1.Type_TYPE_STRING,
+						StringValue: "indonesia",
+					},
+					{
+						Name:        "timezone",
+						Type:        upiv1.Type_TYPE_STRING,
+						StringValue: "asia/jakarta",
+					},
+				},
+			},
+			modelResponse: response,
+			env: &Environment{
+				symbolRegistry: symbolRegistry,
+				compiledPipeline: &CompiledPipeline{
+					compiledExpression: compiledExpression,
+					compiledJsonpath:   compiledJsonPath,
+				},
+				logger: logger,
+			},
+			expectedErr: fmt.Errorf("variable name must be specified"),
+		},
+		{
 			name:         "got error; table in transformer_input contains row_id",
 			pipelineType: types.Preprocess,
 			request: &upiv1.PredictValuesRequest{
@@ -736,6 +1002,73 @@ func TestUPIAutoloadingOp_Execute(t *testing.T) {
 				logger: logger,
 			},
 			expectedErr: fmt.Errorf("row_id column is reserved, user is not allowed to define explicitly row_id column"),
+		},
+		{
+			name:         "got error; table in response doesn't have name",
+			pipelineType: types.Postprocess,
+			request:      request,
+			modelResponse: &upiv1.PredictValuesResponse{
+				PredictionResultTable: &upiv1.Table{
+					Name: "",
+					Columns: []*upiv1.Column{
+						{
+							Name: "probability",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "1",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.2,
+								},
+							},
+						},
+						{
+							RowId: "2",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.3,
+								},
+							},
+						},
+						{
+							RowId: "3",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.4,
+								},
+							},
+						},
+						{
+							RowId: "4",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.5,
+								},
+							},
+						},
+						{
+							RowId: "5",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.6,
+								},
+							},
+						},
+					},
+				},
+			},
+			env: &Environment{
+				symbolRegistry: symbolRegistry,
+				compiledPipeline: &CompiledPipeline{
+					compiledExpression: compiledExpression,
+					compiledJsonpath:   compiledJsonPath,
+				},
+				logger: logger,
+			},
+			expectedErr: fmt.Errorf("table name must be specified"),
 		},
 		{
 			name:         "got error; number of columns is not the same with number of values in each row",
