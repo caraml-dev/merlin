@@ -44,11 +44,19 @@ func NewRegistry() Registry {
 }
 
 func (sr Registry) SetRawRequest(obj types.Payload) {
-	sr[sourceKey].(types.PayloadObjectContainer)[spec.JsonType_RAW_REQUEST] = obj
+	sr[sourceKey].(types.PayloadObjectContainer)[spec.PayloadType_RAW_REQUEST] = obj
+}
+
+func (sr Registry) RawRequest() types.Payload {
+	return sr.PayloadContainer()[spec.PayloadType_RAW_REQUEST]
+}
+
+func (sr Registry) ModelResponse() types.Payload {
+	return sr.PayloadContainer()[spec.PayloadType_MODEL_RESPONSE]
 }
 
 func (sr Registry) SetModelResponse(obj types.Payload) {
-	sr[sourceKey].(types.PayloadObjectContainer)[spec.JsonType_MODEL_RESPONSE] = obj
+	sr[sourceKey].(types.PayloadObjectContainer)[spec.PayloadType_MODEL_RESPONSE] = obj
 }
 
 func (sr Registry) PayloadContainer() types.PayloadObjectContainer {
@@ -100,7 +108,9 @@ func (sr Registry) evalArg(arg interface{}) (interface{}, error) {
 
 		cplJsonPath := sr.getCompiledJSONPath(val)
 		if cplJsonPath == nil {
-			c, err := jsonpath.Compile(val)
+			c, err := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+				JsonPath: val,
+			})
 			if err != nil {
 				return nil, err
 			}

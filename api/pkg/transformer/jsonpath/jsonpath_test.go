@@ -6,9 +6,12 @@ import (
 	"reflect"
 	"testing"
 
+	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/gojekfarm/jsonpath"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
@@ -58,63 +61,197 @@ const (
     `
 )
 
-func TestCompileJsonPath(t *testing.T) {
-	tests := []struct {
-		name     string
-		jsonPath string
-		want     *Compiled
-		wantErr  bool
-	}{
-		{
-			"without jsonContainer json",
-			"$.book",
-			&Compiled{
-				cpl:    jsonpath.MustCompile("$.book"),
-				source: spec.JsonType_RAW_REQUEST,
+var (
+	protoRequest = &upiv1.PredictValuesRequest{
+		PredictionContext: []*upiv1.Variable{
+			{
+				Name:        "country",
+				Type:        upiv1.Type_TYPE_STRING,
+				StringValue: "Indonesia",
 			},
-			false,
 		},
-		{
-			"using raw request as jsonContainer json",
-			"$.raw_request.book",
-			&Compiled{
-				cpl:    jsonpath.MustCompile("$.book"),
-				source: spec.JsonType_RAW_REQUEST,
+		TransformerInput: &upiv1.TransformerInput{
+			Tables: []*upiv1.Table{
+				{
+					Name: "driver_customer_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "driver_id",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+						{
+							Name: "customer_name",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+						{
+							Name: "customer_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "row1",
+							Values: []*upiv1.Value{
+								{
+									StringValue: "driver_1",
+								},
+								{
+									StringValue: "customer_1",
+								},
+								{
+									IntegerValue: 1,
+								},
+							},
+						},
+						{
+							RowId: "row2",
+							Values: []*upiv1.Value{
+								{
+									StringValue: "driver_2",
+								},
+								{
+									StringValue: "customer_2",
+								},
+								{
+									IntegerValue: 1,
+								},
+							},
+						},
+					},
+				},
+				{
+					Name: "rating_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "driver_id",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+						{
+							Name: "rating",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "row1",
+							Values: []*upiv1.Value{
+								{
+									StringValue: "driver_1",
+								},
+
+								{
+									DoubleValue: 0.4,
+								},
+							},
+						},
+						{
+							RowId: "row2",
+							Values: []*upiv1.Value{
+								{
+									StringValue: "driver_2",
+								},
+
+								{
+									DoubleValue: 0.3,
+								},
+							},
+						},
+					},
+				},
 			},
-			false,
+			Variables: []*upiv1.Variable{
+				{
+					Name:         "var_1",
+					Type:         upiv1.Type_TYPE_INTEGER,
+					IntegerValue: 1,
+				},
+				{
+					Name:        "var_2",
+					Type:        upiv1.Type_TYPE_DOUBLE,
+					DoubleValue: 1.2,
+				},
+				{
+					Name:        "var_3",
+					Type:        upiv1.Type_TYPE_STRING,
+					StringValue: "ok",
+				},
+			},
 		},
-		{
-			"using model response as jsonContainer json",
-			"$.model_response.book",
-			&Compiled{
-				cpl:    jsonpath.MustCompile("$.book"),
-				source: spec.JsonType_MODEL_RESPONSE,
+		TargetName: "proba",
+	}
+	protoResponse = &upiv1.PredictValuesResponse{
+		PredictionResultTable: &upiv1.Table{
+			Name: "output_table",
+			Columns: []*upiv1.Column{
+				{
+					Name: "probability",
+					Type: upiv1.Type_TYPE_DOUBLE,
+				},
+				{
+					Name: "customer_id",
+					Type: upiv1.Type_TYPE_STRING,
+				},
 			},
-			false,
-		},
-		{
-			"nested case",
-			"$.nested.model_response.book",
-			&Compiled{
-				cpl:    jsonpath.MustCompile("$.nested.model_response.book"),
-				source: spec.JsonType_RAW_REQUEST,
+			Rows: []*upiv1.Row{
+				{
+					RowId: "1",
+					Values: []*upiv1.Value{
+						{
+							DoubleValue: 0.2,
+						},
+						{
+							StringValue: "customer_1",
+						},
+					},
+				},
+				{
+					RowId: "2",
+					Values: []*upiv1.Value{
+						{
+							DoubleValue: 0.3,
+						},
+						{
+							StringValue: "customer_1",
+						},
+					},
+				},
+				{
+					RowId: "3",
+					Values: []*upiv1.Value{
+						{
+							DoubleValue: 0.4,
+						},
+						{
+							StringValue: "customer_1",
+						},
+					},
+				},
+				{
+					RowId: "4",
+					Values: []*upiv1.Value{
+						{
+							DoubleValue: 0.5,
+						},
+						{
+							StringValue: "customer_1",
+						},
+					},
+				},
+				{
+					RowId: "5",
+					Values: []*upiv1.Value{
+						{
+							DoubleValue: 0.6,
+						},
+						{
+							StringValue: "customer_1",
+						},
+					},
+				},
 			},
-			false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := Compile(tt.jsonPath)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Compile() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Compile() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+)
 
 func TestMustCompileJsonPath(t *testing.T) {
 	tests := []struct {
@@ -129,7 +266,7 @@ func TestMustCompileJsonPath(t *testing.T) {
 			"$.book",
 			&Compiled{
 				cpl:    jsonpath.MustCompile("$.book"),
-				source: spec.JsonType_RAW_REQUEST,
+				source: spec.PayloadType_RAW_REQUEST,
 			},
 			false,
 			nil,
@@ -165,7 +302,7 @@ func TestCompiled_Lookup(t *testing.T) {
 
 	type fields struct {
 		cpl    *jsonpath.Compiled
-		source spec.JsonType
+		source spec.PayloadType
 	}
 
 	tests := []struct {
@@ -179,7 +316,7 @@ func TestCompiled_Lookup(t *testing.T) {
 			"test lookup",
 			fields{
 				cpl:    jsonpath.MustCompile("$.signature_name"),
-				source: spec.JsonType_RAW_REQUEST,
+				source: spec.PayloadType_RAW_REQUEST,
 			},
 			rawRequestData,
 			"predict",
@@ -215,8 +352,8 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 	assert.NoError(t, err)
 
 	jsonContainer := types.PayloadObjectContainer{
-		spec.JsonType_RAW_REQUEST:    rawRequestData,
-		spec.JsonType_MODEL_RESPONSE: modelResponseData,
+		spec.PayloadType_RAW_REQUEST:    rawRequestData,
+		spec.PayloadType_MODEL_RESPONSE: modelResponseData,
 	}
 	testCases := []struct {
 		desc        string
@@ -230,6 +367,7 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 			desc: "without default value",
 			opt: JsonPathOption{
 				JsonPath: "$.signature_name",
+				SrcType:  Map,
 			},
 			sourceJSONs: jsonContainer,
 			want:        "predict",
@@ -240,6 +378,7 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 			desc: "not exist key without default value",
 			opt: JsonPathOption{
 				JsonPath: "$.not_exist_key",
+				SrcType:  Map,
 			},
 			sourceJSONs: jsonContainer,
 			want:        nil,
@@ -252,6 +391,7 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 				JsonPath:     "$.not_exist_key",
 				DefaultValue: "4.4",
 				TargetType:   spec.ValueType_FLOAT,
+				SrcType:      Map,
 			},
 			sourceJSONs: jsonContainer,
 			want:        4.4,
@@ -298,6 +438,7 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 			desc: "filtering nested array",
 			opt: JsonPathOption{
 				JsonPath: "$.inputs[*].variable[?(@.value > 200)]",
+				SrcType:  Map,
 			},
 			sourceJSONs: jsonContainer,
 			want: []interface{}{
@@ -392,6 +533,111 @@ func TestCompiledWithOption_LookupFromContainer(t *testing.T) {
 	}
 }
 
+func TestCompiledWithOption_LookupFromContainer_Protopath(t *testing.T) {
+
+	protoContainer := types.PayloadObjectContainer{
+		spec.PayloadType_RAW_REQUEST:    (*types.UPIPredictionRequest)(protoRequest),
+		spec.PayloadType_MODEL_RESPONSE: (*types.UPIPredictionResponse)(protoResponse),
+	}
+	testCases := []struct {
+		desc        string
+		opt         JsonPathOption
+		sourceJSONs types.PayloadObjectContainer
+		want        interface{}
+		wantErr     bool
+		err         error
+	}{
+		{
+			desc: "without default value",
+			opt: JsonPathOption{
+				JsonPath: "$.target_name",
+				SrcType:  Proto,
+			},
+			sourceJSONs: protoContainer,
+			want:        "proba",
+			wantErr:     false,
+			err:         nil,
+		},
+
+		{
+			desc: "not exist key without default value",
+			opt: JsonPathOption{
+				JsonPath: "$.not_exist_key",
+				SrcType:  Proto,
+			},
+			sourceJSONs: protoContainer,
+			want:        nil,
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			desc: "not exist key with default value",
+			opt: JsonPathOption{
+				JsonPath:     "$.not_exist_key",
+				DefaultValue: "4.4",
+				TargetType:   spec.ValueType_FLOAT,
+				SrcType:      Proto,
+			},
+			sourceJSONs: protoContainer,
+			want:        4.4,
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			desc: "filtering nested array",
+			opt: JsonPathOption{
+				JsonPath: `$.transformer_input.tables[*].rows[?(@.row_id=='row1')]`,
+				SrcType:  Proto,
+			},
+			sourceJSONs: protoContainer,
+			want: []any{
+				&upiv1.Row{
+					RowId: "row1",
+					Values: []*upiv1.Value{
+						{
+							StringValue: "driver_1",
+						},
+						{
+							StringValue: "customer_1",
+						},
+						{
+							IntegerValue: 1,
+						},
+					},
+				},
+				&upiv1.Row{
+					RowId: "row1",
+					Values: []*upiv1.Value{
+						{
+							StringValue: "driver_1",
+						},
+
+						{
+							DoubleValue: 0.4,
+						},
+					},
+				},
+			},
+			wantErr: false,
+			err:     nil,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			cpl, err := CompileWithOption(tC.opt)
+			require.NoError(t, err)
+
+			got, err := cpl.LookupFromContainer(tC.sourceJSONs)
+			if (err != nil) != tC.wantErr {
+				t.Errorf("LookupFromContainer() error = %v, wantErr %v", err, tC.wantErr)
+				return
+			}
+			assert.Equal(t, tC.err, err)
+			assert.True(t, cmp.Equal(tC.want, got, cmp.Comparer(proto.Equal)))
+		})
+	}
+}
+
 func TestCompiled_LookupFromContainer(t *testing.T) {
 	var rawRequestData types.JSONObject
 	var modelResponseData types.JSONObject
@@ -402,13 +648,13 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 	assert.NoError(t, err)
 
 	jsonContainer := types.PayloadObjectContainer{
-		spec.JsonType_RAW_REQUEST:    rawRequestData,
-		spec.JsonType_MODEL_RESPONSE: modelResponseData,
+		spec.PayloadType_RAW_REQUEST:    rawRequestData,
+		spec.PayloadType_MODEL_RESPONSE: modelResponseData,
 	}
 
 	type fields struct {
 		cpl           *jsonpath.Compiled
-		jsonContainer spec.JsonType
+		jsonContainer spec.PayloadType
 	}
 	tests := []struct {
 		name        string
@@ -422,7 +668,7 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 			"json path to the raw request",
 			fields{
 				cpl:           jsonpath.MustCompile("$.signature_name"),
-				jsonContainer: spec.JsonType_RAW_REQUEST,
+				jsonContainer: spec.PayloadType_RAW_REQUEST,
 			},
 			jsonContainer,
 			"predict",
@@ -433,7 +679,7 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 			"json path to the model response",
 			fields{
 				cpl:           jsonpath.MustCompile("$.model_name"),
-				jsonContainer: spec.JsonType_MODEL_RESPONSE,
+				jsonContainer: spec.PayloadType_MODEL_RESPONSE,
 			},
 			jsonContainer,
 			"iris-classifier",
@@ -444,7 +690,7 @@ func TestCompiled_LookupFromContainer(t *testing.T) {
 			"json path from unset json source",
 			fields{
 				cpl:           jsonpath.MustCompile("$.model_name"),
-				jsonContainer: spec.JsonType_INVALID,
+				jsonContainer: spec.PayloadType_INVALID,
 			},
 			jsonContainer,
 			nil,

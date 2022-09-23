@@ -1,15 +1,27 @@
 package jsonpath
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
 
-	"github.com/gojekfarm/jsonpath"
-
+	"github.com/caraml-dev/protopath"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
+	"github.com/gojekfarm/jsonpath"
+	"google.golang.org/protobuf/proto"
+)
+
+// SourceType indicates type of source for jsonpath value extraction
+type SourceType int
+
+const (
+	// Map source type is in map type
+	Map SourceType = iota
+	// Proto source type is in protobuf.Message type
+	Proto
 )
 
 const (
@@ -21,11 +33,27 @@ const (
 
 var sourceJsonPattern = regexp.MustCompile(`\$\.raw_request|\$.model_response`)
 
+// JsonpathExtractor is interface that extract value given the source and path
+type JsonpathExtractor interface {
+	Lookup(obj any) (any, error)
+}
+
+// protopathImpl JsonpathExtractor for proto source type
+type protopathImpl struct {
+	compiled *protopath.Compiled
+}
+
+// Lookup extract value based on the compiled jsonpath syntax
+func (p *protopathImpl) Lookup(obj any) (any, error) {
+	return p.compiled.Lookup(context.TODO(), obj.(proto.Message))
+}
+
 // JsonPathOption holds information about the required jsonpath value and the optional default value
 type JsonPathOption struct {
 	JsonPath     string
 	DefaultValue string
 	TargetType   spec.ValueType
+	SrcType      SourceType
 }
 
 // Compile compile a jsonPath string into a jsonpath.Compiled instance
@@ -37,18 +65,18 @@ type JsonPathOption struct {
 // "$.book" : Compiled.LookupFromContainer extract "book" field from raw request payload
 // "$.raw_request.book" : Compiled.LookupFromContainer extract "book" field from raw request payload
 // "$.model_response.book" : Compiled.LookupFromContainer extract "book" field from model response payload
-func Compile(jsonPath string) (*Compiled, error) {
-	source := spec.JsonType_RAW_REQUEST
+func compile(jsonPath string, sourceType SourceType) (*Compiled, error) {
+	source := spec.PayloadType_RAW_REQUEST
 	match := sourceJsonPattern.FindString(jsonPath)
 	if match != "" {
 		if match == ModelResponsePrefix {
-			source = spec.JsonType_MODEL_RESPONSE
+			source = spec.PayloadType_MODEL_RESPONSE
 		}
 
 		jsonPath = sourceJsonPattern.ReplaceAllString(jsonPath, "$")
 	}
 
-	compiledJsonpath, err := jsonpath.Compile(jsonPath)
+	compiledJsonpath, err := createJsonpathCompiler(jsonPath, sourceType)
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +87,21 @@ func Compile(jsonPath string) (*Compiled, error) {
 	}, nil
 }
 
+func createJsonpathCompiler(path string, sourceType SourceType) (JsonpathExtractor, error) {
+	if sourceType == Map {
+		return jsonpath.Compile(path)
+	}
+	compiledJsonpath, err := protopath.NewJsonPathCompiler(path)
+	if err != nil {
+		return nil, err
+	}
+	return &protopathImpl{compiledJsonpath}, nil
+}
+
 // CompileWithOption compiles JsonPathOption into a jsonpath.Compiled instance
 // JsonPathOption allow setting default value when existing value of given jsonpath is nil
 func CompileWithOption(option JsonPathOption) (*Compiled, error) {
-	compiled, err := Compile(option.JsonPath)
+	compiled, err := compile(option.JsonPath, option.SrcType)
 	if err != nil {
 		return nil, err
 	}
@@ -79,14 +118,18 @@ func CompileWithOption(option JsonPathOption) (*Compiled, error) {
 	return compiled, nil
 }
 
+// MustCompileJsonPath will compile jsonpath using map as source type
+// will panic if got error
 func MustCompileJsonPath(jsonPath string) *Compiled {
-	cpl, err := Compile(jsonPath)
+	cpl, err := compile(jsonPath, Map)
 	if err != nil {
 		panic(err)
 	}
 	return cpl
 }
 
+// MustCompileJsonPathWithOption will compile jsonpath by specifying the option
+// will panic if got error
 func MustCompileJsonPathWithOption(option JsonPathOption) *Compiled {
 	cpl, err := CompileWithOption(option)
 	if err != nil {
@@ -95,14 +138,16 @@ func MustCompileJsonPathWithOption(option JsonPathOption) *Compiled {
 	return cpl
 }
 
+// Compiled contains information about the compilation of operation based on given jsonpath syntax
 type Compiled struct {
-	cpl          *jsonpath.Compiled
-	source       spec.JsonType
+	cpl          JsonpathExtractor
+	source       spec.PayloadType
 	defaultValue interface{}
 }
 
+// Lookup extract value based on the compiled jsonpath syntax by giving the source object
 func (c *Compiled) Lookup(obj types.Payload) (interface{}, error) {
-	val, err := c.cpl.Lookup(obj)
+	val, err := c.cpl.Lookup(obj.OriginalValue())
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +173,7 @@ func (c *Compiled) Lookup(obj types.Payload) (interface{}, error) {
 	return val, nil
 }
 
+// LookupFromContainer extract the value from payload container where it contains request and model response payload
 func (c *Compiled) LookupFromContainer(container types.PayloadObjectContainer) (interface{}, error) {
 	sourceJson := container[c.source]
 	if sourceJson == nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	prt "github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -26,6 +27,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 		coreClient        core.CoreServiceClient
 		transformerConfig *spec.StandardTransformerConfig
 		feastOptions      *feast.Options
+		protocol          prt.Protocol
 	}
 
 	tests := []struct {
@@ -65,6 +67,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 				feastOptions: &feast.Options{},
+				protocol:     prt.HttpJson,
 			},
 			mockFeastCoreResponse: mockFeastCoreResponse{
 				listEntitiesResponse: &core.ListEntitiesResponse{
@@ -154,6 +157,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 				feastOptions: &feast.Options{},
+				protocol:     prt.HttpJson,
 			},
 			mockFeastCoreResponse: mockFeastCoreResponse{
 				listEntitiesResponse: &core.ListEntitiesResponse{
@@ -215,6 +219,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 				feastOptions: &feast.Options{},
+				protocol:     prt.HttpJson,
 			},
 			mockFeastCoreResponse: mockFeastCoreResponse{
 				listEntitiesResponse: &core.ListEntitiesResponse{
@@ -301,6 +306,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 				feastOptions: &feast.Options{},
+				protocol:     prt.HttpJson,
 			},
 			mockFeastCoreResponse: mockFeastCoreResponse{
 				listEntitiesResponse: &core.ListEntitiesResponse{
@@ -368,6 +374,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 				feastOptions: &feast.Options{},
+				protocol:     prt.HttpJson,
 			},
 			mockFeastCoreResponse: mockFeastCoreResponse{
 				listEntitiesResponse: &core.ListEntitiesResponse{
@@ -429,6 +436,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 				feastOptions: &feast.Options{},
+				protocol:     prt.HttpJson,
 			},
 			mockFeastCoreResponse: mockFeastCoreResponse{
 				listEntitiesResponse: &core.ListEntitiesResponse{
@@ -484,6 +492,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 				feastOptions: &feast.Options{},
+				protocol:     prt.HttpJson,
 			},
 			mockFeastCoreResponse: mockFeastCoreResponse{
 				listEntitiesResponse: &core.ListEntitiesResponse{
@@ -508,7 +517,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			prepareFeastCoreMockResponse(tt.args.coreClient.(*mocks.CoreServiceClient), tt.mockFeastCoreResponse, tt.args.transformerConfig)
 
-			err := ValidateTransformerConfig(tt.args.ctx, tt.args.coreClient, tt.args.transformerConfig, tt.args.feastOptions)
+			err := ValidateTransformerConfig(tt.args.ctx, tt.args.coreClient, tt.args.transformerConfig, tt.args.feastOptions, tt.args.protocol)
 			if tt.wantErr {
 				assert.EqualError(t, err, tt.expError.Error())
 				return

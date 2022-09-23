@@ -61,7 +61,9 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 				if len(entity.GetJsonPath()) == 0 {
 					return fmt.Errorf("json path for %s is not specified", entity.Name)
 				}
-				_, err = jsonpath.Compile(entity.GetJsonPath())
+				_, err = jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+					JsonPath: entity.GetJsonPath(),
+				})
 				if err != nil {
 					return fmt.Errorf("jsonpath compilation failed: %w", err)
 				}

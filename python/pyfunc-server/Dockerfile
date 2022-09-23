@@ -13,9 +13,9 @@
 # limitations under the License.
 
 ARG BASE_IMAGE
-ARG MODEL_URL
-
 FROM ${BASE_IMAGE}
+
+ARG MODEL_URL
 
 WORKDIR /pyfunc-server
 RUN gsutil cp -r ${MODEL_URL} .

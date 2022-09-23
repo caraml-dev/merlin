@@ -1461,7 +1461,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 				})).Return(m.response, nil)
 			}
 
-			compiledJSONPaths, err := CompileJSONPaths(tt.fields.featureTableSpecs)
+			compiledJSONPaths, err := CompileJSONPaths(tt.fields.featureTableSpecs, jsonpath.Map)
 			if err != nil {
 				panic(err)
 			}
@@ -1646,7 +1646,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_Batching(t *testing.T
 			})).Return(call.response, nil)
 		}
 
-		compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs)
+		compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs, jsonpath.Map)
 		if err != nil {
 			panic(err)
 		}
@@ -2196,7 +2196,7 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 					Entities: tt.args.entitySpecs,
 				},
 			}
-			compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs)
+			compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs, jsonpath.Map)
 			if err != nil {
 				panic(err)
 			}
@@ -2298,7 +2298,7 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 			})
 	}
 
-	compiledJSONPaths, err := CompileJSONPaths(defaultFeatureTableSpecs)
+	compiledJSONPaths, err := CompileJSONPaths(defaultFeatureTableSpecs, jsonpath.Map)
 	assert.NoError(t, err)
 
 	compiledExpressions, err := CompileExpressions(defaultFeatureTableSpecs, symbol.NewRegistry())

@@ -4,13 +4,17 @@ import (
 	"errors"
 
 	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/gojek/merlin/pkg/transformer/types/series"
 )
 
 const (
 	columnsJsonKey = "columns"
 	dataJsonKey    = "data"
+	// RowIDColumn is reserved column name in standard transformer when UPI_V1 protocol applied
+	RowIDColumn = "row_id"
 )
 
+// TableToJson converts table into JSON with defined format
 func TableToJson(tbl *Table, format spec.FromTable_JsonFormat) (interface{}, error) {
 	switch format {
 	case spec.FromTable_RECORD:
@@ -24,8 +28,17 @@ func TableToJson(tbl *Table, format spec.FromTable_JsonFormat) (interface{}, err
 	}
 }
 
+func getRowIDValues(tbl *Table) []string {
+	rowIDSeries, _ := tbl.GetColumn(RowIDColumn)
+	var rowIDValues []string
+	if rowIDSeries != nil {
+		rowIDValues = rowIDSeries.Series().Records()
+	}
+	return rowIDValues
+}
+
 func tableToJsonRecordFormat(tbl *Table) (interface{}, error) {
-	columnsValues, err := getTableRecordsPerColumns(tbl)
+	columnsValues, err := getTableRecordsAllColumns(tbl)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +59,7 @@ func tableToJsonRecordFormat(tbl *Table) (interface{}, error) {
 }
 
 func tableToJsonValuesFormat(tbl *Table) (interface{}, error) {
-	columnsValues, err := getTableRecordsPerColumns(tbl)
+	columnsValues, err := getTableRecordsAllColumns(tbl)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +94,15 @@ func tableToJsonSplitFormat(tbl *Table) (interface{}, error) {
 	return records, nil
 }
 
-func getTableRecordsPerColumns(tbl *Table) (map[string][]interface{}, error) {
+func getTableRecordsForColumns(columns []*series.Series) (map[string][]interface{}, error) {
+	columnsValues := make(map[string][]interface{})
+	for _, col := range columns {
+		columnsValues[col.Series().Name] = col.GetRecords()
+	}
+	return columnsValues, nil
+}
+
+func getTableRecordsAllColumns(tbl *Table) (map[string][]interface{}, error) {
 	columns := tbl.DataFrame().Names()
 
 	columnsValues := make(map[string][]interface{})

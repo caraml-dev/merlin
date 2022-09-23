@@ -10,6 +10,7 @@ require (
 	github.com/antonmedv/expr v1.8.9
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
+	github.com/caraml-dev/protopath v0.1.0
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/cespare/xxhash v1.1.0
 	github.com/coocood/freecache v1.1.1
@@ -28,6 +29,7 @@ require (
 	github.com/gojekfarm/jsonpath v0.1.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
+	github.com/google/go-cmp v0.5.8
 	github.com/google/go-containerregistry v0.7.1-0.20211118220127-abdc633f8305
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
@@ -81,6 +83,7 @@ require (
 	cloud.google.com/go/storage v1.22.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220804214150-8b0cc382067f // indirect
 	github.com/apache/thrift v0.15.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/aws/aws-sdk-go v1.35.24 // indirect
@@ -116,7 +119,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.0.0-20220520183353-fd19c99a87aa // indirect
@@ -187,7 +189,7 @@ require (
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
-	github.com/caraml-dev/universal-prediction-interface v0.0.0-20220817062131-86a1e548d096
+	github.com/caraml-dev/universal-prediction-interface v0.0.0-20220913065109-8170722e7551
 	github.com/go-openapi/spec v0.19.9 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	k8s.io/klog/v2 v2.40.1 // indirect

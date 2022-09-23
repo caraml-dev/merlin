@@ -1,4 +1,3 @@
-import numpy as np
 import os
 import uuid
 from time import sleep
@@ -9,13 +8,17 @@ import pytest
 import xgboost as xgb
 from caraml.upi.utils import df_to_table, table_to_df
 from caraml.upi.v1 import upi_pb2, upi_pb2_grpc
+from caraml.upi.v1 import type_pb2, variable_pb2
 from sklearn.datasets import load_iris
+from typing import List
+
 
 import merlin
 from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import Status
 from merlin.model import ModelType, PyFuncModel
 from merlin.protocol import Protocol
+from merlin.transformer import StandardTransformer
 from test.utils import undeploy_all_version
 
 
@@ -53,6 +56,17 @@ class IrisClassifier(PyFuncModel):
         return pd.DataFrame(self._model.predict(features_matrix), columns = self.target_names)
 
 
+class SimpleForwarder(PyFuncModel):
+    target_name = "probability"
+    def infer(self, request: dict, **kwargs):
+        return request
+
+    def upiv1_infer(self, request: upi_pb2.PredictValuesRequest,
+                    context: grpc.ServicerContext) -> upi_pb2.PredictValuesResponse:
+        return upi_pb2.PredictValuesResponse(prediction_result_table=request.prediction_table, target_name=self.target_name)
+
+
+
 @pytest.mark.pyfunc
 @pytest.mark.integration
 def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
@@ -79,6 +93,44 @@ def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
     stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
 
     validate_iris_upi(xgb_model, stub)
+    merlin.undeploy(v)
+
+@pytest.mark.pyfunc
+@pytest.mark.integration
+def test_pyfunc_with_standard_transformer(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("pyfunc-upi-std", ModelType.PYFUNC)
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        v.log_pyfunc_model(model_instance=SimpleForwarder(),
+                           conda_env="test/pyfunc/env.yaml",
+                           code_dir=["test"])
+
+    transformer_config_path = os.path.join(
+        "test/transformer", "upi_standard_transformer_no_feast.yaml"
+    )
+    transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
+    endpoint = merlin.deploy(v, transformer=transformer, protocol=Protocol.UPI_V1)
+
+    assert endpoint.protocol == Protocol.UPI_V1
+    assert endpoint.status == Status.RUNNING
+
+    channel = grpc.insecure_channel(f"{endpoint.url}:80")
+    stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
+
+    print(endpoint.url)
+    sleep(5)
+
+    request = create_simple_forwarder_request()
+    response = stub.PredictValues(request=request)
+
+    assert response.metadata.prediction_id == request.metadata.prediction_id
+    assert response.target_name == request.target_name
+    exp_response = simple_forwarder_response()
+    assert response == exp_response
+
     merlin.undeploy(v)
 
 
@@ -166,6 +218,41 @@ def train_xgboost_model():
     xgb_model.save_model(model_path)
     return model_path, xgb_model
 
+def create_simple_forwarder_request() -> upi_pb2.PredictValuesRequest:
+    target_name = SimpleForwarder.target_name
+    cols = ["id", "name", "vehicle", "previous_vehicle", "rating", "test_time", "row_number"]
+    indices = ["row1", "row2"]
+    rows = [
+        [1, "driver-1", "motorcycle", "suv", 4.0, 90, 0],
+        [2, "driver-2", "sedan", "mpv", 3.0, 90, 1]
+    ]
+    driver_df = pd.DataFrame(columns=cols, data=rows, index=indices)
+    driver_table = df_to_table(driver_df, "driver_table")
+    variables: List[variable_pb2.Variable] = [
+        variable_pb2.Variable(name="customer_id", type=type_pb2.TYPE_INTEGER, integer_value=1111)
+    ]
+    return upi_pb2.PredictValuesRequest(
+        target_name=target_name,
+        transformer_input=upi_pb2.TransformerInput(
+            tables=[driver_table],
+            variables=variables
+        )
+    )
+
+def simple_forwarder_response() -> upi_pb2.PredictValuesResponse:
+    target_name = SimpleForwarder.target_name
+    cols = ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle"]
+    indices = ["row2", "row1"]
+    rows = [
+        [1111, "driver-2", 2.5, 0.5, 2, 3],
+        [1111, "driver-1", -2.5, 0.75, 0, 1]
+    ]
+    response_df = pd.DataFrame(columns=cols, data=rows, index=indices)
+    response_table = df_to_table(response_df, "transformed_driver_table")
+    return upi_pb2.PredictValuesResponse(
+        target_name=target_name,
+        prediction_result_table=response_table
+    )
 
 def create_upi_request_from_iris_dataset() -> upi_pb2.PredictValuesRequest:
     target_name = IrisClassifier.target_name

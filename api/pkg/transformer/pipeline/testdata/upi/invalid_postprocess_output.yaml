@@ -1,0 +1,28 @@
+transformerConfig:
+  preprocess:
+    inputs:
+    - autoload:
+        tableNames:
+          - request_table
+    - variables:
+        - name: country
+          jsonPath: $.prediction_context[0].string_value
+    outputs:
+      - upiPreprocessOutput:
+          predictionTableName: request_table
+  postprocess:
+    inputs:
+    - autoload:
+        tableNames:
+          - prediction_result
+    transformations:
+    - tableTransformation:
+          inputTable: prediction_result
+          outputTable: output_table
+          steps:
+            - updateColumns:
+                - column: country
+                  expression: country
+    outputs:
+      - upiPreprocessOutput: # invalid: upiPreprocessOutput is not applicable for postprocess step
+          predictionTableName: output_table
