@@ -33,6 +33,9 @@ type Payload interface {
 
 	// IsNil check whether the interface is nil
 	IsNil() bool
+
+	// OriginalValue will unwrap the Payload to its origin type
+	OriginalValue() any
 }
 
 // AsInput convert current Payload into format that accepted by standard transformer input
@@ -50,6 +53,11 @@ func (upr *UPIPredictionRequest) IsNil() bool {
 	return upr == nil
 }
 
+// OriginalValue will unwrap the Payload to its origin type
+func (upr *UPIPredictionRequest) OriginalValue() any {
+	return (*upiv1.PredictValuesRequest)(upr)
+}
+
 // AsInput convert current Payload into format that accepted by standard transformer input
 func (upr *UPIPredictionResponse) AsInput() (Payload, error) {
 	return upr, nil
@@ -63,6 +71,11 @@ func (upr *UPIPredictionResponse) AsOutput() (Payload, error) {
 // IsNil check whether the interface is nil
 func (upr *UPIPredictionResponse) IsNil() bool {
 	return upr == nil
+}
+
+// OriginalValue will unwrap the Payload to its origin type
+func (upr *UPIPredictionResponse) OriginalValue() any {
+	return (*upiv1.PredictValuesResponse)(upr)
 }
 
 // AsInput convert current Payload into format that accepted by standard transformer input
@@ -84,6 +97,11 @@ func (bp BytePayload) IsNil() bool {
 	return bp == nil
 }
 
+// OriginalValue will unwrap the Payload to its origin type
+func (bp BytePayload) OriginalValue() any {
+	return ([]byte)(bp)
+}
+
 // AsInput convert current Payload into format that accepted by standard transformer input
 func (jo JSONObject) AsInput() (Payload, error) {
 	return jo, nil
@@ -98,6 +116,12 @@ func (jo JSONObject) AsOutput() (Payload, error) {
 	return BytePayload(marshalOut), nil
 }
 
+// IsNil check whether the interface is nil
 func (jo JSONObject) IsNil() bool {
 	return jo == nil
+}
+
+// OriginalValue will unwrap the Payload to its origin type
+func (jo JSONObject) OriginalValue() any {
+	return jo
 }

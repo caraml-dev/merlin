@@ -7,6 +7,8 @@ import "transformer/spec/table.proto";
 import "transformer/spec/variable.proto";
 import "transformer/spec/json.proto";
 import "transformer/spec/encoder.proto";
+import "transformer/spec/upi_output.proto";
+import "transformer/spec/upi_autoload.proto";
 
 option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
 
@@ -42,6 +44,7 @@ message Input {
   repeated FeatureTable feast = 2;
   repeated Table tables = 3;
   repeated Encoder encoders = 4;
+  UPIAutoload autoload = 5;
 }
 
 
@@ -63,4 +66,6 @@ message Transformation {
 
 message Output {
   JsonOutput jsonOutput = 1;
+  UPIPreprocessOutput upiPreprocessOutput = 2;
+  UPIPostprocessOutput upiPostprocessOutput = 3;
 }

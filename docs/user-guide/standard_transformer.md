@@ -1,7 +1,5 @@
 # Standard Transformer 
-Standard Transformer is a built-in pre and post-processing steps supported by Merlin. With standard transformer, it’s possible to enrich the model’s incoming request with features from feast and transform the payload so that it’s compatible with API interface provided by the model. Same transformation can also be applied against the model’s response payload in the post-processing step, which allow users to adapt the response payload to make it suitable for consumption. 
-
-
+Standard Transformer is a built-in pre and post-processing steps supported by Merlin. With standard transformer, it’s possible to enrich the model’s incoming request with features from feast and transform the payload so that it’s compatible with API interface provided by the model. Same transformation can also be applied against the model’s response payload in the post-processing step, which allow users to adapt the response payload to make it suitable for consumption. Standard transformer supports **http_json** and **upi_v1** protocol. For **http_json** protocol the standard transformer server runs rest server on top of **http 1.1**, **upi_v1 protocol** the server run grpc server.
 
 ## Concept
 
@@ -21,7 +19,10 @@ Within both preprocess and postprocess, there are 3 stages that users can specif
 
 
 * Output stage
-  At this stage, both the preprocessing and postprocessing pipeline should create a JSON output. The JSON output of preprocessing pipeline will be used as the request payload to be sent as model request, whereas JSON output of the postprocessing pipeline will be used as response payload to be returned to downstream service / client.
+  At this stage, both the preprocessing and postprocessing pipeline should create output payload which later on can be used as request payload for model predictor or the final response to be returned to downstream service/client. There are 3 types of output operation:
+  * JSON Output. JSON output operation will return JSON output, this operation only applicable for **http_json** protocol
+  * UPIPreprocessOutput. UPIPreprocessOutput will return UPI Request interface payload in a protobuf.Message type
+  * UPIPostprocessOutput. UPIPostprocessOutput will return UPI Response interface payload in a protobuf.Message type
 
 
 <p align="center"><img src="../images/standard_transformer.png" width="550"/></p>
@@ -153,16 +154,17 @@ Expression can be used for updating column value
 For full list of standard transformer built-in function, please check [Transformer Expressions](./transformer_expressions.md).
 
 ## Input Stage
-At the input stage, users specify all the data dependencies that are going to be used in subsequent stages. There are 3 operations available in these stages: 
+At the input stage, users specify all the data dependencies that are going to be used in subsequent stages. There are 4 operations available in these stages: 
 
 1. Table creation 
-- Table Creation from Feast Features
-- Table Creation from Input Request
-- Table Creation from File
+    - Table Creation from Feast Features
+    - Table Creation from Input Request
+    - Table Creation from File
 
 2. Variable declaration
 
 3. Encoder declaration
+4. Autoload
 
 ### Table Creation
 Table is the main data structure within the standard transformer. There are 3 ways of creating table in standard transformer: 
@@ -546,6 +548,20 @@ By range: 0 to 360 (For example wind directions)
 
 To learn more about cyclical encoding, you may find this page useful: [Cyclical Encoding](https://towardsdatascience.com/cyclical-features-encoding-its-about-time-ce23581845ca)
 
+### Autoload
+
+Autoload declares tables and variables that need to be loaded to standard transformer runtime from incoming request/response. This operation is only applicable for **upi_v1** protocol. Below is specification of autoload
+```yaml
+autoload:
+  tableNames:
+    - table_name_1
+    - table_name_2
+  variableNames:
+    - var_name_1
+    - var_name_2
+```
+`tableNames` and `variableNames` are fields that list table name and variables declaration. If `autoload` is part of `preprocess` pipeline, it will try to load those declared table and variables from request payload, otherwise it will load from model response payload.
+
 ## Transformation Stage
 
   In this stage, the standard transformers perform transformation to the tables created in the input stage so that its structure is suitable for the output. In the transformation stage, users operate mainly on tables and are provided with 2 transformation types: single table transformation and table join. Each transformation declared in this stage will be executed sequentially and all output/side effects from each transformation can be used in subsequent transformations. There are two types of transformations in standard transformer:
@@ -797,11 +813,13 @@ tableJoin:
 ```
 
 ## Output Stage
-At this stage, both the preprocessing and postprocessing pipeline should create a JSON output. The JSON output of preprocessing pipeline will be used as the request payload to be sent as model request, whereas JSON output of the postprocessing pipeline will be used as response payload to be returned to downstream service / client.
+At this stage, both the preprocessing and postprocessing pipeline should create an output. The output of preprocessing pipeline will be used as the request payload to be sent as model request, whereas output of the postprocessing pipeline will be used as response payload to be returned to downstream service / client.
+There are 3 types of output specifications:
+* JSON Output. Applicable for **http_json** protocol and both preprocess and postprocess output
+* UPIPreprocessOutput. Applicable only for **upi_v1** protocol and preprocess output
+* UPIPostprocessOutput. Applicable only for **upi_v1** protocol and postprocess output
 
-User can create the json output by configuring the json template configuration 
-
-### User-defined JSON template
+### JSON Output - User-defined JSON template
 Users are given freedom to specify the transformer’s JSON output structure. The syntax is as follows:
 
 ```
@@ -962,6 +980,72 @@ Depending on the json format, it will render different result JSON
       }
     ```
 
+### UPIPreprocessOutput
+UPIPreprocessOutput is output specification only for **upi_v1** protocol and preprocess step. This output specification will create operation that convert defined tables to UPI request interface.
+Below is the specification
+
+```yaml
+upiPreprocessOutput:
+  predictionTableName: table_1
+  transformerInputTableNames:
+    - input_table_1
+    - input_table_2
+```
+
+This specification will convert content of `predictionTableName` into UPI table
+```
+message Table {
+    string name = 1;
+    repeated Column columns = 2;
+    repeated Row rows = 3;
+}
+message Column {
+    string name = 1;
+    Type type = 2;
+}
+message Row {
+   string row_id = 1;
+   repeated Value values = 2;
+}
+message Value {
+    double double_value = 1;
+    int64 integer_value = 2;
+    string string_value = 3;
+    bool is_null = 10;
+}
+```
+and then set field `prediction_table` from this UPI Request interface
+```
+message PredictValuesRequest { 
+  Table prediction_table = 1;
+  TransformerInput transformer_input = 4;
+  string target_name = 2;
+  repeated Variable prediction_context = 3;
+
+  RequestMetadata metadata = 10;
+}
+```
+`transformerInputTableNames` are list of table names that will be converted into UPI Table. These values will be assigned into field `transformer_input`.`tables` field.
+The rest of the fields will be carried on from the incoming reques payload.
+
+### UPIPostprocessOutput
+UPIPostprocessOutput is output specification only for **upi_v1** protocol and postprocess step. This output specification will create operation that convert defined tables to UPI response interface.
+Below is the specification
+
+```yaml
+upiPostprocessOutput:
+  predictionResultTableName: table_name_1
+```
+This specification will convert content of `predictionResultTableName` into UPI table and assigned it to field `prediction_result_table` in this UPI Response interface like below
+```
+message PredictValuesResponse {
+  Table prediction_result_table = 1;
+  string target_name = 2;
+  repeated Variable prediction_context = 3;
+  ResponseMetadata metadata = 10;
+}
+```
+The rest of the fields will be carried on from model predictor response
 
 ### Deploy Standard Transformer using Merlin UI
 

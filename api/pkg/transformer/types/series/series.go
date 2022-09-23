@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/go-gota/gota/series"
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
@@ -88,6 +89,38 @@ func NormalizeIndex(start, end *int, numOfRow int) (startIdx, endIdx int) {
 	}
 
 	return startIdx, endIdx
+}
+
+// ConvertToUPIColumns convert list of columns/series into list of upi column
+func ConvertToUPIColumns(cols []*Series) ([]*upiv1.Column, error) {
+	upiCols := make([]*upiv1.Column, len(cols))
+	for idx, col := range cols {
+		upiCol, err := col.toUPIColumn()
+		if err != nil {
+			return nil, err
+		}
+		upiCols[idx] = upiCol
+	}
+	return upiCols, nil
+}
+
+func (s *Series) toUPIColumn() (*upiv1.Column, error) {
+	var upiColType upiv1.Type
+	switch s.Type() {
+	case Int:
+		upiColType = upiv1.Type_TYPE_INTEGER
+	case Float:
+		upiColType = upiv1.Type_TYPE_DOUBLE
+	case String:
+		upiColType = upiv1.Type_TYPE_STRING
+	default:
+		return nil, fmt.Errorf("type %v is not supported in UPI", s.Type())
+	}
+
+	return &upiv1.Column{
+		Name: s.series.Name,
+		Type: upiColType,
+	}, nil
 }
 
 func (s *Series) Series() *series.Series {

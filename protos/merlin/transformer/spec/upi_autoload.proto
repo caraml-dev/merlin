@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package merlin.transformer;
+
+option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
+
+// UPIAutoload responsible to load given table names or variable names from request/response to standard transformer
+message UPIAutoload {
+    // list of table names that explicitly declared on request/response
+    repeated string tableNames = 1;
+    // list of variable names that explicitly declared on request/response
+    repeated string variableNames = 2;
+}
+

@@ -29,7 +29,7 @@ message Field {
   }
 }
 
-enum JsonType {
+enum PayloadType {
   INVALID = 0;
   RAW_REQUEST = 1;
   MODEL_RESPONSE = 2;

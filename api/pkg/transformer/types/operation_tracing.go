@@ -10,12 +10,15 @@ type TracingDetail struct {
 type OperationType string
 
 const (
-	VariableOpType    OperationType = "variable_op"
-	CreateTableOpType OperationType = "create_table_op"
-	FeastOpType       OperationType = "feast_op"
-	JsonOutputOpType  OperationType = "json_output_op"
-	TableJoinOpType   OperationType = "table_join_op"
-	TableTransformOp  OperationType = "table_transform_op"
+	VariableOpType         OperationType = "variable_op"
+	CreateTableOpType      OperationType = "create_table_op"
+	FeastOpType            OperationType = "feast_op"
+	JsonOutputOpType       OperationType = "json_output_op"
+	TableJoinOpType        OperationType = "table_join_op"
+	TableTransformOp       OperationType = "table_transform_op"
+	UPIAutoloadingOp       OperationType = "upi_autoloading_op"
+	UPIPreprocessOutputOp  OperationType = "upi_preprocess_output_op"
+	UPIPostprocessOutputOp OperationType = "upi_postprocess_output_op"
 )
 
 type PredictResponse struct {

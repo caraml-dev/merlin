@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	merror "github.com/gojek/merlin/pkg/errors"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -185,7 +186,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 
 	// validate transformer
 	if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
-		err := c.validateTransformer(ctx, newEndpoint.Transformer)
+		err := c.validateTransformer(ctx, newEndpoint.Transformer, newEndpoint.Protocol)
 		if err != nil {
 			log.Errorf("error validating transformer config: %v", err)
 			return BadRequest(err.Error())
@@ -258,7 +259,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 	if newEndpoint.Status == models.EndpointRunning || newEndpoint.Status == models.EndpointServing {
 		// validate transformer
 		if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
-			err := c.validateTransformer(ctx, newEndpoint.Transformer)
+			err := c.validateTransformer(ctx, newEndpoint.Transformer, newEndpoint.Protocol)
 			if err != nil {
 				log.Errorf("error validating transformer config: %v", err)
 				return BadRequest(err.Error())
@@ -394,7 +395,7 @@ func validateUpdateRequest(prev *models.VersionEndpoint, new *models.VersionEndp
 	return nil
 }
 
-func (c *EndpointsController) validateTransformer(ctx context.Context, trans *models.Transformer) error {
+func (c *EndpointsController) validateTransformer(ctx context.Context, trans *models.Transformer, protocol protocol.Protocol) error {
 	switch trans.TransformerType {
 	case models.CustomTransformerType, models.DefaultTransformerType:
 		if trans.Image == "" {
@@ -407,7 +408,7 @@ func (c *EndpointsController) validateTransformer(ctx context.Context, trans *mo
 			return errors.New("Standard transformer config is not specified")
 		}
 
-		return c.validateStandardTransformerConfig(ctx, cfg)
+		return c.validateStandardTransformerConfig(ctx, cfg, protocol)
 	default:
 		return fmt.Errorf("Unknown transformer type: %s", trans.TransformerType)
 	}
@@ -423,7 +424,7 @@ func (c *EndpointsController) validateCustomPredictor(ctx context.Context, versi
 	return customPredictor.IsValid()
 }
 
-func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Context, cfg string) error {
+func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Context, cfg string, protocol protocol.Protocol) error {
 	stdTransformerConfig := &spec.StandardTransformerConfig{}
 	err := protojson.Unmarshal([]byte(cfg), stdTransformerConfig)
 	if err != nil {
@@ -434,5 +435,5 @@ func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Cont
 		StorageConfigs: c.StandardTransformerConfig.ToFeastStorageConfigs(),
 	}
 
-	return pipeline.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig, feastOptions)
+	return pipeline.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig, feastOptions, protocol)
 }

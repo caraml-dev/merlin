@@ -622,7 +622,9 @@ func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {
 
 			switch test.entityConfig.Extractor.(type) {
 			case *spec.Entity_JsonPath:
-				compiledJsonPath, _ := jsonpath.Compile(test.entityConfig.GetJsonPath())
+				compiledJsonPath, _ := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+					JsonPath: test.entityConfig.GetJsonPath(),
+				})
 				compiledJsonPaths.Set(test.entityConfig.GetJsonPath(), compiledJsonPath)
 			case *spec.Entity_JsonPathConfig:
 				compiledJsonPath, _ := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
@@ -756,7 +758,9 @@ func doRunBenchmark(b *testing.B, entityConfig *spec.Entity) {
 
 	switch entityConfig.Extractor.(type) {
 	case *spec.Entity_JsonPath:
-		c, err := jsonpath.Compile(entityConfig.GetJsonPath())
+		c, err := jsonpath.CompileWithOption(jsonpath.JsonPathOption{
+			JsonPath: entityConfig.GetJsonPath(),
+		})
 		if err != nil {
 			panic(err)
 		}
