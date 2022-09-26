@@ -1,0 +1,17 @@
+transformerConfig:
+  preprocess:
+    inputs:
+    - autoload:
+        tableNames:
+        - table1
+    outputs:
+      - upiPreprocessOutput:
+          predictionTableName: table1
+  postprocess:
+    inputs:
+    - autoload:
+        tableNames:
+        - model_prediction_table
+    outputs:
+      - upiPostprocessOutput:
+          predictionResultTableName: model_prediction_table

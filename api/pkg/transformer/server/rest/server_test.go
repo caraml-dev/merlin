@@ -25,6 +25,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
 
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
@@ -1477,7 +1478,7 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 				},
 			},
 		},
-	}, logger, false)
+	}, logger, false, protocol.HttpJson)
 	compiledPipeline, err := compiler.Compile(&transformerConfig)
 	if err != nil {
 		logger.Fatal("Unable to compile standard transformer", zap.Error(err))

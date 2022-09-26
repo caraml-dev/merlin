@@ -1,9 +1,11 @@
 package series
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/go-gota/gota/series"
 	"github.com/stretchr/testify/assert"
 )
@@ -1476,6 +1478,66 @@ func TestSeries_IsBoolean(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.input.IsBoolean(); got != tt.want {
 				t.Errorf("Series.IsBoolean() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConvertToUPIColumns(t *testing.T) {
+	type args struct {
+		cols []*Series
+	}
+	tests := []struct {
+		name   string
+		args   args
+		want   []*upiv1.Column
+		expErr error
+	}{
+		{
+			name: "all series are compatible with upi columns",
+			args: args{
+				cols: []*Series{
+					New([]string{"a", "b", "c"}, String, "col_string"),
+					New([]int{1, 2, 3}, Int, "col_int"),
+					New([]float64{1.1, 2.2, 3.3}, Float, "col_float"),
+				},
+			},
+			want: []*upiv1.Column{
+				{
+					Name: "col_string",
+					Type: upiv1.Type_TYPE_STRING,
+				},
+				{
+					Name: "col_int",
+					Type: upiv1.Type_TYPE_INTEGER,
+				},
+				{
+					Name: "col_float",
+					Type: upiv1.Type_TYPE_DOUBLE,
+				},
+			},
+		},
+		{
+			name: "one of the series having bool type; incompatible with upi columns",
+			args: args{
+				cols: []*Series{
+					New([]string{"a", "b", "c"}, String, "col_string"),
+					New([]int{1, 2, 3}, Int, "col_int"),
+					New([]bool{false, true, false}, Bool, "col_bool"),
+				},
+			},
+			expErr: fmt.Errorf("type bool is not supported in UPI"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ConvertToUPIColumns(tt.args.cols)
+			assert.Equal(t, tt.expErr, err)
+			if tt.expErr != nil {
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConvertToUPIColumns() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -1,0 +1,26 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - tables:
+          - name: entity_table
+            baseTable:
+              fromJson:
+                jsonPath: $.entities[*]
+                addRowNumber: false
+      - tables:
+          - name: filetable
+            baseTable:
+              fromFile:
+                uri: ../types/table/testdata/normal.parquet
+                format: PARQUET
+          - name: filetable2
+            baseTable:
+              fromFile:
+                uri: ../types/table/testdata/normal.csv
+                format: CSV
+                schema:
+                  - name: "Is VIP"
+                    type: BOOL
+    outputs:
+       - upiPreprocessOutput:
+          predictionTableName: entity_table

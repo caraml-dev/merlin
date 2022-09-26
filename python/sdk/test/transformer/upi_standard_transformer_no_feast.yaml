@@ -1,0 +1,58 @@
+transformerConfig:
+  preprocess:
+    inputs:
+      - autoload:
+          tableNames:
+            - driver_table
+          variableNames:
+            - customer_id
+      - encoders:
+        - name: "vehicle_mapping"
+          ordinalEncoderConfig:
+            defaultValue: "0"
+            targetValueType: "INT"
+            mapping:
+              suv: "1"
+              sedan: "2"
+              mpv: "3"
+        - name: "hourly_encode"
+          cyclicalEncoderConfig:
+            byRange:
+              min: 0
+              max: 60
+    transformations:
+      - tableTransformation:
+          inputTable: driver_table
+          outputTable: transformed_driver_table
+          steps:
+            - dropColumns: ["id"]
+            - sort:
+                - column: "row_number"
+                  order: DESC
+            - renameColumns:
+                row_number: rank
+            - updateColumns:
+                - column: customer_id
+                  expression: customer_id
+            - scaleColumns:
+              - column: rank
+                standardScalerConfig:
+                  mean: 0.5
+                  std: 0.2
+            - scaleColumns:
+              - column: rating
+                minMaxScalerConfig:
+                  min: 1
+                  max: 5
+            - encodeColumns:
+              - columns:
+                  - vehicle
+                  - previous_vehicle
+                encoder: vehicle_mapping
+              - columns:
+                  - test_time
+                encoder: hourly_encode
+            - selectColumns: ["customer_id", "name", "rank", "rating", "vehicle", "previous_vehicle", "row_id"]
+    outputs:
+      - upiPreprocessOutput:
+          predictionTableName: transformed_driver_table
