@@ -1,7 +1,7 @@
-joblib>=1.2.0
+joblib>=0.13.0,<1.2.0  # >=1.2.0 upon upgrade of kserve's version
 numpy==1.19.5
-scikit-learn==0.23.1
-xgboost==0.82
+scikit-learn==1.0.1  # >=1.1.2 upon python 3.7 deprecation
+xgboost==1.5.0
 mlflow==1.23.0
 merlin-sdk
 cloudpickle==2.0.0
