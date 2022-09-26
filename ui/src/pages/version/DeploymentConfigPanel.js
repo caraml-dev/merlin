@@ -38,7 +38,7 @@ export const DeploymentConfigPanel = ({ endpoint }) => {
 
   const protocolDesc = {
     UPI_V1: "Universal Prediction Interface (gRPC)",
-    HTTP_JSON: "JSON over HTTP",
+    HTTP_JSON: "JSON over HTTP (REST)",
   };
 
   const deploymentConfig = [
