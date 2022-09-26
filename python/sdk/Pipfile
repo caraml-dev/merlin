@@ -11,7 +11,7 @@ pytest-xdist = "*"
 
 [packages]
 merlin-sdk = {extras = ["test"],path = "."}
-cookiecutter = '==1.7.2'
+cookiecutter = '==2.1.1'
 
 [requires]
-python_version = "3.7"
+python_version = ">=3.7"

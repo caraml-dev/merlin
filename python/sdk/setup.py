@@ -31,7 +31,7 @@ REQUIRES = [
     "PyPrind>=2.11.2",
     "google-auth>=1.11.0,<2.0dev",
     "Click>=7.0",
-    "cloudpickle==2.0.0",
+    "cloudpickle==2.0.0",  # used by mlflow
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "PyYAML>=5.4",
@@ -46,9 +46,9 @@ TEST_REQUIRES = [
     "pytest-xdist",
     "urllib3-mock>=0.3.3",
     "requests",
-    "xgboost==0.82",
-    "scikit-learn==0.20.3",
-    "joblib>=1.2.0",
+    "xgboost==1.5.0",
+    "scikit-learn==1.0.1",  # >=1.1.2 upon python 3.7 deprecation
+    "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy==0.812",
     "google-cloud-bigquery==1.22.0",
     "google-cloud-bigquery-storage==0.7.0",
