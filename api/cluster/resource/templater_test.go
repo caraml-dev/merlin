@@ -42,7 +42,7 @@ var (
 		MinReplica:    1,
 		MaxReplica:    2,
 		CPURequest:    resource.MustParse("500m"),
-		MemoryRequest: resource.MustParse("100Mi"),
+		MemoryRequest: resource.MustParse("500Mi"),
 	}
 
 	expDefaultModelResourceRequests = corev1.ResourceRequirements{
@@ -1054,7 +1054,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
 						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
 						knautoscaling.MetricAnnotationKey:                     knautoscaling.Memory,
-						knautoscaling.TargetAnnotationKey:                     "30",
+						knautoscaling.TargetAnnotationKey:                     "150", // 30% * default memory request (500Mi) = 150Mi
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -1081,6 +1081,67 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "serverless deployment using memory autoscaling when memory request is specified",
+			modelSvc: &models.Service{
+				Name:           modelSvc.Name,
+				ModelName:      modelSvc.ModelName,
+				ModelVersion:   modelSvc.ModelVersion,
+				Namespace:      project.Name,
+				ArtifactURI:    modelSvc.ArtifactURI,
+				Type:           models.ModelTypeTensorflow,
+				Options:        &models.ModelOption{},
+				Metadata:       modelSvc.Metadata,
+				DeploymentMode: deployment.ServerlessDeploymentMode,
+				AutoscalingPolicy: &autoscaling.AutoscalingPolicy{
+					MetricsType: autoscaling.MemoryUtilization,
+					TargetValue: 20,
+				},
+				Protocol:        protocol.HttpJson,
+				ResourceRequest: userResourceRequests,
+			},
+			resourcePercentage: queueResourcePercentage,
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      modelSvc.Name,
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.ClassAnnotationKey:                      knautoscaling.HPA,
+						knautoscaling.MetricAnnotationKey:                     knautoscaling.Memory,
+						knautoscaling.TargetAnnotationKey:                     "205", // 20% * (1Gi) ~= 205Mi
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          modelSvc.Metadata.App,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       modelSvc.Metadata.Stream,
+						"gojek.com/team":         modelSvc.Metadata.Team,
+						"gojek.com/sample":       "true",
+						"gojek.com/environment":  modelSvc.Metadata.Environment,
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						Tensorflow: &kservev1beta1.TFServingSpec{
+							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
+								StorageURI: &storageUri,
+								Container: corev1.Container{
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Resources:     expUserResourceRequests,
+									LivenessProbe: probeConfig,
+									Env:           []corev1.EnvVar{},
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &userResourceRequests.MinReplica,
+							MaxReplicas: userResourceRequests.MaxReplica,
 						},
 					},
 				},
