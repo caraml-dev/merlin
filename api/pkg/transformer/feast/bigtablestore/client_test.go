@@ -3,12 +3,12 @@ package bigtablestore
 import (
 	"context"
 	"fmt"
-	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/bigtable"
 	feast "github.com/feast-dev/feast/sdk/go"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/linkedin/goavro/v2"

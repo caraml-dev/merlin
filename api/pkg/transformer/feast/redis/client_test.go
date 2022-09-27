@@ -3,11 +3,11 @@ package redis
 import (
 	"context"
 	"fmt"
-	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
-	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"testing"
 
 	feast "github.com/feast-dev/feast/sdk/go"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
+	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/go-redis/redis/v8"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/stretchr/testify/assert"
