@@ -120,17 +120,18 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 
 			featureStatus := responseStatus[rowIdx][column]
 			switch featureStatus {
-			case serving.GetOnlineFeaturesResponse_PRESENT:
+			case serving.FieldStatus_PRESENT:
 				rawValue = feastRow[column]
 				// set value of entity
 				_, isEntity := fc.entitySet[column]
 				if isEntity {
 					entity[column] = rawValue
 				}
-			case serving.GetOnlineFeaturesResponse_NOT_FOUND, serving.GetOnlineFeaturesResponse_NULL_VALUE, serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE:
+			case serving.FieldStatus_NOT_FOUND, serving.FieldStatus_NULL_VALUE, serving.FieldStatus_OUTSIDE_MAX_AGE:
 				if columnTypes[colIdx] == types.ValueType_INVALID {
 					columnTypes[colIdx] = fc.columnTypeMapping[column]
 				}
+
 				defVal, ok := fc.defaultValues.GetDefaultValue(fc.featureTableSpec.Project, column)
 				if !ok {
 					// no default value is specified, we populate with nil
@@ -169,7 +170,7 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 	}, nil
 }
 
-func (fc *call) recordMetrics(val interface{}, column string, featureStatus serving.GetOnlineFeaturesResponse_FieldStatus) {
+func (fc *call) recordMetrics(val interface{}, column string, featureStatus serving.FieldStatus) {
 	// put behind feature toggle since it will generate high cardinality metrics
 	if fc.valueMonitoringEnabled {
 		v, err := converter.ToFloat64(val)

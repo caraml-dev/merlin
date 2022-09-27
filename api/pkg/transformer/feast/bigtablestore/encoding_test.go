@@ -254,23 +254,17 @@ func TestEncoder_Decode(t *testing.T) {
 		{
 			name: "features with non null values",
 			want: &feast.OnlineFeaturesResponse{
-				RawResponse: &serving.GetOnlineFeaturesResponse{
-					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				RawResponse: &serving.GetOnlineFeaturesResponseV2{
+					Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+						FieldNames: &serving.FieldList{
+							Val: []string{"customer_phone", "resource_type", "login_requests:login_type", "login_requests:lats"},
+						},
+					},
+					Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 						{
-							Fields: map[string]*types.Value{
-								"customer_phone":            feast.StrVal("1234"),
-								"resource_type":             feast.Int64Val(1),
-								"login_requests:login_type": feast.StrVal("OTP"),
-								"login_requests:lats": {Val: &types.Value_DoubleListVal{
-									DoubleListVal: &types.DoubleList{Val: []float64{2.0, 1.0}},
-								}},
-							},
-							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-								"customer_phone":            serving.GetOnlineFeaturesResponse_PRESENT,
-								"resource_type":             serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:login_type": serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:lats":       serving.GetOnlineFeaturesResponse_PRESENT,
-							},
+							Values: []*types.Value{feast.StrVal("1234"), feast.Int64Val(1), feast.StrVal("OTP"), {Val: &types.Value_DoubleListVal{
+								DoubleListVal: &types.DoubleList{Val: []float64{2.0, 1.0}}}}},
+							Statuses: []serving.FieldStatus{serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT},
 						},
 					},
 				},
@@ -308,23 +302,17 @@ func TestEncoder_Decode(t *testing.T) {
 		{
 			name: "features with non null values - registry doesn't have codec yet",
 			want: &feast.OnlineFeaturesResponse{
-				RawResponse: &serving.GetOnlineFeaturesResponse{
-					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				RawResponse: &serving.GetOnlineFeaturesResponseV2{
+					Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+						FieldNames: &serving.FieldList{
+							Val: []string{"customer_phone", "resource_type", "login_requests:login_type", "login_requests:lats"},
+						},
+					},
+					Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 						{
-							Fields: map[string]*types.Value{
-								"customer_phone":            feast.StrVal("1234"),
-								"resource_type":             feast.Int64Val(1),
-								"login_requests:login_type": feast.StrVal("OTP"),
-								"login_requests:lats": {Val: &types.Value_DoubleListVal{
-									DoubleListVal: &types.DoubleList{Val: []float64{2.0, 1.0}},
-								}},
-							},
-							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-								"customer_phone":            serving.GetOnlineFeaturesResponse_PRESENT,
-								"resource_type":             serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:login_type": serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:lats":       serving.GetOnlineFeaturesResponse_PRESENT,
-							},
+							Values: []*types.Value{feast.StrVal("1234"), feast.Int64Val(1), feast.StrVal("OTP"), {Val: &types.Value_DoubleListVal{
+								DoubleListVal: &types.DoubleList{Val: []float64{2.0, 1.0}}}}},
+							Statuses: []serving.FieldStatus{serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT},
 						},
 					},
 				},
@@ -409,21 +397,16 @@ func TestEncoder_Decode(t *testing.T) {
 		{
 			name: "features with null values",
 			want: &feast.OnlineFeaturesResponse{
-				RawResponse: &serving.GetOnlineFeaturesResponse{
-					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				RawResponse: &serving.GetOnlineFeaturesResponseV2{
+					Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+						FieldNames: &serving.FieldList{
+							Val: []string{"customer_phone", "resource_type", "login_requests:login_type", "login_requests:lats"},
+						},
+					},
+					Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 						{
-							Fields: map[string]*types.Value{
-								"customer_phone":            feast.StrVal("1234"),
-								"resource_type":             feast.Int64Val(1),
-								"login_requests:login_type": {},
-								"login_requests:lats":       {},
-							},
-							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-								"customer_phone":            serving.GetOnlineFeaturesResponse_PRESENT,
-								"resource_type":             serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:login_type": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-								"login_requests:lats":       serving.GetOnlineFeaturesResponse_NULL_VALUE,
-							},
+							Values:   []*types.Value{feast.StrVal("1234"), feast.Int64Val(1), {}, {}},
+							Statuses: []serving.FieldStatus{serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_NULL_VALUE, serving.FieldStatus_NULL_VALUE},
 						},
 					},
 				},
@@ -461,21 +444,16 @@ func TestEncoder_Decode(t *testing.T) {
 		{
 			name: "missing key",
 			want: &feast.OnlineFeaturesResponse{
-				RawResponse: &serving.GetOnlineFeaturesResponse{
-					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				RawResponse: &serving.GetOnlineFeaturesResponseV2{
+					Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+						FieldNames: &serving.FieldList{
+							Val: []string{"customer_phone", "resource_type", "login_requests:login_type", "login_requests:lats"},
+						},
+					},
+					Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 						{
-							Fields: map[string]*types.Value{
-								"customer_phone":            feast.StrVal("1234"),
-								"resource_type":             feast.Int64Val(1),
-								"login_requests:login_type": {},
-								"login_requests:lats":       {},
-							},
-							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-								"customer_phone":            serving.GetOnlineFeaturesResponse_PRESENT,
-								"resource_type":             serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:login_type": serving.GetOnlineFeaturesResponse_NOT_FOUND,
-								"login_requests:lats":       serving.GetOnlineFeaturesResponse_NOT_FOUND,
-							},
+							Values:   []*types.Value{feast.StrVal("1234"), feast.Int64Val(1), {}, {}},
+							Statuses: []serving.FieldStatus{serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_NOT_FOUND, serving.FieldStatus_NOT_FOUND},
 						},
 					},
 				},
@@ -503,21 +481,16 @@ func TestEncoder_Decode(t *testing.T) {
 		{
 			name: "stale features",
 			want: &feast.OnlineFeaturesResponse{
-				RawResponse: &serving.GetOnlineFeaturesResponse{
-					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				RawResponse: &serving.GetOnlineFeaturesResponseV2{
+					Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+						FieldNames: &serving.FieldList{
+							Val: []string{"customer_phone", "resource_type", "login_requests:login_type", "login_requests:lats"},
+						},
+					},
+					Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 						{
-							Fields: map[string]*types.Value{
-								"customer_phone":            feast.StrVal("1234"),
-								"resource_type":             feast.Int64Val(1),
-								"login_requests:login_type": {},
-								"login_requests:lats":       {},
-							},
-							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-								"customer_phone":            serving.GetOnlineFeaturesResponse_PRESENT,
-								"resource_type":             serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:login_type": serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE,
-								"login_requests:lats":       serving.GetOnlineFeaturesResponse_OUTSIDE_MAX_AGE,
-							},
+							Values:   []*types.Value{feast.StrVal("1234"), feast.Int64Val(1), {}, {}},
+							Statuses: []serving.FieldStatus{serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_OUTSIDE_MAX_AGE, serving.FieldStatus_OUTSIDE_MAX_AGE},
 						},
 					},
 				},
@@ -555,25 +528,17 @@ func TestEncoder_Decode(t *testing.T) {
 		{
 			name: "features some of feature table doesn't have record in bigtable",
 			want: &feast.OnlineFeaturesResponse{
-				RawResponse: &serving.GetOnlineFeaturesResponse{
-					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				RawResponse: &serving.GetOnlineFeaturesResponseV2{
+					Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+						FieldNames: &serving.FieldList{
+							Val: []string{"customer_phone", "resource_type", "login_requests:login_type", "login_requests:lats", "user_stat:num_force_logout"},
+						},
+					},
+					Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 						{
-							Fields: map[string]*types.Value{
-								"customer_phone":            feast.StrVal("1234"),
-								"resource_type":             feast.Int64Val(1),
-								"login_requests:login_type": feast.StrVal("OTP"),
-								"login_requests:lats": {Val: &types.Value_DoubleListVal{
-									DoubleListVal: &types.DoubleList{Val: []float64{2.0, 1.0}},
-								}},
-								"user_stat:num_force_logout": {},
-							},
-							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-								"customer_phone":             serving.GetOnlineFeaturesResponse_PRESENT,
-								"resource_type":              serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:login_type":  serving.GetOnlineFeaturesResponse_PRESENT,
-								"login_requests:lats":        serving.GetOnlineFeaturesResponse_PRESENT,
-								"user_stat:num_force_logout": serving.GetOnlineFeaturesResponse_NOT_FOUND,
-							},
+							Values: []*types.Value{feast.StrVal("1234"), feast.Int64Val(1), feast.StrVal("OTP"), {Val: &types.Value_DoubleListVal{
+								DoubleListVal: &types.DoubleList{Val: []float64{2.0, 1.0}}}}, {}},
+							Statuses: []serving.FieldStatus{serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT, serving.FieldStatus_NOT_FOUND},
 						},
 					},
 				},

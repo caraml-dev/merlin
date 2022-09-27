@@ -58,27 +58,20 @@ func TestGetOnlineFeatures(t *testing.T) {
 				},
 			},
 			want: &feast.OnlineFeaturesResponse{
-				RawResponse: &serving.GetOnlineFeaturesResponse{
-					FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
+				RawResponse: &serving.GetOnlineFeaturesResponseV2{
+					Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+						FieldNames: &serving.FieldList{
+							Val: []string{"driver_id", "driver_trips:trips_today"},
+						},
+					},
+					Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
 						{
-							Fields: map[string]*types.Value{
-								"driver_id":                feast.Int64Val(1),
-								"driver_trips:trips_today": feast.Int32Val(73),
-							},
-							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-								"driver_id":                serving.GetOnlineFeaturesResponse_PRESENT,
-								"driver_trips:trips_today": serving.GetOnlineFeaturesResponse_PRESENT,
-							},
+							Values:   []*types.Value{feast.Int64Val(1), feast.Int32Val(73)},
+							Statuses: []serving.FieldStatus{serving.FieldStatus_PRESENT, serving.FieldStatus_PRESENT},
 						},
 						{
-							Fields: map[string]*types.Value{
-								"driver_id":                feast.Int64Val(2),
-								"driver_trips:trips_today": {},
-							},
-							Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-								"driver_id":                serving.GetOnlineFeaturesResponse_PRESENT,
-								"driver_trips:trips_today": serving.GetOnlineFeaturesResponse_NOT_FOUND,
-							},
+							Values:   []*types.Value{feast.Int64Val(2), {}},
+							Statuses: []serving.FieldStatus{serving.FieldStatus_PRESENT, serving.FieldStatus_NOT_FOUND},
 						},
 					},
 				},
