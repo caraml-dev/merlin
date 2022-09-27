@@ -136,6 +136,8 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 }
 
 func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+	applyDefaults(modelService, config)
+
 	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
 	annotations, err := createAnnotations(modelService, config)
 	if err != nil {
