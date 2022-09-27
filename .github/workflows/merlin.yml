@@ -55,7 +55,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-pipenv-batch-predictor
       - name: Install dependencies
         working-directory: ./python/batch-predictor
         run: |
@@ -81,7 +81,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-pipenv-pyfunc-server
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
         run: |
@@ -107,7 +107,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-pipenv-python-sdk
       - name: Install dependencies
         working-directory: ./python/sdk
         run: |
