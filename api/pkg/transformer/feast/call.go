@@ -128,6 +128,10 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 					entity[column] = rawValue
 				}
 			case serving.FieldStatus_NOT_FOUND, serving.FieldStatus_NULL_VALUE, serving.FieldStatus_OUTSIDE_MAX_AGE:
+				if columnTypes[colIdx] == types.ValueType_INVALID {
+					columnTypes[colIdx] = fc.columnTypeMapping[column]
+				}
+
 				defVal, ok := fc.defaultValues.GetDefaultValue(fc.featureTableSpec.Project, column)
 				if !ok {
 					// no default value is specified, we populate with nil

@@ -1047,30 +1047,39 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":                  feastSdk.StrVal("1"),
-										"all_time_cancellation_rate": feastSdk.DoubleVal(0.2),
-										"all_time_completion_rate":   feastSdk.DoubleVal(0.8),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_id",
+										"all_time_cancellation_rate",
+										"all_time_completion_rate",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":                  serving.GetOnlineFeaturesResponse_PRESENT,
-										"all_time_cancellation_rate": serving.GetOnlineFeaturesResponse_PRESENT,
-										"all_time_completion_rate":   serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("1"),
+										feastSdk.DoubleVal(0.2),
+										feastSdk.DoubleVal(0.8),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":                  feastSdk.StrVal("2"),
-										"all_time_cancellation_rate": nil,
-										"all_time_completion_rate":   nil,
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("2"),
+										nil,
+										nil,
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":                  serving.GetOnlineFeaturesResponse_PRESENT,
-										"all_time_cancellation_rate": serving.GetOnlineFeaturesResponse_NOT_FOUND,
-										"all_time_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_NOT_FOUND,
+										serving.FieldStatus_NULL_VALUE,
 									},
 								},
 							},
@@ -1082,30 +1091,39 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 						Project: "statistic", // used as identifier for mocking. must match config
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":                 feastSdk.StrVal("1"),
-										"average_cancellation_rate": nil,
-										"average_completion_rate":   nil,
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_id",
+										"average_cancellation_rate",
+										"average_completion_rate",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":                 serving.GetOnlineFeaturesResponse_PRESENT,
-										"average_cancellation_rate": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-										"average_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("1"),
+										nil,
+										nil,
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_NULL_VALUE,
+										serving.FieldStatus_NULL_VALUE,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":                 feastSdk.StrVal("2"),
-										"average_cancellation_rate": nil,
-										"average_completion_rate":   nil,
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("2"),
+										nil,
+										nil,
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":                 serving.GetOnlineFeaturesResponse_PRESENT,
-										"average_cancellation_rate": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-										"average_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_NULL_VALUE,
+										serving.FieldStatus_NULL_VALUE,
 									},
 								},
 							},
@@ -1125,34 +1143,44 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 						},
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":                         feastSdk.StrVal("1"),
-										"service_type":                      feastSdk.Int64Val(1),
-										"service_average_cancellation_rate": nil,
-										"service_average_completion_rate":   nil,
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_id",
+										"service_type",
+										"service_average_cancellation_rate",
+										"service_average_completion_rate",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":                         serving.GetOnlineFeaturesResponse_PRESENT,
-										"service_type":                      serving.GetOnlineFeaturesResponse_PRESENT,
-										"service_average_cancellation_rate": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-										"service_average_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("1"),
+										feastSdk.Int64Val(1),
+										nil,
+										nil,
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_NULL_VALUE,
+										serving.FieldStatus_NULL_VALUE,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":                         feastSdk.StrVal("2"),
-										"service_type":                      feastSdk.Int64Val(1),
-										"service_average_cancellation_rate": nil,
-										"service_average_completion_rate":   nil,
+									Values: []*feastTypes.Value{
+										feastSdk.StrVal("2"),
+										feastSdk.Int64Val(1),
+										nil,
+										nil,
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":                         serving.GetOnlineFeaturesResponse_PRESENT,
-										"service_type":                      serving.GetOnlineFeaturesResponse_PRESENT,
-										"service_average_cancellation_rate": serving.GetOnlineFeaturesResponse_NULL_VALUE,
-										"service_average_completion_rate":   serving.GetOnlineFeaturesResponse_NULL_VALUE,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_NULL_VALUE,
+										serving.FieldStatus_NULL_VALUE,
 									},
 								},
 							},
