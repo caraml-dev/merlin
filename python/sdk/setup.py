@@ -25,9 +25,9 @@ REQUIRES = [
     "python-dateutil>=2.1",
     "six>=1.10",
     "mlflow>=1.2.0,<=1.23.0",
-    "google-cloud-storage>=1.19.0",
+    "google-cloud-storage>=1.20.0",
     "boto3>=1.9.84",
-    "urllib3>=1.23",
+    "urllib3>=1.25.3",
     "PyPrind>=2.11.2",
     "google-auth>=1.11.0,<2.0dev",
     "Click>=7.0",
@@ -49,11 +49,11 @@ TEST_REQUIRES = [
     "xgboost==1.5.0",
     "scikit-learn==1.0.1",  # >=1.1.2 upon python 3.7 deprecation
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
-    "mypy==0.812",
-    "google-cloud-bigquery==1.22.0",
+    "mypy>=0.812",
+    "google-cloud-bigquery>=1.18.0",
     "google-cloud-bigquery-storage==0.7.0",
-    "grpcio==1.22.0",
-    "recursive-diff==1.0.0",
+    "grpcio>=1.31.0",
+    "recursive-diff>=1.0.0",
     "xarray"
 ]
 
