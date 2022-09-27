@@ -838,7 +838,6 @@ func TestUPIServer_PredictValues(t *testing.T) {
 			specYamlPath: "../../pipeline/testdata/upi/valid_passthrough.yaml",
 			mockFeasts:   []mockFeast{},
 			request: &upiv1.PredictValuesRequest{
-
 				PredictionTable: &upiv1.Table{
 					Name: "table1",
 					Columns: []*upiv1.Column{
@@ -1462,30 +1461,39 @@ func TestUPIServer_PredictValues(t *testing.T) {
 						Project: "default", // used as identifier for mocking. must match config
 					},
 					response: &feastSdk.OnlineFeaturesResponse{
-						RawResponse: &serving.GetOnlineFeaturesResponse{
-							FieldValues: []*serving.GetOnlineFeaturesResponse_FieldValues{
-								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.Int64Val(1),
-										"driver_feature_1": feastSdk.DoubleVal(1111),
-										"driver_feature_2": feastSdk.DoubleVal(2222),
+						RawResponse: &serving.GetOnlineFeaturesResponseV2{
+							Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+								FieldNames: &serving.FieldList{
+									Val: []string{
+										"driver_id",
+										"driver_feature_1",
+										"driver_feature_2",
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+								},
+							},
+							Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+								{
+									Values: []*feastTypes.Value{
+										feastSdk.Int64Val(1),
+										feastSdk.DoubleVal(1111),
+										feastSdk.DoubleVal(2222),
+									},
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 								{
-									Fields: map[string]*feastTypes.Value{
-										"driver_id":        feastSdk.Int64Val(2),
-										"driver_feature_1": feastSdk.DoubleVal(3333),
-										"driver_feature_2": feastSdk.DoubleVal(4444),
+									Values: []*feastTypes.Value{
+										feastSdk.Int64Val(2),
+										feastSdk.DoubleVal(3333),
+										feastSdk.DoubleVal(4444),
 									},
-									Statuses: map[string]serving.GetOnlineFeaturesResponse_FieldStatus{
-										"driver_id":        serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_1": serving.GetOnlineFeaturesResponse_PRESENT,
-										"driver_feature_2": serving.GetOnlineFeaturesResponse_PRESENT,
+									Statuses: []serving.FieldStatus{
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
+										serving.FieldStatus_PRESENT,
 									},
 								},
 							},
