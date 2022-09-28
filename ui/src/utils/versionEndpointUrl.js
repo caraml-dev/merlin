@@ -16,10 +16,15 @@
 
 import PropTypes from "prop-types";
 
-export const versionEndpointUrl = url => {
-  return url.includes(":predict") ? url : url + ":predict";
+export const versionEndpointUrl = (url, protocol) => {
+  if (protocol && protocol === "HTTP_JSON") {
+    return url.includes(":predict") ? url : url + ":predict";
+  }
+
+  // UPI_V1
+  return url;
 };
 
 versionEndpointUrl.propTypes = {
-  url: PropTypes.string.isRequired
+  url: PropTypes.string.isRequired,
 };

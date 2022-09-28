@@ -30,7 +30,7 @@ export const DeploymentPanelHeader = ({
   model,
   version,
   endpoint,
-  environments
+  environments,
 }) => {
   const headerItems = [
     {
@@ -43,8 +43,8 @@ export const DeploymentPanelHeader = ({
         />
       ),
       flexProps: {
-        grow: 1
-      }
+        grow: 1,
+      },
     },
     {
       title: "Status",
@@ -54,20 +54,22 @@ export const DeploymentPanelHeader = ({
         <EuiText>-</EuiText>
       ),
       flexProps: {
-        grow: 1
-      }
+        grow: 1,
+      },
     },
     {
       title: "Endpoint",
       description:
         endpoint && endpoint.url ? (
-          <CopyableUrl text={versionEndpointUrl(endpoint.url)} />
+          <CopyableUrl
+            text={versionEndpointUrl(endpoint.url, endpoint.protocol)}
+          />
         ) : (
           <EuiText>-</EuiText>
         ),
       flexProps: {
-        grow: 4
-      }
+        grow: 4,
+      },
     },
     {
       title: "Created At",
@@ -79,9 +81,9 @@ export const DeploymentPanelHeader = ({
       flexProps: {
         grow: 1,
         style: {
-          minWidth: "100px"
-        }
-      }
+          minWidth: "100px",
+        },
+      },
     },
     {
       title: "Updated At",
@@ -93,9 +95,9 @@ export const DeploymentPanelHeader = ({
       flexProps: {
         grow: 1,
         style: {
-          minWidth: "100px"
-        }
-      }
+          minWidth: "100px",
+        },
+      },
     },
     {
       title: "Actions",
@@ -111,10 +113,10 @@ export const DeploymentPanelHeader = ({
       flexProps: {
         grow: 1,
         style: {
-          minWidth: "100px"
-        }
-      }
-    }
+          minWidth: "100px",
+        },
+      },
+    },
   ];
 
   return (
@@ -130,5 +132,5 @@ DeploymentPanelHeader.propTypes = {
   model: PropTypes.object.isRequired,
   version: PropTypes.object.isRequired,
   endpoint: PropTypes.object.isRequired,
-  environments: PropTypes.array.isRequired
+  environments: PropTypes.array.isRequired,
 };
