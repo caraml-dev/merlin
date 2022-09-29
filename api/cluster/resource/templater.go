@@ -44,6 +44,7 @@ const (
 	envTransformerModelName  = "MERLIN_TRANSFORMER_MODEL_NAME"
 	envTransformerPredictURL = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
 
+	envPyFuncModelName           = "MODEL_NAME"
 	envPredictorPort             = "MERLIN_PREDICTOR_PORT"
 	envPredictorModelName        = "MERLIN_MODEL_NAME"
 	envPredictorArtifactLocation = "MERLIN_ARTIFACT_LOCATION"
@@ -579,6 +580,10 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 // createPyFuncDefaultEnvVars return default env vars for Pyfunc model.
 func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 	envVars := models.EnvVars{
+		models.EnvVar{
+			Name:  envPyFuncModelName,
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+		},
 		models.EnvVar{
 			Name:  envModelName,
 			Value: svc.ModelName,
