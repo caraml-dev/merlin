@@ -24,7 +24,7 @@ REQUIRES = [
     "certifi>=2017.4.17",
     "python-dateutil>=2.1",
     "six>=1.10",
-    "mlflow>=1.2.0,<=1.23.0",
+    "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
     "google-cloud-storage>=1.19.0",
     "boto3>=1.9.84",
     "urllib3>=1.23",
@@ -35,7 +35,7 @@ REQUIRES = [
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "PyYAML>=5.4",
-    "protobuf<4.0.0",
+    "protobuf<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
     "caraml-upi-protos>=0.3.1"
 ]
 
