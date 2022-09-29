@@ -52,7 +52,7 @@ TEST_REQUIRES = [
     "mypy>=0.812",
     "google-cloud-bigquery>=1.18.0",
     "google-cloud-bigquery-storage>=0.7.0",
-    "grpcio>=1.31.0",
+    "grpcio>=1.31.0,<1.49.0",
     "recursive-diff>=1.0.0",
     "xarray"
 ]
