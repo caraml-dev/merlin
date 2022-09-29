@@ -13,6 +13,7 @@ env:
   DOCKER_BUILDKIT: 1
   GO_VERSION: 1.18
   PYTHON_VERSION: 3.7
+  SDK_PYTHON_VERSION: ["3.7", "3.8", "3.9", "3.10"]
   
 
 jobs:
@@ -97,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ${{fromJson(env.SDK_PYTHON_VERSION)}}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
