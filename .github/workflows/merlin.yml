@@ -12,7 +12,7 @@ env:
   ARTIFACT_RETENTION_DAYS: 7
   DOCKER_BUILDKIT: 1
   GO_VERSION: 1.18
-  PYTHON_VERSION: 3.7
+  PYTHON_VERSION: [3.7, 3.8, 3.9, 3.10]
 
 jobs:
   create-version:
@@ -93,11 +93,15 @@ jobs:
 
   test-python-sdk:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ env.PYTHON_VERSION }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
