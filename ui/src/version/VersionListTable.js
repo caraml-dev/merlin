@@ -33,7 +33,7 @@ import {
   EuiTextAlign,
   EuiToolTip,
   EuiBadgeGroup,
-  EuiSearchBar
+  EuiSearchBar,
 } from "@elastic/eui";
 import { DateFromNow } from "@gojek/mlp-ui";
 import PropTypes from "prop-types";
@@ -42,6 +42,7 @@ import VersionEndpointActions from "./VersionEndpointActions";
 import { Link, navigate } from "@reach/router";
 import EllipsisText from "react-ellipsis-text";
 import useCollapse from "react-collapsed";
+import { versionEndpointUrl } from "../utils/versionEndpointUrl";
 
 const moment = require("moment");
 
@@ -64,7 +65,7 @@ const CollapsibleLabelsPanel = ({
   labels,
   labelOnClick,
   minLabelsCount = 2,
-  maxLabelLength = 9
+  maxLabelLength = 9,
 }) => {
   const { getToggleProps, isExpanded } = useCollapse();
 
@@ -80,20 +81,25 @@ const CollapsibleLabelsPanel = ({
                   const queryText = `labels: ${key} in (${val})`;
                   labelOnClick({ queryText });
                 }}
-                onClickAriaLabel="search by label">
+                onClickAriaLabel="search by label"
+              >
                 <EllipsisText text={key} length={maxLabelLength} />:
                 <EllipsisText text={val} length={maxLabelLength} />
               </EuiBadge>
             )
         )}
-      {// Toggle collapse button
-      !isExpanded && labels && Object.keys(labels).length > minLabelsCount && (
-        <EuiLink {...getToggleProps()}>
-          {isExpanded
-            ? ""
-            : `Show All [${Object.keys(labels).length - minLabelsCount}]`}
-        </EuiLink>
-      )}
+      {
+        // Toggle collapse button
+        !isExpanded &&
+          labels &&
+          Object.keys(labels).length > minLabelsCount && (
+            <EuiLink {...getToggleProps()}>
+              {isExpanded
+                ? ""
+                : `Show All [${Object.keys(labels).length - minLabelsCount}]`}
+            </EuiLink>
+          )
+      }
     </EuiBadgeGroup>
   );
 };
@@ -110,7 +116,7 @@ const VersionListTable = ({
   environments,
   ...props
 }) => {
-  const healthColor = status => {
+  const healthColor = (status) => {
     switch (status) {
       case "serving":
         return "#fea27f";
@@ -127,23 +133,23 @@ const VersionListTable = ({
     }
   };
 
-  const isTerminatedEndpoint = versionEndpoint => {
+  const isTerminatedEndpoint = (versionEndpoint) => {
     return versionEndpoint.status === "terminated";
   };
 
-  const versionCanBeExpanded = version => {
+  const versionCanBeExpanded = (version) => {
     return (
       version.endpoints &&
       version.endpoints.length !== 0 &&
       version.endpoints.find(
-        versionEndpoint => !isTerminatedEndpoint(versionEndpoint)
+        (versionEndpoint) => !isTerminatedEndpoint(versionEndpoint)
       )
     );
   };
 
   const [expandedRowState, setExpandedRowState] = useState({
     rows: {},
-    versionIdToExpandedRowMap: {}
+    versionIdToExpandedRowMap: {},
   });
 
   useEffect(
@@ -155,12 +161,12 @@ const VersionListTable = ({
         if (versions.length > 0) {
           const rows = {};
           const expandedRows = expandedRowState.versionIdToExpandedRowMap;
-          versions.forEach(version => {
+          versions.forEach((version) => {
             mlflowId.push(version.mlflow_run_id);
 
             if (versionCanBeExpanded(version)) {
               version.environment_name = [];
-              version.endpoints.forEach(endpoint => {
+              version.endpoints.forEach((endpoint) => {
                 version.environment_name.push(endpoint.environment_name);
                 envDict[endpoint.environment_name] = true;
               });
@@ -182,12 +188,14 @@ const VersionListTable = ({
                               navigate(
                                 `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/endpoints/${versionEndpoint.id}`
                               )
-                            }>
+                            }
+                          >
                             {versionEndpoint.environment_name}
                           </EuiLink>{" "}
                           {versionEndpoint.status === "serving" && (
                             <EuiBadge
-                              color={healthColor(versionEndpoint.status)}>
+                              color={healthColor(versionEndpoint.status)}
+                            >
                               {versionEndpoint.status}
                             </EuiBadge>
                           )}
@@ -218,9 +226,13 @@ const VersionListTable = ({
                           </EuiText>
                         ) : versionEndpoint.url ? (
                           <EuiCopy
-                            textToCopy={`${versionEndpoint.url}:predict`}
-                            beforeMessage="Click to copy URL to clipboard">
-                            {copy => (
+                            textToCopy={`${versionEndpointUrl(
+                              versionEndpoint.url,
+                              versionEndpoint.protocol
+                            )}`}
+                            beforeMessage="Click to copy URL to clipboard"
+                          >
+                            {(copy) => (
                               <EuiLink onClick={copy} color="text">
                                 <EuiIcon
                                   type={"copyClipboard"}
@@ -273,11 +285,11 @@ const VersionListTable = ({
               }
             }
           });
-          setExpandedRowState(state => {
+          setExpandedRowState((state) => {
             return {
               ...state,
               rows: rows,
-              versionIdToExpandedRowMap: expandedRows
+              versionIdToExpandedRowMap: expandedRows,
             };
           });
         }
@@ -288,11 +300,11 @@ const VersionListTable = ({
       isLoaded,
       versions,
       expandedRowState.versionIdToExpandedRowMap,
-      activeModel
+      activeModel,
     ]
   );
 
-  const toggleDetails = version => {
+  const toggleDetails = (version) => {
     const expandedRows = { ...expandedRowState.versionIdToExpandedRowMap };
     if (expandedRows[version.id]) {
       delete expandedRows[version.id];
@@ -301,10 +313,10 @@ const VersionListTable = ({
         expandedRows[version.id] = expandedRowState.rows[version.id];
       }
     }
-    setExpandedRowState(state => {
+    setExpandedRowState((state) => {
       return {
         ...state,
-        versionIdToExpandedRowMap: expandedRows
+        versionIdToExpandedRowMap: expandedRows,
       };
     });
   };
@@ -315,13 +327,13 @@ const VersionListTable = ({
       name: "Version",
       mobileOptions: {
         enlarge: true,
-        fullWidth: true
+        fullWidth: true,
       },
       sortable: true,
       width: "10%",
       render: (name, version) => {
         const servingEndpoint = version.endpoints.find(
-          endpoint => endpoint.status === "serving"
+          (endpoint) => endpoint.status === "serving"
         );
         const versionPageUrl = `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${version.id}/details`;
         return (
@@ -341,13 +353,13 @@ const VersionListTable = ({
             )}
           </Fragment>
         );
-      }
+      },
     },
     {
       field: "mlflow_run_id",
       name: "MLflow Run ID",
       mobileOptions: {
-        fullWidth: true
+        fullWidth: true,
       },
       width: "25%",
       render: (run_id, version) => (
@@ -355,10 +367,11 @@ const VersionListTable = ({
           href={version.mlflow_url}
           target="_blank"
           size={defaultIconSize}
-          onClick={e => e.stopPropagation()}>
+          onClick={(e) => e.stopPropagation()}
+        >
           {run_id}
         </EuiLink>
-      )
+      ),
     },
     {
       field: "endpoints",
@@ -376,14 +389,14 @@ const VersionListTable = ({
         </EuiToolTip>
       ),
       mobileOptions: {
-        fullWidth: true
+        fullWidth: true,
       },
-      render: endpoints => {
+      render: (endpoints) => {
         if (endpoints && endpoints.length !== 0) {
           const endpointList = endpoints
-            .filter(endpoint => !isTerminatedEndpoint(endpoint))
+            .filter((endpoint) => !isTerminatedEndpoint(endpoint))
             .sort((a, b) => (a.environment_name > b.environment_name ? 1 : -1))
-            .map(endpoint => (
+            .map((endpoint) => (
               <EuiFlexItem key={`${endpoint.id}-list-version`}>
                 {(endpoint.status === "failed" ||
                   endpoint.status === "pending") && (
@@ -391,14 +404,16 @@ const VersionListTable = ({
                     aria-label={endpoint.status}
                     color={healthColor(endpoint.status)}
                     content={`Deployment to ${endpoint.environment_name} is ${endpoint.status}`}
-                    position="left">
+                    position="left"
+                  >
                     <EuiHealth color={healthColor(endpoint.status)}>
                       <EuiLink
                         onClick={() =>
                           navigate(
                             `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}`
                           )
-                        }>
+                        }
+                      >
                         {endpoint.environment_name}
                       </EuiLink>
                     </EuiHealth>
@@ -413,7 +428,8 @@ const VersionListTable = ({
                           navigate(
                             `/merlin/projects/${activeModel.project_id}/models/${activeModel.id}/versions/${endpoint.version_id}/endpoints/${endpoint.id}`
                           )
-                        }>
+                        }
+                      >
                         {endpoint.environment_name}
                       </EuiLink>
                     </EuiText>
@@ -429,24 +445,24 @@ const VersionListTable = ({
             ""
           );
         }
-      }
+      },
     },
     {
       field: "labels",
       name: "Labels",
-      render: labels => (
+      render: (labels) => (
         <CollapsibleLabelsPanel labels={labels} labelOnClick={onChange} />
-      )
+      ),
     },
     {
       field: "created_at",
       name: "Created",
-      render: date => <DateFromNow date={date} size={defaultTextSize} />
+      render: (date) => <DateFromNow date={date} size={defaultTextSize} />,
     },
     {
       field: "updated_at",
       name: "Updated",
-      render: date => <DateFromNow date={date} size={defaultTextSize} />
+      render: (date) => <DateFromNow date={date} size={defaultTextSize} />,
     },
     {
       field: "id",
@@ -466,7 +482,7 @@ const VersionListTable = ({
       align: "right",
       mobileOptions: {
         header: true,
-        fullWidth: false
+        fullWidth: false,
       },
       render: (_, version) =>
         activeModel && (
@@ -479,10 +495,12 @@ const VersionListTable = ({
                     Deploy model version as an HTTP endpoint to available
                     environment.
                   </p>
-                }>
+                }
+              >
                 <Link
                   to={`${version.id}/deploy`}
-                  state={{ model: activeModel, version: version }}>
+                  state={{ model: activeModel, version: version }}
+                >
                   <EuiButtonEmpty iconType="importAction" size="xs">
                     <EuiText size="xs">
                       {activeModel.type !== "pyfunc_v2"
@@ -502,10 +520,12 @@ const VersionListTable = ({
                     <p>
                       Start new batch prediction job from a given model version
                     </p>
-                  }>
+                  }
+                >
                   <Link
                     to={`${version.id}/create-job`}
-                    state={{ model: activeModel, version: version }}>
+                    state={{ model: activeModel, version: version }}
+                  >
                     <EuiButtonEmpty iconType="storage" size="xs">
                       <EuiText size="xs">Start Batch Job</EuiText>
                     </EuiButtonEmpty>
@@ -522,13 +542,13 @@ const VersionListTable = ({
               </Link>
             </EuiFlexItem>
           </EuiFlexGroup>
-        )
+        ),
     },
     {
       align: "right",
       width: "40px",
       isExpander: true,
-      render: version =>
+      render: (version) =>
         versionCanBeExpanded(version) && (
           <EuiToolTip
             position="top"
@@ -538,7 +558,8 @@ const VersionListTable = ({
               ) : (
                 <p>See all deployments</p>
               )
-            }>
+            }
+          >
             <EuiButtonIcon
               onClick={() => toggleDetails(version)}
               aria-label={
@@ -553,14 +574,14 @@ const VersionListTable = ({
               }
             />
           </EuiToolTip>
-        )
-    }
+        ),
+    },
   ];
 
-  const cellProps = item => {
+  const cellProps = (item) => {
     return {
       style: versionCanBeExpanded(item) ? { cursor: "pointer" } : {},
-      onClick: () => toggleDetails(item)
+      onClick: () => toggleDetails(item),
     };
   };
 
@@ -592,7 +613,7 @@ const VersionListTable = ({
     query: query,
     onChange: onChange,
     box: {
-      incremental: false
+      incremental: false,
     },
     filters: [
       {
@@ -600,11 +621,11 @@ const VersionListTable = ({
         field: "environment_name",
         name: "Environment",
         multiSelect: false,
-        options: environments.map(item => ({
-          value: item.name
-        }))
-      }
-    ]
+        options: environments.map((item) => ({
+          value: item.name,
+        })),
+      },
+    ],
   };
 
   const loadingView = isLoaded ? (
@@ -621,7 +642,8 @@ const VersionListTable = ({
     <EuiCallOut
       title="Sorry, there was an error"
       color="danger"
-      iconType="alert">
+      iconType="alert"
+    >
       <p>{error.message}</p>
     </EuiCallOut>
   ) : activeModel ? (
@@ -651,7 +673,7 @@ VersionListTable.propTypes = {
   isLoaded: PropTypes.bool,
   error: PropTypes.object,
   activeVersion: PropTypes.object,
-  activeModel: PropTypes.object
+  activeModel: PropTypes.object,
 };
 
 export default VersionListTable;

@@ -44,6 +44,7 @@ const (
 	envTransformerModelName  = "MERLIN_TRANSFORMER_MODEL_NAME"
 	envTransformerPredictURL = "MERLIN_TRANSFORMER_MODEL_PREDICT_URL"
 
+	envPyFuncModelName           = "MODEL_NAME"
 	envPredictorPort             = "MERLIN_PREDICTOR_PORT"
 	envPredictorModelName        = "MERLIN_MODEL_NAME"
 	envPredictorArtifactLocation = "MERLIN_ARTIFACT_LOCATION"
@@ -107,6 +108,8 @@ func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTrans
 }
 
 func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+	applyDefaults(modelService, config)
+
 	annotations, err := createAnnotations(modelService, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
@@ -134,6 +137,8 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 }
 
 func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+	applyDefaults(modelService, config)
+
 	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
 	annotations, err := createAnnotations(modelService, config)
 	if err != nil {
@@ -151,15 +156,6 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 
 func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
-
-	if modelService.ResourceRequest == nil {
-		modelService.ResourceRequest = &models.ResourceRequest{
-			MinReplica:    config.DefaultModelResourceRequests.MinReplica,
-			MaxReplica:    config.DefaultModelResourceRequests.MaxReplica,
-			CPURequest:    config.DefaultModelResourceRequests.CPURequest,
-			MemoryRequest: config.DefaultModelResourceRequests.MemoryRequest,
-		}
-	}
 
 	// Set cpu limit and memory limit to be 2x of the requests
 	cpuLimit := modelService.ResourceRequest.CPURequest.DeepCopy()
@@ -286,15 +282,6 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 }
 
 func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
-	if transformer.ResourceRequest == nil {
-		transformer.ResourceRequest = &models.ResourceRequest{
-			MinReplica:    config.DefaultTransformerResourceRequests.MinReplica,
-			MaxReplica:    config.DefaultTransformerResourceRequests.MaxReplica,
-			CPURequest:    config.DefaultTransformerResourceRequests.CPURequest,
-			MemoryRequest: config.DefaultTransformerResourceRequests.MemoryRequest,
-		}
-	}
-
 	// Set cpu limit and memory limit to be 2x of the requests
 	cpuLimit := transformer.ResourceRequest.CPURequest.DeepCopy()
 	cpuLimit.Add(transformer.ResourceRequest.CPURequest)
@@ -481,13 +468,13 @@ func createAnnotations(modelService *models.Service, config *config.DeploymentCo
 				annotations[knautoscaling.ClassAnnotationKey] = knautoscaling.KPA
 			}
 
-			autoscalingMetrics, err := toKNativeAutoscalerMetrics(modelService.AutoscalingPolicy.MetricsType)
+			autoscalingMetrics, targetValue, err := toKNativeAutoscalerMetrics(modelService.AutoscalingPolicy.MetricsType, modelService.AutoscalingPolicy.TargetValue, modelService.ResourceRequest)
 			if err != nil {
 				return nil, err
 			}
 
 			annotations[knautoscaling.MetricAnnotationKey] = autoscalingMetrics
-			annotations[knautoscaling.TargetAnnotationKey] = fmt.Sprintf("%.0f", modelService.AutoscalingPolicy.TargetValue)
+			annotations[knautoscaling.TargetAnnotationKey] = targetValue
 		}
 	}
 
@@ -594,6 +581,10 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 	envVars := models.EnvVars{
 		models.EnvVar{
+			Name:  envPyFuncModelName,
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+		},
+		models.EnvVar{
 			Name:  envModelName,
 			Value: svc.ModelName,
 		},
@@ -619,4 +610,28 @@ func createPyFuncDefaultEnvVars(svc *models.Service) models.EnvVars {
 		},
 	}
 	return envVars
+}
+
+func applyDefaults(service *models.Service, config *config.DeploymentConfig) {
+	// apply default resource request for model
+	if service.ResourceRequest == nil {
+		service.ResourceRequest = &models.ResourceRequest{
+			MinReplica:    config.DefaultModelResourceRequests.MinReplica,
+			MaxReplica:    config.DefaultModelResourceRequests.MaxReplica,
+			CPURequest:    config.DefaultModelResourceRequests.CPURequest,
+			MemoryRequest: config.DefaultModelResourceRequests.MemoryRequest,
+		}
+	}
+
+	// apply default resource request for transformer
+	if service.Transformer != nil && service.Transformer.Enabled {
+		if service.Transformer.ResourceRequest == nil {
+			service.Transformer.ResourceRequest = &models.ResourceRequest{
+				MinReplica:    config.DefaultTransformerResourceRequests.MinReplica,
+				MaxReplica:    config.DefaultTransformerResourceRequests.MaxReplica,
+				CPURequest:    config.DefaultTransformerResourceRequests.CPURequest,
+				MemoryRequest: config.DefaultTransformerResourceRequests.MemoryRequest,
+			}
+		}
+	}
 }
