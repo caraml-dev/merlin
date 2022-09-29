@@ -3378,6 +3378,10 @@ func getLimit(quantity resource.Quantity) resource.Quantity {
 func createPyFuncDefaultEnvVarsWithProtocol(svc *models.Service, protocolValue protocol.Protocol) models.EnvVars {
 	envVars := models.EnvVars{
 		models.EnvVar{
+			Name:  envPyFuncModelName,
+			Value: models.CreateInferenceServiceName(svc.ModelName, svc.ModelVersion),
+		},
+		models.EnvVar{
 			Name:  envModelName,
 			Value: svc.ModelName,
 		},
