@@ -71,7 +71,7 @@ setup(
     setup_requires=["setuptools_scm"],
     tests_require=TEST_REQUIRES,
     extras_require={'test': TEST_REQUIRES},
-    python_requires='>=3.7',
+    python_requires='>=3.7,<3.11',
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
     entry_points='''
