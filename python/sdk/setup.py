@@ -24,18 +24,18 @@ REQUIRES = [
     "certifi>=2017.4.17",
     "python-dateutil>=2.1",
     "six>=1.10",
-    "mlflow>=1.2.0,<=1.23.0",
+    "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
     "google-cloud-storage>=1.19.0",
     "boto3>=1.9.84",
     "urllib3>=1.23",
     "PyPrind>=2.11.2",
-    "google-auth>=1.11.0,<2.0dev",
+    "google-auth>=1.11.0",
     "Click>=7.0",
-    "cloudpickle==2.0.0",
+    "cloudpickle==2.0.0",  # used by mlflow
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "PyYAML>=5.4",
-    "protobuf<4.0.0",
+    "protobuf<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
     "caraml-upi-protos>=0.3.1"
 ]
 
@@ -46,14 +46,14 @@ TEST_REQUIRES = [
     "pytest-xdist",
     "urllib3-mock>=0.3.3",
     "requests",
-    "xgboost==0.82",
-    "scikit-learn==0.20.3",
-    "joblib>=1.2.0",
-    "mypy==0.812",
-    "google-cloud-bigquery==1.22.0",
-    "google-cloud-bigquery-storage==0.7.0",
-    "grpcio==1.22.0",
-    "recursive-diff==1.0.0",
+    "xgboost==1.6.2",
+    "scikit-learn==1.0.1",  # >=1.1.2 upon python 3.7 deprecation
+    "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
+    "mypy>=0.812",
+    "google-cloud-bigquery>=1.18.0",
+    "google-cloud-bigquery-storage>=0.7.0",
+    "grpcio>=1.31.0,<1.49.0",
+    "recursive-diff>=1.0.0",
     "xarray"
 ]
 
@@ -71,7 +71,7 @@ setup(
     setup_requires=["setuptools_scm"],
     tests_require=TEST_REQUIRES,
     extras_require={'test': TEST_REQUIRES},
-    python_requires='>=3.7',
+    python_requires='>=3.7,<3.11',
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
     entry_points='''

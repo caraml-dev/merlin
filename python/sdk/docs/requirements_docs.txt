@@ -13,7 +13,7 @@ ipypublish
 certifi>=2017.4.17
 python-dateutil>=2.1
 six>=1.10
-mlflow>=1.2.0
+mlflow>=1.2.0,<=1.23.0
 google-cloud-storage>=1.19.0
 urllib3>=1.23
 PyPrind>=2.11.2
