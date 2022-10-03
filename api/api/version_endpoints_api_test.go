@@ -23,6 +23,7 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/mlp/api/client"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
@@ -1016,6 +1017,106 @@ func TestCreateEndpoint(t *testing.T) {
 					}),
 					CreatedUpdated: models.CreatedUpdated{},
 				},
+			},
+		},
+		{
+			desc: "Should return 400 if UPI is not supported",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionEndpoint{
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
+				ServiceName:     "sample",
+				Namespace:       "sample",
+				EnvironmentName: "dev",
+				Message:         "",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    1,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Protocol: protocol.UpiV1,
+				EnvVars: models.EnvVars([]models.EnvVar{
+					{
+						Name:  "WORKER",
+						Value: "1",
+					},
+				}),
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
+					Name:         "model-1",
+					ProjectID:    models.ID(1),
+					Project:      mlp.Project{},
+					ExperimentID: 1,
+					Type:         models.ModelTypeTensorflow,
+					MlflowURL:    "",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "",
+						Endpoints:    nil,
+					},
+				}, nil)
+				return svc
+			},
+			envService: func() *mocks.EnvironmentService {
+				svc := &mocks.EnvironmentService{}
+				svc.On("GetDefaultEnvironment").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				svc.On("GetEnvironment", "dev").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				return svc
+			},
+			monitoringConfig: config.MonitoringConfig{
+				MonitoringEnabled: true,
+				MonitoringBaseURL: "http://grafana",
+			},
+			feastCoreMock: func() *feastmocks.CoreServiceClient {
+				return &feastmocks.CoreServiceClient{}
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "tensorflow model is not supported by UPI"},
 			},
 		},
 		{

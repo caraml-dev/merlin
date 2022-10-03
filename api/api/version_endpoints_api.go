@@ -167,6 +167,12 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 		newEndpoint.EnvironmentName = env.Name
 	}
 
+	// check that UPI is supported
+	if model.Type != models.ModelTypePyFunc && newEndpoint.Protocol == protocol.UpiV1 {
+		return BadRequest(
+			fmt.Sprintf("%s model is not supported by UPI", model.Type))
+	}
+
 	// check that the endpoint is not deployed nor deploying
 	endpoint, ok := version.GetEndpointByEnvironmentName(env.Name)
 	if ok && (endpoint.IsRunning() || endpoint.IsServing()) {
