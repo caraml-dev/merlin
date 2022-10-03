@@ -26,6 +26,12 @@ export const PipelineStage = ({ stage }) => {
     onChangeHandler
   } = useContext(FormContext);
 
+  const {
+    data: versionEndpoint
+  } = useContext(FormContext)
+
+  const protocol = versionEndpoint.protocol
+
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
 
@@ -38,6 +44,7 @@ export const PipelineStage = ({ stage }) => {
               <FeastProjectsContextProvider>
                 <InputPanel
                   inputs={inputs}
+                  protocol={protocol}
                   onChangeHandler={onChange(
                     `transformer.config.transformerConfig.${stage}.inputs`
                   )}
@@ -69,6 +76,8 @@ export const PipelineStage = ({ stage }) => {
             <Element name={"output-" + stage}>
               <OutputPanel
                 outputs={outputs}
+                protocol={protocol}
+                pipelineStage={stage}
                 onChangeHandler={onChange(
                   `transformer.config.transformerConfig.${stage}.outputs`
                 )}

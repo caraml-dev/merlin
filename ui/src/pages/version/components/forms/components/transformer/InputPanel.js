@@ -11,16 +11,20 @@ import {
 import { get, useOnChangeHandler } from "@gojek/mlp-ui";
 import { AddButton } from "./components/AddButton";
 import { TableInputCard } from "./components/table_inputs/TableInputCard";
+import { AutoloadCard } from "./components/table_inputs/AutoloadCard";
 import { VariablesInputCard } from "./components/table_inputs/VariablesInputCard";
 import { FeastInputGroup } from "../feast_config/components/FeastInputGroup";
 import { EncodersInputGroup } from "./components/table_inputs/EncodersInputGroup";
 import { Panel } from "../Panel";
 import {
+  Autoload,
   FeastInput,
   TablesInput
 } from "../../../../../../services/transformer/TransformerConfig";
 
-export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
+import {PROTOCOL} from "../../../../../../services/version_endpoint/VersionEndpoint"
+
+export const InputPanel = ({ inputs = [], onChangeHandler, protocol, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
   const onAddInput = (field, input) => {
@@ -120,6 +124,16 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
                       />
                     )}
 
+                    {input.autoload && (
+                     <AutoloadCard 
+                      autoload={input.autoload}
+                      onChangeHandler={onChange(`${idx}.autoload`)}
+                      onDelete={onDeleteInput(idx)}
+                      dragHandleProps={provided.dragHandleProps}
+                      errors={errors}
+                     />
+                    )}
+
                     <EuiSpacer size="s" />
                   </EuiFlexItem>
                 )}
@@ -170,7 +184,18 @@ export const InputPanel = ({ inputs = [], onChangeHandler, errors = {} }) => {
                   ])
                 }
               />
-            </EuiFlexItem>
+              </EuiFlexItem>
+              { protocol === PROTOCOL.UPI_V1 && (
+                <EuiFlexItem>
+                  <AddButton
+                    title="+ Add Autoload"
+                    description="Autoload configuration register tables and variables to standard transformer registry"
+                    onClick={() =>
+                      onAddInput("autoload", new Autoload())
+                    }
+                  />
+                </EuiFlexItem>
+              )}
           </EuiFlexGroup>
         </EuiFlexItem>
       </EuiFlexGroup>

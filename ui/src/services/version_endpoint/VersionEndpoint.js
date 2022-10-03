@@ -3,6 +3,11 @@ import { Transformer } from "../transformer/Transformer";
 
 const objectAssignDeep = require(`object-assign-deep`);
 
+export const PROTOCOL = {
+  HTTP_JSON: "HTTP_JSON",
+  UPI_V1: "UPI_V1"
+}
+
 export class VersionEndpoint {
   constructor() {
     this.id = undefined;
