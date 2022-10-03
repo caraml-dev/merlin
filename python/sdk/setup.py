@@ -35,7 +35,7 @@ REQUIRES = [
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "PyYAML>=5.4",
-    "protobuf<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
+    "protobuf>=3.0.0,<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
     "caraml-upi-protos>=0.3.1"
 ]
 
