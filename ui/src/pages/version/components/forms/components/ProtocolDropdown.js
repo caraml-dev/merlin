@@ -56,7 +56,7 @@ export const ProtocolDropdown = ({
           ),
         },
       ]}
-      valueOfSelected={protocol}
+      valueOfSelected={protocol || "HTTP_JSON"}
       onChange={onChange}
       disabled={isDisabled(endpointStatus)}
       hasDividers

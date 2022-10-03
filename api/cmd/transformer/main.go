@@ -108,11 +108,11 @@ func main() {
 		logger.Fatal("got error when creating handler", zap.Error(err))
 	}
 
-	if appConfig.Server.Protocol == protocol.HttpJson {
-		runHTTPServer(&appConfig.Server, handler, logger)
-	} else {
+	if appConfig.Server.Protocol == protocol.UpiV1 {
 		go rest.RunInstrumentationServer(&appConfig.Server, logger)
 		runGrpcServer(&appConfig.Server, handler, logger)
+	} else {
+		runHTTPServer(&appConfig.Server, handler, logger)
 	}
 
 }
