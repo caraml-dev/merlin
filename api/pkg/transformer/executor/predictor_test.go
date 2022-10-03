@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	prt "github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
@@ -12,6 +13,7 @@ func Test_mockModelPredictor_ModelPrediction(t *testing.T) {
 	type fields struct {
 		mockResponseBody   types.JSONObject
 		mockResponseHeader map[string]string
+		protocol           prt.Protocol
 	}
 	type args struct {
 		ctx           context.Context
@@ -35,6 +37,7 @@ func Test_mockModelPredictor_ModelPrediction(t *testing.T) {
 				mockResponseHeader: map[string]string{
 					"country-id": "ID",
 				},
+				protocol: prt.HttpJson,
 			},
 			args: args{
 				ctx:         context.Background(),
@@ -56,6 +59,7 @@ func Test_mockModelPredictor_ModelPrediction(t *testing.T) {
 				mockResponseBody: types.JSONObject{
 					"prediction": 0.5,
 				},
+				protocol: prt.HttpJson,
 			},
 			args: args{
 				ctx:         context.Background(),
@@ -88,13 +92,32 @@ func Test_mockModelPredictor_ModelPrediction(t *testing.T) {
 				"request-id": "12",
 			},
 		},
+		{
+			name: "specify mock for response body only; UPI_V1 protocol",
+			fields: fields{
+				mockResponseBody: types.JSONObject{
+					"prediction": 0.5,
+				},
+				protocol: prt.UpiV1,
+			},
+			args: args{
+				ctx:         context.Background(),
+				requestBody: []byte(`{"order_id":"ABCD"}`),
+				requestHeader: map[string]string{
+					"request-id": "12",
+				},
+			},
+			wantRespBody: types.JSONObject{
+				"prediction": 0.5,
+			},
+			wantRespHeaders: map[string]string{
+				"request-id": "12",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mock := &mockModelPredictor{
-				mockResponseBody:   tt.fields.mockResponseBody,
-				mockResponseHeader: tt.fields.mockResponseHeader,
-			}
+			mock := NewMockModelPredictor(tt.fields.mockResponseBody, tt.fields.mockResponseHeader, tt.fields.protocol)
 			gotRespBody, gotRespHeaders, err := mock.ModelPrediction(tt.args.ctx, types.BytePayload(tt.args.requestBody), tt.args.requestHeader)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("mockModelPredictor.ModelPrediction() error = %v, wantErr %v", err, tt.wantErr)

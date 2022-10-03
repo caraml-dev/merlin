@@ -5,6 +5,7 @@ import (
 
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/protocol"
 )
 
 // TransformerController
@@ -22,6 +23,9 @@ func (c *TransformerController) SimulateTransformer(r *http.Request, vars map[st
 		return BadRequest("Unable to parse request body")
 	}
 
+	if simulationPayload.Protocol != protocol.HttpJson && simulationPayload.Protocol != protocol.UpiV1 {
+		return BadRequest(`The only supported protocol are "HTTP_JSON" and "UPI_V1"`)
+	}
 	transformerResult, err := c.TransformerService.SimulateTransformer(ctx, simulationPayload)
 	if err != nil {
 		log.Errorf("Failed performing transfomer simulation %v", err)

@@ -15,6 +15,7 @@
 package models
 
 import (
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/google/uuid"
@@ -51,6 +52,7 @@ type TransformerSimulation struct {
 	Headers          map[string]string               `json:"headers"`
 	Config           *spec.StandardTransformerConfig `json:"config"`
 	PredictionConfig *ModelPredictionConfig          `json:"model_prediction_config"`
+	Protocol         protocol.Protocol               `json:"protocol"`
 }
 
 // ModelPredictionConfig
