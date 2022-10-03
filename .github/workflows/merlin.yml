@@ -388,7 +388,7 @@ jobs:
         timeout-minutes: 30
         id: run-e2e-test
         working-directory: merlin/scripts/e2e
-        run: ./run-e2e.sh ${{ env.INGRESS_HOST }}
+        run: ./run-e2e.sh ${{ env.INGRESS_HOST }} ${{ env.PYTHON_VERSION }}
       - name: "Debug"
         if: always()
         continue-on-error: true

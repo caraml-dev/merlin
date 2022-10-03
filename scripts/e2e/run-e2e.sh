@@ -6,6 +6,7 @@ set -o pipefail
 set -o nounset
 
 INGRESS_HOST=$1
+PYTHON_VERSION=$2
 
 API_PATH="merlin/api"
 MLP_API_BASEPATH="http://mlp.mlp.${INGRESS_HOST}/v1"
@@ -29,5 +30,5 @@ kubectl create namespace ${E2E_PROJECT_NAME} --dry-run=client -o yaml | kubectl 
 
 cd ../../python/sdk
 pip install pipenv==2022.8.19
-pipenv install --dev --skip-lock
+pipenv install --dev --skip-lock --python ${PYTHON_VERSION}
 pipenv run pytest -n=4 -W=ignore --cov=merlin -m "not (feast or batch or pyfunc or local_server_test or cli or customtransformer)"
