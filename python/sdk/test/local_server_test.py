@@ -40,7 +40,7 @@ else:
 
 @pytest.mark.integration
 @pytest.mark.local_server_test
-@pytest.mark.dependency(depends=["test/integration_test.py::test_sklearn"], scope='session')
+@pytest.mark.dependency(depends=["integration_test.py::test_sklearn"], scope='session')
 def test_sklearn(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
