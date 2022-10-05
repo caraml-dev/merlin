@@ -44,7 +44,7 @@ else:
 def test_sklearn(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("sklearn-sample-r", ModelType.SKLEARN)
+    merlin.set_model("sklearn-sample", ModelType.SKLEARN)
     v = _get_latest_version(merlin.active_model())
     port = _get_free_port()
     p = Process(target=v.start_server, kwargs={"port": port, "build_image": True})
@@ -64,7 +64,7 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth):
 def test_xgboost(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("xgboost-sample-r", ModelType.XGBOOST)
+    merlin.set_model("xgboost-sample", ModelType.XGBOOST)
     v = _get_latest_version(merlin.active_model())
     port = _get_free_port()
     p = Process(target=v.start_server, kwargs={"port": port, "build_image": True})
@@ -84,7 +84,7 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth):
 def test_tensorflow(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model("tensorflow-sample-r", ModelType.TENSORFLOW)
+    merlin.set_model("tensorflow-sample", ModelType.TENSORFLOW)
     v = _get_latest_version(merlin.active_model())
     port = _get_free_port()
     p = Process(target=v.start_server, kwargs={"port": port, "build_image": True})
@@ -114,7 +114,7 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pytorch-sample", ModelType.PYTORCH)
-    model_dir = "test/pytorch-model/pytorch-sample"
+    model_dir = "test/pytorch-model"
 
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
