@@ -41,7 +41,7 @@ REQUIRES = [
 
 TEST_REQUIRES = [
     "pytest",
-    "pytest-dependency",
+    #"pytest-dependency",
     "pytest-order",
     "pytest-cov",
     "pytest-xdist",
