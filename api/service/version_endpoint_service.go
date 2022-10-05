@@ -27,6 +27,7 @@ import (
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/gojek/merlin/pkg/imagebuilder"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -218,10 +219,13 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 		left.EnvVars = models.MergeEnvVars(left.EnvVars, right.EnvVars)
 	}
 
-	// override protocol
-	if right.Protocol != "" {
-		left.Protocol = right.Protocol
+	// default to HttpJson if not provided
+	if right.Protocol == "" {
+		right.Protocol = protocol.HttpJson
 	}
+
+	// override protocol
+	left.Protocol = right.Protocol
 
 	return nil
 }
