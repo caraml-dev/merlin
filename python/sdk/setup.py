@@ -42,6 +42,7 @@ REQUIRES = [
 TEST_REQUIRES = [
     "pytest",
     "pytest-dependency",
+    "pytest-order",
     "pytest-cov",
     "pytest-xdist",
     "urllib3-mock>=0.3.3",
