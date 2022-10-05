@@ -86,7 +86,7 @@ def test_model_version_with_labels(
 def test_sklearn(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model(f"sklearn-sample", ModelType.SKLEARN)
+    merlin.set_model(f"sklearn-sample-{deployment_mode_suffix(deployment_mode)}", ModelType.SKLEARN)
 
     model_dir = "test/sklearn-model"
 
@@ -111,7 +111,7 @@ def test_sklearn(integration_test_url, project_name, deployment_mode, use_google
 def test_xgboost(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model(f"xgboost-sample", ModelType.XGBOOST)
+    merlin.set_model(f"xgboost-sample-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST)
 
     model_dir = "test/xgboost-model"
 
@@ -184,7 +184,7 @@ def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth, r
 def test_tensorflow(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model(f"tensorflow-sample", ModelType.TENSORFLOW)
+    merlin.set_model(f"tensorflow-sample-{deployment_mode_suffix(deployment_mode)}", ModelType.TENSORFLOW)
 
     model_dir = "test/tensorflow-model"
 
