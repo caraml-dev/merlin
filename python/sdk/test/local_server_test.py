@@ -114,7 +114,7 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pytorch-sample", ModelType.PYTORCH)
-    model_dir = "test/pytorch-model"
+    model_dir = "test/pytorch-model/pytorch-sample"
 
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
