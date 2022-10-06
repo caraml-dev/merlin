@@ -458,10 +458,10 @@ jobs:
     needs:
     - create-version
     - build-pyfunc-server #- e2e-test
-    #- test-api
+    - test-api
     #- test-python-sdk
     - test-pyfunc-server
-    #- test-batch-predictor
+    - test-batch-predictor
     with:
       version: ${{ needs.create-version.outputs.version }}
     secrets:
