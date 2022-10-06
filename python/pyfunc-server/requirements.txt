@@ -10,4 +10,4 @@ caraml-upi-protos
 grpcio<1.49.0
 grpcio-reflection<1.49.0
 grpcio-tools<1.49.0
-file:../sdk#egg=merlin-sdk
+file:${SDK_PATH}#egg=merlin-sdk
