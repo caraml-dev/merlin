@@ -38,12 +38,12 @@ for index, item in enumerate(REQUIRE):
 
 setup(
     name='pyfuncserver',
-    version='0.5.2',
+    version='0.6.0',
     author_email='merlin-dev@gojek.com',
     description='Model Server implementation for mlflow pyfunc model',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    python_requires='>=3.7',
+    python_requires='>=3.7,<3.11',
     packages=find_packages(exclude=["test"]),
     install_requires=REQUIRE,
     tests_require=tests_require,
