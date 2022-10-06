@@ -457,7 +457,8 @@ jobs:
     uses: ./.github/workflows/release.yml
     needs:
     - create-version
-    - e2e-test
+    #- e2e-test
+    - build-pyfunc-server
     - test-api
     - test-python-sdk
     - test-pyfunc-server

@@ -105,7 +105,7 @@ jobs:
           name: merlin-pyfunc-base-py${{ matrix.python-version }}.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
         env:
-          CONTAINER_REGISTRY: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}
+          CONTAINER_REGISTRY: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
         run: |
           IMAGE_TAG="${{ env.CONTAINER_REGISTRY }}/merlin-pyfunc-base-py${{ matrix.python-version }}:${{ inputs.version }}"
           docker image load --input merlin-pyfunc-base-py${{ matrix.python-version }}.${{ inputs.version }}.tar
