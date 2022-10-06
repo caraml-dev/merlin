@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# base dockerfile using python 3.8
 FROM continuumio/miniconda3
 
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz | tar xzf -
@@ -19,7 +20,7 @@ ENV PATH=$PATH:/google-cloud-sdk/bin
 
 COPY pyfunc-server /pyfunc-server
 COPY sdk /sdk
-RUN conda env create -f /pyfunc-server/environment.yaml && \
+RUN conda env create -f /pyfunc-server/env38.yaml && \
     rm -rf /root/.cache
 
 RUN mkdir /prom_dir
