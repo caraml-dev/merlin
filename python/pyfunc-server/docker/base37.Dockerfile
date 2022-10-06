@@ -20,7 +20,7 @@ ENV PATH=$PATH:/google-cloud-sdk/bin
 
 COPY pyfunc-server /pyfunc-server
 COPY sdk /sdk
-ENV SDK_PATH=$PATH:/sdk
+ENV SDK_PATH=/sdk
 RUN conda env create -f /pyfunc-server/docker/env37.yaml && \
     rm -rf /root/.cache
 
