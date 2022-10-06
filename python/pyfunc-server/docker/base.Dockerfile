@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# base dockerfile using python 3.10
 FROM condaforge/miniforge3
 
 ARG PYTHON_VERSION
