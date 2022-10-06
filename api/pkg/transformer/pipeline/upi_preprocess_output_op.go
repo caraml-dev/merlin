@@ -56,6 +56,11 @@ func (up *UPIPreprocessOutputOp) Execute(ctx context.Context, env *Environment) 
 	copiedRequest.TransformerInput = transformerInput
 
 	env.SetOutput(copiedRequest)
+	if up.OperationTracing != nil {
+		if err := up.OperationTracing.AddInputOutput(nil, map[string]any{"output": copiedRequest}); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

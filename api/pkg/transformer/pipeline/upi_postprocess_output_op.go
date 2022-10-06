@@ -25,6 +25,8 @@ func NewUPIPostprocessOutputOp(outputSpec *spec.UPIPostprocessOutput, tracingEna
 	return output
 }
 
+// Execute output operation
+// The only fields that modified in this output is prediction_result_table
 func (up *UPIPostprocessOutputOp) Execute(ctx context.Context, env *Environment) error {
 	modelResponse := env.symbolRegistry.ModelResponse()
 	upiModelResponse, valid := modelResponse.(*types.UPIPredictionResponse)
@@ -41,7 +43,7 @@ func (up *UPIPostprocessOutputOp) Execute(ctx context.Context, env *Environment)
 	env.SetOutput(copiedResponse)
 	if up.OperationTracing != nil {
 		return up.OperationTracing.AddInputOutput(nil, map[string]any{
-			"output": &copiedResponse,
+			"output": copiedResponse,
 		})
 	}
 	return nil

@@ -2,13 +2,13 @@ package executor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	prt "github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/types"
-	"github.com/mitchellh/mapstructure"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // ModelPredictor
@@ -49,21 +49,26 @@ func restResponseConverter(payload types.Payload) (types.Payload, error) {
 
 func upiResponseConverter(payload types.Payload) (types.Payload, error) {
 	switch payloadT := payload.OriginalValue().(type) {
-	case []byte:
-		var resp upiv1.PredictValuesResponse
-		if err := proto.Unmarshal(payloadT, &resp); err != nil {
+	case types.JSONObject:
+		byteData, err := json.Marshal(payloadT)
+		if err != nil {
 			return nil, err
 		}
-		return (*types.UPIPredictionResponse)(&resp), nil
-	case types.JSONObject:
 		var resp upiv1.PredictValuesResponse
-		if err := mapstructure.Decode(payloadT, &resp); err != nil {
+		if err := protojson.Unmarshal(byteData, &resp); err != nil {
 			return nil, err
 		}
 		return (*types.UPIPredictionResponse)(&resp), nil
 	case *upiv1.PredictValuesRequest:
 		resp := &upiv1.PredictValuesResponse{}
+		resp.TargetName = payloadT.TargetName
 		resp.PredictionResultTable = payloadT.PredictionTable
+		resp.PredictionContext = payloadT.PredictionContext
+		if payloadT.Metadata != nil {
+			respMetadata := &upiv1.ResponseMetadata{}
+			respMetadata.PredictionId = payloadT.Metadata.PredictionId
+			resp.Metadata = respMetadata
+		}
 		return (*types.UPIPredictionResponse)(resp), nil
 	case *upiv1.PredictValuesResponse:
 		return payload, nil
