@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # base dockerfile using python 3.10
-FROM continuumio/miniconda3
+FROM continuumio/miniconda3:latest
 
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz | tar xzf -
 ENV PATH=$PATH:/google-cloud-sdk/bin
