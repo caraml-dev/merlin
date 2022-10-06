@@ -20,7 +20,7 @@ ENV PATH=$PATH:/google-cloud-sdk/bin
 
 COPY pyfunc-server /pyfunc-server
 COPY sdk /sdk
-RUN conda env create -f /pyfunc-server/env38.yaml && \
+RUN conda env create -f /pyfunc-server/docker/env38.yaml && \
     rm -rf /root/.cache
 
 RUN mkdir /prom_dir
