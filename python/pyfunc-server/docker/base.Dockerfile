@@ -15,13 +15,15 @@
 # base dockerfile using python 3.10
 FROM condaforge/miniforge3
 
+ARG PYTHON_VERSION
+
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz | tar xzf -
 ENV PATH=$PATH:/google-cloud-sdk/bin
 
 COPY pyfunc-server /pyfunc-server
 COPY sdk /sdk
 ENV SDK_PATH=/sdk
-RUN conda env create -f /pyfunc-server/docker/env310.yaml && \
+RUN conda env create -f /pyfunc-server/docker/env${PYTHON_VERSION}.yaml && \
     rm -rf /root/.cache
 
 RUN mkdir /prom_dir

@@ -284,7 +284,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build Pyfunc Server Docker py${{ matrix.python-version }}
-        run: docker build -t merlin-pyfunc-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }} -f python/pyfunc-server/docker/base${{ matrix.python-version }}.Dockerfile python
+        run: docker build -t merlin-pyfunc-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} -f python/pyfunc-server/docker/base.Dockerfile python
       - name: Save Pyfunc Server Docker py${{ matrix.python-version }}
         run: docker image save --output merlin-pyfunc-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar merlin-pyfunc-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }}
       - name: Publish Pyfunc Server Docker Artifact py${{ matrix.python-version }}
@@ -457,12 +457,11 @@ jobs:
     uses: ./.github/workflows/release.yml
     needs:
     - create-version
-    #- e2e-test
-    - build-pyfunc-server
-    - test-api
-    - test-python-sdk
+    - build-pyfunc-server #- e2e-test
+    #- test-api
+    #- test-python-sdk
     - test-pyfunc-server
-    - test-batch-predictor
+    #- test-batch-predictor
     with:
       version: ${{ needs.create-version.outputs.version }}
     secrets:
