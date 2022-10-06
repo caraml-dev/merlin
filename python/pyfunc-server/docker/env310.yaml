@@ -3,6 +3,6 @@ dependencies:
   - python=3.10
   - pip=22.2.2
   - pip:
-      - -r file:../requirements.txt
+      - -r file:sdk/requirements.txt
       - --extra-index-url=https://test.pypi.org/simple
       - --trusted-host=test.pypi.org
