@@ -190,3 +190,45 @@ func TestEnqueueAndConsumeJob_RestartCase(t *testing.T) {
 		dispatcher.Stop()
 	})
 }
+
+func TestEnqueueAndConsumeJob_RetryableError(t *testing.T) {
+	database.WithTestDatabase(t, func(t *testing.T, db *gorm.DB) {
+		dispatcher := NewDispatcher(Config{
+			NumWorkers: 1,
+			Db:         db,
+		})
+
+		retryCount := 0
+		dispatcher.RegisterJob("sample-1", func(j *Job) error {
+			if retryCount >= 1 {
+				fmt.Printf("Job ID %d successful\n", j.ID)
+				return nil
+			}
+			fmt.Printf("Job ID %d failed\n", j.ID)
+
+			retryCount += 1
+			return RetryableError{Message: "transient error"}
+		})
+
+		dispatcher.Start()
+
+		err := dispatcher.EnqueueJob(&Job{
+			Name: "sample-1",
+			Arguments: Arguments{
+				"data": "value",
+			},
+		})
+		require.NoError(t, err)
+
+		// wait until the job is retried
+		time.Sleep(delayOfRetry * 2)
+		var jobs []Job
+		res := db.Where("completed = ?", true).Find(&jobs)
+		require.NoError(t, res.Error)
+
+		// should be successful the second time
+		assert.Equal(t, 1, len(jobs))
+		assert.Equal(t, 1, retryCount)
+		dispatcher.Stop()
+	})
+}
