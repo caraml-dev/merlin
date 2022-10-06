@@ -49,8 +49,10 @@ func (w *worker) processJob(job *Job) {
 	tx := w.db.Begin()
 	err := tx.Raw(findJobQuery, job.ID, false).Scan(&refreshedJob).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// `findJobQuery` use "SKIP LOCKED", which means all rows that are already locked by transaction in other process
+		// will be excluded from query result
 		tx.Rollback()
-		log.Warnf("Job with ID:%d is still running in other process or already ran successfully", job.ID)
+		log.Warnf("Job %d is still running in other process or already ran successfully", job.ID)
 		return
 	}
 
@@ -62,7 +64,7 @@ func (w *worker) processJob(job *Job) {
 
 	fn, ok := w.jobFuncMap.Load(job.Name)
 	if !ok {
-		log.Warnf("There is no function be run for job %s", job.Name)
+		log.Warnf("Unknown job %s", job.Name)
 		tx.Rollback()
 		return
 	}
@@ -73,9 +75,15 @@ func (w *worker) processJob(job *Job) {
 		tx.Rollback()
 		return
 	}
+
+	// execute job
+	log.Infof("Executing job %d", job.ID)
 	if err := jobFn(job); err != nil {
-		log.Errorf("Job execution is failed, with id:%d and error: %v", job.ID, err)
+		log.Errorf("Job %d failed with error: %v", job.ID, err)
+
+		// requeue it if the error is retryable
 		if errors.As(err, &RetryableError{}) {
+			tx.Rollback()
 			w.requeueJob(job)
 			return
 		}
@@ -95,6 +103,7 @@ func (w *worker) processJob(job *Job) {
 }
 
 func (w *worker) requeueJob(job *Job) {
+	log.Infof("Requeue job %d", job.ID)
 	time.Sleep(delayOfRetry) // sleep for specific amount of time before retry
 	go func() {
 		w.jobChan <- job
@@ -102,6 +111,7 @@ func (w *worker) requeueJob(job *Job) {
 }
 
 func (w *worker) stop() {
+	log.Infof("Stopping worker")
 	go func() {
 		w.quitChan <- true
 	}()
