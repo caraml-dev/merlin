@@ -13,13 +13,14 @@
 # limitations under the License.
 
 # base dockerfile using python 3.10
-FROM continuumio/miniconda3:latest
+FROM condaforge/miniforge3
 
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz | tar xzf -
 ENV PATH=$PATH:/google-cloud-sdk/bin
 
 COPY pyfunc-server /pyfunc-server
 COPY sdk /sdk
+ENV SDK_PATH=/sdk
 RUN conda env create -f /pyfunc-server/docker/env310.yaml && \
     rm -rf /root/.cache
 
