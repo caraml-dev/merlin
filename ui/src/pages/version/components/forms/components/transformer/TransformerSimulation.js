@@ -4,13 +4,14 @@ import React, { useContext, useState } from "react";
 import { useMerlinApi } from "../../../../../../hooks/useMerlinApi";
 import { TransformerSimulationInput } from "./components/simulation/TransformerSimulationInput";
 import { TransformerSimulationOutput } from "./components/simulation/TransformerSimulationOutput";
-
+import { PROTOCOL } from "../../../../../../services/version_endpoint/VersionEndpoint"
 class SimulationPayload {
-  constructor() {
+  constructor(protocol=PROTOCOL.HTTP_JSON) {
     this.payload = undefined;
     this.headers = undefined;
     this.config = undefined;
     this.model_prediction_config = undefined;
+    this.protocol = protocol
   }
 }
 
@@ -26,9 +27,9 @@ const convertToJson = (val) => {
   }
 };
 
-export const TransformerSimulation = () => {
+export const TransformerSimulation = ({protocol}) => {
   const [simulationPayload, setSimulationPayload] = useState(
-    new SimulationPayload()
+    new SimulationPayload(protocol)
   );
   const [errors, setErrors] = useState({});
 
@@ -49,11 +50,14 @@ export const TransformerSimulation = () => {
     let errors = {};
 
     Object.keys(simulationPayload).forEach((name) => {
-      try {
-        convertToJson(simulationPayload[name]);
-      } catch (e) {
-        errors[name] = e.message;
+      if (name !== "protocol") {
+        try {
+          convertToJson(simulationPayload[name]);
+        } catch (e) {
+          errors[name] = e.message;
+        }
       }
+      
     });
 
     setErrors(errors);
@@ -73,6 +77,7 @@ export const TransformerSimulation = () => {
             headers: convertToJson(simulationPayload.mock_response_headers),
           },
         },
+        protocol: simulationPayload.protocol
       }),
     });
   };

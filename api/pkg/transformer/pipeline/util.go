@@ -40,6 +40,9 @@ func seriesFromExpression(env *Environment, expression string) (*series.Series, 
 	if err != nil {
 		return nil, err
 	}
+	if val == nil {
+		return nil, fmt.Errorf("series is empty due to expression %s returning nil", expression)
+	}
 	return series.NewInferType(val, "")
 }
 

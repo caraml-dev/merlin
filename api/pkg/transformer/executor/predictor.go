@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-// ModelPredictor
+// ModelPredictor interface that handle model prediction operation
 type ModelPredictor interface {
 	ModelPrediction(ctx context.Context, requestBody types.Payload, requestHeader map[string]string) (respBody types.Payload, respHeaders map[string]string, err error)
 }
@@ -27,7 +27,7 @@ func newEchoMockPredictor() *mockModelPredictor {
 	return &mockModelPredictor{}
 }
 
-// NewMockModelPredictor
+// NewMockModelPredictor create mock model predictor given the payload header and protocol
 func NewMockModelPredictor(respBody types.Payload, respHeader map[string]string, protocol prt.Protocol) *mockModelPredictor {
 	var converterFn func(types.Payload) (types.Payload, error)
 	if protocol == prt.UpiV1 {
@@ -79,7 +79,9 @@ func upiResponseConverter(payload types.Payload) (types.Payload, error) {
 
 var _ ModelPredictor = (*mockModelPredictor)(nil)
 
-// ModelPrediction
+// ModelPrediction return mock of model prediction
+// for `UPI_V1“ protocol if the mock model prediction is not given it will create new UPI response interface and assign `prediction_result_table` with value of `prediction_table` field from request payload
+// for `HTTP_JSON` protocol if the mock model prediction is not given it will return the request payload instead
 func (mock *mockModelPredictor) ModelPrediction(ctx context.Context, requestBody types.Payload, requestHeader map[string]string) (respBody types.Payload, respHeaders map[string]string, err error) {
 	reqBodyObj, err := requestBody.AsInput()
 	if err != nil {

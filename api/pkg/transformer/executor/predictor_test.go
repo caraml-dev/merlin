@@ -3,7 +3,6 @@ package executor
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -142,7 +141,7 @@ func Test_mockModelPredictor_ModelPrediction_UPI_V1(t *testing.T) {
 		args            args
 		wantRespBody    []byte
 		wantRespHeaders map[string]string
-		expErr          error
+		wantErr         bool
 	}{
 		{
 			name:   "not set any mock ; UPI_V1 protocol",
@@ -196,7 +195,7 @@ func Test_mockModelPredictor_ModelPrediction_UPI_V1(t *testing.T) {
 					"request-id": "12",
 				},
 			},
-			expErr: fmt.Errorf("proto:\u00a0(line 1:2): unknown field \"prediction\""),
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -214,8 +213,8 @@ func Test_mockModelPredictor_ModelPrediction_UPI_V1(t *testing.T) {
 
 			reqPayload := (*types.UPIPredictionRequest)(&upiReqBody)
 			gotRespBody, gotRespHeaders, err := mock.ModelPrediction(tt.args.ctx, reqPayload, tt.args.requestHeader)
-			if tt.expErr != nil {
-				assert.EqualError(t, err, tt.expErr.Error())
+			if tt.wantErr {
+				assert.True(t, err != nil)
 				return
 			}
 
