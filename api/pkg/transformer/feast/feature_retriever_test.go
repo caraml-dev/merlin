@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"runtime"
+	"runtime/pprof"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -2538,22 +2540,20 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 }
 
 func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_FeastTimeout(t *testing.T) {
-	go func() {
-		for {
-			fmt.Printf("#goroutines: %d\n", runtime.NumGoroutine())
-			time.Sleep(500 * time.Millisecond)
-		}
-	}()
-
+	initialGoroutineCount := runtime.NumGoroutine()
 	logger, _ := zap.NewDevelopment()
 
 	request := []byte(`{"drivers": [
 		{"id":"1001"},
 		{"id":"1002"},
 		{"id":"1003"},
-		{"id":"1004"}
+		{"id":"1004"},
+		{"id":"1005"},
+		{"id":"1006"},
+		{"id":"1007"},
+		{"id":"1008"}
 	]}`)
-	requestEntityLen := 4
+	requestEntityLen := 8
 	var requestJson transTypes.JSONObject
 	if err := json.Unmarshal(request, &requestJson); err != nil {
 		panic(err)
@@ -2641,7 +2641,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_FeastTimeout(t *testi
 			StatusMonitoringEnabled:          true,
 			ValueMonitoringEnabled:           true,
 			BatchSize:                        1,
-			FeastTimeout:                     time.Duration(100 * time.Millisecond),
+			FeastTimeout:                     100 * time.Millisecond,
 			FeastClientHystrixCommandName:    "TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_FeastTimeout",
 			FeastClientMaxConcurrentRequests: 100,
 			CacheEnabled:                     true,
@@ -2660,6 +2660,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_FeastTimeout(t *testi
 
 	mockFeast.AssertExpectations(t)
 
-	time.Sleep(5 * time.Second)
-	fmt.Printf("Z #goroutines: %d\n", runtime.NumGoroutine())
+	time.Sleep(2 * time.Second)
+	assert.Less(t, runtime.NumGoroutine(), initialGoroutineCount+requestEntityLen, "goroutine leak")
+	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 }
