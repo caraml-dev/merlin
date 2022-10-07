@@ -219,6 +219,8 @@ merlin:
       },
     ]
 
+    upiDocURL: "http://sample.doc.com"
+
     # Comma-separated value of Docker registries that can be chosen in deployment page
     dockerRegistries: ghcr.io/gojek,ghcr.io/your-company
 

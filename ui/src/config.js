@@ -32,6 +32,7 @@ export const appConfig = {
       label: "Getting Started with Merlin"
     }
   ],
+  upiDocumentationUrl: getEnv("REACT_APP_UPI_DOC_URL"),
   dockerRegistries: getEnv("REACT_APP_DOCKER_REGISTRIES")
     ? getEnv("REACT_APP_DOCKER_REGISTRIES").split(",")
     : [],
