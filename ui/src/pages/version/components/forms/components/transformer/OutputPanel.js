@@ -39,7 +39,7 @@ export const OutputPanel = ({ outputs = [], protocol, pipelineStage, onChangeHan
             <EuiDraggable
                 key={`output-${idx}`}
                 index={idx}
-                draggableId={`${idx}`}
+                draggableId={`output-${idx}`}
                 customDragHandle={true}
                 disableInteractiveElementBlocking>
               {

@@ -54,7 +54,7 @@ export const UpiPostprocessOutputCard = ({ output, onDelete, onChangeHandler, er
               onChange={e =>
                 onChange("0.upiPostprocessOutput.predictionResultTableName")(e.target.value)
               }
-              name="prediction-table-name"
+              name="prediction-result-table-name"
               isInvalid={!!errors.predictionResultTableName}
               fullWidth
             />

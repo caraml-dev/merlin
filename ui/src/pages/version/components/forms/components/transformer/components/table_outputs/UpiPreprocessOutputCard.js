@@ -67,7 +67,13 @@ export const UpiPreprocessOutputCard = ({ output, onDelete, onChangeHandler, err
           <ColumnsComboBox
             columns={output.transformerInputTableNames || []}
             onChange={onChange("0.upiPreprocessOutput.transformerInputTableNames")}
-            title="Transformer input table names"
+            title={
+              <EuiToolTip content="Transformer input table names contains tables that can be used to enrich prediction_table using standard transformer">
+                <span>
+                Transformer input table names <EuiIcon type="questionInCircle" color="subdued" />
+                </span>
+              </EuiToolTip>
+            }
             description={
               <p>
                 List of transformer input table name

@@ -22,7 +22,7 @@ import {
   TablesInput
 } from "../../../../../../services/transformer/TransformerConfig";
 
-import {PROTOCOL} from "../../../../../../services/version_endpoint/VersionEndpoint"
+import {PROTOCOL} from "../../../../../../services/version_endpoint/VersionEndpoint";
 
 export const InputPanel = ({ inputs = [], onChangeHandler, protocol, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
