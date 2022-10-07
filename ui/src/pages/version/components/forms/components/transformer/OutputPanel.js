@@ -39,11 +39,7 @@ export const OutputPanel = ({ outputs = [], protocol, pipelineStage, onChangeHan
             <EuiDraggable
                 key={`output-${idx}`}
                 index={idx}
-<<<<<<< HEAD
                 draggableId={`output-${idx}`}
-=======
-                draggableId={`${idx}`}
->>>>>>> cf45b71 (Add output and autoload standard transformer UI components)
                 customDragHandle={true}
                 disableInteractiveElementBlocking>
               {
