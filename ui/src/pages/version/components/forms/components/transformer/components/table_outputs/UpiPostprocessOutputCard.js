@@ -38,11 +38,7 @@ export const UpiPostprocessOutputCard = ({ output, onDelete, onChangeHandler, er
         <EuiFlexItem>
           <EuiFormRow
             label={
-<<<<<<< HEAD
               <EuiToolTip content="Table name that will be used to populate prediction_result_table in the response to client">
-=======
-              <EuiToolTip content="Prediction Result Table Name corresponding to the prediction rows provided in the request">
->>>>>>> 46453eb (Change some wording and component position)
                 <span>
                 Prediction Result Table Name <EuiIcon type="questionInCircle" color="subdued" />
                 </span>
