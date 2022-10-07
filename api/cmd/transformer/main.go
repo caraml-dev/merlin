@@ -13,6 +13,7 @@ import (
 	"github.com/prometheus/common/version"
 	jcfg "github.com/uber/jaeger-client-go/config"
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
+	_ "go.uber.org/automaxprocs"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -24,10 +25,9 @@ import (
 	serverConf "github.com/gojek/merlin/pkg/transformer/server/config"
 	grpc "github.com/gojek/merlin/pkg/transformer/server/grpc"
 	rest "github.com/gojek/merlin/pkg/transformer/server/rest"
-	"github.com/gojek/merlin/pkg/transformer/types/expression"
-
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
+	"github.com/gojek/merlin/pkg/transformer/types/expression"
 )
 
 func init() {
@@ -114,7 +114,6 @@ func main() {
 		go rest.RunInstrumentationServer(&appConfig.Server, logger)
 		runGrpcServer(&appConfig.Server, handler, logger)
 	}
-
 }
 
 // TODO: Feast enricher will be deprecated soon all associated functions will be deleted
@@ -190,7 +189,6 @@ func parseFeatureTableMetadata(featureTableSpecsJson string) ([]*spec.FeatureTab
 }
 
 func createPipelineHandler(appConfig AppConfig, transformerConfig *spec.StandardTransformerConfig, featureTableMetadata []*spec.FeatureTableMetadata, logger *zap.Logger) (*pipeline.Handler, error) {
-
 	feastOpts := feast.OverwriteFeastOptionsConfig(appConfig.Feast, appConfig.RedisOverwriteConfig, appConfig.BigtableOverwriteConfig)
 	logger.Info("feast options", zap.Any("val", feastOpts))
 

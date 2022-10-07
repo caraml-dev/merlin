@@ -106,6 +106,9 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, 
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.RetrieveFromSymbolRegistry")
 	defer span.Finish()
 
@@ -224,35 +227,46 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 
 	numOfBatchBeforeCeil := float64(len(entityNotInCache)) / float64(fr.options.BatchSize)
 	numOfBatch := int(math.Ceil(numOfBatchBeforeCeil))
+
 	batchResultChan := make(chan callResult, numOfBatch)
 
-	go func() {
-		for i := 0; i < numOfBatch; i++ {
-			startIndex := i * fr.options.BatchSize
-			endIndex := len(entityNotInCache)
-			if endIndex > startIndex+fr.options.BatchSize {
-				endIndex = startIndex + fr.options.BatchSize
-			}
-			batchedEntities := entityNotInCache[startIndex:endIndex]
-
-			f, err := newCall(fr, featureTableSpec, columns, entitySet)
-			if err != nil {
-				batchResultChan <- callResult{err: err}
-				return
-			}
-
-			hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
-				batchResultChan <- f.do(ctx, batchedEntities, features)
-				return nil
-			}, func(ctx context.Context, err error) error {
-				batchResultChan <- callResult{featureTable: nil, err: err}
-				return nil
-			})
+	for i := 0; i < numOfBatch; i++ {
+		startIndex := i * fr.options.BatchSize
+		endIndex := len(entityNotInCache)
+		if endIndex > startIndex+fr.options.BatchSize {
+			endIndex = startIndex + fr.options.BatchSize
 		}
-	}()
+		batchedEntities := entityNotInCache[startIndex:endIndex]
+
+		f, err := newCall(fr, featureTableSpec, columns, entitySet)
+		if err != nil {
+			batchResultChan <- callResult{err: err}
+			return nil, err
+		}
+
+		hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
+			reqCtx, cancel := context.WithTimeout(ctx, fr.options.FeastTimeout)
+			defer cancel()
+
+			result := f.do(reqCtx, batchedEntities, features)
+
+			select {
+			case <-reqCtx.Done():
+				return reqCtx.Err()
+			default:
+				batchResultChan <- result
+			}
+
+			return nil
+		}, func(ctx context.Context, err error) error {
+			batchResultChan <- callResult{featureTable: nil, err: err}
+			return nil
+		})
+	}
 
 	// merge result from all batch, including the cached one
-	for res := range batchResultChan {
+	for i := 0; i < numOfBatch; i++ {
+		res := <-batchResultChan
 		if res.err != nil {
 			return nil, res.err
 		}
