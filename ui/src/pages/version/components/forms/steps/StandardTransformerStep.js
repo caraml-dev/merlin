@@ -45,6 +45,7 @@ export const StandardTransformerStep = () => {
     data: versionEndpoint
   } = useContext(FormContext)
 
+
   const protocol = versionEndpoint.protocol
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);

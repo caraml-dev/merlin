@@ -11,9 +11,11 @@ import {
 import React from "react";
 import { Panel } from "../../../Panel";
 import { simulationIcon } from "./constants";
+import {PROTOCOL} from "../../../../../../../../services/version_endpoint/VersionEndpoint"
 
 export const TransformerSimulationInput = ({
   simulationPayload,
+  protocol,
   onChange,
   onSubmit,
   errors
@@ -21,8 +23,8 @@ export const TransformerSimulationInput = ({
   const clientRequestItems = [
     {
       label: "Client Request Body",
-      helpText:
-        "Specify the request body for your standard transformer, must be in JSON object format.",
+      helpText: protocol === PROTOCOL.HTTP_JSON ?
+        "Specify the request body for your standard transformer, must be in JSON object format.": "Specify the request body for your standard transformer, must be in UPI PredictionValuesRequest type",
       value: !!simulationPayload.payload ? simulationPayload.payload : "",
       onChange: val => onChange("payload", val),
       error: errors.payload
@@ -40,8 +42,8 @@ export const TransformerSimulationInput = ({
   const modelRequestItems = [
     {
       label: "Model Response Body",
-      helpText:
-        "Specify the mock for model prediction's response body that can be used for the postprocess, must be in JSON object format.",
+      helpText: protocol === PROTOCOL.HTTP_JSON ?
+        "Specify the mock for model prediction's response body that can be used for the postprocess, must be in JSON object format." : "Specify the mock for model prediction's response body that can be used for the postprocess, must be in UPI PredictionValuesResponse type",
       value: !!simulationPayload.mock_response_body
         ? simulationPayload.mock_response_body
         : "",

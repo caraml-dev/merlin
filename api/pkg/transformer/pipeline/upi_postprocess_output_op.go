@@ -42,9 +42,11 @@ func (up *UPIPostprocessOutputOp) Execute(ctx context.Context, env *Environment)
 	copiedResponse.PredictionResultTable = predictionResultTable
 	env.SetOutput(copiedResponse)
 	if up.OperationTracing != nil {
-		return up.OperationTracing.AddInputOutput(nil, map[string]any{
-			"output": copiedResponse,
-		})
+		outputDetail, err := copiedResponse.ToMap()
+		if err != nil {
+			return err
+		}
+		return up.OperationTracing.AddInputOutput(nil, outputDetail)
 	}
 	return nil
 }

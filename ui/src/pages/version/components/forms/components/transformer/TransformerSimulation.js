@@ -91,6 +91,7 @@ export const TransformerSimulation = ({protocol}) => {
       <EuiFlexItem>
         <TransformerSimulationInput
           simulationPayload={simulationPayload}
+          protocol={protocol}
           onChange={onChange}
           onSubmit={onSubmit}
           errors={errors}
