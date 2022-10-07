@@ -144,6 +144,17 @@ export const InputPanel = ({ inputs = [], onChangeHandler, protocol, errors = {}
 
         <EuiFlexItem>
           <EuiFlexGroup>
+            { protocol === PROTOCOL.UPI_V1 && (
+                <EuiFlexItem>
+                  <AddButton
+                    title="+ Add UPI Autoload"
+                    description="UPI Autoload loads tables and variables in UPI payload into standard transformer registry"
+                    onClick={() =>
+                      onAddInput("autoload", new Autoload())
+                    }
+                  />
+                </EuiFlexItem>
+            )}
             <EuiFlexItem>
               <AddButton
                 title="+ Add Feast Input"
@@ -185,17 +196,6 @@ export const InputPanel = ({ inputs = [], onChangeHandler, protocol, errors = {}
                 }
               />
               </EuiFlexItem>
-              { protocol === PROTOCOL.UPI_V1 && (
-                <EuiFlexItem>
-                  <AddButton
-                    title="+ Add Autoload"
-                    description="Autoload configuration register tables and variables to standard transformer registry"
-                    onClick={() =>
-                      onAddInput("autoload", new Autoload())
-                    }
-                  />
-                </EuiFlexItem>
-              )}
           </EuiFlexGroup>
         </EuiFlexItem>
       </EuiFlexGroup>

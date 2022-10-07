@@ -6,7 +6,8 @@ import {
   EuiFieldText,
   EuiToolTip,
   EuiText,
-  EuiSpacer
+  EuiSpacer,
+  EuiIcon
 
 } from "@elastic/eui";
 import {
@@ -36,7 +37,13 @@ export const UpiPostprocessOutputCard = ({ output, onDelete, onChangeHandler, er
         </EuiFlexItem>
         <EuiFlexItem>
           <EuiFormRow
-            label="Prediction Result Table Name"
+            label={
+              <EuiToolTip content="Prediction Result Table Name corresponding to the prediction rows provided in the request">
+                <span>
+                Prediction Result Table Name <EuiIcon type="questionInCircle" color="subdued" />
+                </span>
+              </EuiToolTip>
+            }
             isInvalid={!!errors.predictionResultTableName}
             error={errors.predictionResultTableName}
             display="columnCompressed"

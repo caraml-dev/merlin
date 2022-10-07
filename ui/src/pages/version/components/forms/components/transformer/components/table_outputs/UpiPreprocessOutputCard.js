@@ -6,7 +6,8 @@ import {
   EuiFieldText,
   EuiToolTip,
   EuiText,
-  EuiSpacer
+  EuiSpacer,
+  EuiIcon
 
 } from "@elastic/eui";
 import {
@@ -39,7 +40,13 @@ export const UpiPreprocessOutputCard = ({ output, onDelete, onChangeHandler, err
         </EuiFlexItem>
         <EuiFlexItem>
           <EuiFormRow
-            label="Prediction Table Name"
+            label={
+              <EuiToolTip content="Prediction Table Name contains instances to be predicted. This should contain all preprocessed feature that model use to perform prediction">
+                <span>
+                Prediction Table Name <EuiIcon type="questionInCircle" color="subdued" />
+                </span>
+              </EuiToolTip>
+            }
             isInvalid={!!errors.predictionTableName}
             error={errors.predictionTableName}
             display="columnCompressed"

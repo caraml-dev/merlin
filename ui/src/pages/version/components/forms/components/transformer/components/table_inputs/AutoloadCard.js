@@ -29,10 +29,10 @@ export const AutoloadCard = ({
         <EuiSpacer size="s" />
         <EuiFlexGroup direction="column" gutterSize="m">
           <EuiFlexItem>
-            <EuiToolTip content="Autoload will load tables or variables from request/model response">
+            <EuiToolTip content="UPI Autoload loads tables or variables from UPI payload into standard transformer registry">
               <span>
               <EuiText size="s">
-                <h4>Autoload</h4>
+                <h4>UPI Autoload</h4>
               </EuiText>
                 
               </span>
