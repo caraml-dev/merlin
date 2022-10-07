@@ -2662,5 +2662,6 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_FeastTimeout(t *testi
 
 	time.Sleep(2 * time.Second)
 	assert.Less(t, runtime.NumGoroutine(), initialGoroutineCount+requestEntityLen, "goroutine leak")
-	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+	err = pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+	assert.NoError(t, err)
 }
