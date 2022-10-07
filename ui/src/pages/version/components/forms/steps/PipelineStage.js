@@ -24,6 +24,7 @@ export const PipelineStage = ({ stage }) => {
     },
     onChangeHandler
   } = useContext(FormContext);
+
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
 
@@ -67,6 +68,8 @@ export const PipelineStage = ({ stage }) => {
             <div id={"output-" + stage}>
               <OutputPanel
                 outputs={outputs}
+                protocol={protocol}
+                pipelineStage={stage}
                 onChangeHandler={onChange(
                   `transformer.config.transformerConfig.${stage}.outputs`
                 )}

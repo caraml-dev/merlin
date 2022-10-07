@@ -245,6 +245,9 @@ func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, pipelineType types
 }
 
 func (c *Compiler) parseUpiPreprocessOutput(outputSpec *spec.UPIPreprocessOutput) (Op, error) {
+	if outputSpec.PredictionTableName == "" && len(outputSpec.TransformerInputTableNames) == 0 {
+		return nil, fmt.Errorf(`"predictionTableName" or "transformerInputTableNames" must be set for upi preprocess output spec`)
+	}
 	if outputSpec.PredictionTableName != "" {
 		if err := c.checkVariableRegistered(outputSpec.PredictionTableName); err != nil {
 			return nil, err
@@ -261,6 +264,9 @@ func (c *Compiler) parseUpiPreprocessOutput(outputSpec *spec.UPIPreprocessOutput
 }
 
 func (c *Compiler) parseUpiPostprocessOutput(outputSpec *spec.UPIPostprocessOutput) (Op, error) {
+	if outputSpec.PredictionResultTableName == "" {
+		return nil, fmt.Errorf(`"predictionResultTableName" must be set for upi postprocess output spec`)
+	}
 	if err := c.checkVariableRegistered(outputSpec.PredictionResultTableName); err != nil {
 		return nil, err
 	}
