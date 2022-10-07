@@ -45,7 +45,7 @@ export const AutoloadCard = ({
               title="Table names"
               description={
                 <p>
-                  List of table name that must be loaded from request/response and can be used for other operations
+                  List of table names that will be loaded from request/response and can be used for other operations in standard transformer
                 </p>
               }
               errors={get(errors, "tableNames")}
@@ -58,7 +58,7 @@ export const AutoloadCard = ({
               title="Variable names"
               description={
                 <p>
-                  List of variable name that must be loaded from request/response and can be used for other operations
+                  List of variable names that will be loaded from request/response and can be used for other operations in standard transformer
                 </p>
               }
               errors={get(errors, "variableNames")}

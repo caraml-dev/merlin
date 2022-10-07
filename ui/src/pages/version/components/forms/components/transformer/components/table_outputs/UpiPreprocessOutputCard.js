@@ -41,7 +41,7 @@ export const UpiPreprocessOutputCard = ({ output, onDelete, onChangeHandler, err
         <EuiFlexItem>
           <EuiFormRow
             label={
-              <EuiToolTip content="Prediction Table Name contains instances to be predicted. This should contain all preprocessed feature that model use to perform prediction">
+              <EuiToolTip content="Table name that will be used to populate prediction_table field in the request to model">
                 <span>
                 Prediction Table Name <EuiIcon type="questionInCircle" color="subdued" />
                 </span>
@@ -68,7 +68,7 @@ export const UpiPreprocessOutputCard = ({ output, onDelete, onChangeHandler, err
             columns={output.transformerInputTableNames || []}
             onChange={onChange("0.upiPreprocessOutput.transformerInputTableNames")}
             title={
-              <EuiToolTip content="Transformer input table names contains tables that can be used to enrich prediction_table using standard transformer">
+              <EuiToolTip content="List of table names that will be used to populate transformer_inputs field in the request to model">
                 <span>
                 Transformer input table names <EuiIcon type="questionInCircle" color="subdued" />
                 </span>
