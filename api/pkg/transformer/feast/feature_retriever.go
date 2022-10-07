@@ -106,9 +106,6 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, 
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.RetrieveFromSymbolRegistry")
 	defer span.Finish()
 
@@ -228,6 +225,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 	numOfBatchBeforeCeil := float64(len(entityNotInCache)) / float64(fr.options.BatchSize)
 	numOfBatch := int(math.Ceil(numOfBatchBeforeCeil))
 	batchResultChan := make(chan callResult, numOfBatch)
+	fallbackChan := make(chan callResult, numOfBatch)
 
 	for i := 0; i < numOfBatch; i++ {
 		startIndex := i * fr.options.BatchSize
@@ -243,47 +241,44 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		}
 
 		hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
-			reqCtx, cancel := context.WithTimeout(ctx, fr.options.FeastTimeout)
-			defer cancel()
-
-			result := f.do(reqCtx, batchedEntities, features)
-
-			select {
-			case <-reqCtx.Done():
-				batchResultChan <- callResult{featureTable: nil, err: reqCtx.Err()}
-				return reqCtx.Err()
-			default:
-				batchResultChan <- result
-			}
-
+			batchResultChan <- f.do(ctx, batchedEntities, features)
 			return nil
 		}, func(ctx context.Context, err error) error {
-			batchResultChan <- callResult{featureTable: nil, err: err}
+			fallbackChan <- callResult{featureTable: nil, err: err}
 			return nil
 		})
 	}
 
 	// merge result from all batch, including the cached one
 	for i := 0; i < numOfBatch; i++ {
-		res := <-batchResultChan
-		if res.err != nil {
-			return nil, res.err
-		}
-
-		if fr.options.CacheEnabled {
-			if err := fr.featureCache.insertFeatureTable(res.featureTable, featureTableSpec.Project); err != nil {
-				fr.logger.Error("insert_to_cache", zap.Any("error", err))
+		select {
+		case res := <-batchResultChan:
+			if res.err != nil {
+				fr.logger.Error("feast retrieval error", zap.Any("error", res.err))
+				return nil, res.err
 			}
-		}
 
-		if featureTable == nil {
-			featureTable = res.featureTable
-			continue
-		}
+			if fr.options.CacheEnabled {
+				if err := fr.featureCache.insertFeatureTable(res.featureTable, featureTableSpec.Project); err != nil {
+					fr.logger.Error("insert_to_cache", zap.Any("error", err))
+				}
+			}
 
-		err := featureTable.mergeFeatureTable(res.featureTable)
-		if err != nil {
-			return nil, err
+			// first result received
+			if featureTable == nil {
+				featureTable = res.featureTable
+				continue
+			}
+
+			// merge subsequent result to featureTable
+			err := featureTable.mergeFeatureTable(res.featureTable)
+			if err != nil {
+				return nil, err
+			}
+
+		case res := <-fallbackChan:
+			fr.logger.Error("fallback error", zap.Any("error", res.err))
+			return nil, res.err
 		}
 	}
 
