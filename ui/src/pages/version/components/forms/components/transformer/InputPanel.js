@@ -22,11 +22,7 @@ import {
   TablesInput
 } from "../../../../../../services/transformer/TransformerConfig";
 
-<<<<<<< HEAD
 import {PROTOCOL} from "../../../../../../services/version_endpoint/VersionEndpoint";
-=======
-import {PROTOCOL} from "../../../../../../services/version_endpoint/VersionEndpoint"
->>>>>>> cf45b71 (Add output and autoload standard transformer UI components)
 
 export const InputPanel = ({ inputs = [], onChangeHandler, protocol, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
@@ -200,20 +196,6 @@ export const InputPanel = ({ inputs = [], onChangeHandler, protocol, errors = {}
                 }
               />
               </EuiFlexItem>
-<<<<<<< HEAD
-=======
-              { protocol === PROTOCOL.UPI_V1 && (
-                <EuiFlexItem>
-                  <AddButton
-                    title="+ Add Autoload"
-                    description="Autoload configuration register tables and variables to standard transformer registry"
-                    onClick={() =>
-                      onAddInput("autoload", new Autoload())
-                    }
-                  />
-                </EuiFlexItem>
-              )}
->>>>>>> cf45b71 (Add output and autoload standard transformer UI components)
           </EuiFlexGroup>
         </EuiFlexItem>
       </EuiFlexGroup>
