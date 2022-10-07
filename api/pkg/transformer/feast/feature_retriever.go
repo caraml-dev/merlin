@@ -106,6 +106,9 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, 
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.RetrieveFromSymbolRegistry")
 	defer span.Finish()
 
@@ -240,7 +243,19 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		}
 
 		hystrix.GoC(ctx, fr.options.FeastClientHystrixCommandName, func(ctx context.Context) error {
-			batchResultChan <- f.do(ctx, batchedEntities, features)
+			reqCtx, cancel := context.WithTimeout(ctx, fr.options.FeastTimeout)
+			defer cancel()
+
+			result := f.do(reqCtx, batchedEntities, features)
+
+			select {
+			case <-reqCtx.Done():
+				batchResultChan <- callResult{featureTable: nil, err: reqCtx.Err()}
+				return reqCtx.Err()
+			default:
+				batchResultChan <- result
+			}
+
 			return nil
 		}, func(ctx context.Context, err error) error {
 			batchResultChan <- callResult{featureTable: nil, err: err}

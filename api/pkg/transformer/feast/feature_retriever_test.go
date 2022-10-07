@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"runtime"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -1630,6 +1631,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest(t *testing.T) {
 					CacheEnabled:                     true,
 					CacheSizeInMB:                    100,
 					CacheTTL:                         10 * time.Minute,
+					FeastTimeout:                     1 * time.Second,
 				},
 				logger,
 			)
@@ -1825,6 +1827,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_Batching(t *testing.T
 				BatchSize:                        batchSize,
 				FeastClientHystrixCommandName:    "TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_Batching",
 				FeastClientMaxConcurrentRequests: 100,
+				FeastTimeout:                     1 * time.Second,
 			},
 			logger,
 		)
@@ -2373,6 +2376,7 @@ func TestFeatureRetriever_buildEntitiesRows(t *testing.T) {
 					StatusMonitoringEnabled:       true,
 					ValueMonitoringEnabled:        true,
 					FeastClientHystrixCommandName: "TestFeatureRetriever_buildEntitiesRows",
+					FeastTimeout:                  1 * time.Second,
 				},
 				logger,
 			)
@@ -2474,7 +2478,8 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
 
 	options := &Options{
-		BatchSize: 100,
+		BatchSize:    100,
+		FeastTimeout: 1 * time.Second,
 
 		FeastClientHystrixCommandName:    "TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent",
 		FeastClientMaxConcurrentRequests: 2,
@@ -2530,4 +2535,131 @@ func TestFeatureRetriever_RetriesRetrieveFeatures_MaxConcurrent(t *testing.T) {
 	assert.Equal(t, atomic.LoadUint32(&good), uint32(2))
 
 	mockFeast.AssertExpectations(t)
+}
+
+func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_FeastTimeout(t *testing.T) {
+	go func() {
+		for {
+			fmt.Printf("#goroutines: %d\n", runtime.NumGoroutine())
+			time.Sleep(500 * time.Millisecond)
+		}
+	}()
+
+	logger, _ := zap.NewDevelopment()
+
+	request := []byte(`{"drivers": [
+		{"id":"1001"},
+		{"id":"1002"},
+		{"id":"1003"},
+		{"id":"1004"}
+	]}`)
+	requestEntityLen := 4
+	var requestJson transTypes.JSONObject
+	if err := json.Unmarshal(request, &requestJson); err != nil {
+		panic(err)
+	}
+
+	mockFeast := &mocks.Client{}
+	feastClients := Clients{}
+	feastClients[spec.ServingSource_BIGTABLE] = mockFeast
+	feastClients[spec.ServingSource_REDIS] = mockFeast
+
+	for i := 0; i < requestEntityLen; i++ {
+		response := &feast.OnlineFeaturesResponse{
+			RawResponse: &serving.GetOnlineFeaturesResponseV2{
+				Metadata: &serving.GetOnlineFeaturesResponseMetadata{
+					FieldNames: &serving.FieldList{
+						Val: []string{
+							"driver_id",
+							"driver_trips:average_daily_rides",
+						},
+					},
+				},
+				Results: []*serving.GetOnlineFeaturesResponseV2_FieldVector{
+					{
+						Values: []*feastTypes.Value{
+							feast.StrVal(fmt.Sprintf("100%d", i+1)),
+							feast.Int32Val(1001),
+						},
+						Statuses: []serving.FieldStatus{
+							serving.FieldStatus_PRESENT,
+							serving.FieldStatus_PRESENT,
+						},
+					},
+				},
+			},
+		}
+
+		mockFeast.On("GetOnlineFeatures", mock.Anything, mock.MatchedBy(func(req *feast.OnlineFeaturesRequest) bool {
+			time.Sleep(500 * time.Millisecond)
+			return req.Project == "default"
+		})).Return(response, nil)
+	}
+
+	featureTableSpecs := []*spec.FeatureTable{
+		{
+			Project: "default",
+			Source:  spec.ServingSource_REDIS,
+			Entities: []*spec.Entity{
+				{
+					Name:      "driver_id",
+					ValueType: "STRING",
+					Extractor: &spec.Entity_JsonPath{
+						JsonPath: "$.drivers[*].id",
+					},
+				},
+			},
+			Features: []*spec.Feature{
+				{
+					Name:         "driver_trips:average_daily_rides",
+					DefaultValue: "0.0",
+					ValueType:    "DOUBLE",
+				},
+			},
+		},
+	}
+	compiledJSONPaths, err := CompileJSONPaths(featureTableSpecs, jsonpath.Map)
+	if err != nil {
+		panic(err)
+	}
+
+	compiledExpressions, err := CompileExpressions(featureTableSpecs, symbol.NewRegistry())
+	if err != nil {
+		panic(err)
+	}
+
+	jsonPathStorage := jsonpath.NewStorage()
+	jsonPathStorage.AddAll(compiledJSONPaths)
+	expressionStorage := expression.NewStorage()
+	expressionStorage.AddAll(compiledExpressions)
+	entityExtractor := NewEntityExtractor(jsonPathStorage, expressionStorage)
+
+	fr := NewFeastRetriever(feastClients,
+		entityExtractor,
+		featureTableSpecs,
+		&Options{
+			StatusMonitoringEnabled:          true,
+			ValueMonitoringEnabled:           true,
+			BatchSize:                        1,
+			FeastTimeout:                     time.Duration(100 * time.Millisecond),
+			FeastClientHystrixCommandName:    "TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_FeastTimeout",
+			FeastClientMaxConcurrentRequests: 100,
+			CacheEnabled:                     true,
+			CacheSizeInMB:                    100,
+			CacheTTL:                         10 * time.Minute,
+		},
+		logger,
+	)
+
+	got, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
+	assert.NotNil(t, err)
+	assert.EqualError(t, err, "hystrix: timeout")
+
+	want := []*transTypes.FeatureTable{}
+	assert.ElementsMatch(t, got, want)
+
+	mockFeast.AssertExpectations(t)
+
+	time.Sleep(5 * time.Second)
+	fmt.Printf("Z #goroutines: %d\n", runtime.NumGoroutine())
 }
