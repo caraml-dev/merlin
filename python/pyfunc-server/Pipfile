@@ -5,6 +5,3 @@ verify_ssl = true
 
 [packages]
 pyfuncserver = {editable = true, extras = ["test"], path = "."}
-
-[requires]
-python_version = "3.7"

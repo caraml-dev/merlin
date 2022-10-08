@@ -1217,6 +1217,8 @@ definitions:
       updated_at:
         type: "string"
         format: "date-time"
+      python_version:
+        type: "string"
 
   CustomPredictor:
     type: "object"

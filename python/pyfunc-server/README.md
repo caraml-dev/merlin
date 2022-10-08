@@ -69,7 +69,7 @@ gsutil cp -r gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifac
 Build the docker image
 
 ```bash
-docker build -t mymodel:latest  -f local.Dockerfile .
+docker build -t mymodel:latest  -f docker/local.Dockerfile .
 ```
 
 And run the model service
@@ -98,28 +98,29 @@ Pyfunc server can be configured via following environment variables
 ## Directory Structure
 
 ```
-├── benchmark          <- Benchmarking artifacts
-├── echo-model         <- Simple model for testing
-├── test               <- Test package
-├── pyfuncserver       <- Source code of this workflow
-│   ├── __main__.py    <- Entry point of pyfuncserver
-│   ├── config.py      <- Pyfuncserver configurations
-│   ├── server.py      <- Main server that orchestrate the initialization of all server within pyfuncserver
-│   ├── metrics        <- Module related to pubishing prometheus metrics
-│   ├── utils          <- Utility package
-│   ├── model          <- Model package
+├── benchmark              <- Benchmarking artifacts
+├── docker                 <- Dockerfiles and environment files
+    ├── Dockerfile         <- Dockerfile that will be used by kaniko to build user image in the cluster
+    ├── base.Dockerfile    <- Base docker image that will be used by `Dockerfile` and `local.Dockerfile`
+    ├── local.Dockerfile   <- Dockerfile that can be used to perform local testing
+    ├── envXY.yaml         <- Conda environment for python version X.Y that will be created within `base.Dockerfile`
+├── echo-model             <- Simple model for testing
+├── test                   <- Test package
+├── pyfuncserver           <- Source code of this workflow
+│   ├── __main__.py        <- Entry point of pyfuncserver
+│   ├── config.py          <- Pyfuncserver configurations
+│   ├── server.py          <- Main server that orchestrate the initialization of all server within pyfuncserver
+│   ├── metrics            <- Module related to pubishing prometheus metrics
+│   ├── utils              <- Utility package
+│   ├── model              <- Model package
 │   └── protocol           <- Protocol implementations
-│       └── rest       <- Server implementation for HTTP_JSON protocol
-│       └── upi        <- Server implementation for UPI_V1 protocol
+│       └── rest           <- Server implementation for HTTP_JSON protocol
+│       └── upi            <- Server implementation for UPI_V1 protocol
 ├── .gitignore
-├── Dockerfile         <- Dockerfile that will be used by kaniko to build user image in the cluster
-├── base.Dockerfile    <- Base docker image that will be used by `Dockerfile` and `local.Dockerfile`
-├── local.Dockerfile   <- Dockerfile that can be used to perform local testing
-├── Makefile           <- Makefile 
-├── README.md          <- The top-level README for developers using this project.
-├── requirements.txt   <- pyfuncserver dependencies
-├── environment.yaml   <- Conda environment that will be created within `base.Dockerfile`
-├── setup.py           <- setup.py
-├── run.sh             <- Script to activate `merlin-model` environment and run pyfuncserver when `docker run` is invoked
+├── Makefile               <- Makefile 
+├── README.md              <- The top-level README for developers using this project.
+├── requirements.txt       <- pyfuncserver dependencies
+├── setup.py               <- setup.py
+├── run.sh                 <- Script to activate `merlin-model` environment and run pyfuncserver when `docker run` is invoked
 
 ```
