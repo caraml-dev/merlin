@@ -22,7 +22,7 @@ version = imp.load_source(
 
 REQUIRES = [
     "certifi>=2017.4.17",
-    "python-dateutil>=2.1",
+    "python_dateutil>=2.5.3",
     "six>=1.10",
     "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
     "google-cloud-storage>=1.19.0",
