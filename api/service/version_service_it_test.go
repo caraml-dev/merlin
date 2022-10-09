@@ -61,9 +61,10 @@ func TestVersionsService_FindById(t *testing.T) {
 		db.Create(&m)
 
 		v := models.Version{
-			ModelID:     m.ID,
-			RunID:       "1",
-			ArtifactURI: "gcs:/mlp/1/1",
+			ModelID:       m.ID,
+			RunID:         "1",
+			ArtifactURI:   "gcs:/mlp/1/1",
+			PythonVersion: "3.7.*",
 		}
 		db.Create(&v)
 
