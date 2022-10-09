@@ -22,6 +22,7 @@ import warnings
 from datetime import datetime
 from enum import Enum
 from time import sleep
+from sys import version_info
 from typing import Dict, List, Optional, Tuple
 
 import docker
@@ -425,7 +426,8 @@ class Model:
         :return:  new ModelVersion
         """
         version_api = VersionApi(self._api_client)
-        v = version_api.models_model_id_versions_post(int(self.id), body={"labels": labels})
+        python_version = f'{version_info.major}.{version_info.minor}.*'  # capture user's python version
+        v = version_api.models_model_id_versions_post(int(self.id), body={"labels": labels, "python_version": python_version})
         return ModelVersion(v, self, self._api_client)
 
     def serve_traffic(self, traffic_rule: Dict['VersionEndpoint', int],
@@ -640,6 +642,7 @@ class ModelVersion:
         self._artifact_uri = version.artifact_uri
         self._labels = version.labels
         self._custom_predictor = version.custom_predictor
+        self._python_version = version.python_version
         mlflow.set_tracking_uri(model.project.mlflow_tracking_url)
 
     @property

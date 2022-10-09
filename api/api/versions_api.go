@@ -128,10 +128,11 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 	}
 
 	version := &models.Version{
-		ModelID:     modelID,
-		RunID:       run.Info.RunID,
-		ArtifactURI: run.Info.ArtifactURI,
-		Labels:      versionPost.Labels,
+		ModelID:       modelID,
+		RunID:         run.Info.RunID,
+		ArtifactURI:   run.Info.ArtifactURI,
+		Labels:        versionPost.Labels,
+		PythonVersion: versionPost.PythonVersion,
 	}
 
 	version, _ = c.VersionsService.Save(ctx, version, c.MonitoringConfig)
