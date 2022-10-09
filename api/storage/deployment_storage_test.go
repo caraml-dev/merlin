@@ -51,9 +51,10 @@ func TestDeploymentStorage_List(t *testing.T) {
 		db.Create(&m)
 
 		v := models.Version{
-			ModelID:     m.ID,
-			RunID:       "1",
-			ArtifactURI: "gcs:/mlp/1/1",
+			ModelID:       m.ID,
+			RunID:         "1",
+			ArtifactURI:   "gcs:/mlp/1/1",
+			PythonVersion: "3.7.*",
 		}
 		db.Create(&v)
 
@@ -126,16 +127,18 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 		db.Create(&m)
 
 		v1 := models.Version{
-			ModelID:     m.ID,
-			RunID:       "1",
-			ArtifactURI: "gcs:/mlp/1/1",
+			ModelID:       m.ID,
+			RunID:         "1",
+			ArtifactURI:   "gcs:/mlp/1/1",
+			PythonVersion: "3.7.*",
 		}
 		db.Create(&v1)
 
 		v2 := models.Version{
-			ModelID:     m.ID,
-			RunID:       "1",
-			ArtifactURI: "gcs:/mlp/1/1",
+			ModelID:       m.ID,
+			RunID:         "1",
+			ArtifactURI:   "gcs:/mlp/1/1",
+			PythonVersion: "3.7.*",
 		}
 		db.Create(&v2)
 
