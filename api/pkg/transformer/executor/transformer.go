@@ -2,7 +2,9 @@ package executor
 
 import (
 	"context"
+	"encoding/json"
 
+	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	prt "github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
@@ -10,7 +12,9 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type standardTransformer struct {
@@ -22,7 +26,7 @@ type standardTransformer struct {
 
 // Transformer have predict function that process all the preprocess, model prediction and postproces
 type Transformer interface {
-	Execute(ctx context.Context, requestBody types.Payload, requestHeaders map[string]string) (*types.PredictResponse, error)
+	Execute(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) *types.PredictResponse
 }
 
 type transformerExecutorConfig struct {
@@ -67,32 +71,36 @@ func NewStandardTransformerWithConfig(ctx context.Context, transformerConfig *sp
 }
 
 // Predict will process all standard transformer request including preprocessing, model prediction and postprocess
-func (st *standardTransformer) Execute(ctx context.Context, requestBody types.Payload, requestHeaders map[string]string) (*types.PredictResponse, error) {
+func (st *standardTransformer) Execute(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) *types.PredictResponse {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "st.Execute")
 	defer span.Finish()
 
-	preprocessOut := requestBody
+	requestPayload, err := createRequestPayload(st.executorConfig.protocol, requestBody)
+	if err != nil {
+		return generateErrorResponse(err)
+	}
+
+	preprocessOut := requestPayload
 	st.logger.Debug("raw request_body", zap.Any("request_body", requestBody))
 
 	env := pipeline.NewEnvironment(st.compiledPipeline, st.executorConfig.logger)
 
-	var err error
 	if env.IsPreprocessOpExist() {
-		preprocessOut, err = env.Preprocess(ctx, requestBody, requestHeaders)
+		preprocessOut, err = env.Preprocess(ctx, requestPayload, requestHeaders)
 		if err != nil {
-			return generateErrorResponse(err), err
+			return generateErrorResponse(err)
 		}
 		st.logger.Debug("preprocess response", zap.Any("preprocess_response", preprocessOut))
 	}
 
 	reqBody, err := preprocessOut.AsOutput()
 	if err != nil {
-		return generateErrorResponse(err), err
+		return generateErrorResponse(err)
 	}
 
 	predictorRespBody, predictorRespHeaders, err := st.modelPredictor.ModelPrediction(ctx, reqBody, requestHeaders)
 	if err != nil {
-		return generateErrorResponse(err), err
+		return generateErrorResponse(err)
 	}
 
 	st.logger.Debug("predictor response", zap.Any("predict_response", predictorRespBody))
@@ -101,7 +109,7 @@ func (st *standardTransformer) Execute(ctx context.Context, requestBody types.Pa
 	if env.IsPostProcessOpExist() {
 		predictionOut, err = env.Postprocess(ctx, predictionOut, predictorRespHeaders)
 		if err != nil {
-			return generateErrorResponse(err), err
+			return generateErrorResponse(err)
 		}
 		st.logger.Debug("postprocess response", zap.Any("postprocess_response", predictionOut))
 	}
@@ -125,7 +133,24 @@ func (st *standardTransformer) Execute(ctx context.Context, requestBody types.Pa
 		st.logger.Debug("executor tracing", zap.Any("tracing_details", resp.Tracing))
 	}
 
-	return resp, nil
+	return resp
+}
+
+func createRequestPayload(protocol prt.Protocol, jsonRequestPayload types.JSONObject) (types.Payload, error) {
+	if protocol == prt.HttpJson || protocol == "" {
+		return jsonRequestPayload, nil
+	}
+
+	payloadData, err := json.Marshal(jsonRequestPayload)
+	if err != nil {
+		return nil, err
+	}
+	var requestPayload upiv1.PredictValuesRequest
+	if err := protojson.Unmarshal(payloadData, &requestPayload); err != nil {
+		return nil, errors.Wrap(err, "request is not valid, user should specifies request with UPI PredictValuesRequest type")
+	}
+
+	return (*types.UPIPredictionRequest)(&requestPayload), nil
 }
 
 func generateErrorResponse(err error) *types.PredictResponse {

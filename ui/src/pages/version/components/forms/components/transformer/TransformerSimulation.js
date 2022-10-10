@@ -1,6 +1,6 @@
 import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import { FormContext } from "@gojek/mlp-ui";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useMerlinApi } from "../../../../../../hooks/useMerlinApi";
 import { TransformerSimulationInput } from "./components/simulation/TransformerSimulationInput";
 import { TransformerSimulationOutput } from "./components/simulation/TransformerSimulationOutput";
@@ -33,7 +33,11 @@ export const TransformerSimulation = ({protocol}) => {
   );
   const [errors, setErrors] = useState({});
 
-    const [simulationResponse, submitForm] = useMerlinApi(
+  useEffect(() => {
+    onChange("protocol", protocol)
+  }, [protocol]);
+
+  const [simulationResponse, submitForm] = useMerlinApi(
     `/standard_transformer/simulate`,
     { method: "POST" },
     {},

@@ -23,7 +23,7 @@ export const TransformerSimulationInput = ({
   errors
 }) => {
   const populateSampleRequest = () => {
-    const defaultPayload = {"target_name":"probability","prediction_table":{"name":"prediction_table_sample","columns":[{"name":"col1","type":"TYPE_INTEGER"},{"name":"col2","type":"TYPE_DOUBLE"}],"rows":[{"rowId":"row1","values":[{"integer_value":1},{"doubleValue":4.4}]},{"rowId":"row2","values":[{"integer_value":2},{"doubleValue":8.8}]}]},"transformer_input":{"tables":[{"name":"sample_table","columns":[{"name":"col1","type":"TYPE_INTEGER"},{"name":"col2","type":"TYPE_DOUBLE"}],"rows":[{"rowId":"row1","values":[{"integer_value":1},{"double_value":4.4}]},{"rowId":"row2","values":[{"integer_value":2},{"double_value":8.8}]}]}],"variables":[{"name":"var1","type":"TYPE_INTEGER","integer_value":1},{"name":"var2","type":"TYPE_DOUBLE","double_value":1.1}]},"prediction_context":[{"name":"ctx1","type":"TYPE_INTEGER","integer_value":1},{"name":"ctx2","type":"TYPE_STRING","double_value":"SAMPLE"}]}
+    const defaultPayload = {"target_name":"probability","prediction_table":{"name":"prediction_table_sample","columns":[{"name":"col1","type":"TYPE_INTEGER"},{"name":"col2","type":"TYPE_DOUBLE"}],"rows":[{"rowId":"row1","values":[{"integer_value":1},{"double_value":4.4}]},{"rowId":"row2","values":[{"integer_value":2},{"double_value":8.8}]}]},"transformer_input":{"tables":[{"name":"sample_table","columns":[{"name":"col1","type":"TYPE_INTEGER"},{"name":"col2","type":"TYPE_DOUBLE"}],"rows":[{"rowId":"row1","values":[{"integer_value":1},{"double_value":4.4}]},{"rowId":"row2","values":[{"integer_value":2},{"double_value":8.8}]}]}],"variables":[{"name":"var1","type":"TYPE_INTEGER","integer_value":1},{"name":"var2","type":"TYPE_DOUBLE","double_value":1.1}]},"prediction_context":[{"name":"ctx1","type":"TYPE_INTEGER","integer_value":1},{"name":"ctx2","type":"TYPE_STRING","string_value":"SAMPLE"}]}
     onChange("payload", JSON.stringify(defaultPayload, null, 2))
   }
 
@@ -37,11 +37,12 @@ export const TransformerSimulationInput = ({
       helpText: protocol === PROTOCOL.HTTP_JSON ?
         "Specify the request body for your standard transformer, must be in JSON object format.": "Specify the request body for your standard transformer, must be in UPI PredictionValuesRequest type",
       value: !!simulationPayload.payload ? simulationPayload.payload : "",
-      labelAppend: (
+      labelAppend: protocol === PROTOCOL.UPI_V1 ? (
         <span>
           <EuiToolTip content="Go to UPI interface documentation">
             <EuiButtonIcon 
                 iconType="documentation"
+                aria-label="UPI Documentation"
                 href={appConfig.upiDocumentationUrl}
             />
           </EuiToolTip>
@@ -55,7 +56,7 @@ export const TransformerSimulationInput = ({
             Populate sample payload
           </EuiButton>
         </span>  
-      ),
+      ) : undefined,
       onChange: val => onChange("payload", val),
       error: errors.payload
     },
@@ -77,11 +78,12 @@ export const TransformerSimulationInput = ({
       value: !!simulationPayload.mock_response_body
         ? simulationPayload.mock_response_body
         : "",
-      labelAppend: (
+      labelAppend: protocol === PROTOCOL.UPI_V1 ? (
         <span>
           <EuiToolTip content="Go to UPI interface documentation">
             <EuiButtonIcon 
                 iconType="documentation"
+                aria-label="UPI Documentation"
                 href={appConfig.upiDocumentationUrl}
             />
           </EuiToolTip>
@@ -94,7 +96,7 @@ export const TransformerSimulationInput = ({
             Populate sample model predictor payload
           </EuiButton>
         </span>  
-      ),
+      ) : undefined,
       onChange: val => onChange("mock_response_body", val),
       error: errors.mock_response_body
     },

@@ -2,20 +2,15 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/executor"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/types"
 
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const (
@@ -48,21 +43,7 @@ func (ts *transformerService) SimulateTransformer(ctx context.Context, simulatio
 		return nil, fmt.Errorf("failed creating transformer executor: %w", err)
 	}
 
-	if simulationPayload.Protocol == protocol.HttpJson {
-		return ts.simulate(ctx, transformerExecutor, simulationPayload.Payload, simulationPayload.Headers)
-	}
-
-	payloadData, err := json.Marshal(simulationPayload.Payload)
-	if err != nil {
-		return nil, err
-	}
-	var requestPayload upiv1.PredictValuesRequest
-	if err := protojson.Unmarshal(payloadData, &requestPayload); err != nil {
-		return nil, errors.Wrap(err, "request is not valid, user should specifies request with UPI PredictValuesRequest type")
-	}
-
-	payload := (*types.UPIPredictionRequest)(&requestPayload)
-	return ts.simulate(ctx, transformerExecutor, payload, simulationPayload.Headers)
+	return transformerExecutor.Execute(ctx, simulationPayload.Payload, simulationPayload.Headers), nil
 }
 
 func (ts *transformerService) createTransformerExecutor(ctx context.Context, simulationPayload *models.TransformerSimulation) (executor.Transformer, error) {
@@ -100,8 +81,4 @@ func (ts *transformerService) createTransformerExecutor(ctx context.Context, sim
 	}
 
 	return transformerExecutor, nil
-}
-
-func (ts *transformerService) simulate(ctx context.Context, transformer executor.Transformer, requestPayload types.Payload, requestHeaders map[string]string) (*types.PredictResponse, error) {
-	return transformer.Execute(ctx, requestPayload, requestHeaders)
 }
