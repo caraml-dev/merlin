@@ -353,7 +353,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			requestHeaders: map[string]string{
 				"Country-ID": "ID",
 			},
-			wantResponseByte: []byte(`{"response":{"error": "request is not valid, user should specifies request with UPI PredictValuesRequest type: proto: (line 1:2): unknown field \"randomKey\""},"operation_tracing": null}`),
+			wantResponseByte: []byte(`{"response":{"error": "request is not valid, user should specifies request with UPI PredictValuesRequest type"},"operation_tracing": null}`),
 		},
 		{
 			desc:         "table transformation with feast; upi_v1",

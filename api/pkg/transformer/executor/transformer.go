@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	prt "github.com/gojek/merlin/pkg/protocol"
@@ -12,7 +13,6 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -77,7 +77,8 @@ func (st *standardTransformer) Execute(ctx context.Context, requestBody types.JS
 
 	requestPayload, err := createRequestPayload(st.executorConfig.protocol, requestBody)
 	if err != nil {
-		return generateErrorResponse(err)
+		st.logger.Warn("request payload conversion", zap.Any("err", err.Error()))
+		return generateErrorResponse(fmt.Errorf("request is not valid, user should specifies request with UPI PredictValuesRequest type"))
 	}
 
 	preprocessOut := requestPayload
@@ -147,7 +148,7 @@ func createRequestPayload(protocol prt.Protocol, jsonRequestPayload types.JSONOb
 	}
 	var requestPayload upiv1.PredictValuesRequest
 	if err := protojson.Unmarshal(payloadData, &requestPayload); err != nil {
-		return nil, errors.Wrap(err, "request is not valid, user should specifies request with UPI PredictValuesRequest type")
+		return nil, err
 	}
 
 	return (*types.UPIPredictionRequest)(&requestPayload), nil
