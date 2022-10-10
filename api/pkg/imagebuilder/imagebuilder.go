@@ -335,7 +335,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 	if !ok {
 		return nil, fmt.Errorf("No matching base image for tag %s", version.PythonVersion)
 	}
-
+	
 	kanikoArgs := []string{
 		fmt.Sprintf("--dockerfile=%s", c.config.DockerfilePath),
 		fmt.Sprintf("--context=%s", c.config.BuildContextURL),
