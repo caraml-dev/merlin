@@ -891,7 +891,7 @@ class ModelVersion:
                 "log_pyfunc_model is only for PyFunc and PyFuncV2 model")
 
         # add/replace python version in conda to match that used to create model version
-        conda_env = _process_conda_env(conda_env, self.python_version)
+        conda_env = _process_conda_env(conda_env, self._python_version)
 
         mlflow.pyfunc.log_model(DEFAULT_MODEL_PATH,
                                 python_model=model_instance,
@@ -1498,17 +1498,19 @@ def _process_conda_env(conda_env: Union[str, Dict[str, Any]], python_version: st
             spec == name or re.match(name + r"[><=\s]+", spec) is not None
         )
 
+    new_conda_env = {}
+
     if isinstance(conda_env, str):
         with open(conda_env, "r") as f:
-            conda_env = yaml.safe_load(f)
-    elif not isinstance(conda_env, dict):
-        conda_env = {}
+            new_conda_env = yaml.safe_load(f)
+    elif isinstance(conda_env, dict):
+        new_conda_env = conda_env
 
-    if 'dependencies' not in conda_env:
-        conda_env['dependencies'] = []
+    if 'dependencies' not in new_conda_env:
+        new_conda_env['dependencies'] = []
 
     # Replace python dependency to match minor version
-    conda_env['dependencies'] = ([f'python={python_version}'] +
-        [spec for spec in conda_env['dependencies'] if not match_dependency(spec, 'python')])
-
-    return conda_env
+    new_conda_env['dependencies'] = ([f'python={python_version}'] +
+        [spec for spec in new_conda_env['dependencies'] if not match_dependency(spec, 'python')])
+        
+    return new_conda_env
