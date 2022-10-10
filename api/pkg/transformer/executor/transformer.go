@@ -80,7 +80,7 @@ func (st *standardTransformer) Execute(ctx context.Context, requestBody types.Pa
 	if env.IsPreprocessOpExist() {
 		preprocessOut, err = env.Preprocess(ctx, requestBody, requestHeaders)
 		if err != nil {
-			return generateErrorResponse(err), nil
+			return generateErrorResponse(err), err
 		}
 		st.logger.Debug("preprocess response", zap.Any("preprocess_response", preprocessOut))
 	}
@@ -92,7 +92,7 @@ func (st *standardTransformer) Execute(ctx context.Context, requestBody types.Pa
 
 	predictorRespBody, predictorRespHeaders, err := st.modelPredictor.ModelPrediction(ctx, reqBody, requestHeaders)
 	if err != nil {
-		return generateErrorResponse(err), nil
+		return generateErrorResponse(err), err
 	}
 
 	st.logger.Debug("predictor response", zap.Any("predict_response", predictorRespBody))
