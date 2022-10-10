@@ -17,6 +17,7 @@ import types
 import pytest
 
 import client
+import merlin
 from merlin import DeploymentMode, MetricsType
 from merlin import AutoscalingPolicy
 from merlin.autoscaling import RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY, \
@@ -698,7 +699,7 @@ class TestModelVersion:
 class TestModel:
     v1 = cl.Version(id=1, model_id=1)
     v2 = cl.Version(id=2, model_id=1)
-    v3 = cl.Version(id=3, model_id=1, labels={"model": "T-800"})
+    v3 = cl.Version(id=3, model_id=1, labels={"model": "T-800"}, python_version="3.7.*")
 
     @responses.activate
     def test_list_version(self, model):
@@ -744,6 +745,19 @@ class TestModel:
         assert len(endpoints) == 2
         assert endpoints[0].id == str(mdl_endpoint_1.id)
         assert endpoints[1].id == str(mdl_endpoint_2.id)
+
+    @responses.activate
+    def test_new_model_version(self, model):
+        responses.add("POST", '/v1/models/1/versions',
+                      body=json.dumps(self.v3.to_dict()),
+                      status=200,
+                      content_type='application/json')
+
+        mv = model.new_model_version(labels={"model": "T-800"})
+        assert mv._python_version == "3.7.*"
+        assert mv._id == 3
+        assert mv._model._id == 1
+        assert mv._labels == {"model": "T-800"}
 
     @responses.activate
     def test_serve_traffic(self, model):
@@ -938,3 +952,26 @@ class TestModel:
         assert endpoint.id == str(mdl_endpoint_upi.id)
         assert endpoint.environment_name == env_1.name == mdl_endpoint_upi.environment_name
         assert endpoint.protocol == Protocol.UPI_V1
+
+def test_process_conda_env():
+    # test dict version
+    conda = {
+        "name": "test-env",
+        "channels": ["conda-forge"],
+        "dependencies": [
+            "python=3.7.0",
+            {
+                "pip": [
+                    "scikit-learn==x.y.z"
+                ],
+            },
+        ],
+    }
+  
+    new_conda = merlin.model._process_conda_env(conda_env=conda, python_version="3.7.*")
+    assert "python=3.7.*" in new_conda["dependencies"]
+
+    # test file version
+    conda = "pyfunc/env.yaml"
+    new_conda = merlin.model._process_conda_env(conda_env=conda, python_version="3.7.*")
+    assert "python=3.7.*" in new_conda["dependencies"]

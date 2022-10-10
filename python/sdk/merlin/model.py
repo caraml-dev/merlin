@@ -18,12 +18,13 @@ import re
 import shutil
 import tempfile
 import warnings
+import yaml
 
 from datetime import datetime
 from enum import Enum
 from time import sleep
 from sys import version_info
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 import docker
 import mlflow
@@ -31,6 +32,7 @@ import pyprind
 from docker import APIClient
 from docker.errors import BuildError
 from docker.models.containers import Container
+from mlflow.pyfunc import PythonModel
 from mlflow.entities import Run, RunData
 from mlflow.exceptions import MlflowException
 
@@ -374,7 +376,6 @@ class Model:
 
     def list_version(self, labels: Dict[str, List[str]] = None) -> List['ModelVersion']:
         """
-        List all version of the model
         List all version of the model
 
         :return: list of ModelVersion
@@ -868,8 +869,11 @@ class ModelVersion:
         """
         mlflow.log_artifact(local_path, artifact_path)
 
-    def log_pyfunc_model(self, model_instance, conda_env, code_dir=None,
-                         artifacts=None):
+    def log_pyfunc_model(self, 
+                        model_instance: PythonModel, 
+                        conda_env: Union[str, Dict[str, Any]], 
+                        code_dir: Optional[List[str]] = None,
+                        artifacts: Dict[str, str] =None):
         """
         Upload PyFunc based model into artifact storage.
         User has to specify model_instance and
@@ -878,13 +882,16 @@ class ModelVersion:
         model
 
         :param model_instance: instance of python function model
-        :param conda_env: path to conda env.yaml file
+        :param conda_env: path to conda env.yaml file or dictionary representation of it
         :param code_dir: additional code directory that will be loaded with ModelType.PYFUNC model
         :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config" : "config/staging.yaml"}
         """
         if self._model.type != ModelType.PYFUNC and self._model.type != ModelType.PYFUNC_V2:
             raise ValueError(
                 "log_pyfunc_model is only for PyFunc and PyFuncV2 model")
+
+        # add/replace python version in conda to match that used to create model version
+        conda_env = _process_conda_env(conda_env, self.python_version)
 
         mlflow.pyfunc.log_model(DEFAULT_MODEL_PATH,
                                 python_model=model_instance,
@@ -1470,3 +1477,38 @@ class ModelVersion:
         if image_id:
             return
         raise BuildError('Unknown', logs)
+
+def _process_conda_env(conda_env: Union[str, Dict[str, Any]], python_version: str) -> Dict[str, Any]:
+    """
+        This function will replace/add python version dependency to the conda environment file.
+
+        :param conda_env: Either a dictionary representation of a conda environment or the path to a conda environment yaml file.
+        :param python_version: The python version to replace the conda environment with
+        :return: dict representation of the conda environment with python_version set as per given input
+    """
+    def match_dependency(spec, name):
+        # Using direct match or regex match to match the dependency name,
+        # where the regex accounts for the official conda dependency formats:
+        # https://docs.conda.io/projects/conda-build/en/latest/resources/package-spec.html
+        # There are no convenient python libraries to carry out the parsing of
+        # conda dependencies whose spec differs slightly from Python's setuptools.
+        # We could install the complete conda library but this is too bulky if the goal is
+        # to just carry out this matching.
+        return isinstance(spec, str) and (
+            spec == name or re.match(name + r"[><=\s]+", spec) is not None
+        )
+
+    if isinstance(conda_env, str):
+        with open(conda_env, "r") as f:
+            conda_env = yaml.safe_load(f)
+    elif not isinstance(conda_env, dict):
+        conda_env = {}
+
+    if 'dependencies' not in conda_env:
+        conda_env['dependencies'] = []
+
+    # Replace python dependency to match minor version
+    conda_env['dependencies'] = ([f'python={python_version}'] +
+        [spec for spec in conda_env['dependencies'] if not match_dependency(spec, 'python')])
+
+    return conda_env
