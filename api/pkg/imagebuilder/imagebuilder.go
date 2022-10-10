@@ -115,7 +115,14 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 			return "", ErrUnableToGetJobStatus
 		}
 
-		jobSpec := c.createKanikoJobSpec(project, model, version)
+		jobSpec, err := c.createKanikoJobSpec(project, model, version)
+		if err != nil {
+			log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
+			return "", ErrUnableToCreateJobSpec{
+				Message: err.Error(),
+			}
+		}
+
 		job, err = jobClient.Create(ctx, jobSpec, metav1.CreateOptions{})
 		if err != nil {
 			log.Errorf("unable to build image %s, error: %v", imageRef, err)
@@ -132,7 +139,14 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 				return "", ErrDeleteFailedJob
 			}
 
-			jobSpec := c.createKanikoJobSpec(project, model, version)
+			jobSpec, err := c.createKanikoJobSpec(project, model, version)
+			if err != nil {
+				log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
+				return "", ErrUnableToCreateJobSpec{
+					Message: err.Error(),
+				}
+			}
+			
 			job, err = jobClient.Create(ctx, jobSpec, metav1.CreateOptions{})
 			if err != nil {
 				log.Errorf("unable to build image %s, error: %v", imageRef, err)
@@ -305,7 +319,7 @@ func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) e
 	}
 }
 
-func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version) *batchv1.Job {
+func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version) (*batchv1.Job, error) {
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
 
@@ -317,11 +331,16 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		labelOrchestratorName: "merlin",
 	}
 
+	baseImage, ok := c.config.BaseImage[version.PythonVersion]
+	if !ok {
+		return nil, fmt.Errorf("No matching base image for tag %s", version.PythonVersion)
+	}
+
 	kanikoArgs := []string{
 		fmt.Sprintf("--dockerfile=%s", c.config.DockerfilePath),
 		fmt.Sprintf("--context=%s", c.config.BuildContextURL),
 		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactURI),
-		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", c.config.BaseImage),
+		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImage),
 		fmt.Sprintf("--destination=%s", imageRef),
 		"--cache=true",
 		"--single-snapshot",
@@ -386,5 +405,5 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 				},
 			},
 		},
-	}
+	}, nil
 }

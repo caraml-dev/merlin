@@ -46,10 +46,12 @@ merlin:
   imageBuilder:
     clusterName: "dev"
     buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
-    baseImage: ""
+    baseImage: 
+      3.7.*: ""
     dockerfilePath: "./Dockerfile"
     predictionJobBuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
-    predictionJobBaseImage: "gojek/mlp/merlin-pyspark:v0.4.1"
+    predictionJobBaseImage: 
+      3.7.*: gojek/mlp/merlin-pyspark:v0.4.1
     predictionJobDockerfilePath: "docker/app.Dockerfile"
     namespace: "mlp"
     dockerRegistry: "gojek"

@@ -31,6 +31,14 @@ type ErrUnableToBuildImage struct {
 	Message string
 }
 
+type ErrUnableToCreateJobSpec struct {
+	Message string
+}
+
+func (e ErrUnableToCreateJobSpec) Error() string {
+	return fmt.Sprintf("error creating job spec: %s", e.Message)
+}
+
 func (e ErrUnableToBuildImage) Error() string {
 	return fmt.Sprintf("error building pyfunc image: %s", e.Message)
 }
