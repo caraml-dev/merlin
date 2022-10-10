@@ -9,5 +9,3 @@ merlin-pyspark-app = {editable = true,extras = ["test"],path = "."}
 [packages]
 merlin-pyspark-app = {editable = true, extras = ["test"], path = "."}
 
-[requires]
-python_version = "3.7"
