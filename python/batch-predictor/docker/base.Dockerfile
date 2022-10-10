@@ -16,6 +16,7 @@ FROM gcr.io/spark-operator/spark-py:v2.4.5
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 ENV ARROW_PRE_0_15_IPC_FORMAT 1
+ARG PYTHON_VERSION
 
 # Setup dependencies for Google Cloud Storage access.
 RUN rm $SPARK_HOME/jars/guava-14.0.1.jar
@@ -49,7 +50,7 @@ ENV PATH=$PATH:/google-cloud-sdk/bin
 COPY batch-predictor /merlin-spark-app
 COPY sdk /sdk
 COPY batch-predictor/merlin-entrypoint.sh /opt/merlin-entrypoint.sh
-RUN conda env create -f /merlin-spark-app/environment.yaml && \
+RUN conda env create -f /merlin-spark-app/env${PYTHON_VERSION}.yaml && \
     rm -rf /root/.cache
 
 ENTRYPOINT [ "/opt/merlin-entrypoint.sh" ]

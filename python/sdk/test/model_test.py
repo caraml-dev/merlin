@@ -972,6 +972,6 @@ def test_process_conda_env():
     assert "python=3.7.*" in new_conda["dependencies"]
 
     # test file version
-    conda = "pyfunc/env.yaml"
+    conda = "test/pyfunc/env.yaml"
     new_conda = merlin.model._process_conda_env(conda_env=conda, python_version="3.7.*")
     assert "python=3.7.*" in new_conda["dependencies"]

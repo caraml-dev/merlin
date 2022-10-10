@@ -258,19 +258,23 @@ jobs:
 
   build-batch-predictor:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["37", "38", "39", "310"]
     needs:
       - create-version
     steps:
       - uses: actions/checkout@v2
-      - name: Build Batch Predictor Docker
-        run: docker build -t merlin-pyspark-base:${{ needs.create-version.outputs.version }} -f python/batch-predictor/docker/base.Dockerfile python
+      - name: Build Batch Predictor Docker py${{ matrix.python-version }}
+        run: docker build -t merlin-pyspark-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} -f python/batch-predictor/docker/base.Dockerfile python
       - name: Save Batch Predictor Docker
-        run: docker image save --output merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar merlin-pyspark-base:${{ needs.create-version.outputs.version }}
+        run: docker image save --output merlin-pyspark-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar merlin-pyspark-base-py${{ matrix.python-version }}:${{ needs.create-version.outputs.version }}
       - name: Publish Batch Predictor Docker Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
-          path: merlin-pyspark-base.${{ needs.create-version.outputs.version }}.tar
+          name: merlin-pyspark-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
+          path: merlin-pyspark-base-py${{ matrix.python-version }}.${{ needs.create-version.outputs.version }}.tar
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-pyfunc-server:
