@@ -12,7 +12,8 @@ env:
   ARTIFACT_RETENTION_DAYS: 7
   DOCKER_BUILDKIT: 1
   GO_VERSION: 1.18
-  PYTHON_VERSION: 3.7
+  PYTHON_VERSION: 3.10
+  PYTHON_VERSION_TAG: 310
   
 jobs:
   create-version:
@@ -343,7 +344,6 @@ jobs:
       LOCAL_REGISTRY_PORT: 12345
       LOCAL_REGISTRY: "dev.localhost"
       INGRESS_HOST: "127.0.0.1.nip.io"
-      PYTHON_VERSION_TAG: 310
     steps:
       - uses: actions/checkout@v2
         with:
@@ -400,7 +400,7 @@ jobs:
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
-        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ PYTHON_VERSION_TAG }}
+        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.PYTHON_VERSION_TAG }}
       - name: Run E2E Test
         timeout-minutes: 30
         id: run-e2e-test
