@@ -28,6 +28,7 @@ type OperationTracing struct {
 	OpType types.OperationType
 }
 
+// NewOperationTracing initialize operation tracing object
 func NewOperationTracing(operationSpecs interface{}, opType types.OperationType) *OperationTracing {
 	opTracing := &OperationTracing{
 		Specs:  operationSpecs,

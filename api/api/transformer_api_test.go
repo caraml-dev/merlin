@@ -7,6 +7,7 @@ import (
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/models"
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/service/mocks"
@@ -66,6 +67,7 @@ func TestTransformerController_SimulateTransformer(t *testing.T) {
 						},
 					},
 				},
+				Protocol: protocol.HttpJson,
 				PredictionConfig: &models.ModelPredictionConfig{
 					Mock: &models.MockResponse{
 						Body: types.JSONObject{
@@ -174,6 +176,69 @@ func TestTransformerController_SimulateTransformer(t *testing.T) {
 			},
 		},
 		{
+			desc: "protocol is not set",
+			requestBody: &models.TransformerSimulation{
+				Payload: types.JSONObject{
+					"driver_id":    2,
+					"service_type": 1,
+				},
+				Headers: map[string]string{
+					"Country-ID": "ID",
+				},
+				Config: &spec.StandardTransformerConfig{
+					TransformerConfig: &spec.TransformerConfig{
+						Preprocess: &spec.Pipeline{
+							Inputs: []*spec.Input{
+								{
+									Variables: []*spec.Variable{
+										{
+											Name: "driver_id",
+											Value: &spec.Variable_JsonPath{
+												JsonPath: "$.driver_id",
+											},
+										},
+									},
+								},
+							},
+							Outputs: []*spec.Output{
+								{
+									JsonOutput: &spec.JsonOutput{
+										JsonTemplate: &spec.JsonTemplate{
+											Fields: []*spec.Field{
+												{
+													FieldName: "id",
+													Value: &spec.Field_Expression{
+														Expression: "driver_id",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				PredictionConfig: &models.ModelPredictionConfig{
+					Mock: &models.MockResponse{
+						Body: types.JSONObject{
+							"prediction": []float64{0.2, 0.4},
+						},
+					},
+				},
+			},
+			transformerService: func(payload *models.TransformerSimulation) *mocks.TransformerService {
+				mockSvc := &mocks.TransformerService{}
+				return mockSvc
+			},
+			want: &Response{
+				code: http.StatusBadRequest,
+				data: Error{
+					Message: `The only supported protocol are "HTTP_JSON" and "UPI_V1"`,
+				},
+			},
+		},
+		{
 			desc: "valid request body - service returning error",
 			requestBody: &models.TransformerSimulation{
 				Payload: types.JSONObject{
@@ -183,6 +248,7 @@ func TestTransformerController_SimulateTransformer(t *testing.T) {
 				Headers: map[string]string{
 					"Country-ID": "ID",
 				},
+				Protocol: protocol.HttpJson,
 				Config: &spec.StandardTransformerConfig{
 					TransformerConfig: &spec.TransformerConfig{
 						Preprocess: &spec.Pipeline{

@@ -9,6 +9,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/executor"
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/types"
+
 	"go.uber.org/zap"
 )
 
@@ -42,7 +43,7 @@ func (ts *transformerService) SimulateTransformer(ctx context.Context, simulatio
 		return nil, fmt.Errorf("failed creating transformer executor: %w", err)
 	}
 
-	return ts.simulate(ctx, transformerExecutor, simulationPayload.Payload, simulationPayload.Headers)
+	return transformerExecutor.Execute(ctx, simulationPayload.Payload, simulationPayload.Headers), nil
 }
 
 func (ts *transformerService) createTransformerExecutor(ctx context.Context, simulationPayload *models.TransformerSimulation) (executor.Transformer, error) {
@@ -67,20 +68,17 @@ func (ts *transformerService) createTransformerExecutor(ctx context.Context, sim
 		simulationPayload.Config,
 		executor.WithLogger(logger),
 		executor.WithTraceEnabled(true),
-		executor.WithModelPredictor(executor.NewMockModelPredictor(mockModelResponseBody, mockModelRequestHeaders)),
+		executor.WithModelPredictor(executor.NewMockModelPredictor(mockModelResponseBody, mockModelRequestHeaders, simulationPayload.Protocol)),
 		executor.WithFeastOptions(feast.Options{
 			StorageConfigs:     ts.cfg.ToFeastStorageConfigsForSimulation(),
 			DefaultFeastSource: ts.cfg.DefaultFeastSource,
 			BatchSize:          defaultFeastBatchSize,
 		}),
+		executor.WithProtocol(simulationPayload.Protocol),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed initializing standard transformer: %w", err)
 	}
 
 	return transformerExecutor, nil
-}
-
-func (ts *transformerService) simulate(ctx context.Context, transformer executor.Transformer, requestPayload types.JSONObject, requestHeaders map[string]string) (*types.PredictResponse, error) {
-	return transformer.Execute(ctx, requestPayload, requestHeaders)
 }

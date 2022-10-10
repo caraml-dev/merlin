@@ -57,6 +57,16 @@ func (up *UPIPreprocessOutputOp) Execute(ctx context.Context, env *Environment) 
 
 	env.SetOutput(copiedRequest)
 
+	if up.OperationTracing != nil {
+		outputDetail, err := copiedRequest.ToMap()
+		if err != nil {
+			return err
+		}
+		if err := up.OperationTracing.AddInputOutput(nil, outputDetail); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -40,6 +40,13 @@ export const StandardTransformerStep = () => {
     },
     onChangeHandler
   } = useContext(FormContext);
+
+  const {
+    data: versionEndpoint
+  } = useContext(FormContext)
+
+
+  const protocol = versionEndpoint.protocol
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const { errors } = useContext(FormValidationContext);
   const [isSideNavOpenOnMobile, setisSideNavOpenOnMobile] = useState(false);
@@ -264,7 +271,9 @@ export const StandardTransformerStep = () => {
                 )}
                 paddingSize="l"
                 initialIsOpen={true}>
-                <TransformerSimulation />
+                <TransformerSimulation 
+                  protocol={protocol}
+                />
               </EuiAccordion>
             </Element>
           </div>

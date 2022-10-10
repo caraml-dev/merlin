@@ -219,6 +219,8 @@ merlin:
       },
     ]
 
+    upiDocURL: "https://github.com/caraml-dev/universal-prediction-interface/blob/main/docs/api_markdown/caraml/upi/v1/index.md"
+
     # Comma-separated value of Docker registries that can be chosen in deployment page
     dockerRegistries: ghcr.io/gojek,ghcr.io/your-company
 

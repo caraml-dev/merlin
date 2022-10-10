@@ -1,16 +1,17 @@
 import { EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
 import { FormContext } from "@gojek/mlp-ui";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useMerlinApi } from "../../../../../../hooks/useMerlinApi";
 import { TransformerSimulationInput } from "./components/simulation/TransformerSimulationInput";
 import { TransformerSimulationOutput } from "./components/simulation/TransformerSimulationOutput";
-
+import { PROTOCOL } from "../../../../../../services/version_endpoint/VersionEndpoint"
 class SimulationPayload {
-  constructor() {
+  constructor(protocol=PROTOCOL.HTTP_JSON) {
     this.payload = undefined;
     this.headers = undefined;
     this.config = undefined;
     this.model_prediction_config = undefined;
+    this.protocol = protocol
   }
 }
 
@@ -26,13 +27,13 @@ const convertToJson = (val) => {
   }
 };
 
-export const TransformerSimulation = () => {
+export const TransformerSimulation = ({protocol}) => {
   const [simulationPayload, setSimulationPayload] = useState(
-    new SimulationPayload()
+    new SimulationPayload(protocol)
   );
   const [errors, setErrors] = useState({});
 
-    const [simulationResponse, submitForm] = useMerlinApi(
+  const [simulationResponse, submitForm] = useMerlinApi(
     `/standard_transformer/simulate`,
     { method: "POST" },
     {},
@@ -49,11 +50,14 @@ export const TransformerSimulation = () => {
     let errors = {};
 
     Object.keys(simulationPayload).forEach((name) => {
-      try {
-        convertToJson(simulationPayload[name]);
-      } catch (e) {
-        errors[name] = e.message;
+      if (name !== "protocol") {
+        try {
+          convertToJson(simulationPayload[name]);
+        } catch (e) {
+          errors[name] = e.message;
+        }
       }
+      
     });
 
     setErrors(errors);
@@ -73,6 +77,7 @@ export const TransformerSimulation = () => {
             headers: convertToJson(simulationPayload.mock_response_headers),
           },
         },
+        protocol: simulationPayload.protocol
       }),
     });
   };
@@ -81,11 +86,18 @@ export const TransformerSimulation = () => {
     setSimulationPayload({ ...simulationPayload, [field]: value });
   };
 
+  useEffect(() => {
+    onChange("protocol", protocol)
+  },
+  // eslint-disable-next-line react-hooks/exhaustive-deps 
+  [protocol]);
+
   return (
     <EuiFlexGroup gutterSize="m" direction="column">
       <EuiFlexItem>
         <TransformerSimulationInput
           simulationPayload={simulationPayload}
+          protocol={protocol}
           onChange={onChange}
           onSubmit={onSubmit}
           errors={errors}
