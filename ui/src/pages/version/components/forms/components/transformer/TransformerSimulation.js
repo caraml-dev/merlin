@@ -33,10 +33,6 @@ export const TransformerSimulation = ({protocol}) => {
   );
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    onChange("protocol", protocol)
-  }, [protocol]);
-
   const [simulationResponse, submitForm] = useMerlinApi(
     `/standard_transformer/simulate`,
     { method: "POST" },
@@ -89,6 +85,12 @@ export const TransformerSimulation = ({protocol}) => {
   const onChange = (field, value) => {
     setSimulationPayload({ ...simulationPayload, [field]: value });
   };
+
+  useEffect(() => {
+    onChange("protocol", protocol)
+  },
+  // eslint-disable-next-line react-hooks/exhaustive-deps 
+  [protocol]);
 
   return (
     <EuiFlexGroup gutterSize="m" direction="column">
