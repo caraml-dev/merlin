@@ -467,7 +467,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
 										fmt.Sprintf("--context=%s", config.BuildContextURL),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage[modelVersion.PythonVersion]),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
