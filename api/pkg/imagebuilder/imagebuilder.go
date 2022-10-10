@@ -146,7 +146,7 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 					Message: err.Error(),
 				}
 			}
-			
+
 			job, err = jobClient.Create(ctx, jobSpec, metav1.CreateOptions{})
 			if err != nil {
 				log.Errorf("unable to build image %s, error: %v", imageRef, err)
