@@ -48,13 +48,6 @@ install_merlin() {
             \"3.8.*\": \"${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py38:${VERSION}\", \
             \"3.9.*\": \"${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py39:${VERSION}\", \
             \"3.10.*\": \"${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py310:${VERSION}\"}' \
-    --set merlin.imageBuilder.predictionJobBaseImage=\
-          '\{ \
-            \"3\.7\.*\": ${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py37:${VERSION}\, \
-            \"3\.8\.*\": ${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py38:${VERSION}\, \
-            \"3\.9\.*\": ${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py39:${VERSION}\, \
-            \"3\.10.*\": ${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py310:${VERSION}\, \
-          \}' \
     --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}/v1 \
     --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST} \
     --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \
