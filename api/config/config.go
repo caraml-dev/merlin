@@ -101,24 +101,24 @@ type DatabaseConfig struct {
 }
 
 type ImageBuilderConfig struct {
-	ClusterName                  string            `envconfig:"IMG_BUILDER_CLUSTER_NAME"`
-	GcpProject                   string            `envconfig:"IMG_BUILDER_GCP_PROJECT"`
-	BuildContextURI              string            `envconfig:"IMG_BUILDER_BUILD_CONTEXT_URI"`
-	ContextSubPath               string            `envconfig:"IMG_BUILDER_CONTEXT_SUB_PATH"`
-	DockerfilePath               string            `envconfig:"IMG_BUILDER_DOCKERFILE_PATH" default:"./Dockerfile"`
-	BaseImage                    map[string]string `envconfig:"IMG_BUILDER_BASE_IMAGE"`
-	PredictionJobBuildContextURI string            `envconfig:"IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI"`
-	PredictionJobContextSubPath  string            `envconfig:"IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH"`
-	PredictionJobDockerfilePath  string            `envconfig:"IMG_BUILDER_PREDICTION_JOB_DOCKERFILE_PATH" default:"./Dockerfile"`
-	PredictionJobBaseImage       map[string]string `envconfig:"IMG_BUILDER_PREDICTION_JOB_BASE_IMAGE"`
-	BuildNamespace               string            `envconfig:"IMG_BUILDER_NAMESPACE" default:"mlp"`
-	DockerRegistry               string            `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
-	BuildTimeout                 string            `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
-	KanikoImage                  string            `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	ClusterName                  string  `envconfig:"IMG_BUILDER_CLUSTER_NAME"`
+	GcpProject                   string  `envconfig:"IMG_BUILDER_GCP_PROJECT"`
+	BuildContextURI              string  `envconfig:"IMG_BUILDER_BUILD_CONTEXT_URI"`
+	ContextSubPath               string  `envconfig:"IMG_BUILDER_CONTEXT_SUB_PATH"`
+	DockerfilePath               string  `envconfig:"IMG_BUILDER_DOCKERFILE_PATH" default:"./Dockerfile"`
+	BaseImage                    DictEnv `envconfig:"IMG_BUILDER_BASE_IMAGE"`
+	PredictionJobBuildContextURI string  `envconfig:"IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI"`
+	PredictionJobContextSubPath  string  `envconfig:"IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH"`
+	PredictionJobDockerfilePath  string  `envconfig:"IMG_BUILDER_PREDICTION_JOB_DOCKERFILE_PATH" default:"./Dockerfile"`
+	PredictionJobBaseImage       DictEnv `envconfig:"IMG_BUILDER_PREDICTION_JOB_BASE_IMAGE"`
+	BuildNamespace               string  `envconfig:"IMG_BUILDER_NAMESPACE" default:"mlp"`
+	DockerRegistry               string  `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
+	BuildTimeout                 string  `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
+	KanikoImage                  string  `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
 	Tolerations   Tolerations   `envconfig:"IMG_BUILDER_TOLERATIONS"`
-	NodeSelectors NodeSelectors `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
+	NodeSelectors DictEnv       `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
 	MaximumRetry  int32         `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
 }
 
@@ -134,15 +134,15 @@ func (spec *Tolerations) Decode(value string) error {
 	return nil
 }
 
-type NodeSelectors map[string]string
+type DictEnv map[string]string
 
-func (ns *NodeSelectors) Decode(value string) error {
-	var nodeSelectors NodeSelectors
+func (d *DictEnv) Decode(value string) error {
+	var dict DictEnv
 
-	if err := json.Unmarshal([]byte(value), &nodeSelectors); err != nil {
+	if err := json.Unmarshal([]byte(value), &dict); err != nil {
 		return err
 	}
-	*ns = nodeSelectors
+	*d = dict
 	return nil
 }
 
