@@ -334,10 +334,10 @@ jobs:
   e2e-test:
     runs-on: ubuntu-latest
     needs: 
-      - build-api
+      #- build-api
       #- build-batch-predictor
       #- build-pyfunc-server
-      - build-transformer
+      #- build-transformer
       - create-version
     env:
       K3D_CLUSTER: merlin-cluster
