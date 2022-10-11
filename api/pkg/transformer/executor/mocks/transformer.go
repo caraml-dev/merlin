@@ -16,11 +16,11 @@ type Transformer struct {
 }
 
 // Execute provides a mock function with given fields: ctx, requestBody, requestHeaders
-func (_m *Transformer) Execute(ctx context.Context, requestBody types.Payload, requestHeaders map[string]string) (*types.PredictResponse, error) {
+func (_m *Transformer) Execute(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) *types.PredictResponse {
 	ret := _m.Called(ctx, requestBody, requestHeaders)
 
 	var r0 *types.PredictResponse
-	if rf, ok := ret.Get(0).(func(context.Context, types.Payload, map[string]string) *types.PredictResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.JSONObject, map[string]string) *types.PredictResponse); ok {
 		r0 = rf(ctx, requestBody, requestHeaders)
 	} else {
 		if ret.Get(0) != nil {
@@ -28,14 +28,7 @@ func (_m *Transformer) Execute(ctx context.Context, requestBody types.Payload, r
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, types.Payload, map[string]string) error); ok {
-		r1 = rf(ctx, requestBody, requestHeaders)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 type mockConstructorTestingTNewTransformer interface {

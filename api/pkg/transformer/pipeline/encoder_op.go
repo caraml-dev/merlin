@@ -22,7 +22,7 @@ type Encoder interface {
 func NewEncoderOp(encoders []*spec.Encoder, tracingEnabled bool) *EncoderOp {
 	encoderOp := &EncoderOp{encoderSpecs: encoders}
 	if tracingEnabled {
-		encoderOp.OperationTracing = NewOperationTracing(encoders, types.JsonOutputOpType)
+		encoderOp.OperationTracing = NewOperationTracing(encoders, types.EncoderOpType)
 	}
 	return encoderOp
 }

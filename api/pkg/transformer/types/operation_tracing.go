@@ -14,6 +14,7 @@ const (
 	CreateTableOpType      OperationType = "create_table_op"
 	FeastOpType            OperationType = "feast_op"
 	JsonOutputOpType       OperationType = "json_output_op"
+	EncoderOpType          OperationType = "encoder_op"
 	TableJoinOpType        OperationType = "table_join_op"
 	TableTransformOp       OperationType = "table_transform_op"
 	UPIAutoloadingOp       OperationType = "upi_autoloading_op"

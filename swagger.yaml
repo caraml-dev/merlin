@@ -968,7 +968,7 @@ paths:
         200:
           description: "OK"
           schema:
-            $ref: "#/definitions/VersionEndpoint"
+            $ref: "#/definitions/StandardTransformerSimulationResponse"
 
 definitions:
   EndpointStatus:
@@ -1618,6 +1618,9 @@ definitions:
         $ref: "#/definitions/FreeFormObject"
       model_prediction_config:
         $ref: "#/definitions/ModelPredictionConfig"
+      protocol:
+        $ref: "#/definitions/Protocol"
+
 
   StandardTransformerSimulationResponse:
     type: object

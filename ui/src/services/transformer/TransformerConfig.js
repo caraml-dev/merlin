@@ -20,6 +20,7 @@ import {
   feastInputSchema,
   pipelineSchema
 } from "../../pages/version/components/forms/validation/schema";
+import { PROTOCOL } from "../version_endpoint/VersionEndpoint"
 
 const objectAssignDeep = require(`object-assign-deep`);
 
@@ -44,6 +45,11 @@ export const getFeastSource = feastConfig => {
 
 export const STANDARD_TRANSFORMER_CONFIG_ENV_NAME =
   "STANDARD_TRANSFORMER_CONFIG";
+
+export const PIPELINE_STEP = {
+  Preprocess: "preprocess",
+  Postprocess: "postprocess"
+}
 
 export class Config {
   constructor(transformerConfig) {
@@ -171,7 +177,6 @@ export class Pipeline {
     this.inputs = [];
     this.transformations = [];
     this.outputs = [];
-
     this.toJSON = this.toJSON.bind(this);
   }
 
@@ -482,6 +487,13 @@ export class TablesInput {
   }
 }
 
+export class Autoload {
+  constructor() {
+    this.tableNames = []
+    this.variableNames = []
+  }
+}
+
 export class Transformations {
   constructor() {
     this.tableTransformation = new TableTransformation();
@@ -508,8 +520,29 @@ export class TableJoin {
 }
 
 export class Output {
+  constructor(protocol, pipelineStage) {
+    if (protocol === PROTOCOL.UPI_V1) {
+      if (pipelineStage === PIPELINE_STEP.Preprocess) {
+        this.upiPreprocessOutput = new UPIPreprocessOutput()
+      } else {
+        this.upiPostprocessOutput = new UPIPostprocessOutput()
+      }
+    } else {
+      this.jsonOutput = new JsonOutput();
+    }
+  }
+}
+
+export class UPIPreprocessOutput {
   constructor() {
-    this.jsonOutput = new JsonOutput();
+    this.predictionTableName = ""
+    this.transformerInputTableNames = []
+  }
+}
+
+export class UPIPostprocessOutput {
+  constructor() {
+    this.predictionResultTableName = ""
   }
 }
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 // UPIPredictionRequest, wrapper of upiv1.PredictValuesRequest
@@ -58,6 +59,26 @@ func (upr *UPIPredictionRequest) OriginalValue() any {
 	return (*upiv1.PredictValuesRequest)(upr)
 }
 
+// ToMap convert receiver to map type
+func (upr *UPIPredictionRequest) ToMap() (map[string]any, error) {
+	upiRequest := (*upiv1.PredictValuesRequest)(upr)
+	return convertProtoToMap(upiRequest)
+}
+
+func convertProtoToMap(message proto.Message) (map[string]any, error) {
+	data, err := json.Marshal(message)
+	if err != nil {
+		return nil, err
+	}
+
+	var res map[string]any
+	if err := json.Unmarshal(data, &res); err != nil {
+		return nil, err
+	}
+	return res, nil
+
+}
+
 // AsInput convert current Payload into format that accepted by standard transformer input
 func (upr *UPIPredictionResponse) AsInput() (Payload, error) {
 	return upr, nil
@@ -71,6 +92,12 @@ func (upr *UPIPredictionResponse) AsOutput() (Payload, error) {
 // IsNil check whether the interface is nil
 func (upr *UPIPredictionResponse) IsNil() bool {
 	return upr == nil
+}
+
+// ToMap convert receiver to map type
+func (upr *UPIPredictionResponse) ToMap() (map[string]any, error) {
+	upiResponse := (*upiv1.PredictValuesResponse)(upr)
+	return convertProtoToMap(upiResponse)
 }
 
 // OriginalValue will unwrap the Payload to its origin type

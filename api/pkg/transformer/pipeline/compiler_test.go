@@ -139,6 +139,38 @@ func TestCompiler_Compile(t *testing.T) {
 			expError:         errors.New("unable to compile preprocessing pipeline: unknown name var3 (1:1)\n | var3\n | ^"),
 		},
 		{
+			name: "invalid upi preprocess due to empty `predictionTableName` and `transformerInputTableNames`",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.UpiV1,
+			},
+			specYamlFilePath: "./testdata/upi/invalid_preprocess_output_empty.yaml",
+			wantErr:          true,
+			expError:         errors.New(`unable to compile preprocessing pipeline: "predictionTableName" or "transformerInputTableNames" must be set for upi preprocess output spec`),
+		},
+		{
+			name: "invalid upi postprocess due to empty `predictionResultTableName`",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.UpiV1,
+			},
+			specYamlFilePath: "./testdata/upi/invalid_postprocess_empty_result_table.yaml",
+			wantErr:          true,
+			expError:         errors.New(`unable to compile postprocessing pipeline: "predictionResultTableName" must be set for upi postprocess output spec`),
+		},
+		{
 			name: "invalid upi preprocess output",
 			fields: fields{
 				sr:           symbol.NewRegistry(),

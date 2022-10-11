@@ -94,6 +94,8 @@ spec:
           - name: REACT_APP_MERLIN_DOCS_URL
             value: {{ .Values.merlin.ui.docsURL | toJson | quote }}
           {{- end }}
+          - name: REACT_APP_UPI_DOC_URL
+            value: "{{ .Values.merlin.ui.upiDocURL }}"
           - name: REACT_APP_HOMEPAGE
             value: "{{ .Values.merlin.ui.homepage }}"
           - name: REACT_APP_MERLIN_API

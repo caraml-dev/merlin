@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -98,25 +97,11 @@ func Test_transformerService_simulate(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc: "executor error",
-			transformerExecutor: func(payload types.Payload, headers map[string]string) *mocks.Transformer {
-				mockTrf := &mocks.Transformer{}
-				mockTrf.On("Execute", mock.Anything, payload, headers).Return(nil, fmt.Errorf("executor error"))
-				return mockTrf
-			},
-			wantErr: true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			ts := &transformerService{}
 			trfExecutor := tt.transformerExecutor(tt.requestPayload, tt.headers)
-			got, err := ts.simulate(context.Background(), trfExecutor, tt.requestPayload, tt.headers)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("transformerService.simulate() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := trfExecutor.Execute(context.Background(), tt.requestPayload, tt.headers)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("transformerService.simulate() = %v, want %v", got, tt.want)
 			}

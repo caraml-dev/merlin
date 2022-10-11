@@ -72,6 +72,7 @@ type ReactAppConfig struct {
 	MlpURL            string         `envconfig:"REACT_APP_MLP_API" json:"REACT_APP_MLP_API,omitempty"`
 	OauthClientID     string         `envconfig:"REACT_APP_OAUTH_CLIENT_ID" json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
 	SentryDSN         string         `envconfig:"REACT_APP_SENTRY_DSN" json:"REACT_APP_SENTRY_DSN,omitempty"`
+	UPIDocumentation  string         `envconfig:"REACT_APP_UPI_DOC_URL" json:"REACT_APP_UPI_DOC_URL,omitempty"`
 }
 
 type Documentations []Documentation

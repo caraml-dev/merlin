@@ -192,13 +192,24 @@ export const PipelineNodeDetails = ({ details }) => {
     }
 
     let tabs = [];
-    if (details.output["instances"] === undefined) {
+    if (details.output["instances"] === undefined && details.operation_type !== "upi_preprocess_output_op" && details.operation_type !== "upi_postprocess_output_op") {
+      let tables = []
+      Object.keys(details.output).forEach(name => {
+        tables.push(
+          <Table
+            key={name}
+            data={{ [name]: details.output[name] }}
+          />
+        );
+      });
+
       tabs.push({
         id: "output-table",
         name: "Table",
-        content: <Table data={details.output} />
+        content: tables
       });
     }
+
 
     tabs.push({
       id: "output-json",
@@ -211,7 +222,7 @@ export const PipelineNodeDetails = ({ details }) => {
       )
     });
     setOutputTabs(tabs);
-  }, [details.output, setOutputTabs]);
+  }, [details.output, setOutputTabs, details.operation_type]);
 
   const items = [
     {

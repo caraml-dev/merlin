@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-import { EuiPageTemplate, EuiPanel, EuiSpacer } from "@elastic/eui";
+import { EuiPageTemplate, EuiPanel, EuiSpacer} from "@elastic/eui";
 import { FormContextProvider } from "@gojek/mlp-ui";
-import React from "react";
+import { React } from "react";
 import {
   Config,
   Pipeline,
   TransformerConfig
 } from "../../services/transformer/TransformerConfig";
-import { StandardTransformerStep } from "../version/components/forms/steps/StandardTransformerStep";
+import {StandardTransformerTools} from "./StandardTransformerTools"
+import { PROTOCOL } from "../../services/version_endpoint/VersionEndpoint";
 
 const TransformerTools = () => {
+
   return (
     <EuiPageTemplate restrictWidth="90%" paddingSize="none">
       <EuiPageTemplate.Section color={"transparent"}>
         <EuiPanel>
           <FormContextProvider
             data={{
+              protocol: PROTOCOL.HTTP_JSON,
               transformer: {
                 config: new Config(
                   new TransformerConfig(
@@ -42,7 +45,9 @@ const TransformerTools = () => {
                 type_on_ui: "standard"
               }
             }}>
-            <StandardTransformerStep />
+            
+            <StandardTransformerTools 
+            />
           </FormContextProvider>
         </EuiPanel>
       </EuiPageTemplate.Section>
