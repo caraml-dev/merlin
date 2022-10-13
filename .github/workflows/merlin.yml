@@ -462,7 +462,7 @@ jobs:
     needs:
     - create-version
     - build-pyfunc-server #- e2e-test
-    - build-build-batch-predictor #To be removed
+    - build-batch-predictor #To be removed
     - test-api
     - test-python-sdk
     - test-pyfunc-server
