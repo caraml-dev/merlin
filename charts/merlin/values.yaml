@@ -48,7 +48,7 @@ merlin:
     buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
     baseImage: 
       3.7.*: ""
-    dockerfilePath: "./Dockerfile"
+    dockerfilePath: "docker/Dockerfile"
     predictionJobBuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
     predictionJobBaseImage: 
       3.7.*: gojek/mlp/merlin-pyspark:v0.4.1

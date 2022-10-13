@@ -47,7 +47,7 @@ TEST_REQUIRES = [
     "urllib3-mock>=0.3.3",
     "requests",
     "xgboost==1.6.2",
-    "scikit-learn==1.0.1",  # >=1.1.2 upon python 3.7 deprecation
+    "scikit-learn==1.0.2",  # >=1.1.2 upon python 3.7 deprecation
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy>=0.812",
     "google-cloud-bigquery>=1.18.0",

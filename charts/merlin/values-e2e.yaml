@@ -64,7 +64,7 @@ merlin:
     kanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
     baseImage: 
       3.7.*: ""
-    dockerfilePath: "./Dockerfile"
+    dockerfilePath: "docker/Dockerfile"
     predictionJobDockerfilePath: "docker/app.Dockerfile"
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
