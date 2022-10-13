@@ -13,17 +13,14 @@
 # limitations under the License.
 
 FROM gcr.io/spark-operator/spark-py:v3.1.1
+USER root
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
-ENV ARROW_PRE_0_15_IPC_FORMAT 1
 ARG PYTHON_VERSION
 
-# Setup dependencies for Google Cloud Storage access.
-RUN rm $SPARK_HOME/jars/guava-14.0.1.jar
-ADD https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar $SPARK_HOME/jars
 # Add the connector jar needed to access Google Cloud Storage using the Hadoop FileSystem API.
-ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop2-2.0.1.jar $SPARK_HOME/jars
-ADD https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.11/0.13.1-beta/spark-bigquery-with-dependencies_2.11-0.13.1-beta.jar $SPARK_HOME/jars
+ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-2.2.8.jar $SPARK_HOME/jars
+ADD https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.13/0.27.0/spark-bigquery-with-dependencies_2.13-0.27.0.jar $SPARK_HOME/jars
 
 # Setup for the Prometheus JMX exporter.
 RUN mkdir -p /etc/metrics/conf
