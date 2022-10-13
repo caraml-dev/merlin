@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/spark-operator/spark-py:v2.4.5
+FROM gcr.io/spark-operator/spark-py:v3.1.1
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 ENV ARROW_PRE_0_15_IPC_FORMAT 1
