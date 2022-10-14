@@ -13,7 +13,7 @@
 # limitations under the License.
 ARG SPARK_VERSION=v3.1.1
 
-FROM gcr.io/spark-operator/spark-py:$SPARK_VERSION
+FROM gcr.io/spark-operator/spark-py:${SPARK_VERSION}
 USER root
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
@@ -24,14 +24,14 @@ ARG SPARK_BQ_CONNECTOR_VERSION=0.27.0
 
 # Add the connector jar needed to access Google Cloud Storage using the Hadoop FileSystem API.
 ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop2-2.2.8.jar $SPARK_HOME/jars
-ADD https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.12/$SPARK_BQ_CONNECTOR_VERSION/spark-bigquery-with-dependencies_2.12-0.27.0.jar $SPARK_HOME/jars
+ADD https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.12/${SPARK_BQ_CONNECTOR_VERSION}/spark-bigquery-with-dependencies_2.12-0.27.0.jar $SPARK_HOME/jars
 
 # Setup for the Prometheus JMX exporter.
 RUN mkdir -p /etc/metrics/conf
 # Add the Prometheus JMX exporter Java agent jar for exposing metrics sent to the JmxSink to Prometheus.
 ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.11.0/jmx_prometheus_javaagent-0.11.0.jar /prometheus/
-ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/$SPARK_OPERATOR_VERSION/spark-docker/conf/metrics.properties /etc/metrics/conf
-ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/$SPARK_OPERATOR_VERSION/spark-docker/conf/prometheus.yaml /etc/metrics/conf
+ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/${SPARK_OPERATOR_VERSION}/spark-docker/conf/metrics.properties /etc/metrics/conf
+ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/${SPARK_OPERATOR_VERSION}/spark-docker/conf/prometheus.yaml /etc/metrics/conf
 
 RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -y wget bzip2 ca-certificates \
     libglib2.0-0 libxext6 libsm6 libxrender1 \
@@ -45,7 +45,8 @@ RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/4.14
     echo "conda activate base" >> ~/.bashrc
 
 WORKDIR /
-RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-265.0.0-linux-x86_64.tar.gz | tar xzf -
+ARG GCLOUD_VERSION=405.0.0
+RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
 ENV PATH=$PATH:/google-cloud-sdk/bin
 
 COPY batch-predictor /merlin-spark-app
