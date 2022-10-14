@@ -11,23 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+ARG SPARK_VERSION=v3.1.1
 
-FROM gcr.io/spark-operator/spark-py:v3.1.1
+FROM gcr.io/spark-operator/spark-py:$SPARK_VERSION
 USER root
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 ARG PYTHON_VERSION
+ARG SPARK_OPERATOR_VERSION=v1beta2-1.3.7-3.1.1
+ARG SPARK_BQ_CONNECTOR_VERSION=0.27.0
+
 
 # Add the connector jar needed to access Google Cloud Storage using the Hadoop FileSystem API.
-ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-2.2.8.jar $SPARK_HOME/jars
-ADD https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.13/0.27.0/spark-bigquery-with-dependencies_2.13-0.27.0.jar $SPARK_HOME/jars
+ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop2-2.2.8.jar $SPARK_HOME/jars
+ADD https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.12/$SPARK_BQ_CONNECTOR_VERSION/spark-bigquery-with-dependencies_2.12-0.27.0.jar $SPARK_HOME/jars
 
 # Setup for the Prometheus JMX exporter.
 RUN mkdir -p /etc/metrics/conf
 # Add the Prometheus JMX exporter Java agent jar for exposing metrics sent to the JmxSink to Prometheus.
 ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.11.0/jmx_prometheus_javaagent-0.11.0.jar /prometheus/
-ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/v1beta2-1.1.0-2.4.5/spark-docker/conf/metrics.properties /etc/metrics/conf
-ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/v1beta2-1.1.0-2.4.5/spark-docker/conf/prometheus.yaml /etc/metrics/conf
+ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/$SPARK_OPERATOR_VERSION/spark-docker/conf/metrics.properties /etc/metrics/conf
+ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/$SPARK_OPERATOR_VERSION/spark-docker/conf/prometheus.yaml /etc/metrics/conf
 
 RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -y wget bzip2 ca-certificates \
     libglib2.0-0 libxext6 libsm6 libxrender1 \
