@@ -26,6 +26,8 @@ import (
 	"github.com/gojek/merlin/utils"
 )
 
+const DEFAULT_PYTHON_VERSION = "3.7.*"
+
 type VersionsController struct {
 	*AppContext
 }
@@ -113,6 +115,10 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 	validLabel := validateLabels(versionPost.Labels)
 	if !validLabel {
 		return BadRequest("Valid label key/values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between.")
+	}
+
+	if versionPost.PythonVersion == "" { // if using older sdk, this will be blank
+		versionPost.PythonVersion = DEFAULT_PYTHON_VERSION
 	}
 
 	modelID, _ := models.ParseID(vars["model_id"])

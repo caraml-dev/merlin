@@ -39,7 +39,7 @@ type Version struct {
 
 type VersionPost struct {
 	Labels        KV     `json:"labels" gorm:"labels"`
-	PythonVersion string `json:"python_version" gorm:"python_version" default:"3.7.*"` // default for backward compatibility with older sdk
+	PythonVersion string `json:"python_version" gorm:"python_version"`
 }
 
 type VersionPatch struct {
