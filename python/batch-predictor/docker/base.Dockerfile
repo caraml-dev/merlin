@@ -52,7 +52,7 @@ RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -
 
 # Install gcloud SDK
 WORKDIR /
-ARG GCLOUD_VERSION=332.0.0
+ARG GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
 ENV PATH=$PATH:/google-cloud-sdk/bin
 
