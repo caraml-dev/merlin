@@ -20,7 +20,7 @@ USER root
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
-ARG PYTHON_VERSION
+
 ARG SPARK_OPERATOR_VERSION=v1beta2-1.2.2-3.0.0
 ARG SPARK_BQ_CONNECTOR_VERSION=0.19.1
 
@@ -51,23 +51,11 @@ RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -
     git mercurial subversion
 
 # Install gcloud SDK
-WORKDIR /
+ENV PATH=$PATH:/google-cloud-sdk/bin
 ARG GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
-ENV PATH=$PATH:/google-cloud-sdk/bin
 
-# Install miniconda
-RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/4.14.0-0/Miniforge3-4.14.0-0-Linux-x86_64.sh -O ~/miniconda.sh && \
-    /bin/bash ~/miniconda.sh -b -p /opt/conda && \
-    rm ~/miniconda.sh && \
-    /opt/conda/bin/conda clean -all -y && \
-    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    echo "conda activate base" >> ~/.bashrc
-
-# Copy batch predictor application
-COPY batch-predictor /merlin-spark-app
-COPY sdk /sdk
+# Copy batch predictor application entrypoint to protected directory
 COPY batch-predictor/merlin-entrypoint.sh /opt/merlin-entrypoint.sh
 
 # Configure non-root user
@@ -80,12 +68,31 @@ ENV GID $spark_gid
 ENV HOME /home/$USER
 RUN adduser --disabled-password --uid $UID --gid $GID --home $HOME $USER
 
-# Setup base conda environment
-RUN conda env create -f /merlin-spark-app/env${PYTHON_VERSION}.yaml && \
-    rm -rf /root/.cache
-
 # Switch to Spark user
 USER ${USER}
-WORKDIR /
+WORKDIR ${HOME}
+
+# Install miniconda
+ENV CONDA_DIR ${HOME}/miniconda3
+ENV PATH ${CONDA_DIR}/bin:$PATH
+
+RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/4.14.0-0/Miniforge3-4.14.0-0-Linux-x86_64.sh -O miniconda.sh && \
+    /bin/bash miniconda.sh -b -p ${CONDA_DIR} && \
+    rm ~/miniconda.sh && \
+    $CONDA_DIR/bin/conda clean -afy && \
+    echo "source $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.bashrc
+
+# Copy batch predictor application
+COPY --chown=${UID}:${GID} batch-predictor ${HOME}/merlin-spark-app
+COPY --chown=${UID}:${GID} sdk ${HOME}/sdk
+
+# Setup base conda environment
+ARG PYTHON_VERSION
+ENV CONDA_ENVIRONMENT merlin-model
+RUN conda env create -f ${HOME}/merlin-spark-app/env${PYTHON_VERSION}.yaml -n ${CONDA_ENVIRONMENT} && \
+    rm -rf ${HOME}/.cache
+
+RUN echo "conda activate ${CONDA_ENVIRONMENT}" >> $HOME/.bashrc
+ENV PATH ${CONDA_DIR}/envs/${CONDA_ENVIRONMENT}/bin:$PATH
 
 ENTRYPOINT [ "/opt/merlin-entrypoint.sh" ]
