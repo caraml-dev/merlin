@@ -18,7 +18,7 @@ FROM ${BASE_IMAGE}
 # Get the model
 
 ARG MODEL_URL
-RUN gsutil cp -r ${MODEL_URL} .
+RUN gsutil -m cp -r ${MODEL_URL} .
 # pip 20.2.4 to allow dependency conflicts
 RUN /bin/bash -c ". activate ${CONDA_ENVIRONMENT} && \
     sed -i 's/pip$/pip=20.2.4/' ${HOME}/model/conda.yaml && \
