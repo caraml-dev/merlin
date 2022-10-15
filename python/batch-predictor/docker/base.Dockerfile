@@ -56,20 +56,6 @@ ARG GCLOUD_VERSION=332.0.0
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
 ENV PATH=$PATH:/google-cloud-sdk/bin
 
-# Configure non-root user
-ARG username=spark
-ARG spark_uid=185
-ARG spark_gid=100
-ENV USER $username
-ENV UID $spark_uid
-ENV GID $spark_gid
-ENV HOME /home/$USER
-RUN adduser --disabled-password --uid $UID --gid $GID --home $HOME $USER
-
-# Switch to Spark user
-USER ${USER}
-WORKDIR $HOME
-
 # Install miniconda
 RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/4.14.0-0/Miniforge3-4.14.0-0-Linux-x86_64.sh -O ~/miniconda.sh && \
     /bin/bash ~/miniconda.sh -b -p /opt/conda && \
@@ -84,8 +70,22 @@ COPY batch-predictor /merlin-spark-app
 COPY sdk /sdk
 COPY batch-predictor/merlin-entrypoint.sh /opt/merlin-entrypoint.sh
 
+# Configure non-root user
+ARG username=spark
+ARG spark_uid=185
+ARG spark_gid=100
+ENV USER $username
+ENV UID $spark_uid
+ENV GID $spark_gid
+ENV HOME /home/$USER
+RUN adduser --disabled-password --uid $UID --gid $GID --home $HOME $USER
+
 # Setup base conda environment
 RUN conda env create -f /merlin-spark-app/env${PYTHON_VERSION}.yaml && \
     rm -rf /root/.cache
+
+# Switch to Spark user
+USER ${USER}
+WORKDIR $HOME
 
 ENTRYPOINT [ "/opt/merlin-entrypoint.sh" ]
