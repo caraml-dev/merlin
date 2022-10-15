@@ -18,4 +18,4 @@ FROM ${BASE_IMAGE}
 
 # Get the model
 COPY model /model
-RUN /bin/bash -c ". activate merlin-model && conda env update --name merlin-model --file /model/conda.yaml && python merlin-spark-app/main.py --dry-run-model /model"
+RUN /bin/bash -c ". activate merlin-model && conda env update --name merlin-model --file /model/conda.yaml && python ${HOME}/merlin-spark-app/main.py --dry-run-model /model"

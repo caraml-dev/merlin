@@ -57,7 +57,7 @@ const (
 
 var (
 	// Hardcoded based on python/batch-predictor/docker/base.Dockerfile
-	mainApplicationPath = "local:///merlin-spark-app/main.py"
+	mainApplicationPath = "local:///home/spark/merlin-spark-app/main.py"
 	pythonVersion       = "3"
 	ttlSecond           = int64(24 * time.Hour / time.Second)
 

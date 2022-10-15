@@ -13,7 +13,7 @@ spec:
   mode: cluster
   image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
   imagePullPolicy: IfNotPresent
-  mainApplicationFile: local:///merlin-spark-app/main.py
+  mainApplicationFile: local:///home/spark/merlin-spark-app/main.py
   arguments:
     - "--job-name"
     - "bq-to-bq-prediction"
