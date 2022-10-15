@@ -46,6 +46,16 @@ ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/
 ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/$SPARK_OPERATOR_VERSION/spark-docker/conf/prometheus.yaml /etc/metrics/conf
 RUN chmod 644 -R /etc/metrics/conf/*
 
+RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -y wget bzip2 ca-certificates \
+    libglib2.0-0 libxext6 libsm6 libxrender1 \
+    git mercurial subversion
+
+# Install gcloud SDK
+WORKDIR /
+ARG GCLOUD_VERSION=332.0.0
+RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
+ENV PATH=$PATH:/google-cloud-sdk/bin
+
 # Configure non-root user
 ARG username=spark
 ARG spark_uid=185
@@ -60,10 +70,6 @@ RUN adduser --disabled-password --uid $UID --gid $GID --home $HOME $USER
 USER ${USER}
 WORKDIR $HOME
 
-RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -y wget bzip2 ca-certificates \
-    libglib2.0-0 libxext6 libsm6 libxrender1 \
-    git mercurial subversion
-
 # Install miniconda
 RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/4.14.0-0/Miniforge3-4.14.0-0-Linux-x86_64.sh -O ~/miniconda.sh && \
     /bin/bash ~/miniconda.sh -b -p /opt/conda && \
@@ -72,12 +78,6 @@ RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/4.14
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc
-
-# Install gcloud SDK
-WORKDIR /
-ARG GCLOUD_VERSION=332.0.0
-RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
-ENV PATH=$PATH:/google-cloud-sdk/bin
 
 # Copy batch predictor application
 COPY batch-predictor /merlin-spark-app
