@@ -86,6 +86,6 @@ RUN conda env create -f /merlin-spark-app/env${PYTHON_VERSION}.yaml && \
 
 # Switch to Spark user
 USER ${USER}
-WORKDIR $HOME
+WORKDIR /
 
 ENTRYPOINT [ "/opt/merlin-entrypoint.sh" ]
