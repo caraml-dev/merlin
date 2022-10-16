@@ -123,7 +123,6 @@ if __name__ == '__main__':
             .appName(args.job_name) \
             .getOrCreate()
         spark.conf.set("spark.sql.execution.arrow.enabled", "true")
-        spark.conf.set("spark.decommission.enabled", "true")
 
     print(f"Spark Conf: {spark.sparkContext.getConf().getAll()}")
     if args.dry_run_path is not None:
