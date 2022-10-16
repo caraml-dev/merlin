@@ -42,8 +42,8 @@ RUN mkdir -p /etc/metrics/conf
 ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.11.0/jmx_prometheus_javaagent-0.11.0.jar /prometheus/
 RUN chmod 644 /prometheus/jmx_prometheus_javaagent-0.11.0.jar
 
-ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/$SPARK_OPERATOR_VERSION/spark-docker/conf/metrics.properties /etc/metrics/conf
-ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/$SPARK_OPERATOR_VERSION/spark-docker/conf/prometheus.yaml /etc/metrics/conf
+ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/${SPARK_OPERATOR_VERSION}/spark-docker/conf/metrics.properties /etc/metrics/conf
+ADD https://raw.githubusercontent.com/GoogleCloudPlatform/spark-on-k8s-operator/${SPARK_OPERATOR_VERSION}/spark-docker/conf/prometheus.yaml /etc/metrics/conf
 RUN chmod 644 -R /etc/metrics/conf/*
 
 RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -y wget bzip2 ca-certificates \
