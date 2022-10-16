@@ -5,3 +5,5 @@ xgboost==1.6.2
 mlflow==1.23.0
 merlin-sdk
 cloudpickle==2.0.0
+google-cloud
+google-cloud-bigquery[pandas]==2.34.3

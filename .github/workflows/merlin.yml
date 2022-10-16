@@ -461,8 +461,7 @@ jobs:
     uses: ./.github/workflows/release.yml
     needs:
     - create-version
-    - build-pyfunc-server #- e2e-test
-    - build-batch-predictor #To be removed
+    - e2e-test
     - test-api
     - test-python-sdk
     - test-pyfunc-server
