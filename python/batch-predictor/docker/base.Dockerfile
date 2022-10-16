@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG SPARK_VERSION=v3.1.1
+ARG SPARK_VERSION=v3.0.0
 FROM gcr.io/spark-operator/spark-py:${SPARK_VERSION}
 
 # Switch to user root so we can add additional jars and configuration files.
@@ -21,8 +21,8 @@ USER root
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
-ARG SPARK_OPERATOR_VERSION=v1beta2-1.3.7-3.1.1
-ARG SPARK_BQ_CONNECTOR_VERSION=0.27.0
+ARG SPARK_OPERATOR_VERSION=v1beta2-1.2.2-3.0.0
+ARG SPARK_BQ_CONNECTOR_VERSION=0.19.1
 
 # Setup dependencies for Google Cloud Storage access.
 RUN rm $SPARK_HOME/jars/guava-14.0.1.jar
@@ -30,7 +30,7 @@ ADD https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar \
     $SPARK_HOME/jars
 
 # Add the connector jar needed to access Google Cloud Storage using the Hadoop FileSystem API.
-ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop2-2.2.8.jar \
+ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop2-2.0.1.jar \
     $SPARK_HOME/jars
 ADD https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.12/${SPARK_BQ_CONNECTOR_VERSION}/spark-bigquery-with-dependencies_2.12-${SPARK_BQ_CONNECTOR_VERSION}.jar \
     $SPARK_HOME/jars
