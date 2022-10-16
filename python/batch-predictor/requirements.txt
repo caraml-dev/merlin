@@ -1,5 +1,5 @@
 findspark
-pyspark==3.0.3
+pyspark==3.0.1
 mlflow>=1.2.0,<=1.23.0
 cloudpickle==2.0.0
 pyarrow>=0.14.1
