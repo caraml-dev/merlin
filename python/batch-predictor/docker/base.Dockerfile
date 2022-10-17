@@ -81,7 +81,7 @@ RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/4.14
 # Copy batch predictor application
 COPY --chown=${UID}:${GID} batch-predictor ${HOME}/merlin-spark-app
 COPY --chown=${UID}:${GID} sdk ${HOME}/sdk
-ENV SDK_PATH=${HOME}/sdk/sdk
+ENV SDK_PATH=${HOME}/sdk
 
 # Setup base conda environment
 ARG PYTHON_VERSION
