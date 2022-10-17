@@ -3,6 +3,6 @@ dependencies:
   - python=3.7
   - pip=22.2.2
   - pip:
-      - -r requirements.txt
+      - -r ../requirements.txt
       - --extra-index-url=https://test.pypi.org/simple
       - --trusted-host=test.pypi.org
