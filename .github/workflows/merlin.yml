@@ -334,8 +334,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - build-api
-      #- build-batch-predictor
-      #- build-pyfunc-server
+      - build-batch-predictor
+      - build-pyfunc-server
       - build-transformer
       - create-version
     env:
