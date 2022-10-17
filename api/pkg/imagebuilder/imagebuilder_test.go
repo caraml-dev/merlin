@@ -17,6 +17,7 @@ package imagebuilder
 import (
 	"context"
 	"fmt"
+	cfg "github.com/gojek/merlin/config"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -78,15 +79,29 @@ var (
 	jobBackOffLimit = int32(3)
 
 	config = Config{
-		BuildContextURL: buildContextURL,
-		DockerfilePath:  "./Dockerfile",
-		BuildNamespace:  buildNamespace,
-		ContextSubPath:  "python/pyfunc-server",
-		BaseImage: map[string]string{
-			"3.7.*":  "gojek/base-image:1",
-			"3.8.*":  "gojek/base-image:2",
-			"3.9.*":  "gojek/base-image:3",
-			"3.10.*": "gojek/base-image:4",
+		BuildNamespace: buildNamespace,
+		ContextSubPath: "python/pyfunc-server",
+		BaseImages: cfg.BaseImageConfigs{
+			"3.7.*": cfg.BaseImageConfig{
+				ImageName:       "gojek/base-image:1",
+				BuildContextURI: buildContextURL,
+				DockerfilePath:  "./Dockerfile",
+			},
+			"3.8.*": cfg.BaseImageConfig{
+				ImageName:       "gojek/base-image:2",
+				BuildContextURI: buildContextURL,
+				DockerfilePath:  "./Dockerfile",
+			},
+			"3.9.*": cfg.BaseImageConfig{
+				ImageName:       "gojek/base-image:3",
+				BuildContextURI: buildContextURL,
+				DockerfilePath:  "./Dockerfile",
+			},
+			"3.10.*": cfg.BaseImageConfig{
+				ImageName:       "gojek/base-image:4",
+				BuildContextURI: buildContextURL,
+				DockerfilePath:  "./Dockerfile",
+			},
 		},
 		DockerRegistry:       dockerRegistry,
 		BuildTimeoutDuration: timeout,
@@ -158,10 +173,10 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage[modelVersion.PythonVersion]),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -248,10 +263,10 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage[modelVersion.PythonVersion]),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -296,15 +311,29 @@ func TestBuildImage(t *testing.T) {
 			wantDeleteJobName: "",
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config: Config{
-				BuildContextURL: buildContextURL,
-				DockerfilePath:  "./Dockerfile",
-				BuildNamespace:  buildNamespace,
-				ContextSubPath:  "python/pyfunc-server",
-				BaseImage: map[string]string{
-					"3.7.*":  "gojek/base-image:1",
-					"3.8.*":  "gojek/base-image:2",
-					"3.9.*":  "gojek/base-image:3",
-					"3.10.*": "gojek/base-image:4",
+				BuildNamespace: buildNamespace,
+				ContextSubPath: "python/pyfunc-server",
+				BaseImages: cfg.BaseImageConfigs{
+					"3.7.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:1",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+					"3.8.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:2",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+					"3.9.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:3",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+					"3.10.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:4",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
 				},
 				DockerRegistry:       dockerRegistry,
 				BuildTimeoutDuration: timeout,
@@ -351,10 +380,10 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage[modelVersion.PythonVersion]),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -404,15 +433,29 @@ func TestBuildImage(t *testing.T) {
 			wantDeleteJobName: "",
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config: Config{
-				BuildContextURL: buildContextURL,
-				DockerfilePath:  "./Dockerfile",
-				BuildNamespace:  buildNamespace,
-				ContextSubPath:  "python/pyfunc-server",
-				BaseImage: map[string]string{
-					"3.7.*":  "gojek/base-image:1",
-					"3.8.*":  "gojek/base-image:2",
-					"3.9.*":  "gojek/base-image:3",
-					"3.10.*": "gojek/base-image:4",
+				BuildNamespace: buildNamespace,
+				ContextSubPath: "python/pyfunc-server",
+				BaseImages: cfg.BaseImageConfigs{
+					"3.7.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:1",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+					"3.8.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:2",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+					"3.9.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:3",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+					"3.10.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:4",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
 				},
 				DockerRegistry:       dockerRegistry,
 				BuildTimeoutDuration: timeout,
@@ -464,10 +507,10 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage[modelVersion.PythonVersion]),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -519,10 +562,29 @@ func TestBuildImage(t *testing.T) {
 			wantDeleteJobName: "",
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config: Config{
-				BuildContextURL:      config.BuildContextURL,
-				DockerfilePath:       config.DockerfilePath,
-				BuildNamespace:       config.BuildNamespace,
-				BaseImage:            config.BaseImage,
+				BuildNamespace: config.BuildNamespace,
+				BaseImages: cfg.BaseImageConfigs{
+					"3.7.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:1",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+					"3.8.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:2",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+					"3.9.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:3",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+					"3.10.*": cfg.BaseImageConfig{
+						ImageName:       "gojek/base-image:4",
+						BuildContextURI: buildContextURL,
+						DockerfilePath:  "./Dockerfile",
+					},
+				},
 				DockerRegistry:       config.DockerRegistry,
 				BuildTimeoutDuration: config.BuildTimeoutDuration,
 				ClusterName:          config.ClusterName,
@@ -566,10 +628,10 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage[modelVersion.PythonVersion]),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -655,10 +717,10 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage[modelVersion.PythonVersion]),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -747,10 +809,10 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage[modelVersion.PythonVersion]),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -827,10 +889,10 @@ func TestBuildImage(t *testing.T) {
 									Name:  containerName,
 									Image: "gcr.io/kaniko-project/executor:v1.1.0",
 									Args: []string{
-										fmt.Sprintf("--dockerfile=%s", config.DockerfilePath),
-										fmt.Sprintf("--context=%s", config.BuildContextURL),
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
-										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImage[modelVersion.PythonVersion]),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",

@@ -331,16 +331,16 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		labelOrchestratorName: "merlin",
 	}
 
-	baseImage, ok := c.config.BaseImage[version.PythonVersion]
+	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
 	if !ok {
 		return nil, fmt.Errorf("No matching base image for tag %s", version.PythonVersion)
 	}
 
 	kanikoArgs := []string{
-		fmt.Sprintf("--dockerfile=%s", c.config.DockerfilePath),
-		fmt.Sprintf("--context=%s", c.config.BuildContextURL),
+		fmt.Sprintf("--dockerfile=%s", baseImageTag.DockerfilePath),
+		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
 		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactURI),
-		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImage),
+		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImageTag.ImageName),
 		fmt.Sprintf("--destination=%s", imageRef),
 		"--cache=true",
 		"--single-snapshot",

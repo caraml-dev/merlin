@@ -15,20 +15,17 @@
 package imagebuilder
 
 import (
+	cfg "github.com/gojek/merlin/config"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
-	// GCS URL Containing build context
-	BuildContextURL string
 	// Path to sub folder which is intended to build instead of using root folder
 	ContextSubPath string
 	// Dockerfile Path within the build context
-	DockerfilePath string
-	// Map of Base docker images for building model for each python version
-	BaseImage map[string]string
+	BaseImages cfg.BaseImageConfigs
 	// Namespace where Kaniko Pod will be created
 	BuildNamespace string
 	// Docker registry to push to

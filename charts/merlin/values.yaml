@@ -45,14 +45,16 @@ merlin:
 
   imageBuilder:
     clusterName: "dev"
-    buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
-    baseImage: 
-      3.7.*: ""
-    dockerfilePath: "docker/Dockerfile"
-    predictionJobBuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
-    predictionJobBaseImage: 
-      3.7.*: gojek/mlp/merlin-pyspark:v0.4.1
-    predictionJobDockerfilePath: "docker/app.Dockerfile"
+    baseImages: 
+      3.7.*: 
+        imageName: pyfunc-py37:v0.1.0
+        dockerfilePath: "docker/Dockerfile"
+        buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
+    predictionJobBaseImages: 
+      3.7.*: 
+        imageName: pyspark-py37:v0.1.0
+        dockerfilePath: "docker/app.Dockerfile"
+        buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
     namespace: "mlp"
     dockerRegistry: "gojek"
     timeout: "30m"
