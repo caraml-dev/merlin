@@ -20,8 +20,8 @@ USER root
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
-ARG SPARK_OPERATOR_VERSION=v1beta2-1.3.7-3.1.1
-ARG SPARK_BQ_CONNECTOR_VERSION=0.27.0
+ENV SPARK_OPERATOR_VERSION=v1beta2-1.3.7-3.1.1
+ENV SPARK_BQ_CONNECTOR_VERSION=0.27.0
 
 # Setup dependencies for Google Cloud Storage access.
 RUN rm $SPARK_HOME/jars/guava-14.0.1.jar
@@ -85,7 +85,7 @@ COPY --chown=${UID}:${GID} sdk ${HOME}/sdk
 # Setup base conda environment
 ARG PYTHON_VERSION
 ENV CONDA_ENVIRONMENT merlin-model
-RUN conda env create -f ${HOME}/merlin-spark-app/env${PYTHON_VERSION}.yaml -n ${CONDA_ENVIRONMENT} && \
+RUN conda env create -f ${HOME}/merlin-spark-app/docker/env${PYTHON_VERSION}.yaml -n ${CONDA_ENVIRONMENT} && \
     rm -rf ${HOME}/.cache
 
 RUN echo "conda activate ${CONDA_ENVIRONMENT}" >> $HOME/.bashrc
