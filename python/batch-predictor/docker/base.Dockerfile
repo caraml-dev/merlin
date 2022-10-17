@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG SPARK_VERSION=v3.0.0
-FROM gcr.io/spark-operator/spark-py:${SPARK_VERSION}
+FROM gcr.io/spark-operator/spark-py:v3.0.0
 
 # Switch to user root so we can add additional jars and configuration files.
 USER root
@@ -59,12 +58,9 @@ RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-
 COPY batch-predictor/merlin-entrypoint.sh /opt/merlin-entrypoint.sh
 
 # Configure non-root user
-ARG username=spark
-ARG spark_uid=185
-ARG spark_gid=100
-ENV USER $username
-ENV UID $spark_uid
-ENV GID $spark_gid
+ENV USER spark
+ENV UID 185
+ENV GID 100
 ENV HOME /home/$USER
 RUN adduser --disabled-password --uid $UID --gid $GID --home $HOME $USER
 
