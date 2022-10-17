@@ -15,8 +15,8 @@
 package config
 
 import (
-	"io/ioutil"
 	"log"
+	"os"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -61,7 +61,7 @@ type ResourceRequestConfig struct {
 }
 
 func initEnvironmentConfigs(path string) []EnvironmentConfig {
-	cfgFile, err := ioutil.ReadFile(path)
+	cfgFile, err := os.ReadFile(path)
 	if err != nil {
 		log.Panicf("unable to read deployment config file: %s", path)
 	}

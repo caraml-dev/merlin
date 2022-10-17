@@ -1,7 +1,7 @@
 package pipeline
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	prt "github.com/gojek/merlin/pkg/protocol"
@@ -633,7 +633,7 @@ func TestCompiler_Compile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewCompiler(tt.fields.sr, tt.fields.feastClients, tt.fields.feastOptions, tt.fields.logger, false, tt.fields.protocol)
 
-			yamlBytes, err := ioutil.ReadFile(tt.specYamlFilePath)
+			yamlBytes, err := os.ReadFile(tt.specYamlFilePath)
 			assert.NoError(t, err)
 
 			jsonBytes, err := yaml.YAMLToJSON(yamlBytes)

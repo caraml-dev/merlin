@@ -3,7 +3,7 @@ package hystrix
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -40,12 +40,12 @@ func Test_Do(t *testing.T) {
 			doer: DoerFunc(func(req *http.Request) (*http.Response, error) {
 				return &http.Response{
 					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(strings.NewReader("")),
+					Body:       io.NopCloser(strings.NewReader("")),
 				}, nil
 			}),
 			want: &http.Response{
 				StatusCode: http.StatusOK,
-				Body:       ioutil.NopCloser(strings.NewReader("")),
+				Body:       io.NopCloser(strings.NewReader("")),
 			},
 			wantErr: nil,
 		},
@@ -54,12 +54,12 @@ func Test_Do(t *testing.T) {
 			doer: DoerFunc(func(req *http.Request) (*http.Response, error) {
 				return &http.Response{
 					StatusCode: http.StatusForbidden,
-					Body:       ioutil.NopCloser(strings.NewReader("")),
+					Body:       io.NopCloser(strings.NewReader("")),
 				}, nil
 			}),
 			want: &http.Response{
 				StatusCode: http.StatusForbidden,
-				Body:       ioutil.NopCloser(strings.NewReader("")),
+				Body:       io.NopCloser(strings.NewReader("")),
 			},
 			wantErr: nil,
 		},
@@ -68,12 +68,12 @@ func Test_Do(t *testing.T) {
 			doer: DoerFunc(func(req *http.Request) (*http.Response, error) {
 				return &http.Response{
 					StatusCode: http.StatusInternalServerError,
-					Body:       ioutil.NopCloser(strings.NewReader("")),
+					Body:       io.NopCloser(strings.NewReader("")),
 				}, nil
 			}),
 			want: &http.Response{
 				StatusCode: http.StatusInternalServerError,
-				Body:       ioutil.NopCloser(strings.NewReader("")),
+				Body:       io.NopCloser(strings.NewReader("")),
 			},
 			wantErr: fmt.Errorf("got 5xx response code: %d", http.StatusInternalServerError),
 		},

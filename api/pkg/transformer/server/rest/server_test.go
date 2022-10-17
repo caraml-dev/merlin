@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -60,7 +60,7 @@ func TestServer_PredictHandler_NoTransformation(t *testing.T) {
 
 	server.PredictHandler(rr, req)
 
-	response, err := ioutil.ReadAll(rr.Body)
+	response, err := io.ReadAll(rr.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, mockPredictResponse, response)
 	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
@@ -101,7 +101,7 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 			}
 
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				body, err := ioutil.ReadAll(r.Body)
+				body, err := io.ReadAll(r.Body)
 				// check log id is propagated as header
 				logId, ok := test.requestHeader[MerlinLogIdHeader]
 				if ok {
@@ -139,7 +139,7 @@ func TestServer_PredictHandler_WithPreprocess(t *testing.T) {
 
 			server.PredictHandler(rr, req)
 
-			response, err := ioutil.ReadAll(rr.Body)
+			response, err := io.ReadAll(rr.Body)
 			assert.NoError(t, err)
 			assert.Equal(t, test.modelResponse, response)
 			assert.Equal(t, test.modelStatusCode, rr.Code)
@@ -1243,7 +1243,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			modelServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				body, err := ioutil.ReadAll(r.Body)
+				body, err := io.ReadAll(r.Body)
 
 				assert.Nil(t, err)
 
@@ -1304,7 +1304,7 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				}
 				transformerServer.PredictHandler(rr, req)
 
-				responseBody, err := ioutil.ReadAll(rr.Body)
+				responseBody, err := io.ReadAll(rr.Body)
 				assert.NoError(t, err)
 				assert.JSONEq(t, string(tt.expTransformedResponse.body), string(responseBody))
 				assert.Equal(t, tt.expTransformedResponse.statusCode, rr.Code)
@@ -1353,7 +1353,7 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 				assert.Equal(t, http.MethodPost, r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
-				rBody, err := ioutil.ReadAll(r.Body)
+				rBody, err := io.ReadAll(r.Body)
 				assert.NoError(t, err, "should not have failed to extract request body")
 
 				assert.Equal(t, defaultRequestBodyString, string(rBody))
@@ -1393,7 +1393,7 @@ func Test_newHTTPHystrixClient(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, http.StatusOK, response.StatusCode)
 
-				body, err := ioutil.ReadAll(response.Body)
+				body, err := io.ReadAll(response.Body)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.response, string(body))
 			}
@@ -1432,7 +1432,7 @@ func Test_recoveryHandler(t *testing.T) {
 	defer resp.Body.Close() // nolint: errcheck
 	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(resp.Body)
@@ -1509,7 +1509,7 @@ func assertJSONEqWithFloat(t *testing.T, expectedMap map[string]interface{}, act
 }
 
 func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *config.Options) (*HTTPServer, error) {
-	yamlBytes, err := ioutil.ReadFile(transformerConfigPath)
+	yamlBytes, err := os.ReadFile(transformerConfigPath)
 	if err != nil {
 		return nil, err
 	}

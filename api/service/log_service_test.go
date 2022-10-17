@@ -16,7 +16,7 @@ package service
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -197,7 +197,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 
 	for _, pod := range pods {
 		for _, container := range containers {
-			r := ioutil.NopCloser(strings.NewReader(nowRFC3339 + " log from " + pod + "/" + container))
+			r := io.NopCloser(strings.NewReader(nowRFC3339 + " log from " + pod + "/" + container))
 
 			c := container
 			mockController.On("StreamPodLogs", context.Background(), "test-namespace", pod, mock.MatchedBy(func(opts *v1.PodLogOptions) bool {

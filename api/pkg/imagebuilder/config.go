@@ -15,8 +15,9 @@
 package imagebuilder
 
 import (
-	cfg "github.com/gojek/merlin/config"
 	"time"
+
+	cfg "github.com/gojek/merlin/config"
 
 	v1 "k8s.io/api/core/v1"
 )

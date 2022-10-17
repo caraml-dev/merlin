@@ -17,12 +17,13 @@ package imagebuilder
 import (
 	"context"
 	"fmt"
-	cfg "github.com/gojek/merlin/config"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	cfg "github.com/gojek/merlin/config"
 
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"

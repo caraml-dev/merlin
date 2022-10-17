@@ -3,7 +3,7 @@ package executor
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -501,7 +501,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 }
 
 func loadStandardTransformerConfig(transformerConfigPath string) (*spec.StandardTransformerConfig, error) {
-	yamlBytes, err := ioutil.ReadFile(transformerConfigPath)
+	yamlBytes, err := os.ReadFile(transformerConfigPath)
 	if err != nil {
 		return nil, err
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -1788,7 +1788,7 @@ func TestUPIServer_PredictValues(t *testing.T) {
 }
 
 func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *config.Options, modelClient upiv1.UniversalPredictionServiceClient) (*UPIServer, error) {
-	yamlBytes, err := ioutil.ReadFile(transformerConfigPath)
+	yamlBytes, err := os.ReadFile(transformerConfigPath)
 	if err != nil {
 		return nil, err
 	}
