@@ -79,14 +79,10 @@ type BaseImageConfigs map[string]BaseImageConfig
 
 // A struct containing configuration details for each base image type
 type BaseImageConfig struct {
-	// docker image name with path
-	ImageName string `json:"imageName"`
-
-	// Dockerfile Path within the build context
-	DockerfilePath string `json:"dockerfilePath"`
-
-	// GCS URL Containing build context
-	BuildContextURI string `json:"buildContextURI"`
+	ImageName       string `json:"imageName"`       // docker image name with path
+	DockerfilePath  string `json:"dockerfilePath"`  // Dockerfile Path within the build context
+	BuildContextURI string `json:"buildContextURI"` // GCS URL Containing build context
+	MainAppPath     string `json:"mainAppPath"`     // path to main file to run application
 }
 
 // Decoder to decode the env variable which is a nested map into a list of BaseImageConfig

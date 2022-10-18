@@ -49,6 +49,7 @@ type ImageBuilder interface {
 	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error)
 	// GetContainers return reference to container used to build the docker image of a model version
 	GetContainers(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error)
+	GetMainAppPath(version *models.Version) (string, error)
 }
 
 type nameGenerator interface {
@@ -91,6 +92,20 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 		config:        config,
 		nameGenerator: nameGenerator,
 	}
+}
+
+// GetMainAppPath Returns the path to run the main.py of batch predictor, as configured via env var
+func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
+	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
+	if !ok {
+		return "", fmt.Errorf("No matching base image for tag %s", version.PythonVersion)
+	}
+
+	if baseImageTag.MainAppPath == "" {
+		return "", fmt.Errorf("mainAppPath is not set for tag %s", version.PythonVersion)
+	}
+
+	return baseImageTag.MainAppPath, nil
 }
 
 // BuildImage build a docker image for the given model version

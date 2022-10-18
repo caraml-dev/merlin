@@ -61,7 +61,7 @@ COPY batch-predictor/merlin-entrypoint.sh /opt/merlin-entrypoint.sh
 ENV USER spark
 ENV UID 185
 ENV GID 100
-ENV HOME /
+ENV HOME /home/$USER
 RUN adduser --disabled-password --uid $UID --gid $GID --home $HOME $USER
 
 # Switch to Spark user

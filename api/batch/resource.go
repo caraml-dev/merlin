@@ -56,10 +56,8 @@ const (
 )
 
 var (
-	// Hardcoded based on python/batch-predictor/docker/base.Dockerfile
-	mainApplicationPath = "local:///merlin-spark-app/main.py"
-	pythonVersion       = "3"
-	ttlSecond           = int64(24 * time.Hour / time.Second)
+	pythonVersion = "3"
+	ttlSecond     = int64(24 * time.Hour / time.Second)
 
 	submissionFailureRetries       int32 = 3
 	submissionFailureRetryInterval int64 = 10
@@ -115,6 +113,8 @@ func createSpec(job *models.PredictionJob) (v1beta2.SparkApplicationSpec, error)
 	if err != nil {
 		return v1beta2.SparkApplicationSpec{}, err
 	}
+
+	var mainApplicationPath = "local://" + job.Config.MainAppPath
 
 	return v1beta2.SparkApplicationSpec{
 		Type:                sparkType,

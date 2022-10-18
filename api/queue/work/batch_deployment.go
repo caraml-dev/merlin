@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	"github.com/gojek/merlin/batch"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlp"
@@ -83,6 +82,8 @@ func (depl *BatchDeployment) doCreatePredictionJob(ctx context.Context, env *mod
 		return err
 	}
 	job.Config.ImageRef = imageRef
+
+	job.Config.MainAppPath, err = depl.ImageBuilder.GetMainAppPath(version)
 
 	ctl, ok := depl.BatchControllers[env.Name]
 	if !ok {

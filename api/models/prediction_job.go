@@ -45,6 +45,7 @@ type Config struct {
 	ServiceAccountName string                        `json:"service_account_name"`
 	JobConfig          *spec.PredictionJob           `json:"job_config"`
 	ImageRef           string                        `json:"image_ref"`
+	MainAppPath        string                        `json:"main_app_path"`
 	ResourceRequest    *PredictionJobResourceRequest `json:"resource_request"`
 	EnvVars            EnvVars                       `json:"env_vars"`
 }
