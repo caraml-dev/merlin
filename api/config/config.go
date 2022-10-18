@@ -77,6 +77,7 @@ type ReactAppConfig struct {
 
 type BaseImageConfigs map[string]BaseImageConfig
 
+// A struct containing configuration details for each base image type
 type BaseImageConfig struct {
 	// docker image name with path
 	ImageName string `json:"imageName"`
@@ -88,6 +89,7 @@ type BaseImageConfig struct {
 	BuildContextURI string `json:"buildContextURI"`
 }
 
+// Decoder to decode the env variable which is a nested map into a list of BaseImageConfig
 func (b *BaseImageConfigs) Decode(value string) error {
 	var configList BaseImageConfigs
 
