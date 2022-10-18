@@ -16,6 +16,7 @@ package batch
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -57,7 +58,8 @@ const (
 
 var (
 	// Hardcoded based on python/batch-predictor/docker/base.Dockerfile
-	mainApplicationPath = "local:///home/spark/merlin-spark-app/main.py"
+	homeDir             = os.Getenv("IMG_BUILDER_PRED_HOME_DIR")
+	mainApplicationPath = "local://" + homeDir + "/merlin-spark-app/main.py"
 	pythonVersion       = "3"
 	ttlSecond           = int64(24 * time.Hour / time.Second)
 
