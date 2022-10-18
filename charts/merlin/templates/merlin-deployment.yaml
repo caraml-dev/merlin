@@ -112,8 +112,6 @@ spec:
             value: "{{ .Values.merlin.imageBuilder.clusterName }}"
           - name: IMG_BUILDER_BASE_IMAGES
             value: {{ .Values.merlin.imageBuilder.baseImages | toJson | quote }}
-          - name: IMG_BUILDER_PRED_HOME_DIR
-            value: "{{ .Values.merlin.imageBuilder.predictionJobHomeDir }}"
           - name: IMG_BUILDER_PREDICTION_JOB_BASE_IMAGES
             value: {{ .Values.merlin.imageBuilder.predictionJobBaseImages | toJson | quote }}
           - name: IMG_BUILDER_NAMESPACE

@@ -55,7 +55,6 @@ merlin:
         imageName: pyspark-py37:v0.1.0
         dockerfilePath: "docker/app.Dockerfile"
         buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
-    predictionJobHomeDir: /home/spark
     namespace: "mlp"
     dockerRegistry: "gojek"
     timeout: "30m"
