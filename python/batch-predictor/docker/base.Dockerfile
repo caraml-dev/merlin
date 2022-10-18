@@ -51,7 +51,7 @@ RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -
 
 # Install gcloud SDK
 ENV PATH=$PATH:/google-cloud-sdk/bin
-ARG GCLOUD_VERSION=405.0.1
+ENV GCLOUD_VERSION=405.0.1
 RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf - -C /
 
 # Copy batch predictor application entrypoint to protected directory
@@ -71,8 +71,9 @@ WORKDIR ${HOME}
 # Install miniconda
 ENV CONDA_DIR ${HOME}/miniconda3
 ENV PATH ${CONDA_DIR}/bin:$PATH
+ENV MINIFORGE_VERSION=4.14.0-0
 
-RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/4.14.0-0/Miniforge3-4.14.0-0-Linux-x86_64.sh -O miniconda.sh && \
+RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/Miniforge3-${MINIFORGE_VERSION}-Linux-x86_64.sh -O miniconda.sh && \
     /bin/bash miniconda.sh -b -p ${CONDA_DIR} && \
     rm ~/miniconda.sh && \
     $CONDA_DIR/bin/conda clean -afy && \
