@@ -21,8 +21,10 @@ import (
 )
 
 const (
-	envName  = "test-env"
-	imageRef = "gojek/my-image:1"
+	envName             = "test-env"
+	imageRef            = "gojek/my-image:1"
+	mainApplicationPath = "/merlin-spark-app/main.py"
+	mainAppPathInput    = "/merlin-spark-app/main.py"
 )
 
 var (
@@ -90,6 +92,7 @@ var (
 					Value: "value",
 				},
 			},
+			MainAppPath: mainAppPathInput,
 		},
 		Status: models.JobPending,
 	}
@@ -116,6 +119,7 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 			},
 			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
 				imgBuilder.On("BuildImage", context.Background(), project, model, version).Return(imageRef, nil)
+				imgBuilder.On("GetMainAppPath", version).Return(mainApplicationPath, nil)
 			},
 			mockStorage: func(st *storageMock.PredictionJobStorage) {
 				st.On("Get", savedJob.ID).Return(savedJob, nil)
@@ -134,6 +138,19 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 			},
 		},
 		{
+			desc:           "Failed: getting mainAppPath fail",
+			deployErr:      fmt.Errorf("failed getting mainAppPath"),
+			controllerMock: func(ctrl *mocks.Controller) {},
+			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
+				imgBuilder.On("BuildImage", context.Background(), project, model, version).Return(imageRef, nil)
+				imgBuilder.On("GetMainAppPath", version).Return("", fmt.Errorf("failed getting mainAppPath"))
+			},
+			mockStorage: func(st *storageMock.PredictionJobStorage) {
+				st.On("Get", savedJob.ID).Return(savedJob, nil)
+				st.On("Save", savedJob).Return(nil)
+			},
+		},
+		{
 			desc:      "Failed: submit job failed",
 			deployErr: fmt.Errorf("failed submit job"),
 			controllerMock: func(ctrl *mocks.Controller) {
@@ -141,6 +158,7 @@ func TestBatchDeployment_Deploy(t *testing.T) {
 			},
 			imageBuilderMock: func(imgBuilder *imageBuilderMock.ImageBuilder) {
 				imgBuilder.On("BuildImage", context.Background(), project, model, version).Return(imageRef, nil)
+				imgBuilder.On("GetMainAppPath", version).Return(mainApplicationPath, nil)
 			},
 			mockStorage: func(st *storageMock.PredictionJobStorage) {
 				st.On("Get", savedJob.ID).Return(savedJob, nil)

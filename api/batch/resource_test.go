@@ -28,11 +28,13 @@ import (
 )
 
 var (
-	teamName         = "dsp"
-	streamName       = "dsp"
-	environementName = "dev"
-	modelName        = "my-model"
-	userLabels       = mlp.Labels{
+	mainAppPathInput    = "/merlin-spark-app/main.py"
+	mainApplicationPath = "local:///merlin-spark-app/main.py"
+	teamName            = "dsp"
+	streamName          = "dsp"
+	environementName    = "dev"
+	modelName           = "my-model"
+	userLabels          = mlp.Labels{
 		{
 			Key:   "my-key",
 			Value: "my-value",
@@ -147,6 +149,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						ExecutorCPURequest:    executorCPURequest,
 						ExecutorMemoryRequest: executorMemory,
 					},
+					MainAppPath: mainAppPathInput,
 				},
 			},
 			want: &v1beta2.SparkApplication{
@@ -225,6 +228,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						ExecutorCPURequest:    executorCPURequest,
 						ExecutorMemoryRequest: executorMemory,
 					},
+					MainAppPath: mainAppPathInput,
 				},
 			},
 			want: &v1beta2.SparkApplication{
@@ -303,6 +307,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						ExecutorCPURequest:    "1500m",
 						ExecutorMemoryRequest: executorMemory,
 					},
+					MainAppPath: mainAppPathInput,
 				},
 			},
 			want: &v1beta2.SparkApplication{
@@ -381,6 +386,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						ExecutorCPURequest:    largeExecutorCPURequest,
 						ExecutorMemoryRequest: executorMemory,
 					},
+					MainAppPath: mainAppPathInput,
 				},
 			},
 			want: &v1beta2.SparkApplication{
@@ -465,6 +471,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 							Value: "value",
 						},
 					},
+					MainAppPath: mainAppPathInput,
 				},
 			},
 			want: &v1beta2.SparkApplication{
@@ -549,6 +556,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						ExecutorCPURequest:    "1500x",
 						ExecutorMemoryRequest: executorMemory,
 					},
+					MainAppPath: mainAppPathInput,
 				},
 			},
 			wantErr:        true,
@@ -578,6 +586,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 						ExecutorCPURequest:    "1500m",
 						ExecutorMemoryRequest: executorMemory,
 					},
+					MainAppPath: mainAppPathInput,
 				},
 			},
 			wantErr:        true,
@@ -613,6 +622,7 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 							Value: "new_value",
 						},
 					},
+					MainAppPath: mainAppPathInput,
 				},
 			},
 			wantErr:        true,
