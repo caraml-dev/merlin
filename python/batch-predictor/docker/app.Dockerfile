@@ -21,6 +21,5 @@ ARG MODEL_URL
 RUN gsutil -m cp -r ${MODEL_URL} .
 # pip 20.2.4 to allow dependency conflicts
 RUN /bin/bash -c ". activate ${CONDA_ENVIRONMENT} && \
-    sed -i 's/pip$/pip=20.2.4/' ${HOME}/model/conda.yaml && \
     conda env update --name ${CONDA_ENVIRONMENT} --file ${HOME}/model/conda.yaml && \
     python ${HOME}/merlin-spark-app/main.py --dry-run-model ${HOME}/model"

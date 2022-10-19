@@ -20,7 +20,6 @@ ARG MODEL_URL
 WORKDIR /pyfunc-server
 RUN gsutil cp -r ${MODEL_URL} .
 RUN /bin/bash -c ". activate merlin-model && \
-    sed -i 's/pip$/pip=20.2.4/' model/conda.yaml && \
     conda env update --name merlin-model --file model/conda.yaml && \
     python -m pyfuncserver --model_dir model --dry_run"
 
