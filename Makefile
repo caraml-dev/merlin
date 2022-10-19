@@ -12,6 +12,7 @@ VERSION := $(or ${VERSION}, $(shell git describe --tags --always --first-parent)
 GOLANGCI_LINT_VERSION="v1.49.0"
 PROTOC_GEN_GO_JSON_VERSION="v1.1.0"
 PROTOC_GEN_GO_VERSION="v1.26"
+PYTHON_VERSION ?= "37"	#set as 37 38 39 310 for 3.7-3.10 respectively
 
 all: setup init-dep lint test clean build run
 
@@ -224,8 +225,10 @@ docker-build-transformer:
 
 .PHONY: docker-build-pyfunc
 docker-build-pyfunc:
-	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin-pyfunc-base:${VERSION})
-	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} -f python/pyfunc-server/base.Dockerfile python
+	@$(eval IMAGE_TAG = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/,)merlin/merlin-pyfunc-base-py${PYTHON_VERSION}:${VERSION})
+	@DOCKER_BUILDKIT=1 docker build -t ${IMAGE_TAG} \
+			--build-arg PYTHON_VERSION=${PYTHON_VERSION} \
+			-f python/pyfunc-server/docker/base.Dockerfile python
 
 .PHONY: docker-build-batch-predictor
 docker-build-batch-predictor:

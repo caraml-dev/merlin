@@ -84,6 +84,11 @@ func (depl *BatchDeployment) doCreatePredictionJob(ctx context.Context, env *mod
 	}
 	job.Config.ImageRef = imageRef
 
+	job.Config.MainAppPath, err = depl.ImageBuilder.GetMainAppPath(version)
+	if err != nil {
+		return err
+	}
+
 	ctl, ok := depl.BatchControllers[env.Name]
 	if !ok {
 		log.Errorf("environment %s is not found", env.Name)

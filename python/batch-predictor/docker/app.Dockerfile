@@ -18,9 +18,8 @@ FROM ${BASE_IMAGE}
 # Get the model
 
 ARG MODEL_URL
-RUN gsutil cp -r ${MODEL_URL} .
+RUN gsutil -m cp -r ${MODEL_URL} .
 # pip 20.2.4 to allow dependency conflicts
-RUN /bin/bash -c ". activate merlin-model && \
-    sed -i 's/pip$/pip=20.2.4/' /model/conda.yaml && \
-    conda env update --name merlin-model --file /model/conda.yaml && \
-    python merlin-spark-app/main.py --dry-run-model /model"
+RUN /bin/bash -c ". activate ${CONDA_ENVIRONMENT} && \
+    conda env update --name ${CONDA_ENVIRONMENT} --file ${HOME}/model/conda.yaml && \
+    python ${HOME}/merlin-spark-app/main.py --dry-run-model ${HOME}/model"

@@ -22,7 +22,7 @@ version = imp.load_source(
 
 REQUIRES = [
     "certifi>=2017.4.17",
-    "python-dateutil>=2.1",
+    "python_dateutil>=2.5.3",
     "six>=1.10",
     "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
     "google-cloud-storage>=1.19.0",
@@ -35,7 +35,7 @@ REQUIRES = [
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
     "PyYAML>=5.4",
-    "protobuf<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
+    "protobuf>=3.0.0,<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
     "caraml-upi-protos>=0.3.1"
 ]
 
@@ -47,7 +47,7 @@ TEST_REQUIRES = [
     "urllib3-mock>=0.3.3",
     "requests",
     "xgboost==1.6.2",
-    "scikit-learn==1.0.1",  # >=1.1.2 upon python 3.7 deprecation
+    "scikit-learn==1.0.2",  # >=1.1.2 upon python 3.7 deprecation
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy>=0.812",
     "google-cloud-bigquery>=1.18.0",

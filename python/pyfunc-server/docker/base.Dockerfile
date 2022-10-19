@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM continuumio/miniconda3
+FROM condaforge/miniforge3:4.14.0-0
 
-RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz | tar xzf -
+ARG PYTHON_VERSION
+
+ENV GCLOUD_VERSION=405.0.1
+RUN wget -qO- https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz | tar xzf -
 ENV PATH=$PATH:/google-cloud-sdk/bin
 
 COPY pyfunc-server /pyfunc-server
 COPY sdk /sdk
-RUN conda env create -f /pyfunc-server/environment.yaml && \
+ENV SDK_PATH=/sdk
+RUN conda env create -f /pyfunc-server/docker/env${PYTHON_VERSION}.yaml && \
     rm -rf /root/.cache
 
 RUN mkdir /prom_dir

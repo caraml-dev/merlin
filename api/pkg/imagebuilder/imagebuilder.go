@@ -49,6 +49,7 @@ type ImageBuilder interface {
 	BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error)
 	// GetContainers return reference to container used to build the docker image of a model version
 	GetContainers(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) ([]*models.Container, error)
+	GetMainAppPath(version *models.Version) (string, error)
 }
 
 type nameGenerator interface {
@@ -93,6 +94,20 @@ func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerat
 	}
 }
 
+// GetMainAppPath Returns the path to run the main.py of batch predictor, as configured via env var
+func (c *imageBuilder) GetMainAppPath(version *models.Version) (string, error) {
+	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
+	if !ok {
+		return "", fmt.Errorf("No matching base image for tag %s", version.PythonVersion)
+	}
+
+	if baseImageTag.MainAppPath == "" {
+		return "", fmt.Errorf("mainAppPath is not set for tag %s", version.PythonVersion)
+	}
+
+	return baseImageTag.MainAppPath, nil
+}
+
 // BuildImage build a docker image for the given model version
 // Returns the docker image ref
 func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, model *models.Model, version *models.Version) (string, error) {
@@ -115,7 +130,14 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 			return "", ErrUnableToGetJobStatus
 		}
 
-		jobSpec := c.createKanikoJobSpec(project, model, version)
+		jobSpec, err := c.createKanikoJobSpec(project, model, version)
+		if err != nil {
+			log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
+			return "", ErrUnableToCreateJobSpec{
+				Message: err.Error(),
+			}
+		}
+
 		job, err = jobClient.Create(ctx, jobSpec, metav1.CreateOptions{})
 		if err != nil {
 			log.Errorf("unable to build image %s, error: %v", imageRef, err)
@@ -132,7 +154,14 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 				return "", ErrDeleteFailedJob
 			}
 
-			jobSpec := c.createKanikoJobSpec(project, model, version)
+			jobSpec, err := c.createKanikoJobSpec(project, model, version)
+			if err != nil {
+				log.Errorf("unable to create job spec %s, error: %v", imageRef, err)
+				return "", ErrUnableToCreateJobSpec{
+					Message: err.Error(),
+				}
+			}
+
 			job, err = jobClient.Create(ctx, jobSpec, metav1.CreateOptions{})
 			if err != nil {
 				log.Errorf("unable to build image %s, error: %v", imageRef, err)
@@ -305,7 +334,7 @@ func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) e
 	}
 }
 
-func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version) *batchv1.Job {
+func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Model, version *models.Version) (*batchv1.Job, error) {
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
 
@@ -317,11 +346,16 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		labelOrchestratorName: "merlin",
 	}
 
+	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
+	if !ok {
+		return nil, fmt.Errorf("No matching base image for tag %s", version.PythonVersion)
+	}
+
 	kanikoArgs := []string{
-		fmt.Sprintf("--dockerfile=%s", c.config.DockerfilePath),
-		fmt.Sprintf("--context=%s", c.config.BuildContextURL),
+		fmt.Sprintf("--dockerfile=%s", baseImageTag.DockerfilePath),
+		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
 		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactURI),
-		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", c.config.BaseImage),
+		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImageTag.ImageName),
 		fmt.Sprintf("--destination=%s", imageRef),
 		"--cache=true",
 		"--single-snapshot",
@@ -386,5 +420,5 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 				},
 			},
 		},
-	}
+	}, nil
 }

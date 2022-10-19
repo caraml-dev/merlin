@@ -29,11 +29,11 @@ for index, item in enumerate(REQUIRE):
 
 setup(
     name='merlin-pyspark-app',
-    version='0.1.0',
+    version='0.2.0',
     author_email='merlin-dev@gojek.com',
     description='Base pyspark application for running merlin prediction job',
     long_description=open('README.md').read(),
-    python_requires='>=3.7',
+    python_requires='>=3.7,<3.11',
     packages=find_packages("merlinpyspark"),
     install_requires=REQUIRE,
     tests_require=TEST_REQUIRE,

@@ -73,30 +73,52 @@ jobs:
 
   publish-batch-predictor:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["37", "38", "39", "310"]
     steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-pyspark-base.${{ inputs.version }}.tar
+          name: merlin-pyspark-base-py${{ matrix.python-version }}.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
+        env:
+          CONTAINER_REGISTRY: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
         run: |
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/gojek/merlin-pyspark-base:${{ inputs.version }}"
-          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
-          docker image load --input merlin-pyspark-base.${{ inputs.version }}.tar
-          docker tag merlin-pyspark-base:${{ inputs.version }} ${IMAGE_TAG}
+          IMAGE_TAG="${{ env.CONTAINER_REGISTRY }}/merlin-pyspark-base-py${{ matrix.python-version }}:${{ inputs.version }}"
+          docker image load --input merlin-pyspark-base-py${{ matrix.python-version }}.${{ inputs.version }}.tar
+          docker tag merlin-pyspark-base-py${{ matrix.python-version }}:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
   
   publish-pyfunc:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["37", "38", "39", "310"]
     steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
-          name: merlin-pyfunc-base.${{ inputs.version }}.tar
+          name: merlin-pyfunc-base-py${{ matrix.python-version }}.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
+        env:
+          CONTAINER_REGISTRY: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
         run: |
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/gojek/merlin-pyfunc-base:${{ inputs.version }}"
-          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
-          docker image load --input merlin-pyfunc-base.${{ inputs.version }}.tar
-          docker tag merlin-pyfunc-base:${{ inputs.version }} ${IMAGE_TAG}
+          IMAGE_TAG="${{ env.CONTAINER_REGISTRY }}/merlin-pyfunc-base-py${{ matrix.python-version }}:${{ inputs.version }}"
+          docker image load --input merlin-pyfunc-base-py${{ matrix.python-version }}.${{ inputs.version }}.tar
+          docker tag merlin-pyfunc-base-py${{ matrix.python-version }}:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}

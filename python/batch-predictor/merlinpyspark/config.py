@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Iterable, MutableMapping
+from typing import Iterable, MutableMapping, Dict
 
 import yaml
 from google.protobuf import json_format
@@ -137,11 +137,11 @@ class ModelConfig:
         if rt == ResultType.ARRAY:
             it = self._proto.result.item_type
             if it in self.PRIMITIVE_TYPE_MAP:
-                return ArrayType(self.PRIMITIVE_TYPE_MAP.get(it))
+                return ArrayType(self.PRIMITIVE_TYPE_MAP[it])
             raise ValueError(f"unknown item type for array: {it}")
 
         if rt in self.PRIMITIVE_TYPE_MAP:
-            return self.PRIMITIVE_TYPE_MAP.get(rt)
+            return self.PRIMITIVE_TYPE_MAP[rt]
 
         raise ValueError(f"unknown result type: {rt}")
 

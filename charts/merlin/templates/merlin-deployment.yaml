@@ -110,18 +110,10 @@ spec:
             value: "{{ .Values.merlin.ui.maxAllowedReplica }}"
           - name: IMG_BUILDER_CLUSTER_NAME
             value: "{{ .Values.merlin.imageBuilder.clusterName }}"
-          - name: IMG_BUILDER_BUILD_CONTEXT_URI
-            value: "{{ .Values.merlin.imageBuilder.buildContextURI }}"
-          - name: IMG_BUILDER_DOCKERFILE_PATH
-            value: "{{ .Values.merlin.imageBuilder.dockerfilePath }}"
-          - name: IMG_BUILDER_BASE_IMAGE
-            value: "{{ .Values.merlin.imageBuilder.baseImage }}"
-          - name: IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI
-            value: "{{ .Values.merlin.imageBuilder.predictionJobBuildContextURI }}"
-          - name: IMG_BUILDER_PREDICTION_JOB_DOCKERFILE_PATH
-            value: "{{ .Values.merlin.imageBuilder.predictionJobDockerfilePath }}"
-          - name: IMG_BUILDER_PREDICTION_JOB_BASE_IMAGE
-            value: "{{ .Values.merlin.imageBuilder.predictionJobBaseImage }}"
+          - name: IMG_BUILDER_BASE_IMAGES
+            value: {{ .Values.merlin.imageBuilder.baseImages | toJson | quote }}
+          - name: IMG_BUILDER_PREDICTION_JOB_BASE_IMAGES
+            value: {{ .Values.merlin.imageBuilder.predictionJobBaseImages | toJson | quote }}
           - name: IMG_BUILDER_NAMESPACE
             value: "{{ .Values.merlin.imageBuilder.namespace }}"
           - name: IMG_BUILDER_DOCKER_REGISTRY

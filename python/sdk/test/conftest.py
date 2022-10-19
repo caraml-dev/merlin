@@ -79,6 +79,7 @@ def version(project, model, mlflow_url, api_client):
         mlflow_run_id=r.info.run_id,
         mlflow_url=mlflow_url,
         artifact_uri="gs://artifacts",
+        python_version="3.7.*",
         created_at="2019-08-29T08:13:12.377Z",
         updated_at="2019-08-29T08:13:12.377Z",
     )

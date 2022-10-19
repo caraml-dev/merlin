@@ -75,6 +75,31 @@ type ReactAppConfig struct {
 	UPIDocumentation  string         `envconfig:"REACT_APP_UPI_DOC_URL" json:"REACT_APP_UPI_DOC_URL,omitempty"`
 }
 
+type BaseImageConfigs map[string]BaseImageConfig
+
+// A struct containing configuration details for each base image type
+type BaseImageConfig struct {
+	// docker image name with path
+	ImageName string `json:"imageName"`
+	// Dockerfile Path within the build context
+	DockerfilePath string `json:"dockerfilePath"`
+	// GCS URL Containing build context
+	BuildContextURI string `json:"buildContextURI"`
+	// path to main file to run application
+	MainAppPath string `json:"mainAppPath"`
+}
+
+// Decoder to decode the env variable which is a nested map into a list of BaseImageConfig
+func (b *BaseImageConfigs) Decode(value string) error {
+	var configList BaseImageConfigs
+
+	if err := json.Unmarshal([]byte(value), &configList); err != nil {
+		return err
+	}
+	*b = configList
+	return nil
+}
+
 type Documentations []Documentation
 
 type Documentation struct {
@@ -102,24 +127,24 @@ type DatabaseConfig struct {
 }
 
 type ImageBuilderConfig struct {
-	ClusterName                  string `envconfig:"IMG_BUILDER_CLUSTER_NAME"`
-	GcpProject                   string `envconfig:"IMG_BUILDER_GCP_PROJECT"`
-	BuildContextURI              string `envconfig:"IMG_BUILDER_BUILD_CONTEXT_URI"`
-	ContextSubPath               string `envconfig:"IMG_BUILDER_CONTEXT_SUB_PATH"`
-	DockerfilePath               string `envconfig:"IMG_BUILDER_DOCKERFILE_PATH" default:"./Dockerfile"`
-	BaseImage                    string `envconfig:"IMG_BUILDER_BASE_IMAGE"`
-	PredictionJobBuildContextURI string `envconfig:"IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI"`
-	PredictionJobContextSubPath  string `envconfig:"IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH"`
-	PredictionJobDockerfilePath  string `envconfig:"IMG_BUILDER_PREDICTION_JOB_DOCKERFILE_PATH" default:"./Dockerfile"`
-	PredictionJobBaseImage       string `envconfig:"IMG_BUILDER_PREDICTION_JOB_BASE_IMAGE"`
-	BuildNamespace               string `envconfig:"IMG_BUILDER_NAMESPACE" default:"mlp"`
-	DockerRegistry               string `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
-	BuildTimeout                 string `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
-	KanikoImage                  string `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	ClusterName                  string           `envconfig:"IMG_BUILDER_CLUSTER_NAME"`
+	GcpProject                   string           `envconfig:"IMG_BUILDER_GCP_PROJECT"`
+	BuildContextURI              string           `envconfig:"IMG_BUILDER_BUILD_CONTEXT_URI"`
+	ContextSubPath               string           `envconfig:"IMG_BUILDER_CONTEXT_SUB_PATH"`
+	DockerfilePath               string           `envconfig:"IMG_BUILDER_DOCKERFILE_PATH" default:"./Dockerfile"`
+	BaseImages                   BaseImageConfigs `envconfig:"IMG_BUILDER_BASE_IMAGES"`
+	PredictionJobBuildContextURI string           `envconfig:"IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI"`
+	PredictionJobContextSubPath  string           `envconfig:"IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH"`
+	PredictionJobDockerfilePath  string           `envconfig:"IMG_BUILDER_PREDICTION_JOB_DOCKERFILE_PATH" default:"./Dockerfile"`
+	PredictionJobBaseImages      BaseImageConfigs `envconfig:"IMG_BUILDER_PREDICTION_JOB_BASE_IMAGES"`
+	BuildNamespace               string           `envconfig:"IMG_BUILDER_NAMESPACE" default:"mlp"`
+	DockerRegistry               string           `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
+	BuildTimeout                 string           `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
+	KanikoImage                  string           `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
 	Tolerations   Tolerations   `envconfig:"IMG_BUILDER_TOLERATIONS"`
-	NodeSelectors NodeSelectors `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
+	NodeSelectors DictEnv       `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
 	MaximumRetry  int32         `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
 }
 
@@ -135,15 +160,15 @@ func (spec *Tolerations) Decode(value string) error {
 	return nil
 }
 
-type NodeSelectors map[string]string
+type DictEnv map[string]string
 
-func (ns *NodeSelectors) Decode(value string) error {
-	var nodeSelectors NodeSelectors
+func (d *DictEnv) Decode(value string) error {
+	var dict DictEnv
 
-	if err := json.Unmarshal([]byte(value), &nodeSelectors); err != nil {
+	if err := json.Unmarshal([]byte(value), &dict); err != nil {
 		return err
 	}
-	*ns = nodeSelectors
+	*d = dict
 	return nil
 }
 

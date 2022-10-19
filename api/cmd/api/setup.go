@@ -142,9 +142,7 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 	}
 
 	webServiceConfig := imagebuilder.Config{
-		BuildContextURL:      cfg.ImageBuilderConfig.BuildContextURI,
-		DockerfilePath:       cfg.ImageBuilderConfig.DockerfilePath,
-		BaseImage:            cfg.ImageBuilderConfig.BaseImage,
+		BaseImages:           cfg.ImageBuilderConfig.BaseImages,
 		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
 		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
 		ContextSubPath:       cfg.ImageBuilderConfig.ContextSubPath,
@@ -162,9 +160,7 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 	webserviceBuilder = imagebuilder.NewModelServiceImageBuilder(kubeClient, webServiceConfig)
 
 	predJobConfig := imagebuilder.Config{
-		BuildContextURL:      cfg.ImageBuilderConfig.PredictionJobBuildContextURI,
-		DockerfilePath:       cfg.ImageBuilderConfig.PredictionJobDockerfilePath,
-		BaseImage:            cfg.ImageBuilderConfig.PredictionJobBaseImage,
+		BaseImages:           cfg.ImageBuilderConfig.PredictionJobBaseImages,
 		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
 		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
 		ContextSubPath:       cfg.ImageBuilderConfig.PredictionJobContextSubPath,

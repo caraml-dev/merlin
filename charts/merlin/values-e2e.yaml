@@ -62,14 +62,20 @@ merlin:
     namespace: "mlp"
     timeout: "10m"
     kanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
-    baseImage: ""
-    dockerfilePath: "./Dockerfile"
-    predictionJobDockerfilePath: "docker/app.Dockerfile"
+    baseImages: 
+      3.7.*: 
+        imageName: pyfunc-py37:v0.1.0
+        dockerfilePath: "docker/Dockerfile"
+        buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.19.0"
+        mainAppPath: /merlin-spark-app/main.py
+    predictionJobBaseImages: 
+      3.7.*: 
+        imageName: pyspark-py37:v0.1.0
+        dockerfilePath: "docker/app.Dockerfile"
+        buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.19.0"
+        mainAppPath: /merlin-spark-app/main.py
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
-    buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.19.0"
-    predictionJobBuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.19.0"
-    predictionJobBaseImage: "ghcr.io/gojek/merlin-pyspark-base:v0.4.1"
     nodeSelectors: {}
     tolerations: []
 

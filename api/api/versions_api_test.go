@@ -738,6 +738,7 @@ func TestCreateVersion(t *testing.T) {
 					"1-targeting_date": "2021-02-01",
 					"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
 				},
+				PythonVersion: "3.10.*",
 			},
 			modelsService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
@@ -776,6 +777,7 @@ func TestCreateVersion(t *testing.T) {
 						"1-targeting_date": "2021-02-01",
 						"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
 					},
+					PythonVersion: "3.10.*",
 				}, mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
@@ -794,6 +796,7 @@ func TestCreateVersion(t *testing.T) {
 						"1-targeting_date": "2021-02-01",
 						"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
 					},
+					PythonVersion: "3.10.*",
 				}, nil)
 				return svc
 			},
@@ -817,6 +820,7 @@ func TestCreateVersion(t *testing.T) {
 						"1-targeting_date": "2021-02-01",
 						"TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe": "TheQuickBrownFoxJumpsOverTheLazyDogTheQuickBrownFoxJumpsOverThe",
 					},
+					PythonVersion: "3.10.*",
 				},
 			},
 		},
@@ -1061,7 +1065,7 @@ func TestCreateVersion(t *testing.T) {
 			},
 		},
 		{
-			desc: "Should successfully create version without labels",
+			desc: "Should successfully create version without labels, default python version",
 			vars: map[string]string{
 				"model_id": "1",
 			},
@@ -1095,9 +1099,10 @@ func TestCreateVersion(t *testing.T) {
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
 				svc.On("Save", mock.Anything, &models.Version{
-					ModelID:     models.ID(1),
-					RunID:       "1",
-					ArtifactURI: "artifact/url/run",
+					ModelID:       models.ID(1),
+					RunID:         "1",
+					ArtifactURI:   "artifact/url/run",
+					PythonVersion: DEFAULT_PYTHON_VERSION,
 				}, mock.Anything).Return(&models.Version{
 					ID:      models.ID(1),
 					ModelID: models.ID(1),
@@ -1110,7 +1115,8 @@ func TestCreateVersion(t *testing.T) {
 						Type:         "sklearn",
 						MlflowURL:    "http://mlflow.com",
 					},
-					MlflowURL: "http://mlflow.com",
+					MlflowURL:     "http://mlflow.com",
+					PythonVersion: DEFAULT_PYTHON_VERSION,
 				}, nil)
 				return svc
 			},
@@ -1128,7 +1134,8 @@ func TestCreateVersion(t *testing.T) {
 						Type:         "sklearn",
 						MlflowURL:    "http://mlflow.com",
 					},
-					MlflowURL: "http://mlflow.com",
+					MlflowURL:     "http://mlflow.com",
+					PythonVersion: DEFAULT_PYTHON_VERSION,
 				},
 			},
 		},

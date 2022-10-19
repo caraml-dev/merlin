@@ -32,12 +32,14 @@ type Version struct {
 	Endpoints       []*VersionEndpoint `json:"endpoints" gorm:"foreignkey:VersionID,VersionModelID;association_foreignkey:ID,ModelID;"`
 	Properties      KV                 `json:"properties" gorm:"properties"`
 	Labels          KV                 `json:"labels" gorm:"labels"`
+	PythonVersion   string             `json:"python_version" gorm:"python_version"`
 	CustomPredictor *CustomPredictor   `json:"custom_predictor"`
 	CreatedUpdated
 }
 
 type VersionPost struct {
-	Labels KV `json:"labels" gorm:"labels"`
+	Labels        KV     `json:"labels" gorm:"labels"`
+	PythonVersion string `json:"python_version" gorm:"python_version"`
 }
 
 type VersionPatch struct {

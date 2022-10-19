@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -125,7 +124,7 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}(r.Body)
 
-	requestBody, err := ioutil.ReadAll(r.Body)
+	requestBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		s.logger.Error("read request_body", zap.Error(err))
 		response.NewError(http.StatusInternalServerError, err).Write(w)
@@ -150,7 +149,7 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer resp.Body.Close() //nolint: errcheck
 
-	modelResponseBody, err := ioutil.ReadAll(resp.Body)
+	modelResponseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		s.logger.Error("error reading model response", zap.Error(err))
 		response.NewError(http.StatusInternalServerError, err).Write(w)

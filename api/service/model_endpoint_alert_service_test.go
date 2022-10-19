@@ -15,7 +15,7 @@
 package service
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -50,7 +50,7 @@ func Test_modelEndpointAlertService_CreateModelEndpointAlert(t *testing.T) {
 			assert.Len(t, args, 1)
 
 			opt := args[0].(gitlab.CreateFileOptions)
-			yamlBytes, err := ioutil.ReadFile("./testdata/model_endpoint_alert.yaml")
+			yamlBytes, err := os.ReadFile("./testdata/model_endpoint_alert.yaml")
 			assert.Nil(t, err)
 			assert.Equal(t, string(yamlBytes), opt.Content)
 		}).

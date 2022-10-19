@@ -11,6 +11,7 @@ CHART_PATH="$3"
 VERSION="$4"
 GIT_REF="$5"
 
+
 TIMEOUT=120s
 
 install_mlp() {
@@ -40,9 +41,22 @@ install_merlin() {
     --set merlin.image.tag=${VERSION} \
     --set merlin.transformer.image=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \
     --set merlin.imageBuilder.dockerRegistry=${DOCKER_REGISTRY} \
-    --set merlin.imageBuilder.buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
-    --set merlin.imageBuilder.predictionJobBuildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
-    --set merlin.imageBuilder.predictionJobBaseImage=${DOCKER_REGISTRY}/merlin-pyspark-base:${VERSION} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py37:${VERSION} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".dockerfilePath=docker/app.Dockerfile \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py38:${VERSION} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".dockerfilePath=docker/app.Dockerfile \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py39:${VERSION} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".dockerfilePath=docker/app.Dockerfile \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py310:${VERSION} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".dockerfilePath=docker/app.Dockerfile \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
     --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}/v1 \
     --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST} \
     --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \
