@@ -1,0 +1,4 @@
+xgboost==1.6.2
+scikit-learn==1.0.2  # >=1.1.2 upon python 3.7 deprecation
+merlin-sdk>=0.22.2rc4
+numpy
