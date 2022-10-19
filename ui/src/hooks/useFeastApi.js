@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-import { AuthContext, useApi } from "@gojek/mlp-ui";
-import { useContext } from "react";
+import { useApi } from "@gojek/mlp-ui";
 import config from "../config";
 
 export const feastEndpoints = {
-  listProjects: "/feast.core.CoreService/ListProjects",
-  listEntities: "/feast.core.CoreService/ListEntities",
-  listFeatureTables: "/feast.core.CoreService/ListFeatureTables"
+  listProjects: "/feast/api/projects",
+  listEntities: "/feast/api/entities",
+  listFeatureTables: "/feast/api/tables",
 };
 
 export const useFeastApi = (
@@ -30,8 +29,6 @@ export const useFeastApi = (
   result,
   callImmediately = true
 ) => {
-  const authCtx = useContext(AuthContext);
-
   /* Use undefined for authCtx so that the authorization header passed in the options
    * will be used instead of being overwritten. Ref: https://github.com/gojek/mlp/blob/main/ui/packages/lib/src/utils/fetchJson.js#L39*/
 
@@ -43,10 +40,9 @@ export const useFeastApi = (
       useMockData: config.USE_MOCK_DATA,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${authCtx.state.idToken}`
       },
 
-      ...options
+      ...options,
     },
     undefined,
     result,
