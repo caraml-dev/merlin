@@ -19,7 +19,6 @@ export const FeastResourcesContextProvider = ({ project, children }) => {
   );
 
   useEffect(() => {
-    console.log("project:", project);
     if (project && project !== "") {
       listEntities();
 
