@@ -6,7 +6,7 @@ const FeastProjectsContext = React.createContext([]);
 export const FeastProjectsContextProvider = ({ children }) => {
   const [{ data: projects }] = useFeastApi(
     feastEndpoints.listProjects,
-    { method: "POST", muteError: true },
+    { method: "GET", muteError: true },
     {},
     true
   );

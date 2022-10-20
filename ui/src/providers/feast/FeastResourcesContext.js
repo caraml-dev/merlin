@@ -5,28 +5,24 @@ const FeastResourcesContext = React.createContext({});
 
 export const FeastResourcesContextProvider = ({ project, children }) => {
   const [{ data: entities }, listEntities] = useFeastApi(
-    feastEndpoints.listEntities,
-    { method: "POST", muteError: true },
+    `${feastEndpoints.listEntities}?project=${project}`,
+    { method: "GET", muteError: true },
     {},
     false
   );
 
   const [{ data: featureTables }, listFeatureTables] = useFeastApi(
-    feastEndpoints.listFeatureTables,
-    { method: "POST", muteError: true },
+    `${feastEndpoints.listFeatureTables}?project=${project}`,
+    { method: "GET", muteError: true },
     {},
     false
   );
 
   useEffect(() => {
     if (project && project !== "") {
-      listEntities({
-        body: JSON.stringify({ filter: { project: project } })
-      });
+      listEntities();
 
-      listFeatureTables({
-        body: JSON.stringify({ filter: { project: project } })
-      });
+      listFeatureTables();
     }
   }, [project, listEntities, listFeatureTables]);
 
