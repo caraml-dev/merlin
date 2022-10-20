@@ -125,7 +125,9 @@ type DatabaseConfig struct {
 	Database      string `envconfig:"DATABASE_NAME" default:"mlp"`
 	MigrationPath string `envconfig:"DATABASE_MIGRATIONS_PATH" default:"file://db-migrations"`
 
-	ConnMaxIdleTime time.Duration `envconfig:"DATABASE_CONN_MAX_IDLE_TIME" default:"15m"`
+	ConnMaxIdleTime time.Duration `envconfig:"DATABASE_CONN_MAX_IDLE_TIME" default:"10m"`
+	MaxIdleConns    int           `envconfig:"DATABASE_MAX_IDLE_CONNS" default:"10"`
+	MaxOpenConns    int           `envconfig:"DATABASE_MAX_OPEN_CONNS" default:"100"`
 }
 
 type ImageBuilderConfig struct {

@@ -63,6 +63,8 @@ func initDB(cfg config.DatabaseConfig) (*gorm.DB, func()) {
 	}
 
 	sqlDB.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
 
 	return db, func() { db.Close() } //nolint:errcheck
 }
