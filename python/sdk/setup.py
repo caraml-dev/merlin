@@ -22,41 +22,43 @@ version = imp.load_source(
     'merlin.version', os.path.join('merlin', 'version.py')).VERSION
 
 REQUIRES = [
-    "certifi>=2017.4.17",
-    "python_dateutil>=2.5.3",
-    "six>=1.10",
-    "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
-    "google-cloud-storage>=1.19.0",
     "boto3>=1.9.84",
-    "urllib3>=1.23",
-    "PyPrind>=2.11.2",
-    "google-auth>=1.11.0",
+    "caraml-upi-protos>=0.3.1",
+    "certifi>=2017.4.17",
     "Click>=7.0",
     "cloudpickle==2.0.0",  # used by mlflow
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
-    "PyYAML>=5.4",
+    "google-auth>=1.11.0",
+    "google-cloud-storage>=1.19.0",
+    "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
     "protobuf>=3.0.0,<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
-    "caraml-upi-protos>=0.3.1"
+    "PyPrind>=2.11.2",
+    "python_dateutil>=2.5.3",
+    "PyYAML>=5.4",
+    "six>=1.10",
+    "urllib3>=1.23",
 ]
 
 TEST_REQUIRES = [
-    "pytest",
-    "pytest-dependency",
-    "pytest-cov",
-    "pytest-xdist",
-    "urllib3-mock>=0.3.3",
-    "requests",
-    "xgboost==1.6.2",
-    "scikit-learn==1.0.2",  # >=1.1.2 upon python 3.7 deprecation
+    "google-cloud-bigquery-storage>=0.7.0",
+    "google-cloud-bigquery>=1.18.0",
+    "grpcio>=1.31.0,<1.49.0",
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy>=0.812",
-    "types-six",
-    "google-cloud-bigquery>=1.18.0",
-    "google-cloud-bigquery-storage>=0.7.0",
-    "grpcio>=1.31.0,<1.49.0",
+    "pytest-cov",
+    "pytest-dependency",
+    "pytest-xdist",
+    "pytest",
     "recursive-diff>=1.0.0",
-    "xarray"
+    "requests",
+    "scikit-learn==1.0.2",  # >=1.1.2 upon python 3.7 deprecation
+    "types-python-dateutil",
+    "types-PyYAML",
+    "types-six",
+    "urllib3-mock>=0.3.3",
+    "xarray",
+    "xgboost==1.6.2",
 ]
 
 setup(
