@@ -15,7 +15,8 @@
 
 import imp
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 version = imp.load_source(
     'merlin.version', os.path.join('merlin', 'version.py')).VERSION
@@ -50,6 +51,7 @@ TEST_REQUIRES = [
     "scikit-learn==1.0.2",  # >=1.1.2 upon python 3.7 deprecation
     "joblib>=0.13.0,<1.2.0",  # >=1.2.0 upon upgrade of kserve's version
     "mypy>=0.812",
+    "types-six",
     "google-cloud-bigquery>=1.18.0",
     "google-cloud-bigquery-storage>=0.7.0",
     "grpcio>=1.31.0,<1.49.0",
