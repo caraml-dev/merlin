@@ -246,8 +246,8 @@ merlin-postgresql:
   # The password secret will be created using this password
   postgresqlPassword: merlin
 
-  connMaxIdleTime: 0
-  connMaxLifetime: 0
+  connMaxIdleTime: 0s
+  connMaxLifetime: 0s
   maxIdleConns: 0
   maxOpenConns: 0
 
