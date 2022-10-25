@@ -122,7 +122,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/sdk
         run: |
-          pip install mypy==0.812 pipenv==2022.8.19
+          pip install pipenv
           make setup
       - name: Unit test Python SDK
         env:
