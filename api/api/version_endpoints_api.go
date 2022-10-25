@@ -157,6 +157,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 			env, err = c.AppContext.EnvironmentService.GetEnvironment(newEndpoint.EnvironmentName)
 			if err != nil {
 				if !gorm.IsRecordNotFoundError(err) {
+					log.Errorf("Unable to find the specified environment: %s. Err: %s", env.Name, err)
 					return InternalServerError(fmt.Sprintf("Unable to find the specified environment: %s", env.Name))
 				}
 
@@ -256,6 +257,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 	env, err := c.AppContext.EnvironmentService.GetEnvironment(newEndpoint.EnvironmentName)
 	if err != nil {
 		if !gorm.IsRecordNotFoundError(err) {
+			log.Errorf("Unable to find the specified environment: %s. Err: %s", newEndpoint.EnvironmentName, err)
 			return InternalServerError(fmt.Sprintf("Unable to find the specified environment: %s", newEndpoint.EnvironmentName))
 		}
 

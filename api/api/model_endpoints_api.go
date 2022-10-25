@@ -94,6 +94,7 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
+			log.Errorf("Model ID %s not found. Err: %s", modelID, err)
 			return NotFound(fmt.Sprintf("Model ID %s not found", modelID))
 		}
 
@@ -118,7 +119,8 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 		env, err = c.AppContext.EnvironmentService.GetEnvironment(endpoint.EnvironmentName)
 		if err != nil {
 			if !gorm.IsRecordNotFoundError(err) {
-				return InternalServerError("Unable to find the specified environment")
+				log.Errorf("Unable to find the specified environment: %s. Err: %s", endpoint.EnvironmentName, err)
+				return InternalServerError(fmt.Sprintf("Unable to find the specified environment: %s", endpoint.EnvironmentName))
 			}
 
 			return NotFound(fmt.Sprintf("Environment not found: %s", endpoint.EnvironmentName))
@@ -129,6 +131,7 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 	// Deploy model endpoint as Istio's VirtualService
 	endpoint, err = c.ModelEndpointsService.DeployEndpoint(ctx, model, endpoint)
 	if err != nil {
+		log.Errorf("Unable to create model endpoint: %s", err)
 		return InternalServerError(fmt.Sprintf("Unable to create model endpoint: %s", err.Error()))
 	}
 
@@ -145,6 +148,7 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
+			log.Errorf("Model ID %s not found. Err: %s", modelID, err)
 			return NotFound(fmt.Sprintf("Model ID %s not found", modelID))
 		}
 
@@ -170,7 +174,8 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 		env, err = c.AppContext.EnvironmentService.GetEnvironment(newEndpoint.EnvironmentName)
 		if err != nil {
 			if !gorm.IsRecordNotFoundError(err) {
-				return InternalServerError("Unable to find the specified environment")
+				log.Errorf("Unable to find the specified environment: %s. Err: %s", newEndpoint.EnvironmentName, err)
+				return InternalServerError(fmt.Sprintf("Unable to find the specified environment: %s", newEndpoint.EnvironmentName))
 			}
 
 			return NotFound(fmt.Sprintf("Environment not found: %s", newEndpoint.EnvironmentName))
@@ -195,6 +200,7 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 	}
 
 	if err != nil {
+		log.Errorf("Unable to update model endpoint: %s", err)
 		return InternalServerError(fmt.Sprintf("Unable to update model endpoint: %s", err.Error()))
 	}
 

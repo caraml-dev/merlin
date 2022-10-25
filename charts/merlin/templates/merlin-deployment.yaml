@@ -82,6 +82,14 @@ spec:
                 key: postgresql-password
           - name: DATABASE_NAME
             value: {{ index .Values "merlin-postgresql" "postgresqlDatabase" }}
+          - name: DATABASE_CONN_MAX_IDLE_TIME
+            value: "{{ index .Values "merlin-postgresql" "connMaxIdleTime" }}"
+          - name: DATABASE_CONN_MAX_LIFETIME
+            value: "{{ index .Values "merlin-postgresql" "connMaxLifetime" }}"
+          - name: DATABASE_MAX_IDLE_CONNS
+            value: "{{ index .Values "merlin-postgresql" "maxIdleConns" }}"
+          - name: DATABASE_MAX_OPEN_CONNS
+            value: "{{ index .Values "merlin-postgresql" "maxOpenConns" }}"
           - name: REACT_APP_OAUTH_CLIENT_ID
             value: "{{ .Values.merlin.ui.oauthClientID }}"
           - name: REACT_APP_ENVIRONMENT

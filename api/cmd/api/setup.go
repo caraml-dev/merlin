@@ -56,6 +56,17 @@ func initDB(cfg config.DatabaseConfig) (*gorm.DB, func()) {
 		panic(err)
 	}
 	db.LogMode(false)
+
+	sqlDB := db.DB()
+	if sqlDB == nil {
+		panic("fail to get the underlying database connection")
+	}
+
+	sqlDB.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
+	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
+
 	return db, func() { db.Close() } //nolint:errcheck
 }
 
