@@ -18,7 +18,8 @@ CLUSTER_NAME=$1
 INGRESS_HOST=$2
 
 ISTIO_VERSION=1.13.2
-KNATIVE_VERSION=1.3.0
+# queue proxy version in config/knative/overlay.yaml should also be modified to upgrade knative
+KNATIVE_VERSION=1.7.2
 CERT_MANAGER_VERSION=1.7.2
 MINIO_VERSION=3.6.3 
 KSERVE_VERSION=0.8.0
