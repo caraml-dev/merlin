@@ -14,21 +14,28 @@
  * limitations under the License.
  */
 
-import { EuiPageTemplate, EuiPanel, EuiSpacer} from "@elastic/eui";
+import { EuiPageTemplate, EuiPanel, EuiSpacer } from "@elastic/eui";
 import { FormContextProvider } from "@gojek/mlp-ui";
 import { React } from "react";
 import {
   Config,
   Pipeline,
-  TransformerConfig
+  TransformerConfig,
 } from "../../services/transformer/TransformerConfig";
-import {StandardTransformerTools} from "./StandardTransformerTools"
 import { PROTOCOL } from "../../services/version_endpoint/VersionEndpoint";
+import { StandardTransformerTools } from "./StandardTransformerTools";
 
 const TransformerTools = () => {
-
   return (
     <EuiPageTemplate restrictWidth="90%" paddingSize="none">
+      <EuiSpacer size="l" />
+      <EuiPageTemplate.Header
+        bottomBorder={false}
+        iconType="tableDensityExpanded"
+        pageTitle="Transformer Simulator"
+      />
+
+      <EuiSpacer size="l" />
       <EuiPageTemplate.Section color={"transparent"}>
         <EuiPanel>
           <FormContextProvider
@@ -42,12 +49,11 @@ const TransformerTools = () => {
                     new Pipeline()
                   )
                 ),
-                type_on_ui: "standard"
-              }
-            }}>
-            
-            <StandardTransformerTools 
-            />
+                type_on_ui: "standard",
+              },
+            }}
+          >
+            <StandardTransformerTools />
           </FormContextProvider>
         </EuiPanel>
       </EuiPageTemplate.Section>
