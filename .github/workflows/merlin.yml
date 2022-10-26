@@ -381,7 +381,7 @@ jobs:
       - name: "Create Test Cluster"
         run: |
           k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
-          k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.21.2-k3s1 --k3s-arg '--no-deploy=traefik,metrics-server@server:*' --port 80:80@loadbalancer
+          k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.22.15-k3s1 --k3s-arg '--no-deploy=traefik,metrics-server@server:*' --port 80:80@loadbalancer
       - name: Publish images to k3d registry
         run: |
           # Merlin API
