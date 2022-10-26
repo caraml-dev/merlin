@@ -101,6 +101,8 @@ install_knative() {
     kubectl apply -k config/knative
 
     # Install knative-istio
+    # knative net istio doesn't release bugfix version for every new knative release
+    KNATIVE_NET_ISTIO=$(echo "${KNATIVE_VERSION}" | awk -F. '{print $1"."$2"."0}')
     kubectl apply -f https://github.com/knative/net-istio/releases/download/knative-v${KNATIVE_VERSION}/net-istio.yaml
 
     kubectl rollout status deployment/autoscaler -n knative-serving -w --timeout=${TIMEOUT}
