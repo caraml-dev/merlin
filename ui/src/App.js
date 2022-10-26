@@ -14,52 +14,55 @@
  * limitations under the License.
  */
 
-import React from "react";
-import { Redirect, Router } from "@reach/router";
+import { EuiProvider } from "@elastic/eui";
 import {
   AuthProvider,
-  Page404,
   ErrorBoundary,
   Login,
   MlpApiContextProvider,
+  Page404,
   PrivateRoute,
-  Toast
+  Toast,
 } from "@gojek/mlp-ui";
+import { Redirect, Router } from "@reach/router";
+import React from "react";
 import config from "./config";
 import Home from "./Home";
-import Models from "./model/Models";
-import { ModelDetails } from "./model/ModelDetails";
-import Versions from "./version/Versions";
-import Jobs from "./job/Jobs";
-import JobDetails from "./job/JobDetails";
 import { CreateJobView } from "./job/CreateJobView";
+import JobDetails from "./job/JobDetails";
+import Jobs from "./job/Jobs";
+import { ModelDetails } from "./model/ModelDetails";
+import Models from "./model/Models";
 import { PrivateLayout } from "./PrivateLayout";
-import { EuiProvider } from "@elastic/eui";
+import Versions from "./version/Versions";
 
 // The new UI architecture will have all UI pages inside of `pages` folder
 import {
   DeployModelVersionView,
   RedeployModelVersionView,
+  TransformerTools,
   VersionDetails,
-  TransformerTools
 } from "./pages";
 
 const App = () => {
-
-  return(
+  return (
     <EuiProvider>
       <ErrorBoundary>
         <MlpApiContextProvider
           mlpApiUrl={config.MLP_API}
           timeout={config.TIMEOUT}
-          useMockData={config.USE_MOCK_DATA}>
+          useMockData={config.USE_MOCK_DATA}
+        >
           <AuthProvider clientId={config.OAUTH_CLIENT_ID}>
             <Router role="group">
               <Login path="/login" />
 
               <Redirect from="/" to={config.HOMEPAGE} noThrow />
 
-              <PrivateRoute path={config.HOMEPAGE} render={PrivateLayout(Home)} />
+              <PrivateRoute
+                path={config.HOMEPAGE}
+                render={PrivateLayout(Home)}
+              />
 
               <Redirect
                 from={`${config.HOMEPAGE}/projects/:projectId`}
@@ -148,7 +151,15 @@ const App = () => {
               />
 
               {/* Tools */}
-              <TransformerTools path={`${config.HOMEPAGE}/-/tools/transformer`} />
+              <PrivateRoute
+                path={`${config.HOMEPAGE}/projects/:projectId/transformer-simulator`}
+                render={PrivateLayout(TransformerTools)}
+              />
+
+              {/* For backward compatibility */}
+              <TransformerTools
+                path={`${config.HOMEPAGE}/-/tools/transformer`}
+              />
 
               {/* DEFAULT */}
               <Page404 default />
