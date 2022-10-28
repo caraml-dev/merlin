@@ -129,7 +129,7 @@ func (us *UPIServer) Run() {
 	go func() {
 		us.logger.Info("starting http server")
 		if err := httpServer.Serve(httpLis); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			errCh <- errors.Wrapf(err, "HTTP server failed")
+			errCh <- errors.Wrapf(err, "instrumentation server failed")
 		}
 	}()
 
