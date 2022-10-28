@@ -23,7 +23,6 @@ install_mlp() {
     --set mlp.ingress.enabled=true \
     --set mlp.ingress.class=istio \
     --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST} \
-    --set mlp.ingress.path="/*" \
     --wait --timeout=${TIMEOUT}
 
    kubectl apply -f config/mock/message-dumper.yaml

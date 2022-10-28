@@ -247,20 +247,18 @@ func (s *HTTPServer) predict(ctx context.Context, r *http.Request, payload []byt
 	return res, nil
 }
 
-// RunInstrumentationServer running http server that only serve endpoints that related to instrumentation
+// NewInstrumentationRouter create router that only serve endpoints that related to instrumentation
 // e.g prometheus scape metric endpoint or pprof endpoint
-func RunInstrumentationServer(opt *config.Options, logger *zap.Logger) {
+func NewInstrumentationRouter() *mux.Router {
 	router := mux.NewRouter()
-
-	setDefaultRouter(router)
-
-	run("instrumentation", router, opt, logger)
+	attachInstrumentationRoutes(router)
+	return router
 }
 
 // Run serves the HTTP endpoints.
 func (s *HTTPServer) Run() {
 	router := s.router
-	setDefaultRouter(router)
+	attachInstrumentationRoutes(router)
 
 	router.HandleFunc(fmt.Sprintf("/v1/models/%s:predict", s.options.ModelFullName), s.PredictHandler).Methods("POST")
 	run("standard transformer", router, s.options, s.logger)
@@ -305,7 +303,7 @@ func run(name string, handler http.Handler, opt *config.Options, logger *zap.Log
 	}
 }
 
-func setDefaultRouter(router *mux.Router) {
+func attachInstrumentationRoutes(router *mux.Router) {
 	router.Use(recoveryHandler)
 
 	health := healthcheck.NewHandler()
