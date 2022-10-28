@@ -136,7 +136,7 @@ func (us *UPIServer) Run() {
 	go func() {
 		us.logger.Info(fmt.Sprintf("serving at port: %s", us.opts.GRPCPort))
 		if err := m.Serve(); err != nil && !errors.Is(err, cmux.ErrListenerClosed) {
-			errCh <- errors.Wrapf(err, "server failed")
+			errCh <- errors.Wrapf(err, "cmux server failed")
 		}
 	}()
 
@@ -155,7 +155,11 @@ func (us *UPIServer) Run() {
 
 	grpcServer.GracefulStop()
 	us.logger.Info("stopped grpc server")
-	_ = httpServer.Shutdown(context.Background())
+	if err = httpServer.Shutdown(context.Background()); err != nil {
+		us.logger.Warn("failed shutting down http server")
+		return
+	}
+
 	us.logger.Info("stopped http server")
 }
 
