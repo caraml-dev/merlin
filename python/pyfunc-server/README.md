@@ -93,7 +93,10 @@ Pyfunc server can be configured via following environment variables
 | WORKERS | Number of Python processes that will be created to allow multi processing (default = 1)                                                                                                                                                    | 
 | LOG_LEVEL | Log level, valid values are `INFO`, `ERROR`, `DEBUG`, `WARN`, `CRITICAL`  (default='INFO')                                                                                                                                                 | 
 | GRPC_OPTIONS | GRPC options to configure UPI server as json string. The possible options can be found in [grpc_types.h](https://github.com/grpc/grpc/blob/v1.46.x/include/grpc/impl/codegen/grpc_types.h). Example: '{"grpc.max_concurrent_streams":100}' | 
-| GRPC_CONCURRENCY | Size of grpc handler threadpool per worker (default = 10) |
+| GRPC_CONCURRENCY | Size of grpc handler threadpool per worker (default = 10)                                                                                                                                                                                  |
+| PUSHGATEWAY_ENABLED | Enable pushing metrics to prometheus push gateway, only available when `CARAML_PROTOCOL` is set to `UPI_V1` (default = false)                                                                                                              |
+| PUSHGATEWAY_URL | Url of the prometheus push gateway (default = localhost:9091)                                                                                                                                                                              |
+| PUSHGATEWAY_PUSH_INTERVAL_SEC | Interval in seconds for pushing metrics to prometheus push gateway (default = 30)                                                                                                                                                          |
 
 ## Directory Structure
 
