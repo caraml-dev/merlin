@@ -42,11 +42,11 @@ def test_http_protocol():
     port = "8081"
 
     try:
-        env[HTTP_PORT] = port
-        env[MODEL_NAME] = model_name
-        env[MODEL_VERSION] = model_version
-        env[MODEL_FULL_NAME] = model_full_name
-        env[WORKERS] = "1"
+        env[HTTP_PORT[0]] = port
+        env[MODEL_NAME[0]] = model_name
+        env[MODEL_VERSION[0]] = model_version
+        env[MODEL_FULL_NAME[0]] = model_full_name
+        env[WORKERS[0]] = "1"
         env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
@@ -93,11 +93,11 @@ def test_metrics():
     try:
         pathlib.Path(metrics_path).mkdir(exist_ok=True)
 
-        env[HTTP_PORT] = port
-        env[MODEL_NAME] = model_name
-        env[MODEL_VERSION] = model_version
-        env[MODEL_FULL_NAME] = model_full_name
-        env[WORKERS] = "4"
+        env[HTTP_PORT[0]] = port
+        env[MODEL_NAME[0]] = model_name
+        env[MODEL_VERSION[0]] = model_version
+        env[MODEL_FULL_NAME[0]] = model_full_name
+        env[WORKERS[0]] = "4"
         env["PROMETHEUS_MULTIPROC_DIR"] = metrics_path
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env,
                              start_new_session=True)

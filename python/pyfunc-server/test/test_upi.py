@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 import re
@@ -173,13 +174,13 @@ def start_upi_server(model_name="my-model", model_version="1", http_port=8080, g
     mlflow.end_run()
     pathlib.Path(metrics_path).mkdir(exist_ok=True)
 
-    env[PROTOCOL] = Protocol.UPI_V1.value
-    env[HTTP_PORT] = str(http_port)
-    env[GRPC_PORT] = str(grpc_port)
-    env[MODEL_NAME] = model_name
-    env[MODEL_VERSION] = model_version
-    env[MODEL_FULL_NAME] = model_full_name
-    env[WORKERS] = str(workers)
+    env[PROTOCOL[0]] = Protocol.UPI_V1.value
+    env[HTTP_PORT[0]] = str(http_port)
+    env[GRPC_PORT[0]] = str(grpc_port)
+    env[MODEL_NAME[0]] = model_name
+    env[MODEL_VERSION[0]] = model_version
+    env[MODEL_FULL_NAME[0]] = model_full_name
+    env[WORKERS[0]] = str(workers)
     env["PROMETHEUS_MULTIPROC_DIR"] = metrics_path
     pid = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env, start_new_session=True)
 
