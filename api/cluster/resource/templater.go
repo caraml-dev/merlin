@@ -179,9 +179,8 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	var livenessProbeConfig *corev1.Probe = nil
 	envVarsMap := envVars.ToMap()
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
-		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") &&
-		modelService.Protocol == protocol.HttpJson {
-		livenessProbeConfig = createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s", modelService.Name))
+		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") {
+		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, fmt.Sprintf("/v1/models/%s", modelService.Name))
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
@@ -325,9 +324,8 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 	var livenessProbeConfig *corev1.Probe = nil
 	envVarsMap := envVars.ToMap()
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
-		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") &&
-		modelService.Protocol == protocol.HttpJson {
-		livenessProbeConfig = createLivenessProbeSpec("/")
+		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") {
+		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, "/")
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
@@ -409,7 +407,14 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(envVars mod
 	return envVars
 }
 
-func createLivenessProbeSpec(path string) *corev1.Probe {
+func createLivenessProbeSpec(prt protocol.Protocol, httpPath string) *corev1.Probe {
+	if prt == protocol.UpiV1 {
+		return createTCPLivenessProbeSpec(defaultGRPCPort)
+	}
+	return createHTTPLivenessProbeSpec(httpPath)
+}
+
+func createHTTPLivenessProbeSpec(path string) *corev1.Probe {
 	return &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
@@ -417,6 +422,23 @@ func createLivenessProbeSpec(path string) *corev1.Probe {
 				Scheme: "HTTP",
 				Port: intstr.IntOrString{
 					IntVal: defaultHTTPPort,
+				},
+			},
+		},
+		InitialDelaySeconds: liveProbeInitialDelaySec,
+		TimeoutSeconds:      liveProbeTimeoutSec,
+		PeriodSeconds:       liveProbePeriodSec,
+		SuccessThreshold:    liveProbeSuccessThreshold,
+		FailureThreshold:    liveProbeFailureThreshold,
+	}
+}
+
+func createTCPLivenessProbeSpec(tcpPort int) *corev1.Probe {
+	return &corev1.Probe{
+		Handler: corev1.Handler{
+			TCPSocket: &corev1.TCPSocketAction{
+				Port: intstr.IntOrString{
+					IntVal: int32(tcpPort),
 				},
 			},
 		},
