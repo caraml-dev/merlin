@@ -21,6 +21,7 @@ import (
 	yamlv3 "gopkg.in/yaml.v3"
 
 	"github.com/gojek/merlin/mlp"
+	"github.com/gojek/merlin/pkg/protocol"
 )
 
 const (
@@ -217,6 +218,70 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 									Style: yamlv3.LiteralStyle,
 									Tag:   "!!str",
 									Value: "(100 * sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",response_code_class!=\"2xx\",revision_name=~\".*model-1.*\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m]))) > 50",
+								},
+								For: "5m",
+								Labels: PromAlertRuleLabels{
+									Owner:       "team-1",
+									ServiceName: "merlin_project-1_model-1_env-1",
+									Severity:    "warning",
+								},
+								Annotations: PromAlertRuleAnnotations{
+									Summary:   "Error rate of model-1 model in env-1 is higher than 50.00%. Current value is {{ $value }}%.",
+									Dashboard: "https://monitoring.dev/graph/d/123456789/merlin-dashboard?var-cluster=cluster-1&var-model=model-1&var-project=project-1",
+									Playbook:  "TODO",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "error rate grpc",
+			fields: fields{
+				ModelID: 1,
+				Model: &Model{
+					Name: "model-1",
+					Project: mlp.Project{
+						Name: "project-1",
+					},
+				},
+				ModelEndpointID: ID(1),
+				ModelEndpoint: &ModelEndpoint{
+					ID: ID(1),
+					Environment: &Environment{
+						Cluster: "cluster-1",
+					},
+					Protocol: protocol.UpiV1,
+				},
+				EnvironmentName: "env-1",
+				TeamName:        "team-1",
+				AlertConditions: AlertConditions{
+					&AlertCondition{
+						Enabled:    true,
+						MetricType: AlertConditionTypeErrorRate,
+						Severity:   AlertConditionSeverityWarning,
+						Target:     50,
+					},
+				},
+			},
+			want: PromAlert{
+				Groups: []PromAlertGroup{
+					{
+						Name: "merlin_project-1_model-1_env-1",
+						Rules: []PromAlertRule{
+							{
+								Alert: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.DoubleQuotedStyle,
+									Tag:   "!!str",
+									Value: "[merlin] model-1: Error Rate warning",
+								},
+								Expr: yamlv3.Node{
+									Kind:  yamlv3.ScalarNode,
+									Style: yamlv3.LiteralStyle,
+									Tag:   "!!str",
+									Value: "(100 * sum(rate(istio_requests_total{cluster_name=\"cluster-1\",destination_service_name=~\"model-1.*\",destination_workload_namespace=\"project-1\",grpc_response_status!=\"0\",request_protocol=\"grpc\"}[1m])) / sum(rate(istio_requests_total{cluster_name=\"cluster-1\",destination_service_name=~\"model-1.*\",destination_workload_namespace=\"project-1\",request_protocol=\"grpc\"}[1m]))) > 50",
 								},
 								For: "5m",
 								Labels: PromAlertRuleLabels{

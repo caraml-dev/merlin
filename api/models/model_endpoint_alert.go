@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/prometheus/prometheus/promql"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -33,11 +34,12 @@ const (
 )
 
 const (
-	throughputSliExprFormat = "round(sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])), 0.001)"
-	latencySliExprFormat    = "histogram_quantile(%f, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
-	errorRateSliExprFormat  = "(100 * sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",response_code_class!=\"2xx\",revision_name=~\".*%s.*\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
-	cpuSliExprFormat        = "(100 * sum(rate(container_cpu_usage_seconds_total{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}[1m])) / sum(kube_pod_container_resource_requests{resource=\"cpu\",cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}))"
-	memorySliExprFormat     = "(100 * sum(container_memory_usage_bytes{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}) / sum(kube_pod_container_resource_requests{resource=\"memory\",cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}))"
+	throughputSliExprFormat    = "round(sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])), 0.001)"
+	latencySliExprFormat       = "histogram_quantile(%f, sum by(le, revision_name) (rate(revision_request_latencies_bucket{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
+	errorRateSliExprFormat     = "(100 * sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",response_code_class!=\"2xx\",revision_name=~\".*%s.*\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"%s\",namespace_name=\"%s\",revision_name=~\".*%s.*\"}[1m])))"
+	errorRateSliExprGRPCFormat = "(100 * sum(rate(istio_requests_total{cluster_name=\"%s\",destination_service_name=~\"%s.*\",destination_workload_namespace=\"%s\",grpc_response_status!=\"0\",request_protocol=\"grpc\"}[1m])) / sum(rate(istio_requests_total{cluster_name=\"%s\",destination_service_name=~\"%s.*\",destination_workload_namespace=\"%s\",request_protocol=\"grpc\"}[1m])))"
+	cpuSliExprFormat           = "(100 * sum(rate(container_cpu_usage_seconds_total{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}[1m])) / sum(kube_pod_container_resource_requests{resource=\"cpu\",cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}))"
+	memorySliExprFormat        = "(100 * sum(container_memory_usage_bytes{cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}) / sum(kube_pod_container_resource_requests{resource=\"memory\",cluster_name=\"%s\",namespace=\"%s\",pod=~\".*%s.*\",container!~\"|POD\"}))"
 )
 
 const (
@@ -178,6 +180,13 @@ func (alert ModelEndpointAlert) sliExpr(alertCondition AlertCondition) string {
 			percentile, alert.ModelEndpoint.Environment.Cluster, alert.Model.Project.Name, alert.Model.Name,
 		)
 	case AlertConditionTypeErrorRate:
+		if alert.ModelEndpoint.Protocol == protocol.UpiV1 {
+			return fmt.Sprintf(
+				errorRateSliExprGRPCFormat,
+				alert.ModelEndpoint.Environment.Cluster, alert.Model.Name, alert.Model.Project.Name,
+				alert.ModelEndpoint.Environment.Cluster, alert.Model.Name, alert.Model.Project.Name,
+			)
+		}
 		return fmt.Sprintf(
 			errorRateSliExprFormat,
 			alert.ModelEndpoint.Environment.Cluster, alert.Model.Project.Name, alert.Model.Name,
