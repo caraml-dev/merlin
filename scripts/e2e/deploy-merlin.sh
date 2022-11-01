@@ -21,8 +21,8 @@ install_mlp() {
     --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
     --set mlp.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
     --set mlp.ingress.enabled=true \
-    --set mlp.ingress.class=istio \
-    --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST} \
+    --set mlp.ingress.class=traefik \
+    --set mlp.ingress.host=mlp.${INGRESS_HOST} \
     --set mlp.ingress.path="/*" \
     --wait --timeout=${TIMEOUT}
 

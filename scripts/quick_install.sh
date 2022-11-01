@@ -191,7 +191,7 @@ helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yam
   --wait --timeout=5m
 
 cat <<EOF > mlp-ingress.yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: mlp
@@ -206,9 +206,12 @@ spec:
       http:
         paths:
           - path: /*
+            pathType: Prefix
             backend:
-              serviceName: mlp
-              servicePort: 8080
+              service:
+                name: mlp
+                port:
+                  number: 8080
 EOF
 
 # Install Merlin
