@@ -187,7 +187,6 @@ helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yam
   --set mlp.ingress.enabled=true \
   --set mlp.ingress.class=istio \
   --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
-  --set mlp.ingress.path="/*" \
   --wait --timeout=5m
 
 cat <<EOF > mlp-ingress.yaml
