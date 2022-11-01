@@ -378,7 +378,7 @@ jobs:
       - name: Download k3d
         run: |
           curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.4.1 bash
-      - name: "Create Test Cluster"
+      - name: Create Test Cluster
         run: |
           k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
           k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.21.2-k3s1 --k3s-arg '--no-deploy=traefik,metrics-server@server:*' --port 80:80@loadbalancer
