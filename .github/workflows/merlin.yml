@@ -349,7 +349,7 @@ jobs:
       - uses: actions/checkout@master
         with:
           repository: gojek/mlp
-          ref: main
+          ref: v1.7.4
           path: merlin/scripts/e2e/mlp
       - uses: actions/setup-go@v2
         with:
