@@ -33,7 +33,7 @@ import {
   EuiText,
   EuiTextAlign,
   EuiToolTip,
-  EuiSearchBar
+  EuiSearchBar,
 } from "@elastic/eui";
 import { DateFromNow } from "@gojek/mlp-ui";
 import ModelEndpointActions from "./ModelEndpointActions";
@@ -47,26 +47,36 @@ const defaultIconSize = "s";
 const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
   const [expandedRowState, setExpandedRowState] = useState({
     rows: {},
-    itemIdToExpandedRowMap: {}
+    itemIdToExpandedRowMap: {},
   });
   const [config, setConfig] = useState({
     environments: [],
     modelTypes: [],
-    itemsToList: []
+    itemsToList: [],
   });
 
-  const isTerminatedEndpoint = endpoint => {
+  const isTerminatedEndpoint = (endpoint) => {
     return endpoint.status === "terminated";
   };
 
-  const modelCanBeExpanded = model => {
+  const modelCanBeExpanded = (model) => {
     return (
       model.endpoints &&
       model.endpoints.length !== 0 &&
       model.endpoints.find(
-        modelEndpoint => !isTerminatedEndpoint(modelEndpoint)
+        (modelEndpoint) => !isTerminatedEndpoint(modelEndpoint)
       )
     );
+  };
+
+  const modelEndpointUrl = (url, protocol) => {
+    console.log(protocol);
+    if (protocol && protocol === "HTTP_JSON") {
+      return `http://${url}/v1/predict`;
+    }
+
+    // UPI_V1
+    return url;
   };
 
   useEffect(
@@ -78,18 +88,18 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
         if (items.length > 0) {
           const rows = {};
           const expandedRows = expandedRowState.itemIdToExpandedRowMap;
-          items.forEach(item => {
+          items.forEach((item) => {
             modelTypesDict[item.type] = true;
 
             if (modelCanBeExpanded(item)) {
               item.environment_name = [];
-              item.endpoints.forEach(endpoint => {
+              item.endpoints.forEach((endpoint) => {
                 item.environment_name.push(endpoint.environment_name);
                 envDict[endpoint.environment_name] = true;
               });
 
               rows[item.id] = item.endpoints
-                .filter(endpoint => !isTerminatedEndpoint(endpoint))
+                .filter((endpoint) => !isTerminatedEndpoint(endpoint))
                 .sort((a, b) =>
                   a.environment_name > b.environment_name ? 1 : -1
                 )
@@ -99,7 +109,8 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
 
                     <EuiFlexGroup
                       alignItems="center"
-                      justifyContent="spaceBetween">
+                      justifyContent="spaceBetween"
+                    >
                       <EuiFlexItem grow={2}>
                         <EuiText className="expandedRow-title" size="xs">
                           Environment
@@ -113,9 +124,13 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
                           Endpoint
                         </EuiText>
                         <EuiCopy
-                          textToCopy={`http://${endpoint.url}/v1/predict`}
-                          beforeMessage="Click to copy URL to clipboard">
-                          {copy => (
+                          textToCopy={modelEndpointUrl(
+                            endpoint.url,
+                            endpoint.protocol
+                          )}
+                          beforeMessage="Click to copy URL to clipboard"
+                        >
+                          {(copy) => (
                             <EuiLink onClick={copy} color="text">
                               <EuiIcon
                                 type={"copyClipboard"}
@@ -131,13 +146,15 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
                           Traffic Allocation
                         </EuiText>
                         <EuiFlexGroup>
-                          {endpoint.rule.destinations.map(dest => (
+                          {endpoint.rule.destinations.map((dest) => (
                             <EuiFlexItem
-                              key={`${dest.version_endpoint_id}-list-item`}>
+                              key={`${dest.version_endpoint_id}-list-item`}
+                            >
                               <EuiFlexGroup
                                 alignItems="center"
                                 style={{ paddingRight: 0 }}
-                                responsive={false}>
+                                responsive={false}
+                              >
                                 <EuiFlexItem grow={3}>
                                   <EuiText size={defaultTextSize}>
                                     {dest.version_endpoint.url.split("/").pop()}
@@ -154,7 +171,8 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
                                 <EuiFlexItem grow={1}>
                                   <EuiText
                                     size={defaultTextSize}
-                                    textAlign="right">
+                                    textAlign="right"
+                                  >
                                     {dest.weight}%
                                   </EuiText>
                                 </EuiFlexItem>
@@ -187,13 +205,13 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
           });
           setConfig({
             environments: Object.entries(envDict).map(([env]) => env),
-            modelTypes: Object.entries(modelTypesDict).map(([type]) => type)
+            modelTypes: Object.entries(modelTypesDict).map(([type]) => type),
           });
-          setExpandedRowState(state => {
+          setExpandedRowState((state) => {
             return {
               ...state,
               rows: rows,
-              itemIdToExpandedRowMap: expandedRows
+              itemIdToExpandedRowMap: expandedRows,
             };
           });
         }
@@ -203,7 +221,7 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     [isLoaded, items, fetchModels, expandedRowState.itemIdToExpandedRowMap]
   );
 
-  const toggleDetails = item => {
+  const toggleDetails = (item) => {
     const expandedRows = { ...expandedRowState.itemIdToExpandedRowMap };
     if (expandedRows[item.id]) {
       delete expandedRows[item.id];
@@ -212,10 +230,10 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
         expandedRows[item.id] = expandedRowState.rows[item.id];
       }
     }
-    setExpandedRowState(state => {
+    setExpandedRowState((state) => {
       return {
         ...state,
-        itemIdToExpandedRowMap: expandedRows
+        itemIdToExpandedRowMap: expandedRows,
       };
     });
   };
@@ -226,7 +244,7 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
       name: "Name",
       mobileOptions: {
         enlarge: true,
-        fullWidth: true
+        fullWidth: true,
       },
       sortable: true,
       width: "25%",
@@ -234,7 +252,8 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
         <Link
           to={`${item.id}/versions`}
           state={{ activeModel: item }}
-          onClick={e => e.stopPropagation()}>
+          onClick={(e) => e.stopPropagation()}
+        >
           <span className="cell-first-column" size={defaultTextSize}>
             {name}
           </span>
@@ -242,22 +261,26 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
             <EuiBadge color="success">New</EuiBadge>
           )}
         </Link>
-      )
+      ),
     },
     {
       field: "type",
       name: "Type",
-      render: type => <EuiText size={defaultTextSize}>{type}</EuiText>
+      render: (type) => <EuiText size={defaultTextSize}>{type}</EuiText>,
     },
     {
       field: "mlflow_url",
       name: "MLflow Experiment",
-      render: link => (
-        <EuiLink href={link} target="_blank" onClick={e => e.stopPropagation()}>
+      render: (link) => (
+        <EuiLink
+          href={link}
+          target="_blank"
+          onClick={(e) => e.stopPropagation()}
+        >
           <EuiIcon type={"symlink"} size={defaultIconSize} />
           Open
         </EuiLink>
-      )
+      ),
     },
     {
       field: "endpoints",
@@ -275,18 +298,18 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
         </EuiToolTip>
       ),
       mobileOptions: {
-        fullWidth: true
+        fullWidth: true,
       },
-      render: endpoints => {
+      render: (endpoints) => {
         if (
           endpoints &&
           endpoints.length !== 0 &&
-          endpoints.find(endpoint => !isTerminatedEndpoint(endpoint))
+          endpoints.find((endpoint) => !isTerminatedEndpoint(endpoint))
         ) {
           const endpointList = endpoints
-            .filter(endpoint => !isTerminatedEndpoint(endpoint))
+            .filter((endpoint) => !isTerminatedEndpoint(endpoint))
             .sort((a, b) => (a.environment_name > b.environment_name ? 1 : -1))
-            .map(endpoint => (
+            .map((endpoint) => (
               <EuiFlexItem key={`${endpoint.id}-list-item`}>
                 <EuiText size={defaultTextSize}>
                   {endpoint.environment_name}
@@ -299,29 +322,31 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
             </EuiFlexGroup>
           );
         }
-      }
+      },
     },
     {
       field: "created_at",
       name: "Created",
-      render: date => (
+      render: (date) => (
         <EuiToolTip
           position="top"
-          content={moment(date, "YYYY-MM-DDTHH:mm.SSZ").toLocaleString()}>
+          content={moment(date, "YYYY-MM-DDTHH:mm.SSZ").toLocaleString()}
+        >
           <DateFromNow date={date} size={defaultTextSize} />
         </EuiToolTip>
-      )
+      ),
     },
     {
       field: "updated_at",
       name: "Updated",
-      render: date => (
+      render: (date) => (
         <EuiToolTip
           position="top"
-          content={moment(date, "YYYY-MM-DDTHH:mm.SSZ").toLocaleString()}>
+          content={moment(date, "YYYY-MM-DDTHH:mm.SSZ").toLocaleString()}
+        >
           <DateFromNow date={date} size={defaultTextSize} />
         </EuiToolTip>
-      )
+      ),
     },
     {
       field: "id",
@@ -341,26 +366,27 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
       align: "right",
       mobileOptions: {
         header: true,
-        fullWidth: false
+        fullWidth: false,
       },
       render: (_, model) =>
         model.type === "pyfunc_v2" && (
           <EuiToolTip position="top" content={<p>Batch Prediction Job</p>}>
             <Link
               to={`${model.id}/versions/all/jobs`}
-              state={{ projectId: model.project_id }}>
+              state={{ projectId: model.project_id }}
+            >
               <EuiButtonEmpty iconType="storage" size="xs">
                 <EuiText size="xs">Batch Jobs</EuiText>
               </EuiButtonEmpty>
             </Link>
           </EuiToolTip>
-        )
+        ),
     },
     {
       align: "right",
       width: "40px",
       isExpander: true,
-      render: item =>
+      render: (item) =>
         modelCanBeExpanded(item) && (
           <EuiToolTip
             position="top"
@@ -370,7 +396,8 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
               ) : (
                 <p>See all deployments</p>
               )
-            }>
+            }
+          >
             <EuiButtonIcon
               onClick={() => toggleDetails(item)}
               aria-label={
@@ -385,15 +412,15 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
               }
             />
           </EuiToolTip>
-        )
-    }
+        ),
+    },
   ];
 
-  const cellProps = item => {
+  const cellProps = (item) => {
     return {
       style:
         item.endpoints && item.endpoints.length ? { cursor: "pointer" } : {},
-      onClick: () => toggleDetails(item)
+      onClick: () => toggleDetails(item),
     };
   };
 
@@ -402,7 +429,7 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
       return error;
     } else {
       return EuiSearchBar.Query.execute(query, items, {
-        defaultFields: ["name"]
+        defaultFields: ["name"],
       });
     }
   };
@@ -410,7 +437,7 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
   const search = {
     onChange: onChange,
     box: {
-      incremental: true
+      incremental: true,
     },
     filters: [
       {
@@ -418,20 +445,20 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
         field: "type",
         name: "Model type",
         multiSelect: "or",
-        options: config.modelTypes.map(item => ({
-          value: item
-        }))
+        options: config.modelTypes.map((item) => ({
+          value: item,
+        })),
       },
       {
         type: "field_value_selection",
         field: "environment_name",
         name: "Environment",
         multiSelect: "or",
-        options: config.environments.map(item => ({
-          value: item
-        }))
-      }
-    ]
+        options: config.environments.map((item) => ({
+          value: item,
+        })),
+      },
+    ],
   };
 
   return !isLoaded ? (
@@ -442,7 +469,8 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     <EuiCallOut
       title="Sorry, there was an error"
       color="danger"
-      iconType="alert">
+      iconType="alert"
+    >
       <p>{error.message}</p>
     </EuiCallOut>
   ) : (
@@ -462,7 +490,7 @@ ModelListTable.propTypes = {
   items: PropTypes.array,
   isLoaded: PropTypes.bool,
   error: PropTypes.object,
-  fetchModels: PropTypes.func
+  fetchModels: PropTypes.func,
 };
 
 export default ModelListTable;
