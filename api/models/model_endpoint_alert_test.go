@@ -217,7 +217,7 @@ func TestModelEndpointAlert_ToPromAlertSpec(t *testing.T) {
 									Kind:  yamlv3.ScalarNode,
 									Style: yamlv3.LiteralStyle,
 									Tag:   "!!str",
-									Value: "(100 * sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",response_code_class!=\"2xx\",revision_name=~\".*model-1.*\"}[1m])) / sum(rate(revision_request_count{cluster_name=\"cluster-1\",namespace_name=\"project-1\",revision_name=~\".*model-1.*\"}[1m]))) > 50",
+									Value: "(100 * sum(rate(istio_requests_total{cluster_name=\"cluster-1\",destination_service_name=~\"model-1.*\",destination_workload_namespace=\"project-1\",request_protocol=\"http\",response_code!=\"200\"}[1m])) / sum(rate(istio_requests_total{cluster_name=\"cluster-1\",destination_service_name=~\"model-1.*\",destination_workload_namespace=\"project-1\",request_protocol=\"http\"}[1m]))) > 50",
 								},
 								For: "5m",
 								Labels: PromAlertRuleLabels{
