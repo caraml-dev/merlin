@@ -74,21 +74,19 @@ export const ModelDetails = ({ projectId, modelId, location: { state } }) => {
       
       <EuiSpacer size="l" />
       <EuiPageTemplate.Section color={"transparent"}>
-        <EuiPanel>
-          {featureToggleConfig.alertEnabled && (
-            <Router>
-              {model && (
-                <ModelAlert
-                  path="endpoints/:endpointId/alert"
-                  breadcrumbs={breadcrumbs}
-                  model={model}
-                />
-              )}
-
-              <LoadingContent default />
-            </Router>
-          )}
-        </EuiPanel>
+        {featureToggleConfig.alertEnabled && (
+          <Router>
+            {model && (
+              <ModelAlert
+                path="endpoints/:endpointId/alert"
+                breadcrumbs={breadcrumbs}
+                model={model}
+              />
+            )}
+            <LoadingContent default />
+          </Router>
+        )}
+       
       </EuiPageTemplate.Section>
       <EuiSpacer size="l" />
     </EuiPageTemplate>
