@@ -363,14 +363,14 @@ jobs:
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
-      - name: Download API Docker Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: merlin.${{ needs.create-version.outputs.version }}.tar
-      - name: Download Standard Transformer Docker Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
+      # - name: Download API Docker Artifact
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: merlin.${{ needs.create-version.outputs.version }}.tar
+      # - name: Download Standard Transformer Docker Artifact
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
       - name: Download k3d
         run: |
           curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.4.1 bash
@@ -378,17 +378,17 @@ jobs:
         run: |
           k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
           k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.21.2-k3s1 --k3s-arg '--no-deploy=traefik,metrics-server@server:*' --port 80:80@loadbalancer
-      - name: Publish images to k3d registry
-        run: |
-          # Merlin API
-          docker image load --input merlin.${{ needs.create-version.outputs.version }}.tar
-          docker tag merlin:${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin:${{ needs.create-version.outputs.version }}
-          k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin:${{ needs.create-version.outputs.version }} -c merlin-cluster
+      # - name: Publish images to k3d registry
+      #   run: |
+      #     # Merlin API
+      #     docker image load --input merlin.${{ needs.create-version.outputs.version }}.tar
+      #     docker tag merlin:${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin:${{ needs.create-version.outputs.version }}
+      #     k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin:${{ needs.create-version.outputs.version }} -c merlin-cluster
 
-          # Standard Transformer
-          docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
-          docker tag merlin-transformer:${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }}
-          k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
+      #     # Standard Transformer
+      #     docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
+      #     docker tag merlin-transformer:${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }}
+      #     k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
       - name: Setup cluster
         working-directory: merlin/scripts/e2e
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
