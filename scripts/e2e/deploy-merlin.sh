@@ -10,14 +10,18 @@ DOCKER_REGISTRY="$2"
 CHART_PATH="$3"
 VERSION="$4"
 GIT_REF="$5"
+MLP_CHART_VERSION="$6"
 
 
 TIMEOUT=120s
 
 install_mlp() {
   echo "::group::MLP Deployment"
-  helm upgrade --install --debug mlp mlp/charts/mlp --namespace mlp --create-namespace -f mlp/charts/mlp/values-e2e.yaml \
-    --set mlp.image.tag=v1.7.4 \
+
+  helm repo add caraml https://caraml-dev.github.io/helm-charts
+  
+  helm upgrade --install --debug mlp caraml/mlp --namespace mlp --create-namespace \
+    --version ${MLP_CHART_VERSION} \
     --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
     --set mlp.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
     --set mlp.ingress.enabled=true \
