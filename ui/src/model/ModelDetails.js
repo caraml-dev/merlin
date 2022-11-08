@@ -18,7 +18,6 @@ import React, { useEffect, useState } from "react";
 import {
   EuiLoadingContent,
   EuiPageTemplate,
-  EuiPanel,
   EuiSpacer
 } from "@elastic/eui";
 import { Router } from "@reach/router";
