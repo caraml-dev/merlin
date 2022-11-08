@@ -19,15 +19,16 @@ install_mlp() {
   echo "::group::MLP Deployment"
 
   helm repo add caraml https://caraml-dev.github.io/helm-charts
-  
+
   helm upgrade --install --debug mlp caraml/mlp --namespace mlp --create-namespace \
     --version ${MLP_CHART_VERSION} \
-    --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
-    --set mlp.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
-    --set mlp.ingress.enabled=true \
-    --set mlp.ingress.class=istio \
-    --set mlp.ingress.path="/*" \
-    --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST} \
+    --set fullnameOverride=mlp \
+    --set deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
+    --set deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
+    --set ingress.enabled=true \
+    --set ingress.class=istio \
+    --set ingress.path="/*" \
+    --set ingress.host=mlp.mlp.${INGRESS_HOST} \
     --wait --timeout=${TIMEOUT}
 
    kubectl apply -f config/mock/message-dumper.yaml
