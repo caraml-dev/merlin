@@ -12,7 +12,7 @@ export VAULT_VERSION=0.7.0
 export MINIO_VERSION=7.0.2
 
 export OAUTH_CLIENT_ID="<put your oauth client id here>"
-export MLP_CHART_VERSION=0.3.3
+export MLP_CHART_VERSION=0.3.4
 export MERLIN_VERSION=v0.9.0
 
 # Install Istio

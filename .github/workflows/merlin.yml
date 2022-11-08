@@ -342,7 +342,7 @@ jobs:
       LOCAL_REGISTRY_PORT: 12345
       LOCAL_REGISTRY: "dev.localhost"
       INGRESS_HOST: "127.0.0.1.nip.io"
-      MLP_CHART_VERSION: 0.3.3
+      MLP_CHART_VERSION: 0.3.4
     steps:
       - uses: actions/checkout@v2
         with:
