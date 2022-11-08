@@ -27,6 +27,7 @@ install_mlp() {
     --set deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
     --set ingress.enabled=true \
     --set ingress.class=istio \
+    --set ingress.pathType: ImplementationSpecific \
     --set ingress.host=mlp.mlp.${INGRESS_HOST} \
     --wait --timeout=${TIMEOUT}
 
