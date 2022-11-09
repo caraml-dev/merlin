@@ -107,7 +107,8 @@ func (us *UPIServer) Run() {
 	}
 
 	m := cmux.New(lis)
-	grpcLis := m.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
+	// cmux.HTTP2MatchHeaderFieldSendSettings ensures we can handle any gRPC client.
+	grpcLis := m.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc"))
 	httpLis := m.Match(cmux.HTTP1Fast())
 
 	opts := []grpc.ServerOption{
