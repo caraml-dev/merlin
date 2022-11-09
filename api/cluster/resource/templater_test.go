@@ -153,8 +153,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(protocol.HttpJson, false, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
-	probeConfigUPI := createLivenessProbeSpec(protocol.UpiV1, false, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
+	probeConfig := createLivenessProbeSpec(protocol.HttpJson)
+	probeConfigUPI := createLivenessProbeSpec(protocol.UpiV1)
 
 	tests := []struct {
 		name               string
@@ -1366,7 +1366,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 									Resources:     expDefaultModelResourceRequests,
 									Ports:         grpcContainerPorts,
 									Env:           createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1).ToKubernetesEnvVars(),
-									LivenessProbe: probeConfig,
+									LivenessProbe: probeConfigUPI,
 								},
 							},
 						},
@@ -1569,12 +1569,12 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(protocol.HttpJson, false, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
-	probeConfigUPI := createLivenessProbeSpec(protocol.UpiV1, false, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
+	probeConfig := createLivenessProbeSpec(protocol.HttpJson)
+	probeConfigUPI := createLivenessProbeSpec(protocol.UpiV1)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, false, "/")
-	transformerProbeConfigUPI := createLivenessProbeSpec(protocol.UpiV1, false, "/")
+	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson)
+	transformerProbeConfigUPI := createLivenessProbeSpec(protocol.UpiV1)
 	tests := []struct {
 		name     string
 		modelSvc *models.Service
@@ -2085,10 +2085,10 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(protocol.HttpJson, false, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
+	probeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, false, "/")
+	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	tests := []struct {
 		name     string
@@ -2549,10 +2549,10 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(protocol.HttpJson, false, fmt.Sprintf("/v1/models/%s", modelSvc.Name))
+	probeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, false, "/")
+	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	one := 1
 	minReplica := 1
@@ -3215,7 +3215,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 	memoryLimit.Add(memoryRequest)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson, false, "/")
+	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	modelSvc := &models.Service{
 		Name:         "model-1",

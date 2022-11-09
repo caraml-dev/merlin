@@ -27,6 +27,7 @@ import (
 	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/deployment"
+	prt "github.com/gojek/merlin/pkg/protocol"
 	transformerpkg "github.com/gojek/merlin/pkg/transformer"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
@@ -74,6 +75,8 @@ const (
 	defaultHTTPPort                  = 8080
 	defaultGRPCPort                  = 9000
 	defaultPredictorPort             = 80
+
+	grpcHealthProbeCommand = "grpc_health_probe"
 )
 
 var (
@@ -180,8 +183,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	envVarsMap := envVars.ToMap()
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
 		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") {
-		isPyfunc := modelService.Type == models.ModelTypePyFunc
-		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, isPyfunc, fmt.Sprintf("/v1/models/%s", modelService.Name))
+		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol)
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
@@ -326,7 +328,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 	envVarsMap := envVars.ToMap()
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
 		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") {
-		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, false, "/")
+		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol)
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
@@ -408,11 +410,7 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(envVars mod
 	return envVars
 }
 
-func createLivenessProbeSpec(prt protocol.Protocol, isPyfunc bool, httpPath string) *corev1.Probe {
-	port := defaultHTTPPort
-	if prt == protocol.UpiV1 && !isPyfunc {
-		port = defaultGRPCPort
-	}
+func createHTTPGetLivenessProbe(httpPath string, port int) *corev1.Probe {
 	return &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
@@ -429,6 +427,28 @@ func createLivenessProbeSpec(prt protocol.Protocol, isPyfunc bool, httpPath stri
 		SuccessThreshold:    liveProbeSuccessThreshold,
 		FailureThreshold:    liveProbeFailureThreshold,
 	}
+}
+
+func createGRPCLivenessProbe(port int) *corev1.Probe {
+	return &corev1.Probe{
+		Handler: corev1.Handler{
+			Exec: &corev1.ExecAction{
+				Command: []string{grpcHealthProbeCommand, fmt.Sprintf("-addr=:%d", port)},
+			},
+		},
+		InitialDelaySeconds: liveProbeInitialDelaySec,
+		TimeoutSeconds:      liveProbeTimeoutSec,
+		PeriodSeconds:       liveProbePeriodSec,
+		SuccessThreshold:    liveProbeSuccessThreshold,
+		FailureThreshold:    liveProbeFailureThreshold,
+	}
+}
+
+func createLivenessProbeSpec(protocol prt.Protocol) *corev1.Probe {
+	if protocol == prt.UpiV1 {
+		return createGRPCLivenessProbe(defaultGRPCPort)
+	}
+	return createHTTPGetLivenessProbe("/", defaultHTTPPort)
 }
 
 func createPredictorHost(modelService *models.Service) string {

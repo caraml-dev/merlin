@@ -28,6 +28,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -115,6 +116,10 @@ func (us *UPIServer) Run() {
 	grpcServer := grpc.NewServer(opts...)
 	reflection.Register(grpcServer)
 	upiv1.RegisterUniversalPredictionServiceServer(grpcServer, us)
+
+	// add health check service
+	healthChecker := newHealthChecker()
+	grpc_health_v1.RegisterHealthServer(grpcServer, healthChecker)
 
 	stopCh := setupSignalHandler()
 	errCh := make(chan error, 1)
