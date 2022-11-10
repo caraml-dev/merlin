@@ -153,7 +153,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s", modelSvc.Name))
+	probeConfig := createLivenessProbeSpec(protocol.HttpJson)
+	probeConfigUPI := createLivenessProbeSpec(protocol.UpiV1)
 
 	tests := []struct {
 		name               string
@@ -1304,10 +1305,11 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 								StorageURI: &storageUri,
 								Container: corev1.Container{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Resources: expDefaultModelResourceRequests,
-									Ports:     grpcContainerPorts,
-									Env:       []corev1.EnvVar{},
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Resources:     expDefaultModelResourceRequests,
+									Ports:         grpcContainerPorts,
+									Env:           []corev1.EnvVar{},
+									LivenessProbe: probeConfigUPI,
 								},
 							},
 						},
@@ -1359,11 +1361,12 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Image:     "gojek/project-model:1",
-									Resources: expDefaultModelResourceRequests,
-									Ports:     grpcContainerPorts,
-									Env:       createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1).ToKubernetesEnvVars(),
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Image:         "gojek/project-model:1",
+									Resources:     expDefaultModelResourceRequests,
+									Ports:         grpcContainerPorts,
+									Env:           createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1).ToKubernetesEnvVars(),
+									LivenessProbe: probeConfigUPI,
 								},
 							},
 						},
@@ -1412,10 +1415,11 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 								StorageURI: &storageUri,
 								Container: corev1.Container{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Resources: expDefaultModelResourceRequests,
-									Ports:     grpcContainerPorts,
-									Env:       []corev1.EnvVar{},
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Resources:     expDefaultModelResourceRequests,
+									Ports:         grpcContainerPorts,
+									Env:           []corev1.EnvVar{},
+									LivenessProbe: probeConfigUPI,
 								},
 							},
 						},
@@ -1565,11 +1569,12 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s", modelSvc.Name))
+	probeConfig := createLivenessProbeSpec(protocol.HttpJson)
+	probeConfigUPI := createLivenessProbeSpec(protocol.UpiV1)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec("/")
-
+	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson)
+	transformerProbeConfigUPI := createLivenessProbeSpec(protocol.UpiV1)
 	tests := []struct {
 		name     string
 		modelSvc *models.Service
@@ -1788,10 +1793,11 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 								StorageURI: &storageUri,
 								Container: corev1.Container{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Resources: expDefaultModelResourceRequests,
-									Env:       []corev1.EnvVar{},
-									Ports:     grpcContainerPorts,
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Resources:     expDefaultModelResourceRequests,
+									Env:           []corev1.EnvVar{},
+									Ports:         grpcContainerPorts,
+									LivenessProbe: probeConfigUPI,
 								},
 							},
 						},
@@ -1804,13 +1810,14 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:      "transformer",
-									Image:     "ghcr.io/gojek/merlin-transformer-test",
-									Command:   []string{"python"},
-									Args:      []string{"main.py"},
-									Env:       createDefaultTransformerEnvVars(modelSvcGRPC).ToKubernetesEnvVars(),
-									Resources: expDefaultTransformerResourceRequests,
-									Ports:     grpcContainerPorts,
+									Name:          "transformer",
+									Image:         "ghcr.io/gojek/merlin-transformer-test",
+									Command:       []string{"python"},
+									Args:          []string{"main.py"},
+									Env:           createDefaultTransformerEnvVars(modelSvcGRPC).ToKubernetesEnvVars(),
+									Resources:     expDefaultTransformerResourceRequests,
+									LivenessProbe: transformerProbeConfigUPI,
+									Ports:         grpcContainerPorts,
 								},
 							},
 						},
@@ -1975,10 +1982,11 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 							PredictorExtensionSpec: kservev1beta1.PredictorExtensionSpec{
 								StorageURI: &storageUri,
 								Container: corev1.Container{
-									Name:      kserveconstant.InferenceServiceContainerName,
-									Resources: expDefaultModelResourceRequests,
-									Env:       []corev1.EnvVar{},
-									Ports:     grpcContainerPorts,
+									Name:          kserveconstant.InferenceServiceContainerName,
+									Resources:     expDefaultModelResourceRequests,
+									Env:           []corev1.EnvVar{},
+									LivenessProbe: probeConfigUPI,
+									Ports:         grpcContainerPorts,
 								},
 							},
 						},
@@ -2009,8 +2017,9 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
-									Resources: expDefaultTransformerResourceRequests,
-									Ports:     grpcContainerPorts,
+									Resources:     expDefaultTransformerResourceRequests,
+									Ports:         grpcContainerPorts,
+									LivenessProbe: transformerProbeConfigUPI,
 								},
 							},
 						},
@@ -2076,10 +2085,10 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s", modelSvc.Name))
+	probeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec("/")
+	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	tests := []struct {
 		name     string
@@ -2540,10 +2549,10 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 	storageUri := fmt.Sprintf("%s/model", modelSvc.ArtifactURI)
 
 	// Liveness probe config for the model containers
-	probeConfig := createLivenessProbeSpec(fmt.Sprintf("/v1/models/%s", modelSvc.Name))
+	probeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec("/")
+	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	one := 1
 	minReplica := 1
@@ -3206,7 +3215,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 	memoryLimit.Add(memoryRequest)
 
 	// Liveness probe config for the transformers
-	transformerProbeConfig := createLivenessProbeSpec("/")
+	transformerProbeConfig := createLivenessProbeSpec(protocol.HttpJson)
 
 	modelSvc := &models.Service{
 		Name:         "model-1",

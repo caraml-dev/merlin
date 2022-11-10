@@ -26,6 +26,10 @@ ENV SDK_PATH=/sdk
 RUN conda env create -f /pyfunc-server/docker/env${PYTHON_VERSION}.yaml && \
     rm -rf /root/.cache
 
+ENV GRPC_HEALTH_PROBE_VERSION=v0.4.4
+RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
+    chmod +x /bin/grpc_health_probe
+
 RUN mkdir /prom_dir
 ENV PROMETHEUS_MULTIPROC_DIR=/prom_dir
 # For backward compatibility
