@@ -487,30 +487,30 @@ const VersionListTable = ({
       render: (_, version) =>
         activeModel && (
           <EuiFlexGroup alignItems="flexEnd" direction="column" gutterSize="xs">
-            <EuiFlexItem grow={false}>
-              <EuiToolTip
-                position="top"
-                content={
-                  <p>
-                    Deploy model version as an HTTP endpoint to available
-                    environment.
-                  </p>
-                }
-              >
-                <Link
-                  to={`${version.id}/deploy`}
-                  state={{ model: activeModel, version: version }}
+            {activeModel.type !== "pyfunc_v2" && (
+              <EuiFlexItem grow={false}>
+                <EuiToolTip
+                  position="top"
+                  content={
+                    <p>
+                      Deploy model version as an HTTP endpoint to available
+                      environment.
+                    </p>
+                  }
                 >
-                  <EuiButtonEmpty iconType="importAction" size="xs">
-                    <EuiText size="xs">
-                      {activeModel.type !== "pyfunc_v2"
-                        ? "Deploy"
-                        : "Deploy Endpoint"}
-                    </EuiText>
-                  </EuiButtonEmpty>
-                </Link>
-              </EuiToolTip>
-            </EuiFlexItem>
+                  <Link
+                    to={`${version.id}/deploy`}
+                    state={{ model: activeModel, version: version }}
+                  >
+                    <EuiButtonEmpty iconType="importAction" size="xs">
+                      <EuiText size="xs">
+                        Deploy
+                      </EuiText>
+                    </EuiButtonEmpty>
+                  </Link>
+                </EuiToolTip>
+              </EuiFlexItem>
+            )}
 
             {activeModel.type === "pyfunc_v2" && (
               <EuiFlexItem>

@@ -182,7 +182,7 @@ const VersionDetails = ({
               modelLoaded &&
               version &&
               versionLoaded &&
-              !isDeployed && (
+              !isDeployed && model.type !== "pyfunc_v2" && (
                 <EuiEmptyPrompt
                   title={<h2>Model version is not deployed</h2>}
                   body={
@@ -196,9 +196,7 @@ const VersionDetails = ({
                         state={{ model: model, version: version }}>
                         <EuiButton iconType="importAction" size="s">
                           <EuiText size="xs">
-                            {model.type !== "pyfunc_v2"
-                              ? "Deploy"
-                              : "Deploy Endpoint"}
+                            Deploy
                           </EuiText>
                         </EuiButton>
                       </Link>
