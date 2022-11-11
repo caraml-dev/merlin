@@ -70,7 +70,6 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
   };
 
   const modelEndpointUrl = (url, protocol) => {
-    console.log(protocol);
     if (protocol && protocol === "HTTP_JSON") {
       return `http://${url}/v1/predict`;
     }
