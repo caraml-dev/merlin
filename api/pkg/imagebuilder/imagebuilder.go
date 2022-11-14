@@ -75,7 +75,7 @@ const (
 	labelAppName          = "gojek.com/app"
 	labelEnvironment      = "gojek.com/environment"
 	labelOrchestratorName = "gojek.com/orchestrator"
-	labelComponent 		  = "gojek.com/component"
+	labelComponent        = "gojek.com/component"
 )
 
 var (
@@ -345,7 +345,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		labelAppName:          model.Name,
 		labelEnvironment:      c.config.Environment,
 		labelOrchestratorName: "merlin",
-		labelComponent:		   "image-builder"
+		labelComponent:        "image-builder",
 	}
 
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
