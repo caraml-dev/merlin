@@ -75,6 +75,7 @@ const (
 	labelAppName          = "gojek.com/app"
 	labelEnvironment      = "gojek.com/environment"
 	labelOrchestratorName = "gojek.com/orchestrator"
+	labelComponent 		  = "gojek.com/component"
 )
 
 var (
@@ -344,6 +345,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		labelAppName:          model.Name,
 		labelEnvironment:      c.config.Environment,
 		labelOrchestratorName: "merlin",
+		labelComponent:		   "image-builder"
 	}
 
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
@@ -379,6 +381,11 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      kanikoPodName,
+					Namespace: c.config.BuildNamespace,
+					Labels:    labels,
+				},
 				Spec: v1.PodSpec{
 					// https://stackoverflow.com/questions/54091659/kubernetes-pods-disappear-after-failed-jobs
 					RestartPolicy: v1.RestartPolicyNever,
