@@ -23,6 +23,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/server/config"
@@ -135,7 +136,7 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	preprocessOutput, err := s.preprocess(ctx, requestBody, r.Header)
 	if err != nil {
 		s.logger.Error("preprocess error", zap.Error(err))
-		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "preprocessing error")).Write(w)
+		response.NewError(responseCodeFromError(err), errors.Wrapf(err, "preprocessing error")).Write(w)
 		return
 	}
 	s.logger.Debug("preprocess response", zap.ByteString("preprocess_response", preprocessOutput))
@@ -143,7 +144,7 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := s.predict(ctx, r, preprocessOutput)
 	if err != nil {
 		s.logger.Error("predict error", zap.Error(err))
-		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "prediction error")).Write(w)
+		response.NewError(responseCodeFromError(err), errors.Wrapf(err, "prediction error")).Write(w)
 		return
 	}
 
@@ -152,7 +153,7 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	modelResponseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		s.logger.Error("error reading model response", zap.Error(err))
-		response.NewError(http.StatusInternalServerError, err).Write(w)
+		response.NewError(responseCodeFromError(err), err).Write(w)
 		return
 	}
 	s.logger.Debug("predict response", zap.ByteString("predict_response", modelResponseBody))
@@ -160,7 +161,7 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	postprocessOutput, err := s.postprocess(ctx, types.BytePayload(modelResponseBody), resp.Header)
 	if err != nil {
 		s.logger.Error("postprocess error", zap.Error(err))
-		response.NewError(http.StatusInternalServerError, errors.Wrapf(err, "postprocessing error")).Write(w)
+		response.NewError(responseCodeFromError(err), errors.Wrapf(err, "postprocessing error")).Write(w)
 		return
 	}
 	s.logger.Debug("postprocess response", zap.ByteString("postprocess_response", postprocessOutput))
@@ -172,6 +173,13 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.logger.Error("failed writing postprocess response", zap.Error(err))
 	}
+}
+
+func responseCodeFromError(err error) int {
+	if errors.Is(err, mErrors.InvalidInputError) {
+		return http.StatusUnprocessableEntity
+	}
+	return http.StatusInternalServerError
 }
 
 func (s *HTTPServer) preprocess(ctx context.Context, request []byte, requestHeader http.Header) ([]byte, error) {

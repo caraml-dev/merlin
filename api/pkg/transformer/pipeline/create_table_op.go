@@ -2,9 +2,9 @@ package pipeline
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
@@ -135,7 +135,7 @@ func overrideColumns(env *Environment, t *table.Table, columns []*spec.Column) (
 func toRawTable(jsonObj interface{}, addRowNumber bool) (map[string]interface{}, error) {
 	jsonArray, ok := jsonObj.([]interface{})
 	if !ok {
-		return nil, errors.New("not an array")
+		return nil, mErrors.NewInvalidInputErrorf("not an array")
 	}
 
 	nrow := len(jsonArray)
@@ -146,7 +146,7 @@ func toRawTable(jsonObj interface{}, addRowNumber bool) (map[string]interface{},
 	for idx, j := range jsonArray {
 		node, ok := j.(map[string]interface{})
 		if !ok {
-			return nil, errors.New("not an array of JSON object")
+			return nil, mErrors.NewInvalidInputError("not an array of JSON object")
 		}
 		for k, v := range node {
 			ss, ok := rawTable[k]

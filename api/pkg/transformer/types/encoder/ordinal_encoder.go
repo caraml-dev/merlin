@@ -3,6 +3,7 @@ package encoder
 import (
 	"strings"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
@@ -19,7 +20,7 @@ func NewOrdinalEncoder(config *spec.OrdinalEncoderConfig) (*OrdinalEncoder, erro
 	if trimmedDefaultValue != "" {
 		val, err := converter.ToTargetType(trimmedDefaultValue, config.TargetValueType)
 		if err != nil {
-			return nil, err
+			return nil, mErrors.NewInvalidInputError(err.Error())
 		}
 		defaultValue = val
 	}
@@ -30,7 +31,7 @@ func NewOrdinalEncoder(config *spec.OrdinalEncoderConfig) (*OrdinalEncoder, erro
 		trimmedTargetValue := strings.TrimSpace(targetValue)
 		tVal, err := converter.ToTargetType(trimmedTargetValue, config.TargetValueType)
 		if err != nil {
-			return nil, err
+			return nil, mErrors.NewInvalidInputError(err.Error())
 		}
 		mapping[originalValue] = tVal
 	}

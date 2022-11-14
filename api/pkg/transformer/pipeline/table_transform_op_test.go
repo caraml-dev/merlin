@@ -580,7 +580,7 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("variable integer_var is not a table"),
+			expError: errors.New("invalid input: variable integer_var is not a table"),
 		},
 		{
 			name: "error: input variable is not found",
@@ -600,7 +600,7 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("table unknown_table is not declared"),
+			expError: errors.New("invalid input: table unknown_table is not declared"),
 		},
 		{
 			name: "error: scale existing column in table is not numeric ",
@@ -625,7 +625,7 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: fmt.Errorf("this series type is not numeric but string"),
+			expError: fmt.Errorf("invalid input: this series type is not numeric but string"),
 		},
 		{
 			name: "error: encode columns, referred encoder is not exist",
@@ -645,7 +645,7 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: fmt.Errorf("encoder notExistEncoder is not declared"),
+			expError: fmt.Errorf("invalid input: encoder notExistEncoder is not declared"),
 		},
 		{
 			name: "error: encode columns, referred encoder is not encoder type",
@@ -665,7 +665,7 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: fmt.Errorf("variable existing_table is not encoder"),
+			expError: fmt.Errorf("invalid input: variable existing_table is not encoder"),
 		},
 	}
 	for _, tt := range tests {

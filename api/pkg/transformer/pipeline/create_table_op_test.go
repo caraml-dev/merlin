@@ -573,7 +573,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 			},
 			env:          env,
 			wantErr:      true,
-			errorPattern: `unable to create base table for my_table: invalid json pointed by \$\.unknown_field: not an array`,
+			errorPattern: `unable to create base table for my_table: invalid json pointed by \$\.unknown_field: invalid input: not an array`,
 		},
 		{
 			name: "create table from json path: not an array",
@@ -592,7 +592,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 			},
 			env:          env,
 			wantErr:      true,
-			errorPattern: "unable to create base table for my_table: invalid json pointed by \\$\\.int: not an array",
+			errorPattern: "unable to create base table for my_table: invalid json pointed by \\$\\.int: invalid input: not an array",
 		},
 		{
 			name: "create table from json path: not an array of struct",
@@ -611,7 +611,7 @@ func TestCreateTableOp_Execute(t *testing.T) {
 			},
 			env:          env,
 			wantErr:      true,
-			errorPattern: "unable to create base table for my_table: invalid json pointed by \\$\\.array_float: not an array of JSON object",
+			errorPattern: "unable to create base table for my_table: invalid json pointed by \\$\\.array_float: invalid input: not an array of JSON object",
 		},
 		{
 			name: "create table from column definition using jsonPath pointing to 2 array with different length",

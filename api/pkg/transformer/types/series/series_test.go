@@ -1526,14 +1526,14 @@ func TestConvertToUPIColumns(t *testing.T) {
 					New([]bool{false, true, false}, Bool, "col_bool"),
 				},
 			},
-			expErr: fmt.Errorf("type bool is not supported in UPI"),
+			expErr: fmt.Errorf("invalid input: type bool is not supported in UPI"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ConvertToUPIColumns(tt.args.cols)
-			assert.Equal(t, tt.expErr, err)
 			if tt.expErr != nil {
+				assert.EqualError(t, tt.expErr, err.Error())
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {

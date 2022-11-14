@@ -10,6 +10,7 @@ from grpc_health.v1 import health_pb2_grpc
 
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
+import time
 
 
 class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
@@ -19,6 +20,7 @@ class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
         self._model = model
 
     def PredictValues(self, request, context):
+        time.sleep(10)
         return self._model.upiv1_predict(request=request, context=context)
 
 
