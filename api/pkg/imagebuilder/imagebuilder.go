@@ -382,9 +382,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      kanikoPodName,
-					Namespace: c.config.BuildNamespace,
-					Labels:    labels,
+					Labels: labels,
 				},
 				Spec: v1.PodSpec{
 					// https://stackoverflow.com/questions/54091659/kubernetes-pods-disappear-after-failed-jobs

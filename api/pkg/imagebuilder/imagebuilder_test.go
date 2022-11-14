@@ -169,8 +169,6 @@ func TestBuildImage(t *testing.T) {
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-							Namespace: config.BuildNamespace,
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/orchestrator": "merlin",
@@ -272,8 +270,6 @@ func TestBuildImage(t *testing.T) {
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-							Namespace: config.BuildNamespace,
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/orchestrator": "merlin",
@@ -402,8 +398,6 @@ func TestBuildImage(t *testing.T) {
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-							Namespace: config.BuildNamespace,
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/orchestrator": "merlin",
@@ -542,8 +536,6 @@ func TestBuildImage(t *testing.T) {
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-							Namespace: config.BuildNamespace,
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/orchestrator": "merlin",
@@ -676,8 +668,6 @@ func TestBuildImage(t *testing.T) {
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-							Namespace: config.BuildNamespace,
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/orchestrator": "merlin",
@@ -778,8 +768,6 @@ func TestBuildImage(t *testing.T) {
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-							Namespace: config.BuildNamespace,
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/orchestrator": "merlin",
@@ -883,8 +871,6 @@ func TestBuildImage(t *testing.T) {
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-							Namespace: config.BuildNamespace,
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/orchestrator": "merlin",
@@ -976,8 +962,6 @@ func TestBuildImage(t *testing.T) {
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
-							Namespace: config.BuildNamespace,
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
 								"gojek.com/orchestrator": "merlin",
