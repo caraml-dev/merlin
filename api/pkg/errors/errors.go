@@ -27,7 +27,7 @@ func NewDeadlineExceededError(reason string) error {
 	return fmt.Errorf("%w: %s", DeadlineExceededError, reason)
 }
 
-// NewDeadlineExceededErrorf reate new DeadlineExceededError with specified reason string format
+// NewDeadlineExceededErrorf create new DeadlineExceededError with specified reason string format
 func NewDeadlineExceededErrorf(reasonFormat string, a ...interface{}) error {
 	return fmt.Errorf("%w: %s", DeadlineExceededError, fmt.Sprintf(reasonFormat, a...))
 }

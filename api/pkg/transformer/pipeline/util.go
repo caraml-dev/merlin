@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"fmt"
+
 	"github.com/antonmedv/expr"
 
 	mErrors "github.com/gojek/merlin/pkg/errors"
@@ -9,14 +11,18 @@ import (
 )
 
 func evalJSONPath(env *Environment, jsonPath string) (interface{}, error) {
+	if jsonPath == "" {
+		return nil, mErrors.NewInvalidInputError("jsonpath is not specified")
+	}
 	c := env.CompiledJSONPath(jsonPath)
 	if c == nil {
-		return nil, mErrors.NewInvalidInputErrorf("compiled jsonpath %s not found", jsonPath)
+		return nil, fmt.Errorf("compiled jsonpath %s not found", jsonPath)
+
 	}
 
 	val, err := c.LookupFromContainer(env.PayloadContainer())
 	if err != nil {
-		return nil, err
+		return nil, mErrors.NewInvalidInputErrorf(err.Error())
 	}
 	return val, nil
 }
@@ -70,9 +76,12 @@ func subsetSeriesFromExpression(env *Environment, expression string, subsetIdx *
 }
 
 func getVal(env *Environment, expression string) (interface{}, error) {
+	if expression == "" {
+		return nil, mErrors.NewInvalidInputError("expression is not specified")
+	}
 	cplExpr := env.CompiledExpression(expression)
 	if cplExpr == nil {
-		return nil, mErrors.NewInvalidInputErrorf("compiled expression %s not found", expression)
+		return nil, fmt.Errorf("compiled expression %s not found", expression)
 	}
 
 	val, err := expr.Run(env.CompiledExpression(expression), env.SymbolRegistry())

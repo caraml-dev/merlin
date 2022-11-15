@@ -637,7 +637,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("invalid input: compiled jsonpath $.merchant_info not found"),
+			err: errors.New("compiled jsonpath $.merchant_info not found"),
 		},
 		{
 			desc: "table has not been registered yet",
@@ -759,7 +759,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					BaseJson: &spec.BaseJson{},
 				},
 			},
-			err: errors.New("invalid input: compiled jsonpath  not found"),
+			err: errors.New("invalid input: jsonpath is not specified"),
 		},
 		{
 			desc: "specifiying multiple fields using expressions which value is kind of table or series",

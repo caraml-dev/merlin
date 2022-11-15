@@ -311,10 +311,10 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			expTransformedResponse: response{
 				headers: map[string]string{
 					"Content-Type":   "application/json",
-					"Content-Length": "174",
+					"Content-Length": "189",
 				},
-				body:       []byte(`{"code":500,"message":"preprocessing error: error executing preprocess operation: *pipeline.CreateTableOp: unable to create base table for entity_table: object is not Slice"}`),
-				statusCode: 500,
+				body:       []byte(`{"code":400,"message":"preprocessing error: error executing preprocess operation: *pipeline.CreateTableOp: unable to create base table for entity_table: invalid input: object is not Slice"}`),
+				statusCode: 400,
 			},
 		},
 		{
