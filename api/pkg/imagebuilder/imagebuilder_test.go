@@ -159,6 +159,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -167,6 +168,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -249,6 +260,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -257,6 +269,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -366,6 +388,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -374,6 +397,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -493,6 +526,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -501,6 +535,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -614,6 +658,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -622,6 +667,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -703,6 +758,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -711,6 +767,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -795,6 +861,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -803,6 +870,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -875,6 +952,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -883,6 +961,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
