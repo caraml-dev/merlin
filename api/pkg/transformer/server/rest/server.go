@@ -177,7 +177,7 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 
 func responseCodeFromError(err error) int {
 	if errors.Is(err, mErrors.InvalidInputError) {
-		return http.StatusUnprocessableEntity
+		return http.StatusBadRequest
 	}
 	return http.StatusInternalServerError
 }

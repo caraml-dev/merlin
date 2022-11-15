@@ -127,6 +127,6 @@ func (j JsonOutputOp) createBaseJsonOutput(env *Environment, baseJson *spec.Base
 	case map[string]interface{}:
 		return types.JSONObject(v), nil
 	default:
-		return nil, mErrors.NewInvalidInputError("value in jsonpath must be object")
+		return nil, mErrors.NewInvalidInputError("value in jsonpath is not an object")
 	}
 }

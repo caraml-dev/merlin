@@ -506,7 +506,7 @@ func TestUPIAutoloadingOp_Execute(t *testing.T) {
 				},
 				logger: logger,
 			},
-			expectedErr: fmt.Errorf("invalid input: row_id column is reserved, user is not allowed to define explicitly row_id column"),
+			expectedErr: fmt.Errorf("invalid input: table contains a reserved column name row_id"),
 		},
 		{
 			name:         "got error; prediction_table name is specified",
@@ -639,7 +639,7 @@ func TestUPIAutoloadingOp_Execute(t *testing.T) {
 				},
 				logger: logger,
 			},
-			expectedErr: fmt.Errorf("invalid input: table name must be specified"),
+			expectedErr: fmt.Errorf("invalid input: table name is not specified"),
 		},
 		{
 			name:         "got error; prediction_table name is specified",
@@ -772,7 +772,7 @@ func TestUPIAutoloadingOp_Execute(t *testing.T) {
 				},
 				logger: logger,
 			},
-			expectedErr: fmt.Errorf("invalid input: variable name must be specified"),
+			expectedErr: fmt.Errorf("invalid input: variable name is not specified"),
 		},
 		{
 			name:         "got error; table in transformer_input contains row_id",
@@ -915,7 +915,7 @@ func TestUPIAutoloadingOp_Execute(t *testing.T) {
 				},
 				logger: logger,
 			},
-			expectedErr: fmt.Errorf("invalid input: row_id column is reserved, user is not allowed to define explicitly row_id column"),
+			expectedErr: fmt.Errorf("invalid input: table contains a reserved column name row_id"),
 		},
 		{
 			name:         "got error; table in response contains row_id",
@@ -1001,7 +1001,7 @@ func TestUPIAutoloadingOp_Execute(t *testing.T) {
 				},
 				logger: logger,
 			},
-			expectedErr: fmt.Errorf("invalid input: row_id column is reserved, user is not allowed to define explicitly row_id column"),
+			expectedErr: fmt.Errorf("invalid input: table contains a reserved column name row_id"),
 		},
 		{
 			name:         "got error; table in response doesn't have name",
@@ -1068,7 +1068,7 @@ func TestUPIAutoloadingOp_Execute(t *testing.T) {
 				},
 				logger: logger,
 			},
-			expectedErr: fmt.Errorf("invalid input: table name must be specified"),
+			expectedErr: fmt.Errorf("invalid input: table name is not specified"),
 		},
 		{
 			name:         "got error; number of columns is not the same with number of values in each row",

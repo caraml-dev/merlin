@@ -311,10 +311,10 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			expTransformedResponse: response{
 				headers: map[string]string{
 					"Content-Type":   "application/json",
-					"Content-Length": "189",
+					"Content-Length": "174",
 				},
-				body:       []byte(`{"code":422,"message":"preprocessing error: error executing preprocess operation: *pipeline.CreateTableOp: unable to create base table for entity_table: invalid input: object is not Slice"}`),
-				statusCode: 422,
+				body:       []byte(`{"code":500,"message":"preprocessing error: error executing preprocess operation: *pipeline.CreateTableOp: unable to create base table for entity_table: object is not Slice"}`),
+				statusCode: 500,
 			},
 		},
 		{
@@ -396,8 +396,8 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 					"Content-Type":   "application/json",
 					"Content-Length": "194",
 				},
-				body:       []byte(`{"code":422,"message":"preprocessing error: error executing preprocess operation: *pipeline.TableTransformOp: invalid input: there is missing value on column test_time, cyclical encoding fails"}`),
-				statusCode: 422,
+				body:       []byte(`{"code":400,"message":"preprocessing error: error executing preprocess operation: *pipeline.TableTransformOp: invalid input: there is missing value on column test_time, cyclical encoding fails"}`),
+				statusCode: 400,
 			},
 		},
 		{

@@ -155,7 +155,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("invalid input: value in jsonpath must be object"),
+			err: errors.New("invalid input: value in jsonpath is not an object"),
 		},
 		{
 			desc: "using base json only - failed when jsonpath value is literal",
@@ -182,7 +182,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("invalid input: value in jsonpath must be object"),
+			err: errors.New("invalid input: value in jsonpath is not an object"),
 		},
 		{
 			desc: "using base json - specifiying field",

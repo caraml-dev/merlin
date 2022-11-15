@@ -16,7 +16,7 @@ func evalJSONPath(env *Environment, jsonPath string) (interface{}, error) {
 
 	val, err := c.LookupFromContainer(env.PayloadContainer())
 	if err != nil {
-		return nil, mErrors.NewInvalidInputError(err.Error())
+		return nil, err
 	}
 	return val, nil
 }
@@ -34,7 +34,7 @@ func evalExpression(env *Environment, expression string) (interface{}, error) {
 	}
 
 	if err != nil {
-		return nil, mErrors.NewInvalidInputError(err.Error())
+		return nil, err
 	}
 	return val, nil
 }
