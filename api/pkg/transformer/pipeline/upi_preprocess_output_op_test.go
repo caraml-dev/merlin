@@ -651,7 +651,7 @@ func TestUPIPreprocessOutputOp_Execute(t *testing.T) {
 				PredictionTableName: "prediction_table_not_exist",
 			},
 			env:    env,
-			expErr: fmt.Errorf("invalid input: table prediction_table_not_exist is not declared"),
+			expErr: fmt.Errorf("invalid input: table 'prediction_table_not_exist' is not declared"),
 		},
 	}
 	for _, tt := range tests {

@@ -146,7 +146,7 @@ func toRawTable(jsonObj interface{}, addRowNumber bool) (map[string]interface{},
 	for idx, j := range jsonArray {
 		node, ok := j.(map[string]interface{})
 		if !ok {
-			return nil, mErrors.NewInvalidInputError("not an array of object")
+			return nil, mErrors.NewInvalidInputError("not an array of objects")
 		}
 		for k, v := range node {
 			ss, ok := rawTable[k]

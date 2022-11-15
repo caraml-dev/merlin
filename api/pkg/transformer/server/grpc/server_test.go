@@ -2115,7 +2115,7 @@ func TestUPIServer_PredictValues(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: status.Error(codes.InvalidArgument, "preprocess err: error executing preprocess operation: *pipeline.TableTransformOp: invalid input: table driver_table is not declared"),
+			expectedErr: status.Error(codes.InvalidArgument, "preprocess err: error executing preprocess operation: *pipeline.TableTransformOp: invalid input: table 'driver_table' is not declared"),
 		},
 		{
 			name:         "table_transformations; one of value for cyclical encoder is nil (test_time column)",

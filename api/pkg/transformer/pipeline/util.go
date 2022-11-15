@@ -16,7 +16,7 @@ func evalJSONPath(env *Environment, jsonPath string) (interface{}, error) {
 	}
 	c := env.CompiledJSONPath(jsonPath)
 	if c == nil {
-		return nil, fmt.Errorf("compiled jsonpath %s not found", jsonPath)
+		return nil, fmt.Errorf("compiled jsonpath '%s' not found", jsonPath)
 
 	}
 
@@ -51,7 +51,7 @@ func seriesFromExpression(env *Environment, expression string) (*series.Series, 
 		return nil, err
 	}
 	if val == nil {
-		return nil, mErrors.NewInvalidInputErrorf("series is empty due to expression %s returning nil", expression)
+		return nil, mErrors.NewInvalidInputErrorf("series is empty due to expression '%s' returning nil", expression)
 	}
 	return series.NewInferType(val, "")
 }
@@ -81,7 +81,7 @@ func getVal(env *Environment, expression string) (interface{}, error) {
 	}
 	cplExpr := env.CompiledExpression(expression)
 	if cplExpr == nil {
-		return nil, fmt.Errorf("compiled expression %s not found", expression)
+		return nil, fmt.Errorf("compiled expression '%s' not found", expression)
 	}
 
 	val, err := expr.Run(env.CompiledExpression(expression), env.SymbolRegistry())

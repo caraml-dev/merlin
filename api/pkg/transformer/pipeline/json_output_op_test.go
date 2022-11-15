@@ -637,7 +637,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("compiled jsonpath $.merchant_info not found"),
+			err: errors.New("compiled jsonpath '$.merchant_info' not found"),
 		},
 		{
 			desc: "table has not been registered yet",
@@ -668,7 +668,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("invalid input: table prediction_table is not declared"),
+			err: errors.New("invalid input: table 'prediction_table' is not declared"),
 		},
 		{
 			desc: "table has been compiled, but not yet set the value",
@@ -702,7 +702,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("invalid input: table prediction_table is not declared"),
+			err: errors.New("invalid input: table 'prediction_table' is not declared"),
 		},
 		{
 			desc: "table has been compiled, but the value is not table",
@@ -737,7 +737,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("invalid input: variable prediction_table is not a table"),
+			err: errors.New("invalid input: variable 'prediction_table' is not a table"),
 		},
 		{
 			desc: "base table - jsonpath is not specified",

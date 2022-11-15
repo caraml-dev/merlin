@@ -255,7 +255,7 @@ func TestUPIPostprocessOutputOp_Execute(t *testing.T) {
 				PredictionResultTableName: "driver_table_not_exist",
 			},
 			env:    env,
-			expErr: fmt.Errorf("invalid input: table driver_table_not_exist is not declared"),
+			expErr: fmt.Errorf("invalid input: table 'driver_table_not_exist' is not declared"),
 		},
 	}
 	for _, tt := range tests {

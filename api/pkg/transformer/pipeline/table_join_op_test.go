@@ -209,7 +209,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column order_id does not exists in left table"),
+			expError: errors.New("invalid input: invalid join column: column order_id does not exist in left table"),
 		},
 		{
 			name: "error: join column does not exist in right table -- join on one column (using deprecated onColumn field)",
@@ -222,7 +222,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column age does not exists in right table"),
+			expError: errors.New("invalid input: invalid join column: column age does not exist in right table"),
 		},
 		{
 			name: "error: not a table -- join on one column (using deprecated onColumn field)",
@@ -235,7 +235,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: variable integer_var is not a table"),
+			expError: errors.New("invalid input: variable 'integer_var' is not a table"),
 		},
 		{
 			name: "error: table not found -- join on one column (using deprecated onColumn field)",
@@ -248,7 +248,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: table unknown_table is not declared"),
+			expError: errors.New("invalid input: table 'unknown_table' is not declared"),
 		},
 		{
 			name: "success: left join two table -- join on one column",
@@ -348,7 +348,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column order_id does not exists in left table"),
+			expError: errors.New("invalid input: invalid join column: column order_id does not exist in left table"),
 		},
 		{
 			name: "error: join column does not exist in right table -- join on one column",
@@ -361,7 +361,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column age does not exists in right table"),
+			expError: errors.New("invalid input: invalid join column: column age does not exist in right table"),
 		},
 		{
 			name: "error: not a table -- join on one column",
@@ -374,7 +374,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: variable integer_var is not a table"),
+			expError: errors.New("invalid input: variable 'integer_var' is not a table"),
 		},
 		{
 			name: "error: table not found -- join on one column",
@@ -387,7 +387,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: table unknown_table is not declared"),
+			expError: errors.New("invalid input: table 'unknown_table' is not declared"),
 		},
 		{
 			name: "success: left join two table-- join on multiple columns",
@@ -484,7 +484,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column col_float does not exists in left table"),
+			expError: errors.New("invalid input: invalid join column: column col_float does not exist in left table"),
 		},
 		{
 			name: "error: join column does not exist in right table -- join on multiple columns",
@@ -497,7 +497,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column col_bool does not exists in right table"),
+			expError: errors.New("invalid input: invalid join column: column col_bool does not exist in right table"),
 		},
 		{
 			name: "error: a join column does not exist in left table or right table -- join on multiple columns",
@@ -510,7 +510,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column col_float does not exists in left table and column col_bool does not exists in right table"),
+			expError: errors.New("invalid input: invalid join column: column col_float does not exist in left table and column col_bool does not exist in right table"),
 		},
 		{
 			name: "error: join column does not exist in right table -- join on multiple columns",
@@ -523,7 +523,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column col_bool does not exists in right table"),
+			expError: errors.New("invalid input: invalid join column: column col_bool does not exist in right table"),
 		},
 		{
 			name: "error: join column does not exist in both tables -- join on multiple columns",
@@ -536,7 +536,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column col_float32 does not exists in left table and right table"),
+			expError: errors.New("invalid input: invalid join column: column col_float32 does not exist in left table and right table"),
 		},
 		{
 			name: "error: join columns does not exist in both tables -- join on multiple columns",
@@ -549,7 +549,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column col_float32, col_float64 does not exists in left table and right table"),
+			expError: errors.New("invalid input: invalid join column: column col_float32, col_float64 does not exist in left table and right table"),
 		},
 		{
 			name: "error: multiple join columns does not exist in left table or right table -- join on multiple columns",
@@ -562,7 +562,7 @@ func TestTableJoinOp_Execute(t *testing.T) {
 			},
 			env:      env,
 			wantErr:  true,
-			expError: errors.New("invalid input: invalid join column: column col_float, col_float32, col_float64 does not exists in left table and column col_bool, col_float32, col_float64 does not exists in right table"),
+			expError: errors.New("invalid input: invalid join column: column col_float, col_float32, col_float64 does not exist in left table and column col_bool, col_float32, col_float64 does not exist in right table"),
 		},
 	}
 	for _, tt := range tests {
