@@ -308,6 +308,8 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 	rawEndpointID, ok := vars["endpoint_id"]
 	endpointID, _ := uuid.Parse(rawEndpointID)
 
+	log.Infof("Deleting endpoint `model_id: %d, version_id: %d`", modelID, versionID)
+
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
 		return NotFound(err.Error())
@@ -358,6 +360,8 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 		log.Errorf("error undeploying version endpoint %s: %v", rawEndpointID, err)
 		return InternalServerError(fmt.Sprintf("Unable to undeploy version endpoint %s", rawEndpointID))
 	}
+
+	log.Infof("Successfully delete endpoint `model_id: %d, version_id: %d`", modelID, versionID)
 	return Ok(nil)
 }
 
