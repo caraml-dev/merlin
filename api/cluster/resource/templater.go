@@ -183,7 +183,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	envVarsMap := envVars.ToMap()
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
 		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") {
-		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol)
+		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, fmt.Sprintf("/v1/models/%s", modelService.Name))
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
@@ -328,7 +328,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 	envVarsMap := envVars.ToMap()
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
 		!strings.EqualFold(envVarsMap[envDisableLivenessProbe], "true") {
-		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol)
+		livenessProbeConfig = createLivenessProbeSpec(modelService.Protocol, "/")
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
@@ -444,11 +444,11 @@ func createGRPCLivenessProbe(port int) *corev1.Probe {
 	}
 }
 
-func createLivenessProbeSpec(protocol prt.Protocol) *corev1.Probe {
+func createLivenessProbeSpec(protocol prt.Protocol, httpPath string) *corev1.Probe {
 	if protocol == prt.UpiV1 {
 		return createGRPCLivenessProbe(defaultGRPCPort)
 	}
-	return createHTTPGetLivenessProbe("/", defaultHTTPPort)
+	return createHTTPGetLivenessProbe(httpPath, defaultHTTPPort)
 }
 
 func createPredictorHost(modelService *models.Service) string {
