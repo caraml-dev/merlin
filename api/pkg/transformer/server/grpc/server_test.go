@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/afex/hystrix-go/hystrix"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
@@ -622,6 +623,7 @@ func TestUPIServer_PredictValues(t *testing.T) {
 		request         *feastSdk.OnlineFeaturesRequest
 		expectedRequest *feastSdk.OnlineFeaturesRequest
 		response        *feastSdk.OnlineFeaturesResponse
+		err             error
 	}
 	tests := []struct {
 		name             string
@@ -630,6 +632,7 @@ func TestUPIServer_PredictValues(t *testing.T) {
 		request          *upiv1.PredictValuesRequest
 		preprocessOutput *upiv1.PredictValuesRequest
 		modelOutput      *upiv1.PredictValuesResponse
+		modelOutputErr   error
 		want             *upiv1.PredictValuesResponse
 		expectedErr      error
 	}{
@@ -1453,6 +1456,774 @@ func TestUPIServer_PredictValues(t *testing.T) {
 			},
 		},
 		{
+			name:         "table_transformations; model prediction timeout",
+			specYamlPath: "../../pipeline/testdata/upi/valid_table_transformer_preprocess.yaml",
+			mockFeasts:   []mockFeast{},
+			request: &upiv1.PredictValuesRequest{
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "previous_vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "rating",
+									Type: upiv1.Type_TYPE_DOUBLE,
+								},
+								{
+									Name: "test_time",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											StringValue: "motorcycle",
+										},
+										{
+											StringValue: "suv",
+										},
+										{
+											DoubleValue: 4,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											StringValue: "sedan",
+										},
+										{
+											StringValue: "mpv",
+										},
+										{
+											DoubleValue: 3,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{
+						{
+							Name:         "customer_id",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 1111,
+						},
+					},
+				},
+			},
+			preprocessOutput: &upiv1.PredictValuesRequest{
+				PredictionTable: &upiv1.Table{
+					Name: "transformed_driver_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "customer_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "name",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+						{
+							Name: "rank",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "rating",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "vehicle",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "previous_vehicle",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "row2",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1111,
+								},
+								{
+									StringValue: "driver-2",
+								},
+								{
+									DoubleValue: 2.5,
+								},
+								{
+									DoubleValue: 0.5,
+								},
+								{
+									IntegerValue: 2,
+								},
+								{
+									IntegerValue: 3,
+								},
+							},
+						},
+						{
+							RowId: "row1",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1111,
+								},
+								{
+									StringValue: "driver-1",
+								},
+								{
+									DoubleValue: -2.5,
+								},
+								{
+									DoubleValue: 0.75,
+								},
+								{
+									IntegerValue: 0,
+								},
+								{
+									IntegerValue: 1,
+								},
+							},
+						},
+					},
+				},
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "previous_vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "rating",
+									Type: upiv1.Type_TYPE_DOUBLE,
+								},
+								{
+									Name: "test_time",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											StringValue: "motorcycle",
+										},
+										{
+											StringValue: "suv",
+										},
+										{
+											DoubleValue: 4,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											StringValue: "sedan",
+										},
+										{
+											StringValue: "mpv",
+										},
+										{
+											DoubleValue: 3,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{},
+				},
+			},
+			modelOutputErr: status.Error(codes.DeadlineExceeded, "timeout"),
+			expectedErr:    status.Error(codes.DeadlineExceeded, "predict err: rpc error: code = DeadlineExceeded desc = timeout"),
+		},
+		{
+			name:         "table_transformations; model prediction timeout from hystrix",
+			specYamlPath: "../../pipeline/testdata/upi/valid_table_transformer_preprocess.yaml",
+			mockFeasts:   []mockFeast{},
+			request: &upiv1.PredictValuesRequest{
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "previous_vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "rating",
+									Type: upiv1.Type_TYPE_DOUBLE,
+								},
+								{
+									Name: "test_time",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											StringValue: "motorcycle",
+										},
+										{
+											StringValue: "suv",
+										},
+										{
+											DoubleValue: 4,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											StringValue: "sedan",
+										},
+										{
+											StringValue: "mpv",
+										},
+										{
+											DoubleValue: 3,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{
+						{
+							Name:         "customer_id",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 1111,
+						},
+					},
+				},
+			},
+			preprocessOutput: &upiv1.PredictValuesRequest{
+				PredictionTable: &upiv1.Table{
+					Name: "transformed_driver_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "customer_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "name",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+						{
+							Name: "rank",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "rating",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "vehicle",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "previous_vehicle",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "row2",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1111,
+								},
+								{
+									StringValue: "driver-2",
+								},
+								{
+									DoubleValue: 2.5,
+								},
+								{
+									DoubleValue: 0.5,
+								},
+								{
+									IntegerValue: 2,
+								},
+								{
+									IntegerValue: 3,
+								},
+							},
+						},
+						{
+							RowId: "row1",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1111,
+								},
+								{
+									StringValue: "driver-1",
+								},
+								{
+									DoubleValue: -2.5,
+								},
+								{
+									DoubleValue: 0.75,
+								},
+								{
+									IntegerValue: 0,
+								},
+								{
+									IntegerValue: 1,
+								},
+							},
+						},
+					},
+				},
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "previous_vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "rating",
+									Type: upiv1.Type_TYPE_DOUBLE,
+								},
+								{
+									Name: "test_time",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											StringValue: "motorcycle",
+										},
+										{
+											StringValue: "suv",
+										},
+										{
+											DoubleValue: 4,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											StringValue: "sedan",
+										},
+										{
+											StringValue: "mpv",
+										},
+										{
+											DoubleValue: 3,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{},
+				},
+			},
+			modelOutputErr: hystrix.ErrTimeout,
+			expectedErr:    status.Error(codes.DeadlineExceeded, "predict err: deadline exceeded: hystrix: timeout"),
+		},
+		{
+			name:         "table_transformations; errors table is not defined in request",
+			specYamlPath: "../../pipeline/testdata/upi/valid_table_transformer_preprocess.yaml",
+			mockFeasts:   []mockFeast{},
+			request: &upiv1.PredictValuesRequest{
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "random_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "previous_vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "rating",
+									Type: upiv1.Type_TYPE_DOUBLE,
+								},
+								{
+									Name: "test_time",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											StringValue: "motorcycle",
+										},
+										{
+											StringValue: "suv",
+										},
+										{
+											DoubleValue: 4,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											StringValue: "sedan",
+										},
+										{
+											StringValue: "mpv",
+										},
+										{
+											DoubleValue: 3,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{
+						{
+							Name:         "customer_id",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 1111,
+						},
+					},
+				},
+			},
+			expectedErr: status.Error(codes.InvalidArgument, "preprocess err: error executing preprocess operation: *pipeline.TableTransformOp: invalid input: table 'driver_table' is not declared"),
+		},
+		{
+			name:         "table_transformations; one of value for cyclical encoder is nil (test_time column)",
+			specYamlPath: "../../pipeline/testdata/upi/valid_table_transformer_preprocess.yaml",
+			mockFeasts:   []mockFeast{},
+			request: &upiv1.PredictValuesRequest{
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "previous_vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "rating",
+									Type: upiv1.Type_TYPE_DOUBLE,
+								},
+								{
+									Name: "test_time",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											IsNull: true,
+										},
+										{
+											StringValue: "suv",
+										},
+										{
+											DoubleValue: 4,
+										},
+										{
+											IsNull: true,
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											StringValue: "sedan",
+										},
+										{
+											StringValue: "mpv",
+										},
+										{
+											DoubleValue: 3,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{
+						{
+							Name:         "customer_id",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 1111,
+						},
+					},
+				},
+			},
+			expectedErr: status.Error(codes.InvalidArgument, "preprocess err: error executing preprocess operation: *pipeline.TableTransformOp: invalid input: there is missing value on column test_time, cyclical encoding fails"),
+		},
+		{
 			name:         "table_transformations with feast",
 			specYamlPath: "../../pipeline/testdata/upi/valid_feast_preprocess.yaml",
 			mockFeasts: []mockFeast{
@@ -1741,13 +2512,305 @@ func TestUPIServer_PredictValues(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:         "table_transformations with feast; timeout calling feast",
+			specYamlPath: "../../pipeline/testdata/upi/valid_feast_preprocess.yaml",
+			mockFeasts: []mockFeast{
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					err: hystrix.ErrTimeout,
+				},
+			},
+			request: &upiv1.PredictValuesRequest{
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{
+						{
+							Name:         "customer_id",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 1111,
+						},
+					},
+				},
+			},
+			preprocessOutput: &upiv1.PredictValuesRequest{
+				PredictionTable: &upiv1.Table{
+					Name: "result_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "rank",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "driver_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "customer_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "driver_feature_1",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "driver_feature_2",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 0,
+								},
+								{
+									IntegerValue: 1,
+								},
+								{
+									IntegerValue: 1111,
+								},
+								{
+									DoubleValue: 1111,
+								},
+								{
+									DoubleValue: 2222,
+								},
+							},
+						},
+						{
+							RowId: "",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1,
+								},
+								{
+									IntegerValue: 2,
+								},
+								{
+									IntegerValue: 1111,
+								},
+								{
+									DoubleValue: 3333,
+								},
+								{
+									DoubleValue: 4444,
+								},
+							},
+						},
+					},
+				},
+				TransformerInput: &upiv1.TransformerInput{
+					Tables:    []*upiv1.Table{},
+					Variables: []*upiv1.Variable{},
+				},
+			},
+			expectedErr: status.Error(codes.DeadlineExceeded, "preprocess err: error executing preprocess operation: *pipeline.FeastOp: deadline exceeded: hystrix: timeout"),
+		},
+		{
+			name:         "table_transformations with feast; timeout from server when calling feast",
+			specYamlPath: "../../pipeline/testdata/upi/valid_feast_preprocess.yaml",
+			mockFeasts: []mockFeast{
+				{
+					request: &feastSdk.OnlineFeaturesRequest{
+						Project: "default", // used as identifier for mocking. must match config
+					},
+					err: status.Error(codes.DeadlineExceeded, "feast timeout"),
+				},
+			},
+			request: &upiv1.PredictValuesRequest{
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{
+						{
+							Name:         "customer_id",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 1111,
+						},
+					},
+				},
+			},
+			preprocessOutput: &upiv1.PredictValuesRequest{
+				PredictionTable: &upiv1.Table{
+					Name: "result_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "rank",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "driver_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "customer_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "driver_feature_1",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "driver_feature_2",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 0,
+								},
+								{
+									IntegerValue: 1,
+								},
+								{
+									IntegerValue: 1111,
+								},
+								{
+									DoubleValue: 1111,
+								},
+								{
+									DoubleValue: 2222,
+								},
+							},
+						},
+						{
+							RowId: "",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1,
+								},
+								{
+									IntegerValue: 2,
+								},
+								{
+									IntegerValue: 1111,
+								},
+								{
+									DoubleValue: 3333,
+								},
+								{
+									DoubleValue: 4444,
+								},
+							},
+						},
+					},
+				},
+				TransformerInput: &upiv1.TransformerInput{
+					Tables:    []*upiv1.Table{},
+					Variables: []*upiv1.Variable{},
+				},
+			},
+			expectedErr: status.Error(codes.DeadlineExceeded, "preprocess err: error executing preprocess operation: *pipeline.FeastOp: deadline exceeded: feast timeout"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			clientMock := &mocks.UniversalPredictionServiceClient{}
 			clientMock.On("PredictValues", mock.Anything, mock.MatchedBy(func(req *upiv1.PredictValuesRequest) bool {
 				return proto.Equal(tt.preprocessOutput, req)
-			})).Return(tt.modelOutput, nil)
+			})).Return(tt.modelOutput, tt.modelOutputErr)
 			mockFeast := &feastMocks.Client{}
 			feastClients := feast.Clients{}
 			feastClients[spec.ServingSource_BIGTABLE] = mockFeast
@@ -1769,7 +2832,7 @@ func TestUPIServer_PredictValues(t *testing.T) {
 						assert.Equal(t, expectedRequest.Features, req.Features)
 					}
 					return req.Project == project
-				})).Return(m.response, nil)
+				})).Return(m.response, m.err)
 			}
 			opts := &config.Options{
 				ModelGRPCHystrixCommandName: "grpcHandler",

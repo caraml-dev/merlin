@@ -284,6 +284,40 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 			},
 		},
 		{
+			name:         "simple preprocess; failed due to entities supplied is not an array",
+			specYamlPath: "../../pipeline/testdata/valid_simple_preprocess_child.yaml",
+			mockFeasts:   []mockFeast{},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"entities" : {"id": 1,"name": "entity-1"}}`),
+			},
+			expTransformedRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"instances": {"columns": ["id", "name"], "data":[[1, "entity-1"],[2, "entity-2"]]},
+								"tablefile": {"columns": ["First Name", "Last Name", "Age", "Weight", "Is VIP"],
+												"data": [["Apple", "Cider", 25, 48.8, true], ["Banana", "Man", 18, 68, false],
+														["Zara", "Vuitton", 35, 75, true], ["Sandra", "Zawaska", 32, 55, false],
+														["Merlion", "Krabby", 23, 57.22, false]]},
+								"tablefile2": {"columns": ["First Name", "Last Name", "Age", "Weight", "Is VIP"],
+												"data": [["Apple", "Cider", 25, 48.8, true], ["Banana", "Man", 18, 68, false],
+														["Zara", "Vuitton", 35, 75, true], ["Sandra", "Zawaska", 32, 55, false],
+														["Merlion", "Krabby", 23, 57.22, false]]}
+								}`),
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type":   "application/json",
+					"Content-Length": "189",
+				},
+				body:       []byte(`{"code":400,"message":"preprocessing error: error executing preprocess operation: *pipeline.CreateTableOp: unable to create base table for entity_table: invalid input: object is not Slice"}`),
+				statusCode: 400,
+			},
+		},
+		{
 			name:         "simple postproces",
 			specYamlPath: "../../pipeline/testdata/valid_simple_postprocess.yaml",
 			mockFeasts:   []mockFeast{},
@@ -345,6 +379,25 @@ func TestServer_PredictHandler_StandardTransformer(t *testing.T) {
 				},
 				body:       []byte(`{"status":"ok"}`),
 				statusCode: 200,
+			},
+		},
+		{
+			name:         "table transformation; failed to encode due to nil value in test_time",
+			specYamlPath: "../../pipeline/testdata/valid_table_transform_preprocess.yaml",
+			mockFeasts:   []mockFeast{},
+			rawRequest: request{
+				headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body: []byte(`{"drivers":[{"id":1,"name":"driver-1","vehicle":"motorcycle","previous_vehicle":"suv","rating":4,"test_time":null},{"id":2,"name":"driver-2","vehicle":"sedan","previous_vehicle":"mpv","rating":3, "test_time": 15}],"customer":{"id":1111}}`),
+			},
+			expTransformedResponse: response{
+				headers: map[string]string{
+					"Content-Type":   "application/json",
+					"Content-Length": "194",
+				},
+				body:       []byte(`{"code":400,"message":"preprocessing error: error executing preprocess operation: *pipeline.TableTransformOp: invalid input: there is missing value on column test_time, cyclical encoding fails"}`),
+				statusCode: 400,
 			},
 		},
 		{

@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/server/config"
@@ -194,19 +195,19 @@ func (us *UPIServer) PredictValues(ctx context.Context, request *upiv1.PredictVa
 	preprocessOutput, err := us.preprocess(ctx, request, meta)
 	if err != nil {
 		us.logger.Error("preprocess error", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, "preprocess err: %v", err)
+		return nil, status.Errorf(getGRPCCode(err), "preprocess err: %v", err)
 	}
 
 	modelResponse, err := us.predict(ctx, preprocessOutput)
 	if err != nil {
 		us.logger.Error("predict error", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, "predict err: %v", err)
+		return nil, status.Errorf(getGRPCCode(err), "predict err: %v", err)
 	}
 
 	postprocessOutput, err := us.postprocess(ctx, modelResponse, meta)
 	if err != nil {
 		us.logger.Error("postprocess error", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, "postprocess err: %v", err)
+		return nil, status.Errorf(getGRPCCode(err), "postprocess err: %v", err)
 	}
 
 	return postprocessOutput, nil
@@ -279,6 +280,9 @@ func (us *UPIServer) predict(ctx context.Context, payload *upiv1.PredictValuesRe
 	predictionDurationMs := time.Since(predictStartTime).Milliseconds()
 	if err != nil {
 		instrumentation.RecordPredictionLatency(false, float64(predictionDurationMs))
+		if errors.Is(err, hystrix.ErrTimeout) {
+			return nil, mErrors.NewDeadlineExceededError(err.Error())
+		}
 		return nil, err
 	}
 	instrumentation.RecordPredictionLatency(true, float64(predictionDurationMs))
@@ -292,4 +296,17 @@ func getMetadata(ctx context.Context) map[string]string {
 		resultHeaders[k] = strings.Join(v, ",")
 	}
 	return resultHeaders
+}
+
+func getGRPCCode(err error) codes.Code {
+	if statusErr, valid := status.FromError(err); valid {
+		return statusErr.Code()
+	}
+
+	if errors.Is(err, mErrors.InvalidInputError) {
+		return codes.InvalidArgument
+	} else if errors.Is(err, mErrors.DeadlineExceededError) {
+		return codes.DeadlineExceeded
+	}
+	return codes.Internal
 }
