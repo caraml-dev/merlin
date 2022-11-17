@@ -261,14 +261,14 @@ func Test_ToUPITable(t *testing.T) {
 				series.New([]string{"row1", "row2"}, series.String, "row_id"),
 			),
 			tableName:   "new_table",
-			expectedErr: fmt.Errorf("type bool is not supported in UPI"),
+			expectedErr: fmt.Errorf("invalid input: type bool is not supported in UPI"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.table.ToUPITable(tt.tableName)
-			assert.Equal(t, tt.expectedErr, err)
 			if tt.expectedErr != nil {
+				assert.EqualError(t, tt.expectedErr, err.Error())
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {

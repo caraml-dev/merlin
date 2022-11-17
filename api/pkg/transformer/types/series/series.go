@@ -6,6 +6,7 @@ import (
 
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/go-gota/gota/series"
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
@@ -63,7 +64,7 @@ func NewInferType(values interface{}, seriesName string) (*Series, error) {
 	seriesType := detectType(values)
 	seriesValues, err := castValues(values, seriesType)
 	if err != nil {
-		return nil, err
+		return nil, mErrors.NewInvalidInputError(err.Error())
 	}
 
 	return New(seriesValues, seriesType, seriesName), nil
@@ -114,7 +115,7 @@ func (s *Series) toUPIColumn() (*upiv1.Column, error) {
 	case String:
 		upiColType = upiv1.Type_TYPE_STRING
 	default:
-		return nil, fmt.Errorf("type %v is not supported in UPI", s.Type())
+		return nil, mErrors.NewInvalidInputErrorf("type %v is not supported in UPI", s.Type())
 	}
 
 	return &upiv1.Column{
@@ -142,7 +143,7 @@ func (s *Series) IsNumeric() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("this series type is not numeric but %s", seriesType)
+	return mErrors.NewInvalidInputErrorf("this series type is not numeric but %s", seriesType)
 }
 
 func (s *Series) And(right *Series) (*Series, error) {

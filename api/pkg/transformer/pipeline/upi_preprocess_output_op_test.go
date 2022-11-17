@@ -651,7 +651,7 @@ func TestUPIPreprocessOutputOp_Execute(t *testing.T) {
 				PredictionTableName: "prediction_table_not_exist",
 			},
 			env:    env,
-			expErr: fmt.Errorf("table prediction_table_not_exist is not declared"),
+			expErr: fmt.Errorf("invalid input: table 'prediction_table_not_exist' is not declared"),
 		},
 	}
 	for _, tt := range tests {
@@ -660,8 +660,9 @@ func TestUPIPreprocessOutputOp_Execute(t *testing.T) {
 				outputSpec: tt.outputSpec,
 			}
 			err := up.Execute(context.Background(), tt.env)
-			assert.Equal(t, tt.expErr, err)
+
 			if tt.expErr != nil {
+				assert.EqualError(t, tt.expErr, err.Error())
 				return
 			}
 			got := tt.env.Output()

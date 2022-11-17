@@ -1,8 +1,7 @@
 package scaler
 
 import (
-	"fmt"
-
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
@@ -19,7 +18,7 @@ func NewScaler(scalerSpec *spec.ScaleColumn) (Scaler, error) {
 	case *spec.ScaleColumn_MinMaxScalerConfig:
 		scalerImpl = &MinMaxScaler{cfg.MinMaxScalerConfig}
 	default:
-		return nil, fmt.Errorf("scaler config has unexpected type %T", cfg)
+		return nil, mErrors.NewInvalidInputErrorf("scaler config has unexpected type %T", cfg)
 	}
 	return scalerImpl, nil
 }

@@ -11,7 +11,6 @@ from grpc_health.v1 import health_pb2_grpc
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
 
-
 class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
     def __init__(self, model: PyFuncModel):
         if not model.ready:

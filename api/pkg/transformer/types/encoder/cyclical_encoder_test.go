@@ -91,7 +91,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: nil,
-			expectedErr:     fmt.Errorf("max of cyclical range must be larger than min"),
+			expectedErr:     fmt.Errorf("invalid input: max of cyclical range must be larger than min"),
 		},
 		{
 			desc: "Should fail - Max < Min",
@@ -104,7 +104,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: nil,
-			expectedErr:     fmt.Errorf("max of cyclical range must be larger than min"),
+			expectedErr:     fmt.Errorf("invalid input: max of cyclical range must be larger than min"),
 		},
 		{
 			desc: "Should succeed - by epoch time: HOUR",
@@ -239,7 +239,7 @@ func TestNewCyclicalEncoder(t *testing.T) {
 				EncodeBy: &spec.CyclicalEncoderConfig_ByEpochTime{},
 			},
 			expectedEncoder: nil,
-			expectedErr:     fmt.Errorf("cyclical encoding config invalid or undefined"),
+			expectedErr:     fmt.Errorf("invalid input: cyclical encoding config invalid or undefined"),
 		},
 	}
 	for _, tC := range testCases {
@@ -279,7 +279,7 @@ func TestCyclicalEncode(t *testing.T) {
 				1641060000, // 3 Jan 2022, 18:00:00
 			},
 			expectedResult: nil,
-			expectedError:  fmt.Errorf("missing value"),
+			expectedError:  fmt.Errorf("invalid input: there is missing value on column col, cyclical encoding fails"),
 		},
 		{
 			desc: "Should fail: By Epoch time: Missing value",
@@ -295,7 +295,7 @@ func TestCyclicalEncode(t *testing.T) {
 				1641060000, // 3 Jan 2022, 18:00:00
 			},
 			expectedResult: nil,
-			expectedError:  fmt.Errorf("missing value"),
+			expectedError:  fmt.Errorf("invalid input: there is missing value on column col, cyclical encoding fails"),
 		},
 		{
 			desc: "Should fail: Invalid value",
@@ -580,28 +580,28 @@ func TestGetCycleTime(t *testing.T) {
 			periodType:        123,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedCycleTime: 0,
-			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
+			expectedErr:       fmt.Errorf("invalid input: period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should fail - PeriodType: HOUR",
 			periodType:        spec.PeriodType_HOUR,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedCycleTime: 0,
-			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
+			expectedErr:       fmt.Errorf("invalid input: period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should fail - PeriodType: DAY",
 			periodType:        spec.PeriodType_DAY,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedCycleTime: 0,
-			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
+			expectedErr:       fmt.Errorf("invalid input: period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should fail - PeriodType: WEEK",
 			periodType:        spec.PeriodType_WEEK,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedCycleTime: 0,
-			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
+			expectedErr:       fmt.Errorf("invalid input: period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should succeed - PeriodType: MONTH, leap",
@@ -821,28 +821,28 @@ func TestGetUnitAngle(t *testing.T) {
 			periodType:        123,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedUnitAngle: 0,
-			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
+			expectedErr:       fmt.Errorf("invalid input: period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should fail - PeriodType: HOUR",
 			periodType:        spec.PeriodType_HOUR,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedUnitAngle: 0,
-			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
+			expectedErr:       fmt.Errorf("invalid input: period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should fail - PeriodType: DAY",
 			periodType:        spec.PeriodType_DAY,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedUnitAngle: 0,
-			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
+			expectedErr:       fmt.Errorf("invalid input: period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should fail - PeriodType: WEEK",
 			periodType:        spec.PeriodType_WEEK,
 			epochTime:         time.Date(2021, 12, 31, 3, 15, 16, 0, time.UTC),
 			expectedUnitAngle: 0,
-			expectedErr:       fmt.Errorf("period type is undefined for this use case"),
+			expectedErr:       fmt.Errorf("invalid input: period type is undefined for this use case"),
 		},
 		{
 			desc:              "Should succeed - PeriodType: MONTH, Jan",
