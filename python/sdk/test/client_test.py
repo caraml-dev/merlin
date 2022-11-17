@@ -147,6 +147,8 @@ def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth):
         assert isinstance(model.created_at, datetime.datetime)
         assert isinstance(model.updated_at, datetime.datetime)
         assert model.project == project
+        assert "merlin-sdk/" in responses.calls[-1].request.headers['User-Agent']
+        assert "python/" in responses.calls[-1].request.headers['User-Agent']
 
 
 @responses.activate
