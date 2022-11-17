@@ -32,7 +32,7 @@ from merlin.transformer import Transformer
 from merlin.logger import Logger
 from merlin.util import valid_name_check
 
-from python.sdk.merlin.version import VERSION
+from merlin.version import VERSION
 
 OAUTH_SCOPES = ['https://www.googleapis.com/auth/userinfo.email']
 
