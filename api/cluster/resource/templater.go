@@ -178,7 +178,6 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	}
 
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
-	// only applicable for protocol = HttpJson for now
 	var livenessProbeConfig *corev1.Probe = nil
 	envVarsMap := envVars.ToMap()
 	if !strings.EqualFold(envVarsMap[envOldDisableLivenessProbe], "true") &&
