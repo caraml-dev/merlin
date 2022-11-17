@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from sys import version_info
 from typing import Dict, List, Optional
 
 import warnings
@@ -32,6 +32,8 @@ from merlin.transformer import Transformer
 from merlin.logger import Logger
 from merlin.util import valid_name_check
 
+from python.sdk.merlin.version import VERSION
+
 OAUTH_SCOPES = ['https://www.googleapis.com/auth/userinfo.email']
 
 
@@ -47,6 +49,8 @@ class MerlinClient:
             autorized_http = AuthorizedHttp(credentials, urllib3.PoolManager())
             self._api_client.rest_client.pool_manager = autorized_http
 
+        python_version = f'{version_info.major}.{version_info.minor}.*'  # capture user's python version
+        self._api_client.user_agent = f"merlin-sdk/{VERSION} python/{python_version}"
         self._project_api = ProjectApi(self._api_client)
         self._model_api = ModelsApi(self._api_client)
         self._version_api = VersionApi(self._api_client)
