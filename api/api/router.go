@@ -21,11 +21,14 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/gojek/mlp/api/pkg/authz/enforcer"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
@@ -251,6 +254,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 			Handler(handler)
 	}
 
+	router.Use(prometheusMiddleware)
 	router.Use(recoveryHandler)
 
 	return router, nil
@@ -258,4 +262,31 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 
 func recoveryHandler(next http.Handler) http.Handler {
 	return sentry.Recoverer(next)
+}
+
+var httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+	Name: "merlin_http_duration_seconds",
+	Help: "Duration of HTTP requests.",
+}, []string{"name", "path", "user_agent"})
+
+// prometheusMiddleware implements mux.MiddlewareFunc.
+func prometheusMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		route := mux.CurrentRoute(r)
+
+		name := route.GetName()
+		path, _ := route.GetPathTemplate() // returns template (`/obj/{id}`) rather than actual path (`/obj/123`) which would avoid a cardinality explosion
+
+		userAgent := r.UserAgent()
+		ua := ""
+		if strings.Contains(userAgent, "merlin-sdk") || strings.Contains(userAgent, "python") {
+			ua = userAgent
+		}
+
+		timer := prometheus.NewTimer(httpDuration.WithLabelValues(name, path, ua))
+
+		next.ServeHTTP(w, r)
+
+		timer.ObserveDuration()
+	})
 }

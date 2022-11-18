@@ -15,17 +15,21 @@
 package api
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	mux2 "github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-
 	"github.com/gojek/mlp/api/pkg/authz/enforcer"
 	enforcerMock "github.com/gojek/mlp/api/pkg/authz/enforcer/mocks"
+	"github.com/gorilla/mux"
+	mux2 "github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/mlp"
@@ -395,4 +399,68 @@ func TestRejectAuthorization(t *testing.T) {
 			assert.Equal(t, http.StatusUnauthorized, rr.Code)
 		})
 	}
+}
+
+func Test_prometheusMiddleware_get(t *testing.T) {
+	userAgent := "merlin-sdk/0.25.0 python/3.10.3"
+
+	router := mux.NewRouter()
+
+	router.HandleFunc("/foo", func(rw http.ResponseWriter, r *http.Request) {
+		rw.Write([]byte("bar"))
+	}).Schemes("http").Name("Foo")
+
+	router.Use(prometheusMiddleware)
+
+	req, err := http.NewRequest("GET", "/foo", nil)
+	assert.Nil(t, err)
+	req.Header = http.Header{
+		"User-Agent": []string{userAgent},
+	}
+
+	rr := httptest.NewRecorder()
+
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, 200, rr.Code)
+	assert.Equal(t, rr.Body.String(), "bar")
+
+	m := &dto.Metric{}
+	h := httpDuration.WithLabelValues("Foo", "/foo", userAgent)
+	h.(prometheus.Histogram).Write(m)
+
+	assert.Equal(t, uint64(1), *m.Histogram.SampleCount)
+}
+
+func Test_prometheusMiddleware_post(t *testing.T) {
+	userAgent := "merlin-sdk/0.25.0 python/3.10.3"
+
+	router := mux.NewRouter()
+
+	router.HandleFunc("/foo", func(rw http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		assert.Nil(t, err)
+		rw.Write(body)
+	}).Schemes("http").Name("Foo")
+
+	router.Use(prometheusMiddleware)
+
+	req, err := http.NewRequest("POST", "/foo", bytes.NewBufferString(`{"foo":"bar"}`))
+	assert.Nil(t, err)
+	req.Header = http.Header{
+		"User-Agent": []string{userAgent},
+	}
+
+	rr := httptest.NewRecorder()
+
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, 200, rr.Code)
+	assert.Equal(t, rr.Body.String(), `{"foo":"bar"}`)
+
+	m := &dto.Metric{}
+	h := httpDuration.WithLabelValues("Foo", "/foo", userAgent)
+	h.(prometheus.Histogram).Write(m)
+
+	assert.Equal(t, uint64(1), *m.Histogram.SampleCount)
 }
