@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/go-playground/validator"
@@ -265,13 +266,29 @@ func recoveryHandler(next http.Handler) http.Handler {
 }
 
 var httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Name: "merlin_http_duration_seconds",
-	Help: "Duration of HTTP requests.",
-}, []string{"name", "path", "user_agent"})
+	Name:    "merlin_http_duration_ms",
+	Help:    "Duration of HTTP requests.",
+	Buckets: prometheus.ExponentialBuckets(10, 2, 10),
+}, []string{"name", "path", "user_agent", "status_code"})
+
+type statusCodeRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (r *statusCodeRecorder) WriteHeader(statusCode int) {
+	r.statusCode = statusCode
+	r.ResponseWriter.WriteHeader(statusCode)
+}
 
 // prometheusMiddleware implements mux.MiddlewareFunc.
 func prometheusMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		recorder := &statusCodeRecorder{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+
 		route := mux.CurrentRoute(r)
 
 		name := route.GetName()
@@ -283,10 +300,10 @@ func prometheusMiddleware(next http.Handler) http.Handler {
 			ua = userAgent
 		}
 
-		timer := prometheus.NewTimer(httpDuration.WithLabelValues(name, path, ua))
+		startTime := time.Now()
+		next.ServeHTTP(recorder, r)
+		durationMs := time.Since(startTime).Milliseconds()
 
-		next.ServeHTTP(w, r)
-
-		timer.ObserveDuration()
+		httpDuration.WithLabelValues(name, path, ua, fmt.Sprint(recorder.statusCode)).Observe(float64(durationMs))
 	})
 }

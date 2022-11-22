@@ -427,7 +427,7 @@ func Test_prometheusMiddleware_get(t *testing.T) {
 	assert.Equal(t, rr.Body.String(), "bar")
 
 	m := &dto.Metric{}
-	h := httpDuration.WithLabelValues("Foo-Get", "/foo", userAgent)
+	h := httpDuration.WithLabelValues("Foo-Get", "/foo", userAgent, "200")
 	err = h.(prometheus.Histogram).Write(m)
 	assert.Nil(t, err)
 
@@ -463,7 +463,44 @@ func Test_prometheusMiddleware_post(t *testing.T) {
 	assert.Equal(t, rr.Body.String(), `{"foo":"bar"}`)
 
 	m := &dto.Metric{}
-	h := httpDuration.WithLabelValues("Foo-Post", "/foo", userAgent)
+	h := httpDuration.WithLabelValues("Foo-Post", "/foo", userAgent, "200")
+	err = h.(prometheus.Histogram).Write(m)
+	assert.Nil(t, err)
+
+	assert.Equal(t, uint64(1), *m.Histogram.SampleCount)
+}
+
+func Test_prometheusMiddleware_post_500(t *testing.T) {
+	userAgent := "merlin-sdk/0.25.0 python/3.10.3"
+
+	router := mux.NewRouter()
+
+	router.HandleFunc("/foo-500", func(rw http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		assert.Nil(t, err)
+
+		rw.WriteHeader(500)
+		_, err = rw.Write(body)
+		assert.Nil(t, err)
+	}).Schemes("http").Name("Foo-Post-500")
+
+	router.Use(prometheusMiddleware)
+
+	req, err := http.NewRequest("POST", "/foo-500", bytes.NewBufferString(`{"foo":"bar"}`))
+	assert.Nil(t, err)
+	req.Header = http.Header{
+		"User-Agent": []string{userAgent},
+	}
+
+	rr := httptest.NewRecorder()
+
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, 500, rr.Code)
+	assert.Equal(t, rr.Body.String(), `{"foo":"bar"}`)
+
+	m := &dto.Metric{}
+	h := httpDuration.WithLabelValues("Foo-Post-500", "/foo-500", userAgent, "500")
 	err = h.(prometheus.Histogram).Write(m)
 	assert.Nil(t, err)
 
