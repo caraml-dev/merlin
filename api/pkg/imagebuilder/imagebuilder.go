@@ -76,6 +76,9 @@ const (
 	labelEnvironment      = "gojek.com/environment"
 	labelOrchestratorName = "gojek.com/orchestrator"
 	labelComponent        = "gojek.com/component"
+
+	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
+	saFilePath = "/secret/kaniko-secret.json"
 )
 
 var (
@@ -358,6 +361,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
 		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactURI),
 		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImageTag.ImageName),
+		fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath),
 		fmt.Sprintf("--destination=%s", imageRef),
 		"--cache=true",
 		"--single-snapshot",
@@ -400,8 +404,8 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 							},
 							Env: []v1.EnvVar{
 								{
-									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-									Value: "/secret/kaniko-secret.json",
+									Name:  gacEnvKey,
+									Value: saFilePath,
 								},
 							},
 							Resources: v1.ResourceRequirements{
