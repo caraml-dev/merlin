@@ -1119,7 +1119,6 @@ class ModelVersion:
               f"\nView model version logs: {log_url}")
 
         self._version_endpoints = self.list_endpoint()
-        print("deploy: self._version_endpoints", self._version_endpoints)
 
         return VersionEndpoint(endpoint, log_url)
 
