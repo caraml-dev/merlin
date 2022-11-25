@@ -44,14 +44,21 @@ jobs:
   publish-api:
     runs-on: ubuntu-latest
     steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
           name: merlin.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
+        env:
+          CONTAINER_REGISTRY: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}
         run: |
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/gojek/merlin:${{ inputs.version }}"
-          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
+          IMAGE_TAG="${{ env.CONTAINER_REGISTRY }}/merlin:${{ inputs.version }}"
           docker image load --input merlin.${{ inputs.version }}.tar
           docker tag merlin:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
@@ -59,14 +66,21 @@ jobs:
   publish-transformer:
     runs-on: ubuntu-latest
     steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
           name: merlin-transformer.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
+        env:
+          CONTAINER_REGISTRY: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}
         run: |
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/gojek/merlin-transformer:${{ inputs.version }}"
-          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
+          IMAGE_TAG="${{ env.CONTAINER_REGISTRY }}/merlin-transformer:${{ inputs.version }}"
           docker image load --input merlin-transformer.${{ inputs.version }}.tar
           docker tag merlin-transformer:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
@@ -96,7 +110,7 @@ jobs:
           docker image load --input merlin-pyspark-base-py${{ matrix.python-version }}.${{ inputs.version }}.tar
           docker tag merlin-pyspark-base-py${{ matrix.python-version }}:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
-  
+
   publish-pyfunc:
     runs-on: ubuntu-latest
     strategy:
