@@ -218,6 +218,11 @@ class TestModelVersion:
                       body=json.dumps(ep1.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([ep1.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy(environment_name=env_1.name)
 
         assert endpoint.id == ep1.id
@@ -240,6 +245,11 @@ class TestModelVersion:
                       body=json.dumps(upi_ep.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([upi_ep.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy(environment_name=env_1.name)
 
         assert endpoint.id == upi_ep.id
@@ -262,6 +272,11 @@ class TestModelVersion:
                       body=json.dumps(ep3.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([ep3.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy(environment_name=env_1.name, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
 
         assert endpoint.id == ep3.id
@@ -283,6 +298,11 @@ class TestModelVersion:
                       body=json.dumps(ep4.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([ep4.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy(environment_name=env_1.name,
                                   autoscaling_policy=AutoscalingPolicy(metrics_type=MetricsType.CPU_UTILIZATION,
                                                                        target_value=10))
@@ -318,6 +338,11 @@ class TestModelVersion:
                       body=json.dumps(ep1.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([ep1.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy()
 
         assert endpoint.id == ep1.id
