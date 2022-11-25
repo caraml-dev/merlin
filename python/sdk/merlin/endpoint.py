@@ -89,7 +89,7 @@ class VersionEndpoint:
     @property
     def env_vars(self) -> Dict[str, str]:
         env_vars = {}
-        if self._env_vars is not None:
+        if self._env_vars:
             for ev in self._env_vars:
                 env_vars[ev.name] = ev.value
         return env_vars

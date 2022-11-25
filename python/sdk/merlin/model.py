@@ -671,14 +671,10 @@ class ModelVersion:
         """
 
         # For backward compatibility, we called VersionEndpoint API if _version_endpoints empty.
-        endpoints = self._version_endpoints
-        if endpoints is None:
-            endpoint_api = EndpointApi(self._api_client)
-            endpoints = endpoint_api. \
-                models_model_id_versions_version_id_endpoint_get(
-                    model_id=self.model.id, version_id=self.id)
+        if self._version_endpoints is None:
+            self._version_endpoints = self.list_endpoint()
 
-        for endpoint in endpoints:
+        for endpoint in self._version_endpoints:
             if endpoint.environment.is_default:
                 return VersionEndpoint(endpoint)
 
