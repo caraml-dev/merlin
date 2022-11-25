@@ -667,7 +667,7 @@ class ModelVersion:
         Return endpoint of this model version that is deployed in default
         environment
 
-        :return: Endpoint or None
+        :return: VersionEndpoint or None
         """
 
         # For backward compatibility, we called VersionEndpoint API if _version_endpoints empty.
@@ -1117,6 +1117,9 @@ class ModelVersion:
         log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
         print(f"Model {model.name} version {self.id} is deployed."
               f"\nView model version logs: {log_url}")
+
+        self._version_endpoints = self.list_endpoint()
+        print("deploy: self._version_endpoints", self._version_endpoints)
 
         return VersionEndpoint(endpoint, log_url)
 

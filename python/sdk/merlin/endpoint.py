@@ -16,8 +16,9 @@ from enum import Enum
 from typing import Dict
 
 import client
-from merlin.autoscaling import AutoscalingPolicy, MetricsType, RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY, \
-    SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+                                AutoscalingPolicy, MetricsType)
 from merlin.deployment_mode import DeploymentMode
 from merlin.environment import Environment
 from merlin.logger import Logger
@@ -88,8 +89,9 @@ class VersionEndpoint:
     @property
     def env_vars(self) -> Dict[str, str]:
         env_vars = {}
-        for ev in self._env_vars:
-            env_vars[ev.name] = ev.value
+        if self._env_vars is not None:
+            for ev in self._env_vars:
+                env_vars[ev.name] = ev.value
         return env_vars
 
     @property
