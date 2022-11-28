@@ -689,6 +689,7 @@ def test_standard_transformer_with_multiple_feast(
     merlin.undeploy(v)
 
 
+@pytest.mark.skip(reason="Direct retrieval requires rework")
 @pytest.mark.feast
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
