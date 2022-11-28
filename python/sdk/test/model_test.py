@@ -14,25 +14,24 @@
 
 import json
 import types
-import pytest
-
-import client
-import merlin
-from merlin import DeploymentMode, MetricsType
-from merlin import AutoscalingPolicy
-from merlin.autoscaling import RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY, \
-    SERVERLESS_DEFAULT_AUTOSCALING_POLICY
-from merlin.model import ModelType
-from urllib3_mock import Responses
 from unittest.mock import patch
 
+import client
 import client as cl
+import pytest
+from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY)
 from merlin.batch.config import PredictionJobConfig, ResultType
 from merlin.batch.job import JobStatus
 from merlin.batch.sink import BigQuerySink, SaveMode
 from merlin.batch.source import BigQuerySource
 from merlin.endpoint import VersionEndpoint
+from merlin.model import ModelType
 from merlin.protocol import Protocol
+from urllib3_mock import Responses
+
+import merlin
+from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
 
 responses = Responses('requests.packages.urllib3')
 
@@ -197,28 +196,6 @@ class TestProject:
 
 class TestModelVersion:
     @responses.activate
-    def test_endpoint(self, version):
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([ep2.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-
-        ep = version.endpoint
-        assert ep is None
-        responses.reset()
-
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([ep1.to_dict(), ep2.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-
-        ep = version.endpoint
-        assert ep.id == ep1.id
-        assert ep.status.value == ep1.status
-        assert ep.environment_name == ep1.environment_name
-        assert ep.url.startswith(ep1.url)
-
-    @responses.activate
     def test_list_endpoint(self, version):
         responses.add("GET", '/v1/models/1/versions/1/endpoint',
                       body=json.dumps([ep1.to_dict(), ep2.to_dict()]),
@@ -241,6 +218,11 @@ class TestModelVersion:
                       body=json.dumps(ep1.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([ep1.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy(environment_name=env_1.name)
 
         assert endpoint.id == ep1.id
@@ -263,6 +245,11 @@ class TestModelVersion:
                       body=json.dumps(upi_ep.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([upi_ep.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy(environment_name=env_1.name)
 
         assert endpoint.id == upi_ep.id
@@ -285,6 +272,11 @@ class TestModelVersion:
                       body=json.dumps(ep3.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([ep3.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy(environment_name=env_1.name, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
 
         assert endpoint.id == ep3.id
@@ -306,6 +298,11 @@ class TestModelVersion:
                       body=json.dumps(ep4.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([ep4.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy(environment_name=env_1.name,
                                   autoscaling_policy=AutoscalingPolicy(metrics_type=MetricsType.CPU_UTILIZATION,
                                                                        target_value=10))
@@ -341,6 +338,11 @@ class TestModelVersion:
                       body=json.dumps(ep1.to_dict()),
                       status=200,
                       content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([ep1.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
         endpoint = version.deploy()
 
         assert endpoint.id == ep1.id
@@ -967,7 +969,7 @@ def test_process_conda_env():
             },
         ],
     }
-  
+
     new_conda = merlin.model._process_conda_env(conda_env=conda, python_version="3.7.*")
     assert "python=3.7.*" in new_conda["dependencies"]
 

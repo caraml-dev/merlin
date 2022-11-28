@@ -18,42 +18,45 @@ import re
 import shutil
 import tempfile
 import warnings
-import yaml
-
 from datetime import datetime
 from enum import Enum
-from time import sleep
 from sys import version_info
-from typing import Dict, List, Optional, Tuple, Union, Any
+from time import sleep
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import client
 import docker
-import mlflow
 import pyprind
+import yaml
+from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
+                    SecretApi, VersionApi)
 from docker import APIClient
 from docker.errors import BuildError
 from docker.models.containers import Container
-from mlflow.pyfunc import PythonModel
-from mlflow.entities import Run, RunData
-from mlflow.exceptions import MlflowException
-
-import client
-from client import EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi, SecretApi, VersionApi
-from merlin.autoscaling import AutoscalingPolicy, RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY, \
-    SERVERLESS_DEFAULT_AUTOSCALING_POLICY
+from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+                                AutoscalingPolicy)
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
 from merlin.batch.source import BigQuerySource
 from merlin.deployment_mode import DeploymentMode
-from merlin.docker.docker import copy_pyfunc_dockerfile, copy_standard_dockerfile
+from merlin.docker.docker import (copy_pyfunc_dockerfile,
+                                  copy_standard_dockerfile)
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
+from merlin.logger import Logger
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.logger import Logger
-from merlin.util import autostr, download_files_from_gcs, guess_mlp_ui_url, valid_name_check
+from merlin.util import (autostr, download_files_from_gcs, guess_mlp_ui_url,
+                         valid_name_check)
 from merlin.validation import validate_model_dir
 from merlin.version import VERSION
+from mlflow.entities import Run, RunData
+from mlflow.exceptions import MlflowException
+from mlflow.pyfunc import PythonModel
+
+import mlflow
 from merlin import pyfunc
 
 # Ensure backward compatibility after moving PyFuncModel and PyFuncV2Model to pyfunc.py
@@ -664,14 +667,14 @@ class ModelVersion:
         Return endpoint of this model version that is deployed in default
         environment
 
-        :return: Endpoint or None
+        :return: VersionEndpoint or None
         """
-        endpoint_api = EndpointApi(self._api_client)
-        ep_list = endpoint_api. \
-            models_model_id_versions_version_id_endpoint_get(
-                model_id=self.model.id, version_id=self.id)
 
-        for endpoint in ep_list:
+        # For backward compatibility, we called VersionEndpoint API if _version_endpoints empty.
+        if self._version_endpoints is None:
+            self._version_endpoints = self.list_endpoint()
+
+        for endpoint in self._version_endpoints:
             if endpoint.environment.is_default:
                 return VersionEndpoint(endpoint)
 
@@ -869,9 +872,9 @@ class ModelVersion:
         """
         mlflow.log_artifact(local_path, artifact_path)
 
-    def log_pyfunc_model(self, 
-                        model_instance: PythonModel, 
-                        conda_env: Union[str, Dict[str, Any]], 
+    def log_pyfunc_model(self,
+                        model_instance: PythonModel,
+                        conda_env: Union[str, Dict[str, Any]],
                         code_dir: Optional[List[str]] = None,
                         artifacts: Dict[str, str] =None):
         """
@@ -1110,6 +1113,8 @@ class ModelVersion:
         log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
         print(f"Model {model.name} version {self.id} is deployed."
               f"\nView model version logs: {log_url}")
+
+        self._version_endpoints = self.list_endpoint()
 
         return VersionEndpoint(endpoint, log_url)
 
@@ -1512,5 +1517,5 @@ def _process_conda_env(conda_env: Union[str, Dict[str, Any]], python_version: st
     # Replace python dependency to match minor version
     new_conda_env['dependencies'] = ([f'python={python_version}'] +
         [spec for spec in new_conda_env['dependencies'] if not match_dependency(spec, 'python')])
-        
+
     return new_conda_env
