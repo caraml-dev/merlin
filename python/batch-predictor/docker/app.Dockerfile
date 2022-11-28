@@ -20,7 +20,7 @@ FROM ${BASE_IMAGE}
 ARG MODEL_URL
 ARG GOOGLE_APPLICATION_CREDENTIALS
 
-# Run docker build using the preovided credential
+# Run docker build using the provided credential
 RUN gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
 RUN gsutil -m cp -r ${MODEL_URL} .
 # pip 20.2.4 to allow dependency conflicts
