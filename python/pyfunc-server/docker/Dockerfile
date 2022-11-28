@@ -16,8 +16,12 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 ARG MODEL_URL
+ARG GOOGLE_APPLICATION_CREDENTIALS
 
 WORKDIR /pyfunc-server
+
+# Run docker build using the provided credential
+RUN gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
 RUN gsutil cp -r ${MODEL_URL} .
 RUN /bin/bash -c ". activate merlin-model && \
     conda env update --name merlin-model --file model/conda.yaml && \
