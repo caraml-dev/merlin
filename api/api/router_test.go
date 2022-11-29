@@ -401,17 +401,15 @@ func TestRejectAuthorization(t *testing.T) {
 	}
 }
 
-func Test_prometheusMiddleware_get(t *testing.T) {
+func Test_prometheusWrapHandle_get(t *testing.T) {
 	userAgent := "merlin-sdk/0.25.0 python/3.10.3"
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/foo", func(rw http.ResponseWriter, r *http.Request) {
+	router.Handle("/foo", prometheusWrapHandle("Foo-Get", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		_, err := rw.Write([]byte("bar"))
 		assert.Nil(t, err)
-	}).Schemes("http").Name("Foo-Get")
-
-	router.Use(prometheusMiddleware)
+	}))).Schemes("http").Name("Foo-Get")
 
 	req, err := http.NewRequest("GET", "/foo", nil)
 	assert.Nil(t, err)
@@ -434,20 +432,18 @@ func Test_prometheusMiddleware_get(t *testing.T) {
 	assert.Equal(t, uint64(1), *m.Histogram.SampleCount)
 }
 
-func Test_prometheusMiddleware_post(t *testing.T) {
+func Test_prometheusWrapHandle_post(t *testing.T) {
 	userAgent := "merlin-sdk/0.25.0 python/3.10.3"
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/foo", func(rw http.ResponseWriter, r *http.Request) {
+	router.Handle("/foo", prometheusWrapHandle("Foo-Post", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 		assert.Nil(t, err)
 
 		_, err = rw.Write(body)
 		assert.Nil(t, err)
-	}).Schemes("http").Name("Foo-Post")
-
-	router.Use(prometheusMiddleware)
+	}))).Schemes("http").Name("Foo-Post")
 
 	req, err := http.NewRequest("POST", "/foo", bytes.NewBufferString(`{"foo":"bar"}`))
 	assert.Nil(t, err)
@@ -470,21 +466,19 @@ func Test_prometheusMiddleware_post(t *testing.T) {
 	assert.Equal(t, uint64(1), *m.Histogram.SampleCount)
 }
 
-func Test_prometheusMiddleware_post_500(t *testing.T) {
+func Test_prometheusWrapHandle_post_500(t *testing.T) {
 	userAgent := "merlin-sdk/0.25.0 python/3.10.3"
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/foo-500", func(rw http.ResponseWriter, r *http.Request) {
+	router.Handle("/foo-500", prometheusWrapHandle("Foo-Get", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 		assert.Nil(t, err)
 
 		rw.WriteHeader(500)
 		_, err = rw.Write(body)
 		assert.Nil(t, err)
-	}).Schemes("http").Name("Foo-Post-500")
-
-	router.Use(prometheusMiddleware)
+	}))).Schemes("http").Name("Foo-Post-500")
 
 	req, err := http.NewRequest("POST", "/foo-500", bytes.NewBufferString(`{"foo":"bar"}`))
 	assert.Nil(t, err)

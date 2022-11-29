@@ -232,6 +232,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, r := range routes {
 		_, handler := newrelic.WrapHandle(r.name, r.HandlerFunc(validate))
+		handler = prometheusWrapHandle(r.name, handler)
 
 		if appCtx.AuthorizationEnabled {
 			handler = authzMiddleware.AuthorizationMiddleware(handler)
@@ -255,7 +256,6 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 			Handler(handler)
 	}
 
-	router.Use(prometheusMiddleware)
 	router.Use(recoveryHandler)
 
 	return router, nil
@@ -281,8 +281,8 @@ func (r *statusCodeRecorder) WriteHeader(statusCode int) {
 	r.ResponseWriter.WriteHeader(statusCode)
 }
 
-// prometheusMiddleware implements mux.MiddlewareFunc.
-func prometheusMiddleware(next http.Handler) http.Handler {
+// prometheusWrapHandle instruments http.Handler handlers with Prometheus metrics.
+func prometheusWrapHandle(name string, handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		recorder := &statusCodeRecorder{
 			ResponseWriter: w,
@@ -301,7 +301,7 @@ func prometheusMiddleware(next http.Handler) http.Handler {
 		}
 
 		startTime := time.Now()
-		next.ServeHTTP(recorder, r)
+		handler.ServeHTTP(recorder, r)
 		durationMs := time.Since(startTime).Milliseconds()
 
 		httpDuration.WithLabelValues(name, path, ua, fmt.Sprint(recorder.statusCode)).Observe(float64(durationMs))

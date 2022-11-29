@@ -131,7 +131,6 @@ func (st *standardTransformer) Execute(ctx context.Context, requestBody types.JS
 		if env.IsPostProcessOpExist() {
 			resp.Tracing.PostprocessTracing = env.PostprocessTracingDetail()
 		}
-		st.logger.Debug("executor tracing", zap.Any("tracing_details", resp.Tracing))
 	}
 
 	return resp
