@@ -30,7 +30,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	batchv1client "k8s.io/client-go/kubernetes/typed/batch/v1"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
-	restclient "k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gojek/merlin/config"
@@ -67,6 +66,9 @@ type Config struct {
 	ClusterName string
 	// GCP project where the cluster resides
 	GcpProject string
+
+	// Alternative to CACert, ClientCert info
+	CredsManager
 }
 
 const (
@@ -85,16 +87,10 @@ type controller struct {
 }
 
 func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, standardTransformerConfig config.StandardTransformerConfig) (Controller, error) {
-	cfg := &restclient.Config{
-		Host: clusterConfig.Host,
-		TLSClientConfig: restclient.TLSClientConfig{
-			Insecure: false,
-			CAData:   []byte(clusterConfig.CACert),
-			CertData: []byte(clusterConfig.ClientCert),
-			KeyData:  []byte(clusterConfig.ClientKey),
-		},
+	cfg, err := clusterConfig.GenerateConfig()
+	if err != nil {
+		return nil, err
 	}
-
 	servingClient, err := kservev1beta1client.NewForConfig(cfg)
 	if err != nil {
 		return nil, err

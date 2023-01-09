@@ -18,7 +18,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 
 	"github.com/gojek/merlin/api"
 	"github.com/gojek/merlin/batch"
@@ -126,20 +125,13 @@ func initVault(cfg config.VaultConfig) vault.Client {
 	return vaultClient
 }
 
-func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder, imageBuilderJanitor *imagebuilder.Janitor) {
-	imgBuilderClusterSecret, err := vaultClient.GetClusterSecret(cfg.ImageBuilderConfig.ClusterName)
-	if err != nil {
-		log.Panicf("unable to retrieve secret for cluster %s from vault", cfg.ImageBuilderConfig.ClusterName)
-	}
+func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder, imageBuilderJanitor *imagebuilder.Janitor) {
+	imgBuilderK8sConfig := cfg.ImageBuilderConfig.K8sConfig
+	credsManager := cluster.NewK8sCredsManager(&imgBuilderK8sConfig)
 
-	restConfig := &rest.Config{
-		Host: imgBuilderClusterSecret.Endpoint,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: false,
-			CAData:   []byte(imgBuilderClusterSecret.CaCert),
-			CertData: []byte(imgBuilderClusterSecret.ClientCert),
-			KeyData:  []byte(imgBuilderClusterSecret.ClientKey),
-		},
+	restConfig, err := credsManager.GenerateConfig()
+	if err != nil {
+		log.Panicf("%s, unable to get image builder k8s config", err.Error())
 	}
 
 	kubeClient, err := kubernetes.NewForConfig(restConfig)
@@ -189,13 +181,10 @@ func initImageBuilder(cfg *config.Config, vaultClient vault.Client) (webserviceB
 	predJobBuilder = imagebuilder.NewPredictionJobImageBuilder(kubeClient, predJobConfig)
 
 	ctl, err := cluster.NewController(cluster.Config{
-		Host:       imgBuilderClusterSecret.Endpoint,
-		CACert:     imgBuilderClusterSecret.CaCert,
-		ClientCert: imgBuilderClusterSecret.ClientCert,
-		ClientKey:  imgBuilderClusterSecret.ClientKey,
-
-		ClusterName: cfg.ImageBuilderConfig.ClusterName,
-		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
+		Host:         imgBuilderK8sConfig.Cluster.Server,
+		CredsManager: credsManager,
+		ClusterName:  cfg.ImageBuilderConfig.ClusterName,
+		GcpProject:   cfg.ImageBuilderConfig.GcpProject,
 	},
 		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
 		config.StandardTransformerConfig{})
@@ -368,20 +357,14 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 	return svc
 }
 
-func initModelEndpointService(cfg *config.Config, vaultClient vault.Client, db *gorm.DB) service.ModelEndpointsService {
+func initModelEndpointService(cfg *config.Config, db *gorm.DB) service.ModelEndpointsService {
 	istioClients := make(map[string]istio.Client)
 	for _, env := range cfg.EnvironmentConfigs {
-		clusterName := env.Cluster
-		clusterSecret, err := vaultClient.GetClusterSecret(clusterName)
-		if err != nil {
-			log.Panicf("unable to get cluster secret of cluster: %s %v", clusterName, err)
-		}
+		credsManager := cluster.NewK8sCredsManager(env.K8sConfig)
 
 		istioClient, err := istio.NewClient(istio.Config{
-			ClusterHost:       clusterSecret.Endpoint,
-			ClusterCACert:     clusterSecret.CaCert,
-			ClusterClientCert: clusterSecret.ClientCert,
-			ClusterClientKey:  clusterSecret.ClientKey,
+			ClusterHost:  env.K8sConfig.Cluster.Server,
+			CredsManager: credsManager,
 		})
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)
@@ -403,7 +386,7 @@ func initBatchDeployment(cfg *config.Config, db *gorm.DB, controllers map[string
 	}
 }
 
-func initBatchControllers(cfg *config.Config, vaultClient vault.Client, db *gorm.DB, mlpAPIClient mlp.APIClient) map[string]batch.Controller {
+func initBatchControllers(cfg *config.Config, db *gorm.DB, mlpAPIClient mlp.APIClient) map[string]batch.Controller {
 	controllers := make(map[string]batch.Controller)
 	predictionJobStorage := storage.NewPredictionJobStorage(db)
 	for _, env := range cfg.EnvironmentConfigs {
@@ -411,20 +394,11 @@ func initBatchControllers(cfg *config.Config, vaultClient vault.Client, db *gorm
 			continue
 		}
 
+		credsManager := cluster.NewK8sCredsManager(env.K8sConfig)
 		clusterName := env.Cluster
-		clusterSecret, err := vaultClient.GetClusterSecret(clusterName)
+		restConfig, err := credsManager.GenerateConfig()
 		if err != nil {
-			log.Panicf("unable to get cluster secret of cluster: %s %v", clusterName, err)
-		}
-
-		restConfig := &rest.Config{
-			Host: clusterSecret.Endpoint,
-			TLSClientConfig: rest.TLSClientConfig{
-				Insecure: false,
-				CAData:   []byte(clusterSecret.CaCert),
-				CertData: []byte(clusterSecret.ClientCert),
-				KeyData:  []byte(clusterSecret.ClientKey),
-			},
+			log.Panicf("unable to get cluster config of cluster: %s %v", clusterName, err)
 		}
 
 		sparkClient := versioned.NewForConfigOrDie(restConfig)
@@ -463,20 +437,15 @@ func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBu
 	}
 }
 
-func initClusterControllers(cfg *config.Config, vaultClient vault.Client) map[string]cluster.Controller {
+func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 	controllers := make(map[string]cluster.Controller)
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
-		clusterSecret, err := vaultClient.GetClusterSecret(clusterName)
-		if err != nil {
-			log.Panicf("unable to get cluster secret of cluster: %s %v", clusterName, err)
-		}
+		credsManager := cluster.NewK8sCredsManager(env.K8sConfig)
 
 		ctl, err := cluster.NewController(cluster.Config{
-			Host:       clusterSecret.Endpoint,
-			CACert:     clusterSecret.CaCert,
-			ClientCert: clusterSecret.ClientCert,
-			ClientKey:  clusterSecret.ClientKey,
+			Host:         env.K8sConfig.Cluster.Server,
+			CredsManager: credsManager,
 
 			ClusterName: clusterName,
 			GcpProject:  env.GcpProject,
@@ -506,17 +475,11 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 	})
 }
 
-func initLogService(cfg *config.Config, vaultClient vault.Client) service.LogService {
-	// image builder cluster
-	imgBuilderClusterSecret, err := vaultClient.GetClusterSecret(cfg.ImageBuilderConfig.ClusterName)
-	if err != nil {
-		log.Panicf("unable to retrieve secret for cluster %s from vault: %v", cfg.ImageBuilderConfig.ClusterName, err)
-	}
+func initLogService(cfg *config.Config) service.LogService {
+	credsManager := cluster.NewK8sCredsManager(&cfg.ImageBuilderConfig.K8sConfig)
 	ctl, err := cluster.NewController(cluster.Config{
-		Host:       imgBuilderClusterSecret.Endpoint,
-		CACert:     imgBuilderClusterSecret.CaCert,
-		ClientCert: imgBuilderClusterSecret.ClientCert,
-		ClientKey:  imgBuilderClusterSecret.ClientKey,
+		Host:         cfg.ImageBuilderConfig.K8sConfig.Cluster.Server,
+		CredsManager: credsManager,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -532,19 +495,13 @@ func initLogService(cfg *config.Config, vaultClient vault.Client) service.LogSer
 
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
-		clusterSecret, err := vaultClient.GetClusterSecret(clusterName)
-		if err != nil {
-			log.Panicf("unable to get cluster secret of cluster %s %v", clusterName, err)
-		}
+		credsManager := cluster.NewK8sCredsManager(env.K8sConfig)
 
 		ctl, err := cluster.NewController(cluster.Config{
-			Host:       clusterSecret.Endpoint,
-			CACert:     clusterSecret.CaCert,
-			ClientCert: clusterSecret.ClientCert,
-			ClientKey:  clusterSecret.ClientKey,
-
-			ClusterName: clusterName,
-			GcpProject:  env.GcpProject,
+			Host:         env.K8sConfig.Cluster.Server,
+			CredsManager: credsManager,
+			ClusterName:  clusterName,
+			GcpProject:   env.GcpProject,
 		},
 			config.ParseDeploymentConfig(env),
 			cfg.StandardTransformerConfig)

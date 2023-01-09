@@ -26,6 +26,7 @@ import (
 	internalValidator "github.com/gojek/merlin/pkg/validator"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
+	clientcmdapiv1 "k8s.io/client-go/tools/clientcmd/api/v1"
 )
 
 const (
@@ -151,6 +152,7 @@ type ImageBuilderConfig struct {
 	Tolerations   Tolerations   `envconfig:"IMG_BUILDER_TOLERATIONS"`
 	NodeSelectors DictEnv       `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
 	MaximumRetry  int32         `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
+	K8sConfig     K8sConfig     `envconfig:"IMG_BUILDER_K8S_CONFIG"`
 }
 
 type Tolerations []v1.Toleration
@@ -324,6 +326,23 @@ type JaegerConfig struct {
 
 type MlflowConfig struct {
 	TrackingURL string `envconfig:"MLFLOW_TRACKING_URL" required:"true"`
+}
+
+// K8sConfig contains fields on how to connect to a k8s cluster
+type K8sConfig struct {
+	Cluster  *clientcmdapiv1.Cluster  `json:"cluster"`
+	AuthInfo *clientcmdapiv1.AuthInfo `json:"user"`
+	Name     string                   `json:"name"`
+}
+
+// Decode provides envconfig steps to parse env var to K8sConfig struct
+func (k *K8sConfig) Decode(value string) error {
+	var k8sConfig K8sConfig
+	if err := json.Unmarshal([]byte(value), &k8sConfig); err != nil {
+		return err
+	}
+	*k = k8sConfig
+	return nil
 }
 
 func InitConfigEnv() (*Config, error) {
