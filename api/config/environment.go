@@ -21,7 +21,6 @@ import (
 
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/api/resource"
-	clientcmdapiv1 "k8s.io/client-go/tools/clientcmd/api/v1"
 	sigyaml "sigs.k8s.io/yaml"
 )
 
@@ -46,13 +45,6 @@ type EnvironmentConfig struct {
 	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
 	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
 	K8sConfig                  *K8sConfig                          `json:"k8s_config"`
-}
-
-// K8sConfig contains fields on how to connect to a k8s cluster
-type K8sConfig struct {
-	Cluster  *clientcmdapiv1.Cluster  `json:"cluster"`
-	AuthInfo *clientcmdapiv1.AuthInfo `json:"user"`
-	Name     string                   `json:"name"`
 }
 
 type PredictionJobResourceRequestConfig struct {
