@@ -35,6 +35,7 @@ import (
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
+	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 )
 
 type Controller interface {
@@ -68,7 +69,7 @@ type Config struct {
 	GcpProject string
 
 	// Alternative to CACert, ClientCert info
-	CredsManager
+	mlpcluster.CredsManager
 }
 
 const (
