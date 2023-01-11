@@ -33,6 +33,7 @@ import (
 	"github.com/gojek/merlin/service"
 	"github.com/gojek/merlin/storage"
 	"github.com/gojek/merlin/vault"
+	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 )
 
 type deps struct {
@@ -127,7 +128,7 @@ func initVault(cfg config.VaultConfig) vault.Client {
 
 func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder, imageBuilderJanitor *imagebuilder.Janitor) {
 	imgBuilderK8sConfig := cfg.ImageBuilderConfig.K8sConfig
-	credsManager := cluster.NewK8sCredsManager(&imgBuilderK8sConfig)
+	credsManager := mlpcluster.NewK8sCredsManager(&imgBuilderK8sConfig)
 
 	restConfig, err := credsManager.GenerateConfig()
 	if err != nil {
@@ -360,7 +361,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 func initModelEndpointService(cfg *config.Config, db *gorm.DB) service.ModelEndpointsService {
 	istioClients := make(map[string]istio.Client)
 	for _, env := range cfg.EnvironmentConfigs {
-		credsManager := cluster.NewK8sCredsManager(env.K8sConfig)
+		credsManager := mlpcluster.NewK8sCredsManager(env.K8sConfig)
 
 		istioClient, err := istio.NewClient(istio.Config{
 			ClusterHost:  env.K8sConfig.Cluster.Server,
@@ -394,7 +395,7 @@ func initBatchControllers(cfg *config.Config, db *gorm.DB, mlpAPIClient mlp.APIC
 			continue
 		}
 
-		credsManager := cluster.NewK8sCredsManager(env.K8sConfig)
+		credsManager := mlpcluster.NewK8sCredsManager(env.K8sConfig)
 		clusterName := env.Cluster
 		restConfig, err := credsManager.GenerateConfig()
 		if err != nil {
@@ -441,7 +442,7 @@ func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 	controllers := make(map[string]cluster.Controller)
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
-		credsManager := cluster.NewK8sCredsManager(env.K8sConfig)
+		credsManager := mlpcluster.NewK8sCredsManager(env.K8sConfig)
 
 		ctl, err := cluster.NewController(cluster.Config{
 			Host:         env.K8sConfig.Cluster.Server,
@@ -476,7 +477,7 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 }
 
 func initLogService(cfg *config.Config) service.LogService {
-	credsManager := cluster.NewK8sCredsManager(&cfg.ImageBuilderConfig.K8sConfig)
+	credsManager := mlpcluster.NewK8sCredsManager(&cfg.ImageBuilderConfig.K8sConfig)
 	ctl, err := cluster.NewController(cluster.Config{
 		Host:         cfg.ImageBuilderConfig.K8sConfig.Cluster.Server,
 		CredsManager: credsManager,
@@ -495,7 +496,7 @@ func initLogService(cfg *config.Config) service.LogService {
 
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
-		credsManager := cluster.NewK8sCredsManager(env.K8sConfig)
+		credsManager := mlpcluster.NewK8sCredsManager(env.K8sConfig)
 
 		ctl, err := cluster.NewController(cluster.Config{
 			Host:         env.K8sConfig.Cluster.Server,

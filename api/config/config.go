@@ -24,6 +24,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	internalValidator "github.com/gojek/merlin/pkg/validator"
+	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 	clientcmdapiv1 "k8s.io/client-go/tools/clientcmd/api/v1"
@@ -148,11 +149,11 @@ type ImageBuilderConfig struct {
 	BuildTimeout                 string           `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
 	KanikoImage                  string           `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
-	Retention     time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
-	Tolerations   Tolerations   `envconfig:"IMG_BUILDER_TOLERATIONS"`
-	NodeSelectors DictEnv       `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
-	MaximumRetry  int32         `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
-	K8sConfig     K8sConfig     `envconfig:"IMG_BUILDER_K8S_CONFIG"`
+	Retention     time.Duration        `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
+	Tolerations   Tolerations          `envconfig:"IMG_BUILDER_TOLERATIONS"`
+	NodeSelectors DictEnv              `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
+	MaximumRetry  int32                `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
+	K8sConfig     mlpcluster.K8sConfig `envconfig:"IMG_BUILDER_K8S_CONFIG"`
 }
 
 type Tolerations []v1.Toleration
