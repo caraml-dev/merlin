@@ -37,7 +37,7 @@ func TestDeploymentStorage_List(t *testing.T) {
 
 		p := mlp.Project{
 			Name:              "project",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 		db.Create(&p)
 
@@ -113,7 +113,7 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 
 		p := mlp.Project{
 			Name:              "project",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 		db.Create(&p)
 

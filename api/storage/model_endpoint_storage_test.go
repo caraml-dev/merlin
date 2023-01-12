@@ -147,7 +147,7 @@ func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
 	p := mlp.Project{
 		Id:                1,
 		Name:              "project",
-		MlflowTrackingUrl: "http://mlflow:5000",
+		MLFlowTrackingURL: "http://mlflow:5000",
 	}
 
 	m := models.Model{

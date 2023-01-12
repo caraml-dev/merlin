@@ -37,12 +37,12 @@ type Project client.Project
 
 // MlflowExperimentURL returns MLflow Experiment URL for given experiment ID.
 func (p Project) MlflowExperimentURL(experimentID string) string {
-	return fmt.Sprintf("%s/#/experiments/%s", p.MlflowTrackingUrl, experimentID)
+	return fmt.Sprintf("%s/#/experiments/%s", p.MLFlowTrackingURL, experimentID)
 }
 
 // MlflowRunURL returns MLflow Epxeriment Run URL for given experiment ID.
 func (p Project) MlflowRunURL(experimentID, runID string) string {
-	return fmt.Sprintf("%s/#/experiments/%s/runs/%s", p.MlflowTrackingUrl, experimentID, runID)
+	return fmt.Sprintf("%s/#/experiments/%s/runs/%s", p.MLFlowTrackingURL, experimentID, runID)
 }
 
 // IsAdministrator returns true if email is in Project's Administrator list.
@@ -120,7 +120,7 @@ func (c *apiClient) CreateProject(ctx context.Context, project Project) (Project
 }
 
 func (c *apiClient) UpdateProject(ctx context.Context, project Project) (Project, error) {
-	updatedProject, _, err := c.client.ProjectApi.ProjectsProjectIdPut(ctx, project.Id, client.Project(project)) // nolint: bodyclose
+	updatedProject, _, err := c.client.ProjectApi.ProjectsProjectIdPut(ctx, project.ID, client.Project(project)) // nolint: bodyclose
 	if err != nil {
 		return Project{}, fmt.Errorf("mlp-api_UpdateProject: %w", err)
 	}

@@ -42,7 +42,7 @@ func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {
 
 	project1 := mlp.Project{
 		Name:              "project-1",
-		MlflowTrackingUrl: "http://mlflow:5000",
+		MLFlowTrackingURL: "http://mlflow:5000",
 	}
 
 	model1 := &models.Model{

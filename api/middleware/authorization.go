@@ -90,7 +90,7 @@ func (a *Authorizer) getResource(r *http.Request) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("projects:%d:%s", model.Project.Id, resource), nil
+		return fmt.Sprintf("projects:%d:%s", model.Project.ID, resource), nil
 	}
 
 	// workaround since logs API is not under projects/**
@@ -105,7 +105,7 @@ func (a *Authorizer) getResource(r *http.Request) (string, error) {
 			return "", err
 		}
 
-		return fmt.Sprintf("projects:%d:logs", model.Project.Id), nil
+		return fmt.Sprintf("projects:%d:logs", model.Project.ID), nil
 	}
 
 	return resource, nil

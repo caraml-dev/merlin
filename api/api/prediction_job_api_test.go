@@ -1400,9 +1400,9 @@ func TestListAllInProject(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				svc := &mocks.ProjectsService{}
 				svc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					Id:                1,
+					ID:                1,
 					Name:              "project-1",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MLFlowTrackingURL: "http://mlflow.com",
 					Team:              "dsp",
 					Stream:            "dsp",
 				}), nil)
@@ -1472,9 +1472,9 @@ func TestListAllInProject(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				svc := &mocks.ProjectsService{}
 				svc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					Id:                1,
+					ID:                1,
 					Name:              "project-1",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MLFlowTrackingURL: "http://mlflow.com",
 					Team:              "dsp",
 					Stream:            "dsp",
 				}), nil)

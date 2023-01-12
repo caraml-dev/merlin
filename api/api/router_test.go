@@ -95,7 +95,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -111,7 +111,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -127,7 +127,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -143,7 +143,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -167,7 +167,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -183,7 +183,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -199,7 +199,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -215,7 +215,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -231,7 +231,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -247,7 +247,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -263,7 +263,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -279,7 +279,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -295,7 +295,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -311,7 +311,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -327,7 +327,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",
@@ -343,7 +343,7 @@ func TestRejectAuthorization(t *testing.T) {
 				ID:        2,
 				ProjectID: 1,
 				Project: mlp.Project{
-					Id:   1,
+					ID:   1,
 					Name: "my-project",
 				},
 				Name: "my-model",

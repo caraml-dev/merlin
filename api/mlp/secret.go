@@ -49,7 +49,7 @@ func (s Secret) Decrypt(passphrase string) (Secret, error) {
 	}
 
 	return Secret{
-		Id:   s.Id,
+		ID:   s.ID,
 		Name: s.Name,
 		Data: decryptedData,
 	}, nil
@@ -79,7 +79,7 @@ func (c *apiClient) UpdateSecret(ctx context.Context, projectID int32, secret Se
 		Body: optional.NewInterface(client.Secret(secret)),
 	}
 
-	newSecret, _, err := c.client.SecretApi.ProjectsProjectIdSecretsSecretIdPatch(ctx, projectID, secret.Id, opt) // nolint: bodyclose
+	newSecret, _, err := c.client.SecretApi.ProjectsProjectIdSecretsSecretIdPatch(ctx, projectID, secret.ID, opt) // nolint: bodyclose
 	if err != nil {
 		return Secret{}, fmt.Errorf("mlp-api_UpdateSecret: %w", err)
 	}
@@ -102,7 +102,7 @@ func (c *apiClient) GetSecretByIDandProjectID(ctx context.Context, secretID, pro
 	}
 
 	for _, secret := range secrets {
-		if secret.Id == secretID {
+		if secret.ID == secretID {
 			return Secret(secret), nil
 		}
 	}
