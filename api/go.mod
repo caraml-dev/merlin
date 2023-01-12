@@ -25,7 +25,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/gojek/merlin-pyspark-app v0.0.3
-	github.com/gojek/mlp v1.7.5-0.20230112103534-3f1866de350d
+	github.com/gojek/mlp v1.7.5-0.20230112125751-e6a444b970d0
 	github.com/gojekfarm/jsonpath v0.1.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
