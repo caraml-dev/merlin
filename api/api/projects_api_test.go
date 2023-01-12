@@ -28,7 +28,7 @@ import (
 var (
 	projects = mlp.Projects{
 		{
-			Id:             1,
+			ID:             1,
 			Name:           "project-1",
 			Administrators: []string{"admin@domain.com"},
 			Readers:        []string{"reader@domain.com"},
@@ -36,7 +36,7 @@ var (
 	}
 
 	project1 = mlp.Project{
-		Id:             1,
+		ID:             1,
 		Name:           "project-1",
 		Administrators: []string{"admin@domain.com"},
 		Readers:        []string{"reader@domain.com"},

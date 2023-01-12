@@ -22,7 +22,6 @@ import (
 	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/api/resource"
-	sigyaml "sigs.k8s.io/yaml"
 )
 
 type EnvironmentConfig struct {
@@ -45,7 +44,7 @@ type EnvironmentConfig struct {
 	DefaultPredictionJobConfig *PredictionJobResourceRequestConfig `yaml:"default_prediction_job_config"`
 	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
 	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
-	K8sConfig                  *mlpcluster.K8sConfig               `json:"k8s_config"`
+	K8sConfig                  *mlpcluster.K8sConfig               `yaml:"k8s_config"`
 }
 
 type PredictionJobResourceRequestConfig struct {
@@ -72,9 +71,6 @@ func initEnvironmentConfigs(path string) []EnvironmentConfig {
 	err = yaml.Unmarshal(cfgFile, &configs)
 	if err != nil {
 		log.Panicf("unable to unmarshall deployment config file:\n %s,\nDue to: %v", cfgFile, err)
-	}
-	if err := sigyaml.Unmarshal(cfgFile, &configs); err != nil {
-		log.Panicf("unable to unmarshall k8sconfig from deployment config file:\n %s,\nDue to: %v", cfgFile, err)
 	}
 	return configs
 }

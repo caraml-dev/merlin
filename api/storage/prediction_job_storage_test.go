@@ -46,7 +46,7 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 		p := mlp.Project{
 			Id:                1,
 			Name:              "project",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 		db.Create(&p)
 
@@ -162,7 +162,7 @@ func TestPredictionJobStorage_List(t *testing.T) {
 
 		p := mlp.Project{
 			Name:              "project",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 		db.Create(&p)
 

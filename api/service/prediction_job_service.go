@@ -82,7 +82,7 @@ func (p *predictionJobService) ListPredictionJobs(ctx context.Context, project m
 		Name:           query.Name,
 		VersionID:      query.VersionID,
 		VersionModelID: query.ModelID,
-		ProjectID:      models.ID(project.Id),
+		ProjectID:      models.ID(project.ID),
 		Status:         query.Status,
 		Error:          query.Error,
 	}

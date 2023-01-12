@@ -126,7 +126,7 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 	isDefaultTrue := true
 	p := mlp.Project{
 		Name:              "project",
-		MlflowTrackingUrl: "http://mlflow:5000",
+		MLFlowTrackingURL: "http://mlflow:5000",
 	}
 	db.Create(&p)
 

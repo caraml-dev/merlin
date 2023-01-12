@@ -49,7 +49,7 @@ func TestVersionsService_FindById(t *testing.T) {
 		p := mlp.Project{
 			Id:                1,
 			Name:              "project_1",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 
 		m := models.Model{
@@ -137,7 +137,7 @@ func TestVersionsService_ListVersions(t *testing.T) {
 		p := mlp.Project{
 			Id:                1,
 			Name:              "project_1",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 
 		m := models.Model{
@@ -424,7 +424,7 @@ func TestVersionsService_Save(t *testing.T) {
 		p := mlp.Project{
 			Id:                1,
 			Name:              "project_1",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 
 		m := models.Model{
