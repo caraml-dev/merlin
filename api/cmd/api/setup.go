@@ -32,7 +32,6 @@ import (
 	"github.com/gojek/merlin/queue/work"
 	"github.com/gojek/merlin/service"
 	"github.com/gojek/merlin/storage"
-	"github.com/gojek/merlin/vault"
 	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 )
 
@@ -112,18 +111,6 @@ func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool
 		panic(err)
 	}
 	return core.NewCoreServiceClient(cc)
-}
-
-func initVault(cfg config.VaultConfig) vault.Client {
-	vaultConfig := &vault.Config{
-		Address: cfg.Address,
-		Token:   cfg.Token,
-	}
-	vaultClient, err := vault.NewVaultClient(vaultConfig)
-	if err != nil {
-		log.Panicf("unable to initialize vault")
-	}
-	return vaultClient
 }
 
 func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder, imageBuilderJanitor *imagebuilder.Janitor) {
