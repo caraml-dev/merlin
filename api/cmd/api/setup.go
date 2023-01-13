@@ -115,9 +115,9 @@ func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool
 
 func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder, imageBuilderJanitor *imagebuilder.Janitor) {
 	imgBuilderK8sConfig := cfg.ImageBuilderConfig.K8sConfig
-	credsManager := mlpcluster.NewK8sCredsManager(&imgBuilderK8sConfig)
+	creds := mlpcluster.NewK8sClusterCreds(&imgBuilderK8sConfig)
 
-	restConfig, err := credsManager.GenerateConfig()
+	restConfig, err := creds.ToRestConfig()
 	if err != nil {
 		log.Panicf("%s, unable to get image builder k8s config", err.Error())
 	}
@@ -169,10 +169,10 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	predJobBuilder = imagebuilder.NewPredictionJobImageBuilder(kubeClient, predJobConfig)
 
 	ctl, err := cluster.NewController(cluster.Config{
-		Host:         imgBuilderK8sConfig.Cluster.Server,
-		CredsManager: credsManager,
-		ClusterName:  cfg.ImageBuilderConfig.ClusterName,
-		GcpProject:   cfg.ImageBuilderConfig.GcpProject,
+		Host:        imgBuilderK8sConfig.Cluster.Server,
+		Credentials: creds,
+		ClusterName: cfg.ImageBuilderConfig.ClusterName,
+		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
 	},
 		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
 		config.StandardTransformerConfig{})
@@ -348,11 +348,11 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 func initModelEndpointService(cfg *config.Config, db *gorm.DB) service.ModelEndpointsService {
 	istioClients := make(map[string]istio.Client)
 	for _, env := range cfg.EnvironmentConfigs {
-		credsManager := mlpcluster.NewK8sCredsManager(env.K8sConfig)
+		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 
 		istioClient, err := istio.NewClient(istio.Config{
-			ClusterHost:  env.K8sConfig.Cluster.Server,
-			CredsManager: credsManager,
+			ClusterHost: env.K8sConfig.Cluster.Server,
+			Credentials: creds,
 		})
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)
@@ -382,9 +382,9 @@ func initBatchControllers(cfg *config.Config, db *gorm.DB, mlpAPIClient mlp.APIC
 			continue
 		}
 
-		credsManager := mlpcluster.NewK8sCredsManager(env.K8sConfig)
+		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 		clusterName := env.Cluster
-		restConfig, err := credsManager.GenerateConfig()
+		restConfig, err := creds.ToRestConfig()
 		if err != nil {
 			log.Panicf("unable to get cluster config of cluster: %s %v", clusterName, err)
 		}
@@ -429,11 +429,11 @@ func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 	controllers := make(map[string]cluster.Controller)
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
-		credsManager := mlpcluster.NewK8sCredsManager(env.K8sConfig)
+		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 
 		ctl, err := cluster.NewController(cluster.Config{
-			Host:         env.K8sConfig.Cluster.Server,
-			CredsManager: credsManager,
+			Host:        env.K8sConfig.Cluster.Server,
+			Credentials: creds,
 
 			ClusterName: clusterName,
 			GcpProject:  env.GcpProject,
@@ -464,10 +464,10 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 }
 
 func initLogService(cfg *config.Config) service.LogService {
-	credsManager := mlpcluster.NewK8sCredsManager(&cfg.ImageBuilderConfig.K8sConfig)
+	creds := mlpcluster.NewK8sClusterCreds(&cfg.ImageBuilderConfig.K8sConfig)
 	ctl, err := cluster.NewController(cluster.Config{
-		Host:         cfg.ImageBuilderConfig.K8sConfig.Cluster.Server,
-		CredsManager: credsManager,
+		Host:        cfg.ImageBuilderConfig.K8sConfig.Cluster.Server,
+		Credentials: creds,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -483,13 +483,13 @@ func initLogService(cfg *config.Config) service.LogService {
 
 	for _, env := range cfg.EnvironmentConfigs {
 		clusterName := env.Cluster
-		credsManager := mlpcluster.NewK8sCredsManager(env.K8sConfig)
+		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 
 		ctl, err := cluster.NewController(cluster.Config{
-			Host:         env.K8sConfig.Cluster.Server,
-			CredsManager: credsManager,
-			ClusterName:  clusterName,
-			GcpProject:   env.GcpProject,
+			Host:        env.K8sConfig.Cluster.Server,
+			Credentials: creds,
+			ClusterName: clusterName,
+			GcpProject:  env.GcpProject,
 		},
 			config.ParseDeploymentConfig(env),
 			cfg.StandardTransformerConfig)

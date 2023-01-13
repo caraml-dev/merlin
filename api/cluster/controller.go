@@ -69,7 +69,7 @@ type Config struct {
 	GcpProject string
 
 	// Alternative to CACert, ClientCert info
-	mlpcluster.CredsManager
+	mlpcluster.Credentials
 }
 
 const (
@@ -88,7 +88,7 @@ type controller struct {
 }
 
 func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, standardTransformerConfig config.StandardTransformerConfig) (Controller, error) {
-	cfg, err := clusterConfig.GenerateConfig()
+	cfg, err := clusterConfig.ToRestConfig()
 	if err != nil {
 		return nil, err
 	}
