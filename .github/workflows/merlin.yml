@@ -67,7 +67,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/batch-predictor
         run: |
-          pip install pipenv==2022.8.19
+          python -m pip install pipenv
           make setup
       - name: Run batch-predictor test
         working-directory: ./python/batch-predictor
