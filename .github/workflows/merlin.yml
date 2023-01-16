@@ -64,6 +64,7 @@ jobs:
           pip -V
           which python
           which pip
+          make which-python
       - name: Install dependencies
         working-directory: ./python/batch-predictor
         run: |
