@@ -52,9 +52,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
@@ -82,9 +82,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
@@ -112,9 +112,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
@@ -356,9 +356,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
