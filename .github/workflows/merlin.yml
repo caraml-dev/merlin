@@ -58,6 +58,12 @@ jobs:
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-batch-predictor
+      - name: Check Python version
+        run: |
+          python -V
+          which python
+          pip -V
+          which pip
       - name: Install dependencies
         working-directory: ./python/batch-predictor
         run: |
