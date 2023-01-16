@@ -136,6 +136,11 @@ spec:
             value: {{ .Values.merlin.imageBuilder.nodeSelectors | toJson | quote }}
           - name: IMG_BUILDER_MAX_RETRY
             value: "{{ .Values.merlin.imageBuilder.maxRetry }}"
+          - name: IMG_BUILDER_K8S_CONFIG
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "merlin.fullname" . }}-environments
+                key: imageBuilderK8sConfig
           {{- if .Values.merlin.imageBuilder.contextSubPath }}
           - name: IMG_BUILDER_CONTEXT_SUB_PATH
             value: "{{ .Values.merlin.imageBuilder.contextSubPath }}"
@@ -314,8 +319,8 @@ spec:
 
       volumes:
       - name: config
-        configMap:
-          name: {{ template "merlin.fullname" .}}-environments
+        secret:
+          secretName: {{ template "merlin.fullname" .}}-environments
       {{- if .Values.merlin.gcpServiceAccount }}
       - name: gcp-service-account
         secret:
