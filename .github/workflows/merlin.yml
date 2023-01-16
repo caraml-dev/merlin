@@ -68,8 +68,8 @@ jobs:
         working-directory: ./python/batch-predictor
         run: |
           python -m pip install pipenv
-          env | grep PIPENV
-          make setup
+          env
+          pipenv install --skip-lock -e .[test]
       - name: Run batch-predictor test
         working-directory: ./python/batch-predictor
         run: make unit-test
