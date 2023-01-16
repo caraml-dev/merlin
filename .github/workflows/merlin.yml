@@ -61,8 +61,8 @@ jobs:
       - name: Check Python version
         run: |
           python -V
-          which python
           pip -V
+          which python
           which pip
       - name: Install dependencies
         working-directory: ./python/batch-predictor
