@@ -132,7 +132,7 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 
 	m := models.Model{
 		ID:           1,
-		ProjectID:    models.ID(p.Id),
+		ProjectID:    models.ID(p.ID),
 		ExperimentID: 1,
 		Name:         "model",
 		Type:         models.ModelTypeSkLearn,

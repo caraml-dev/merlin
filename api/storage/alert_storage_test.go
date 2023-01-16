@@ -47,7 +47,7 @@ func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {
 
 	model1 := &models.Model{
 		ID:           1,
-		ProjectID:    models.ID(project1.Id),
+		ProjectID:    models.ID(project1.ID),
 		ExperimentID: 1,
 		Name:         "model-1",
 		Type:         models.ModelTypeSkLearn,
@@ -56,7 +56,7 @@ func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {
 
 	model2 := &models.Model{
 		ID:           2,
-		ProjectID:    models.ID(project1.Id),
+		ProjectID:    models.ID(project1.ID),
 		ExperimentID: 2,
 		Name:         "model-2",
 		Type:         models.ModelTypeSkLearn,
