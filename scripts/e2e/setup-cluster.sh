@@ -136,7 +136,6 @@ add_helm_repo
 install_istio
 install_minio
 install_knative
-install_vault
 install_cert_manager
 install_kserve
 store_cluster_secret
