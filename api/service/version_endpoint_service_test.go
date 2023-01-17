@@ -1992,8 +1992,8 @@ func TestDeployEndpoint_StandardTransformer(t *testing.T) {
 }
 
 func TestListContainers(t *testing.T) {
-	project := mlp.Project{Id: 1, Name: "my-project"}
-	model := &models.Model{ID: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectID: models.ID(project.Id)}
+	project := mlp.Project{ID: 1, Name: "my-project"}
+	model := &models.Model{ID: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectID: models.ID(project.ID)}
 	version := &models.Version{ID: 1}
 	id := uuid.New()
 	env := &models.Environment{Name: "my-env", Cluster: "my-cluster", IsDefault: &isDefaultTrue}

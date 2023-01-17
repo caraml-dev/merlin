@@ -52,7 +52,7 @@ const (
 var (
 	projectID, _ = models.ParseID("1")
 	secret       = mlp.Secret{
-		Id:   1,
+		ID:   1,
 		Name: "my-secret",
 		Data: "secret-data",
 	}
@@ -335,7 +335,7 @@ func TestSubmit(t *testing.T) {
 			mockManifestManager.On("CreateDriverAuthorization", context.Background(), test.namespace).Return(test.driverAuthzCreationResult.serviceAccountName, test.driverAuthzCreationResult.error)
 			mockManifestManager.On("CreateSecret", context.Background(), jobName, test.namespace, secret.Data).Return(test.secretCreationResult.secretName, test.secretCreationResult.error)
 			mockManifestManager.On("CreateJobSpec", context.Background(), jobName, test.namespace, predictionJob.Config.JobConfig).Return(test.jobConfigCreationResult.configName, test.jobConfigCreationResult.error)
-			if test.existingServiceAccount.Id != int32(0) {
+			if test.existingServiceAccount.ID != int32(0) {
 				mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(test.existingServiceAccount, nil)
 			} else {
 				mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(mlp.Secret{}, errors.New("not found"))
@@ -487,7 +487,7 @@ func TestUpdateStatus(t *testing.T) {
 			stopCh := make(chan struct{})
 			defer close(stopCh)
 			go ctl.Run(stopCh)
-			time.Sleep(5 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 
 			if test.wantState.IsTerminal() {
 				mockManifestManager.On("DeleteSecret", context.Background(), jobName, defaultNamespace).Return(nil)

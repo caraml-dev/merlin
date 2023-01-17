@@ -30,12 +30,12 @@ import (
 
 var (
 	secret1 = mlp.Secret{
-		Id:   int32(1),
+		ID:   int32(1),
 		Name: "secret-1",
 		Data: "data-1",
 	}
 	secret2 = mlp.Secret{
-		Id:   int32(2),
+		ID:   int32(2),
 		Name: "secret-2",
 		Data: "data-2",
 	}

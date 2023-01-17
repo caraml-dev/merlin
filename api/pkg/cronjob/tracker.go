@@ -98,7 +98,7 @@ func (t *Tracker) recordProjectAndModelCount() {
 
 	projects, err := t.projectService.List(ctx, "")
 	if err != nil {
-		log.Errorf("unable to list project")
+		log.Errorf("unable to list project %s", err.Error())
 		return
 	}
 
@@ -107,9 +107,9 @@ func (t *Tracker) recordProjectAndModelCount() {
 
 	nbOfModel := 0
 	for _, p := range projects {
-		models, err := t.modelService.ListModels(ctx, models.ID(p.Id), "")
+		models, err := t.modelService.ListModels(ctx, models.ID(p.ID), "")
 		if err != nil {
-			log.Errorf("unable to list models for project %s", p.Name)
+			log.Errorf("unable to list models for project %s, %s", p.Name, err.Error())
 			return
 		}
 		nbOfModel += len(models)

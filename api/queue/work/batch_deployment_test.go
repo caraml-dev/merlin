@@ -45,7 +45,7 @@ var (
 		},
 	}
 	project = mlp.Project{
-		Id:     1,
+		ID:     1,
 		Name:   "my-project",
 		Team:   "dsp",
 		Stream: "dsp",
@@ -80,7 +80,7 @@ var (
 		},
 		VersionID:       3,
 		VersionModelID:  1,
-		ProjectID:       models.ID(project.Id),
+		ProjectID:       models.ID(project.ID),
 		EnvironmentName: predJobEnv.Name,
 		Environment:     predJobEnv,
 		Config: &models.Config{

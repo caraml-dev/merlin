@@ -37,13 +37,13 @@ func TestDeploymentStorage_List(t *testing.T) {
 
 		p := mlp.Project{
 			Name:              "project",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 		db.Create(&p)
 
 		m := models.Model{
 			ID:           1,
-			ProjectID:    models.ID(p.Id),
+			ProjectID:    models.ID(p.ID),
 			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
@@ -76,7 +76,7 @@ func TestDeploymentStorage_List(t *testing.T) {
 		db.Create(&endpoint)
 
 		deploy1 := &models.Deployment{
-			ProjectID:         models.ID(p.Id),
+			ProjectID:         models.ID(p.ID),
 			VersionID:         v.ID,
 			VersionModelID:    m.ID,
 			VersionEndpointID: endpoint.ID,
@@ -86,7 +86,7 @@ func TestDeploymentStorage_List(t *testing.T) {
 		}
 
 		deploy2 := &models.Deployment{
-			ProjectID:         models.ID(p.Id),
+			ProjectID:         models.ID(p.ID),
 			VersionID:         v.ID,
 			VersionModelID:    m.ID,
 			VersionEndpointID: endpoint.ID,
@@ -113,13 +113,13 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 
 		p := mlp.Project{
 			Name:              "project",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 		db.Create(&p)
 
 		m := models.Model{
 			ID:           1,
-			ProjectID:    models.ID(p.Id),
+			ProjectID:    models.ID(p.ID),
 			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
@@ -170,7 +170,7 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 		db.Create(&e2)
 
 		deploy1 := &models.Deployment{
-			ProjectID:         models.ID(p.Id),
+			ProjectID:         models.ID(p.ID),
 			VersionID:         v1.ID,
 			VersionModelID:    m.ID,
 			VersionEndpointID: e1.ID,
@@ -180,7 +180,7 @@ func TestDeploymentStorage_GetFirstSuccessModelVersionPerModel(t *testing.T) {
 		}
 
 		deploy2 := &models.Deployment{
-			ProjectID:         models.ID(p.Id),
+			ProjectID:         models.ID(p.ID),
 			VersionID:         v2.ID,
 			VersionModelID:    m.ID,
 			VersionEndpointID: e1.ID,
