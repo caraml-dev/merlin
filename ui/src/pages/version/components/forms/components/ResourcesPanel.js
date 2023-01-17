@@ -6,10 +6,12 @@ import {
   EuiFlexItem,
   EuiForm,
   EuiFormRow,
-  EuiSpacer
+  EuiSpacer,
+  EuiCallOut,
 } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
 import { Panel } from "./Panel";
+import { calculateCost } from "../../../../../utils/costEstimation";
 
 const maxTicks = 20;
 
@@ -17,7 +19,7 @@ export const ResourcesPanel = ({
   resourcesConfig,
   onChangeHandler,
   errors = {},
-  maxAllowedReplica
+  maxAllowedReplica,
 }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
@@ -40,11 +42,12 @@ export const ResourcesPanel = ({
               }
               isInvalid={!!errors.cpu_request}
               error={errors.cpu_request}
-              fullWidth>
+              fullWidth
+            >
               <EuiFieldText
                 placeholder="500m"
                 value={resourcesConfig.cpu_request}
-                onChange={e => onChange("cpu_request")(e.target.value)}
+                onChange={(e) => onChange("cpu_request")(e.target.value)}
                 isInvalid={!!errors.cpu_request}
                 name="cpu"
               />
@@ -61,11 +64,12 @@ export const ResourcesPanel = ({
               }
               isInvalid={!!errors.memory_request}
               error={errors.memory_request}
-              fullWidth>
+              fullWidth
+            >
               <EuiFieldText
                 placeholder="500Mi"
                 value={resourcesConfig.memory_request}
-                onChange={e => onChange("memory_request")(e.target.value)}
+                onChange={(e) => onChange("memory_request")(e.target.value)}
                 isInvalid={!!errors.memory_request}
                 name="memory"
               />
@@ -84,7 +88,8 @@ export const ResourcesPanel = ({
           }
           isInvalid={!!replicasError.length}
           error={replicasError}
-          fullWidth>
+          fullWidth
+        >
           <EuiDualRange
             fullWidth
             min={0}
@@ -95,7 +100,7 @@ export const ResourcesPanel = ({
             showTicks
             value={[
               resourcesConfig.min_replica || 0,
-              resourcesConfig.max_replica || 0
+              resourcesConfig.max_replica || 0,
             ]}
             onChange={([min_replica, max_replica]) => {
               onChange("min_replica")(parseInt(min_replica));
@@ -106,6 +111,24 @@ export const ResourcesPanel = ({
           />
         </EuiFormRow>
       </EuiForm>
+      <EuiSpacer size="xl" />
+      <EuiCallOut title="Cost Estimation" iconType="tag">
+        <p>
+          The requested resouces will cost between USD{" "}
+          {calculateCost(
+            resourcesConfig.min_replica,
+            resourcesConfig.cpu_request,
+            resourcesConfig.memory_request
+          )}{" "}
+          -{" "}
+          {calculateCost(
+            resourcesConfig.max_replica,
+            resourcesConfig.cpu_request,
+            resourcesConfig.memory_request
+          )}{" "}
+          / Month
+        </p>
+      </EuiCallOut>
     </Panel>
   );
 };
