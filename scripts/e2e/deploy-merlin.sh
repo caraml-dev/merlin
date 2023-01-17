@@ -59,7 +59,7 @@ install_merlin() {
 		--set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
 		--set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".dockerfilePath=docker/app.Dockerfile \
 		--set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
-		--set merlin.imageBuilder.k8sConfig="$(jq '.k8sConfig' /tmp/temp_k8sconfig.json -r -M -c | base64)" \
+		--set merlin.imageBuilder.k8sConfig="$(jq '.k8s_config' /tmp/temp_k8sconfig.json -r -M -c | base64)" \
 		--set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}/v1 \
 		--set merlin.ingress.host=merlin.mlp.${INGRESS_HOST} \
 		--set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \
