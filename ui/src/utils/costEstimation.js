@@ -1,8 +1,5 @@
 import { parseCpu, parseMemoryInGi } from "./kubernetesResourceParser";
-
-// TODO: move as env var
-const CPU_COST_PER_MONTH = 28.46927;
-const MEMORY_COST_PER_GI_PER_MONTH = 3.81498;
+import { costEstimationConfig } from "../config";
 
 /**
  * Calculate cost estimation for given number of replica, cpu, and memory resource
@@ -17,7 +14,7 @@ export const calculateCost = (replica, cpu, memory) => {
 
   return (
     replica *
-    (parsed_cpu * CPU_COST_PER_MONTH +
-      parsed_memory_gb * MEMORY_COST_PER_GI_PER_MONTH)
+    (parsed_cpu * costEstimationConfig.cpuCost +
+      parsed_memory_gb * costEstimationConfig.memoryCost)
   );
 };
