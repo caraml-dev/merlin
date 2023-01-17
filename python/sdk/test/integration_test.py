@@ -214,7 +214,8 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth, requests)
 
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy()
+        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+        endpoint = merlin.deploy(v, resource_request=resource_request)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
