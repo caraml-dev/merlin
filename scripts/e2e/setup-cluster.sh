@@ -35,7 +35,7 @@ add_helm_repo() {
 store_cluster_secret() {
 	echo "::group::Storing Cluster Secret"
 
-	k3d kubeconfig get default >/tmp/temp_kubeconfig.yaml
+	k3d kubeconfig get "$CLUSTER_NAME" >/tmp/temp_kubeconfig.yaml
 	cat <<EOF >/tmp/temp_k8sconfig.json
 {
     "k8sConfig": {

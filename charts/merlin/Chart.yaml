@@ -1,4 +1,4 @@
 apiVersion: v1
 description: Kubernetes-friendly ML model management, deployment, and serving.
 name: merlin
-version: 0.8.0
+version: 0.8.1
