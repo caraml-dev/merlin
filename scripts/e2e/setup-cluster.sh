@@ -40,16 +40,13 @@ store_cluster_secret() {
 {
     "k8s_config": {
         "name": $(yq .clusters[0].name -o json /tmp/temp_kubeconfig.yaml),
-        "cluster": $(yq '.clusters[0].cluster | .server = "kubernetes.default:443"' -o json /tmp/temp_kubeconfig.yaml),
+        "cluster": $(yq '.clusters[0].cluster | .server = "https://kubernetes.default.svc.cluster.local:443"' -o json /tmp/temp_kubeconfig.yaml),
         "user": $(yq .users[0].user -o json /tmp/temp_kubeconfig.yaml)
     }
 }
 EOF
 	# get yaml file
 	yq e -P /tmp/temp_k8sconfig.json -o yaml >/tmp/temp_k8sconfig.yaml
-
-	# use yaml file
-	# yq '.[0] *= load("/tmp/temp_k8sconfig.yaml")' rest_config.yaml
 
 	# NOTE: Do no delete files created here as they will be used in the next step
 	# TODO: Figure out a better way to pass cluster K8sConfig
