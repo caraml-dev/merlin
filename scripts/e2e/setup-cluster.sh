@@ -40,7 +40,7 @@ store_cluster_secret() {
 {
     "k8s_config": {
         "name": $(yq .clusters[0].name -o json /tmp/temp_kubeconfig.yaml),
-        "cluster": $(yq .clusters[0].cluster -o json /tmp/temp_kubeconfig.yaml),
+        "cluster": $(yq '.clusters[0].cluster | .server = "kubernetes.default:443"' -o json /tmp/temp_kubeconfig.yaml),
         "user": $(yq .users[0].user -o json /tmp/temp_kubeconfig.yaml)
     }
 }
