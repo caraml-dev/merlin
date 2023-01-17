@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React from "react";
 import {
   EuiSpacer,
   EuiCallOut,
@@ -8,7 +8,6 @@ import {
   EuiText,
 } from "@elastic/eui";
 import { calculateCost } from "../../../../../utils/costEstimation";
-import { VersionEndpoint } from "../../../../../services/version_endpoint/VersionEndpoint";
 
 /**
  * Panel for showing cost estimation
