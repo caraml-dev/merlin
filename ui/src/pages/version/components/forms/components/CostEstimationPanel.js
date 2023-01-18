@@ -59,7 +59,7 @@ export const CostEstimationPanel = ({ versionEndpoint }) => {
           <EuiFlexItem style={{ textAlign: "right" }}>
             {" "}
             <h4>
-              USD {modelMinCost.toFixed(2)}- {modelMaxCost.toFixed(2)} / Month
+              ${modelMinCost.toFixed(2)}-{modelMaxCost.toFixed(2)} / Month
             </h4>
           </EuiFlexItem>
         </EuiFlexGroup>
@@ -86,8 +86,8 @@ export const CostEstimationPanel = ({ versionEndpoint }) => {
             <EuiFlexItem style={{ textAlign: "right" }}>
               {" "}
               <h4>
-                USD {transformerMinCost.toFixed(2)}-
-                {transformerMaxCost.toFixed(2)} / Month
+                ${transformerMinCost.toFixed(2)}-{transformerMaxCost.toFixed(2)}{" "}
+                / Month
               </h4>
             </EuiFlexItem>
           </EuiFlexGroup>
@@ -113,7 +113,7 @@ export const CostEstimationPanel = ({ versionEndpoint }) => {
         </EuiFlexItem>
         <EuiFlexItem style={{ textAlign: "right" }}>
           <h4>
-            USD {totalMinCost.toFixed(2)}-{totalMaxCost.toFixed(2)} / Month
+            ${totalMinCost.toFixed(2)}-{totalMaxCost.toFixed(2)} / Month
           </h4>
         </EuiFlexItem>
       </EuiFlexGroup>

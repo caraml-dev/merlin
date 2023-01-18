@@ -114,13 +114,13 @@ export const ResourcesPanel = ({
       <EuiSpacer size="xl" />
       <EuiCallOut title="Cost Estimation" iconType="tag">
         <p>
-          The requested resouces will cost between USD{" "}
+          The requested resources will cost between $
           {calculateCost(
             resourcesConfig.min_replica,
             resourcesConfig.cpu_request,
             resourcesConfig.memory_request
-          ).toFixed(2)}{" "}
-          -{" "}
+          ).toFixed(2)}
+          -
           {calculateCost(
             resourcesConfig.max_replica,
             resourcesConfig.cpu_request,
