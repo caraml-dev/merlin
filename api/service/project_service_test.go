@@ -35,7 +35,7 @@ func Test_projectService(t *testing.T) {
 	assert.NotNil(t, ps)
 
 	project1 := mlp.Project{
-		Id:   1,
+		ID:   1,
 		Name: "project-1",
 	}
 	projects := mlp.Projects{

@@ -8,10 +8,13 @@ import (
 	"math"
 	"time"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/cespare/xxhash"
@@ -255,7 +258,7 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 		case res := <-batchResultChan:
 			if res.err != nil {
 				fr.logger.Error("feast retrieval error", zap.Any("error", res.err))
-				return nil, res.err
+				return nil, handleFeastError(res.err)
 			}
 
 			if fr.options.CacheEnabled {
@@ -278,11 +281,21 @@ func (fr *FeastRetriever) getFeatureTable(ctx context.Context, entities []feast.
 
 		case res := <-fallbackChan:
 			fr.logger.Error("fallback error", zap.Any("error", res.err))
-			return nil, res.err
+			return nil, handleFeastError(res.err)
 		}
 	}
 
 	return featureTable, nil
+}
+
+func handleFeastError(err error) error {
+	if errors.Is(err, hystrix.ErrTimeout) {
+		return mErrors.NewDeadlineExceededError(err.Error())
+	}
+	if grpcErr, valid := status.FromError(err); valid && grpcErr.Code() == codes.DeadlineExceeded {
+		return mErrors.NewDeadlineExceededError(grpcErr.Message())
+	}
+	return err
 }
 
 // getFeatureNames get list of feature name within a feature table spec

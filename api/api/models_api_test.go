@@ -53,9 +53,9 @@ func TestListModel(t *testing.T) {
 						Name:      "tensorflow",
 						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
-							Id:                1,
+							ID:                1,
 							Name:              "tensorflow",
-							MlflowTrackingUrl: "http://mlflow.com",
+							MLFlowTrackingURL: "http://mlflow.com",
 							Administrators:    nil,
 							Readers:           nil,
 							Team:              "dsp",
@@ -83,9 +83,9 @@ func TestListModel(t *testing.T) {
 						Name:      "tensorflow",
 						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
-							Id:                1,
+							ID:                1,
 							Name:              "tensorflow",
-							MlflowTrackingUrl: "http://mlflow.com",
+							MLFlowTrackingURL: "http://mlflow.com",
 							Administrators:    nil,
 							Readers:           nil,
 							Team:              "dsp",
@@ -154,9 +154,9 @@ func TestGetModel(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					Id:                1,
+					ID:                1,
 					Name:              "tensorflow",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MLFlowTrackingURL: "http://mlflow.com",
 					Administrators:    nil,
 					Readers:           nil,
 					Team:              "dsp",
@@ -175,9 +175,9 @@ func TestGetModel(t *testing.T) {
 						Name:      "tensorflow",
 						ProjectID: models.ID(1),
 						Project: mlp.Project(client.Project{
-							Id:                1,
+							ID:                1,
 							Name:              "tensorflow",
-							MlflowTrackingUrl: "http://mlflow.com",
+							MLFlowTrackingURL: "http://mlflow.com",
 							Administrators:    nil,
 							Readers:           nil,
 							Team:              "dsp",
@@ -203,9 +203,9 @@ func TestGetModel(t *testing.T) {
 					Name:      "tensorflow",
 					ProjectID: models.ID(1),
 					Project: mlp.Project(client.Project{
-						Id:                1,
+						ID:                1,
 						Name:              "tensorflow",
-						MlflowTrackingUrl: "http://mlflow.com",
+						MLFlowTrackingURL: "http://mlflow.com",
 						Administrators:    nil,
 						Readers:           nil,
 						Team:              "dsp",
@@ -253,9 +253,9 @@ func TestGetModel(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					Id:                1,
+					ID:                1,
 					Name:              "tensorflow",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MLFlowTrackingURL: "http://mlflow.com",
 					Administrators:    nil,
 					Readers:           nil,
 					Team:              "dsp",
@@ -285,9 +285,9 @@ func TestGetModel(t *testing.T) {
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
 				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{
-					Id:                1,
+					ID:                1,
 					Name:              "tensorflow",
-					MlflowTrackingUrl: "http://mlflow.com",
+					MLFlowTrackingURL: "http://mlflow.com",
 					Administrators:    nil,
 					Readers:           nil,
 					Team:              "dsp",

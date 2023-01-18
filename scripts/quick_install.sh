@@ -12,6 +12,7 @@ export VAULT_VERSION=0.7.0
 export MINIO_VERSION=7.0.2
 
 export OAUTH_CLIENT_ID="<put your oauth client id here>"
+export MLP_CHART_VERSION=0.3.4
 export MERLIN_VERSION=v0.9.0
 
 # Install Istio
@@ -177,21 +178,20 @@ helm install minio minio/minio --version=${MINIO_VERSION} --namespace=minio --va
 # Install MLP
 kubectl create namespace mlp
 
-git clone git@github.com:gojek/mlp.git
+helm repo add caraml https://caraml-dev.github.io/helm-charts
 
-helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yaml \
-  --set mlp.image.tag=main \
-  --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
-  --set mlp.oauthClientID=${OAUTH_CLIENT_ID} \
-  --set mlp.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST}.nip.io \
-  --set mlp.ingress.enabled=true \
-  --set mlp.ingress.class=istio \
-  --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
-  --set mlp.ingress.path="/*" \
+helm upgrade --install --debug mlp caraml/mlp --namespace mlp --create-namespace \
+  --version ${MLP_CHART_VERSION} \
+  --set fullnameOverride=mlp \
+  --set deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
+  --set deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST}.nip.io \
+  --set ingress.enabled=true \
+  --set ingress.class=istio \
+  --set ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
   --wait --timeout=5m
 
 cat <<EOF > mlp-ingress.yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: mlp
@@ -206,9 +206,12 @@ spec:
       http:
         paths:
           - path: /*
+            pathType: Prefix
             backend:
-              serviceName: mlp
-              servicePort: 8080
+              service:
+                name: mlp
+                port:
+                  number: 8080
 EOF
 
 # Install Merlin

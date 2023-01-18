@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
@@ -90,7 +91,7 @@ func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, e
 	byRange := config.GetByRange()
 	if byRange != nil {
 		if (byRange.Max - byRange.Min) < floatZero {
-			return nil, fmt.Errorf("max of cyclical range must be larger than min")
+			return nil, mErrors.NewInvalidInputError("max of cyclical range must be larger than min")
 		}
 
 		return &CyclicalEncoder{
@@ -130,7 +131,7 @@ func NewCyclicalEncoder(config *spec.CyclicalEncoderConfig) (*CyclicalEncoder, e
 		}, nil
 	}
 
-	return nil, fmt.Errorf("cyclical encoding config invalid or undefined")
+	return nil, mErrors.NewInvalidInputErrorf("cyclical encoding config invalid or undefined")
 }
 
 func (oe *CyclicalEncoder) Encode(values []interface{}, column string) (map[string]interface{}, error) {
@@ -145,7 +146,7 @@ func (oe *CyclicalEncoder) Encode(values []interface{}, column string) (map[stri
 		for _, val := range values {
 			// Check if value is missing
 			if val == nil {
-				return nil, fmt.Errorf("missing value")
+				return nil, mErrors.NewInvalidInputErrorf("there is missing value on column %s, cyclical encoding fails", column)
 			}
 
 			// Check if value is valid
@@ -164,7 +165,7 @@ func (oe *CyclicalEncoder) Encode(values []interface{}, column string) (map[stri
 		for _, val := range values {
 			// Check if value is missing
 			if val == nil {
-				return nil, fmt.Errorf("missing value")
+				return nil, mErrors.NewInvalidInputErrorf("there is missing value on column %s, cyclical encoding fails", column)
 			}
 
 			// Check if value is valid
@@ -253,7 +254,7 @@ func getCycleTime(periodType spec.PeriodType, t time.Time) (int, error) {
 		return elapsed, nil
 	}
 
-	return 0, fmt.Errorf("period type is undefined for this use case")
+	return 0, mErrors.NewInvalidInputError("period type is undefined for this use case")
 }
 
 // Convert time duration in days, hour, min, sec to number of seconds
@@ -304,7 +305,7 @@ func getUnitAngle(periodType spec.PeriodType, t time.Time) (float64, error) {
 		return unitYearInSec, nil
 	}
 
-	return 0, fmt.Errorf("period type is undefined for this use case")
+	return 0, mErrors.NewInvalidInputError("period type is undefined for this use case")
 }
 
 // test if a given year is leap year

@@ -1,7 +1,7 @@
 
 .PHONY: dev_install
 dev_install:
-	pipenv install --skip-lock -e .[test]
+	pipenv install --skip-lock -e .[test] --verbose
 
 .PHONY: setup
 setup: dev_install

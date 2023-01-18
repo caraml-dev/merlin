@@ -11,7 +11,6 @@ env:
   ARTIFACT_RETENTION_DAYS: 7
   DOCKER_BUILDKIT: 1
   GO_VERSION: 1.18
-  PYTHON_VERSION: "3.10"
 
 jobs:
   create-version:
@@ -44,17 +43,19 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
+    env:
+      PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
@@ -74,17 +75,19 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
+    env:
+      PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
@@ -104,17 +107,19 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
+    env:
+      PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
@@ -342,27 +347,24 @@ jobs:
       LOCAL_REGISTRY_PORT: 12345
       LOCAL_REGISTRY: "dev.localhost"
       INGRESS_HOST: "127.0.0.1.nip.io"
+      MLP_CHART_VERSION: 0.3.4
+      E2E_PYTHON_VERSION: "3.10"
     steps:
       - uses: actions/checkout@v2
         with:
           path: merlin
-      - uses: actions/checkout@master
-        with:
-          repository: gojek/mlp
-          ref: main
-          path: merlin/scripts/e2e/mlp
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ env.E2E_PYTHON_VERSION }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
@@ -378,7 +380,7 @@ jobs:
       - name: Download k3d
         run: |
           curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.4.1 bash
-      - name: "Create Test Cluster"
+      - name: Create Test Cluster
         run: |
           k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
           k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.22.15-k3s1 --k3s-arg '--no-deploy=traefik,metrics-server@server:*' --port 80:80@loadbalancer
@@ -398,12 +400,12 @@ jobs:
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
-        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }} ${{ github.ref }}
+        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MLP_CHART_VERSION }}
       - name: Run E2E Test
         timeout-minutes: 30
         id: run-e2e-test
         working-directory: merlin/scripts/e2e
-        run: ./run-e2e.sh ${{ env.INGRESS_HOST }} ${{ env.PYTHON_VERSION }}
+        run: ./run-e2e.sh ${{ env.INGRESS_HOST }} ${{ env.E2E_PYTHON_VERSION }}
       - name: "Debug"
         if: always()
         continue-on-error: true

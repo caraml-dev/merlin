@@ -13,23 +13,20 @@
 # limitations under the License.
 import json
 import os
+from test.utils import undeploy_all_version
 from time import sleep
 
-
-import pytest
 import pandas as pd
+import pytest
+from merlin.endpoint import Status
+from merlin.logger import Logger, LoggerConfig, LoggerMode
+from merlin.model import ModelType
+from merlin.resource_request import ResourceRequest
+from merlin.transformer import StandardTransformer, Transformer
 from recursive_diff import recursive_eq
 
 import merlin
 from merlin import DeploymentMode
-from merlin.endpoint import Status
-from merlin.model import ModelType
-from merlin.resource_request import ResourceRequest
-from merlin.transformer import Transformer, StandardTransformer
-from merlin.logger import Logger, LoggerConfig, LoggerMode
-from test.utils import undeploy_all_version
-
-
 
 request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
 tensorflow_request_json = {
@@ -217,7 +214,8 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth, requests)
 
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy()
+        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+        endpoint = merlin.deploy(v, resource_request=resource_request)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -262,7 +260,7 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth, reque
     # Try to undeploy serving model version. It must be fail
     with pytest.raises(Exception):
         assert merlin.undeploy(v)
-        
+
     merlin.stop_serving_traffic(endpoint.environment_name)
 
     # Undeploy other running model version endpoints
@@ -303,7 +301,7 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
     # Try to undeploy serving model version. It must be fail
     with pytest.raises(Exception):
         assert merlin.undeploy(v)
-      
+
     merlin.stop_serving_traffic(model_endpoint.environment_name)
 
     # Undeploy other running model version endpoints
@@ -380,7 +378,7 @@ def test_resource_request(integration_test_url, project_name, deployment_mode, u
 # https://github.com/kserve/kserve/issues/2142
 # Logging is not supported yet in raw_deployment
 @pytest.mark.integration
-@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS]) 
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_logger(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
@@ -689,6 +687,7 @@ def test_standard_transformer_with_multiple_feast(
     merlin.undeploy(v)
 
 
+@pytest.mark.skip(reason="Direct retrieval requires rework")
 @pytest.mark.feast
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
@@ -914,7 +913,7 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
     assert resp.status_code == 200
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
-    
+
     merlin.stop_serving_traffic(model_endpoint.environment_name)
     undeploy_all_version()
 

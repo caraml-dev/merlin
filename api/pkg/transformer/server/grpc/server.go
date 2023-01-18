@@ -4,20 +4,24 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
 	"github.com/gojek/merlin/pkg/transformer/pipeline"
 	"github.com/gojek/merlin/pkg/transformer/server/config"
 	"github.com/gojek/merlin/pkg/transformer/server/grpc/interceptors"
 	"github.com/gojek/merlin/pkg/transformer/server/instrumentation"
 	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/gorilla/mux"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+	"github.com/soheilhy/cmux"
 
 	"github.com/afex/hystrix-go/hystrix"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
@@ -25,6 +29,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -38,10 +43,11 @@ var (
 type UPIServer struct {
 	upiv1.UnimplementedUniversalPredictionServiceServer
 
-	opts        *config.Options
-	modelClient upiv1.UniversalPredictionServiceClient
-	conn        *grpc.ClientConn
-	logger      *zap.Logger
+	opts                  *config.Options
+	modelClient           upiv1.UniversalPredictionServiceClient
+	conn                  *grpc.ClientConn
+	instrumentationRouter *mux.Router
+	logger                *zap.Logger
 
 	// ContextModifier function to modify or store value in a context
 	ContextModifier func(ctx context.Context) context.Context
@@ -56,10 +62,11 @@ type UPIServer struct {
 }
 
 // NewUPIServer creates GRPC server that implement UPI Service
-func NewUPIServer(opts *config.Options, handler *pipeline.Handler, logger *zap.Logger) (*UPIServer, error) {
+func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentationRouter *mux.Router, logger *zap.Logger) (*UPIServer, error) {
 	dialOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
+
 	conn, err := grpc.Dial(opts.ModelPredictURL, dialOpts...)
 	if err != nil {
 		return nil, err
@@ -75,10 +82,11 @@ func NewUPIServer(opts *config.Options, handler *pipeline.Handler, logger *zap.L
 
 	modelClient := upiv1.NewUniversalPredictionServiceClient(conn)
 	svr := &UPIServer{
-		opts:        opts,
-		modelClient: modelClient,
-		conn:        conn,
-		logger:      logger,
+		opts:                  opts,
+		modelClient:           modelClient,
+		conn:                  conn,
+		instrumentationRouter: instrumentationRouter,
+		logger:                logger,
 	}
 
 	if handler != nil {
@@ -92,12 +100,18 @@ func NewUPIServer(opts *config.Options, handler *pipeline.Handler, logger *zap.L
 
 // Run running GRPC Server
 func (us *UPIServer) Run() {
-	// defer us.conn.Close()
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", us.opts.GRPCPort))
+	// bind to all interfaces at port us.opts.GRPCPort
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", us.opts.GRPCPort))
 	if err != nil {
 		us.logger.Error(fmt.Sprintf("failed to listen the port %s", us.opts.GRPCPort))
 		return
 	}
+
+	m := cmux.New(lis)
+	// cmux.HTTP2MatchHeaderFieldSendSettings ensures we can handle any gRPC client.
+	grpcLis := m.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc"))
+	httpLis := m.Match(cmux.HTTP1Fast())
+
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(interceptors.PanicRecoveryInterceptor()),
 	}
@@ -105,26 +119,55 @@ func (us *UPIServer) Run() {
 	reflection.Register(grpcServer)
 	upiv1.RegisterUniversalPredictionServiceServer(grpcServer, us)
 
+	// add health check service
+	healthChecker := newHealthChecker()
+	grpc_health_v1.RegisterHealthServer(grpcServer, healthChecker)
+
 	stopCh := setupSignalHandler()
 	errCh := make(chan error, 1)
 	go func() {
-		if err := grpcServer.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+		us.logger.Info("starting grpc server")
+		if err := grpcServer.Serve(grpcLis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			errCh <- errors.Wrap(err, "GRPC server failed")
+		}
+	}()
+
+	httpServer := &http.Server{Handler: us.instrumentationRouter}
+	go func() {
+		us.logger.Info("starting http server")
+		if err := httpServer.Serve(httpLis); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- errors.Wrapf(err, "instrumentation server failed")
+		}
+	}()
+
+	go func() {
+		us.logger.Info(fmt.Sprintf("serving at port: %s", us.opts.GRPCPort))
+		if err := m.Serve(); err != nil && !errors.Is(err, cmux.ErrListenerClosed) {
+			errCh <- errors.Wrapf(err, "cmux server failed")
 		}
 	}()
 
 	select {
 	case <-stopCh:
-		us.logger.Info("got signal to stop GRPC server")
+		us.logger.Info("got signal to stop server")
 	case err := <-errCh:
-		us.logger.Error(fmt.Sprintf("failed to run GRPC server %v", err))
+		us.logger.Error(fmt.Sprintf("failed to run server %v", err))
 	}
 
+	us.logger.Info("shutting down standard transformer")
 	if err := us.conn.Close(); err != nil {
 		us.logger.Error(fmt.Sprintf("failed to close connection %v", err))
 	}
 	us.logger.Info("closed connection to model prediction server")
+
 	grpcServer.GracefulStop()
+	us.logger.Info("stopped grpc server")
+	if err = httpServer.Shutdown(context.Background()); err != nil {
+		us.logger.Warn("failed shutting down http server")
+		return
+	}
+
+	us.logger.Info("stopped http server")
 }
 
 func setupSignalHandler() (stopCh <-chan struct{}) {
@@ -152,19 +195,19 @@ func (us *UPIServer) PredictValues(ctx context.Context, request *upiv1.PredictVa
 	preprocessOutput, err := us.preprocess(ctx, request, meta)
 	if err != nil {
 		us.logger.Error("preprocess error", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, "preprocess err: %v", err)
+		return nil, status.Errorf(getGRPCCode(err), "preprocess err: %v", err)
 	}
 
 	modelResponse, err := us.predict(ctx, preprocessOutput)
 	if err != nil {
 		us.logger.Error("predict error", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, "predict err: %v", err)
+		return nil, status.Errorf(getGRPCCode(err), "predict err: %v", err)
 	}
 
 	postprocessOutput, err := us.postprocess(ctx, modelResponse, meta)
 	if err != nil {
 		us.logger.Error("postprocess error", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, "postprocess err: %v", err)
+		return nil, status.Errorf(getGRPCCode(err), "postprocess err: %v", err)
 	}
 
 	return postprocessOutput, nil
@@ -237,6 +280,9 @@ func (us *UPIServer) predict(ctx context.Context, payload *upiv1.PredictValuesRe
 	predictionDurationMs := time.Since(predictStartTime).Milliseconds()
 	if err != nil {
 		instrumentation.RecordPredictionLatency(false, float64(predictionDurationMs))
+		if errors.Is(err, hystrix.ErrTimeout) {
+			return nil, mErrors.NewDeadlineExceededError(err.Error())
+		}
 		return nil, err
 	}
 	instrumentation.RecordPredictionLatency(true, float64(predictionDurationMs))
@@ -250,4 +296,17 @@ func getMetadata(ctx context.Context) map[string]string {
 		resultHeaders[k] = strings.Join(v, ",")
 	}
 	return resultHeaders
+}
+
+func getGRPCCode(err error) codes.Code {
+	if statusErr, valid := status.FromError(err); valid {
+		return statusErr.Code()
+	}
+
+	if errors.Is(err, mErrors.InvalidInputError) {
+		return codes.InvalidArgument
+	} else if errors.Is(err, mErrors.DeadlineExceededError) {
+		return codes.DeadlineExceeded
+	}
+	return codes.Internal
 }

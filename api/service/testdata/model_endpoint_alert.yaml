@@ -75,7 +75,7 @@ groups:
             summary: 95.00p latency of model-1 model ({{ $labels.revision_name }}) in env-1 is higher than 6.00 ms. Current value is {{ $value }} ms.
         - alert: "[merlin] model-1: Error Rate warning"
           expr: |-
-            (100 * sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",response_code_class!="2xx",revision_name=~".*model-1.*"}[1m])) / sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 7
+            (100 * sum(rate(istio_requests_total{cluster_name="cluster-1",destination_service_name=~"model-1.*",destination_workload_namespace="project-1",request_protocol="http",response_code!="200"}[1m])) / sum(rate(istio_requests_total{cluster_name="cluster-1",destination_service_name=~"model-1.*",destination_workload_namespace="project-1",request_protocol="http"}[1m]))) > 7
           for: 5m
           labels:
             owner: team-1
@@ -87,7 +87,7 @@ groups:
             summary: Error rate of model-1 model in env-1 is higher than 7.00%. Current value is {{ $value }}%.
         - alert: "[merlin] model-1: Error Rate critical"
           expr: |-
-            (100 * sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",response_code_class!="2xx",revision_name=~".*model-1.*"}[1m])) / sum(rate(revision_request_count{cluster_name="cluster-1",namespace_name="project-1",revision_name=~".*model-1.*"}[1m]))) > 8
+            (100 * sum(rate(istio_requests_total{cluster_name="cluster-1",destination_service_name=~"model-1.*",destination_workload_namespace="project-1",request_protocol="http",response_code!="200"}[1m])) / sum(rate(istio_requests_total{cluster_name="cluster-1",destination_service_name=~"model-1.*",destination_workload_namespace="project-1",request_protocol="http"}[1m]))) > 8
           for: 5m
           labels:
             owner: team-1

@@ -35,13 +35,6 @@ type LogController struct {
 func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	// Make sure that the writer supports flushing.
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		InternalServerError("Streaming unsupported!").WriteTo(w)
-		return
-	}
-
 	var query service.LogQuery
 	err := decoder.Decode(&query, r.URL.Query())
 	if err != nil {
@@ -75,7 +68,9 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 
 				// Send the response over network
 				// although it's not guaranteed to reach client if it sits behind proxy
-				flusher.Flush()
+				if flusher, ok := w.(http.Flusher); ok {
+					flusher.Flush()
+				}
 			}
 		}
 	}()

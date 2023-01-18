@@ -75,6 +75,10 @@ const (
 	labelAppName          = "gojek.com/app"
 	labelEnvironment      = "gojek.com/environment"
 	labelOrchestratorName = "gojek.com/orchestrator"
+	labelComponent        = "gojek.com/component"
+
+	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
+	saFilePath = "/secret/kaniko-secret.json"
 )
 
 var (
@@ -344,6 +348,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		labelAppName:          model.Name,
 		labelEnvironment:      c.config.Environment,
 		labelOrchestratorName: "merlin",
+		labelComponent:        "image-builder",
 	}
 
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
@@ -356,6 +361,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
 		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactURI),
 		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImageTag.ImageName),
+		fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath),
 		fmt.Sprintf("--destination=%s", imageRef),
 		"--cache=true",
 		"--single-snapshot",
@@ -379,6 +385,9 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 			TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
 				Spec: v1.PodSpec{
 					// https://stackoverflow.com/questions/54091659/kubernetes-pods-disappear-after-failed-jobs
 					RestartPolicy: v1.RestartPolicyNever,
@@ -395,8 +404,8 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 							},
 							Env: []v1.EnvVar{
 								{
-									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-									Value: "/secret/kaniko-secret.json",
+									Name:  gacEnvKey,
+									Value: saFilePath,
 								},
 							},
 							Resources: v1.ResourceRequirements{

@@ -155,7 +155,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("value in jsonpath must be object"),
+			err: errors.New("invalid input: value in jsonpath is not an object"),
 		},
 		{
 			desc: "using base json only - failed when jsonpath value is literal",
@@ -182,7 +182,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("value in jsonpath must be object"),
+			err: errors.New("invalid input: value in jsonpath is not an object"),
 		},
 		{
 			desc: "using base json - specifiying field",
@@ -637,7 +637,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("compiled jsonpath $.merchant_info not found"),
+			err: errors.New("compiled jsonpath '$.merchant_info' not found"),
 		},
 		{
 			desc: "table has not been registered yet",
@@ -668,7 +668,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("table prediction_table is not declared"),
+			err: errors.New("invalid input: table 'prediction_table' is not declared"),
 		},
 		{
 			desc: "table has been compiled, but not yet set the value",
@@ -702,7 +702,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("table prediction_table is not declared"),
+			err: errors.New("invalid input: table 'prediction_table' is not declared"),
 		},
 		{
 			desc: "table has been compiled, but the value is not table",
@@ -737,7 +737,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("variable prediction_table is not a table"),
+			err: errors.New("invalid input: variable 'prediction_table' is not a table"),
 		},
 		{
 			desc: "base table - jsonpath is not specified",
@@ -759,7 +759,7 @@ func TestJsonOutputOp_Execute(t *testing.T) {
 					BaseJson: &spec.BaseJson{},
 				},
 			},
-			err: errors.New("compiled jsonpath  not found"),
+			err: errors.New("invalid input: jsonpath is not specified"),
 		},
 		{
 			desc: "specifiying multiple fields using expressions which value is kind of table or series",

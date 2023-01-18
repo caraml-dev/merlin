@@ -6,6 +6,7 @@ import (
 	"log"
 
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
+	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -109,8 +110,8 @@ func main() {
 	}
 
 	if appConfig.Server.Protocol == protocol.UpiV1 {
-		go rest.RunInstrumentationServer(&appConfig.Server, logger)
-		runGrpcServer(&appConfig.Server, handler, logger)
+		instRouter := rest.NewInstrumentationRouter()
+		runGrpcServer(&appConfig.Server, handler, instRouter, logger)
 	} else {
 		runHTTPServer(&appConfig.Server, handler, logger)
 	}
@@ -213,8 +214,8 @@ func runHTTPServer(opts *serverConf.Options, handler *pipeline.Handler, logger *
 	s.Run()
 }
 
-func runGrpcServer(opts *serverConf.Options, handler *pipeline.Handler, logger *zap.Logger) {
-	s, err := grpc.NewUPIServer(opts, handler, logger)
+func runGrpcServer(opts *serverConf.Options, handler *pipeline.Handler, instrumentationRouter *mux.Router, logger *zap.Logger) {
+	s, err := grpc.NewUPIServer(opts, handler, instrumentationRouter, logger)
 	if err != nil {
 		panic(err)
 	}

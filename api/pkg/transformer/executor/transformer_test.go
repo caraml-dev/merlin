@@ -215,7 +215,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			requestHeaders: map[string]string{
 				"Country-ID": "ID",
 			},
-			wantResponseByte: []byte(`{"response":{"error":"error executing preprocess operation: *pipeline.CreateTableOp: unable to create base table for entity_table: invalid json pointed by $.entities[*]: not an array"},"operation_tracing":null}`),
+			wantResponseByte: []byte(`{"response":{"error":"error executing preprocess operation: *pipeline.CreateTableOp: unable to create base table for entity_table: invalid json pointed by $.entities[*]: invalid input: not an array"},"operation_tracing":null}`),
 		},
 		{
 			desc:         "table transformation with conditional update, filter row and slice row",

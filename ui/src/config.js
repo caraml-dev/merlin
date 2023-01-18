@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-const getEnv = env => {
+const getEnv = (env) => {
   return window.env && env in window.env ? window.env[env] : process.env[env];
 };
 
 export const sentryConfig = {
   dsn: getEnv("REACT_APP_SENTRY_DSN"),
-  environment: getEnv("REACT_APP_ENVIRONMENT")
+  environment: getEnv("REACT_APP_ENVIRONMENT"),
 };
 
 export const appConfig = {
   appIcon: "machineLearningApp",
   docsUrl: getEnv("REACT_APP_MERLIN_DOCS_URL") || [
     {
-      href:
-        "https://github.com/gojek/merlin/blob/main/docs/getting-started/README.md",
-      label: "Getting Started with Merlin"
-    }
+      href: "https://github.com/gojek/merlin/blob/main/docs/getting-started/README.md",
+      label: "Getting Started with Merlin",
+    },
   ],
   upiDocumentationUrl: getEnv("REACT_APP_UPI_DOC_URL"),
   dockerRegistries: getEnv("REACT_APP_DOCKER_REGISTRIES")
@@ -44,29 +43,25 @@ export const appConfig = {
       host: "online-serving-redis.feast.dev",
       label: "Online Serving with Redis",
       icon: "redis",
-      source_type: "REDIS"
+      source_type: "REDIS",
     },
     {
       host: "online-serving-bigtable.feast.dev",
       label: "Online Serving with BigTable",
       icon: "bigtable",
-      source_type: "BIGTABLE"
-    }
+      source_type: "BIGTABLE",
+    },
   ],
   scaling: {
     maxAllowedReplica: getEnv("REACT_APP_MAX_ALLOWED_REPLICA")
       ? parseInt(getEnv("REACT_APP_MAX_ALLOWED_REPLICA"))
-      : 20
-  }
+      : 20,
+  },
 };
 
 export const featureToggleConfig = {
   alertEnabled: getEnv("REACT_APP_ALERT_ENABLED")
-    ? !(
-        getEnv("REACT_APP_ALERT_ENABLED")
-          .toString()
-          .toLowerCase() === "false"
-      )
+    ? !(getEnv("REACT_APP_ALERT_ENABLED").toString().toLowerCase() === "false")
     : false,
   monitoringEnabled: getEnv("REACT_APP_MONITORING_DASHBOARD_ENABLED")
     ? !(
@@ -77,7 +72,14 @@ export const featureToggleConfig = {
     : false,
   monitoringDashboardJobBaseURL: getEnv(
     "REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"
-  )
+  ),
+};
+
+export const costEstimationConfig = {
+  // Default based on N1 on-demand pricing in asia-southeast1 / Singapore
+  // Data taken on January 2023
+  cpuCost: getEnv("REACT_APP_CPU_COST") || 28.46927,
+  memoryCost: getEnv("REACT_APP_MEMORY_COST") || 3.81498,
 };
 
 const config = {
@@ -87,7 +89,7 @@ const config = {
   MERLIN_API: getEnv("REACT_APP_MERLIN_API"),
   MLP_API: getEnv("REACT_APP_MLP_API"),
   FEAST_CORE_API: getEnv("REACT_APP_FEAST_CORE_API"),
-  OAUTH_CLIENT_ID: getEnv("REACT_APP_OAUTH_CLIENT_ID")
+  OAUTH_CLIENT_ID: getEnv("REACT_APP_OAUTH_CLIENT_ID"),
 };
 
 export default config;

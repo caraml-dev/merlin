@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/scaler"
@@ -172,11 +173,11 @@ func (t TableTransformOp) Execute(context context.Context, env *Environment) err
 func getEncoder(env *Environment, encoderName string) (Encoder, error) {
 	encoderRaw := env.symbolRegistry[encoderName]
 	if encoderRaw == nil {
-		return nil, fmt.Errorf("encoder %s is not declared", encoderName)
+		return nil, mErrors.NewInvalidInputErrorf("encoder '%s' is not declared", encoderName)
 	}
 	encodeImpl, ok := encoderRaw.(Encoder)
 	if !ok {
-		return nil, fmt.Errorf("variable %s is not encoder", encoderName)
+		return nil, mErrors.NewInvalidInputErrorf("variable '%s' is not an encoder", encoderName)
 	}
 	return encodeImpl, nil
 }

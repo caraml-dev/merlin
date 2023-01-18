@@ -21,11 +21,15 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"strings"
+	"time"
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/gojek/mlp/api/pkg/authz/enforcer"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
@@ -251,6 +255,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 			Handler(handler)
 	}
 
+	router.Use(prometheusMiddleware)
 	router.Use(recoveryHandler)
 
 	return router, nil
@@ -258,4 +263,53 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 
 func recoveryHandler(next http.Handler) http.Handler {
 	return sentry.Recoverer(next)
+}
+
+var httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+	Name:    "merlin_http_duration_ms",
+	Help:    "Duration of HTTP requests.",
+	Buckets: prometheus.ExponentialBuckets(10, 2, 10),
+}, []string{"name", "path", "user_agent", "status_code"})
+
+type statusCodeRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (r *statusCodeRecorder) WriteHeader(statusCode int) {
+	r.statusCode = statusCode
+	r.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (r *statusCodeRecorder) Flush() {
+	if flusher, ok := r.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
+// prometheusMiddleware implements mux.MiddlewareFunc.
+func prometheusMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		recorder := &statusCodeRecorder{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+
+		route := mux.CurrentRoute(r)
+
+		name := route.GetName()
+		path, _ := route.GetPathTemplate() // returns template (`/obj/{id}`) rather than actual path (`/obj/123`) which would avoid a cardinality explosion
+
+		userAgent := r.UserAgent()
+		ua := ""
+		if strings.Contains(userAgent, "merlin-sdk") || strings.Contains(userAgent, "python") {
+			ua = userAgent
+		}
+
+		startTime := time.Now()
+		next.ServeHTTP(recorder, r)
+		durationMs := time.Since(startTime).Milliseconds()
+
+		httpDuration.WithLabelValues(name, path, ua, fmt.Sprint(recorder.statusCode)).Observe(float64(durationMs))
+	})
 }

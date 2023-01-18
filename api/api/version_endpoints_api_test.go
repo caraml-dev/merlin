@@ -63,7 +63,7 @@ func TestListEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -155,7 +155,7 @@ func TestListEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -189,7 +189,7 @@ func TestListEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -266,7 +266,7 @@ func TestGetEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -356,7 +356,7 @@ func TestGetEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -391,7 +391,7 @@ func TestGetEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -433,7 +433,7 @@ func TestGetEndpoint(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -510,7 +510,7 @@ func TestListContainers(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -595,7 +595,7 @@ func TestListContainers(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)
@@ -630,7 +630,7 @@ func TestListContainers(t *testing.T) {
 					ProjectID: models.ID(1),
 					Type:      "pyfunc",
 					Project: mlp.Project(client.Project{
-						Id:   1,
+						ID:   1,
 						Name: "sample",
 					}),
 				}, nil)

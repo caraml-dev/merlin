@@ -72,7 +72,7 @@ func TestSecret(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA==", secret.Data)
 
-	secret, err = c.UpdateSecret(ctx, int32(1), Secret{Id: int32(1), Name: "secret-1", Data: "data-1"})
+	secret, err = c.UpdateSecret(ctx, int32(1), Secret{ID: int32(1), Name: "secret-1", Data: "data-1"})
 	assert.Nil(t, err)
 	assert.Equal(t, "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA==", secret.Data)
 
@@ -82,7 +82,7 @@ func TestSecret(t *testing.T) {
 
 	secret, err = c.GetSecretByIDandProjectID(ctx, int32(1), int32(1))
 	assert.Nil(t, err)
-	assert.Equal(t, int32(1), secret.Id)
+	assert.Equal(t, int32(1), secret.ID)
 
 	secret, err = c.GetSecretByNameAndProjectID(ctx, "secret-1", int32(1))
 	assert.Nil(t, err)

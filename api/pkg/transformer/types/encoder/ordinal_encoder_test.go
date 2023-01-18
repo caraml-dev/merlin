@@ -133,7 +133,7 @@ func TestNewOrdinalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: nil,
-			expectedErr:     fmt.Errorf(`strconv.Atoi: parsing "1one": invalid syntax`),
+			expectedErr:     fmt.Errorf(`invalid input: strconv.Atoi: parsing "1one": invalid syntax`),
 		},
 		{
 			desc: "Should return error, when default value is string but target type is INT",
@@ -146,7 +146,7 @@ func TestNewOrdinalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: nil,
-			expectedErr:     fmt.Errorf(`strconv.Atoi: parsing "zero": invalid syntax`),
+			expectedErr:     fmt.Errorf(`invalid input: strconv.Atoi: parsing "zero": invalid syntax`),
 		},
 		{
 			desc: "Should return error, when mapping target value is int but target type is boolean",
@@ -158,7 +158,7 @@ func TestNewOrdinalEncoder(t *testing.T) {
 				},
 			},
 			expectedEncoder: nil,
-			expectedErr:     fmt.Errorf(`strconv.ParseBool: parsing "2": invalid syntax`),
+			expectedErr:     fmt.Errorf(`invalid input: strconv.ParseBool: parsing "2": invalid syntax`),
 		},
 	}
 	for _, tC := range testCases {

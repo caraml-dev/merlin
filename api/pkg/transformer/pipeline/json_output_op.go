@@ -2,8 +2,8 @@ package pipeline
 
 import (
 	"context"
-	"errors"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/series"
@@ -127,6 +127,6 @@ func (j JsonOutputOp) createBaseJsonOutput(env *Environment, baseJson *spec.Base
 	case map[string]interface{}:
 		return types.JSONObject(v), nil
 	default:
-		return nil, errors.New("value in jsonpath must be object")
+		return nil, mErrors.NewInvalidInputError("value in jsonpath is not an object")
 	}
 }
