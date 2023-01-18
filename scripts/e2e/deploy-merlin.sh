@@ -36,8 +36,8 @@ install_mlp() {
 
 install_merlin() {
 	echo "::group::Merlin Deployment"
-
 	yq '.merlin.environmentConfigs[0] *= load("/tmp/temp_k8sconfig.yaml")' -i "${CHART_PATH}/values-e2e.yaml"
+
 	helm upgrade --install --debug merlin ${CHART_PATH} --namespace=mlp --create-namespace -f ${CHART_PATH}/values-e2e.yaml \
 		--set merlin.image.registry=${DOCKER_REGISTRY} \
 		--set merlin.image.tag=${VERSION} \
