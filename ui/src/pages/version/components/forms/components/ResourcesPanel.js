@@ -119,13 +119,13 @@ export const ResourcesPanel = ({
             resourcesConfig.min_replica,
             resourcesConfig.cpu_request,
             resourcesConfig.memory_request
-          )}{" "}
+          ).toFixed(2)}{" "}
           -{" "}
           {calculateCost(
             resourcesConfig.max_replica,
             resourcesConfig.cpu_request,
             resourcesConfig.memory_request
-          )}{" "}
+          ).toFixed(2)}{" "}
           / Month
         </p>
       </EuiCallOut>
