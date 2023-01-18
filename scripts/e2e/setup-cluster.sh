@@ -22,7 +22,6 @@ KNATIVE_VERSION=1.3.0
 CERT_MANAGER_VERSION=1.7.2
 MINIO_VERSION=3.6.3
 KSERVE_VERSION=0.8.0
-VAULT_VERSION=0.19.0
 TIMEOUT=180s
 
 
@@ -133,7 +132,6 @@ add_helm_repo
 install_istio
 install_minio
 install_knative
-install_vault
 install_cert_manager
 install_kserve
 store_cluster_secret
