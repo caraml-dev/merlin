@@ -44,7 +44,7 @@ type EnvironmentConfig struct {
 	DefaultPredictionJobConfig *PredictionJobResourceRequestConfig `yaml:"default_prediction_job_config"`
 	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
 	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
-	K8sConfig                  *mlpcluster.K8sConfig               `json:"k8s_config"`
+	K8sConfig                  *mlpcluster.K8sConfig               `yaml:"k8s_config"`
 }
 
 type PredictionJobResourceRequestConfig struct {
