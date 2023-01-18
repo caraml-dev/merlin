@@ -1,6 +1,6 @@
 # Configuring Standard Transformer for UPI Model
 
-> This guide assumes you have experience using standard transformer and  familiar with UPI contract. You can read refer to https://github.com/caraml-dev/universal-prediction-interface to get details on the contract. 
+> This guide assumes you have experience using standard transformer and  familiar with UPI contract. You can refer to https://github.com/caraml-dev/universal-prediction-interface to get details on the contract. 
 
 There are 2 key differences in Standard Transformer when it’s deployed using UPI protocol:
 
@@ -22,7 +22,7 @@ For example in HTTP model, if you want to declare a rating variable that should 
 ```
 
 then you have to declare following configuration in the input configuration of the standard transformer which will extract the data from incoming request. 
-The drawback of this approach is that it could be  for a more complex request payload and number of variable
+The drawback of this approach is that it could be complicated for a more complex request payload and for large number of variable/table to be imported.
 
 ```yaml
   - variables:
@@ -35,9 +35,9 @@ The drawback of this approach is that it could be  for a more complex request pa
 
 You can avoid it altogether by using autoload feature in UPI. To do so:
 
-- Store the variable in `transformer_input` field of the `PredictValuesRequest` 
+#### Store the variable/table in `prediction_table` or `transformer_input` field of the `PredictValuesRequest` 
 
-For example, when using Python SDK, you can do so by following code. 
+For example, when using Python SDK, you can do so by following code.
 In below example, we are storing `user_rating` as variable and `customer_df` as `customer_table` in `transformer_input`, as well as sending the `prediction_df` as `prediction_table`.
 
 ```python
@@ -58,7 +58,7 @@ request = upi_pb2.`PredictValuesRequest`(
 )
 ```
 
-- Add autoload feature in the standard transformer config.
+#### Add autoload feature in the standard transformer config.
 
 Add all variables and tables that are going to be imported in the standard transformer.
 In below example we are importing `prediction_table`, `customer_table` , and `user_rating` that was sent by the client.
