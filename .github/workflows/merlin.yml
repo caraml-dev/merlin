@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7", "3.8.15", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
@@ -56,10 +56,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      - uses: actions/cache@v3
-        with:
-          path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-batch-predictor
       - name: Install dependencies
         working-directory: ./python/batch-predictor
         run: |
@@ -74,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7", "3.8.15", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
@@ -88,10 +84,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      - uses: actions/cache@v3
-        with:
-          path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-pyfunc-server
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
         run: |
@@ -106,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7", "3.8.15", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     env:
       PIPENV_DEFAULT_PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
@@ -120,10 +112,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      - uses: actions/cache@v3
-        with:
-          path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-python-sdk
       - name: Install dependencies
         working-directory: ./python/sdk
         run: |
@@ -365,10 +353,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      - uses: actions/cache@v3
-        with:
-          path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
