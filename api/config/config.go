@@ -73,6 +73,8 @@ type ReactAppConfig struct {
 	OauthClientID     string         `envconfig:"REACT_APP_OAUTH_CLIENT_ID" json:"REACT_APP_OAUTH_CLIENT_ID,omitempty"`
 	SentryDSN         string         `envconfig:"REACT_APP_SENTRY_DSN" json:"REACT_APP_SENTRY_DSN,omitempty"`
 	UPIDocumentation  string         `envconfig:"REACT_APP_UPI_DOC_URL" json:"REACT_APP_UPI_DOC_URL,omitempty"`
+	CPUCost           string         `envconfig:"REACT_APP_CPU_COST" json:"REACT_APP_CPU_COST,omitempty"`
+	MemoryCost        string         `envconfig:"REACT_APP_MEMORY_COST" json:"REACT_APP_MEMORY_COST,omitempty"`
 }
 
 type BaseImageConfigs map[string]BaseImageConfig

@@ -147,5 +147,5 @@ metadata:
   name: config-deployment
   namespace: knative-serving
 data:
-  queueSidecarImage: gcr.io/knative-releases/knative.dev/serving/cmd/queue@sha256:c9dcb1610c99fab4caa39b972f6ce4defa2bdc4ab5c502cc1759f6aa89c34e02
+  image: gcr.io/knative-releases/knative.dev/serving/cmd/queue@sha256:fec35c5d66dad3d520e39de7f4f75ec6057962401f85761c143efc902f34efe7
   registries-skipping-tag-resolving: "kind.local,ko.local,dev.local,dev.localhost:12345"
