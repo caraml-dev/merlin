@@ -18,7 +18,9 @@ CLUSTER_NAME=$1
 INGRESS_HOST=$2
 
 ISTIO_VERSION=1.13.2
-KNATIVE_VERSION=1.3.0
+# queue proxy version in config/knative/overlay.yaml should also be modified to upgrade knative
+KNATIVE_VERSION=1.7.4
+KNATIVE_NET_ISTIO_VERSION=1.7.1
 CERT_MANAGER_VERSION=1.7.2
 MINIO_VERSION=3.6.3 
 KSERVE_VERSION=0.8.0
@@ -99,15 +101,16 @@ install_knative() {
     wget https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-core.yaml -O config/knative/serving-core.yaml
     kubectl apply -k config/knative
 
-    # Install knative-istio
-    kubectl apply -f https://github.com/knative/net-istio/releases/download/knative-v${KNATIVE_VERSION}/net-istio.yaml
-
     kubectl rollout status deployment/autoscaler -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/activator -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/domain-mapping -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/domainmapping-webhook -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/webhook -n knative-serving -w --timeout=${TIMEOUT}
+
+    # Install knative-istio
+    kubectl apply -f https://github.com/knative/net-istio/releases/download/knative-v${KNATIVE_NET_ISTIO_VERSION}/net-istio.yaml
+
     kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}
 }
@@ -148,8 +151,8 @@ patch_coredns() {
 
 add_helm_repo
 install_istio
-install_minio
 install_knative
+install_minio
 install_vault
 install_cert_manager
 install_kserve
