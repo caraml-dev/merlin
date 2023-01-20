@@ -20,6 +20,7 @@ import google.auth
 import urllib3
 from client import (ApiClient, Configuration, EndpointApi, EnvironmentApi,
                     ModelsApi, ProjectApi, VersionApi)
+from google.auth.transport.requests import Request
 from google.auth.transport.urllib3 import AuthorizedHttp
 from merlin.autoscaling import AutoscalingPolicy
 from merlin.deployment_mode import DeploymentMode
@@ -44,9 +45,12 @@ class MerlinClient:
 
         self._api_client = ApiClient(config)
         if use_google_oauth:
-            credentials, project = google.auth.default(scopes=OAUTH_SCOPES)
-            autorized_http = AuthorizedHttp(credentials, urllib3.PoolManager())
-            self._api_client.rest_client.pool_manager = autorized_http
+            credentials, _ = google.auth.default(scopes=OAUTH_SCOPES)
+            # Refresh credentials, in case it's coming from Compute Engine.
+            # See: https://github.com/googleapis/google-auth-library-python/issues/1211
+            credentials.refresh(Request())
+            authorized_http = AuthorizedHttp(credentials, urllib3.PoolManager())
+            self._api_client.rest_client.pool_manager = authorized_http
 
         python_version = f'{version_info.major}.{version_info.minor}.{version_info.micro}'  # capture user's python version
         self._api_client.user_agent = f"merlin-sdk/{VERSION} python/{python_version}"
