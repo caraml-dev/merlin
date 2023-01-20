@@ -36,8 +36,9 @@ install_mlp() {
 
 install_merlin() {
     echo "::group::Merlin Deployment"
-  # Merlin uses vault-secret to connect to vault
-  yq '.merlin.environmentConfigs[0] *= load("/tmp/temp_k8sconfig.yaml")' -i "${CHART_PATH}/values-e2e.yaml"
+# build in json first, then convert to yaml
+  output=$(yq e -o json '.k8s_config' /tmp/temp_k8sconfig.yaml | jq -r -M -c .)
+  output="$output" yq '.merlin.environmentConfigs[0] *= load("/tmp/temp_k8sconfig.yaml") | .merlin.imageBuilder.k8sConfig |= strenv(output)' -i "${CHART_PATH}/values-e2e.yaml"
 
   helm upgrade --install --debug merlin ${CHART_PATH} --namespace=mlp --create-namespace -f ${CHART_PATH}/values-e2e.yaml \
     --set merlin.image.registry=${DOCKER_REGISTRY} \
@@ -60,7 +61,6 @@ install_merlin() {
     --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
     --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".dockerfilePath=docker/app.Dockerfile \
     --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
-    --set merlin.imageBuilder.k8sConfig="$(jq '.k8s_config' /tmp/temp_k8sconfig.json -r -M -c | base64)" \
     --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}/v1 \
     --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST} \
     --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \

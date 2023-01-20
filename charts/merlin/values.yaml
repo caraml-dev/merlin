@@ -67,6 +67,7 @@ merlin:
     tolerations: []
     nodeSelectors: {}
     maxRetry: 3
+    k8sConfig: ""
 
   gitlab:
     baseURL: https://gitlab.com/
