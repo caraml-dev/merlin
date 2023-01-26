@@ -88,6 +88,8 @@ install_knative() {
 
     kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}
+
+    sleep 30 # HACK: give some time for knative webhook service to start
 }
 
 install_cert_manager() {
