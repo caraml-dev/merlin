@@ -1,4 +1,8 @@
+import asyncio
 import logging
+import os
+import signal
+import sys
 
 import tornado
 from prometheus_client import CollectorRegistry
@@ -7,6 +11,15 @@ from pyfuncserver.config import Config
 from pyfuncserver.metrics.handler import MetricsHandler
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.handler import HealthHandler, LivenessHandler, PredictHandler
+
+
+async def sig_handler(server):
+    logging.info("Stop accepting new connection")
+    server.stop()
+    logging.info("Closing existing connection")
+    await server.close_all_connections()
+    logging.info("Stopping ioloop")
+    tornado.ioloop.IOLoop.current().stop()
 
 
 class HTTPServer:
@@ -32,11 +45,15 @@ class HTTPServer:
     def start(self):
         self._http_server = tornado.httpserver.HTTPServer(
             self.create_application())
-
         logging.info("Listening on port %s", self.http_port)
         self._http_server.bind(self.http_port)
         logging.info("Will fork %d workers", self.workers)
         self._http_server.start(self.workers)
+
+        for signame in ('SIGINT', 'SIGTERM'):
+            asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
+                                                        lambda: asyncio.create_task(sig_handler(self._http_server)))
+
         tornado.ioloop.IOLoop.current().start()
 
     def register_model(self, model: PyFuncModel):
