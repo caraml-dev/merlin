@@ -38,7 +38,13 @@ RUN go mod tidy
 RUN go build -o bin/merlin_api ./cmd/api
 
 # ============================================================
-# Build stage 2: Copy binary and config file
+# Build stage 2: Download gke auth plugin
+# ============================================================
+FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine as gke-plugin-builder
+RUN gcloud components install gke-gcloud-auth-plugin --quiet
+
+# ============================================================
+# Build stage 3: Copy binary and config file
 # ============================================================
 FROM alpine:3.12
 
@@ -46,6 +52,7 @@ COPY --from=go-builder /src/api/bin/merlin_api /usr/bin/merlin_api
 COPY --from=go-builder /src/api/db-migrations ./db-migrations
 COPY --from=go-builder /src/api/swagger.yaml ./swagger.yaml
 COPY --from=go-builder /usr/local/go/lib/time/zoneinfo.zip /zoneinfo.zip
+COPY --from=gke-plugin-builder /google-cloud-sdk/bin/gke-gcloud-auth-plugin /usr/local/bin/gke-gcloud-auth-plugin
 
 ENV ZONEINFO=/zoneinfo.zip
 
