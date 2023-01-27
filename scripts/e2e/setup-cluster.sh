@@ -6,7 +6,7 @@ set -o pipefail
 set -o nounset
 
 # Software requirements:
-# - yq 4.24.2 
+# - yq 4.24.2
 # - helm 3
 # - k3d
 # - kubectl
@@ -22,7 +22,7 @@ ISTIO_VERSION=1.13.2
 KNATIVE_VERSION=1.7.4
 KNATIVE_NET_ISTIO_VERSION=1.7.1
 CERT_MANAGER_VERSION=1.7.2
-MINIO_VERSION=3.6.3 
+MINIO_VERSION=3.6.3
 KSERVE_VERSION=0.8.0
 VAULT_VERSION=0.19.0
 TIMEOUT=180s
@@ -78,10 +78,10 @@ install_istio() {
     helm upgrade --install istio-base istio/base --version=${ISTIO_VERSION} -n istio-system --create-namespace
     helm upgrade --install istiod istio/istiod --version=${ISTIO_VERSION} -n istio-system --create-namespace \
         -f config/istio/istiod.yaml --timeout=${TIMEOUT}
-    
+
     helm upgrade --install istio-ingressgateway istio/gateway -n istio-system --create-namespace \
         -f config/istio/ingress-gateway.yaml --timeout=${TIMEOUT}
-    
+
     helm upgrade --install cluster-local-gateway istio/gateway -n istio-system --create-namespace \
         -f config/istio/clusterlocal-gateway.yaml --timeout=${TIMEOUT}
 
@@ -145,7 +145,7 @@ install_kserve() {
 
 patch_coredns() {
     echo "::group::Patching CoreDNS"
-    kubectl patch cm coredns -n kube-system --patch-file config/coredns/patch.yaml 
+    kubectl patch cm coredns -n kube-system --patch-file config/coredns/patch.yaml
     kubectl get cm coredns -n kube-system -o yaml
 }
 
@@ -158,3 +158,4 @@ install_cert_manager
 install_kserve
 store_cluster_secret
 patch_coredns
+
