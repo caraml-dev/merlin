@@ -21,6 +21,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/api/resource"
+	clientcmdapiv1 "k8s.io/client-go/tools/clientcmd/api/v1"
+	sigyaml "sigs.k8s.io/yaml"
 )
 
 type EnvironmentConfig struct {
@@ -43,6 +45,14 @@ type EnvironmentConfig struct {
 	DefaultPredictionJobConfig *PredictionJobResourceRequestConfig `yaml:"default_prediction_job_config"`
 	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
 	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
+	K8sConfig                  *K8sConfig                          `json:"k8s_config"`
+}
+
+// K8sConfig contains fields on how to connect to a k8s cluster
+type K8sConfig struct {
+	Cluster  *clientcmdapiv1.Cluster  `json:"cluster"`
+	AuthInfo *clientcmdapiv1.AuthInfo `json:"user"`
+	Name     string                   `json:"name"`
 }
 
 type PredictionJobResourceRequestConfig struct {
@@ -69,6 +79,9 @@ func initEnvironmentConfigs(path string) []EnvironmentConfig {
 	err = yaml.Unmarshal(cfgFile, &configs)
 	if err != nil {
 		log.Panicf("unable to unmarshall deployment config file:\n %s,\nDue to: %v", cfgFile, err)
+	}
+	if err := sigyaml.Unmarshal(cfgFile, &configs); err != nil {
+		log.Panicf("unable to unmarshall k8sconfig from deployment config file:\n %s,\nDue to: %v", cfgFile, err)
 	}
 	return configs
 }
