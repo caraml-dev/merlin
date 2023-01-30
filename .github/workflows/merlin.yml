@@ -442,6 +442,10 @@ jobs:
           kubectl logs deploy/merlin -n mlp -c merlin
           echo "::endgroup::"
 
+          echo "::group::Mlflow logs"
+          kubectl logs deploy/merlin-mlflow -n mlp -c merlin-mlflow
+          echo "::endgroup::"
+
           echo "::group::KServe log"
           kubectl logs statefulset/kserve-controller-manager -n kserve -c manager
           echo "::endgroup::"
