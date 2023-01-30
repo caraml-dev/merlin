@@ -474,6 +474,10 @@ jobs:
           kubectl logs -l component=predictor -c kserve-container -n merlin-e2e
           echo "::endgroup::"
 
+          echo "::group::Queue proxy log"
+          kubectl logs -l component=predictor -c queue-proxy -n merlin-e2e
+          echo "::endgroup::"
+
           echo "::group::Transformer log"
           kubectl logs -l component=transformer -c kserve-container -n merlin-e2e
           echo "::endgroup::"
