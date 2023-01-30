@@ -44,7 +44,6 @@ type Config struct {
 	SwaggerPath           string          `envconfig:"SWAGGER_PATH" default:"./swagger.yaml"`
 
 	DbConfig                  DatabaseConfig
-	VaultConfig               VaultConfig
 	ImageBuilderConfig        ImageBuilderConfig
 	EnvironmentConfigs        []EnvironmentConfig
 	AuthorizationConfig       AuthorizationConfig
@@ -179,11 +178,6 @@ func (d *DictEnv) Decode(value string) error {
 	}
 	*d = dict
 	return nil
-}
-
-type VaultConfig struct {
-	Address string `envconfig:"VAULT_ADDRESS"`
-	Token   string `envconfig:"VAULT_TOKEN"`
 }
 
 type AuthorizationConfig struct {
