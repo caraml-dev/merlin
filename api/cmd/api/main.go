@@ -206,18 +206,17 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	mlpAPIClient := initMLPAPIClient(ctx, cfg.MlpAPIConfig)
 	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL, cfg.StandardTransformerConfig.FeastCoreAuthAudience, cfg.StandardTransformerConfig.EnableAuth)
 
-	vaultClient := initVault(cfg.VaultConfig)
-	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg, vaultClient)
+	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg)
 
-	clusterControllers := initClusterControllers(cfg, vaultClient)
+	clusterControllers := initClusterControllers(cfg)
 	modelServiceDeployment := initModelServiceDeployment(cfg, webServiceBuilder, clusterControllers, db)
 	versionEndpointService := initVersionEndpointService(cfg, webServiceBuilder, clusterControllers, db, coreClient, dispatcher)
-	modelEndpointService := initModelEndpointService(cfg, vaultClient, db)
+	modelEndpointService := initModelEndpointService(cfg, db)
 
-	batchControllers := initBatchControllers(cfg, vaultClient, db, mlpAPIClient)
+	batchControllers := initBatchControllers(cfg, db, mlpAPIClient)
 	batchDeployment := initBatchDeployment(cfg, db, batchControllers, predJobBuilder)
 	predictionJobService := initPredictionJobService(cfg, batchControllers, predJobBuilder, db, dispatcher)
-	logService := initLogService(cfg, vaultClient)
+	logService := initLogService(cfg)
 	// use "mlp" as product name for enforcer so that same policy can be reused by excalibur
 	authEnforcer, err := enforcer.NewEnforcerBuilder().
 		URL(cfg.AuthorizationConfig.AuthorizationServerURL).
