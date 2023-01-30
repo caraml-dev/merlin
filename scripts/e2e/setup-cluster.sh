@@ -24,7 +24,6 @@ KNATIVE_NET_ISTIO_VERSION=1.7.1
 CERT_MANAGER_VERSION=1.7.2
 MINIO_VERSION=3.6.3
 KSERVE_VERSION=0.8.0
-VAULT_VERSION=0.19.0
 TIMEOUT=180s
 
 
@@ -84,25 +83,16 @@ install_knative() {
     wget https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-core.yaml -O config/knative/serving-core.yaml
     kubectl apply -k config/knative
 
-<<<<<<< HEAD
-=======
-    # Install knative-istio
-    kubectl apply -f https://github.com/knative/net-istio/releases/download/knative-v${KNATIVE_VERSION}/net-istio.yaml
-
->>>>>>> 5a6ba38 (Fix shell script formatting)
     kubectl rollout status deployment/autoscaler -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/activator -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/domain-mapping -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/domainmapping-webhook -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/webhook -n knative-serving -w --timeout=${TIMEOUT}
-<<<<<<< HEAD
 
     # Install knative-istio
     kubectl apply -f https://github.com/knative/net-istio/releases/download/knative-v${KNATIVE_NET_ISTIO_VERSION}/net-istio.yaml
 
-=======
->>>>>>> 5a6ba38 (Fix shell script formatting)
     kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}
 }
