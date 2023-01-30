@@ -19,6 +19,7 @@ import (
 	"os"
 	"time"
 
+	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/api/resource"
 	sigyaml "sigs.k8s.io/yaml"
@@ -44,7 +45,7 @@ type EnvironmentConfig struct {
 	DefaultPredictionJobConfig *PredictionJobResourceRequestConfig `yaml:"default_prediction_job_config"`
 	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
 	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
-	K8sConfig                  *K8sConfig                          `json:"k8s_config"`
+	K8sConfig                  *mlpcluster.K8sConfig               `json:"k8s_config"`
 }
 
 type PredictionJobResourceRequestConfig struct {

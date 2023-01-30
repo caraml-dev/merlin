@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	istionetv1beta1 "istio.io/api/networking/v1beta1"
 	istiov1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	istiofake "istio.io/client-go/pkg/clientset/versioned/fake"
@@ -27,11 +28,24 @@ import (
 	istiocliv1beta1fake "istio.io/client-go/pkg/clientset/versioned/typed/networking/v1beta1/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 	ktesting "k8s.io/client-go/testing"
 )
 
+type mockCredsManager struct {
+	mock.Mock
+}
+
+func (_m *mockCredsManager) GenerateConfig() (*rest.Config, error) {
+	return &rest.Config{}, nil
+}
+
+func (_m *mockCredsManager) GetClusterName() string { return "" }
+
 func TestNewClient(t *testing.T) {
-	client, err := NewClient(Config{})
+	client, err := NewClient(Config{
+		CredsManager: &mockCredsManager{},
+	})
 	assert.NotNil(t, client)
 	assert.Nil(t, err)
 }
