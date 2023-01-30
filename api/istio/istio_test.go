@@ -32,19 +32,19 @@ import (
 	ktesting "k8s.io/client-go/testing"
 )
 
-type mockCredsManager struct {
+type mockCredentials struct {
 	mock.Mock
 }
 
-func (_m *mockCredsManager) GenerateConfig() (*rest.Config, error) {
+func (_m *mockCredentials) ToRestConfig() (*rest.Config, error) {
 	return &rest.Config{}, nil
 }
 
-func (_m *mockCredsManager) GetClusterName() string { return "" }
+func (_m *mockCredentials) GetClusterName() string { return "" }
 
 func TestNewClient(t *testing.T) {
 	client, err := NewClient(Config{
-		CredsManager: &mockCredsManager{},
+		Credentials: &mockCredentials{},
 	})
 	assert.NotNil(t, client)
 	assert.Nil(t, err)
