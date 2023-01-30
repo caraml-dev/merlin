@@ -54,15 +54,6 @@ type Controller interface {
 
 // Config Model cluster authentication settings
 type Config struct {
-	// Kubernetes API server endpoint
-	Host string
-	// CA Certificate to trust for TLS
-	CACert string
-	// Client Certificate for authenticating to cluster
-	ClientCert string
-	// Client Key for authenticating to cluster
-	ClientKey string
-
 	// Cluster Name
 	ClusterName string
 	// GCP project where the cluster resides

@@ -169,7 +169,6 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	predJobBuilder = imagebuilder.NewPredictionJobImageBuilder(kubeClient, predJobConfig)
 
 	ctl, err := cluster.NewController(cluster.Config{
-		Host:        imgBuilderK8sConfig.Cluster.Server,
 		Credentials: creds,
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -432,7 +431,6 @@ func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 
 		ctl, err := cluster.NewController(cluster.Config{
-			Host:        env.K8sConfig.Cluster.Server,
 			Credentials: creds,
 
 			ClusterName: clusterName,
@@ -466,7 +464,6 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 func initLogService(cfg *config.Config) service.LogService {
 	creds := mlpcluster.NewK8sClusterCreds(&cfg.ImageBuilderConfig.K8sConfig)
 	ctl, err := cluster.NewController(cluster.Config{
-		Host:        cfg.ImageBuilderConfig.K8sConfig.Cluster.Server,
 		Credentials: creds,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
@@ -486,7 +483,6 @@ func initLogService(cfg *config.Config) service.LogService {
 		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 
 		ctl, err := cluster.NewController(cluster.Config{
-			Host:        env.K8sConfig.Cluster.Server,
 			Credentials: creds,
 			ClusterName: clusterName,
 			GcpProject:  env.GcpProject,

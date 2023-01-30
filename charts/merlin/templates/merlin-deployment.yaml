@@ -314,7 +314,7 @@ spec:
       volumes:
       - name: config
         secret:
-        {{- include "merlin.getEnvironmentSecret" . | indent 10 }}
+          secretName: {{ template "merlin.environmentsSecretName" . }}
       {{- if .Values.merlin.gcpServiceAccount }}
       - name: gcp-service-account
         secret:

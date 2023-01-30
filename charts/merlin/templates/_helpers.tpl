@@ -59,10 +59,10 @@
 {{- end -}}
 
 
-{{- define "merlin.getEnvironmentSecret" -}}
+{{- define "merlin.environmentsSecretName" -}}
 {{- if .Values.mlp.environmentConfigSecret.name }}
-secretName: {{ .Values.mlp.environmentConfigSecret.name }}
+{{- printf "%s" .Values.mlp.environmentConfigSecret.name }}
 {{- else }}
-secretName: {{ template "merlin.fullname" .}}-environments
+{{- printf "%s-environments" (include "merlin.fullname" .) }}
 {{- end -}}
 {{- end -}}
