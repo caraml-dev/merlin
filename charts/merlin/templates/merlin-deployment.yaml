@@ -189,16 +189,6 @@ spec:
             value: "{{ .Values.merlin.transformer.jaeger.samplerParam }}"
           - name: JAEGER_DISABLED
             value: "{{ .Values.merlin.transformer.jaeger.disabled }}"
-          - name: VAULT_ADDRESS
-            valueFrom:
-              secretKeyRef:
-                name: "{{ .Values.merlin.vault.secretName }}"
-                key: address
-          - name: VAULT_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: "{{ .Values.merlin.vault.secretName }}"
-                key: token
           - name: DEPLOYMENT_CONFIG_PATH
             value: "/opt/config/environment.yaml"
           {{ if .Values.merlin.sentry.enabled }}
