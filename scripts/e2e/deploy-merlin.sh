@@ -12,7 +12,7 @@ VERSION="$4"
 GIT_REF="$5"
 MLP_CHART_VERSION="$6"
 
-TIMEOUT=200s
+TIMEOUT=300s
 
 install_mlp() {
   echo "::group::MLP Deployment"
