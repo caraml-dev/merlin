@@ -15,57 +15,58 @@ MLP_CHART_VERSION="$6"
 TIMEOUT=200s
 
 install_mlp() {
-	echo "::group::MLP Deployment"
+  echo "::group::MLP Deployment"
 
-	helm repo add caraml https://caraml-dev.github.io/helm-charts
+  helm repo add caraml https://caraml-dev.github.io/helm-charts
 
-	helm upgrade --install --debug mlp caraml/mlp --namespace mlp --create-namespace \
-		--version ${MLP_CHART_VERSION} \
-		--set fullnameOverride=mlp \
-		--set deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
-		--set deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
-		--set ingress.enabled=true \
-		--set ingress.class=istio \
-		--set ingress.host=mlp.mlp.${INGRESS_HOST} \
-		--wait --timeout=${TIMEOUT}
+  helm upgrade --install --debug mlp caraml/mlp --namespace mlp --create-namespace \
+    --version ${MLP_CHART_VERSION} \
+    --set fullnameOverride=mlp \
+    --set deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
+    --set deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
+    --set ingress.enabled=true \
+    --set ingress.class=istio \
+    --set ingress.host=mlp.mlp.${INGRESS_HOST} \
+    --wait --timeout=${TIMEOUT}
 
-	kubectl apply -f config/mock/message-dumper.yaml
+   kubectl apply -f config/mock/message-dumper.yaml
 
-	kubectl rollout status deployment/mlp -n mlp -w --timeout=${TIMEOUT}
+   kubectl rollout status deployment/mlp -n mlp -w --timeout=${TIMEOUT}
 }
 
 install_merlin() {
-	echo "::group::Merlin Deployment"
-	yq '.merlin.environmentConfigs[0] *= load("/tmp/temp_k8sconfig.yaml")' -i "${CHART_PATH}/values-e2e.yaml"
+    echo "::group::Merlin Deployment"
+  # Merlin uses vault-secret to connect to vault
+  yq '.merlin.environmentConfigs[0] *= load("/tmp/temp_k8sconfig.yaml")' -i "${CHART_PATH}/values-e2e.yaml"
 
-	helm upgrade --install --debug merlin ${CHART_PATH} --namespace=mlp --create-namespace -f ${CHART_PATH}/values-e2e.yaml \
-		--set merlin.image.registry=${DOCKER_REGISTRY} \
-		--set merlin.image.tag=${VERSION} \
-		--set merlin.transformer.image=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \
-		--set merlin.imageBuilder.dockerRegistry=${DOCKER_REGISTRY} \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py37:${VERSION} \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".dockerfilePath=docker/app.Dockerfile \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py38:${VERSION} \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".dockerfilePath=docker/app.Dockerfile \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py39:${VERSION} \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".dockerfilePath=docker/app.Dockerfile \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py310:${VERSION} \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".dockerfilePath=docker/app.Dockerfile \
-		--set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
-		--set merlin.imageBuilder.k8sConfig="$(jq '.k8s_config' /tmp/temp_k8sconfig.json -r -M -c | base64)" \
-		--set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}/v1 \
-		--set merlin.ingress.host=merlin.mlp.${INGRESS_HOST} \
-		--set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \
-		--wait --timeout=${TIMEOUT}
+  helm upgrade --install --debug merlin ${CHART_PATH} --namespace=mlp --create-namespace -f ${CHART_PATH}/values-e2e.yaml \
+    --set merlin.image.registry=${DOCKER_REGISTRY} \
+    --set merlin.image.tag=${VERSION} \
+    --set merlin.transformer.image=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \
+    --set merlin.imageBuilder.dockerRegistry=${DOCKER_REGISTRY} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py37:${VERSION} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".dockerfilePath=docker/app.Dockerfile \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.7\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py38:${VERSION} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".dockerfilePath=docker/app.Dockerfile \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.8\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py39:${VERSION} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".dockerfilePath=docker/app.Dockerfile \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.9\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".imageName=${DOCKER_REGISTRY}/merlin/merlin-pyspark-base-py310:${VERSION} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".buildContextURI=git://github.com/gojek/merlin.git#${GIT_REF} \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".dockerfilePath=docker/app.Dockerfile \
+    --set merlin.imageBuilder.predictionJobBaseImages."3\.10\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
+    --set merlin.imageBuilder.k8sConfig="$(jq '.k8s_config' /tmp/temp_k8sconfig.json -r -M -c | base64)" \
+    --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}/v1 \
+    --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST} \
+    --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \
+    --wait --timeout=${TIMEOUT}
 
-	kubectl rollout status deployment/merlin -n mlp -w --timeout=${TIMEOUT}
+  kubectl rollout status deployment/merlin -n mlp -w --timeout=${TIMEOUT}
 }
 
 install_mlp
