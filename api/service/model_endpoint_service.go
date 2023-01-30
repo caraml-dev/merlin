@@ -63,8 +63,8 @@ type ModelEndpointsService interface {
 }
 
 // NewModelEndpointsService returns an initialized ModelEndpointsService.
-func NewModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) ModelEndpointsService {
-	return newModelEndpointsService(istioClients, modelEndpointStorage, versionEndpointStorage, environment)
+func NewModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment, labelPrefix string) ModelEndpointsService {
+	return newModelEndpointsService(istioClients, modelEndpointStorage, versionEndpointStorage, environment, labelPrefix)
 }
 
 type modelEndpointsService struct {
@@ -72,14 +72,16 @@ type modelEndpointsService struct {
 	modelEndpointStorage   storage.ModelEndpointStorage
 	versionEndpointStorage storage.VersionEndpointStorage
 	environment            string
+	labelPrefix            string
 }
 
-func newModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) *modelEndpointsService {
+func newModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment, labelPrefix string) *modelEndpointsService {
 	return &modelEndpointsService{
 		istioClients:           istioClients,
 		modelEndpointStorage:   modelEndpointStorage,
 		versionEndpointStorage: versionEndpointStorage,
 		environment:            environment,
+		labelPrefix:            labelPrefix,
 	}
 }
 
@@ -216,6 +218,7 @@ func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoi
 		App:         model.Name,
 		Environment: s.environment,
 		Labels:      model.Project.Labels,
+		LabelPrefix: s.labelPrefix,
 	}
 	labels := metadata.ToLabel()
 

@@ -29,6 +29,7 @@ merlin:
     enabled: false
 
   environment: dev
+  deploymentLabelPrefix: "gojek.com/"
 
   loggerDestinationURL: "http://yourDestinationLogger"
 

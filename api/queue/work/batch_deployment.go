@@ -22,6 +22,7 @@ type BatchDeployment struct {
 	BatchControllers map[string]batch.Controller
 	Clock            clock2.Clock
 	EnvironmentLabel string
+	LabelPrefix      string
 }
 
 type BatchJob struct {
