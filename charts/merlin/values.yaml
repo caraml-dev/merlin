@@ -397,3 +397,9 @@ swagger:
   service:
     internalPort: 8081
     externalPort: 8080
+
+mlp:
+  environmentConfigSecret: 
+    name: ""
+    envKey: environment.yaml
+    imageBuilderKey: imageBuilderK8sConfig

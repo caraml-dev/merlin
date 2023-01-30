@@ -139,8 +139,13 @@ spec:
           - name: IMG_BUILDER_K8S_CONFIG
             valueFrom:
               secretKeyRef:
+                {{- if .Values.mlp.environmentConfigSecret.name }}
+                name: {{ .Values.mlp.environmentConfigSecret.name }}
+                key: {{ .Values.mlp.environmentConfigSecret.imageBuilderKey }}
+                {{- else }}
                 name: {{ template "merlin.fullname" . }}-environments
                 key: imageBuilderK8sConfig
+                {{- end }}
           {{- if .Values.merlin.imageBuilder.contextSubPath }}
           - name: IMG_BUILDER_CONTEXT_SUB_PATH
             value: "{{ .Values.merlin.imageBuilder.contextSubPath }}"
@@ -190,7 +195,7 @@ spec:
           - name: JAEGER_DISABLED
             value: "{{ .Values.merlin.transformer.jaeger.disabled }}"
           - name: DEPLOYMENT_CONFIG_PATH
-            value: "/opt/config/environment.yaml"
+            value: {{ ternary (printf "/opt/config/%s" "environment.yaml") (printf "/opt/config/%s" .Values.mlp.environmentConfigSecret.envKey) (eq .Values.mlp.environmentConfigSecret.name "")}}
           {{ if .Values.merlin.sentry.enabled }}
           - name: SENTRY_ENABLED
             value: "{{ .Values.merlin.sentry.enabled }}"
@@ -306,11 +311,10 @@ spec:
             echo "Running Swagger UI..."
             /usr/share/nginx/run.sh
       {{- end }}
-
       volumes:
       - name: config
         secret:
-          secretName: {{ template "merlin.fullname" .}}-environments
+        {{- include "merlin.getEnvironmentSecret" . | indent 10 }}
       {{- if .Values.merlin.gcpServiceAccount }}
       - name: gcp-service-account
         secret:

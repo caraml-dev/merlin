@@ -57,3 +57,12 @@
 {{- printf .Values.mlflow.backendStoreUri -}}
 {{- end -}}
 {{- end -}}
+
+
+{{- define "merlin.getEnvironmentSecret" -}}
+{{- if .Values.mlp.environmentConfigSecret.name }}
+secretName: {{ .Values.mlp.environmentConfigSecret.name }}
+{{- else }}
+secretName: {{ template "merlin.fullname" .}}-environments
+{{- end -}}
+{{- end -}}
