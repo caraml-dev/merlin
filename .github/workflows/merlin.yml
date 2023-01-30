@@ -438,12 +438,24 @@ jobs:
           kubectl get isvc -n merlin-e2e
           echo "::endgroup::"
 
+          echo "::group::Get events merlin-e2e namespace"
+          kubectl get events -n merlin-e2e
+          echo "::endgroup::"
+
           echo "::group::Merlin log"
           kubectl logs deploy/merlin -n mlp -c merlin
           echo "::endgroup::"
 
           echo "::group::Mlflow logs"
           kubectl logs deploy/merlin-mlflow -n mlp -c merlin-mlflow
+          echo "::endgroup::"
+
+          echo "::group::Get kserve pods"
+          kubectl get pods -n kserve -o yaml
+          echo "::endgroup::"
+
+          echo "::group::Get cert manager logs"
+          kubectl logs deploy/cert-manager -n cert-manager
           echo "::endgroup::"
 
           echo "::group::KServe log"
