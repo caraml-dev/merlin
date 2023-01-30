@@ -418,6 +418,10 @@ jobs:
           kubectl get deployment -n merlin-e2e
           echo "::endgroup::"
 
+          echo "::group::Describe pods mlp namespace"
+          kubectl describe pods -n mlp
+          echo "::endgroup::"
+
           echo "::group::Describe deployment merlin-e2e namespace"
           kubectl describe deployment -n merlin-e2e
           echo "::endgroup::"
