@@ -124,7 +124,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 
 	kubeClient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		log.Panicf("unable to initialize image builder")
+		log.Panicf("%s unable to initialize image builder", err.Error())
 	}
 
 	timeout, err := time.ParseDuration(cfg.ImageBuilderConfig.BuildTimeout)
