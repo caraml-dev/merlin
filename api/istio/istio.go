@@ -36,7 +36,7 @@ type Config struct {
 	// Client Key for authenticating to cluster
 	ClusterClientKey string
 
-	mlpcluster.CredsManager
+	mlpcluster.Credentials
 }
 
 // Client interface.
@@ -48,7 +48,7 @@ type Client interface {
 
 // NewClient returns an initialized Istio's client.
 func NewClient(config Config) (Client, error) {
-	c, err := config.GenerateConfig()
+	c, err := config.ToRestConfig()
 	if err != nil {
 		return nil, err
 	}
