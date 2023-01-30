@@ -35,25 +35,18 @@ add_helm_repo() {
 }
 
 store_cluster_secret() {
-	echo "::group::Storing Cluster Secret"
+  echo "::group::Storing Cluster Secret"
 
-	k3d kubeconfig get "$CLUSTER_NAME" >/tmp/temp_kubeconfig.yaml
-	cat <<EOF >/tmp/temp_k8sconfig.json
+  # create and store K8sConfig in tmp dir
+  cat <<EOF |  yq -P - > /tmp/temp_k8sconfig.yaml
 {
     "k8s_config": {
-        "name": $(yq .clusters[0].name -o json /tmp/temp_kubeconfig.yaml),
-        "cluster": $(yq '.clusters[0].cluster | .server = "https://kubernetes.default.svc.cluster.local:443"' -o json /tmp/temp_kubeconfig.yaml),
-        "user": $(yq .users[0].user -o json /tmp/temp_kubeconfig.yaml)
+        "name": $(k3d kubeconfig get "$CLUSTER_NAME" | yq .clusters[0].name -o json -),
+        "cluster": $(k3d kubeconfig get "$CLUSTER_NAME" | yq '.clusters[0].cluster | .server = "https://kubernetes.default.svc.cluster.local:443"' -o json -),
+        "user": $(k3d kubeconfig get "$CLUSTER_NAME" | yq .users[0].user -o json - )
     }
 }
 EOF
-	# get yaml file
-	yq e -P /tmp/temp_k8sconfig.json -o yaml >/tmp/temp_k8sconfig.yaml
-
-	# NOTE: Do no delete files created here as they will be used in the next step
-	# TODO: Figure out a better way to pass cluster K8sConfig
-	# rm /tmp/temp_kubeconfig.yaml
-	# rm /tmp/temp_k8sconfig.yaml
 }
 install_istio() {
     echo "::group::Istio Deployment"
