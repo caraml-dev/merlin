@@ -13,6 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+sigterm_handler() {
+  echo "Terminating.."
+  kill -TERM "$server_pid"
+  wait "$server_pid"
+}
+
+sigint_handler() {
+  echo "Terminating.."
+  kill -INT "$server_pid"
+  wait "$server_pid"
+}
+
+trap sigterm_handler SIGTERM
+trap sigint_handler SIGINT
 
 source activate merlin-model
-python -m pyfuncserver --model_dir ./model
+python -m pyfuncserver --model_dir ./model &
+
+server_pid=$!
+wait "$server_pid"
