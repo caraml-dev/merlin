@@ -12,7 +12,7 @@ VERSION="$4"
 GIT_REF="$5"
 MLP_CHART_VERSION="$6"
 
-TIMEOUT=200s
+TIMEOUT=300s
 
 install_mlp() {
   echo "::group::MLP Deployment"
@@ -36,8 +36,9 @@ install_mlp() {
 
 install_merlin() {
     echo "::group::Merlin Deployment"
-  # Merlin uses vault-secret to connect to vault
-  kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root --dry-run=client -o yaml | kubectl apply -f -
+# build in json first, then convert to yaml
+  output=$(yq e -o json '.k8s_config' /tmp/temp_k8sconfig.yaml | jq -r -M -c .)
+  output="$output" yq '.merlin.environmentConfigs[0] *= load("/tmp/temp_k8sconfig.yaml") | .merlin.imageBuilder.k8sConfig |= strenv(output)' -i "${CHART_PATH}/values-e2e.yaml"
 
   helm upgrade --install --debug merlin ${CHART_PATH} --namespace=mlp --create-namespace -f ${CHART_PATH}/values-e2e.yaml \
     --set merlin.image.registry=${DOCKER_REGISTRY} \
