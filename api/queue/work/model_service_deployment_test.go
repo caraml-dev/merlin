@@ -357,6 +357,11 @@ func TestExecuteDeployment(t *testing.T) {
 			err := svc.Deploy(job)
 			assert.Equal(t, tt.deployErr, err)
 
+			if len(ctrl.ExpectedCalls) > 0 && ctrl.ExpectedCalls[0].ReturnArguments[0] != nil {
+				deployedSvc := ctrl.ExpectedCalls[0].ReturnArguments[0].(*models.Service)
+				assert.Equal(t, svcMetadata, deployedSvc.Metadata)
+			}
+
 			mockStorage.AssertNumberOfCalls(t, "Save", 1)
 			savedEndpoint := mockStorage.Calls[1].Arguments[0].(*models.VersionEndpoint)
 			assert.Equal(t, tt.model.ID, savedEndpoint.VersionModelID)
