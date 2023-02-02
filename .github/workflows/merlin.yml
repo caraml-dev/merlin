@@ -410,36 +410,56 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
+          echo "::group::Get cert manager logs"
+          kubectl logs deploy/cert-manager -n cert-manager
+          echo "::endgroup::"
+
           echo "::group::Get deployment mlp namespace"
           kubectl get deployment -n mlp
           echo "::endgroup::"
 
-          echo "::group::Get deployment  merlin-e2e namespace"
-          kubectl get deployment -n merlin-e2e
+          echo "::group::Describe pods mlp namespace"
+          kubectl describe pods -n mlp
           echo "::endgroup::"
 
           echo "::group::Describe deployment merlin-e2e namespace"
           kubectl describe deployment -n merlin-e2e
           echo "::endgroup::"
 
-          echo "::group::Get Pod  merlin-e2e namespace"
-          kubectl get pod -n merlin-e2e
+          echo "::group::Get deployment merlin-e2e namespace"
+          kubectl get deployment -n merlin-e2e
           echo "::endgroup::"
 
-          echo "::group::Describe Pod  merlin-e2e namespace"
+          echo "::group::Get Pod  merlin-e2e namespace"
+          kubectl get pod -n merlin-e2e -o yaml
+          echo "::endgroup::"
+
+          echo "::group::Describe Pod merlin-e2e namespace"
           kubectl describe pod -n merlin-e2e
           echo "::endgroup::"
 
-          echo "::group::Get Inference Service  merlin-e2e namespace"
-          kubectl get isvc -n merlin-e2e
+          echo "::group::Get Inference Service merlin-e2e namespace"
+          kubectl get isvc -n merlin-e2e -o yaml
+          echo "::endgroup::"
+
+          echo "::group::Get events merlin-e2e namespace"
+          kubectl get events -n merlin-e2e
           echo "::endgroup::"
 
           echo "::group::Merlin log"
           kubectl logs deploy/merlin -n mlp -c merlin
           echo "::endgroup::"
 
+          echo "::group::Get kserve pods"
+          kubectl get pods -n kserve -o yaml
+          echo "::endgroup::"
+
           echo "::group::KServe log"
           kubectl logs statefulset/kserve-controller-manager -n kserve -c manager
+          echo "::endgroup::"
+
+          echo "::group::KServe events"
+          kubectl get events -n kserve
           echo "::endgroup::"
 
           echo "::group::Knative log"
@@ -452,6 +472,10 @@ jobs:
 
           echo "::group::Model log"
           kubectl logs -l component=predictor -c kserve-container -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Queue proxy log"
+          kubectl logs -l component=predictor -c queue-proxy -n merlin-e2e
           echo "::endgroup::"
 
           echo "::group::Transformer log"

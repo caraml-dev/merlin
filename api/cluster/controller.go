@@ -30,12 +30,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	batchv1client "k8s.io/client-go/kubernetes/typed/batch/v1"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
-	restclient "k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/models"
+	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 )
 
 type Controller interface {
@@ -54,19 +54,13 @@ type Controller interface {
 
 // Config Model cluster authentication settings
 type Config struct {
-	// Kubernetes API server endpoint
-	Host string
-	// CA Certificate to trust for TLS
-	CACert string
-	// Client Certificate for authenticating to cluster
-	ClientCert string
-	// Client Key for authenticating to cluster
-	ClientKey string
-
 	// Cluster Name
 	ClusterName string
 	// GCP project where the cluster resides
 	GcpProject string
+
+	// Alternative to CACert, ClientCert info
+	mlpcluster.Credentials
 }
 
 const (
@@ -85,16 +79,10 @@ type controller struct {
 }
 
 func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, standardTransformerConfig config.StandardTransformerConfig) (Controller, error) {
-	cfg := &restclient.Config{
-		Host: clusterConfig.Host,
-		TLSClientConfig: restclient.TLSClientConfig{
-			Insecure: false,
-			CAData:   []byte(clusterConfig.CACert),
-			CertData: []byte(clusterConfig.ClientCert),
-			KeyData:  []byte(clusterConfig.ClientKey),
-		},
+	cfg, err := clusterConfig.ToRestConfig()
+	if err != nil {
+		return nil, err
 	}
-
 	servingClient, err := kservev1beta1client.NewForConfig(cfg)
 	if err != nil {
 		return nil, err

@@ -1,40 +1,46 @@
 #!/bin/sh
+set -x
 
 export CLUSTER_NAME=dev
 
-export ISTIO_VERSION=1.5.4
-export KNATIVE_VERSION=v0.14.3
-export KNATIVE_NET_ISTIO_VERSION=v0.15.0
-export CERT_MANAGER_VERSION=v1.1.0
-export KFSERVING_VERSION=v0.4.0
+export ISTIO_VERSION=1.12.4
+export KNATIVE_VERSION=v1.3.2
+export KNATIVE_NET_ISTIO_VERSION=v1.3.0
+export CERT_MANAGER_VERSION=v1.9.1
+export KFSERVING_VERSION=v0.8.0
 
-export VAULT_VERSION=0.7.0
 export MINIO_VERSION=7.0.2
 
-export OAUTH_CLIENT_ID="<put your oauth client id here>"
-export MLP_CHART_VERSION=0.3.4
-export MERLIN_VERSION=v0.9.0
+export OAUTH_CLIENT_ID=""
+export MLP_CHART_VERSION=0.4.11
+# export MERLIN_VERSION=0.0.0-82ca798e8b50ea20ca0f6bb5d6283e5eb104216c
+export MERLIN_VERSION=82ca798 # TODO: update to use new merlin version once vault dependency removed
 
-# Install Istio
+## Install Istio
 curl --location https://git.io/getLatestIstio | sh -
 
 cat << EOF > ./istio-config.yaml
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
+  profile: default
+  hub: gcr.io/istio-testing
+  tag: latest
+  revision: 1-12-4
+  meshConfig:
+    accessLogFile: /dev/stdout
+    enableTracing: true
+  components:
+    egressGateways:
+    - name: istio-egressgateway
+      enabled: true
   values:
     global:
       proxy:
         autoInject: disabled
-      useMCP: false
-      jwtPolicy: first-party-jwt
-      k8sIngress:
-        enabled: true
-  addonComponents:
-    pilot:
-      enabled: true
-    prometheus:
-      enabled: false
+    gateways:
+        istio-ingressgateway:
+            runAsRoot: true
   components:
     ingressGateways:
       - name: istio-ingressgateway
@@ -70,9 +76,10 @@ spec:
 EOF
 istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f istio-config.yaml
 
-# Install Knative
-kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-crds.yaml
-kubectl apply --filename=https://github.com/knative/serving/releases/download/${KNATIVE_VERSION}/serving-core.yaml
+### Install Knative
+### https://github.com/knative/serving/releases/download/knative-v1.3.2/serving-core.yaml
+kubectl apply --filename=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-crds.yaml
+kubectl apply --filename=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-core.yaml
 
 export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 cat <<EOF > ./patch-config-domain.json
@@ -85,7 +92,7 @@ EOF
 kubectl patch configmap/config-domain --namespace=knative-serving --type=merge --patch="$(cat patch-config-domain.json)"
 
 # Install Knative Net Istio
-kubectl apply --filename=https://github.com/knative/net-istio/releases/download/${KNATIVE_NET_ISTIO_VERSION}/release.yaml
+kubectl apply --filename=https://github.com/knative-sandbox/net-istio/releases/download/knative-${KNATIVE_NET_ISTIO_VERSION}/release.yaml
 
 # Install Cert Manager
 kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
@@ -93,7 +100,9 @@ kubectl wait deployment.apps/cert-manager-webhook --namespace=cert-manager --for
 sleep 15
 
 # Install KFServing
-kubectl apply --filename=https://raw.githubusercontent.com/kubeflow/kfserving/master/install/${KFSERVING_VERSION}/kfserving.yaml
+kubectl apply --filename=https://github.com/kserve/kserve/releases/download/v0.8.0/kserve.yaml
+kubectl apply --filename=https://github.com/kserve/kserve/releases/download/v0.8.0/kserve-runtimes.yaml
+
 
 cat <<EOF > ./patch-config-inferenceservice.json
 {
@@ -105,48 +114,21 @@ cat <<EOF > ./patch-config-inferenceservice.json
 EOF
 kubectl patch configmap/inferenceservice-config --namespace=kfserving-system --type=merge --patch="$(cat patch-config-inferenceservice.json)"
 
-# Install Vault
-cat <<EOF > ./vault-values.yaml
-injector:
-  enabled: false
-server:
-  dev:
-    enabled: true
-  dataStorage:
-    enabled: false
-  resources:
-    requests:
-      cpu: 25m
-      memory: 64Mi
-    limits:
-      memory: 128Mi
-  affinity: null
-  tolerations: null
-EOF
-
-kubectl create namespace vault
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm install vault hashicorp/vault --namespace=vault --version=${VAULT_VERSION} --values=vault-values.yaml --wait --timeout=600s
-sleep 5
-kubectl wait pod/vault-0 --namespace=vault --for=condition=ready --timeout=600s
-
-# Downgrade to Vault KV secrets engine version 1
-kubectl exec vault-0 --namespace=vault -- vault secrets disable secret
-kubectl exec vault-0 --namespace=vault -- vault secrets enable -version=1 -path=secret kv
-
-# Write cluster credential to be saved in Vault
-cat <<EOF > cluster-credential.json
+cat <<EOF | yq e -P - > k8s_config.yaml
 {
-  "name": "dev",
-  "master_ip": "https://kubernetes.default.svc:443",
-  "certs": "$(cat ~/.minikube/ca.crt | awk '{printf "%s\\n", $0}')",
-  "client_certificate": "$(cat ~/.minikube/profiles/minikube/client.crt | awk '{printf "%s\\n", $0}'))",
-  "client_key": "$(cat ~/.minikube/profiles/minikube/client.key | awk '{printf "%s\\n", $0}'))"
+  "k8s_config": {
+    "name": "dev",
+    "cluster": {
+      "server": "https://kubernetes.default.svc.cluster.local:443",
+      "certificate-authority-data": "$(awk '{printf "%s\n", $0}' ~/.minikube/ca.crt | base64)"
+    },
+    "user": {
+      "client-certificate-data": "$(awk '{printf "%s\n", $0}' ~/.minikube/profiles/minikube/client.crt | base64)",
+      "client-key-data": "$(awk '{printf "%s\n", $0}' ~/.minikube/profiles/minikube/client.key | base64)"
+    }
+  }
 }
 EOF
-
-kubectl cp cluster-credential.json vault/vault-0:/tmp/cluster-credential.json
-kubectl exec vault-0 --namespace=vault -- vault kv put secret/${CLUSTER_NAME} @/tmp/cluster-credential.json
 
 # Install Minio
 cat <<EOF > minio-values.yaml
@@ -215,9 +197,13 @@ spec:
 EOF
 
 # Install Merlin
-kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root
 
-helm install merlin ../charts/merlin --namespace=mlp --values=../charts/merlin/values-e2e.yaml \
+# create new e2e file containing cluster credentials
+output=$(yq e -o json '.k8s_config' k8s_config.yaml | jq -r -M -c .)
+yq '.merlin.environmentConfigs[0] *= load("k8s_config.yaml")' ../charts/merlin/values-e2e.yaml > ../charts/merlin/values-e2e-with-k8s_config.yaml
+output="$output" yq '.merlin.imageBuilder.k8sConfig |= strenv(output)' -i ../charts/merlin/values-e2e-with-k8s_config.yaml
+
+helm upgrade --install merlin ../charts/merlin --namespace=mlp --values=../charts/merlin/values-e2e-with-k8s_config.yaml \
   --set merlin.image.tag=${MERLIN_VERSION} \
   --set merlin.oauthClientID=${OAUTH_CLIENT_ID} \
   --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}.nip.io/v1 \

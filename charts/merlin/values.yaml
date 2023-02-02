@@ -67,9 +67,7 @@ merlin:
     tolerations: []
     nodeSelectors: {}
     maxRetry: 3
-
-  vault:
-    secretName: "vault-secret" # Must be bootstraped first.
+    k8sConfig: ""
 
   gitlab:
     baseURL: https://gitlab.com/
@@ -400,3 +398,9 @@ swagger:
   service:
     internalPort: 8081
     externalPort: 8080
+
+mlp:
+  environmentConfigSecret: 
+    name: ""
+    envKey: environment.yaml
+    imageBuilderKey: imageBuilderK8sConfig

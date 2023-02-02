@@ -24,6 +24,7 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	internalValidator "github.com/gojek/merlin/pkg/validator"
+	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 )
@@ -43,7 +44,6 @@ type Config struct {
 	SwaggerPath           string          `envconfig:"SWAGGER_PATH" default:"./swagger.yaml"`
 
 	DbConfig                  DatabaseConfig
-	VaultConfig               VaultConfig
 	ImageBuilderConfig        ImageBuilderConfig
 	EnvironmentConfigs        []EnvironmentConfig
 	AuthorizationConfig       AuthorizationConfig
@@ -149,10 +149,11 @@ type ImageBuilderConfig struct {
 	BuildTimeout                 string           `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
 	KanikoImage                  string           `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
-	Retention     time.Duration `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
-	Tolerations   Tolerations   `envconfig:"IMG_BUILDER_TOLERATIONS"`
-	NodeSelectors DictEnv       `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
-	MaximumRetry  int32         `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
+	Retention     time.Duration        `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
+	Tolerations   Tolerations          `envconfig:"IMG_BUILDER_TOLERATIONS"`
+	NodeSelectors DictEnv              `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
+	MaximumRetry  int32                `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
+	K8sConfig     mlpcluster.K8sConfig `envconfig:"IMG_BUILDER_K8S_CONFIG"`
 }
 
 type Tolerations []v1.Toleration
@@ -177,11 +178,6 @@ func (d *DictEnv) Decode(value string) error {
 	}
 	*d = dict
 	return nil
-}
-
-type VaultConfig struct {
-	Address string `envconfig:"VAULT_ADDRESS"`
-	Token   string `envconfig:"VAULT_TOKEN"`
 }
 
 type AuthorizationConfig struct {

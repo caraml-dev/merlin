@@ -14,8 +14,10 @@ RUN pip install psycopg2-binary==2.8.6
 
 ARG BOTO3_VERSION=1.7.12
 ARG MLFLOW_VERSION=1.3.0
+ARG SQLALCHEMY_VERSION=1.4.46
 
 RUN pip install boto3==${BOTO3_VERSION}
+RUN pip install SQLAlchemy==${SQLALCHEMY_VERSION}
 RUN pip install mlflow==${MLFLOW_VERSION}
 
 ENV BACKEND_STORE_URI="/data/mlruns"
