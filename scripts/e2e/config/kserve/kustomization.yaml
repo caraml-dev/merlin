@@ -1,8 +1,4 @@
 resources:
 - kserve.yaml
-# TODO: remove this once kserve 0.9.0 is released
-- temp.yaml
 patchesStrategicMerge:
 - overlay.yaml
-# TODO: remove this once kserve 0.9.0 is released
-- temp-overlay.yaml
