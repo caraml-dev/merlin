@@ -60,7 +60,7 @@ var (
 		},
 	}
 	project = mlp.Project{
-		Id:     1,
+		ID:     1,
 		Name:   "my-project",
 		Team:   "dsp",
 		Stream: "dsp",
@@ -95,7 +95,7 @@ var (
 		},
 		VersionID:       3,
 		VersionModelID:  1,
-		ProjectID:       models.ID(project.Id),
+		ProjectID:       models.ID(project.ID),
 		EnvironmentName: predJobEnv.Name,
 		Environment:     predJobEnv,
 		Config: &models.Config{
@@ -150,7 +150,7 @@ func TestListPredictionJob(t *testing.T) {
 		Name:           query.Name,
 		VersionID:      query.VersionID,
 		VersionModelID: query.ModelID,
-		ProjectID:      models.ID(project.Id),
+		ProjectID:      models.ID(project.ID),
 		Status:         query.Status,
 		Error:          query.Error,
 	}
@@ -261,8 +261,8 @@ func TestInvalidResourceRequest(t *testing.T) {
 }
 
 func TestPredictionJobService_ListContainers(t *testing.T) {
-	project := mlp.Project{Id: 1, Name: "my-project"}
-	model := &models.Model{ID: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectID: models.ID(project.Id)}
+	project := mlp.Project{ID: 1, Name: "my-project"}
+	model := &models.Model{ID: 1, Name: "model", Type: models.ModelTypeXgboost, Project: project, ProjectID: models.ID(project.ID)}
 	version := &models.Version{ID: 1}
 	job := &models.PredictionJob{ID: 2, VersionID: 1, VersionModelID: 1}
 

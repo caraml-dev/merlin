@@ -747,7 +747,7 @@ func TestCreateVersion(t *testing.T) {
 					Name:      "model-1",
 					ProjectID: models.ID(1),
 					Project: mlp.Project{
-						MlflowTrackingUrl: "http://www.notinuse.com",
+						MLFlowTrackingURL: "http://www.notinuse.com",
 					},
 					ExperimentID: 1,
 					Type:         "pyfunc",
@@ -1077,7 +1077,7 @@ func TestCreateVersion(t *testing.T) {
 					Name:      "model-1",
 					ProjectID: models.ID(1),
 					Project: mlp.Project{
-						MlflowTrackingUrl: "http://www.notinuse.com",
+						MLFlowTrackingURL: "http://www.notinuse.com",
 					},
 					ExperimentID: 1,
 					Type:         "pyfunc",

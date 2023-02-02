@@ -12,25 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+from sys import version_info
 from typing import Dict, List, Optional
 
-import warnings
 import google.auth
 import urllib3
+from client import (ApiClient, Configuration, EndpointApi, EnvironmentApi,
+                    ModelsApi, ProjectApi, VersionApi)
+from google.auth.transport.requests import Request
 from google.auth.transport.urllib3 import AuthorizedHttp
-
-from client import ApiClient, Configuration, EndpointApi, EnvironmentApi, \
-    ModelsApi, ProjectApi, VersionApi
 from merlin.autoscaling import AutoscalingPolicy
 from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import VersionEndpoint
 from merlin.environment import Environment
+from merlin.logger import Logger
 from merlin.model import Model, ModelType, ModelVersion, Project
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.logger import Logger
 from merlin.util import valid_name_check
+from merlin.version import VERSION
 
 OAUTH_SCOPES = ['https://www.googleapis.com/auth/userinfo.email']
 
@@ -43,10 +45,15 @@ class MerlinClient:
 
         self._api_client = ApiClient(config)
         if use_google_oauth:
-            credentials, project = google.auth.default(scopes=OAUTH_SCOPES)
-            autorized_http = AuthorizedHttp(credentials, urllib3.PoolManager())
-            self._api_client.rest_client.pool_manager = autorized_http
+            credentials, _ = google.auth.default(scopes=OAUTH_SCOPES)
+            # Refresh credentials, in case it's coming from Compute Engine.
+            # See: https://github.com/googleapis/google-auth-library-python/issues/1211
+            credentials.refresh(Request())
+            authorized_http = AuthorizedHttp(credentials, urllib3.PoolManager())
+            self._api_client.rest_client.pool_manager = authorized_http
 
+        python_version = f'{version_info.major}.{version_info.minor}.{version_info.micro}'  # capture user's python version
+        self._api_client.user_agent = f"merlin-sdk/{VERSION} python/{python_version}"
         self._project_api = ProjectApi(self._api_client)
         self._model_api = ModelsApi(self._api_client)
         self._version_api = VersionApi(self._api_client)

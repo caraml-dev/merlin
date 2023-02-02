@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
@@ -59,7 +60,7 @@ func validateRequest(payload *types.UPIPredictionRequest) error {
 
 	for _, variable := range payload.TransformerInput.Variables {
 		if variable.Name == "" {
-			return fmt.Errorf("variable name must be specified")
+			return mErrors.NewInvalidInputError("variable name is not specified")
 		}
 	}
 	return nil
@@ -70,11 +71,11 @@ func validateUPITable(tbl *upiv1.Table) error {
 	// since row_id will be automated created from row entry
 	// if table doesn't have name we will throw error
 	if tbl.Name == "" {
-		return fmt.Errorf("table name must be specified")
+		return mErrors.NewInvalidInputError("table name is not specified")
 	}
 	for _, col := range tbl.Columns {
 		if col.Name == table.RowIDColumn {
-			return fmt.Errorf("row_id column is reserved, user is not allowed to define explicitly row_id column")
+			return mErrors.NewInvalidInputError("table contains a reserved column name row_id")
 		}
 	}
 	return nil
@@ -84,7 +85,7 @@ func (ua *UPIAutoloadingOp) autoLoadingPreprocessInput(ctx context.Context, env 
 	requestPayload := env.symbolRegistry.RawRequest()
 	upiRequestPayload, valid := requestPayload.(*types.UPIPredictionRequest)
 	if !valid {
-		return fmt.Errorf("raw request is not valid")
+		return mErrors.NewInvalidInputError("raw request is not valid")
 	}
 
 	if err := validateRequest(upiRequestPayload); err != nil {
@@ -134,7 +135,7 @@ func generateVariableFromRequest(requestPayload *types.UPIPredictionRequest, env
 		case upiv1.Type_TYPE_STRING:
 			variables[variable.Name] = variable.StringValue
 		default:
-			return nil, fmt.Errorf("unknown type %T", variable)
+			return nil, mErrors.NewInvalidInputErrorf("unknown type %T", variable)
 		}
 	}
 	return variables, nil

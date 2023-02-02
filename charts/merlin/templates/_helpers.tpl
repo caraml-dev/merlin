@@ -57,3 +57,12 @@
 {{- printf .Values.mlflow.backendStoreUri -}}
 {{- end -}}
 {{- end -}}
+
+
+{{- define "merlin.environmentsSecretName" -}}
+{{- if .Values.mlp.environmentConfigSecret.name }}
+{{- printf "%s" .Values.mlp.environmentConfigSecret.name }}
+{{- else }}
+{{- printf "%s-environments" (include "merlin.fullname" .) }}
+{{- end -}}
+{{- end -}}

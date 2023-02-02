@@ -18,11 +18,11 @@ import (
 	"context"
 	"encoding/json"
 
+	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 	istiov1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	networkingv1beta1 "istio.io/client-go/pkg/clientset/versioned/typed/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/rest"
 )
 
 // Configuration stores configuration to Istio client.
@@ -35,6 +35,8 @@ type Config struct {
 	ClusterClientCert string
 	// Client Key for authenticating to cluster
 	ClusterClientKey string
+
+	mlpcluster.Credentials
 }
 
 // Client interface.
@@ -46,14 +48,9 @@ type Client interface {
 
 // NewClient returns an initialized Istio's client.
 func NewClient(config Config) (Client, error) {
-	c := &rest.Config{
-		Host: config.ClusterHost,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: false,
-			CAData:   []byte(config.ClusterCACert),
-			CertData: []byte(config.ClusterClientCert),
-			KeyData:  []byte(config.ClusterClientKey),
-		},
+	c, err := config.ToRestConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	networking, err := networkingv1beta1.NewForConfig(c)

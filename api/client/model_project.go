@@ -16,7 +16,7 @@ import (
 type Project struct {
 	Id                int32     `json:"id,omitempty"`
 	Name              string    `json:"name"`
-	MlflowTrackingUrl string    `json:"mlflow_tracking_url,omitempty"`
+	MLFlowTrackingURL string    `json:"mlflow_tracking_url,omitempty"`
 	Administrators    []string  `json:"administrators,omitempty"`
 	Readers           []string  `json:"readers,omitempty"`
 	Team              string    `json:"team,omitempty"`

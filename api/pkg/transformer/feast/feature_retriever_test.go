@@ -2653,7 +2653,7 @@ func TestFeatureRetriever_RetrieveFeatureOfEntityInRequest_FeastTimeout(t *testi
 
 	got, err := fr.RetrieveFeatureOfEntityInRequest(context.Background(), requestJson)
 	assert.NotNil(t, err)
-	assert.EqualError(t, err, "hystrix: timeout")
+	assert.EqualError(t, err, "deadline exceeded: hystrix: timeout")
 
 	want := []*transTypes.FeatureTable{}
 	assert.ElementsMatch(t, got, want)

@@ -25,7 +25,7 @@ var (
 		ID:        1,
 		ProjectID: 1,
 		Project: mlp.Project{
-			Id:     1,
+			ID:     1,
 			Name:   "project-1",
 			Team:   "dsp",
 			Stream: "dsp",
@@ -96,7 +96,7 @@ var (
 		ID:        2,
 		ProjectID: 1,
 		Project: mlp.Project{
-			Id:     1,
+			ID:     1,
 			Name:   "project-1",
 			Team:   "dsp",
 			Stream: "dsp",

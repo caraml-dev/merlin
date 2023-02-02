@@ -44,15 +44,15 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 		db.Create(&env1)
 
 		p := mlp.Project{
-			Id:                1,
+			ID:                1,
 			Name:              "project",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 		db.Create(&p)
 
 		m := models.Model{
 			ID:           1,
-			ProjectID:    models.ID(p.Id),
+			ProjectID:    models.ID(p.ID),
 			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
@@ -83,7 +83,7 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 			},
 			VersionID:       v.ID,
 			VersionModelID:  m.ID,
-			ProjectID:       models.ID(p.Id),
+			ProjectID:       models.ID(p.ID),
 			EnvironmentName: env1.Name,
 			Environment:     &env1,
 			Config: &models.Config{
@@ -162,13 +162,13 @@ func TestPredictionJobStorage_List(t *testing.T) {
 
 		p := mlp.Project{
 			Name:              "project",
-			MlflowTrackingUrl: "http://mlflow:5000",
+			MLFlowTrackingURL: "http://mlflow:5000",
 		}
 		db.Create(&p)
 
 		m := models.Model{
 			ID:           1,
-			ProjectID:    models.ID(p.Id),
+			ProjectID:    models.ID(p.ID),
 			ExperimentID: 1,
 			Name:         "model",
 			Type:         models.ModelTypeSkLearn,
@@ -199,7 +199,7 @@ func TestPredictionJobStorage_List(t *testing.T) {
 			},
 			VersionID:       v.ID,
 			VersionModelID:  m.ID,
-			ProjectID:       models.ID(p.Id),
+			ProjectID:       models.ID(p.ID),
 			Environment:     &env1,
 			EnvironmentName: env1.Name,
 			Config: &models.Config{
@@ -262,7 +262,7 @@ func TestPredictionJobStorage_List(t *testing.T) {
 			},
 			VersionID:       v.ID,
 			VersionModelID:  m.ID,
-			ProjectID:       models.ID(p.Id),
+			ProjectID:       models.ID(p.ID),
 			Environment:     &env1,
 			EnvironmentName: env1.Name,
 			Config: &models.Config{
@@ -315,7 +315,7 @@ func TestPredictionJobStorage_List(t *testing.T) {
 		assert.NoError(t, err)
 
 		jobs, err := predJobStore.List(&models.PredictionJob{
-			ProjectID: models.ID(p.Id),
+			ProjectID: models.ID(p.ID),
 		})
 		assert.NoError(t, err)
 		assert.Len(t, jobs, 2)

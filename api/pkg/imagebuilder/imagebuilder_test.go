@@ -159,6 +159,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -167,6 +168,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -178,6 +189,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -249,6 +261,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -257,6 +270,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -268,6 +291,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -366,6 +390,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -374,6 +399,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -385,6 +420,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -493,6 +529,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -501,6 +538,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -512,6 +559,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -614,6 +662,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -622,6 +671,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -633,6 +692,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -703,6 +763,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -711,6 +772,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -722,6 +793,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -795,6 +867,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -803,6 +876,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -814,6 +897,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
@@ -875,6 +959,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -883,6 +968,16 @@ func TestBuildImage(t *testing.T) {
 					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
 					ActiveDeadlineSeconds:   &timeoutInSecond,
 					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
 						Spec: v1.PodSpec{
 							RestartPolicy: v1.RestartPolicyNever,
 							Containers: []v1.Container{
@@ -894,6 +989,7 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",

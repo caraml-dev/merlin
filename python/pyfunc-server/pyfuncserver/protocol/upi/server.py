@@ -5,10 +5,11 @@ from concurrent import futures
 import grpc
 from caraml.upi.v1 import upi_pb2, upi_pb2_grpc
 from grpc_reflection.v1alpha import reflection
+from grpc_health.v1.health import HealthServicer
+from grpc_health.v1 import health_pb2_grpc
 
 from pyfuncserver.config import Config
 from pyfuncserver.model.model import PyFuncModel
-
 
 class PredictionService(upi_pb2_grpc.UniversalPredictionServiceServicer):
     def __init__(self, model: PyFuncModel):
@@ -24,6 +25,7 @@ class UPIServer:
     def __init__(self, model: PyFuncModel, config: Config):
         self._predict_service = PredictionService(model=model)
         self._config = config
+        self._health_service = HealthServicer()
 
     def start(self):
         logging.info(f"Starting {self._config.workers} workers")
@@ -49,6 +51,7 @@ class UPIServer:
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=self._config.grpc_concurrency),
                              options=options)
         upi_pb2_grpc.add_UniversalPredictionServiceServicer_to_server(self._predict_service, server)
+        health_pb2_grpc.add_HealthServicer_to_server(self._health_service, server)
 
         # Enable reflection server for debugging
         SERVICE_NAMES = (

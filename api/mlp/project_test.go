@@ -68,11 +68,11 @@ func TestProject(t *testing.T) {
 
 	project1, err := c.CreateProject(ctx, Project{Name: "project-1"})
 	assert.Nil(t, err)
-	assert.NotEmpty(t, project1.Id)
+	assert.NotEmpty(t, project1.ID)
 	assert.Equal(t, "project-1", project1.Name)
 
 	project1, err = c.UpdateProject(ctx, Project{
-		Id:      1,
+		ID:      1,
 		Name:    "project-1",
 		Readers: []string{"user@domain.com"},
 	})
@@ -81,7 +81,7 @@ func TestProject(t *testing.T) {
 
 	project1, err = c.GetProjectByID(ctx, int32(1))
 	assert.Nil(t, err)
-	assert.Equal(t, int32(1), project1.Id)
+	assert.Equal(t, int32(1), project1.ID)
 
 	project1, err = c.GetProjectByName(ctx, "project-1")
 	assert.Nil(t, err)
@@ -105,7 +105,7 @@ func TestProject_MlflowExperimentURL(t *testing.T) {
 		{
 			"1",
 			Project{
-				MlflowTrackingUrl: "http://mlflow",
+				MLFlowTrackingURL: "http://mlflow",
 			},
 			args{"1"},
 			"http://mlflow/#/experiments/1",
@@ -134,7 +134,7 @@ func TestProject_MlflowRunURL(t *testing.T) {
 		{
 			"1",
 			Project{
-				MlflowTrackingUrl: "http://mlflow",
+				MLFlowTrackingURL: "http://mlflow",
 			},
 			args{"1", "1"},
 			"http://mlflow/#/experiments/1/runs/1",

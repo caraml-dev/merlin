@@ -49,6 +49,11 @@ FROM alpine:3.12
 COPY --from=go-builder /src/api/bin/transformer /usr/bin/transformer
 COPY --from=go-builder /usr/local/go/lib/time/zoneinfo.zip /zoneinfo.zip
 
+# Adding the grpc_health_probe
+ENV GRPC_HEALTH_PROBE_VERSION=v0.4.4
+RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
+    chmod +x /bin/grpc_health_probe
+
 ENV ZONEINFO=/zoneinfo.zip
 
 ENTRYPOINT ["transformer"]

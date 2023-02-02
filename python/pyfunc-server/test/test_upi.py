@@ -14,6 +14,7 @@ import pytest
 import requests
 from caraml.upi.utils import df_to_table
 from caraml.upi.v1 import upi_pb2, upi_pb2_grpc, variable_pb2, type_pb2
+from grpc_health.v1 import health_pb2_grpc, health_pb2
 from merlin.model import PyFuncModel
 from merlin.protocol import Protocol
 from prometheus_client import Counter, Gauge
@@ -65,6 +66,11 @@ def test_benchmark_multiprocess(workers, benchmark):
         c = start_upi_server(model_name, model_version, http_port, grpc_port, workers, metrics_path)
 
         channel = grpc.insecure_channel(f'localhost:{grpc_port}')
+        
+        health_check_stub = health_pb2_grpc.HealthStub(channel)
+        response: health_pb2.HealthCheckResponse = health_check_stub.Check(health_pb2.HealthCheckRequest())
+        assert response.status == health_pb2.HealthCheckResponse.SERVING
+
         stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
         df = pd.DataFrame([[4, 1, "hi"]] * 3,
                           columns=['int_value', 'int_value_2', 'string_value'],
@@ -115,6 +121,11 @@ def test_upi(workers):
         c = start_upi_server(model_name, model_version, http_port, grpc_port, workers, metrics_path)
 
         channel = grpc.insecure_channel(f'localhost:{grpc_port}')
+
+        health_check_stub = health_pb2_grpc.HealthStub(channel)
+        response: health_pb2.HealthCheckResponse = health_check_stub.Check(health_pb2.HealthCheckRequest())
+        assert response.status == health_pb2.HealthCheckResponse.SERVING
+
         stub = upi_pb2_grpc.UniversalPredictionServiceStub(channel)
         df = pd.DataFrame([[4, 1, "hi"]] * 3,
                           columns=['int_value', 'int_value_2', 'string_value'],

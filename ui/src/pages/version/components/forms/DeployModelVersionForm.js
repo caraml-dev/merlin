@@ -3,7 +3,7 @@ import {
   addToast,
   ConfirmationModal,
   FormContext,
-  StepsWizardHorizontal
+  StepsWizardHorizontal,
 } from "@gojek/mlp-ui";
 import { DeploymentSummary } from "./components/DeploymentSummary";
 import { CustomTransformerStep } from "./steps/CustomTransformerStep";
@@ -16,10 +16,10 @@ import {
   feastEnricherTransformerSchema,
   standardTransformerSchema,
   transformerConfigSchema,
-  versionEndpointSchema
+  versionEndpointSchema,
 } from "./validation/schema";
 
-const targetRequestStatus = currentStatus => {
+const targetRequestStatus = (currentStatus) => {
   return currentStatus === "serving" ? "serving" : "running";
 };
 
@@ -31,7 +31,7 @@ export const DeployModelVersionForm = ({
   submissionResponse,
   submitForm,
   actionTitle = "Deploy",
-  isEnvironmentDisabled = false
+  isEnvironmentDisabled = false,
 }) => {
   const { data: versionEndpoint } = useContext(FormContext);
 
@@ -41,7 +41,7 @@ export const DeployModelVersionForm = ({
         id: "submit-success-deploy",
         title: "The deployment process is starting",
         color: "success",
-        iconType: "check"
+        iconType: "check",
       });
       onSuccess(
         `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}/endpoints/${submissionResponse.data.id}/details`
@@ -53,8 +53,8 @@ export const DeployModelVersionForm = ({
     submitForm({
       body: JSON.stringify({
         ...versionEndpoint,
-        status: targetRequestStatus(versionEndpoint.status)
-      })
+        status: targetRequestStatus(versionEndpoint.status),
+      }),
     });
 
   const mainSteps = [
@@ -66,33 +66,33 @@ export const DeployModelVersionForm = ({
           isEnvironmentDisabled={isEnvironmentDisabled}
         />
       ),
-      validationSchema: versionEndpointSchema
+      validationSchema: versionEndpointSchema,
     },
     {
       title: "Transformer",
       children: <TransformerStep />,
-      validationSchema: transformerConfigSchema
-    }
+      validationSchema: transformerConfigSchema,
+    },
   ];
 
   const standardTransformerStep = {
     title: "Standard Transformer",
     children: <StandardTransformerStep />,
     validationSchema: standardTransformerSchema,
-    width: "100%"
+    width: "100%",
   };
 
   const customTransformerStep = {
     title: "Custom Transformer",
     children: <CustomTransformerStep />,
-    validationSchema: customTransformerSchema
+    validationSchema: customTransformerSchema,
   };
 
   const feastTransformerStep = {
     title: "Feast Enricher",
     children: <FeastTransformerStep />,
     validationSchema: feastEnricherTransformerSchema,
-    width: "100%"
+    width: "100%",
   };
 
   const [steps, setSteps] = useState(mainSteps);
@@ -129,13 +129,15 @@ export const DeployModelVersionForm = ({
           actionTitle={actionTitle}
           modelName={model.name}
           versionId={version.id}
+          versionEndpoint={versionEndpoint}
         />
       }
       isLoading={submissionResponse.isLoading}
       onConfirm={onSubmit}
       confirmButtonText={actionTitle}
-      confirmButtonColor="primary">
-      {onSubmit => (
+      confirmButtonColor="primary"
+    >
+      {(onSubmit) => (
         <StepsWizardHorizontal
           steps={steps}
           onCancel={onCancel}

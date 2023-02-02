@@ -10,20 +10,23 @@ DOCKER_REGISTRY="$2"
 CHART_PATH="$3"
 VERSION="$4"
 GIT_REF="$5"
+MLP_CHART_VERSION="$6"
 
-
-TIMEOUT=120s
+TIMEOUT=300s
 
 install_mlp() {
   echo "::group::MLP Deployment"
-  helm upgrade --install --debug mlp mlp/charts/mlp --namespace mlp --create-namespace -f mlp/charts/mlp/values-e2e.yaml \
-    --set mlp.image.tag=v1.7.2 \
-    --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
-    --set mlp.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
-    --set mlp.ingress.enabled=true \
-    --set mlp.ingress.class=istio \
-    --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST} \
-    --set mlp.ingress.path="/" \
+
+  helm repo add caraml https://caraml-dev.github.io/helm-charts
+
+  helm upgrade --install --debug mlp caraml/mlp --namespace mlp --create-namespace \
+    --version ${MLP_CHART_VERSION} \
+    --set fullnameOverride=mlp \
+    --set deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
+    --set deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
+    --set ingress.enabled=true \
+    --set ingress.class=istio \
+    --set ingress.host=mlp.mlp.${INGRESS_HOST} \
     --wait --timeout=${TIMEOUT}
 
    kubectl apply -f config/mock/message-dumper.yaml
@@ -33,8 +36,9 @@ install_mlp() {
 
 install_merlin() {
     echo "::group::Merlin Deployment"
-  # Merlin uses vault-secret to connect to vault
-  kubectl create secret generic vault-secret --namespace=mlp --from-literal=address=http://vault.vault.svc.cluster.local --from-literal=token=root --dry-run=client -o yaml | kubectl apply -f -
+# build in json first, then convert to yaml
+  output=$(yq e -o json '.k8s_config' /tmp/temp_k8sconfig.yaml | jq -r -M -c .)
+  output="$output" yq '.merlin.environmentConfigs[0] *= load("/tmp/temp_k8sconfig.yaml") | .merlin.imageBuilder.k8sConfig |= strenv(output)' -i "${CHART_PATH}/values-e2e.yaml"
 
   helm upgrade --install --debug merlin ${CHART_PATH} --namespace=mlp --create-namespace -f ${CHART_PATH}/values-e2e.yaml \
     --set merlin.image.registry=${DOCKER_REGISTRY} \

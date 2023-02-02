@@ -14,17 +14,18 @@
 
 import datetime
 import json
+from sys import version_info
 from unittest import mock
 
-import pytest
-from urllib3_mock import Responses
-
 import client as cl
+import pytest
 from client import ApiClient, Configuration
 from merlin.client import MerlinClient
 from merlin.endpoint import Status
-from merlin.model import Project, Model, ModelType
+from merlin.model import Model, ModelType, Project
 from merlin.util import guess_mlp_ui_url
+from merlin.version import VERSION
+from urllib3_mock import Responses
 
 responses = Responses('requests.packages.urllib3')
 
@@ -147,6 +148,8 @@ def test_create_model(mock_url, api_client, mock_oauth, use_google_oauth):
         assert isinstance(model.created_at, datetime.datetime)
         assert isinstance(model.updated_at, datetime.datetime)
         assert model.project == project
+        assert f"merlin-sdk/{VERSION}" in responses.calls[-1].request.headers['User-Agent']
+        assert f"python/{version_info.major}.{version_info.minor}.{version_info.micro}" in responses.calls[-1].request.headers['User-Agent']
 
 
 @responses.activate

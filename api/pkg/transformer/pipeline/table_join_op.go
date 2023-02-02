@@ -7,6 +7,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 
+	mErrors "github.com/gojek/merlin/pkg/errors"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/gojek/merlin/pkg/transformer/symbol"
 	"github.com/gojek/merlin/pkg/transformer/types"
@@ -107,7 +108,7 @@ func (t TableJoinOp) Execute(ctx context.Context, environment *Environment) erro
 			return err
 		}
 	default:
-		return fmt.Errorf("unknown join method: %s", t.tableJoinSpec.How)
+		return mErrors.NewInvalidInputErrorf("unknown join method: %s", t.tableJoinSpec.How)
 	}
 
 	environment.SetSymbol(t.tableJoinSpec.OutputTable, resultTable)
@@ -130,12 +131,12 @@ func getTable(env *Environment, tableName string) (*table.Table, error) {
 func getTableFromSymbolRegistry(sr symbol.Registry, tableName string) (*table.Table, error) {
 	tableRaw := sr[tableName]
 	if tableRaw == nil {
-		return nil, fmt.Errorf("table %s is not declared", tableName)
+		return nil, mErrors.NewInvalidInputErrorf("table '%s' is not declared", tableName)
 	}
 
 	tableOut, ok := tableRaw.(*table.Table)
 	if !ok {
-		return nil, fmt.Errorf("variable %s is not a table", tableName)
+		return nil, mErrors.NewInvalidInputErrorf("variable '%s' is not a table", tableName)
 	}
 	return tableOut, nil
 }
@@ -155,23 +156,23 @@ func validateJoinColumns(leftTable *table.Table, rightTable *table.Table, joinCo
 
 	if len(leftTableColumns) > 0 && len(rightTableColumns) > 0 {
 		if strings.Join(leftTableColumns, ", ") == strings.Join(rightTableColumns, ", ") {
-			return fmt.Errorf("invalid join column: column %s does not exists in %s", strings.Join(leftTableColumns, ", "), "left table and right table")
+			return mErrors.NewInvalidInputErrorf("invalid join column: column %s does not exist in %s", strings.Join(leftTableColumns, ", "), "left table and right table")
 		}
 	}
 
 	var errMessages []string
 	if len(leftTableColumns) > 0 {
 		missingColumns := strings.Join(leftTableColumns, ", ")
-		errMessages = append(errMessages, fmt.Sprintf("column %s does not exists in %s", missingColumns, "left table"))
+		errMessages = append(errMessages, fmt.Sprintf("column %s does not exist in %s", missingColumns, "left table"))
 	}
 
 	if len(rightTableColumns) > 0 {
 		missingColumns := strings.Join(rightTableColumns, ", ")
-		errMessages = append(errMessages, fmt.Sprintf("column %s does not exists in %s", missingColumns, "right table"))
+		errMessages = append(errMessages, fmt.Sprintf("column %s does not exist in %s", missingColumns, "right table"))
 	}
 
 	if len(errMessages) > 0 {
-		return fmt.Errorf("invalid join column: %s", strings.Join(errMessages, " and "))
+		return mErrors.NewInvalidInputErrorf("invalid join column: %s", strings.Join(errMessages, " and "))
 	}
 
 	return nil
