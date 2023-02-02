@@ -18,6 +18,9 @@ import (
 	"fmt"
 	"strings"
 
+	mlpclient "github.com/gojek/mlp/api/client"
+
+	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/pkg/autoscaling"
 	"github.com/gojek/merlin/pkg/deployment"
 	"github.com/gojek/merlin/pkg/protocol"
@@ -60,7 +63,7 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 			Stream:      model.Project.Stream,
 			App:         model.Name,
 			Environment: endpoint.EnvironmentName,
-			Labels:      model.Project.Labels,
+			Labels:      mergeProjectVersionLabels(model.Project.Labels, version.Labels),
 		},
 		Transformer:       endpoint.Transformer,
 		Logger:            endpoint.Logger,
@@ -68,6 +71,28 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 		AutoscalingPolicy: endpoint.AutoscalingPolicy,
 		Protocol:          endpoint.Protocol,
 	}
+}
+
+func mergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.Labels {
+	projectLabelsMap := map[string]int{}
+	for index, projectLabel := range projectLabels {
+		projectLabelsMap[projectLabel.Key] = index
+	}
+
+	for versionLabelKey, versionLabelValue := range versionLabels {
+		if _, labelExists := projectLabelsMap[versionLabelKey]; labelExists {
+			index := projectLabelsMap[versionLabelKey]
+			projectLabels[index].Value = fmt.Sprint(versionLabelValue)
+			continue
+		}
+
+		projectLabels = append(projectLabels, mlpclient.Label{
+			Key:   versionLabelKey,
+			Value: fmt.Sprint(versionLabelValue),
+		})
+	}
+
+	return projectLabels
 }
 
 func CreateInferenceServiceName(modelName string, versionID string) string {

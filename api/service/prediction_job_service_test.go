@@ -93,6 +93,7 @@ var (
 			App:         model.Name,
 			Environment: environmentLabel,
 			Labels:      project.Labels,
+			LabelPrefix: "gojek.com/",
 		},
 		VersionID:       3,
 		VersionModelID:  1,

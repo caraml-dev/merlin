@@ -72,18 +72,22 @@ func (metadata *Metadata) ToLabel() map[string]string {
 
 	for _, label := range metadata.Labels {
 		key := metadata.LabelPrefix + label.Key
+
 		// skip label that is trying to override reserved key
 		if _, usingReservedKeys := reservedKeys[key]; usingReservedKeys {
 			continue
 		}
+
 		// skip label that has invalid key name
 		if err := utils.IsValidLabel(label.Key); err != nil {
 			continue
 		}
+
 		// skip label that has invalid value name
 		if err := utils.IsValidLabel(label.Value); err != nil {
 			continue
 		}
+
 		labels[key] = label.Value
 	}
 	return labels

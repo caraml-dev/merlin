@@ -145,6 +145,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Value: "true",
 				},
 			},
+			LabelPrefix: "gojek.com/",
 		},
 		Protocol: protocol.HttpJson,
 	}
@@ -1540,6 +1541,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Value: "true",
 				},
 			},
+			LabelPrefix: "gojek.com/",
 		},
 		Protocol: protocol.HttpJson,
 	}
@@ -1561,6 +1563,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Value: "true",
 				},
 			},
+			LabelPrefix: "gojek.com/",
 		},
 		Protocol: protocol.UpiV1,
 	}
@@ -2077,6 +2080,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Value: "true",
 				},
 			},
+			LabelPrefix: "gojek.com/",
 		},
 		Protocol: protocol.HttpJson,
 	}
@@ -2542,6 +2546,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Value: "true",
 				},
 			},
+			LabelPrefix: "gojek.com/",
 		},
 		Protocol: protocol.HttpJson,
 	}
@@ -3234,6 +3239,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 					Value: "true",
 				},
 			},
+			LabelPrefix: "gojek.com/",
 		},
 		Protocol: protocol.HttpJson,
 	}
@@ -3270,7 +3276,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 						MemoryRequest: memoryRequest,
 					},
 					EnvVars: models.EnvVars{
-						{Name: transformer.JaegerAgentHost, Value: "NEW_HOST"}, //test user overwrite
+						{Name: transformer.JaegerAgentHost, Value: "NEW_HOST"}, // test user overwrite
 					},
 				},
 				&config.DeploymentConfig{},

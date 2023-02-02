@@ -597,7 +597,7 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &modelEndpointsService{environment: tt.fields.environment}
+			s := &modelEndpointsService{environment: tt.fields.environment, labelPrefix: "gojek.com/"}
 			vs, err := s.createVirtualService(tt.args.model, tt.args.modelEndpoint)
 
 			if (err != nil) != tt.wantErr {

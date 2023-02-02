@@ -26,6 +26,7 @@ func TestToLabel(t *testing.T) {
 						Value: "value",
 					},
 				},
+				LabelPrefix: "gojek.com/",
 			},
 			expectedLabels: map[string]string{
 				"gojek.com/team":         "abc",
@@ -65,6 +66,7 @@ func TestToLabel(t *testing.T) {
 						Value: "clockwork",
 					},
 				},
+				LabelPrefix: "gojek.com/",
 			},
 			expectedLabels: map[string]string{
 				"gojek.com/team":         "abc",
@@ -95,6 +97,7 @@ func TestToLabel(t *testing.T) {
 						Value: "project!",
 					},
 				},
+				LabelPrefix: "gojek.com/",
 			},
 			expectedLabels: map[string]string{
 				"gojek.com/team":         "abc",

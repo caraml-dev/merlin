@@ -15,7 +15,6 @@
 package batch
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/apis/sparkoperator.k8s.io/v1beta2"
@@ -57,7 +56,6 @@ var (
 	labelAppName          = "gojek.com/app"
 	labelOrchestratorName = "gojek.com/orchestrator"
 	labelEnvironment      = "gojek.com/environment"
-	labelUsersPrefix      = "gojek.com/%s"
 
 	defaultLabels = map[string]string{
 		labelOrchestratorName: "merlin",
@@ -65,11 +63,11 @@ var (
 		labelModelVersionID:   versionID.String(),
 		labelPredictionJobID:  jobID.String(),
 
-		labelTeamName:                           teamName,
-		labelStreamName:                         streamName,
-		labelAppName:                            modelName,
-		labelEnvironment:                        environementName,
-		fmt.Sprintf(labelUsersPrefix, "my-key"): "my-value",
+		labelTeamName:    teamName,
+		labelStreamName:  streamName,
+		labelAppName:     modelName,
+		labelEnvironment: environementName,
+		"my-key":         "my-value",
 	}
 
 	driverCore       int32 = 1

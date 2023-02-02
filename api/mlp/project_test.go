@@ -20,6 +20,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gojek/mlp/api/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -147,4 +148,22 @@ func TestProject_MlflowRunURL(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLabels(t *testing.T) {
+	labels := []client.Label{
+		{Key: "key-1", Value: "value-1"},
+		{Key: "key-2", Value: "value-2"},
+	}
+
+	maps := map[string]string{
+		"key-1": "value-1",
+		"key-2": "value-2",
+	}
+
+	gotMaps := LabelsToMaps(labels)
+	assert.Equal(t, maps, gotMaps)
+
+	gotLabels := MapsToLabels(maps)
+	assert.Equal(t, Labels(labels), gotLabels)
 }
