@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: manager
-        image: kserve/kserve-controller:latest
+        image: kserve/kserve-controller:v0.9.0
         resources:
           limits:
             cpu: 1
@@ -27,7 +27,7 @@ metadata:
 data:
   agent: |-
     {
-        "image" : "kserve/agent:v0.8.0",
+        "image" : "kserve/agent:v0.9.0",
         "memoryRequest": "50Mi",
         "memoryLimit": "1Gi",
         "cpuRequest": "10m",
@@ -35,7 +35,7 @@ data:
     }
   batcher: |-
     {
-        "image" : "kserve/agent:v0.8.0",
+        "image" : "kserve/agent:v0.9.0",
         "memoryRequest": "50Mi",
         "memoryLimit": "1Gi",
         "cpuRequest": "10m",
@@ -82,7 +82,7 @@ data:
     }
   logger: |-
     {
-        "image" : "kserve/agent:v0.8.0",
+        "image" : "kserve/agent:v0.9.0",
         "memoryRequest": "100Mi",
         "memoryLimit": "1Gi",
         "cpuRequest": "10m",
@@ -112,7 +112,7 @@ data:
         "sklearn": {
           "v1": {
             "image": "kserve/sklearnserver",
-            "defaultImageVersion": "v0.8.0",
+            "defaultImageVersion": "v0.9.0",
             "supportedFrameworks": [
               "sklearn"
             ],
@@ -130,7 +130,7 @@ data:
         "xgboost": {
           "v1": {
             "image": "kserve/xgbserver",
-            "defaultImageVersion": "v0.8.0",
+            "defaultImageVersion": "v0.9.0",
             "supportedFrameworks": [
               "xgboost"
             ],
@@ -178,7 +178,7 @@ data:
         },
         "pmml": {
             "image": "kserve/pmmlserver",
-            "defaultImageVersion": "v0.8.0",
+            "defaultImageVersion": "v0.9.0",
             "supportedFrameworks": [
               "pmml"
             ],
@@ -186,7 +186,7 @@ data:
         },
         "lightgbm": {
             "image": "kserve/lgbserver",
-            "defaultImageVersion": "v0.8.0",
+            "defaultImageVersion": "v0.9.0",
             "supportedFrameworks": [
               "lightgbm"
             ],
@@ -194,7 +194,7 @@ data:
         },
         "paddle": {
             "image": "kserve/paddleserver",
-            "defaultImageVersion": "v0.8.0",
+            "defaultImageVersion": "v0.9.0",
             "supportedFrameworks": [
               "paddle"
             ],
