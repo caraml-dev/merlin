@@ -103,7 +103,7 @@ func (p *predictionJobService) CreatePredictionJob(ctx context.Context, env *mod
 		Stream:      model.Project.Stream,
 		App:         model.Name,
 		Environment: p.environmentLabel,
-		Labels:      model.Project.Labels,
+		Labels:      models.MergeProjectVersionLabels(model.Project.Labels, version.Labels),
 		LabelPrefix: p.labelPrefix,
 	}
 	predictionJob.Status = models.JobPending

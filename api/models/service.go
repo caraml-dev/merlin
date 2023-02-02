@@ -63,7 +63,7 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 			Stream:      model.Project.Stream,
 			App:         model.Name,
 			Environment: endpoint.EnvironmentName,
-			Labels:      mergeProjectVersionLabels(model.Project.Labels, version.Labels),
+			Labels:      MergeProjectVersionLabels(model.Project.Labels, version.Labels),
 		},
 		Transformer:       endpoint.Transformer,
 		Logger:            endpoint.Logger,
@@ -73,7 +73,7 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 	}
 }
 
-func mergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.Labels {
+func MergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.Labels {
 	projectLabelsMap := map[string]int{}
 	for index, projectLabel := range projectLabels {
 		projectLabelsMap[projectLabel.Key] = index

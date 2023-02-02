@@ -131,7 +131,7 @@ func Test_mergeProjectVersionLabels(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := mergeProjectVersionLabels(tt.args.projectLabels, tt.args.versionLabels); !reflect.DeepEqual(got, tt.want) {
+			if got := MergeProjectVersionLabels(tt.args.projectLabels, tt.args.versionLabels); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("mergeProjectVersionLabels() = %v, want %v", got, tt.want)
 			}
 		})
