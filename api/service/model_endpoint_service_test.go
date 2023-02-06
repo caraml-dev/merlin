@@ -38,7 +38,6 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 		modelEndpointStorage   storage.ModelEndpointStorage
 		versionEndpointStorage storage.VersionEndpointStorage
 		environment            string
-		labelPrefix            string
 	}
 
 	type args struct {
@@ -62,7 +61,6 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
-				labelPrefix:            "gojek.com/",
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, modelEndpointRequest1)
@@ -91,7 +89,6 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
-				labelPrefix:            "gojek.com/",
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(upiV1Model, upiV1ModelEndpointRequest1)
@@ -120,7 +117,6 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
-				labelPrefix:            "gojek.com/",
 			},
 			func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, modelEndpointRequest1)
@@ -145,7 +141,7 @@ func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment, tt.fields.labelPrefix)
+			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment)
 
 			tt.mockFunc(s)
 
@@ -243,7 +239,6 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 		modelEndpointStorage   storage.ModelEndpointStorage
 		versionEndpointStorage storage.VersionEndpointStorage
 		environment            string
-		labelPrefix            string
 	}
 	type args struct {
 		ctx         context.Context
@@ -266,7 +261,6 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
-				labelPrefix:            "gojek.com/",
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, updatedModelEndpointReq)
@@ -296,7 +290,6 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
-				labelPrefix:            "gojek.com/",
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, updatedUpiV1ModelEndpointReq)
@@ -326,7 +319,6 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
-				labelPrefix:            "gojek.com/",
 			},
 			func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, modelEndpointRequestWrongEnvironment)
@@ -352,7 +344,7 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment, tt.fields.labelPrefix)
+			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment)
 
 			tt.mockFunc(s)
 
@@ -375,7 +367,6 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 		modelEndpointStorage   storage.ModelEndpointStorage
 		versionEndpointStorage storage.VersionEndpointStorage
 		environment            string
-		labelPrefix            string
 	}
 	type args struct {
 		ctx      context.Context
@@ -397,7 +388,6 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
-				labelPrefix:            "gojek.com/",
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
@@ -421,7 +411,6 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
 				environment:            "staging",
-				labelPrefix:            "gojek.com/",
 			},
 			func(s *modelEndpointsService) {
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
@@ -438,7 +427,7 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment, tt.fields.labelPrefix)
+			s := newModelEndpointsService(tt.fields.istioClients, tt.fields.modelEndpointStorage, tt.fields.versionEndpointStorage, tt.fields.environment)
 
 			tt.mockFunc(s)
 
@@ -453,6 +442,9 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 }
 
 func TestModelEndpointService_createVirtualService(t *testing.T) {
+	models.InitKubernetesLabeller("gojek.com/")
+	defer models.InitKubernetesLabeller("")
+
 	type fields struct {
 		environment string
 	}
@@ -484,11 +476,12 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 					Namespace: model1.Project.Name,
 					Labels: map[string]string{
 						"gojek.com/app":          model1.Name,
+						"gojek.com/component":    models.ComponentModelEndpoint,
+						"gojek.com/environment":  "staging",
 						"gojek.com/orchestrator": "merlin",
+						"gojek.com/sample":       "true",
 						"gojek.com/stream":       model1.Project.Stream,
 						"gojek.com/team":         model1.Project.Team,
-						"gojek.com/environment":  "staging",
-						"gojek.com/sample":       "true",
 					},
 				},
 				Spec: networking.VirtualService{
@@ -563,11 +556,12 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 					Namespace: model1.Project.Name,
 					Labels: map[string]string{
 						"gojek.com/app":          model1.Name,
+						"gojek.com/component":    models.ComponentModelEndpoint,
+						"gojek.com/environment":  "staging",
 						"gojek.com/orchestrator": "merlin",
+						"gojek.com/sample":       "true",
 						"gojek.com/stream":       model1.Project.Stream,
 						"gojek.com/team":         model1.Project.Team,
-						"gojek.com/environment":  "staging",
-						"gojek.com/sample":       "true",
 					},
 				},
 				Spec: networking.VirtualService{
@@ -597,7 +591,7 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &modelEndpointsService{environment: tt.fields.environment, labelPrefix: "gojek.com/"}
+			s := &modelEndpointsService{environment: tt.fields.environment}
 			vs, err := s.createVirtualService(tt.args.model, tt.args.modelEndpoint)
 
 			if (err != nil) != tt.wantErr {

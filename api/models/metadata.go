@@ -24,28 +24,42 @@ import (
 )
 
 const (
-	labelTeamName         = "gojek.com/team"
-	labelStreamName       = "gojek.com/stream"
-	labelAppName          = "gojek.com/app"
-	labelOrchestratorName = "gojek.com/orchestrator"
-	labelEnvironment      = "gojek.com/environment"
+	LabelAppName          = "app"
+	LabelComponent        = "component"
+	LabelEnvironment      = "environment"
+	LabelOrchestratorName = "orchestrator"
+	LabelStreamName       = "stream"
+	LabelTeamName         = "team"
+
+	ComponentBatchJob      = "batch-job"
+	ComponentImageBuilder  = "image-builder"
+	ComponentModelEndpoint = "model-endpoint"
+	ComponentModelVersion  = "model-version"
 )
 
 var reservedKeys = map[string]bool{
-	labelTeamName:         true,
-	labelStreamName:       true,
-	labelAppName:          true,
-	labelOrchestratorName: true,
-	labelEnvironment:      true,
+	LabelAppName:          true,
+	LabelComponent:        true,
+	LabelEnvironment:      true,
+	LabelOrchestratorName: true,
+	LabelStreamName:       true,
+	LabelTeamName:         true,
+}
+
+var prefix string
+
+// InitKubernetesLabeller builds a new KubernetesLabeller Singleton
+func InitKubernetesLabeller(p string) {
+	prefix = p
 }
 
 type Metadata struct {
-	Team        string
-	Stream      string
 	App         string
+	Component   string
 	Environment string
+	Stream      string
+	Team        string
 	Labels      mlp.Labels
-	LabelPrefix string
 }
 
 func (metadata Metadata) Value() (driver.Value, error) {
@@ -63,18 +77,17 @@ func (metadata *Metadata) Scan(value interface{}) error {
 
 func (metadata *Metadata) ToLabel() map[string]string {
 	labels := map[string]string{
-		labelOrchestratorName: "merlin",
-		labelAppName:          metadata.App,
-		labelEnvironment:      metadata.Environment,
-		labelStreamName:       metadata.Stream,
-		labelTeamName:         metadata.Team,
+		prefix + LabelAppName:          metadata.App,
+		prefix + LabelComponent:        metadata.Component,
+		prefix + LabelEnvironment:      metadata.Environment,
+		prefix + LabelOrchestratorName: "merlin",
+		prefix + LabelStreamName:       metadata.Stream,
+		prefix + LabelTeamName:         metadata.Team,
 	}
 
 	for _, label := range metadata.Labels {
-		key := metadata.LabelPrefix + label.Key
-
 		// skip label that is trying to override reserved key
-		if _, usingReservedKeys := reservedKeys[key]; usingReservedKeys {
+		if _, usingReservedKeys := reservedKeys[label.Key]; usingReservedKeys {
 			continue
 		}
 
@@ -88,7 +101,9 @@ func (metadata *Metadata) ToLabel() map[string]string {
 			continue
 		}
 
+		key := prefix + label.Key
 		labels[key] = label.Value
 	}
+
 	return labels
 }

@@ -45,7 +45,6 @@ var (
 	nowRFC3339 = now.Format(time.RFC3339)
 
 	environmentLabel       = "dev"
-	labelPrefix            = "gojek.com/"
 	isDefaultPredictionJob = true
 	predJobEnv             = &models.Environment{
 		ID:                     1,
@@ -88,12 +87,12 @@ var (
 		ID:   0,
 		Name: fmt.Sprintf("%s-%s-%s", model.Name, version.ID, strconv.FormatInt(now.UnixNano(), 10)[:13]),
 		Metadata: models.Metadata{
-			Team:        project.Team,
-			Stream:      project.Stream,
 			App:         model.Name,
+			Component:   models.ComponentBatchJob,
 			Environment: environmentLabel,
+			Stream:      project.Stream,
+			Team:        project.Team,
 			Labels:      project.Labels,
-			LabelPrefix: "gojek.com/",
 		},
 		VersionID:       3,
 		VersionModelID:  1,
@@ -366,5 +365,5 @@ func newMockPredictionJobService() (PredictionJobService, map[string]batch.Contr
 	mockImageBuilder := &imageBuilderMock.ImageBuilder{}
 	mockStorage := &storageMock.PredictionJobStorage{}
 	mockClock := clock.NewFakeClock(now)
-	return NewPredictionJobService(mockControllers, mockImageBuilder, mockStorage, mockClock, environmentLabel, labelPrefix, mockJobProducer), mockControllers, mockImageBuilder, mockStorage, mockJobProducer
+	return NewPredictionJobService(mockControllers, mockImageBuilder, mockStorage, mockClock, environmentLabel, mockJobProducer), mockControllers, mockImageBuilder, mockStorage, mockJobProducer
 }

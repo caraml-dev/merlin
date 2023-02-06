@@ -70,13 +70,6 @@ const (
 	kanikoSecretName   = "kaniko-secret"
 	tickDurationSecond = 5
 
-	labelTeamName         = "gojek.com/team"
-	labelStreamName       = "gojek.com/stream"
-	labelAppName          = "gojek.com/app"
-	labelEnvironment      = "gojek.com/environment"
-	labelOrchestratorName = "gojek.com/orchestrator"
-	labelComponent        = "gojek.com/component"
-
 	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
 	saFilePath = "/secret/kaniko-secret.json"
 )
@@ -342,13 +335,12 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 	kanikoPodName := c.nameGenerator.generateBuilderJobName(project, model, version)
 	imageRef := c.imageRef(project, model, version)
 
-	labels := map[string]string{
-		labelTeamName:         project.Team,
-		labelStreamName:       project.Stream,
-		labelAppName:          model.Name,
-		labelEnvironment:      c.config.Environment,
-		labelOrchestratorName: "merlin",
-		labelComponent:        "image-builder",
+	metadata := models.Metadata{
+		App:         model.Name,
+		Component:   models.ComponentImageBuilder,
+		Environment: c.config.Environment,
+		Stream:      project.Stream,
+		Team:        project.Team,
 	}
 
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
@@ -377,7 +369,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kanikoPodName,
 			Namespace: c.config.BuildNamespace,
-			Labels:    labels,
+			Labels:    metadata.ToLabel(),
 		},
 		Spec: batchv1.JobSpec{
 			Completions:             &jobCompletions,
@@ -386,7 +378,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels: metadata.ToLabel(),
 				},
 				Spec: v1.PodSpec{
 					// https://stackoverflow.com/questions/54091659/kubernetes-pods-disappear-after-failed-jobs

@@ -63,8 +63,8 @@ type ModelEndpointsService interface {
 }
 
 // NewModelEndpointsService returns an initialized ModelEndpointsService.
-func NewModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment, labelPrefix string) ModelEndpointsService {
-	return newModelEndpointsService(istioClients, modelEndpointStorage, versionEndpointStorage, environment, labelPrefix)
+func NewModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) ModelEndpointsService {
+	return newModelEndpointsService(istioClients, modelEndpointStorage, versionEndpointStorage, environment)
 }
 
 type modelEndpointsService struct {
@@ -72,16 +72,14 @@ type modelEndpointsService struct {
 	modelEndpointStorage   storage.ModelEndpointStorage
 	versionEndpointStorage storage.VersionEndpointStorage
 	environment            string
-	labelPrefix            string
 }
 
-func newModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment, labelPrefix string) *modelEndpointsService {
+func newModelEndpointsService(istioClients map[string]istio.Client, modelEndpointStorage storage.ModelEndpointStorage, versionEndpointStorage storage.VersionEndpointStorage, environment string) *modelEndpointsService {
 	return &modelEndpointsService{
 		istioClients:           istioClients,
 		modelEndpointStorage:   modelEndpointStorage,
 		versionEndpointStorage: versionEndpointStorage,
 		environment:            environment,
-		labelPrefix:            labelPrefix,
 	}
 }
 
@@ -213,12 +211,12 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 
 func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoint *models.ModelEndpoint) (*v1beta1.VirtualService, error) {
 	metadata := models.Metadata{
-		Team:        model.Project.Team,
-		Stream:      model.Project.Stream,
 		App:         model.Name,
+		Component:   models.ComponentModelEndpoint,
 		Environment: s.environment,
 		Labels:      model.Project.Labels,
-		LabelPrefix: s.labelPrefix,
+		Stream:      model.Project.Stream,
+		Team:        model.Project.Team,
 	}
 	labels := metadata.ToLabel()
 

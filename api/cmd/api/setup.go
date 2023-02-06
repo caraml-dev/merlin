@@ -360,7 +360,7 @@ func initModelEndpointService(cfg *config.Config, db *gorm.DB) service.ModelEndp
 		istioClients[env.Name] = istioClient
 	}
 
-	return service.NewModelEndpointsService(istioClients, storage.NewModelEndpointStorage(db), storage.NewVersionEndpointStorage(db), cfg.Environment, cfg.DeploymentLabelPrefix)
+	return service.NewModelEndpointsService(istioClients, storage.NewModelEndpointStorage(db), storage.NewVersionEndpointStorage(db), cfg.Environment)
 }
 
 func initBatchDeployment(cfg *config.Config, db *gorm.DB, controllers map[string]batch.Controller, builder imagebuilder.ImageBuilder) *work.BatchDeployment {
@@ -370,7 +370,6 @@ func initBatchDeployment(cfg *config.Config, db *gorm.DB, controllers map[string
 		BatchControllers: controllers,
 		Clock:            clock.RealClock{},
 		EnvironmentLabel: cfg.Environment,
-		LabelPrefix:      cfg.DeploymentLabelPrefix,
 	}
 }
 
@@ -412,7 +411,7 @@ func initBatchControllers(cfg *config.Config, db *gorm.DB, mlpAPIClient mlp.APIC
 
 func initPredictionJobService(cfg *config.Config, controllers map[string]batch.Controller, builder imagebuilder.ImageBuilder, db *gorm.DB, producer queue.Producer) service.PredictionJobService {
 	predictionJobStorage := storage.NewPredictionJobStorage(db)
-	return service.NewPredictionJobService(controllers, builder, predictionJobStorage, clock.RealClock{}, cfg.Environment, cfg.DeploymentLabelPrefix, producer)
+	return service.NewPredictionJobService(controllers, builder, predictionJobStorage, clock.RealClock{}, cfg.Environment, producer)
 }
 
 func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBuilder, controllers map[string]cluster.Controller, db *gorm.DB) *work.ModelServiceDeployment {

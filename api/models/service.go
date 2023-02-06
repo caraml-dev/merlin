@@ -59,10 +59,11 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 		ResourceRequest: endpoint.ResourceRequest,
 		EnvVars:         endpoint.EnvVars,
 		Metadata: Metadata{
-			Team:        model.Project.Team,
-			Stream:      model.Project.Stream,
 			App:         model.Name,
+			Component:   ComponentModelVersion,
 			Environment: endpoint.EnvironmentName,
+			Stream:      model.Project.Stream,
+			Team:        model.Project.Team,
 			Labels:      MergeProjectVersionLabels(model.Project.Labels, version.Labels),
 		},
 		Transformer:       endpoint.Transformer,

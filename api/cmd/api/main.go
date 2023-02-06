@@ -41,6 +41,7 @@ import (
 	"github.com/gojek/merlin/config"
 	"github.com/gojek/merlin/log"
 	"github.com/gojek/merlin/mlflow"
+	"github.com/gojek/merlin/models"
 	"github.com/gojek/merlin/pkg/gitlab"
 	"github.com/gojek/merlin/queue"
 	"github.com/gojek/merlin/queue/work"
@@ -205,6 +206,8 @@ func registerQueueJob(consumer queue.Consumer, modelServiceDepl *work.ModelServi
 func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dispatcher *queue.Dispatcher) deps {
 	mlpAPIClient := initMLPAPIClient(ctx, cfg.MlpAPIConfig)
 	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL, cfg.StandardTransformerConfig.FeastCoreAuthAudience, cfg.StandardTransformerConfig.EnableAuth)
+
+	models.InitKubernetesLabeller(cfg.DeploymentLabelPrefix)
 
 	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg)
 

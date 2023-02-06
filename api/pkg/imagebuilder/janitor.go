@@ -13,6 +13,7 @@ import (
 
 	"github.com/gojek/merlin/cluster"
 	"github.com/gojek/merlin/log"
+	"github.com/gojek/merlin/models"
 )
 
 var (
@@ -71,7 +72,7 @@ func (j *Janitor) CleanJobs() {
 }
 
 func (j *Janitor) getExpiredJobs(ctx context.Context) ([]batchv1.Job, error) {
-	jobs, err := j.cc.ListJobs(ctx, j.cfg.BuildNamespace, labelOrchestratorName+"=merlin")
+	jobs, err := j.cc.ListJobs(ctx, j.cfg.BuildNamespace, models.LabelOrchestratorName+"=merlin")
 	if err != nil {
 		return nil, err
 	}

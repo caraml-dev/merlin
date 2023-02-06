@@ -62,12 +62,11 @@ type predictionJobService struct {
 	batchControllers map[string]batch.Controller
 	clock            clock2.Clock
 	environmentLabel string
-	labelPrefix      string
 	producer         queue.Producer
 }
 
-func NewPredictionJobService(batchControllers map[string]batch.Controller, imageBuilder imagebuilder.ImageBuilder, store storage.PredictionJobStorage, clock clock2.Clock, environmentLabel, labelPrefix string, producer queue.Producer) PredictionJobService {
-	svc := predictionJobService{store: store, imageBuilder: imageBuilder, batchControllers: batchControllers, clock: clock, environmentLabel: environmentLabel, labelPrefix: labelPrefix, producer: producer}
+func NewPredictionJobService(batchControllers map[string]batch.Controller, imageBuilder imagebuilder.ImageBuilder, store storage.PredictionJobStorage, clock clock2.Clock, environmentLabel string, producer queue.Producer) PredictionJobService {
+	svc := predictionJobService{store: store, imageBuilder: imageBuilder, batchControllers: batchControllers, clock: clock, environmentLabel: environmentLabel, producer: producer}
 	return &svc
 }
 
@@ -99,12 +98,12 @@ func (p *predictionJobService) CreatePredictionJob(ctx context.Context, env *mod
 
 	predictionJob.Name = jobName
 	predictionJob.Metadata = models.Metadata{
-		Team:        model.Project.Team,
-		Stream:      model.Project.Stream,
 		App:         model.Name,
+		Component:   models.ComponentBatchJob,
 		Environment: p.environmentLabel,
 		Labels:      models.MergeProjectVersionLabels(model.Project.Labels, version.Labels),
-		LabelPrefix: p.labelPrefix,
+		Stream:      model.Project.Stream,
+		Team:        model.Project.Team,
 	}
 	predictionJob.Status = models.JobPending
 	predictionJob.VersionModelID = model.ID

@@ -51,23 +51,26 @@ var (
 	modelID   = models.ID(2)
 	versionID = models.ID(3)
 
-	labelTeamName         = "gojek.com/team"
-	labelStreamName       = "gojek.com/stream"
 	labelAppName          = "gojek.com/app"
-	labelOrchestratorName = "gojek.com/orchestrator"
+	labelComponentName    = "gojek.com/component"
 	labelEnvironment      = "gojek.com/environment"
+	labelOrchestratorName = "gojek.com/orchestrator"
+	labelStreamName       = "gojek.com/stream"
+	labelTeamName         = "gojek.com/team"
 
 	defaultLabels = map[string]string{
-		labelOrchestratorName: "merlin",
-		labelModelID:          modelID.String(),
-		labelModelVersionID:   versionID.String(),
-		labelPredictionJobID:  jobID.String(),
+		labelModelID:         modelID.String(),
+		labelModelVersionID:  versionID.String(),
+		labelPredictionJobID: jobID.String(),
 
-		labelTeamName:    teamName,
-		labelStreamName:  streamName,
-		labelAppName:     modelName,
-		labelEnvironment: environementName,
-		"my-key":         "my-value",
+		labelAppName:          modelName,
+		labelComponentName:    models.ComponentBatchJob,
+		labelEnvironment:      environementName,
+		labelOrchestratorName: "merlin",
+		labelStreamName:       streamName,
+		labelTeamName:         teamName,
+
+		"gojek.com/my-key": "my-value",
 	}
 
 	driverCore       int32 = 1
@@ -116,6 +119,9 @@ var (
 )
 
 func TestCreateSparkApplicationResource(t *testing.T) {
+	models.InitKubernetesLabeller("gojek.com/")
+	defer models.InitKubernetesLabeller("")
+
 	tests := []struct {
 		name           string
 		arg            *models.PredictionJob
@@ -129,10 +135,11 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				Name: jobName,
 				ID:   jobID,
 				Metadata: models.Metadata{
-					Team:        teamName,
-					Stream:      streamName,
 					App:         modelName,
+					Component:   models.ComponentBatchJob,
 					Environment: environementName,
+					Stream:      streamName,
+					Team:        teamName,
 					Labels:      userLabels,
 				},
 				VersionModelID: modelID,
@@ -208,10 +215,11 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				Name: jobName,
 				ID:   jobID,
 				Metadata: models.Metadata{
-					Team:        teamName,
-					Stream:      streamName,
 					App:         modelName,
+					Component:   models.ComponentBatchJob,
 					Environment: environementName,
+					Stream:      streamName,
+					Team:        teamName,
 					Labels:      userLabels,
 				},
 				VersionModelID: modelID,
@@ -287,10 +295,11 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				Name: jobName,
 				ID:   jobID,
 				Metadata: models.Metadata{
-					Team:        teamName,
-					Stream:      streamName,
 					App:         modelName,
+					Component:   models.ComponentBatchJob,
 					Environment: environementName,
+					Stream:      streamName,
+					Team:        teamName,
 					Labels:      userLabels,
 				},
 				VersionModelID: modelID,
@@ -366,10 +375,11 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				Name: jobName,
 				ID:   jobID,
 				Metadata: models.Metadata{
-					Team:        teamName,
-					Stream:      streamName,
 					App:         modelName,
+					Component:   models.ComponentBatchJob,
 					Environment: environementName,
+					Stream:      streamName,
+					Team:        teamName,
 					Labels:      userLabels,
 				},
 				VersionModelID: modelID,
@@ -445,10 +455,11 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				Name: jobName,
 				ID:   jobID,
 				Metadata: models.Metadata{
-					Team:        teamName,
-					Stream:      streamName,
 					App:         modelName,
+					Component:   models.ComponentBatchJob,
 					Environment: environementName,
+					Stream:      streamName,
+					Team:        teamName,
 					Labels:      userLabels,
 				},
 				VersionModelID: modelID,
@@ -536,10 +547,11 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				Name: jobName,
 				ID:   jobID,
 				Metadata: models.Metadata{
-					Team:        teamName,
-					Stream:      streamName,
 					App:         modelName,
+					Component:   models.ComponentBatchJob,
 					Environment: environementName,
+					Stream:      streamName,
+					Team:        teamName,
 					Labels:      userLabels,
 				},
 				VersionModelID: modelID,
@@ -566,10 +578,11 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				Name: jobName,
 				ID:   jobID,
 				Metadata: models.Metadata{
-					Team:        teamName,
-					Stream:      streamName,
 					App:         modelName,
+					Component:   models.ComponentBatchJob,
 					Environment: environementName,
+					Stream:      streamName,
+					Team:        teamName,
 					Labels:      userLabels,
 				},
 				VersionModelID: modelID,
@@ -596,10 +609,11 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 				Name: jobName,
 				ID:   jobID,
 				Metadata: models.Metadata{
-					Team:        teamName,
-					Stream:      streamName,
 					App:         modelName,
+					Component:   models.ComponentBatchJob,
 					Environment: environementName,
+					Stream:      streamName,
+					Team:        teamName,
 					Labels:      userLabels,
 				},
 				VersionModelID: modelID,
