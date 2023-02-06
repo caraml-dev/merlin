@@ -35,9 +35,26 @@ func TestExecuteDeployment(t *testing.T) {
 			MemoryRequest: resource.MustParse("1Gi"),
 		},
 	}
-	project := mlp.Project{Name: "project"}
+
+	mlpLabels := mlp.Labels{
+		{Key: "key-1", Value: "value-1"},
+	}
+
+	versionLabels := models.KV{
+		"key-1": "value-11",
+		"key-2": "value-2",
+	}
+
+	svcMetadata := models.Metadata{
+		Labels: mlp.Labels{
+			{Key: "key-1", Value: "value-11"},
+			{Key: "key-2", Value: "value-2"},
+		},
+	}
+
+	project := mlp.Project{Name: "project", Labels: mlpLabels}
 	model := &models.Model{Name: "model", Project: project}
-	version := &models.Version{ID: 1}
+	version := &models.Version{ID: 1, Labels: versionLabels}
 	iSvcName := fmt.Sprintf("%s-%d", model.Name, version.ID)
 	svcName := fmt.Sprintf("%s-%d.project.svc.cluster.local", model.Name, version.ID)
 	url := fmt.Sprintf("%s-%d.example.com", model.Name, version.ID)
@@ -88,6 +105,7 @@ func TestExecuteDeployment(t *testing.T) {
 						Namespace:   project.Name,
 						ServiceName: svcName,
 						URL:         url,
+						Metadata:    svcMetadata,
 					}, nil)
 				return ctrl
 			},
@@ -131,6 +149,7 @@ func TestExecuteDeployment(t *testing.T) {
 						Namespace:   project.Name,
 						ServiceName: svcName,
 						URL:         url,
+						Metadata:    svcMetadata,
 					}, nil)
 				return ctrl
 			},
@@ -174,6 +193,7 @@ func TestExecuteDeployment(t *testing.T) {
 						Namespace:   project.Name,
 						ServiceName: svcName,
 						URL:         url,
+						Metadata:    svcMetadata,
 					}, nil)
 				return ctrl
 			},
@@ -219,6 +239,7 @@ func TestExecuteDeployment(t *testing.T) {
 						Namespace:   project.Name,
 						ServiceName: svcName,
 						URL:         url,
+						Metadata:    svcMetadata,
 					}, nil)
 				return ctrl
 			},
@@ -335,6 +356,11 @@ func TestExecuteDeployment(t *testing.T) {
 
 			err := svc.Deploy(job)
 			assert.Equal(t, tt.deployErr, err)
+
+			if len(ctrl.ExpectedCalls) > 0 && ctrl.ExpectedCalls[0].ReturnArguments[0] != nil {
+				deployedSvc := ctrl.ExpectedCalls[0].ReturnArguments[0].(*models.Service)
+				assert.Equal(t, svcMetadata, deployedSvc.Metadata)
+			}
 
 			mockStorage.AssertNumberOfCalls(t, "Save", 1)
 			savedEndpoint := mockStorage.Calls[1].Arguments[0].(*models.VersionEndpoint)

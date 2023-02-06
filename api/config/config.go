@@ -43,6 +43,8 @@ type Config struct {
 	NumOfQueueWorkers     int             `envconfig:"NUM_OF_WORKERS" default:"2"`
 	SwaggerPath           string          `envconfig:"SWAGGER_PATH" default:"./swagger.yaml"`
 
+	DeploymentLabelPrefix string `envconfig:"DEPLOYMENT_LABEL_PREFIX" default:"gojek.com/"`
+
 	DbConfig                  DatabaseConfig
 	ImageBuilderConfig        ImageBuilderConfig
 	EnvironmentConfigs        []EnvironmentConfig

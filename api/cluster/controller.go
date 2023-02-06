@@ -112,7 +112,8 @@ func newController(kfservingClient kservev1beta1client.ServingV1beta1Interface,
 	batchV1Client batchv1client.BatchV1Interface,
 	deploymentConfig config.DeploymentConfig,
 	containerFetcher ContainerFetcher,
-	templater *resource.InferenceServiceTemplater) (Controller, error) {
+	templater *resource.InferenceServiceTemplater,
+) (Controller, error) {
 	return &controller{
 		servingClient:              kfservingClient,
 		clusterClient:              coreV1Client,
@@ -197,6 +198,7 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		Namespace:   s.Namespace,
 		ServiceName: s.Status.URL.Host,
 		URL:         inferenceURL,
+		Metadata:    modelService.Metadata,
 	}, nil
 }
 

@@ -442,6 +442,9 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 }
 
 func TestModelEndpointService_createVirtualService(t *testing.T) {
+	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
+	defer models.InitKubernetesLabeller("")     //nolint:errcheck
+
 	type fields struct {
 		environment string
 	}
@@ -473,11 +476,12 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 					Namespace: model1.Project.Name,
 					Labels: map[string]string{
 						"gojek.com/app":          model1.Name,
+						"gojek.com/component":    models.ComponentModelEndpoint,
+						"gojek.com/environment":  "staging",
 						"gojek.com/orchestrator": "merlin",
 						"gojek.com/stream":       model1.Project.Stream,
 						"gojek.com/team":         model1.Project.Team,
-						"gojek.com/environment":  "staging",
-						"gojek.com/sample":       "true",
+						"sample":                 "true",
 					},
 				},
 				Spec: networking.VirtualService{
@@ -552,11 +556,12 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 					Namespace: model1.Project.Name,
 					Labels: map[string]string{
 						"gojek.com/app":          model1.Name,
+						"gojek.com/component":    models.ComponentModelEndpoint,
+						"gojek.com/environment":  "staging",
 						"gojek.com/orchestrator": "merlin",
 						"gojek.com/stream":       model1.Project.Stream,
 						"gojek.com/team":         model1.Project.Team,
-						"gojek.com/environment":  "staging",
-						"gojek.com/sample":       "true",
+						"sample":                 "true",
 					},
 				},
 				Spec: networking.VirtualService{

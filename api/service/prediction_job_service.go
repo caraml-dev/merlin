@@ -98,11 +98,12 @@ func (p *predictionJobService) CreatePredictionJob(ctx context.Context, env *mod
 
 	predictionJob.Name = jobName
 	predictionJob.Metadata = models.Metadata{
-		Team:        model.Project.Team,
-		Stream:      model.Project.Stream,
 		App:         model.Name,
+		Component:   models.ComponentBatchJob,
 		Environment: p.environmentLabel,
-		Labels:      model.Project.Labels,
+		Labels:      models.MergeProjectVersionLabels(model.Project.Labels, version.Labels),
+		Stream:      model.Project.Stream,
+		Team:        model.Project.Team,
 	}
 	predictionJob.Status = models.JobPending
 	predictionJob.VersionModelID = model.ID
