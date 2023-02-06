@@ -125,8 +125,8 @@ var (
 )
 
 func TestCreateInferenceServiceSpec(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/")
-	defer models.InitKubernetesLabeller("")
+	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
+	defer models.InitKubernetesLabeller("")     //nolint:errcheck
 
 	project := mlp.Project{
 		Name: "project",
@@ -1545,8 +1545,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 }
 
 func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/")
-	defer models.InitKubernetesLabeller("")
+	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
+	defer models.InitKubernetesLabeller("")     //nolint:errcheck
 
 	project := mlp.Project{
 		Name: "project",
@@ -2092,8 +2092,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 }
 
 func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/")
-	defer models.InitKubernetesLabeller("")
+	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
+	defer models.InitKubernetesLabeller("")     //nolint:errcheck
 
 	project := mlp.Project{
 		Name: "project",
@@ -2567,8 +2567,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 }
 
 func TestPatchInferenceServiceSpec(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/")
-	defer models.InitKubernetesLabeller("")
+	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
+	defer models.InitKubernetesLabeller("")     //nolint:errcheck
 
 	project := mlp.Project{
 		Name: "project",

@@ -8,8 +8,8 @@ import (
 )
 
 func TestToLabel(t *testing.T) {
-	InitKubernetesLabeller("gojek.com/")
-	defer InitKubernetesLabeller("")
+	InitKubernetesLabeller("gojek.com/") //nolint:errcheck
+	defer InitKubernetesLabeller("")     //nolint:errcheck
 
 	testCases := []struct {
 		desc           string
@@ -130,8 +130,8 @@ func TestToLabel(t *testing.T) {
 }
 
 func TestInitKubernetesLabeller(t *testing.T) {
-	InitKubernetesLabeller("gojek.com/")
-	defer InitKubernetesLabeller("")
+	InitKubernetesLabeller("gojek.com/") //nolint:errcheck
+	defer InitKubernetesLabeller("")     //nolint:errcheck
 
 	tests := []struct {
 		prefix  string

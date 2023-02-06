@@ -16,7 +16,7 @@ package api
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -440,7 +440,7 @@ func Test_prometheusMiddleware_post(t *testing.T) {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/foo", func(rw http.ResponseWriter, r *http.Request) {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		assert.Nil(t, err)
 
 		_, err = rw.Write(body)
@@ -476,7 +476,7 @@ func Test_prometheusMiddleware_post_500(t *testing.T) {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/foo-500", func(rw http.ResponseWriter, r *http.Request) {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		assert.Nil(t, err)
 
 		rw.WriteHeader(500)

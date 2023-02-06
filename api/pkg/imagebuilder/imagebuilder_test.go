@@ -126,8 +126,8 @@ var (
 )
 
 func TestBuildImage(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/")
-	defer models.InitKubernetesLabeller("")
+	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
+	defer models.InitKubernetesLabeller("")     //nolint:errcheck
 
 	type args struct {
 		project mlp.Project

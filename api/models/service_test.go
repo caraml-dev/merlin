@@ -48,8 +48,8 @@ func TestGetValidInferenceURL(t *testing.T) {
 }
 
 func Test_mergeProjectVersionLabels(t *testing.T) {
-	InitKubernetesLabeller("gojek.com/")
-	defer InitKubernetesLabeller("")
+	InitKubernetesLabeller("gojek.com/") //nolint:errcheck
+	defer InitKubernetesLabeller("")     //nolint:errcheck
 
 	type args struct {
 		projectLabels mlp.Labels
