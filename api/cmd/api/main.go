@@ -207,7 +207,9 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	mlpAPIClient := initMLPAPIClient(ctx, cfg.MlpAPIConfig)
 	coreClient := initFeastCoreClient(cfg.StandardTransformerConfig.FeastCoreURL, cfg.StandardTransformerConfig.FeastCoreAuthAudience, cfg.StandardTransformerConfig.EnableAuth)
 
-	models.InitKubernetesLabeller(cfg.DeploymentLabelPrefix)
+	if err := models.InitKubernetesLabeller(cfg.DeploymentLabelPrefix); err != nil {
+		log.Panicf("invalid deployment label prefix (%s): %s", cfg.DeploymentLabelPrefix, err)
+	}
 
 	webServiceBuilder, predJobBuilder, imageBuilderJanitor := initImageBuilder(cfg)
 

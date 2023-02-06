@@ -35,14 +35,14 @@ func TestToLabel(t *testing.T) {
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
 				"gojek.com/environment":  "staging",
-				"gojek.com/key":          "value",
 				"gojek.com/orchestrator": "merlin",
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
+				"key":                    "value",
 			},
 		},
 		{
-			desc: "MLP labels has using reserved keys, should be ignored",
+			desc: "MLP labels has using reserved keys",
 			metadata: Metadata{
 				App:         "app",
 				Component:   "model-version",
@@ -79,6 +79,11 @@ func TestToLabel(t *testing.T) {
 				"gojek.com/orchestrator": "merlin",
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
+
+				"app":          "newApp",
+				"environment":  "env",
+				"orchestrator": "clockwork",
+				"stream":       "stream",
 			},
 		},
 		{
@@ -108,10 +113,11 @@ func TestToLabel(t *testing.T) {
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
 				"gojek.com/environment":  "staging",
-				"gojek.com/key":          "value",
 				"gojek.com/orchestrator": "merlin",
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
+
+				"key": "value",
 			},
 		},
 	}
@@ -119,6 +125,56 @@ func TestToLabel(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			gotLabels := tC.metadata.ToLabel()
 			assert.Equal(t, tC.expectedLabels, gotLabels)
+		})
+	}
+}
+
+func TestInitKubernetesLabeller(t *testing.T) {
+	InitKubernetesLabeller("gojek.com/")
+	defer InitKubernetesLabeller("")
+
+	tests := []struct {
+		prefix  string
+		wantErr bool
+	}{
+		{
+			"gojek.com/",
+			false,
+		},
+		{
+			"model.caraml.dev/",
+			false,
+		},
+		{
+			"goto/gojek",
+			true,
+		},
+		{
+			"gojek",
+			true,
+		},
+		{
+			"gojek.com/caraml",
+			true,
+		},
+		{
+			"gojek//",
+			true,
+		},
+		{
+			"gojek.com//",
+			true,
+		},
+		{
+			"//gojek.com",
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.prefix, func(t *testing.T) {
+			if err := InitKubernetesLabeller(tt.prefix); (err != nil) != tt.wantErr {
+				t.Errorf("InitKubernetesLabeller() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }

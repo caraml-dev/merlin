@@ -18,18 +18,20 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"regexp"
 
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/utils"
 )
 
 const (
-	LabelAppName          = "app"
-	LabelComponent        = "component"
-	LabelEnvironment      = "environment"
+	labelAppName          = "app"
+	labelComponent        = "component"
+	labelEnvironment      = "environment"
 	LabelOrchestratorName = "orchestrator"
-	LabelStreamName       = "stream"
-	LabelTeamName         = "team"
+	labelStreamName       = "stream"
+	labelTeamName         = "team"
 
 	ComponentBatchJob      = "batch-job"
 	ComponentImageBuilder  = "image-builder"
@@ -38,19 +40,31 @@ const (
 )
 
 var reservedKeys = map[string]bool{
-	LabelAppName:          true,
-	LabelComponent:        true,
-	LabelEnvironment:      true,
+	labelAppName:          true,
+	labelComponent:        true,
+	labelEnvironment:      true,
 	LabelOrchestratorName: true,
-	LabelStreamName:       true,
-	LabelTeamName:         true,
+	labelStreamName:       true,
+	labelTeamName:         true,
 }
 
-var prefix string
+var (
+	prefix           string
+	validPrefixRegex = regexp.MustCompile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?(/)$")
+)
 
 // InitKubernetesLabeller builds a new KubernetesLabeller Singleton
-func InitKubernetesLabeller(p string) {
+func InitKubernetesLabeller(p string) error {
+	if len(p) > 253 {
+		return fmt.Errorf("length of prefix is greater than 253 characters")
+	}
+
+	if isValidPrefix := validPrefixRegex.MatchString(p); !isValidPrefix {
+		return fmt.Errorf("name violates kubernetes label's prefix constraint")
+	}
+
 	prefix = p
+	return nil
 }
 
 type Metadata struct {
@@ -77,17 +91,17 @@ func (metadata *Metadata) Scan(value interface{}) error {
 
 func (metadata *Metadata) ToLabel() map[string]string {
 	labels := map[string]string{
-		prefix + LabelAppName:          metadata.App,
-		prefix + LabelComponent:        metadata.Component,
-		prefix + LabelEnvironment:      metadata.Environment,
+		prefix + labelAppName:          metadata.App,
+		prefix + labelComponent:        metadata.Component,
+		prefix + labelEnvironment:      metadata.Environment,
 		prefix + LabelOrchestratorName: "merlin",
-		prefix + LabelStreamName:       metadata.Stream,
-		prefix + LabelTeamName:         metadata.Team,
+		prefix + labelStreamName:       metadata.Stream,
+		prefix + labelTeamName:         metadata.Team,
 	}
 
 	for _, label := range metadata.Labels {
 		// skip label that is trying to override reserved key
-		if _, usingReservedKeys := reservedKeys[label.Key]; usingReservedKeys {
+		if _, usingReservedKeys := reservedKeys[prefix+label.Key]; usingReservedKeys {
 			continue
 		}
 
@@ -101,8 +115,7 @@ func (metadata *Metadata) ToLabel() map[string]string {
 			continue
 		}
 
-		key := prefix + label.Key
-		labels[key] = label.Value
+		labels[label.Key] = label.Value
 	}
 
 	return labels

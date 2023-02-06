@@ -70,7 +70,7 @@ var (
 		labelStreamName:       streamName,
 		labelTeamName:         teamName,
 
-		"gojek.com/my-key": "my-value",
+		"my-key": "my-value",
 	}
 
 	driverCore       int32 = 1

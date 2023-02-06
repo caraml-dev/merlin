@@ -18,6 +18,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/gojek/mlp/api/client"
@@ -165,5 +166,7 @@ func TestLabels(t *testing.T) {
 	assert.Equal(t, maps, gotMaps)
 
 	gotLabels := MapsToLabels(maps)
-	assert.Equal(t, Labels(labels), gotLabels)
+	if !reflect.DeepEqual(gotLabels, Labels(labels)) {
+		t.Errorf("MapsToLabels() = %v, want %v", gotLabels, Labels(labels))
+	}
 }

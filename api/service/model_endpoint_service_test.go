@@ -479,9 +479,9 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 						"gojek.com/component":    models.ComponentModelEndpoint,
 						"gojek.com/environment":  "staging",
 						"gojek.com/orchestrator": "merlin",
-						"gojek.com/sample":       "true",
 						"gojek.com/stream":       model1.Project.Stream,
 						"gojek.com/team":         model1.Project.Team,
+						"sample":                 "true",
 					},
 				},
 				Spec: networking.VirtualService{
@@ -559,9 +559,9 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 						"gojek.com/component":    models.ComponentModelEndpoint,
 						"gojek.com/environment":  "staging",
 						"gojek.com/orchestrator": "merlin",
-						"gojek.com/sample":       "true",
 						"gojek.com/stream":       model1.Project.Stream,
 						"gojek.com/team":         model1.Project.Team,
+						"sample":                 "true",
 					},
 				},
 				Spec: networking.VirtualService{

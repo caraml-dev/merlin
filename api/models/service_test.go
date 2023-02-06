@@ -48,6 +48,9 @@ func TestGetValidInferenceURL(t *testing.T) {
 }
 
 func Test_mergeProjectVersionLabels(t *testing.T) {
+	InitKubernetesLabeller("gojek.com/")
+	defer InitKubernetesLabeller("")
+
 	type args struct {
 		projectLabels mlp.Labels
 		versionLabels KV
@@ -61,21 +64,22 @@ func Test_mergeProjectVersionLabels(t *testing.T) {
 			"both maps has different keys",
 			args{
 				projectLabels: mlp.Labels{
-					{Key: "key-1", Value: "value-1"},
+					{Key: "gojek.com/key-1", Value: "value-1"},
 				},
 				versionLabels: KV{
 					"key-2": "value-2",
 				},
 			},
 			mlp.Labels{
-				{Key: "key-1", Value: "value-1"},
+				{Key: "gojek.com/key-1", Value: "value-1"},
 				{Key: "key-2", Value: "value-2"},
 			},
 		},
 		{
-			"duplicate key",
+			"both maps has different keys",
 			args{
 				projectLabels: mlp.Labels{
+					{Key: "gojek.com/key-1", Value: "value-1"},
 					{Key: "key-1", Value: "value-1"},
 				},
 				versionLabels: KV{
@@ -84,6 +88,24 @@ func Test_mergeProjectVersionLabels(t *testing.T) {
 				},
 			},
 			mlp.Labels{
+				{Key: "gojek.com/key-1", Value: "value-1"},
+				{Key: "key-1", Value: "value-11"},
+				{Key: "key-2", Value: "value-2"},
+			},
+		},
+		{
+			"duplicate key name without prefix",
+			args{
+				projectLabels: mlp.Labels{
+					{Key: "gojek.com/key-1", Value: "value-1"},
+				},
+				versionLabels: KV{
+					"key-1": "value-11",
+					"key-2": "value-2",
+				},
+			},
+			mlp.Labels{
+				{Key: "gojek.com/key-1", Value: "value-1"},
 				{Key: "key-1", Value: "value-11"},
 				{Key: "key-2", Value: "value-2"},
 			},
@@ -92,12 +114,12 @@ func Test_mergeProjectVersionLabels(t *testing.T) {
 			"only project labels",
 			args{
 				projectLabels: mlp.Labels{
-					{Key: "key-1", Value: "value-1"},
+					{Key: "gojek.com/key-1", Value: "value-1"},
 				},
 				versionLabels: nil,
 			},
 			mlp.Labels{
-				{Key: "key-1", Value: "value-1"},
+				{Key: "gojek.com/key-1", Value: "value-1"},
 			},
 		},
 		{
