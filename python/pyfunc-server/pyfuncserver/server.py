@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 
 import prometheus_client
 from merlin.protocol import Protocol
 from prometheus_client import CollectorRegistry, multiprocess
 
 from pyfuncserver.config import Config
+from pyfuncserver.metrics.pusher import labels, start_metrics_pusher
 from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.protocol.rest.server import HTTPServer
 from pyfuncserver.protocol.upi.server import UPIServer
@@ -38,8 +40,18 @@ class PyFuncServer:
             http_server = HTTPServer(model=model, config=self._config, metrics_registry=registry)
             http_server.start()
         elif self._config.protocol == Protocol.UPI_V1:
-            # start prometheus metrics server and listen at http port
-            prometheus_client.start_http_server(self._config.http_port, registry=registry)
+            # Due to https://github.com/knative/serving/issues/8471, we have to resort to pushing metrics to
+            # prometheus push gateway.
+            if (self._config.push_gateway.enabled):
+                target_info = labels(self._config)
+                start_metrics_pusher(self._config.push_gateway.url,
+                                     registry,
+                                     target_info,
+                                     self._config.push_gateway.push_interval_sec)
+            else:
+                # start prometheus metrics server and listen at http port
+                logging.info(f"starting metrics server at {self._config.http_port}")
+                prometheus_client.start_http_server(self._config.http_port, registry=registry)
 
             # start grpc/upi server and listen at grpc port
             upi_server = UPIServer(model=model, config=self._config)

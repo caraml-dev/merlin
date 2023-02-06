@@ -2,30 +2,24 @@ import json
 import logging
 import os
 
-# Following environment variables are expected to be populated by Merlin
 from merlin.protocol import Protocol
 
-HTTP_PORT = "CARAML_HTTP_PORT"
-MODEL_NAME = "CARAML_MODEL_NAME"
-MODEL_VERSION = "CARAML_MODEL_VERSION"
-MODEL_FULL_NAME = "CARAML_MODEL_FULL_NAME"
-PROTOCOL = "CARAML_PROTOCOL"
-WORKERS = "WORKERS"
-GRPC_PORT = "CARAML_GRPC_PORT"
-LOG_LEVEL = "LOG_LEVEL"
-GRPC_OPTIONS = "GRPC_OPTIONS"
-GRPC_CONCURRENCY = "GRPC_CONCURRENCY"
+# Following environment variables are expected to be populated by Merlin
+HTTP_PORT = ("CARAML_HTTP_PORT", 8080)
+MODEL_NAME = ("CARAML_MODEL_NAME", "model")
+MODEL_VERSION = ("CARAML_MODEL_VERSION", "1")
+MODEL_FULL_NAME = ("CARAML_MODEL_FULL_NAME", "model-1")
+PROTOCOL = ("CARAML_PROTOCOL", "HTTP_JSON")
 
-DEFAULT_HTTP_PORT = 8080
-DEFAULT_GRPC_PORT = 9000
-DEFAULT_MODEL_NAME = "model"
-DEFAULT_MODEL_VERSION = "1"
-DEFAULT_FULL_NAME = f"{DEFAULT_MODEL_NAME}-{DEFAULT_MODEL_VERSION}"
-DEFAULT_LOG_LEVEL = "INFO"
-DEFAULT_PROTOCOL = "HTTP_JSON"
-DEFAULT_GRPC_OPTIONS = "{}"
-DEFAULT_GRPC_CONCURRENCY = "10"
+WORKERS = ("WORKERS", 1)
+GRPC_PORT = ("CARAML_GRPC_PORT", 9000)
+LOG_LEVEL = ("LOG_LEVEL", "INFO")
+GRPC_OPTIONS = ("GRPC_OPTIONS", "{}")
+GRPC_CONCURRENCY = ("GRPC_CONCURRENCY", 10)
 
+PUSHGATEWAY_ENABLED = ("PUSHGATEWAY_ENABLED", "false")
+PUSHGATEWAY_URL = ("PUSHGATEWAY_URL", "localhost:9091")
+PUSHGATEWAY_PUSH_INTERVAL_SEC = ("PUSHGATEWAY_PUSH_INTERVAL_SEC", 30)
 
 class ModelManifest:
     """
@@ -39,39 +33,57 @@ class ModelManifest:
         self.model_dir = model_dir
 
 
+class PushGateway:
+    def __init__(self, enabled, url, push_interval_sec):
+        self.url = url
+        self.enabled = enabled
+        self.push_interval_sec = push_interval_sec
+
+
 class Config:
     """
     Server Configuration
     """
 
     def __init__(self, model_dir: str):
-        self.protocol = Protocol(os.getenv(PROTOCOL, DEFAULT_PROTOCOL))
-        self.http_port = int(os.getenv(HTTP_PORT, DEFAULT_HTTP_PORT))
-        self.grpc_port = int(os.getenv(GRPC_PORT, DEFAULT_GRPC_PORT))
+        self.protocol = Protocol(os.getenv(*PROTOCOL))
+        self.http_port = int(os.getenv(*HTTP_PORT))
+        self.grpc_port = int(os.getenv(*GRPC_PORT))
 
         # Model manifest
-        model_name = os.getenv(MODEL_NAME, DEFAULT_MODEL_NAME)
-        model_version = os.getenv(MODEL_VERSION, DEFAULT_MODEL_VERSION)
-        model_full_name = os.getenv(MODEL_FULL_NAME, DEFAULT_FULL_NAME)
+        model_name = os.getenv(*MODEL_NAME)
+        model_version = os.getenv(*MODEL_VERSION)
+        model_full_name = os.getenv(*MODEL_FULL_NAME)
         self.model_manifest = ModelManifest(model_name, model_version, model_full_name, model_dir)
 
-        self.workers = int(os.getenv(WORKERS, 1))
+        self.workers = int(os.getenv(*WORKERS))
         self.log_level = self._log_level()
 
-        self.grpc_options = self._to_grpc_options(os.getenv(GRPC_OPTIONS, DEFAULT_GRPC_OPTIONS))
-        self.grpc_concurrency = int(os.getenv(GRPC_CONCURRENCY, DEFAULT_GRPC_CONCURRENCY))
+        self.grpc_options = self._grpc_options()
+        self.grpc_concurrency = int(os.getenv(*GRPC_CONCURRENCY))
+
+        push_enabled = str_to_bool(os.getenv(*PUSHGATEWAY_ENABLED))
+        push_url = os.getenv(*PUSHGATEWAY_URL)
+        push_interval = os.getenv(*PUSHGATEWAY_PUSH_INTERVAL_SEC)
+        self.push_gateway = PushGateway(push_enabled,
+                                        push_url,
+                                        push_interval)
 
     def _log_level(self):
-        log_level = os.getenv(LOG_LEVEL, DEFAULT_LOG_LEVEL)
+        log_level = os.getenv(*LOG_LEVEL)
         numeric_level = getattr(logging, log_level.upper(), None)
         if not isinstance(numeric_level, int):
             logging.warning(f"invalid log level {log_level}")
             return logging.INFO
         return numeric_level
 
-    def _to_grpc_options(self, raw_options: str):
+    def _grpc_options(self):
+        raw_options = os.getenv(*GRPC_OPTIONS)
         options = json.loads(raw_options)
         grpc_options = []
         for k, v in options.items():
             grpc_options.append((k, v))
         return grpc_options
+
+def str_to_bool(str: str)->bool:
+    return str.lower() in ("true", "1")

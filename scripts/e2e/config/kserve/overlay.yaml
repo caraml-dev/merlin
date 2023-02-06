@@ -14,7 +14,7 @@ spec:
             cpu: 1
             memory: 300Mi
           requests:
-            cpu: 80m
+            cpu: 100m
             memory: 64Mi
 
 ---
@@ -206,7 +206,7 @@ data:
         "image" : "ghcr.io/ariefrahmansyah/kfserving-storage-init:latest",
         "memoryRequest": "50Mi",
         "memoryLimit": "1Gi",
-        "cpuRequest": "20m",
+        "cpuRequest": "10m",
         "cpuLimit": "1"
     }
   transformers: |-

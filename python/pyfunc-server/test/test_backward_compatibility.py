@@ -230,8 +230,8 @@ def test_model_int(model):
 
     try:
         env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
-        env[HTTP_PORT] = "8081"
-        env[WORKERS] = "1"
+        env[HTTP_PORT[0]] = "8081"
+        env[WORKERS[0]] = "1"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
@@ -265,8 +265,8 @@ def test_model_headers(model):
 
     try:
         env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
-        env[HTTP_PORT] = "8081"
-        env[WORKERS] = "1"
+        env[HTTP_PORT[0]] = "8081"
+        env[WORKERS[0]] = "1"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
@@ -303,8 +303,8 @@ def test_error_model_int(error_core, message, model):
 
     try:
         env["PROMETHEUS_MULTIPROC_DIR"] = "prometheus"
-        env[HTTP_PORT] = "8081"
-        env[WORKERS] = "1"
+        env[HTTP_PORT[0]] = "8081"
+        env[WORKERS[0]] = "1"
         c = subprocess.Popen(["python", "-m", "pyfuncserver", "--model_dir", model_path], env=env)
 
         # wait till the server is up
