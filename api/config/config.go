@@ -267,6 +267,16 @@ type MlpAPIConfig struct {
 	EncryptionKey string `envconfig:"MLP_API_ENCRYPTION_KEY" required:"true"`
 }
 
+// FeastServingKeepAliveConfig config for feast serving grpc keepalive
+type FeastServingKeepAliveConfig struct {
+	// Enable the client grpc keepalive
+	Enabled bool `envconfig:"FEAST_SERVING_KEEP_ALIVE_ENABLED" default:"true"`
+	// Duration of time no activity until client try to PING gRPC server
+	Time time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIME" default:"30s"`
+	// Duration of time client waits if no activity connection will be closed
+	Timeout time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIMEOUT" default:"1s"`
+}
+
 type StandardTransformerConfig struct {
 	ImageName             string               `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
 	FeastServingURLs      FeastServingURLs     `envconfig:"FEAST_SERVING_URLS" required:"true"`
@@ -275,6 +285,7 @@ type StandardTransformerConfig struct {
 	EnableAuth            bool                 `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
 	FeastRedisConfig      *FeastRedisConfig    `envconfig:"FEAST_REDIS_CONFIG"`
 	FeastBigtableConfig   *FeastBigtableConfig `envconfig:"FEAST_BIG_TABLE_CONFIG"`
+	FeastServingKeepAlive *FeastServingKeepAliveConfig
 	// Base64 Service Account
 	BigtableCredential string             `envconfig:"FEAST_BIGTABLE_CREDENTIAL"`
 	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`

@@ -155,6 +155,10 @@ merlin:
       coreURL: core.feast.dev
       coreAuthAudience: core.feast.dev
       authEnabled: false
+      grpc:
+        keepAliveEnabled: true
+        keepAliveTime: 30s
+        keepAliveTimeout: 5s
     image: merlin-transformer:1.0.0
     jaeger:
       agentHost: localhost

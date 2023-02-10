@@ -180,6 +180,12 @@ spec:
             value: {{ .Values.merlin.transformer.feast.bigtableCredential}}
           - name: DEFAULT_FEAST_SOURCE
             value: {{ .Values.merlin.transformer.feast.defaultFeastSource}}
+          - name: FEAST_SERVING_KEEP_ALIVE_ENABLED
+            value: {{ .Values.merlin.transformer.feast.grpc.keepAliveEnabled }}
+          - name: FEAST_SERVING_KEEP_ALIVE_TIME
+            value: {{ .Values.merlin.transformer.feast.grpc.keepAliveTime }}
+          - name: FEAST_SERVING_KEEP_ALIVE_TIMEOUT
+            value: {{ .Values.merlin.transformer.feast.grpc.keepAliveTimeout }}
           - name: SIMULATION_FEAST_REDIS_URL
             value: {{ .Values.merlin.transformer.simulation.feastRedisServingURL}}
           - name: SIMULATION_FEAST_BIGTABLE_URL

@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/gojek/merlin/pkg/protocol"
@@ -385,12 +386,16 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(envVars mod
 	addEnvVar := models.EnvVars{}
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.DefaultFeastSource, Value: t.standardTransformerConfig.DefaultFeastSource.String()})
 
-	// adding feast storage config env variable
+	// adding feast related config env variable
 	feastStorageConfig := t.standardTransformerConfig.ToFeastStorageConfigs()
-
 	if feastStorageConfigJsonByte, err := json.Marshal(feastStorageConfig); err == nil {
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
 	}
+
+	keepaliveCfg := t.standardTransformerConfig.FeastServingKeepAlive
+	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: strconv.FormatBool(keepaliveCfg.Enabled)})
+	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTime, Value: keepaliveCfg.Time.String()})
+	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: keepaliveCfg.Timeout.String()})
 
 	jaegerCfg := t.standardTransformerConfig.Jaeger
 	jaegerEnvVars := []models.EnvVar{

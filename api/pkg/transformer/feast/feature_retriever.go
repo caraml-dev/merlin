@@ -96,6 +96,10 @@ type Options struct {
 	FeastClientRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
 	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"1000"` // How long, in milliseconds, to wait after a circuit opens before testing for recovery
 	FeastClientErrorPercentThreshold  int           `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
+
+	FeastServingKeepAliveEnabled bool          `envconfig:"FEAST_SERVING_KEEP_ALIVE_ENABLED" default:"true"`
+	FeastServingKeepAliveTime    time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIME" default:"30s"`
+	FeastServingKeepAliveTimeout time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIMEOUT" default:"3s"`
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {

@@ -10,6 +10,8 @@ import (
 	"github.com/gojek/merlin/pkg/transformer/feast/redis"
 	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
 func InitFeastServingClients(feastOptions Options, featureTableMetadata []*spec.FeatureTableMetadata, standardTransformerConfig *spec.StandardTransformerConfig) (Clients, error) {
@@ -51,10 +53,10 @@ func createFeastServingClient(feastOptions Options, featureTableMetadata []*spec
 	default:
 		return nil, fmt.Errorf("not valid storage type")
 	}
-	return newFeastGrpcClient(servingURL)
+	return newFeastGrpcClient(servingURL, feastOptions)
 }
 
-func newFeastGrpcClient(url string) (*feastSdk.GrpcClient, error) {
+func newFeastGrpcClient(url string, options Options) (*feastSdk.GrpcClient, error) {
 	host, port, err := net.SplitHostPort(url)
 	if err != nil {
 		return nil, errors.Errorf("Unable to parse Feast Serving host (%s): %s", url, err)
@@ -65,7 +67,15 @@ func newFeastGrpcClient(url string) (*feastSdk.GrpcClient, error) {
 		return nil, errors.Errorf("Unable to parse Feast Serving port (%s): %s", url, err)
 	}
 
-	client, err := feastSdk.NewGrpcClient(host, portInt)
+	dialOpts := []grpc.DialOption{}
+	if options.FeastServingKeepAliveEnabled {
+		keepAliveOpt := grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:    options.FeastServingKeepAliveTime,
+			Timeout: options.FeastServingKeepAliveTimeout,
+		})
+		dialOpts = append(dialOpts, keepAliveOpt)
+	}
+	client, err := feastSdk.NewSecureGrpcClientWithDialOptions(host, portInt, feastSdk.SecurityConfig{}, dialOpts...)
 	if err != nil {
 		return nil, errors.Errorf("Unable to initialize a Feast gRPC client: %s", err)
 	}
