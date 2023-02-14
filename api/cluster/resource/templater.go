@@ -62,6 +62,7 @@ const (
 	envArtifactLocation     = "CARAML_ARTIFACT_LOCATION"
 	envDisableLivenessProbe = "CARAML_DISABLE_LIVENESS_PROBE"
 	envStorageURI           = "STORAGE_URI"
+	envGRPCOptions          = "GRPC_OPTIONS"
 
 	annotationPrometheusScrapeFlag = "prometheus.io/scrape"
 	annotationPrometheusScrapePort = "prometheus.io/port"
@@ -252,6 +253,9 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		}
 	case models.ModelTypePyFunc:
 		envVars := models.MergeEnvVars(modelService.EnvVars, createPyFuncDefaultEnvVars(modelService))
+		if modelService.Protocol == protocol.UpiV1 {
+			envVars = append(envVars, models.EnvVar{Name: envGRPCOptions, Value: config.PyfuncGRPCOptions})
+		}
 		predictorSpec = kservev1beta1.PredictorSpec{
 			PodSpec: kservev1beta1.PodSpec{
 				Containers: []corev1.Container{
@@ -295,7 +299,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 	// Put in defaults if not provided by users (user's input is used)
 	if transformer.TransformerType == models.StandardTransformerType {
 		transformer.Image = t.standardTransformerConfig.ImageName
-		envVars = t.enrichStandardTransformerEnvVars(envVars)
+		envVars = t.enrichStandardTransformerEnvVars(modelService, envVars)
 	}
 
 	// Overwrite user's values with defaults, if provided (overwrite by user not allowed)
@@ -366,7 +370,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 	return transformerSpec
 }
 
-func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(envVars models.EnvVars) models.EnvVars {
+func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelService *models.Service, envVars models.EnvVars) models.EnvVars {
 	// compact standard transformer config
 	envVarsMap := envVars.ToMap()
 	standardTransformerSpec := envVarsMap[transformerpkg.StandardTransformerConfigEnvName]
@@ -390,6 +394,21 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(envVars mod
 	feastStorageConfig := t.standardTransformerConfig.ToFeastStorageConfigs()
 	if feastStorageConfigJsonByte, err := json.Marshal(feastStorageConfig); err == nil {
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
+	}
+
+	// Add keepalive configuration for predictor
+	// only pyfunc config that enforced by merlin
+	keepAliveModelCfg := t.standardTransformerConfig.ModelClientKeepAlive
+	if modelService.Protocol == protocol.UpiV1 && modelService.Type == models.ModelTypePyFunc {
+		addEnvVar = append(addEnvVar, models.EnvVar{
+			Name: transformerpkg.ModelGRPCKeepAliveEnabled, Value: strconv.FormatBool(keepAliveModelCfg.Enabled),
+		})
+		addEnvVar = append(addEnvVar, models.EnvVar{
+			Name: transformerpkg.ModelGRPCKeepAliveTime, Value: keepAliveModelCfg.Time.String(),
+		})
+		addEnvVar = append(addEnvVar, models.EnvVar{
+			Name: transformerpkg.ModelGRPCKeepAliveTimeout, Value: keepAliveModelCfg.Timeout.String(),
+		})
 	}
 
 	keepaliveCfg := t.standardTransformerConfig.FeastServingKeepAlive

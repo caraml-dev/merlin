@@ -10,6 +10,10 @@ const (
 	FeastServingKeepAliveTimeout     = "FEAST_SERVING_KEEP_ALIVE_TIMEOUT"
 	DefaultFeastSource               = "DEFAULT_FEAST_SOURCE"
 
+	ModelGRPCKeepAliveEnabled = "MODEL_GRPC_KEEP_ALIVE_ENABLED"
+	ModelGRPCKeepAliveTime    = "MODEL_GRPC_KEEP_ALIVE_TIME"
+	ModelGRPCKeepAliveTimeout = "MODEL_GRPC_KEEP_ALIVE_TIMEOUT"
+
 	FeastFeatureJSONField = "feast_features"
 
 	JaegerAgentHost    = "JAEGER_AGENT_HOST"

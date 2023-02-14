@@ -45,6 +45,7 @@ type Config struct {
 	SwaggerPath           string          `envconfig:"SWAGGER_PATH" default:"./swagger.yaml"`
 
 	DeploymentLabelPrefix string `envconfig:"DEPLOYMENT_LABEL_PREFIX" default:"gojek.com/"`
+	PyfuncGRPCOptions     string `envconfig:"PYFUNC_GRPC_OPTIONS" default:"{}"`
 
 	DbConfig                  DatabaseConfig
 	ImageBuilderConfig        ImageBuilderConfig
@@ -277,6 +278,16 @@ type FeastServingKeepAliveConfig struct {
 	Timeout time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIMEOUT" default:"1s"`
 }
 
+// ModelClientKeepAliveConfig config for merlin model predictor grpc keepalive
+type ModelClientKeepAliveConfig struct {
+	// Enable the client grpc keepalive
+	Enabled bool `envconfig:"MODEL_CLIENT_KEEP_ALIVE_ENABLED" default:"true"`
+	// Duration of time no activity until client try to PING gRPC server
+	Time time.Duration `envconfig:"MODEL_CLIENT_KEEP_ALIVE_TIME" default:"30s"`
+	// Duration of time client waits if no activity connection will be closed
+	Timeout time.Duration `envconfig:"MODEL_CLIENT_KEEP_ALIVE_TIMEOUT" default:"1s"`
+}
+
 type StandardTransformerConfig struct {
 	ImageName             string               `envconfig:"STANDARD_TRANSFORMER_IMAGE_NAME" required:"true"`
 	FeastServingURLs      FeastServingURLs     `envconfig:"FEAST_SERVING_URLS" required:"true"`
@@ -286,6 +297,7 @@ type StandardTransformerConfig struct {
 	FeastRedisConfig      *FeastRedisConfig    `envconfig:"FEAST_REDIS_CONFIG"`
 	FeastBigtableConfig   *FeastBigtableConfig `envconfig:"FEAST_BIG_TABLE_CONFIG"`
 	FeastServingKeepAlive *FeastServingKeepAliveConfig
+	ModelClientKeepAlive  *ModelClientKeepAliveConfig
 	// Base64 Service Account
 	BigtableCredential string             `envconfig:"FEAST_BIGTABLE_CREDENTIAL"`
 	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
@@ -388,5 +400,18 @@ func InitConfigEnv() (*Config, error) {
 		return nil, err
 	}
 	cfg.EnvironmentConfigs = initEnvironmentConfigs(cfg.EnvironmentConfigPath)
+	if err := cfg.validate(); err != nil {
+		return nil, err
+	}
+
 	return &cfg, nil
+}
+
+func (cfg *Config) validate() error {
+	// validate pyfunc server keep alive config, it must be string in json format
+	var pyfuncGRPCOpts json.RawMessage
+	if err := json.Unmarshal([]byte(cfg.PyfuncGRPCOptions), &pyfuncGRPCOpts); err != nil {
+		return err
+	}
+	return nil
 }

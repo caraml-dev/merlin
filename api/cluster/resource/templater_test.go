@@ -131,6 +131,11 @@ var (
 			KeepAliveTimeout:  &oneMinuteDuration,
 		},
 		BigtableCredential: "eyJrZXkiOiJ2YWx1ZSJ9",
+		ModelClientKeepAlive: &config.ModelClientKeepAliveConfig{
+			Enabled: true,
+			Time:    time.Duration(45 * time.Second),
+			Timeout: time.Duration(5 * time.Second),
+		},
 	}
 )
 
@@ -1399,11 +1404,12 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 						PodSpec: kservev1beta1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:          kserveconstant.InferenceServiceContainerName,
-									Image:         "gojek/project-model:1",
-									Resources:     expDefaultModelResourceRequests,
-									Ports:         grpcContainerPorts,
-									Env:           createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1).ToKubernetesEnvVars(),
+									Name:      kserveconstant.InferenceServiceContainerName,
+									Image:     "gojek/project-model:1",
+									Resources: expDefaultModelResourceRequests,
+									Ports:     grpcContainerPorts,
+									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1),
+										models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}).ToKubernetesEnvVars(),
 									LivenessProbe: probeConfigUPI,
 								},
 							},
@@ -1542,6 +1548,7 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 				DefaultModelResourceRequests:       defaultModelResourceRequests,
 				DefaultTransformerResourceRequests: defaultTransformerResourceRequests,
 				QueueResourcePercentage:            tt.resourcePercentage,
+				PyfuncGRPCOptions:                  "{}",
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
@@ -2089,6 +2096,120 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "standard transformer upi v1; pyfunc",
+			modelSvc: &models.Service{
+				Name:         modelSvc.Name,
+				ModelName:    modelSvc.ModelName,
+				ModelVersion: modelSvc.ModelVersion,
+				Namespace:    project.Name,
+				ArtifactURI:  modelSvc.ArtifactURI,
+				Type:         models.ModelTypePyFunc,
+				Options: &models.ModelOption{
+					PyFuncImageName: "gojek/project-model:1",
+				},
+				Metadata: modelSvc.Metadata,
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					TransformerType: models.StandardTransformerType,
+					EnvVars: models.EnvVars{
+						{
+							Name:  transformer.StandardTransformerConfigEnvName,
+							Value: `{"standard_transformer": null}`,
+						},
+					},
+				},
+				Logger: &models.Logger{
+					DestinationURL: loggerDestinationURL,
+					Transformer: &models.LoggerConfig{
+						Enabled: false,
+						Mode:    models.LogRequest,
+					},
+				},
+				Protocol: protocol.UpiV1,
+			},
+			exp: &kservev1beta1.InferenceService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      modelSvc.Name,
+					Namespace: project.Name,
+					Annotations: map[string]string{
+						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
+						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						annotationPrometheusScrapeFlag:                        "true",
+						annotationPrometheusScrapePort:                        "8080",
+					},
+					Labels: map[string]string{
+						"gojek.com/app":          modelSvc.Metadata.App,
+						"gojek.com/component":    models.ComponentModelVersion,
+						"gojek.com/environment":  modelSvc.Metadata.Environment,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       modelSvc.Metadata.Stream,
+						"gojek.com/team":         modelSvc.Metadata.Team,
+						"sample":                 "true",
+					},
+				},
+				Spec: kservev1beta1.InferenceServiceSpec{
+					Predictor: kservev1beta1.PredictorSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  kserveconstant.InferenceServiceContainerName,
+									Image: "gojek/project-model:1",
+									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1),
+										models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}).ToKubernetesEnvVars(),
+									Resources:     expDefaultModelResourceRequests,
+									LivenessProbe: probeConfigUPI,
+									Ports:         grpcContainerPorts,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultModelResourceRequests.MinReplica,
+							MaxReplicas: defaultModelResourceRequests.MaxReplica,
+						},
+					},
+					Transformer: &kservev1beta1.TransformerSpec{
+						PodSpec: kservev1beta1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "transformer",
+									Image: standardTransformerConfig.ImageName,
+									Env: models.MergeEnvVars(models.EnvVars{
+										{
+											Name:  transformer.DefaultFeastSource,
+											Value: standardTransformerConfig.DefaultFeastSource.String(),
+										},
+										{
+											Name:  transformer.FeastStorageConfigs,
+											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
+										},
+										{Name: transformer.ModelGRPCKeepAliveEnabled, Value: "true"},
+										{Name: transformer.ModelGRPCKeepAliveTime, Value: "45s"},
+										{Name: transformer.ModelGRPCKeepAliveTimeout, Value: "5s"},
+										{Name: transformer.FeastServingKeepAliveEnabled, Value: "true"},
+										{Name: transformer.FeastServingKeepAliveTime, Value: "30s"},
+										{Name: transformer.FeastServingKeepAliveTimeout, Value: "1s"},
+										{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
+										{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+										{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
+										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
+										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
+									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
+									Resources:     expDefaultTransformerResourceRequests,
+									Ports:         grpcContainerPorts,
+									LivenessProbe: transformerProbeConfigUPI,
+								},
+							},
+						},
+						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
+							MinReplicas: &defaultTransformerResourceRequests.MinReplica,
+							MaxReplicas: defaultTransformerResourceRequests.MaxReplica,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -2097,6 +2218,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				DefaultModelResourceRequests:       defaultModelResourceRequests,
 				DefaultTransformerResourceRequests: defaultTransformerResourceRequests,
 				QueueResourcePercentage:            queueResourcePercentage,
+				PyfuncGRPCOptions:                  "{}",
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)

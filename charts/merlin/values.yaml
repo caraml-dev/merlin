@@ -30,6 +30,7 @@ merlin:
 
   environment: dev
   deploymentLabelPrefix: "gojek.com/"
+  pyfuncGRPCOptions : "{}"
 
   loggerDestinationURL: "http://yourDestinationLogger"
 
@@ -166,6 +167,11 @@ merlin:
       samplerType: const
       samplerParam: 1
       disabled: false
+    model:
+      grpc:
+        keepAliveEnabled: true
+        keepAliveTime: 30s
+        keepAliveTimeout: 5s
 
   # Google service account used to access GCP's resources.
   #

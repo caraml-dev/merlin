@@ -36,6 +36,8 @@ type DeploymentConfig struct {
 	MaxMemory resource.Quantity
 	// Percentage of knative's queue proxy resource request from the inference service resource request
 	QueueResourcePercentage string
+	// GRPC Options for Pyfunc server
+	PyfuncGRPCOptions string
 }
 
 type ResourceRequests struct {

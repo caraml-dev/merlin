@@ -198,6 +198,12 @@ spec:
             value: "{{ .Values.merlin.transformer.feast.authEnabled }}"
           - name: STANDARD_TRANSFORMER_IMAGE_NAME
             value: "{{ .Values.merlin.transformer.image }}"
+          - name: MODEL_CLIENT_KEEP_ALIVE_ENABLED
+            value: "{{ .Values.merlin.transformer.model.grpc.keepAliveEnabled }}"
+          - name: MODEL_CLIENT_KEEP_ALIVE_TIME
+            value: "{{ .Values.merlin.transformer.model.grpc.keepAliveTime }}"
+          - name: MODEL_CLIENT_KEEP_ALIVE_TIMEOUT
+            value: "{{ .Values.merlin.transformer.model.grpc.keepAliveTimeout }}"
           - name: JAEGER_AGENT_HOST
             value: "{{ .Values.merlin.transformer.jaeger.agentHost }}"
           - name: JAEGER_AGENT_PORT
@@ -208,6 +214,8 @@ spec:
             value: "{{ .Values.merlin.transformer.jaeger.samplerParam }}"
           - name: JAEGER_DISABLED
             value: "{{ .Values.merlin.transformer.jaeger.disabled }}"
+          - name: PYFUNC_GRPC_OPTIONS
+            value: "{{ .Values.merlin.pyfuncGRPCOptions }}"
           - name: DEPLOYMENT_CONFIG_PATH
             value: {{ ternary (printf "/opt/config/%s" "environment.yaml") (printf "/opt/config/%s" .Values.mlp.environmentConfigSecret.envKey) (eq .Values.mlp.environmentConfigSecret.name "")}}
           {{ if .Values.merlin.sentry.enabled }}

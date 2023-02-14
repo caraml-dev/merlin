@@ -27,4 +27,8 @@ type Options struct {
 	ModelHystrixErrorPercentageThreshold int           `envconfig:"MODEL_HYSTRIX_ERROR_PERCENTAGE_THRESHOLD" default:"25"`
 	ModelHystrixRequestVolumeThreshold   int           `envconfig:"MODEL_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
 	ModelHystrixSleepWindowMs            int           `envconfig:"MODEL_HYSTRIX_SLEEP_WINDOW_MS" default:"10"`
+
+	ModelGRPCKeepAliveEnabled bool          `envconfig:"MODEL_GRPC_KEEP_ALIVE_ENABLED" default:"false"`
+	ModelGRPCKeepAliveTime    time.Duration `envconfig:"MODEL_GRPC_KEEP_ALIVE_TIME" default:"30s"`
+	ModelGRPCKeepAliveTimeout time.Duration `envconfig:"MODEL_GRPC_KEEP_ALIVE_TIMEOUT" default:"5s"`
 }
