@@ -133,15 +133,16 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	}
 
 	webServiceConfig := imagebuilder.Config{
-		BaseImages:           cfg.ImageBuilderConfig.BaseImages,
-		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
-		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
-		ContextSubPath:       cfg.ImageBuilderConfig.ContextSubPath,
-		BuildTimeoutDuration: timeout,
-		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
-		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
-		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
-		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
+		BaseImages:             cfg.ImageBuilderConfig.BaseImages,
+		BuildNamespace:         cfg.ImageBuilderConfig.BuildNamespace,
+		DockerRegistry:         cfg.ImageBuilderConfig.DockerRegistry,
+		ContextSubPath:         cfg.ImageBuilderConfig.ContextSubPath,
+		BuildTimeoutDuration:   timeout,
+		KanikoImage:            cfg.ImageBuilderConfig.KanikoImage,
+		ResourceRequestsLimits: cfg.ImageBuilderConfig.ResourceRequestsLimits,
+		Tolerations:            cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:          cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:           cfg.ImageBuilderConfig.MaximumRetry,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -151,15 +152,16 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	webserviceBuilder = imagebuilder.NewModelServiceImageBuilder(kubeClient, webServiceConfig)
 
 	predJobConfig := imagebuilder.Config{
-		BaseImages:           cfg.ImageBuilderConfig.PredictionJobBaseImages,
-		BuildNamespace:       cfg.ImageBuilderConfig.BuildNamespace,
-		DockerRegistry:       cfg.ImageBuilderConfig.DockerRegistry,
-		ContextSubPath:       cfg.ImageBuilderConfig.PredictionJobContextSubPath,
-		BuildTimeoutDuration: timeout,
-		KanikoImage:          cfg.ImageBuilderConfig.KanikoImage,
-		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
-		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
-		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
+		BaseImages:             cfg.ImageBuilderConfig.PredictionJobBaseImages,
+		BuildNamespace:         cfg.ImageBuilderConfig.BuildNamespace,
+		DockerRegistry:         cfg.ImageBuilderConfig.DockerRegistry,
+		ContextSubPath:         cfg.ImageBuilderConfig.PredictionJobContextSubPath,
+		BuildTimeoutDuration:   timeout,
+		KanikoImage:            cfg.ImageBuilderConfig.KanikoImage,
+		ResourceRequestsLimits: cfg.ImageBuilderConfig.ResourceRequestsLimits,
+		Tolerations:            cfg.ImageBuilderConfig.Tolerations,
+		NodeSelectors:          cfg.ImageBuilderConfig.NodeSelectors,
+		MaximumRetry:           cfg.ImageBuilderConfig.MaximumRetry,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
