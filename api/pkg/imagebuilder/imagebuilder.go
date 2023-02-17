@@ -79,10 +79,6 @@ var (
 	jobCompletions            int32 = 1
 )
 
-var defaultResourceRequests = v1.ResourceList{
-	v1.ResourceCPU: resource.MustParse("1"),
-}
-
 func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator) ImageBuilder {
 	return &imageBuilder{
 		kubeClient:    kubeClient,
@@ -365,6 +361,25 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 
 	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
 
+	resourceRequirements := RequestLimitResources{
+		Request: Resource{
+			CPU: resource.MustParse(
+				c.config.ResourceRequestsLimits.Requests.CPU,
+			),
+			Memory: resource.MustParse(
+				c.config.ResourceRequestsLimits.Requests.Memory,
+			),
+		},
+		Limit: Resource{
+			CPU: resource.MustParse(
+				c.config.ResourceRequestsLimits.Limits.CPU,
+			),
+			Memory: resource.MustParse(
+				c.config.ResourceRequestsLimits.Limits.Memory,
+			),
+		},
+	}
+
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kanikoPodName,
@@ -400,9 +415,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 									Value: saFilePath,
 								},
 							},
-							Resources: v1.ResourceRequirements{
-								Requests: defaultResourceRequests,
-							},
+							Resources:                resourceRequirements.Build(),
 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 						},
 					},
