@@ -149,6 +149,8 @@ spec:
           {{- if .Values.merlin.imageBuilder.contextSubPath }}
           - name: IMG_BUILDER_CONTEXT_SUB_PATH
             value: "{{ .Values.merlin.imageBuilder.contextSubPath }}"
+          - name: IMG_BUILDER_KANIKO_SERVICE_ACCOUNT
+            value: "{{ .Values.merlin.imageBuilder.serviceAccount }}"
           {{- end }}
           {{- if .Values.merlin.imageBuilder.predictionJobContextSubPath }}
           - name: IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH

@@ -67,6 +67,7 @@ merlin:
     tolerations: []
     nodeSelectors: {}
     maxRetry: 3
+    serviceAccount: ""
     k8sConfig: ""
 
   gitlab:
