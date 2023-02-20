@@ -35,6 +35,8 @@ type Config struct {
 	BuildTimeoutDuration time.Duration
 	// Kaniko docker image
 	KanikoImage string
+	// Kaniko kubernetes service account
+	KanikoServiceAccount string
 	// Tolerations for Jobs Specification
 	Tolerations []v1.Toleration
 	// Node Selectors for Jobs Specification
