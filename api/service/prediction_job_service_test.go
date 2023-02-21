@@ -87,10 +87,11 @@ var (
 		ID:   0,
 		Name: fmt.Sprintf("%s-%s-%s", model.Name, version.ID, strconv.FormatInt(now.UnixNano(), 10)[:13]),
 		Metadata: models.Metadata{
-			Team:        project.Team,
-			Stream:      project.Stream,
 			App:         model.Name,
+			Component:   models.ComponentBatchJob,
 			Environment: environmentLabel,
+			Stream:      project.Stream,
+			Team:        project.Team,
 			Labels:      project.Labels,
 		},
 		VersionID:       3,

@@ -211,11 +211,12 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 
 func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoint *models.ModelEndpoint) (*v1beta1.VirtualService, error) {
 	metadata := models.Metadata{
-		Team:        model.Project.Team,
-		Stream:      model.Project.Stream,
 		App:         model.Name,
+		Component:   models.ComponentModelEndpoint,
 		Environment: s.environment,
 		Labels:      model.Project.Labels,
+		Stream:      model.Project.Stream,
+		Team:        model.Project.Team,
 	}
 	labels := metadata.ToLabel()
 

@@ -71,6 +71,26 @@ type Projects []client.Project
 // Labels is a list of mlp-api's Label.
 type Labels []client.Label
 
+func LabelsToMaps(labels []client.Label) map[string]string {
+	output := make(map[string]string, len(labels))
+
+	for _, label := range labels {
+		output[label.Key] = label.Value
+	}
+
+	return output
+}
+
+func MapsToLabels(maps map[string]string) Labels {
+	labels := Labels{}
+
+	for k, v := range maps {
+		labels = append(labels, client.Label{Key: k, Value: v})
+	}
+
+	return labels
+}
+
 func (c *apiClient) ListProjects(ctx context.Context, projectName string) (Projects, error) {
 	var opt *client.ProjectApiProjectsGetOpts
 	if projectName != "" {

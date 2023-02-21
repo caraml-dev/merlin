@@ -19,33 +19,60 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/gojek/merlin/mlp"
 	"github.com/gojek/merlin/utils"
 )
 
 const (
-	labelTeamName         = "gojek.com/team"
-	labelStreamName       = "gojek.com/stream"
-	labelAppName          = "gojek.com/app"
-	labelOrchestratorName = "gojek.com/orchestrator"
-	labelEnvironment      = "gojek.com/environment"
-	labelUsersPrefix      = "gojek.com/%s"
+	labelAppName          = "app"
+	labelComponent        = "component"
+	labelEnvironment      = "environment"
+	LabelOrchestratorName = "orchestrator"
+	labelStreamName       = "stream"
+	labelTeamName         = "team"
+
+	ComponentBatchJob      = "batch-job"
+	ComponentImageBuilder  = "image-builder"
+	ComponentModelEndpoint = "model-endpoint"
+	ComponentModelVersion  = "model-version"
 )
 
 var reservedKeys = map[string]bool{
-	labelTeamName:         true,
-	labelStreamName:       true,
 	labelAppName:          true,
-	labelOrchestratorName: true,
+	labelComponent:        true,
 	labelEnvironment:      true,
+	LabelOrchestratorName: true,
+	labelStreamName:       true,
+	labelTeamName:         true,
+}
+
+var (
+	prefix           string
+	validPrefixRegex = regexp.MustCompile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?(/)$")
+)
+
+// InitKubernetesLabeller builds a new KubernetesLabeller Singleton
+func InitKubernetesLabeller(p string) error {
+	if len(p) > 253 {
+		return fmt.Errorf("length of prefix is greater than 253 characters")
+	}
+
+	if isValidPrefix := validPrefixRegex.MatchString(p); !isValidPrefix {
+		return fmt.Errorf("name violates kubernetes label's prefix constraint")
+	}
+
+	prefix = p
+	return nil
 }
 
 type Metadata struct {
-	Team        string
-	Stream      string
 	App         string
+	Component   string
 	Environment string
+	Stream      string
+	Team        string
 	Labels      mlp.Labels
 }
 
@@ -64,28 +91,32 @@ func (metadata *Metadata) Scan(value interface{}) error {
 
 func (metadata *Metadata) ToLabel() map[string]string {
 	labels := map[string]string{
-		labelOrchestratorName: "merlin",
-		labelAppName:          metadata.App,
-		labelEnvironment:      metadata.Environment,
-		labelStreamName:       metadata.Stream,
-		labelTeamName:         metadata.Team,
+		prefix + labelAppName:          metadata.App,
+		prefix + labelComponent:        metadata.Component,
+		prefix + labelEnvironment:      metadata.Environment,
+		prefix + LabelOrchestratorName: "merlin",
+		prefix + labelStreamName:       metadata.Stream,
+		prefix + labelTeamName:         metadata.Team,
 	}
 
 	for _, label := range metadata.Labels {
-		key := fmt.Sprintf(labelUsersPrefix, label.Key)
 		// skip label that is trying to override reserved key
-		if _, usingReservedKeys := reservedKeys[key]; usingReservedKeys {
+		if _, usingReservedKeys := reservedKeys[prefix+label.Key]; usingReservedKeys {
 			continue
 		}
+
 		// skip label that has invalid key name
 		if err := utils.IsValidLabel(label.Key); err != nil {
 			continue
 		}
+
 		// skip label that has invalid value name
 		if err := utils.IsValidLabel(label.Value); err != nil {
 			continue
 		}
-		labels[key] = label.Value
+
+		labels[label.Key] = label.Value
 	}
+
 	return labels
 }

@@ -24,8 +24,6 @@ from pyfuncserver.model.model import PyFuncModel
 from pyfuncserver.server import PyFuncServer
 from pyfuncserver.utils.contants import ERR_DRY_RUN
 
-DEFAULT_MODEL_NAME = "model"
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', required=True,
                     help='A URI pointer to the model binary')

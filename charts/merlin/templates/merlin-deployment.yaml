@@ -65,6 +65,8 @@ spec:
         env:
           - name: ENVIRONMENT
             value: "{{ .Values.merlin.environment }}"
+          - name: DEPLOYMENT_LABEL_PREFIX
+            value: "{{ .Values.merlin.deploymentLabelPrefix }}"
           - name: LOGGER_DESTINATION_URL
             value: "{{ .Values.merlin.loggerDestinationURL }}"
           - name: NUM_OF_WORKERS

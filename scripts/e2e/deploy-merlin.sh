@@ -29,9 +29,9 @@ install_mlp() {
     --set ingress.host=mlp.mlp.${INGRESS_HOST} \
     --wait --timeout=${TIMEOUT}
 
-   kubectl apply -f config/mock/message-dumper.yaml
-
    kubectl rollout status deployment/mlp -n mlp -w --timeout=${TIMEOUT}
+
+   kubectl apply -f config/mock/message-dumper.yaml
 }
 
 install_merlin() {

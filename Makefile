@@ -56,7 +56,7 @@ lint-ui:
 .PHONY: lint-api
 lint-api:
 	@echo "> Analyzing API source code..."
-	@cd ${API_PATH} && golangci-lint run 
+	@cd ${API_PATH} && golangci-lint run
 
 # ============================================================
 # Testing recipes
