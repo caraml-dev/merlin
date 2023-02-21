@@ -375,7 +375,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 	var volumeMount []v1.VolumeMount
 	var envVar []v1.EnvVar
 
-	// Use kaniko service account is not set, use kaniko secret
+	// If kaniko service account is not set, use kaniko secret
 	if c.config.KanikoServiceAccount == "" {
 		kanikoArgs = append(kanikoArgs,
 			fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath))
