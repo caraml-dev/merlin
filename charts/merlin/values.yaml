@@ -64,7 +64,7 @@ merlin:
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
     kanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
-    resourceRequestsLimits:
+    resources:
       requests:
         cpu: 1
         memory: 256Mi
