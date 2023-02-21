@@ -74,6 +74,13 @@ merlin:
         dockerfilePath: "docker/app.Dockerfile"
         buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.19.0"
         mainAppPath: /merlin-spark-app/main.py
+    resourceRequestsLimits:
+      requests:
+        cpu: 1
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 1Gi
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
     nodeSelectors: {}
