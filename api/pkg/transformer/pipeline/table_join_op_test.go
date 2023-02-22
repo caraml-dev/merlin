@@ -54,6 +54,18 @@ func TestTableJoinOp_Execute(t *testing.T) {
 		series.New([]interface{}{0.1, 0.2, 0.3, 0.4, 0.5}, series.Int, "col_float"),
 	)
 
+	table3 := table.New(
+		series.New([]interface{}{100000000.0, 222222222.0, nil}, series.Float, "col_1"),
+		series.New([]interface{}{"a", "b", "c"}, series.String, "col_2"),
+		series.New([]interface{}{true, false, true}, series.Bool, "col_3"),
+	)
+
+	table4 := table.New(
+		series.New([]interface{}{100000000, 200000000, nil}, series.Int, "col_1"),
+		series.New([]interface{}{"aa", "bb", "cc"}, series.String, "col1_1"),
+		series.New([]interface{}{0.1, 0.2, 0.3}, series.Float, "col1_2"),
+	)
+
 	env := NewEnvironment(&CompiledPipeline{
 		compiledJsonpath:   compiledJsonPath,
 		compiledExpression: compiledExpression,
@@ -65,6 +77,8 @@ func TestTableJoinOp_Execute(t *testing.T) {
 	env.SetSymbol("table_b", tableB)
 	env.SetSymbol("table_1", table1)
 	env.SetSymbol("table_2", table2)
+	env.SetSymbol("table_3", table3)
+	env.SetSymbol("table_4", table4)
 	env.SetSymbol("integer_var", 12345)
 
 	tests := []struct {
@@ -113,6 +127,28 @@ func TestTableJoinOp_Execute(t *testing.T) {
 					series.New([]interface{}{12, 500, 10, 24, nil}, series.Int, "amount"),
 					series.New([]interface{}{"Hardik", "Komal", "Komal", "Elise", "Ramesh"}, series.String, "name"),
 					series.New([]interface{}{25, 23, 23, 20, 24}, series.Int, "age"),
+				),
+			},
+			wantErr:  false,
+			expError: nil,
+		},
+		{
+			name: "success: right join two table -- join column has different types",
+			joinSpec: &spec.TableJoin{
+				LeftTable:   "table_3",
+				RightTable:  "table_4",
+				OutputTable: "table_temp",
+				How:         spec.JoinMethod_LEFT,
+				OnColumn:    "col_1",
+			},
+			env: env,
+			expVariables: map[string]interface{}{
+				"table_temp": table.New(
+					series.New([]interface{}{100000000.0, 222222222.0, nil}, series.Float, "col_1"),
+					series.New([]interface{}{"a", "b", "c"}, series.String, "col_2"),
+					series.New([]interface{}{true, false, true}, series.Bool, "col_3"),
+					series.New([]interface{}{"aa", nil, nil}, series.String, "col1_1"),
+					series.New([]interface{}{0.1, nil, nil}, series.Float, "col1_2"),
 				),
 			},
 			wantErr:  false,
