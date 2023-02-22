@@ -400,15 +400,9 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	// only pyfunc config that enforced by merlin
 	keepAliveModelCfg := t.standardTransformerConfig.ModelClientKeepAlive
 	if modelService.Protocol == protocol.UpiV1 && modelService.Type == models.ModelTypePyFunc {
-		addEnvVar = append(addEnvVar, models.EnvVar{
-			Name: transformerpkg.ModelGRPCKeepAliveEnabled, Value: strconv.FormatBool(keepAliveModelCfg.Enabled),
-		})
-		addEnvVar = append(addEnvVar, models.EnvVar{
-			Name: transformerpkg.ModelGRPCKeepAliveTime, Value: keepAliveModelCfg.Time.String(),
-		})
-		addEnvVar = append(addEnvVar, models.EnvVar{
-			Name: transformerpkg.ModelGRPCKeepAliveTimeout, Value: keepAliveModelCfg.Timeout.String(),
-		})
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveEnabled, Value: strconv.FormatBool(keepAliveModelCfg.Enabled)})
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTime, Value: keepAliveModelCfg.Time.String()})
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelGRPCKeepAliveTimeout, Value: keepAliveModelCfg.Timeout.String()})
 	}
 
 	keepaliveCfg := t.standardTransformerConfig.FeastServingKeepAlive

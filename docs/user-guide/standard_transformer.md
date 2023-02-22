@@ -1121,6 +1121,22 @@ Below are supported environment variables to configure your Transformer.
 | `FEAST_REDIS_WRITE_TIMEOUT` | Timeout for write commands to redis. If reached commands will fails | 3s |
 | `FEAST_BIGTABLE_DIRECT_STORAGE_ENABLED` | Enable features retrieval by querying direcly from bigtable | false | 
 | `FEAST_BIGTABLE_POOL_SIZE` | Number of bigtable grpc connections established in one replica of standard transformer |
+| `FEAST_TIMEOUT` | Timeout of feast request | 1s
+| `FEAST_HYSTRIX_MAX_CONCURRENT_REQUESTS` | Maximum concurrent requests when call feast | 100
+| `FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD` | Threshold of error percentage, once breach circuit will be open | 100
+| `FEAST_HYSTRIX_SLEEP_WINDOW` | Sleep window is duration of rejecting calling feast once the circuit is open | 1s
+| `FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD` | Threshold of number of request to model predictor | 25
+| `FEAST_SERVING_KEEP_ALIVE_ENABLED` | Flag to enable feast keep alive | true
+| `FEAST_SERVING_KEEP_ALIVE_TIME` | Duration of interval between keep alive PING | 60s
+| `FEAST_SERVING_KEEP_ALIVE_TIMEOUT` | Duration of PING that considered as TIMEOUT | 5s
 | `MERLIN_DISABLE_LIVENESS_PROBE` | Disable liveness probe of transformer if set to true |  |
+| `MODEL_TIMEOUT` | Timeout duration of model prediction | 1s |
+| `MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS` | Maximum concurrent requests when call model predictor | 100
+| `MODEL_HYSTRIX_ERROR_PERCENTAGE_THRESHOLD` | Threshold of error percentage, once breach circuit will be open | 25
+| `MODEL_HYSTRIX_REQUEST_VOLUME_THRESHOLD` | Threshold of number of request to model predictor | 100
+| `MODEL_HYSTRIX_SLEEP_WINDOW_MS` | Sleep window is duration of rejecting calling model predictor once the circuit is open | 10
+| `MODEL_GRPC_KEEP_ALIVE_ENABLED` | Flag to enable UPI_V1 model predictor keep alive | false
+| `MODEL_GRPC_KEEP_ALIVE_TIME` | Duration of interval between keep alive PING | 60s
+| `MODEL_GRPC_KEEP_ALIVE_TIME` | Duration of PING that considered as TIMEOUT | 5s
 
 

@@ -283,9 +283,9 @@ type ModelClientKeepAliveConfig struct {
 	// Enable the client grpc keepalive
 	Enabled bool `envconfig:"MODEL_CLIENT_KEEP_ALIVE_ENABLED" default:"true"`
 	// Duration of time no activity until client try to PING gRPC server
-	Time time.Duration `envconfig:"MODEL_CLIENT_KEEP_ALIVE_TIME" default:"30s"`
+	Time time.Duration `envconfig:"MODEL_CLIENT_KEEP_ALIVE_TIME" default:"60s"`
 	// Duration of time client waits if no activity connection will be closed
-	Timeout time.Duration `envconfig:"MODEL_CLIENT_KEEP_ALIVE_TIMEOUT" default:"1s"`
+	Timeout time.Duration `envconfig:"MODEL_CLIENT_KEEP_ALIVE_TIMEOUT" default:"5s"`
 }
 
 type StandardTransformerConfig struct {
