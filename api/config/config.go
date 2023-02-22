@@ -135,22 +135,35 @@ type DatabaseConfig struct {
 	MaxOpenConns    int           `envconfig:"DATABASE_MAX_OPEN_CONNS" default:"0"`
 }
 
+// Resource contains the Kubernetes resource request and limits
+type Resource struct {
+	CPU    string `validate:"required"`
+	Memory string `validate:"required"`
+}
+
+// ResourceRequestsLimits contains the Kubernetes resource request and limits for kaniko
+type ResourceRequestsLimits struct {
+	Requests Resource `validate:"required"`
+	Limits   Resource `validate:"required"`
+}
+
 type ImageBuilderConfig struct {
-	ClusterName                  string           `envconfig:"IMG_BUILDER_CLUSTER_NAME"`
-	GcpProject                   string           `envconfig:"IMG_BUILDER_GCP_PROJECT"`
-	BuildContextURI              string           `envconfig:"IMG_BUILDER_BUILD_CONTEXT_URI"`
-	ContextSubPath               string           `envconfig:"IMG_BUILDER_CONTEXT_SUB_PATH"`
-	DockerfilePath               string           `envconfig:"IMG_BUILDER_DOCKERFILE_PATH" default:"./Dockerfile"`
-	BaseImages                   BaseImageConfigs `envconfig:"IMG_BUILDER_BASE_IMAGES"`
-	PredictionJobBuildContextURI string           `envconfig:"IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI"`
-	PredictionJobContextSubPath  string           `envconfig:"IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH"`
-	PredictionJobDockerfilePath  string           `envconfig:"IMG_BUILDER_PREDICTION_JOB_DOCKERFILE_PATH" default:"./Dockerfile"`
-	PredictionJobBaseImages      BaseImageConfigs `envconfig:"IMG_BUILDER_PREDICTION_JOB_BASE_IMAGES"`
-	BuildNamespace               string           `envconfig:"IMG_BUILDER_NAMESPACE" default:"mlp"`
-	DockerRegistry               string           `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
-	BuildTimeout                 string           `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
-	KanikoImage                  string           `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
-	KanikoServiceAccount         string           `envconfig:"IMG_BUILDER_KANIKO_SERVICE_ACCOUNT"`
+	ClusterName                  string                 `envconfig:"IMG_BUILDER_CLUSTER_NAME"`
+	GcpProject                   string                 `envconfig:"IMG_BUILDER_GCP_PROJECT"`
+	BuildContextURI              string                 `envconfig:"IMG_BUILDER_BUILD_CONTEXT_URI"`
+	ContextSubPath               string                 `envconfig:"IMG_BUILDER_CONTEXT_SUB_PATH"`
+	DockerfilePath               string                 `envconfig:"IMG_BUILDER_DOCKERFILE_PATH" default:"./Dockerfile"`
+	BaseImages                   BaseImageConfigs       `envconfig:"IMG_BUILDER_BASE_IMAGES"`
+	PredictionJobBuildContextURI string                 `envconfig:"IMG_BUILDER_PREDICTION_JOB_BUILD_CONTEXT_URI"`
+	PredictionJobContextSubPath  string                 `envconfig:"IMG_BUILDER_PREDICTION_JOB_CONTEXT_SUB_PATH"`
+	PredictionJobDockerfilePath  string                 `envconfig:"IMG_BUILDER_PREDICTION_JOB_DOCKERFILE_PATH" default:"./Dockerfile"`
+	PredictionJobBaseImages      BaseImageConfigs       `envconfig:"IMG_BUILDER_PREDICTION_JOB_BASE_IMAGES"`
+	BuildNamespace               string                 `envconfig:"IMG_BUILDER_NAMESPACE" default:"mlp"`
+	DockerRegistry               string                 `envconfig:"IMG_BUILDER_DOCKER_REGISTRY"`
+	BuildTimeout                 string                 `envconfig:"IMG_BUILDER_TIMEOUT" default:"10m"`
+	KanikoImage                  string                 `envconfig:"IMG_BUILDER_KANIKO_IMAGE" default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	KanikoServiceAccount         string                 `envconfig:"IMG_BUILDER_KANIKO_SERVICE_ACCOUNT"`
+	Resources                    ResourceRequestsLimits `envconfig:"IMG_BUILDER_RESOURCES"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration        `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
 	Tolerations   Tolerations          `envconfig:"IMG_BUILDER_TOLERATIONS"`

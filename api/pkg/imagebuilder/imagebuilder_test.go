@@ -29,6 +29,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -110,6 +111,16 @@ var (
 		GcpProject:           "test-project",
 		Environment:          "dev",
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+		Resources: cfg.ResourceRequestsLimits{
+			Requests: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+			Limits: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+		},
 		Tolerations: []v1.Toleration{
 			{
 				Key:      "image-build-job",
@@ -167,6 +178,17 @@ var (
 		},
 		MaximumRetry:         jobBackOffLimit,
 		KanikoServiceAccount: "kaniko-sa",
+	}
+
+	defaultResourceRequests = RequestLimitResources{
+		Request: Resource{
+			CPU:    resource.MustParse("500m"),
+			Memory: resource.MustParse("1Gi"),
+		},
+		Limit: Resource{
+			CPU:    resource.MustParse("500m"),
+			Memory: resource.MustParse("1Gi"),
+		},
 	}
 )
 
@@ -255,9 +277,7 @@ func TestBuildImage(t *testing.T) {
 											Value: "/secret/kaniko-secret.json",
 										},
 									},
-									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
-									},
+									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
@@ -344,9 +364,7 @@ func TestBuildImage(t *testing.T) {
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
 									},
-									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
-									},
+									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
@@ -437,9 +455,7 @@ func TestBuildImage(t *testing.T) {
 											Value: "/secret/kaniko-secret.json",
 										},
 									},
-									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
-									},
+									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
@@ -494,6 +510,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           "test-project",
 				Environment:          "dev",
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+				Resources:            config.Resources,
 				NodeSelectors: map[string]string{
 					"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
 				},
@@ -566,9 +583,7 @@ func TestBuildImage(t *testing.T) {
 											Value: "/secret/kaniko-secret.json",
 										},
 									},
-									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
-									},
+									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
@@ -628,6 +643,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           "test-project",
 				Environment:          "dev",
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+				Resources:            config.Resources,
 				Tolerations: []v1.Toleration{
 					{
 						Key:      "image-build-job",
@@ -704,9 +720,7 @@ func TestBuildImage(t *testing.T) {
 											Value: "/secret/kaniko-secret.json",
 										},
 									},
-									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
-									},
+									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
@@ -768,6 +782,7 @@ func TestBuildImage(t *testing.T) {
 				GcpProject:           config.GcpProject,
 				Environment:          config.Environment,
 				KanikoImage:          config.KanikoImage,
+				Resources:            config.Resources,
 				MaximumRetry:         config.MaximumRetry,
 				NodeSelectors:        config.NodeSelectors,
 				Tolerations:          config.Tolerations,
@@ -838,9 +853,7 @@ func TestBuildImage(t *testing.T) {
 											Value: "/secret/kaniko-secret.json",
 										},
 									},
-									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
-									},
+									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
@@ -939,9 +952,7 @@ func TestBuildImage(t *testing.T) {
 											Value: "/secret/kaniko-secret.json",
 										},
 									},
-									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
-									},
+									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
@@ -1043,9 +1054,7 @@ func TestBuildImage(t *testing.T) {
 											Value: "/secret/kaniko-secret.json",
 										},
 									},
-									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
-									},
+									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
@@ -1135,9 +1144,7 @@ func TestBuildImage(t *testing.T) {
 											Value: "/secret/kaniko-secret.json",
 										},
 									},
-									Resources: v1.ResourceRequirements{
-										Requests: defaultResourceRequests,
-									},
+									Resources:                defaultResourceRequests.Build(),
 									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},

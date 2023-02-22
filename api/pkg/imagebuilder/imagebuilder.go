@@ -79,10 +79,6 @@ var (
 	jobCompletions            int32 = 1
 )
 
-var defaultResourceRequests = v1.ResourceList{
-	v1.ResourceCPU: resource.MustParse("1"),
-}
-
 func newImageBuilder(kubeClient kubernetes.Interface, config Config, nameGenerator nameGenerator) ImageBuilder {
 	return &imageBuilder{
 		kubeClient:    kubeClient,
@@ -395,6 +391,25 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		}
 	}
 
+	resourceRequirements := RequestLimitResources{
+		Request: Resource{
+			CPU: resource.MustParse(
+				c.config.Resources.Requests.CPU,
+			),
+			Memory: resource.MustParse(
+				c.config.Resources.Requests.Memory,
+			),
+		},
+		Limit: Resource{
+			CPU: resource.MustParse(
+				c.config.Resources.Limits.CPU,
+			),
+			Memory: resource.MustParse(
+				c.config.Resources.Limits.Memory,
+			),
+		},
+	}
+
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kanikoPodName,
@@ -415,14 +430,12 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 					RestartPolicy: v1.RestartPolicyNever,
 					Containers: []v1.Container{
 						{
-							Name:         containerName,
-							Image:        c.config.KanikoImage,
-							Args:         kanikoArgs,
-							VolumeMounts: volumeMount,
-							Env:          envVar,
-							Resources: v1.ResourceRequirements{
-								Requests: defaultResourceRequests,
-							},
+							Name:                     containerName,
+							Image:                    c.config.KanikoImage,
+							Args:                     kanikoArgs,
+							VolumeMounts:             volumeMount,
+							Env:                      envVar,
+							Resources:                resourceRequirements.Build(),
 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 						},
 					},

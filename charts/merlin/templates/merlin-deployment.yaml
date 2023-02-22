@@ -132,6 +132,8 @@ spec:
             value: "{{ .Values.merlin.imageBuilder.timeout }}"
           - name: IMG_BUILDER_KANIKO_IMAGE
             value: "{{ .Values.merlin.imageBuilder.kanikoImage }}"
+          - name: IMG_BUILDER_RESOURCES
+            value: {{ .Values.merlin.imageBuilder.resources | toJson | quote }}
           - name: IMG_BUILDER_TOLERATIONS
             value: {{ .Values.merlin.imageBuilder.tolerations | toJson | quote }}
           - name: IMG_BUILDER_NODE_SELECTORS
