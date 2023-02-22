@@ -165,6 +165,16 @@ var (
 		GcpProject:           "test-project",
 		Environment:          "dev",
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+		Resources: cfg.ResourceRequestsLimits{
+			Requests: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+			Limits: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+		},
 		Tolerations: []v1.Toleration{
 			{
 				Key:      "image-build-job",
