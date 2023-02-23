@@ -20,6 +20,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	v1 "k8s.io/api/core/v1"
+	resourcev1 "k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/gojek/merlin/pkg/transformer/feast"
 	"github.com/gojek/merlin/pkg/transformer/spec"
@@ -145,6 +146,36 @@ type Resource struct {
 type ResourceRequestsLimits struct {
 	Requests Resource `validate:"required"`
 	Limits   Resource `validate:"required"`
+}
+
+func (r *ResourceRequestsLimits) Decode(value string) error {
+	var resourceRequestsLimits ResourceRequestsLimits
+	var err error
+
+	if err := json.Unmarshal([]byte(value), &resourceRequestsLimits); err != nil {
+		return err
+	}
+	*r = resourceRequestsLimits
+
+	// Validate that the quantity representation is valid
+	_, err = resourcev1.ParseQuantity(r.Requests.CPU)
+	if err != nil {
+		return err
+	}
+	_, err = resourcev1.ParseQuantity(r.Requests.Memory)
+	if err != nil {
+		return err
+	}
+	_, err = resourcev1.ParseQuantity(r.Limits.CPU)
+	if err != nil {
+		return err
+	}
+	_, err = resourcev1.ParseQuantity(r.Limits.Memory)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type ImageBuilderConfig struct {
