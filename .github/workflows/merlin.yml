@@ -348,7 +348,7 @@ jobs:
       LOCAL_REGISTRY: "dev.localhost"
       INGRESS_HOST: "127.0.0.1.nip.io"
       MLP_CHART_VERSION: 0.3.4
-      E2E_PYTHON_VERSION: "3.10.6"
+      E2E_PYTHON_VERSION: "3.10"
     steps:
       - uses: actions/checkout@v2
         with:
