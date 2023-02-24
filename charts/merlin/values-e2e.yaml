@@ -76,10 +76,10 @@ merlin:
         mainAppPath: /merlin-spark-app/main.py
     resources:
       requests:
-        cpu: 1
+        cpu: "1"
         memory: 512Mi
       limits:
-        cpu: 1
+        cpu: "1"
         memory: 1Gi
     contextSubPath: "python/pyfunc-server"
     predictionJobContextSubPath: "python/batch-predictor"
