@@ -134,6 +134,61 @@ var (
 		},
 		MaximumRetry: jobBackOffLimit,
 	}
+	configWithSa = Config{
+		BuildNamespace: buildNamespace,
+		ContextSubPath: "python/pyfunc-server",
+		BaseImages: cfg.BaseImageConfigs{
+			"3.7.*": cfg.BaseImageConfig{
+				ImageName:       "gojek/base-image:1",
+				BuildContextURI: buildContextURL,
+				DockerfilePath:  "./Dockerfile",
+			},
+			"3.8.*": cfg.BaseImageConfig{
+				ImageName:       "gojek/base-image:2",
+				BuildContextURI: buildContextURL,
+				DockerfilePath:  "./Dockerfile",
+			},
+			"3.9.*": cfg.BaseImageConfig{
+				ImageName:       "gojek/base-image:3",
+				BuildContextURI: buildContextURL,
+				DockerfilePath:  "./Dockerfile",
+			},
+			"3.10.*": cfg.BaseImageConfig{
+				ImageName:       "gojek/base-image:4",
+				BuildContextURI: buildContextURL,
+				DockerfilePath:  "./Dockerfile",
+			},
+		},
+		DockerRegistry:       dockerRegistry,
+		BuildTimeoutDuration: timeout,
+		ClusterName:          "my-cluster",
+		GcpProject:           "test-project",
+		Environment:          "dev",
+		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
+		Resources: cfg.ResourceRequestsLimits{
+			Requests: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+			Limits: cfg.Resource{
+				CPU:    "500m",
+				Memory: "1Gi",
+			},
+		},
+		Tolerations: []v1.Toleration{
+			{
+				Key:      "image-build-job",
+				Value:    "true",
+				Operator: v1.TolerationOpEqual,
+				Effect:   v1.TaintEffectNoSchedule,
+			},
+		},
+		NodeSelectors: map[string]string{
+			"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+		},
+		MaximumRetry:         jobBackOffLimit,
+		KanikoServiceAccount: "kaniko-sa",
+	}
 
 	defaultResourceRequests = RequestLimitResources{
 		Request: Resource{
@@ -214,11 +269,11 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -265,6 +320,84 @@ func TestBuildImage(t *testing.T) {
 			wantDeleteJobName: "",
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config:            config,
+		},
+		{
+			name: "success: no existing job, use K8s Service account",
+			args: args{
+				project: project,
+				model:   model,
+				version: modelVersion,
+			},
+			existingJob: nil,
+			wantCreateJob: &batchv1.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-%s-%s", project.Name, model.Name, modelVersion.ID),
+					Namespace: config.BuildNamespace,
+					Labels: map[string]string{
+						"gojek.com/app":          model.Name,
+						"gojek.com/orchestrator": "merlin",
+						"gojek.com/stream":       project.Stream,
+						"gojek.com/team":         project.Team,
+						"gojek.com/environment":  config.Environment,
+						"gojek.com/component":    "image-builder",
+					},
+				},
+				Spec: batchv1.JobSpec{
+					Completions:             &jobCompletions,
+					BackoffLimit:            &jobBackOffLimit,
+					TTLSecondsAfterFinished: &jobTTLSecondAfterComplete,
+					ActiveDeadlineSeconds:   &timeoutInSecond,
+					Template: v1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"gojek.com/app":          model.Name,
+								"gojek.com/orchestrator": "merlin",
+								"gojek.com/stream":       project.Stream,
+								"gojek.com/team":         project.Team,
+								"gojek.com/environment":  config.Environment,
+								"gojek.com/component":    "image-builder",
+							},
+						},
+						Spec: v1.PodSpec{
+							RestartPolicy: v1.RestartPolicyNever,
+							Containers: []v1.Container{
+								{
+									Name:  containerName,
+									Image: "gcr.io/kaniko-project/executor:v1.1.0",
+									Args: []string{
+										fmt.Sprintf("--dockerfile=%s", config.BaseImages[modelVersion.PythonVersion].DockerfilePath),
+										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
+										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
+										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
+										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
+										"--cache=true",
+										"--single-snapshot",
+										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+									},
+									Resources:                defaultResourceRequests.Build(),
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+								},
+							},
+							Tolerations: []v1.Toleration{
+								{
+									Key:      "image-build-job",
+									Operator: v1.TolerationOpEqual,
+									Value:    "true",
+									Effect:   v1.TaintEffectNoSchedule,
+								},
+							},
+							NodeSelector: map[string]string{
+								"cloud.google.com/gke-nodepool": "image-building-job-node-pool",
+							},
+							ServiceAccountName: "kaniko-sa",
+						},
+					},
+				},
+				Status: batchv1.JobStatus{},
+			},
+			wantDeleteJobName: "",
+			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
+			config:            configWithSa,
 		},
 		{
 			name: "success: no existing job, tolerations is not set",
@@ -314,11 +447,11 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -442,11 +575,11 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -580,10 +713,10 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -712,11 +845,11 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -811,11 +944,11 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -913,11 +1046,11 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{
@@ -1003,11 +1136,11 @@ func TestBuildImage(t *testing.T) {
 										fmt.Sprintf("--context=%s", config.BaseImages[modelVersion.PythonVersion].BuildContextURI),
 										fmt.Sprintf("--build-arg=MODEL_URL=%s/model", modelVersion.ArtifactURI),
 										fmt.Sprintf("--build-arg=BASE_IMAGE=%s", config.BaseImages[modelVersion.PythonVersion].ImageName),
-										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 										fmt.Sprintf("--destination=%s", fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID)),
 										"--cache=true",
 										"--single-snapshot",
 										fmt.Sprintf("--context-sub-path=%s", config.ContextSubPath),
+										fmt.Sprintf("--build-arg=GOOGLE_APPLICATION_CREDENTIALS=%s", "/secret/kaniko-secret.json"),
 									},
 									VolumeMounts: []v1.VolumeMount{
 										{

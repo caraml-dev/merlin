@@ -45,6 +45,11 @@ merlin:
     apiHost: http://feast-core.mlp:8080/v1
 
   imageBuilder:
+    serviceAccount:
+      create: true
+      name: "kaniko-sa"
+      annotations: {}
+      labels: {}
     clusterName: "dev"
     baseImages:
       3.7.*:

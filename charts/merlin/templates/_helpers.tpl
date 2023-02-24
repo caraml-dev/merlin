@@ -66,3 +66,11 @@
 {{- printf "%s-environments" (include "merlin.fullname" .) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "merlin.kaniko-sa" -}}
+{{- if .Values.merlin.imageBuilder.serviceAccount.create }}
+{{- printf "%s-%s" .Values.merlin.imageBuilder.serviceAccount.name .Release.Name }}
+{{- else }}
+{{- printf "%s" .Values.merlin.imageBuilder.serviceAccount.name }}
+{{- end }}
+{{- end }}

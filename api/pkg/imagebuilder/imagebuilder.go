@@ -349,7 +349,6 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		fmt.Sprintf("--context=%s", baseImageTag.BuildContextURI),
 		fmt.Sprintf("--build-arg=MODEL_URL=%s/model", version.ArtifactURI),
 		fmt.Sprintf("--build-arg=BASE_IMAGE=%s", baseImageTag.ImageName),
-		fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath),
 		fmt.Sprintf("--destination=%s", imageRef),
 		"--cache=true",
 		"--single-snapshot",
@@ -360,6 +359,37 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 	}
 
 	activeDeadlineSeconds := int64(c.config.BuildTimeoutDuration / time.Second)
+	var volume []v1.Volume
+	var volumeMount []v1.VolumeMount
+	var envVar []v1.EnvVar
+
+	// If kaniko service account is not set, use kaniko secret
+	if c.config.KanikoServiceAccount == "" {
+		kanikoArgs = append(kanikoArgs,
+			fmt.Sprintf("--build-arg=%s=%s", gacEnvKey, saFilePath))
+		volume = []v1.Volume{
+			{
+				Name: kanikoSecretName,
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: kanikoSecretName,
+					},
+				},
+			},
+		}
+		volumeMount = []v1.VolumeMount{
+			{
+				Name:      kanikoSecretName,
+				MountPath: "/secret",
+			},
+		}
+		envVar = []v1.EnvVar{
+			{
+				Name:  gacEnvKey,
+				Value: saFilePath,
+			},
+		}
+	}
 
 	resourceRequirements := RequestLimitResources{
 		Request: Resource{
@@ -380,7 +410,7 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		},
 	}
 
-	return &batchv1.Job{
+	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kanikoPodName,
 			Namespace: c.config.BuildNamespace,
@@ -400,39 +430,24 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 					RestartPolicy: v1.RestartPolicyNever,
 					Containers: []v1.Container{
 						{
-							Name:  containerName,
-							Image: c.config.KanikoImage,
-							Args:  kanikoArgs,
-							VolumeMounts: []v1.VolumeMount{
-								{
-									Name:      kanikoSecretName,
-									MountPath: "/secret",
-								},
-							},
-							Env: []v1.EnvVar{
-								{
-									Name:  gacEnvKey,
-									Value: saFilePath,
-								},
-							},
+							Name:                     containerName,
+							Image:                    c.config.KanikoImage,
+							Args:                     kanikoArgs,
+							VolumeMounts:             volumeMount,
+							Env:                      envVar,
 							Resources:                resourceRequirements.Build(),
 							TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 						},
 					},
-					Volumes: []v1.Volume{
-						{
-							Name: kanikoSecretName,
-							VolumeSource: v1.VolumeSource{
-								Secret: &v1.SecretVolumeSource{
-									SecretName: kanikoSecretName,
-								},
-							},
-						},
-					},
+					Volumes:      volume,
 					Tolerations:  c.config.Tolerations,
 					NodeSelector: c.config.NodeSelectors,
 				},
 			},
 		},
-	}, nil
+	}
+	if c.config.KanikoServiceAccount != "" {
+		job.Spec.Template.Spec.ServiceAccountName = c.config.KanikoServiceAccount
+	}
+	return job, nil
 }

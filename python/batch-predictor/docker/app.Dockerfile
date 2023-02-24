@@ -21,7 +21,7 @@ ARG MODEL_URL
 ARG GOOGLE_APPLICATION_CREDENTIALS
 
 # Run docker build using the provided credential
-RUN gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+RUN if [[-z "$GOOGLE_APPLICATION_CREDENTIALS"]]; then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; fi
 RUN gsutil -m cp -r ${MODEL_URL} .
 # pip 20.2.4 to allow dependency conflicts
 RUN /bin/bash -c ". activate ${CONDA_ENVIRONMENT} && \

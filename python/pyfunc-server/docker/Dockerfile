@@ -20,8 +20,8 @@ ARG GOOGLE_APPLICATION_CREDENTIALS
 
 WORKDIR /pyfunc-server
 
-# Run docker build using the provided credential
-RUN gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+# Run docker build using the credentials if provided
+RUN if [[-z "$GOOGLE_APPLICATION_CREDENTIALS"]]; then gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}; fi
 RUN gsutil cp -r ${MODEL_URL} .
 RUN /bin/bash -c ". activate merlin-model && \
     conda env update --name merlin-model --file model/conda.yaml && \
