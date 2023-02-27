@@ -1,0 +1,12 @@
+channels:
+- conda-forge
+dependencies:
+- python=3.7.11
+- pip<=22.3.1
+- pip:
+  - mlflow
+  - cloudpickle==2.0.0
+  - grpcio-health-checking==1.48.2
+  - grpcio-reflection==1.48.2
+  - merlin-sdk==0.25.0
+name: mlflow-env

@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE
-
+ARG BASE_IMAGE=ghcr.io/gojek/merlin/merlin-pyfunc-base-py37:0.26.0-rc6
 FROM ${BASE_IMAGE}
 
 WORKDIR /pyfunc-server
-COPY pyfunc-server/echo-model/model model
+
+ARG MODEL_DIR=examples/echo-model/model
+COPY ${MODEL_DIR} model
+
+# Add defaults channel to conda config as env.yaml produced by MLflow does not have it
 RUN /bin/bash -c ". activate merlin-model && \
-    sed -i 's/pip$/pip=20.2.4/' model/conda.yaml && \
+    conda config --add channels defaults && \
     conda env update --name merlin-model --file model/conda.yaml && \
     python -m pyfuncserver --model_dir model --dry_run"
 
