@@ -1,6 +1,6 @@
 artifacts/
 prometheus_multiproc_dir/
-# model/
+model/
 mlruns/
 # Created by https://www.gitignore.io/api/python,pycharm
 # Edit at https://www.gitignore.io/?templates=python,pycharm
