@@ -4,8 +4,6 @@ Running the PyFunc model locally can fasten your development time, allowing you 
 
 Merlin PyFunc model inherits MLflow Pyfunc model. When you call `merlin.log_pyfunc_model()`, Merlin SDK will call `mlflow.pyfunc.log_model()` and upload the model artifacts to Merlins' MLflow tracking server. Then, when you call `merlin.deploy()` for your Merlin PyFunc model, Merlin will build the Docker image that contains the code, model artifacts, and conda environment, and deploy the Docker image to the target Kubernetes cluster.
 
-For serving the PyFunc model, the server will first
-
 To have your PyFunc model running locally, you can use only Python environment or also Docker.
 
 ## Develop PyFunc Model in Python Environment (Conda)
