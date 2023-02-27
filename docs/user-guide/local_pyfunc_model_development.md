@@ -177,10 +177,10 @@ $ docker build --file docker/local.Dockerfile --build-arg MODEL_DIR=mlruns/0/ca5
 Run Docker:
 
 ```bash
-$ docker run --publish 8080:8080 --detach iris-model:latest
+$ docker run --publish 8080:8080 iris-model:latest
 ```
 
-Test sending example request
+In the new terminal windows, let's try sending example request
 
 ```bash
 $ curl -X POST localhost:8080/v1/models/model-1:predict -d '{"instances":[[2.8, 1.0, 6.8, 0.4]]}'
