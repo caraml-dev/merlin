@@ -25,5 +25,6 @@ RUN if [[-z "$GOOGLE_APPLICATION_CREDENTIALS"]]; then gcloud auth activate-servi
 RUN gsutil -m cp -r ${MODEL_URL} .
 # pip 20.2.4 to allow dependency conflicts
 RUN /bin/bash -c ". activate ${CONDA_ENVIRONMENT} && \
+    sed -i 's/mlflow$/mlflow==1.23.0/' ${HOME}/model/conda.yaml && \
     conda env update --name ${CONDA_ENVIRONMENT} --file ${HOME}/model/conda.yaml && \
     python ${HOME}/merlin-spark-app/main.py --dry-run-model ${HOME}/model"
