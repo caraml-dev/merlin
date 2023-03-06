@@ -22,6 +22,7 @@ from client import (ApiClient, Configuration, EndpointApi, EnvironmentApi,
                     ModelsApi, ProjectApi, VersionApi)
 from google.auth.transport.requests import Request
 from google.auth.transport.urllib3 import AuthorizedHttp
+from caraml_auth.id_token_credentials import get_default_id_token_credentials
 from merlin.autoscaling import AutoscalingPolicy
 from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import VersionEndpoint
@@ -45,7 +46,7 @@ class MerlinClient:
 
         self._api_client = ApiClient(config)
         if use_google_oauth:
-            credentials, _ = google.auth.default(scopes=OAUTH_SCOPES)
+            credentials = get_default_id_token_credentials(target_audience="turing-sdk.caraml")
             # Refresh credentials, in case it's coming from Compute Engine.
             # See: https://github.com/googleapis/google-auth-library-python/issues/1211
             credentials.refresh(Request())
