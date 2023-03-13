@@ -46,7 +46,7 @@ class MerlinClient:
 
         self._api_client = ApiClient(config)
         if use_google_oauth:
-            credentials = get_default_id_token_credentials(target_audience="turing-sdk.caraml")
+            credentials = get_default_id_token_credentials(target_audience="sdk.caraml")
             # Refresh credentials, in case it's coming from Compute Engine.
             # See: https://github.com/googleapis/google-auth-library-python/issues/1211
             credentials.refresh(Request())
