@@ -29,7 +29,6 @@ REQUIRES = [
     "cloudpickle==2.0.0",  # used by mlflow
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
-    "google-auth>=1.11.0",
     "google-cloud-storage>=1.19.0",
     "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
     "protobuf>=3.0.0,<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
@@ -39,6 +38,7 @@ REQUIRES = [
     "six>=1.10",
     "urllib3>=1.23",
     "numpy<=1.23.5", # Temporary pin numpy due to https://numpy.org/doc/stable/release/1.20.0-notes.html#numpy-1-20-0-release-notes
+    "caraml-auth-google==0.0.0.post3",
 ]
 
 TEST_REQUIRES = [
