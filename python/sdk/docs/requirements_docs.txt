@@ -17,7 +17,6 @@ mlflow>=1.2.0,<=1.23.0
 google-cloud-storage>=1.19.0
 urllib3>=1.23
 PyPrind>=2.11.2
-google-auth>=2.16.2
 Click>=7.0
 cloudpickle==2.0.0
 cookiecutter>=1.7.0

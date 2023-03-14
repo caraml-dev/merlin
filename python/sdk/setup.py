@@ -29,7 +29,6 @@ REQUIRES = [
     "cloudpickle==2.0.0",  # used by mlflow
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
-    "google-auth>=2.16.2",
     "google-cloud-storage>=1.19.0",
     "mlflow>=1.2.0,<=1.23.0", #  for py3.11 due to proto -> "mlflow>=1.26.1",
     "protobuf>=3.0.0,<4.0.0", #  for py3.11 due to proto -> "protobuf>=4.0.0,<5.0dev",
