@@ -50,7 +50,9 @@ func (pl *PredictionLogOp) buildPredictionLog(predictionResult *types.Prediction
 	}
 
 	upiRequest := &types.UPIPredictionRequest{}
-	copier.CopyWithOption(upiRequest, request, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+	if err := copier.CopyWithOption(upiRequest, request, copier.Option{IgnoreEmpty: true, DeepCopy: true}); err != nil {
+		return nil, err
+	}
 
 	log := &upiv1.PredictionLog{}
 	log.ModelName = predictionResult.Metadata.ModelName
@@ -120,7 +122,7 @@ func (pl *PredictionLogOp) buildModelInput(request *types.UPIPredictionRequest, 
 }
 
 func buildLogHeaders(headers map[string]string) []*upiv1.Header {
-	if headers == nil || len(headers) == 0 {
+	if len(headers) == 0 {
 		return nil
 	}
 	logHeaders := make([]*upiv1.Header, 0, len(headers))

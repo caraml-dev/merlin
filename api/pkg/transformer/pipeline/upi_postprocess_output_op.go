@@ -36,7 +36,9 @@ func (up *UPIPostprocessOutputOp) Execute(ctx context.Context, env *Environment)
 	}
 
 	copiedResponse := &types.UPIPredictionResponse{}
-	copier.CopyWithOption(copiedResponse, upiModelResponse, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+	if err := copier.CopyWithOption(copiedResponse, upiModelResponse, copier.Option{IgnoreEmpty: true, DeepCopy: true}); err != nil {
+		return err
+	}
 	predictionResultTable, err := getUPITableFromName(up.outputSpec.PredictionResultTableName, env)
 	if err != nil {
 		return err

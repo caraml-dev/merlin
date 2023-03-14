@@ -212,7 +212,9 @@ func (us *UPIServer) PredictValues(ctx context.Context, request *upiv1.PredictVa
 			var copiedResponse *upiv1.PredictValuesResponse
 			if response != nil {
 				copiedResponse = &upiv1.PredictValuesResponse{}
-				copier.CopyWithOption(copiedResponse, response, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+				if err := copier.CopyWithOption(copiedResponse, response, copier.Option{IgnoreEmpty: true, DeepCopy: true}); err != nil {
+					us.logger.Error("fail to copy response", zap.Error(err))
+				}
 			}
 			us.PredictionLogHandler(ctx, &types.PredictionResult{
 				Response: (*types.UPIPredictionResponse)(copiedResponse),

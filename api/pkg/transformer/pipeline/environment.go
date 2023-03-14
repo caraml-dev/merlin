@@ -63,7 +63,7 @@ func (e *Environment) PublishPredictionLog(ctx context.Context, result *types.Pr
 	if predictionLogOp == nil {
 		return
 	}
-	go predictionLogOp.ProducePredictionLog(ctx, result, e)
+	go predictionLogOp.ProducePredictionLog(ctx, result, e) //nolint:errcheck
 }
 
 func (e *Environment) IsPostProcessOpExist() bool {
