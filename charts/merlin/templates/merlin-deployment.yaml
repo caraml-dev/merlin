@@ -204,6 +204,10 @@ spec:
             value: "{{ .Values.merlin.transformer.model.grpc.keepAliveTime }}"
           - name: MODEL_CLIENT_KEEP_ALIVE_TIMEOUT
             value: "{{ .Values.merlin.transformer.model.grpc.keepAliveTimeout }}"
+          - name: KAFKA_BROKERS
+            value: "{{ .Values.merlin.transformer.kafka.brokers }}"
+          - name: KAFKA_MAX_MESSAGE_SIZE_BYTES
+            value: "{{ .Values.merlin.transformer.kafka.maxMessageSize }}"
           - name: JAEGER_AGENT_HOST
             value: "{{ .Values.merlin.transformer.jaeger.agentHost }}"
           - name: JAEGER_AGENT_PORT

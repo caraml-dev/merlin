@@ -22,5 +22,9 @@ const (
 	JaegerSamplerParam = "JAEGER_SAMPLER_PARAM"
 	JaegerDisabled     = "JAEGER_DISABLED"
 
-	PromNamespace = "merlin_transformer"
+	KafkaTopic               = "KAFKA_TOPIC"
+	KafkaBrokers             = "KAFKA_BROKERS"
+	KafkaMaxMessageSizeBytes = "KAFKA_MAX_MESSAGE_SIZE_BYTES"
+	KafkaSerialization       = "KAFKA_SERIALIZATION_FORMAT"
+	PromNamespace            = "merlin_transformer"
 )

@@ -20,9 +20,10 @@ type Version struct {
 	MlflowUrl       string            `json:"mlflow_url,omitempty"`
 	ArtifactUri     string            `json:"artifact_uri,omitempty"`
 	Endpoints       []VersionEndpoint `json:"endpoints,omitempty"`
-	Properties      interface{}       `json:"properties,omitempty"`
+	Properties      *interface{}      `json:"properties,omitempty"`
 	Labels          map[string]string `json:"labels,omitempty"`
 	CustomPredictor *CustomPredictor  `json:"custom_predictor,omitempty"`
 	CreatedAt       time.Time         `json:"created_at,omitempty"`
 	UpdatedAt       time.Time         `json:"updated_at,omitempty"`
+	PythonVersion   string            `json:"python_version,omitempty"`
 }

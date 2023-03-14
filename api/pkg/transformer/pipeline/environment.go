@@ -58,6 +58,14 @@ func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Paylo
 	return e.compiledPipeline.Postprocess(ctx, e)
 }
 
+func (e *Environment) PublishPredictionLog(ctx context.Context, result *types.PredictionResult) {
+	predictionLogOp := e.compiledPipeline.predictionLogOp
+	if predictionLogOp == nil {
+		return
+	}
+	go predictionLogOp.ProducePredictionLog(ctx, result, e)
+}
+
 func (e *Environment) IsPostProcessOpExist() bool {
 	return len(e.compiledPipeline.postprocessOps) > 0
 }

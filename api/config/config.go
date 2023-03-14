@@ -22,6 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	resourcev1 "k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/caraml-dev/merlin/pkg/kafka"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
@@ -303,6 +304,7 @@ type StandardTransformerConfig struct {
 	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
 	Jaeger             JaegerConfig
 	SimulationFeast    SimulationFeastConfig
+	Kafka              kafka.Config
 }
 
 // SimulationFeastConfig feast config that aimed to be used only for simulation of standard transformer

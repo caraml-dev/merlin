@@ -11,6 +11,8 @@ import { DeploymentConfigPanel } from "../components/DeploymentConfigPanel";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
+import {PROTOCOL} from "../../../../../services/version_endpoint/VersionEndpoint"
+
 
 export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
   const { data, onChangeHandler } = useContext(FormContext);
@@ -39,13 +41,17 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
         />
       </EuiFlexItem>
 
-      <EuiFlexItem grow={false}>
-        <LoggerPanel
-          loggerConfig={get(data, "logger.model")}
-          onChangeHandler={onChange("logger.model")}
-          errors={get(errors, "logger.model")}
-        />
-      </EuiFlexItem>
+      { data.protocol !== PROTOCOL.UPI_V1 && (
+          <EuiFlexItem grow={false}>
+            <LoggerPanel
+              loggerConfig={get(data, "logger.model")}
+              onChangeHandler={onChange("logger.model")}
+              errors={get(errors, "logger.model")}
+            />
+          </EuiFlexItem>
+        )
+      }
+      
 
       <EuiFlexItem grow={false}>
         <EnvVariablesPanel

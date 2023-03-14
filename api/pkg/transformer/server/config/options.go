@@ -18,7 +18,10 @@ type Options struct {
 	// URL for model predictor
 	ModelPredictURL string `envconfig:"CARAML_PREDICTOR_HOST" default:"localhost:8080"`
 	// Choosen protocol for transformer server. There are two protocols "HTTP_JSON" and "UPI_V1", by default "HTTP_JSON" is choosed
-	Protocol protocol.Protocol `envconfig:"CARAML_PROTOCOL" default:"HTTP_JSON"`
+	Protocol     protocol.Protocol `envconfig:"CARAML_PROTOCOL" default:"HTTP_JSON"`
+	Project      string            `envconfig:"CARAML_PROJECT"`
+	ModelVersion string            `envconfig:"CARAML_MODEL_VERSION"`
+	ModelName    string            `envconfig:"CARAML_MODEL_NAME"`
 
 	// Timeout for http server
 	ServerTimeout time.Duration `envconfig:"SERVER_TIMEOUT" default:"30s"`

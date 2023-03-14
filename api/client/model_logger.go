@@ -10,6 +10,7 @@
 package client
 
 type Logger struct {
-	Model       *LoggerConfig `json:"model,omitempty"`
-	Transformer *LoggerConfig `json:"transformer,omitempty"`
+	Model       *LoggerConfig           `json:"model,omitempty"`
+	Transformer *LoggerConfig           `json:"transformer,omitempty"`
+	Prediction  *PredictionLoggerConfig `json:"prediction,omitempty"`
 }

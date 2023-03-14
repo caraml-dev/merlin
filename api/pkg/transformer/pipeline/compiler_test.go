@@ -30,11 +30,12 @@ func TestCompiler_Compile(t *testing.T) {
 		}
 
 		want struct {
-			expressions     []string
-			jsonPaths       []string
-			preloadedTables map[string]table.Table
-			preprocessOps   []Op
-			postprocessOps  []Op
+			expressions          []string
+			jsonPaths            []string
+			preloadedTables      map[string]table.Table
+			preprocessOps        []Op
+			postprocessOps       []Op
+			predictionLogOpExist bool
 		}
 	)
 
@@ -121,6 +122,53 @@ func TestCompiler_Compile(t *testing.T) {
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "upi with prediction log config",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.UpiV1,
+			},
+			specYamlFilePath: "./testdata/upi/valid_transformation_with_prediction_log.yaml",
+			want: want{
+				expressions: []string{},
+				jsonPaths: []string{
+					"$.prediction_context[0].string_value",
+				},
+				preprocessOps: []Op{
+					&UPIAutoloadingOp{},
+					&VariableDeclarationOp{},
+				},
+				postprocessOps: []Op{
+					&UPIAutoloadingOp{},
+					&TableTransformOp{},
+					&UPIPostprocessOutputOp{},
+				},
+				predictionLogOpExist: true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "upi with prediction log config; table for raw features and entities are not exist",
+			fields: fields{
+				sr:           symbol.NewRegistry(),
+				feastClients: feast.Clients{},
+				feastOptions: &feast.Options{
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
+				},
+				logger:   logger,
+				protocol: prt.UpiV1,
+			},
+			specYamlFilePath: "./testdata/upi/invalid_transformation_with_prediction_log.yaml",
+			wantErr:          true,
+			expError:         errors.New("variable unkonwnEntities is not registered"),
 		},
 		{
 			name: "invalid upi preprocess",
@@ -631,7 +679,7 @@ func TestCompiler_Compile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := NewCompiler(tt.fields.sr, tt.fields.feastClients, tt.fields.feastOptions, tt.fields.logger, false, tt.fields.protocol)
+			c := NewCompiler(tt.fields.sr, tt.fields.feastClients, tt.fields.feastOptions, WithLogger(logger), WithOperationTracingEnabled(false), WithProtocol(tt.fields.protocol))
 
 			yamlBytes, err := os.ReadFile(tt.specYamlFilePath)
 			assert.NoError(t, err)
@@ -672,6 +720,7 @@ func TestCompiler_Compile(t *testing.T) {
 			for i, op := range tt.want.postprocessOps {
 				assert.IsType(t, op, got.postprocessOps[i], "different type")
 			}
+			assert.Equal(t, tt.want.predictionLogOpExist, got.predictionLogOp != nil)
 		})
 	}
 }

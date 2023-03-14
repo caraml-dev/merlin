@@ -29,10 +29,10 @@ type EndpointApiService service
 
 /*
 EndpointApiService Get all container belong to a version endpoint
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param versionId
+  - @param endpointId
 
 @return Container
 */
@@ -104,7 +104,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdCon
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -132,12 +134,10 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdCon
 
 /*
 EndpointApiService Undeploy the specified model version deployment
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
-
-
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param versionId
+  - @param endpointId
 */
 func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdDelete(ctx context.Context, modelId int32, versionId int32, endpointId string) (*http.Response, error) {
 	var (
@@ -217,10 +217,10 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdDel
 
 /*
 EndpointApiService Get version endpoint resource
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param versionId
+  - @param endpointId
 
 @return VersionEndpoint
 */
@@ -292,7 +292,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdGet
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -411,7 +413,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPut
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -439,9 +443,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPut
 
 /*
 EndpointApiService List all endpoint of a model version
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param versionId
 
 @return []VersionEndpoint
 */
@@ -512,7 +516,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointGet(ctx conte
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -629,7 +635,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointPost(ctx cont
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		return localVarReturnValue, localVarHttpResponse, err
+		if err == nil {
+			return localVarReturnValue, localVarHttpResponse, err
+		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {

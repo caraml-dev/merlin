@@ -9,6 +9,7 @@ import { DeploymentSummary } from "./components/DeploymentSummary";
 import { CustomTransformerStep } from "./steps/CustomTransformerStep";
 import { FeastTransformerStep } from "./steps/FeastTransformerStep";
 import { ModelStep } from "./steps/ModelStep";
+import { PredictionLoggerStep } from "./steps/PredictionLoggerStep"
 import { StandardTransformerStep } from "./steps/StandardTransformerStep";
 import { TransformerStep } from "./steps/TransformerStep";
 import {
@@ -18,6 +19,7 @@ import {
   transformerConfigSchema,
   versionEndpointSchema,
 } from "./validation/schema";
+import { PROTOCOL } from "../../../../services/version_endpoint/VersionEndpoint";
 
 const targetRequestStatus = (currentStatus) => {
   return currentStatus === "serving" ? "serving" : "running";
@@ -82,6 +84,12 @@ export const DeployModelVersionForm = ({
     width: "100%",
   };
 
+  const predictionLoggerStep = {
+    title: "Logging",
+    children: <PredictionLoggerStep />,
+    validationSchema: transformerConfigSchema
+  }
+
   const customTransformerStep = {
     title: "Custom Transformer",
     children: <CustomTransformerStep />,
@@ -101,7 +109,11 @@ export const DeployModelVersionForm = ({
       if (versionEndpoint.transformer && versionEndpoint.transformer.enabled) {
         switch (versionEndpoint.transformer.type_on_ui) {
           case "standard":
-            setSteps([...mainSteps, standardTransformerStep]);
+            if (versionEndpoint.protocol === PROTOCOL.UPI_V1) {
+              setSteps([...mainSteps, standardTransformerStep, predictionLoggerStep])
+            } else {
+              setSteps([...mainSteps, standardTransformerStep]);
+            }
             break;
           case "custom":
             setSteps([...mainSteps, customTransformerStep]);

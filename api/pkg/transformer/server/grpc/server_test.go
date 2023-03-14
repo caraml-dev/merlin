@@ -13,12 +13,14 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	feastMocks "github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
 	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
+	pipelineMocks "github.com/caraml-dev/merlin/pkg/transformer/pipeline/mocks"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/config"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/grpc/mocks"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
+	"github.com/caraml-dev/universal-prediction-interface/pkg/converter"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
@@ -629,6 +631,7 @@ func TestUPIServer_PredictValues(t *testing.T) {
 		name             string
 		specYamlPath     string
 		mockFeasts       []mockFeast
+		logProducer      *pipelineMocks.PredictionLogProducer
 		request          *upiv1.PredictValuesRequest
 		preprocessOutput *upiv1.PredictValuesRequest
 		modelOutput      *upiv1.PredictValuesResponse
@@ -639,6 +642,206 @@ func TestUPIServer_PredictValues(t *testing.T) {
 		{
 			name:         "simple postprocess",
 			specYamlPath: "../../pipeline/testdata/upi/simple_preprocess_postprocess.yaml",
+			mockFeasts:   []mockFeast{},
+			request: &upiv1.PredictValuesRequest{
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_customer_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "driver_id",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "customer_name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "customer_id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+						},
+					},
+				},
+				PredictionContext: []*upiv1.Variable{
+					{
+						Name:        "country",
+						Type:        upiv1.Type_TYPE_STRING,
+						StringValue: "indonesia",
+					},
+					{
+						Name:        "timezone",
+						Type:        upiv1.Type_TYPE_STRING,
+						StringValue: "asia/jakarta",
+					},
+				},
+			},
+			preprocessOutput: &upiv1.PredictValuesRequest{
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_customer_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "driver_id",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "customer_name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "customer_id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+						},
+					},
+				},
+				PredictionContext: []*upiv1.Variable{
+					{
+						Name:        "country",
+						Type:        upiv1.Type_TYPE_STRING,
+						StringValue: "indonesia",
+					},
+					{
+						Name:        "timezone",
+						Type:        upiv1.Type_TYPE_STRING,
+						StringValue: "asia/jakarta",
+					},
+				},
+			},
+			modelOutput: &upiv1.PredictValuesResponse{
+				PredictionResultTable: &upiv1.Table{
+					Name: "prediction_result",
+					Columns: []*upiv1.Column{
+						{
+							Name: "probability",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "1",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.2,
+								},
+							},
+						},
+						{
+							RowId: "2",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.3,
+								},
+							},
+						},
+						{
+							RowId: "3",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.4,
+								},
+							},
+						},
+						{
+							RowId: "4",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.5,
+								},
+							},
+						},
+						{
+							RowId: "5",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.6,
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &upiv1.PredictValuesResponse{
+				PredictionResultTable: &upiv1.Table{
+					Name: "output_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "probability",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "country",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "1",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.2,
+								},
+								{
+									StringValue: "indonesia",
+								},
+							},
+						},
+						{
+							RowId: "2",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.3,
+								},
+								{
+									StringValue: "indonesia",
+								},
+							},
+						},
+						{
+							RowId: "3",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.4,
+								},
+								{
+									StringValue: "indonesia",
+								},
+							},
+						},
+						{
+							RowId: "4",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.5,
+								},
+								{
+									StringValue: "indonesia",
+								},
+							},
+						},
+						{
+							RowId: "5",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.6,
+								},
+								{
+									StringValue: "indonesia",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:         "simple postprocess with prediction log",
+			specYamlPath: "../../pipeline/testdata/upi/valid_transformation_with_prediction_log.yaml",
 			mockFeasts:   []mockFeast{},
 			request: &upiv1.PredictValuesRequest{
 				TransformerInput: &upiv1.TransformerInput{
@@ -1401,6 +1604,409 @@ func TestUPIServer_PredictValues(t *testing.T) {
 					},
 				},
 			},
+			want: &upiv1.PredictValuesResponse{
+				PredictionResultTable: &upiv1.Table{
+					Name: "model_prediction_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "probability",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "1",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.2,
+								},
+							},
+						},
+						{
+							RowId: "2",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.3,
+								},
+							},
+						},
+						{
+							RowId: "3",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.4,
+								},
+							},
+						},
+						{
+							RowId: "4",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.5,
+								},
+							},
+						},
+						{
+							RowId: "5",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.6,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:         "table_transformations; enable prediction log",
+			specYamlPath: "../../pipeline/testdata/upi/table_transformer_with_prediction_log.yaml",
+			mockFeasts:   []mockFeast{},
+			request: &upiv1.PredictValuesRequest{
+				TargetName: "target",
+				Metadata: &upiv1.RequestMetadata{
+					PredictionId: "predictionID_1",
+				},
+				PredictionTable: &upiv1.Table{
+					Name: "driver_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "name",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+						{
+							Name: "vehicle",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+						{
+							Name: "previous_vehicle",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+						{
+							Name: "rating",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "test_time",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "row_number",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "row1",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1,
+								},
+								{
+									StringValue: "driver-1",
+								},
+								{
+									StringValue: "motorcycle",
+								},
+								{
+									StringValue: "suv",
+								},
+								{
+									DoubleValue: 4,
+								},
+								{
+									IntegerValue: 90,
+								},
+								{
+									IntegerValue: 0,
+								},
+							},
+						},
+						{
+							RowId: "row2",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 2,
+								},
+								{
+									StringValue: "driver-2",
+								},
+								{
+									StringValue: "sedan",
+								},
+								{
+									StringValue: "mpv",
+								},
+								{
+									DoubleValue: 3,
+								},
+								{
+									IntegerValue: 90,
+								},
+								{
+									IntegerValue: 1,
+								},
+							},
+						},
+					},
+				},
+				TransformerInput: &upiv1.TransformerInput{
+					Variables: []*upiv1.Variable{
+						{
+							Name:         "customer_id",
+							Type:         upiv1.Type_TYPE_INTEGER,
+							IntegerValue: 1111,
+						},
+					},
+				},
+			},
+			preprocessOutput: &upiv1.PredictValuesRequest{
+				TargetName: "target",
+				Metadata: &upiv1.RequestMetadata{
+					PredictionId: "predictionID_1",
+				},
+				PredictionTable: &upiv1.Table{
+					Name: "transformed_driver_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "customer_id",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "name",
+							Type: upiv1.Type_TYPE_STRING,
+						},
+						{
+							Name: "rank",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "rating",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+						{
+							Name: "vehicle",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+						{
+							Name: "previous_vehicle",
+							Type: upiv1.Type_TYPE_INTEGER,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "row2",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1111,
+								},
+								{
+									StringValue: "driver-2",
+								},
+								{
+									DoubleValue: 2.5,
+								},
+								{
+									DoubleValue: 0.5,
+								},
+								{
+									IntegerValue: 2,
+								},
+								{
+									IntegerValue: 3,
+								},
+							},
+						},
+						{
+							RowId: "row1",
+							Values: []*upiv1.Value{
+								{
+									IntegerValue: 1111,
+								},
+								{
+									StringValue: "driver-1",
+								},
+								{
+									DoubleValue: -2.5,
+								},
+								{
+									DoubleValue: 0.75,
+								},
+								{
+									IntegerValue: 0,
+								},
+								{
+									IntegerValue: 1,
+								},
+							},
+						},
+					},
+				},
+				TransformerInput: &upiv1.TransformerInput{
+					Tables: []*upiv1.Table{
+						{
+							Name: "driver_table",
+							Columns: []*upiv1.Column{
+								{
+									Name: "id",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "name",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "previous_vehicle",
+									Type: upiv1.Type_TYPE_STRING,
+								},
+								{
+									Name: "rating",
+									Type: upiv1.Type_TYPE_DOUBLE,
+								},
+								{
+									Name: "test_time",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+								{
+									Name: "row_number",
+									Type: upiv1.Type_TYPE_INTEGER,
+								},
+							},
+							Rows: []*upiv1.Row{
+								{
+									RowId: "row1",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 1,
+										},
+										{
+											StringValue: "driver-1",
+										},
+										{
+											StringValue: "motorcycle",
+										},
+										{
+											StringValue: "suv",
+										},
+										{
+											DoubleValue: 4,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 0,
+										},
+									},
+								},
+								{
+									RowId: "row2",
+									Values: []*upiv1.Value{
+										{
+											IntegerValue: 2,
+										},
+										{
+											StringValue: "driver-2",
+										},
+										{
+											StringValue: "sedan",
+										},
+										{
+											StringValue: "mpv",
+										},
+										{
+											DoubleValue: 3,
+										},
+										{
+											IntegerValue: 90,
+										},
+										{
+											IntegerValue: 1,
+										},
+									},
+								},
+							},
+						},
+					},
+					Variables: []*upiv1.Variable{},
+				},
+			},
+			modelOutput: &upiv1.PredictValuesResponse{
+				PredictionResultTable: &upiv1.Table{
+					Name: "model_prediction_table",
+					Columns: []*upiv1.Column{
+						{
+							Name: "probability",
+							Type: upiv1.Type_TYPE_DOUBLE,
+						},
+					},
+					Rows: []*upiv1.Row{
+						{
+							RowId: "1",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.2,
+								},
+							},
+						},
+						{
+							RowId: "2",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.3,
+								},
+							},
+						},
+						{
+							RowId: "3",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.4,
+								},
+							},
+						},
+						{
+							RowId: "4",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.5,
+								},
+							},
+						},
+						{
+							RowId: "5",
+							Values: []*upiv1.Value{
+								{
+									DoubleValue: 0.6,
+								},
+							},
+						},
+					},
+				},
+			},
+			logProducer: func() *pipelineMocks.PredictionLogProducer {
+				mockProducer := &pipelineMocks.PredictionLogProducer{}
+				mockProducer.On("Produce", mock.Anything, mock.MatchedBy(func(log *upiv1.PredictionLog) bool {
+					expectedProto := &upiv1.PredictionLog{
+						PredictionId:       "predictionID_1",
+						ProjectName:        "sample",
+						ModelName:          "initial",
+						TargetName:         "target",
+						ModelVersion:       "1",
+						TableSchemaVersion: converter.TableSchemaV1,
+					}
+					return compareProto(expectedProto, log, "request_timestamp", "input", "output")
+				})).Return(nil)
+				return mockProducer
+			}(),
 			want: &upiv1.PredictValuesResponse{
 				PredictionResultTable: &upiv1.Table{
 					Name: "model_prediction_table",
@@ -2836,8 +3442,13 @@ func TestUPIServer_PredictValues(t *testing.T) {
 			}
 			opts := &config.Options{
 				ModelGRPCHystrixCommandName: "grpcHandler",
+				ModelName:                   "initial",
+				Project:                     "sample",
+				ModelVersion:                "1",
 			}
-			us, err := createTransformerServer(tt.specYamlPath, feastClients, opts, clientMock)
+
+			logProducerMock := tt.logProducer
+			us, err := createTransformerServer(tt.specYamlPath, feastClients, opts, clientMock, logProducerMock)
 			assert.NoError(t, err)
 
 			got, err := us.PredictValues(context.Background(), tt.request)
@@ -2850,7 +3461,7 @@ func TestUPIServer_PredictValues(t *testing.T) {
 	}
 }
 
-func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *config.Options, modelClient upiv1.UniversalPredictionServiceClient) (*UPIServer, error) {
+func createTransformerServer(transformerConfigPath string, feastClients feast.Clients, options *config.Options, modelClient upiv1.UniversalPredictionServiceClient, logProducer pipeline.PredictionLogProducer) (*UPIServer, error) {
 	yamlBytes, err := os.ReadFile(transformerConfigPath)
 	if err != nil {
 		return nil, err
@@ -2900,7 +3511,12 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 				},
 			},
 		},
-	}, logger, false, protocol.UpiV1)
+	},
+		pipeline.WithLogger(logger),
+		pipeline.WithOperationTracingEnabled(false),
+		pipeline.WithProtocol(protocol.UpiV1),
+		pipeline.WithPredictionLogProducer(logProducer),
+	)
 	compiledPipeline, err := compiler.Compile(&transformerConfig)
 	if err != nil {
 		logger.Fatal("Unable to compile standard transformer", zap.Error(err))
@@ -2916,6 +3532,31 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 	transformerServer.ContextModifier = handler.EmbedEnvironment
 	transformerServer.PreprocessHandler = handler.Preprocess
 	transformerServer.PostprocessHandler = handler.Postprocess
+	transformerServer.PredictionLogHandler = handler.PredictionLogHandler
 
 	return transformerServer, nil
+}
+
+func compareProto(expected, actual proto.Message, ignoreFields ...string) bool {
+	expectedProtoReflect := expected.ProtoReflect()
+	actualProtoReflect := actual.ProtoReflect()
+	fieldDescriptors := expectedProtoReflect.Descriptor().Fields()
+	ignoreFieldLookup := make(map[string]bool, len(ignoreFields))
+	for _, ignoreField := range ignoreFields {
+		ignoreFieldLookup[ignoreField] = true
+	}
+	for i := 0; i < fieldDescriptors.Len(); i++ {
+		fieldDesc := fieldDescriptors.Get(i)
+		fieldName := fieldDesc.Name()
+		ignoredField := ignoreFieldLookup[string(fieldName)]
+		if ignoredField {
+			continue
+		}
+		expectedVal := expectedProtoReflect.Get(fieldDesc).Interface()
+		actualVal := actualProtoReflect.Get(fieldDesc).Interface()
+		if expectedVal != actualVal {
+			return false
+		}
+	}
+	return true
 }

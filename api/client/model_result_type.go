@@ -13,10 +13,10 @@ type ResultType string
 
 // List of ResultType
 const (
-	DOUBLE  ResultType = "DOUBLE"
-	FLOAT   ResultType = "FLOAT"
-	INTEGER ResultType = "INTEGER"
-	LONG    ResultType = "LONG"
-	STRING_ ResultType = "STRING"
-	ARRAY   ResultType = "ARRAY"
+	DOUBLE_ResultType  ResultType = "DOUBLE"
+	FLOAT_ResultType   ResultType = "FLOAT"
+	INTEGER_ResultType ResultType = "INTEGER"
+	LONG_ResultType    ResultType = "LONG"
+	STRING__ResultType ResultType = "STRING"
+	ARRAY_ResultType   ResultType = "ARRAY"
 )

@@ -14,7 +14,6 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 
 	"github.com/caraml-dev/merlin/pkg/protocol"
-	prt "github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
 	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
@@ -55,7 +54,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			executorCfg: transformerExecutorConfig{
 				traceEnabled: true,
 				logger:       logger,
-				protocol:     prt.HttpJson,
+				protocol:     protocol.HttpJson,
 			},
 			modelPredictor: newEchoMockPredictor(),
 			requestPayload: []byte(`{"entities" : [{"id": 1,"name": "entity-1"},{"id": 2,"name": "entity-2"}]}`),
@@ -71,7 +70,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			executorCfg: transformerExecutorConfig{
 				traceEnabled: false,
 				logger:       logger,
-				protocol:     prt.HttpJson,
+				protocol:     protocol.HttpJson,
 			},
 			modelPredictor: newEchoMockPredictor(),
 			requestPayload: []byte(`{"entities" : [{"id": 1,"name": "entity-1"},{"id": 2,"name": "entity-2"}]}`),
@@ -86,7 +85,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			executorCfg: transformerExecutorConfig{
 				traceEnabled: true,
 				logger:       logger,
-				protocol:     prt.HttpJson,
+				protocol:     protocol.HttpJson,
 			},
 			modelPredictor: NewMockModelPredictor(types.JSONObject{"entities": []interface{}{
 				map[string]interface{}{
@@ -196,7 +195,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			executorCfg: transformerExecutorConfig{
 				traceEnabled: false,
 				logger:       logger,
-				protocol:     prt.HttpJson,
+				protocol:     protocol.HttpJson,
 			},
 			mockFeasts:       nil,
 			modelPredictor:   NewMockModelPredictor(types.JSONObject{"session_id": "#1"}, map[string]string{"Country-ID": "ID"}, protocol.HttpJson),
@@ -223,7 +222,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			executorCfg: transformerExecutorConfig{
 				traceEnabled: false,
 				logger:       logger,
-				protocol:     prt.HttpJson,
+				protocol:     protocol.HttpJson,
 			},
 			modelPredictor: NewMockModelPredictor(types.JSONObject{"status": "ok"}, map[string]string{"Content-Type": "application/json"}, protocol.HttpJson),
 			requestPayload: []byte(`{"drivers":[{"id":1,"name":"driver-1","rating":4,"acceptance_rate":0.8},{"id":2,"name":"driver-2","rating":3,"acceptance_rate":0.6},{"id":3,"name":"driver-3","rating":3.5,"acceptance_rate":0.77},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.9},{"id":4,"name":"driver-4","rating":2.5,"acceptance_rate":0.88}],"customer":{"id":1111},"details":"{\"points\": [{\"distanceInMeter\": 0.0}, {\"distanceInMeter\": 8976.0}, {\"distanceInMeter\": 729.0}, {\"distanceInMeter\": 8573.0}, {\"distanceInMeter\": 9000.0}]}"}`),
@@ -280,7 +279,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			executorCfg: transformerExecutorConfig{
 				traceEnabled: true,
 				logger:       logger,
-				protocol:     prt.UpiV1,
+				protocol:     protocol.UpiV1,
 			},
 			modelPredictor: NewMockModelPredictor((*types.UPIPredictionResponse)(&upiv1.PredictValuesResponse{
 				PredictionResultTable: &upiv1.Table{
@@ -334,7 +333,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 						},
 					},
 				},
-			}), nil, prt.UpiV1),
+			}), nil, protocol.UpiV1),
 			requestPayload: []byte(`{"transformer_input":{"tables":[{"name":"driver_customer_table","columns":[{"name":"driver_id","type":3},{"name":"customer_name","type":3},{"name":"customer_id","type":2}]}]},"prediction_context":[{"name":"country","type":3,"string_value":"indonesia"},{"name":"timezone","type":3,"string_value":"asia/jakarta"}]}`),
 			requestHeaders: map[string]string{
 				"Country-ID": "ID",
@@ -347,7 +346,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			executorCfg: transformerExecutorConfig{
 				traceEnabled: true,
 				logger:       logger,
-				protocol:     prt.UpiV1,
+				protocol:     protocol.UpiV1,
 			},
 			requestPayload: []byte(`{"randomKey": 2}`),
 			requestHeaders: map[string]string{
@@ -361,7 +360,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			executorCfg: transformerExecutorConfig{
 				traceEnabled: true,
 				logger:       logger,
-				protocol:     prt.UpiV1,
+				protocol:     protocol.UpiV1,
 			},
 			mockFeasts: []*mockFeast{
 				{
@@ -409,7 +408,7 @@ func TestStandardTransformer_Execute(t *testing.T) {
 					},
 				},
 			},
-			modelPredictor: NewMockModelPredictor(nil, nil, prt.UpiV1),
+			modelPredictor: NewMockModelPredictor(nil, nil, protocol.UpiV1),
 			requestPayload: []byte(`{"transformer_input":{"tables":[{"name":"driver_table","columns":[{"name":"id","type":2},{"name":"name","type":3},{"name":"row_number","type":2}],"rows":[{"row_id":"row1","values":[{"integer_value":1},{"string_value":"driver-1"},{}]},{"row_id":"row2","values":[{"integer_value":2},{"string_value":"driver-2"},{"integer_value":1}]}]}],"variables":[{"name":"customer_id","type":2,"integer_value":1111}]}}`),
 			requestHeaders: map[string]string{
 				"Country-ID": "ID",
@@ -473,7 +472,10 @@ func TestStandardTransformer_Execute(t *testing.T) {
 						},
 					},
 				},
-			}, logger, true, tt.executorCfg.protocol)
+			},
+				pipeline.WithLogger(logger),
+				pipeline.WithOperationTracingEnabled(true),
+				pipeline.WithProtocol(tt.executorCfg.protocol))
 
 			compiledPipeline, err := compiler.Compile(transformerConfig)
 			if err != nil {

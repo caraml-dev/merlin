@@ -36,6 +36,26 @@ class LoggerConfig:
     @property
     def mode(self):
         return self._mode
+    
+@autostr
+class PredictionLoggerConfig:
+    def __init__(self, enabled: bool, raw_features_table: str, entities_table: str) -> None:
+        self._enabled = enabled
+        self._raw_features_table = raw_features_table
+        self._entities_table = entities_table
+
+    @property
+    def enabled(self):
+        return self._enabled
+    
+    @property
+    def raw_features_table(self):
+        return self._raw_features_table
+    
+    @property
+    def entities_table(self):
+        return self._entities_table
+
 
 @autostr
 class Logger:
@@ -51,9 +71,10 @@ class Logger:
         client.LoggerMode.RESPONSE: LoggerMode.RESPONSE,
     }
 
-    def __init__(self, model: LoggerConfig = None, transformer: LoggerConfig = None):
+    def __init__(self, model: LoggerConfig = None, transformer: LoggerConfig = None, prediction: PredictionLoggerConfig = None):
         self._model = model
         self._transformer = transformer
+        self._prediction = prediction
 
     @classmethod
     def from_logger_response(cls, response: client.Logger):
@@ -66,8 +87,13 @@ class Logger:
         if response.transformer is not None:
             transformer_config = LoggerConfig(enabled=response.transformer.enabled,
                                               mode=cls._get_logger_mode_from_api_response(response.transformer.mode))
+        prediction_config = None
+        if response.prediction is not None:
+            prediction_config = PredictionLoggerConfig(enabled=response.prediction.enabled,
+                                                              raw_features_table=response.prediction.raw_features_table,
+                                                              entities_table=response.prediction.entities_table)
 
-        return Logger(model=model_config, transformer=transformer_config)
+        return Logger(model=model_config, transformer=transformer_config, prediction=prediction_config)
 
     @classmethod
     def _get_logger_mode_from_api_response(cls, mode_from_api_response):
@@ -103,6 +129,7 @@ class Logger:
     @property
     def transformer(self):
         return self._transformer
-
-
-
+    
+    @property
+    def prediction(self):
+        return self._prediction

@@ -7,10 +7,19 @@ class LoggerConfig {
   }
 }
 
+class PredictionLoggerConfig {
+  constructor() {
+    this.enabled = false;
+    this.raw_features_table = "";
+    this.entities_table = "";
+  }
+}
+
 export class Logger {
   constructor() {
     this.model = new LoggerConfig();
     this.transformer = new LoggerConfig();
+    this.prediction = new PredictionLoggerConfig();
   }
 
   static fromJson(json) {

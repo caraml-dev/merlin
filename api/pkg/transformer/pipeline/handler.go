@@ -70,6 +70,11 @@ func (h *Handler) Postprocess(ctx context.Context, modelResponse types.Payload, 
 	return transformedResponse.AsOutput()
 }
 
+func (h *Handler) PredictionLogHandler(ctx context.Context, result *types.PredictionResult) {
+	env := getEnvironment(ctx)
+	env.PublishPredictionLog(context.Background(), result)
+}
+
 func (h *Handler) EmbedEnvironment(ctx context.Context) context.Context {
 	env := NewEnvironment(h.compiledPipeline, h.logger)
 	return context.WithValue(ctx, PipelineEnvironmentContext, env) //nolint: staticcheck

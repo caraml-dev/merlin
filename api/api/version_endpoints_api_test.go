@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/kafka"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
@@ -2124,6 +2125,510 @@ func TestCreateEndpoint(t *testing.T) {
 						},
 					}),
 					CreatedUpdated: models.CreatedUpdated{},
+				},
+			},
+		},
+		{
+			desc: "Should success create endpoint with transformer; upiv1 and enable prediction logging",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionEndpoint{
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
+				ServiceName:     "sample",
+				Namespace:       "sample",
+				EnvironmentName: "dev",
+				Message:         "",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    1,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				EnvVars: models.EnvVars([]models.EnvVar{
+					{
+						Name:  "WORKER",
+						Value: "1",
+					},
+				}),
+				Protocol: protocol.UpiV1,
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					TransformerType: models.StandardTransformerType,
+					EnvVars: models.EnvVars{
+						{
+							Name: transformer.StandardTransformerConfigEnvName,
+							Value: `{
+								"transformerConfig": {
+								  "preprocess": {
+									"inputs": [
+									  {
+										"autoload": {
+										  "tableNames": [
+											"rawFeatures",
+											"entities"
+										  ]
+										}
+									  },
+									  {
+										"variables": [
+										  {
+											"name": "country",
+											"jsonPath": "$.prediction_context[0].string_value"
+										  }
+										]
+									  }
+									]
+								  },
+								  "postprocess": {
+									"inputs": [
+									  {
+										"autoload": {
+										  "tableNames": [
+											"prediction_result"
+										  ]
+										}
+									  }
+									],
+									"transformations": [
+									  {
+										"tableTransformation": {
+										  "inputTable": "prediction_result",
+										  "outputTable": "output_table",
+										  "steps": [
+											{
+											  "updateColumns": [
+												{
+												  "column": "country",
+												  "expression": "country"
+												}
+											  ]
+											}
+										  ]
+										}
+									  }
+									],
+									"outputs": [
+									  {
+										"upiPostprocessOutput": {
+										  "predictionResultTableName": "output_table"
+										}
+									  }
+									]
+								  }
+								},
+								"predictionLogConfig": {
+								  "enable": true,
+								  "rawFeaturesTable": "rawFeatures",
+								  "entitiesTable": "entities"
+								}
+							  }`,
+						},
+					},
+				},
+				Logger: &models.Logger{
+					Prediction: &models.PredictionLoggerConfig{
+						Enabled:          true,
+						RawFeaturesTable: "rawFeatures",
+						EntitiesTable:    "entities",
+					},
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogAll,
+					},
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogAll,
+					},
+				},
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
+					Name:         "model-1",
+					ProjectID:    models.ID(1),
+					Project:      mlp.Project{},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "",
+						Endpoints:    nil,
+					},
+				}, nil)
+				return svc
+			},
+			envService: func() *mocks.EnvironmentService {
+				svc := &mocks.EnvironmentService{}
+				svc.On("GetDefaultEnvironment").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				svc.On("GetEnvironment", "dev").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
+				svc.On("DeployEndpoint", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointRunning,
+					URL:                  "http://endpoint.svc",
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					},
+					Logger: &models.Logger{
+						Prediction: &models.PredictionLoggerConfig{
+							Enabled:          true,
+							RawFeaturesTable: "rawFeatures",
+							EntitiesTable:    "entities",
+						},
+					},
+					EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					CreatedUpdated: models.CreatedUpdated{},
+				}, nil)
+				return svc
+			},
+			monitoringConfig: config.MonitoringConfig{
+				MonitoringEnabled: true,
+				MonitoringBaseURL: "http://grafana",
+			},
+			standardTransformerConfig: config.StandardTransformerConfig{
+				FeastBigtableConfig: &config.FeastBigtableConfig{
+					ServingURL: "localhost:6567",
+					Project:    "gcp-project",
+					Instance:   "instance",
+					AppProfile: "default",
+					PoolSize:   3,
+				},
+				FeastRedisConfig: &config.FeastRedisConfig{
+					ServingURL: "localhost:6566",
+					RedisAddresses: []string{
+						"10.1.1.2", "10.1.1.3",
+					},
+					PoolSize: 5,
+				},
+				Kafka: kafka.Config{
+					Topic:               "",
+					Brokers:             "brokers",
+					CompressionType:     "none",
+					MaxMessageSizeBytes: 1048588,
+					SerializationFmt:    kafka.Protobuf,
+				},
+			},
+			feastCoreMock: func() *feastmocks.CoreServiceClient {
+				client := &feastmocks.CoreServiceClient{}
+				return client
+			},
+			expected: &Response{
+				code: http.StatusCreated,
+				data: &models.VersionEndpoint{
+					ID:                   uuid,
+					VersionID:            models.ID(1),
+					VersionModelID:       models.ID(1),
+					Status:               models.EndpointRunning,
+					URL:                  "http://endpoint.svc",
+					ServiceName:          "sample",
+					InferenceServiceName: "sample",
+					Namespace:            "sample",
+					MonitoringURL:        "http://monitoring.com",
+					Environment: &models.Environment{
+						ID:         models.ID(1),
+						Name:       "dev",
+						Cluster:    "dev",
+						IsDefault:  &trueBoolean,
+						Region:     "id",
+						GcpProject: "dev-proj",
+						MaxCPU:     "1",
+						MaxMemory:  "1Gi",
+					},
+					EnvironmentName: "dev",
+					Message:         "",
+					ResourceRequest: nil,
+					Logger: &models.Logger{
+						Prediction: &models.PredictionLoggerConfig{
+							Enabled:          true,
+							RawFeaturesTable: "rawFeatures",
+							EntitiesTable:    "entities",
+						},
+					},
+					EnvVars: models.EnvVars([]models.EnvVar{
+						{
+							Name:  "WORKER",
+							Value: "1",
+						},
+					}),
+					CreatedUpdated: models.CreatedUpdated{},
+				},
+			},
+		},
+		{
+			desc: "Failed deploy endpoint due to raw features table is not registered",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			requestBody: &models.VersionEndpoint{
+				ID:              uuid,
+				VersionID:       models.ID(1),
+				VersionModelID:  models.ID(1),
+				ServiceName:     "sample",
+				Namespace:       "sample",
+				EnvironmentName: "dev",
+				Message:         "",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    1,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				EnvVars: models.EnvVars([]models.EnvVar{
+					{
+						Name:  "WORKER",
+						Value: "1",
+					},
+				}),
+				Protocol: protocol.UpiV1,
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					TransformerType: models.StandardTransformerType,
+					EnvVars: models.EnvVars{
+						{
+							Name: transformer.StandardTransformerConfigEnvName,
+							Value: `{
+								"transformerConfig": {
+								  "preprocess": {
+									"inputs": [
+									  {
+										"autoload": {
+										  "tableNames": [
+											"entities"
+										  ]
+										}
+									  },
+									  {
+										"variables": [
+										  {
+											"name": "country",
+											"jsonPath": "$.prediction_context[0].string_value"
+										  }
+										]
+									  }
+									]
+								  },
+								  "postprocess": {
+									"inputs": [
+									  {
+										"autoload": {
+										  "tableNames": [
+											"prediction_result"
+										  ]
+										}
+									  }
+									],
+									"transformations": [
+									  {
+										"tableTransformation": {
+										  "inputTable": "prediction_result",
+										  "outputTable": "output_table",
+										  "steps": [
+											{
+											  "updateColumns": [
+												{
+												  "column": "country",
+												  "expression": "country"
+												}
+											  ]
+											}
+										  ]
+										}
+									  }
+									],
+									"outputs": [
+									  {
+										"upiPostprocessOutput": {
+										  "predictionResultTableName": "output_table"
+										}
+									  }
+									]
+								  }
+								},
+								"predictionLogConfig": {
+								  "enable": true,
+								  "rawFeaturesTable": "rawFeatures",
+								  "entitiesTable": "entities"
+								}
+							  }`,
+						},
+					},
+				},
+				Logger: &models.Logger{
+					Prediction: &models.PredictionLoggerConfig{
+						Enabled:          true,
+						RawFeaturesTable: "rawFeatures",
+						EntitiesTable:    "entities",
+					},
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogAll,
+					},
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogAll,
+					},
+				},
+			},
+			modelService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:           models.ID(1),
+					Name:         "model-1",
+					ProjectID:    models.ID(1),
+					Project:      mlp.Project{},
+					ExperimentID: 1,
+					Type:         "pyfunc",
+					MlflowURL:    "",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc",
+						MlflowURL:    "",
+						Endpoints:    nil,
+					},
+				}, nil)
+				return svc
+			},
+			envService: func() *mocks.EnvironmentService {
+				svc := &mocks.EnvironmentService{}
+				svc.On("GetDefaultEnvironment").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				svc.On("GetEnvironment", "dev").Return(&models.Environment{
+					ID:         models.ID(1),
+					Name:       "dev",
+					Cluster:    "dev",
+					IsDefault:  &trueBoolean,
+					Region:     "id",
+					GcpProject: "dev-proj",
+					MaxCPU:     "1",
+					MaxMemory:  "1Gi",
+				}, nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				svc.On("CountEndpoints", context.Background(), mock.Anything, mock.Anything).Return(0, nil)
+				return svc
+			},
+			monitoringConfig: config.MonitoringConfig{
+				MonitoringEnabled: true,
+				MonitoringBaseURL: "http://grafana",
+			},
+			standardTransformerConfig: config.StandardTransformerConfig{
+				FeastBigtableConfig: &config.FeastBigtableConfig{
+					ServingURL: "localhost:6567",
+					Project:    "gcp-project",
+					Instance:   "instance",
+					AppProfile: "default",
+					PoolSize:   3,
+				},
+				FeastRedisConfig: &config.FeastRedisConfig{
+					ServingURL: "localhost:6566",
+					RedisAddresses: []string{
+						"10.1.1.2", "10.1.1.3",
+					},
+					PoolSize: 5,
+				},
+				Kafka: kafka.Config{
+					Topic:               "",
+					Brokers:             "brokers",
+					CompressionType:     "none",
+					MaxMessageSizeBytes: 1048588,
+					SerializationFmt:    kafka.Protobuf,
+				},
+			},
+			feastCoreMock: func() *feastmocks.CoreServiceClient {
+				client := &feastmocks.CoreServiceClient{}
+				return client
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{
+					Message: "variable rawFeatures is not registered",
 				},
 			},
 		},

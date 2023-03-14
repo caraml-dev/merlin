@@ -92,8 +92,24 @@ func (sr Registry) SetRawRequestHeaders(headers map[string]string) {
 	sr[rawRequestHeadersKey] = headers
 }
 
+func (sr Registry) RawRequestHeaders() map[string]string {
+	rawRequestHeaders := sr[rawRequestHeadersKey]
+	if rawRequestHeaders == nil {
+		return nil
+	}
+	return rawRequestHeaders.(map[string]string)
+}
+
 func (sr Registry) SetModelResponseHeaders(headers map[string]string) {
 	sr[modelResponseHeadersKey] = headers
+}
+
+func (sr Registry) ModelResponseHeaders() map[string]string {
+	rawResponseHeaders := sr[modelResponseHeadersKey]
+	if rawResponseHeaders == nil {
+		return nil
+	}
+	return rawResponseHeaders.(map[string]string)
 }
 
 // evalArg evaluate argument

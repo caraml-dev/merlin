@@ -193,7 +193,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 
 	// validate transformer
 	if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
-		err := c.validateTransformer(ctx, newEndpoint.Transformer, newEndpoint.Protocol)
+		err := c.validateTransformer(ctx, newEndpoint.Transformer, newEndpoint.Protocol, newEndpoint.Logger)
 		if err != nil {
 			log.Errorf("error validating transformer config: %v", err)
 			return BadRequest(err.Error())
@@ -267,7 +267,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 	if newEndpoint.Status == models.EndpointRunning || newEndpoint.Status == models.EndpointServing {
 		// validate transformer
 		if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
-			err := c.validateTransformer(ctx, newEndpoint.Transformer, newEndpoint.Protocol)
+			err := c.validateTransformer(ctx, newEndpoint.Transformer, newEndpoint.Protocol, newEndpoint.Logger)
 			if err != nil {
 				log.Errorf("error validating transformer config: %v", err)
 				return BadRequest(err.Error())
@@ -403,7 +403,7 @@ func validateUpdateRequest(prev *models.VersionEndpoint, new *models.VersionEndp
 	return nil
 }
 
-func (c *EndpointsController) validateTransformer(ctx context.Context, trans *models.Transformer, protocol protocol.Protocol) error {
+func (c *EndpointsController) validateTransformer(ctx context.Context, trans *models.Transformer, protocol protocol.Protocol, logger *models.Logger) error {
 	switch trans.TransformerType {
 	case models.CustomTransformerType, models.DefaultTransformerType:
 		if trans.Image == "" {
@@ -416,7 +416,12 @@ func (c *EndpointsController) validateTransformer(ctx context.Context, trans *mo
 			return errors.New("Standard transformer config is not specified")
 		}
 
-		return c.validateStandardTransformerConfig(ctx, cfg, protocol)
+		var predictionLogCfg *spec.PredictionLogConfig
+		if logger != nil && logger.Prediction != nil {
+			predictionLogCfg = logger.Prediction.ToPredictionLogConfig()
+		}
+
+		return c.validateStandardTransformerConfig(ctx, cfg, protocol, predictionLogCfg)
 	default:
 		return fmt.Errorf("Unknown transformer type: %s", trans.TransformerType)
 	}
@@ -432,7 +437,7 @@ func (c *EndpointsController) validateCustomPredictor(ctx context.Context, versi
 	return customPredictor.IsValid()
 }
 
-func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Context, cfg string, protocol protocol.Protocol) error {
+func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Context, cfg string, protocol protocol.Protocol, predictionLogConfig *spec.PredictionLogConfig) error {
 	stdTransformerConfig := &spec.StandardTransformerConfig{}
 	err := protojson.Unmarshal([]byte(cfg), stdTransformerConfig)
 	if err != nil {
@@ -442,6 +447,8 @@ func (c *EndpointsController) validateStandardTransformerConfig(ctx context.Cont
 	feastOptions := &feast.Options{
 		StorageConfigs: c.StandardTransformerConfig.ToFeastStorageConfigs(),
 	}
+
+	stdTransformerConfig.PredictionLogConfig = predictionLogConfig
 
 	return pipeline.ValidateTransformerConfig(ctx, c.FeastCoreClient, stdTransformerConfig, feastOptions, protocol)
 }

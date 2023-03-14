@@ -7,6 +7,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
+	"github.com/jinzhu/copier"
 )
 
 // UPIPreprocessOutputOp operation to convert all the preprocess result into types.UPIPredictionRequest
@@ -51,7 +52,8 @@ func (up *UPIPreprocessOutputOp) Execute(ctx context.Context, env *Environment) 
 
 	transformerInput := &upiv1.TransformerInput{}
 	transformerInput.Tables = transformerInputTables
-	copiedRequest := enrichedRequest
+	copiedRequest := &types.UPIPredictionRequest{}
+	copier.CopyWithOption(copiedRequest, enrichedRequest, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 	copiedRequest.PredictionTable = predictionTable
 	copiedRequest.TransformerInput = transformerInput
 
