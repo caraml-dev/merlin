@@ -38,7 +38,7 @@ REQUIRES = [
     "six>=1.10",
     "urllib3>=1.23",
     "numpy<=1.23.5", # Temporary pin numpy due to https://numpy.org/doc/stable/release/1.20.0-notes.html#numpy-1-20-0-release-notes
-    "caraml-auth-google==0.0.0.post3",
+    "caraml-auth-google==0.0.0.post4",
 ]
 
 TEST_REQUIRES = [

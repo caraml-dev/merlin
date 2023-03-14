@@ -35,8 +35,6 @@ from merlin.transformer import Transformer
 from merlin.util import valid_name_check
 from merlin.version import VERSION
 
-OAUTH_SCOPES = ['https://www.googleapis.com/auth/userinfo.email']
-
 
 class MerlinClient:
     def __init__(self, merlin_url: str, use_google_oauth: bool=True):
