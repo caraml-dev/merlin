@@ -116,8 +116,14 @@ class Logger:
             transformer_logger_config = client.LoggerConfig(
                 enabled=self.transformer.enabled, mode=Logger.logger_mode_mapping[self.transformer.mode])
 
-        if model_logger_config is not None or transformer_logger_config is not None:
-            target_logger = client.Logger(model=model_logger_config, transformer=transformer_logger_config)
+        prediction_logger_config = None
+        if self.prediction is not None:
+            prediction_logger_config = client.PredictionLoggerConfig(
+                enabled=self.prediction.enabled, raw_features_table= self.prediction.raw_features_table, entities_table=self.prediction.entities_table
+            )
+
+        if model_logger_config is not None or transformer_logger_config is not None or prediction_logger_config is not None:
+            target_logger = client.Logger(model=model_logger_config, transformer=transformer_logger_config, prediction=prediction_logger_config)
 
         return target_logger
 

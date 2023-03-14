@@ -87,7 +87,7 @@ export const DeployModelVersionForm = ({
   const predictionLoggerStep = {
     title: "Logging",
     children: <PredictionLoggerStep />,
-    validationSchema: transformerConfigSchema
+    validationSchema: versionEndpointSchema
   }
 
   const customTransformerStep = {

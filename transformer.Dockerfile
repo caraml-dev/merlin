@@ -23,6 +23,7 @@ ARG VERSION
 
 RUN apk update && apk add --no-cache git ca-certificates bash
 RUN mkdir -p src/api
+RUN apk add build-base librdkafka
 
 WORKDIR /src/api
 
