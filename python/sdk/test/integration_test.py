@@ -418,8 +418,6 @@ def test_logger(integration_test_url, project_name, deployment_mode, use_google_
     merlin.undeploy(v)
 
 
-# https://github.com/kserve/kserve/issues/2142
-# Logging is not supported yet in raw_deployment
 @pytest.mark.customtransformer
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
@@ -432,10 +430,8 @@ def test_custom_transformer(
 
     undeploy_all_version()
 
-    resource_request = ResourceRequest(1, 1, "50m", "200Mi")
     transformer = Transformer(
         "gcr.io/kubeflow-ci/kfserving/image-transformer:latest",
-        resource_request=resource_request,
     )
 
     logger = Logger(
