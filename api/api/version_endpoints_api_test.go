@@ -20,9 +20,14 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/deployment"
-	"github.com/caraml-dev/merlin/pkg/kafka"
 	"github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/transformer"
+	feastmocks "github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/service/mocks"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/gojek/mlp/api/client"
@@ -30,14 +35,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/mlp"
-	"github.com/caraml-dev/merlin/models"
-	"github.com/caraml-dev/merlin/pkg/transformer"
-	feastmocks "github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
-	"github.com/caraml-dev/merlin/service/mocks"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func TestListEndpoint(t *testing.T) {
@@ -2363,12 +2362,12 @@ func TestCreateEndpoint(t *testing.T) {
 					},
 					PoolSize: 5,
 				},
-				Kafka: kafka.Config{
+				Kafka: config.KafkaConfig{
 					Topic:               "",
 					Brokers:             "brokers",
 					CompressionType:     "none",
 					MaxMessageSizeBytes: 1048588,
-					SerializationFmt:    kafka.Protobuf,
+					SerializationFmt:    "protobuf",
 				},
 			},
 			feastCoreMock: func() *feastmocks.CoreServiceClient {
@@ -2613,12 +2612,12 @@ func TestCreateEndpoint(t *testing.T) {
 					},
 					PoolSize: 5,
 				},
-				Kafka: kafka.Config{
+				Kafka: config.KafkaConfig{
 					Topic:               "",
 					Brokers:             "brokers",
 					CompressionType:     "none",
 					MaxMessageSizeBytes: 1048588,
-					SerializationFmt:    kafka.Protobuf,
+					SerializationFmt:    "protobuf",
 				},
 			},
 			feastCoreMock: func() *feastmocks.CoreServiceClient {

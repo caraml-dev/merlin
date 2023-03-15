@@ -353,4 +353,5 @@ func setRequiredEnvironmentVariables() {
 	os.Setenv("DEFAULT_FEAST_SOURCE", "BIGTABLE")
 	os.Setenv("SIMULATION_FEAST_BIGTABLE_URL", "online-serving-bt.dev")
 	os.Setenv("SIMULATION_FEAST_REDIS_URL", "online-serving-redis.dev")
+	os.Setenv("KAFKA_BROKERS", "kafka-brokers:9999")
 }

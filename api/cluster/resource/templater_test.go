@@ -21,7 +21,6 @@ import (
 
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
 	"github.com/caraml-dev/merlin/pkg/deployment"
-	"github.com/caraml-dev/merlin/pkg/kafka"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/pkg/transformer"
 	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
@@ -139,12 +138,12 @@ var (
 			Time:    time.Duration(45 * time.Second),
 			Timeout: time.Duration(5 * time.Second),
 		},
-		Kafka: kafka.Config{
+		Kafka: config.KafkaConfig{
 			Topic:               "",
 			Brokers:             "kafka-brokers",
 			CompressionType:     "none",
 			MaxMessageSizeBytes: 1048588,
-			SerializationFmt:    kafka.Protobuf,
+			SerializationFmt:    "protobuf",
 		},
 	}
 )

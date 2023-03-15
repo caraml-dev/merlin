@@ -44,7 +44,7 @@ func (e *Environment) Preprocess(ctx context.Context, rawRequest types.Payload, 
 	e.symbolRegistry.SetRawRequestHeaders(rawRequestHeaders)
 	e.SetOutput(rawRequest)
 
-	if e.IsPreprocessOpExist() {
+	if !e.IsPreprocessOpExist() {
 		return rawRequest, nil
 	}
 
@@ -59,7 +59,7 @@ func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Paylo
 	e.symbolRegistry.SetModelResponseHeaders(modelResponseHeaders)
 	e.SetOutput(modelResponse)
 
-	if e.IsPostProcessOpExist() {
+	if !e.IsPostProcessOpExist() {
 		return modelResponse, nil
 	}
 
