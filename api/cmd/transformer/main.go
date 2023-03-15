@@ -47,8 +47,6 @@ type AppConfig struct {
 	Feast feast.Options
 	// StandardTransformerConfigJSON is standard transformer configuration in JSON string format
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
-	// PredictionLogConfigJSON
-	PredictionLogConfigJSON string `envconfig:"PREDICTION_LOG_CONFIG"`
 	// FeatureTableSpecJsons is feature table metadata specs in JSON string format
 	FeatureTableSpecJsons string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
 	// LogLevel
@@ -116,9 +114,9 @@ func main() {
 
 	predictionLogConfig := transformerConfig.PredictionLogConfig
 	if predictionLogConfig != nil && predictionLogConfig.Enable && appConfig.Server.Protocol == protocol.UpiV1 {
-		producer, err := kafka.NewProducer(appConfig.KafkaConfig)
+		producer, err := kafka.NewProducer(appConfig.KafkaConfig, logger)
 		if err != nil {
-			logger.Fatal("failed to initialize kafka producer")
+			logger.Fatal("failed to initialize kafka producer", zap.Error(err))
 		}
 
 		opts = append(opts, pipeline.WithPredictionLogProducer(producer))

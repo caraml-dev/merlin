@@ -28,10 +28,6 @@ func (h *Handler) Preprocess(ctx context.Context, rawRequest types.Payload, rawR
 	defer span.Finish()
 
 	env := getEnvironment(ctx)
-	if !env.IsPreprocessOpExist() {
-		return rawRequest, nil
-	}
-
 	rawRequestObj, err := rawRequest.AsInput()
 	if err != nil {
 		return nil, err

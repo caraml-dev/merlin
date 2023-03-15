@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	kafkalib "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -30,7 +31,7 @@ type producer interface {
 }
 
 // NewProducer creates Producer instance
-func NewProducer(cfg Config) (*Producer, error) {
+func NewProducer(cfg Config, logger *zap.Logger) (*Producer, error) {
 	producer, err := kafkalib.NewProducer(&kafkalib.ConfigMap{
 		"bootstrap.servers": cfg.Brokers,
 		"message.max.bytes": cfg.MaxMessageSizeBytes,
@@ -52,6 +53,7 @@ func NewProducer(cfg Config) (*Producer, error) {
 		topic:               cfg.Topic,
 		producer:            producer,
 		serializationFormat: cfg.SerializationFmt,
+		logger:              logger,
 	}
 
 	go kafkaProducer.handleMessageDelivery()
@@ -100,8 +102,26 @@ func (k *Producer) handleMessageDelivery() {
 		switch ev := e.(type) {
 		case *kafkalib.Message:
 			if ev.TopicPartition.Error != nil {
-				k.logger.Warn("failed to deliver message", zap.Error(ev.TopicPartition.Error))
+				val := k.deserializeMessageValue(ev.Value)
+				k.logger.Warn("failed to deliver message", zap.Error(ev.TopicPartition.Error), zap.Any("value", val))
 			}
 		}
 	}
+}
+
+func (k *Producer) deserializeMessageValue(value []byte) any {
+	if k.serializationFormat == JSON {
+		var output map[string]any
+		err := json.Unmarshal(value, &output)
+		if err != nil {
+			k.logger.Warn("failed to deserialize json message value", zap.Error(err))
+		}
+		return output
+	}
+	// for Protobuf case
+	predictionLog := &upiv1.PredictionLog{}
+	if err := proto.Unmarshal(value, predictionLog); err != nil {
+		k.logger.Warn("failed to deserialize protobuf message value", zap.Error(err))
+	}
+	return predictionLog
 }

@@ -44,6 +44,10 @@ func (e *Environment) Preprocess(ctx context.Context, rawRequest types.Payload, 
 	e.symbolRegistry.SetRawRequestHeaders(rawRequestHeaders)
 	e.SetOutput(rawRequest)
 
+	if e.IsPreprocessOpExist() {
+		return rawRequest, nil
+	}
+
 	return e.compiledPipeline.Preprocess(ctx, e)
 }
 
@@ -54,6 +58,10 @@ func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Paylo
 	e.symbolRegistry.SetModelResponse(modelResponse)
 	e.symbolRegistry.SetModelResponseHeaders(modelResponseHeaders)
 	e.SetOutput(modelResponse)
+
+	if e.IsPostProcessOpExist() {
+		return modelResponse, nil
+	}
 
 	return e.compiledPipeline.Postprocess(ctx, e)
 }

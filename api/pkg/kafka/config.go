@@ -1,5 +1,6 @@
 package kafka
 
+// Serialization format
 type SerializationFormat string
 
 const (
@@ -7,6 +8,7 @@ const (
 	JSON     SerializationFormat = "json"
 )
 
+// Kafka configuration
 type Config struct {
 	Topic               string              `envconfig:"KAFKA_TOPIC"`
 	Brokers             string              `envconfig:"KAFKA_BROKERS" required:"true"`
