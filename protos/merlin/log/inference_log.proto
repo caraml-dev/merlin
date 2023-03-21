@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package merlin.log;
+
+option go_package = "github.com/gojek/merlin/pkg/log";
+
+import "google/protobuf/timestamp.proto";
+
+// key
+message InferenceLogKey {
+    // randomly generated request id
+    string request_id = 1;
+    // timestamp when the request is received
+    google.protobuf.Timestamp event_timestamp = 2;
+    // project name of the model
+    string project_name = 3;
+    // model's name
+    string model_name = 4;
+    // models's version
+    string model_version = 5;
+}
+
+// message
+message InferenceLogMessage {
+    // randomly generated request id
+    string request_id = 1;
+    // timestamp when the request is received
+    google.protobuf.Timestamp event_timestamp = 2;
+    // project name of the model
+    string project_name = 3;
+    // model's name
+    string model_name = 4;
+    // models's version
+    string model_version = 5;
+    // incoming request
+    Request request = 6;
+    // model's response
+    Response response = 7;
+}
+
+message Request {
+    // incoming request header
+    map<string, string> header = 1;
+    // incoming request body
+    string body = 2;
+}
+
+message Response {
+    // model's response status code
+    int32 status_code = 1;
+    // model's response body
+    string body = 2;
+}

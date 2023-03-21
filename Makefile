@@ -205,6 +205,13 @@ generate-proto:
 		--go-json_out=../../api \
 		--go-json_opt=module=github.com/gojek/merlin \
 		transformer/**/*.proto
+	@cd protos/merlin && \
+		protoc -I=. \
+		--go_out=../../api \
+		--go_opt=module=github.com/gojek/merlin \
+		--go-json_out=../../api \
+		--go-json_opt=module=github.com/gojek/merlin \
+		log/*.proto
 
 # ============================================================
 # Docker build
