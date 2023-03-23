@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	environmentName = "dev"
+	environmentName = "staging"
 )
 
 func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
