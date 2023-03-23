@@ -33,6 +33,9 @@ const (
 	labelStreamName       = "stream"
 	labelTeamName         = "team"
 
+	// orchestratorValue is the value of the orchestrator (which is Merlin)
+	orchestratorValue = "merlin"
+
 	ComponentBatchJob      = "batch-job"
 	ComponentImageBuilder  = "image-builder"
 	ComponentModelEndpoint = "model-endpoint"
@@ -50,11 +53,12 @@ var reservedKeys = map[string]bool{
 
 var (
 	prefix           string
+	environment      string
 	validPrefixRegex = regexp.MustCompile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?(/)$")
 )
 
 // InitKubernetesLabeller builds a new KubernetesLabeller Singleton
-func InitKubernetesLabeller(p string) error {
+func InitKubernetesLabeller(p, e string) error {
 	if len(p) > 253 {
 		return fmt.Errorf("length of prefix is greater than 253 characters")
 	}
@@ -64,16 +68,16 @@ func InitKubernetesLabeller(p string) error {
 	}
 
 	prefix = p
+	environment = e
 	return nil
 }
 
 type Metadata struct {
-	App         string
-	Component   string
-	Environment string
-	Stream      string
-	Team        string
-	Labels      mlp.Labels
+	App       string
+	Component string
+	Stream    string
+	Team      string
+	Labels    mlp.Labels
 }
 
 func (metadata Metadata) Value() (driver.Value, error) {
@@ -93,8 +97,8 @@ func (metadata *Metadata) ToLabel() map[string]string {
 	labels := map[string]string{
 		prefix + labelAppName:          metadata.App,
 		prefix + labelComponent:        metadata.Component,
-		prefix + labelEnvironment:      metadata.Environment,
-		prefix + LabelOrchestratorName: "merlin",
+		prefix + labelEnvironment:      environment,
+		prefix + LabelOrchestratorName: orchestratorValue,
 		prefix + labelStreamName:       metadata.Stream,
 		prefix + labelTeamName:         metadata.Team,
 	}

@@ -32,6 +32,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	environmentName = "dev"
+)
+
 func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
 	type fields struct {
 		istioClients           map[string]istio.Client
@@ -442,8 +446,13 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 }
 
 func TestModelEndpointService_createVirtualService(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
-	defer models.InitKubernetesLabeller("")     //nolint:errcheck
+	err := models.InitKubernetesLabeller("gojek.com/", environmentName)
+	assert.NoError(t, err)
+
+	defer func() {
+		_ = models.InitKubernetesLabeller("", "")
+		assert.NoError(t, err)
+	}()
 
 	type fields struct {
 		environment string

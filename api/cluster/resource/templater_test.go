@@ -37,6 +37,11 @@ import (
 	"github.com/gojek/merlin/models"
 )
 
+const (
+	environmentName  = "dev"
+	orchestratorName = "merlin"
+)
+
 var (
 	defaultModelResourceRequests = &config.ResourceRequests{
 		MinReplica:    1,
@@ -125,8 +130,13 @@ var (
 )
 
 func TestCreateInferenceServiceSpec(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
-	defer models.InitKubernetesLabeller("")     //nolint:errcheck
+	err := models.InitKubernetesLabeller("gojek.com/", environmentName)
+	assert.NoError(t, err)
+
+	defer func() {
+		_ = models.InitKubernetesLabeller("", "")
+		assert.NoError(t, err)
+	}()
 
 	project := mlp.Project{
 		Name: "project",
@@ -138,11 +148,10 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 		ModelVersion: "1",
 		ArtifactURI:  "gs://my-artifacet",
 		Metadata: models.Metadata{
-			App:         "model",
-			Component:   models.ComponentModelVersion,
-			Environment: "dev",
-			Stream:      "dsp",
-			Team:        "dsp",
+			App:       "model",
+			Component: models.ComponentModelVersion,
+			Stream:    "dsp",
+			Team:      "dsp",
 			Labels: mlp.Labels{
 				{
 					Key:   "sample",
@@ -192,8 +201,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -253,8 +262,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -314,8 +323,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -368,8 +377,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -419,8 +428,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -472,8 +481,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -525,8 +534,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -577,8 +586,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -636,8 +645,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -694,8 +703,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -746,8 +755,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -810,8 +819,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -869,8 +878,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -936,8 +945,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1018,8 +1027,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1079,8 +1088,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1141,8 +1150,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1202,8 +1211,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1263,8 +1272,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1316,8 +1325,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1374,8 +1383,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1428,8 +1437,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1493,8 +1502,8 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1545,8 +1554,13 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 }
 
 func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
-	defer models.InitKubernetesLabeller("")     //nolint:errcheck
+	err := models.InitKubernetesLabeller("gojek.com/", environmentName)
+	assert.NoError(t, err)
+
+	defer func() {
+		_ = models.InitKubernetesLabeller("", "")
+		assert.NoError(t, err)
+	}()
 
 	project := mlp.Project{
 		Name: "project",
@@ -1560,11 +1574,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 		Namespace:    "project",
 		ArtifactURI:  "gs://my-artifacet",
 		Metadata: models.Metadata{
-			App:         "model",
-			Component:   models.ComponentModelVersion,
-			Environment: "dev",
-			Stream:      "dsp",
-			Team:        "dsp",
+			App:       "model",
+			Component: models.ComponentModelVersion,
+			Stream:    "dsp",
+			Team:      "dsp",
 			Labels: mlp.Labels{
 				{
 					Key:   "sample",
@@ -1582,11 +1595,10 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 		Namespace:    "project",
 		ArtifactURI:  "gs://my-artifacet",
 		Metadata: models.Metadata{
-			App:         "model",
-			Component:   models.ComponentModelVersion,
-			Environment: "dev",
-			Stream:      "dsp",
-			Team:        "dsp",
+			App:       "model",
+			Component: models.ComponentModelVersion,
+			Stream:    "dsp",
+			Team:      "dsp",
 			Labels: mlp.Labels{
 				{
 					Key:   "sample",
@@ -1648,8 +1660,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1733,8 +1745,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1815,8 +1827,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -1905,8 +1917,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2006,8 +2018,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2092,8 +2104,13 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 }
 
 func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
-	defer models.InitKubernetesLabeller("")     //nolint:errcheck
+	err := models.InitKubernetesLabeller("gojek.com/", environmentName)
+	assert.NoError(t, err)
+
+	defer func() {
+		_ = models.InitKubernetesLabeller("", "")
+		assert.NoError(t, err)
+	}()
 
 	project := mlp.Project{
 		Name: "project",
@@ -2107,11 +2124,10 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 		ModelVersion: "1",
 		ArtifactURI:  "gs://my-artifacet",
 		Metadata: models.Metadata{
-			App:         "model",
-			Component:   models.ComponentModelVersion,
-			Environment: "dev",
-			Stream:      "dsp",
-			Team:        "dsp",
+			App:       "model",
+			Component: models.ComponentModelVersion,
+			Stream:    "dsp",
+			Team:      "dsp",
 			Labels: mlp.Labels{
 				{
 					Key:   "sample",
@@ -2168,8 +2184,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2237,8 +2253,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2325,8 +2341,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2409,8 +2425,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2497,8 +2513,8 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2567,8 +2583,13 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 }
 
 func TestPatchInferenceServiceSpec(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
-	defer models.InitKubernetesLabeller("")     //nolint:errcheck
+	err := models.InitKubernetesLabeller("gojek.com/", environmentName)
+	assert.NoError(t, err)
+
+	defer func() {
+		_ = models.InitKubernetesLabeller("", "")
+		assert.NoError(t, err)
+	}()
 
 	project := mlp.Project{
 		Name: "project",
@@ -2581,11 +2602,10 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 		Namespace:    project.Name,
 		ArtifactURI:  "gs://my-artifacet",
 		Metadata: models.Metadata{
-			App:         "model",
-			Component:   models.ComponentModelVersion,
-			Environment: "dev",
-			Stream:      "dsp",
-			Team:        "dsp",
+			App:       "model",
+			Component: models.ComponentModelVersion,
+			Stream:    "dsp",
+			Team:      "dsp",
 			Labels: mlp.Labels{
 				{
 					Key:   "sample",
@@ -2686,8 +2706,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2779,8 +2799,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2921,8 +2941,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -2981,8 +3001,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -3025,8 +3045,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -3118,8 +3138,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -3208,8 +3228,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
@@ -3281,10 +3301,9 @@ func TestCreateTransformerSpec(t *testing.T) {
 		ModelVersion: "1",
 		ArtifactURI:  "gs://my-artifacet",
 		Metadata: models.Metadata{
-			Team:        "dsp",
-			Stream:      "dsp",
-			App:         "model",
-			Environment: "dev",
+			Team:   "dsp",
+			Stream: "dsp",
+			App:    "model",
 			Labels: mlp.Labels{
 				{
 					Key:   "sample",

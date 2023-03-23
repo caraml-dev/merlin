@@ -44,9 +44,10 @@ import (
 )
 
 const (
-	projectName = "test-project"
-	modelName   = "mymodel"
-	artifactURI = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
+	environmentName = "dev"
+	projectName     = "test-project"
+	modelName       = "mymodel"
+	artifactURI     = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
 
 	buildContextURL = "gs://bucket/build.tar.gz"
 	buildNamespace  = "mynamespace"
@@ -203,8 +204,13 @@ var (
 )
 
 func TestBuildImage(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/") //nolint:errcheck
-	defer models.InitKubernetesLabeller("")     //nolint:errcheck
+	err := models.InitKubernetesLabeller("gojek.com/", environmentName)
+	assert.NoError(t, err)
+
+	defer func() {
+		_ = models.InitKubernetesLabeller("", "")
+		assert.NoError(t, err)
+	}()
 
 	type args struct {
 		project mlp.Project

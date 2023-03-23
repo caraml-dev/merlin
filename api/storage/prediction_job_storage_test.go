@@ -70,10 +70,9 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 			ID:   1,
 			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time.Now()),
 			Metadata: models.Metadata{
-				Team:        "dsp",
-				Stream:      "dsp",
-				App:         "my-model",
-				Environment: "dev",
+				Team:   "dsp",
+				Stream: "dsp",
+				App:    "my-model",
 				Labels: mlp.Labels{
 					{
 						Key:   "my-key",
@@ -186,10 +185,9 @@ func TestPredictionJobStorage_List(t *testing.T) {
 			ID:   1,
 			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time.Now()),
 			Metadata: models.Metadata{
-				Team:        "dsp",
-				Stream:      "dsp",
-				App:         "my-model",
-				Environment: "dev",
+				Team:   "dsp",
+				Stream: "dsp",
+				App:    "my-model",
 				Labels: mlp.Labels{
 					{
 						Key:   "my-key",
@@ -249,10 +247,9 @@ func TestPredictionJobStorage_List(t *testing.T) {
 			ID:   2,
 			Name: fmt.Sprintf("%s-%s-%s", m.Name, v.ID, time.Now()),
 			Metadata: models.Metadata{
-				Team:        "dsp",
-				Stream:      "dsp",
-				App:         "my-model",
-				Environment: "dev",
+				Team:   "dsp",
+				Stream: "dsp",
+				App:    "my-model",
 				Labels: mlp.Labels{
 					{
 						Key:   "my-key",

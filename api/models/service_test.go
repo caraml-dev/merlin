@@ -48,8 +48,13 @@ func TestGetValidInferenceURL(t *testing.T) {
 }
 
 func Test_mergeProjectVersionLabels(t *testing.T) {
-	InitKubernetesLabeller("gojek.com/") //nolint:errcheck
-	defer InitKubernetesLabeller("")     //nolint:errcheck
+	err := InitKubernetesLabeller("gojek.com/", environmentName)
+	assert.NoError(t, err)
+
+	defer func() {
+		_ = InitKubernetesLabeller("", "")
+		assert.NoError(t, err)
+	}()
 
 	type args struct {
 		projectLabels mlp.Labels
@@ -207,12 +212,11 @@ func TestNewService(t *testing.T) {
 				ResourceRequest: endpoint.ResourceRequest,
 				EnvVars:         endpoint.EnvVars,
 				Metadata: Metadata{
-					App:         model.Name,
-					Component:   ComponentModelVersion,
-					Environment: endpoint.EnvironmentName,
-					Labels:      serviceLabels,
-					Stream:      model.Project.Stream,
-					Team:        model.Project.Team,
+					App:       model.Name,
+					Component: ComponentModelVersion,
+					Labels:    serviceLabels,
+					Stream:    model.Project.Stream,
+					Team:      model.Project.Team,
 				},
 				Transformer:       endpoint.Transformer,
 				Logger:            endpoint.Logger,
