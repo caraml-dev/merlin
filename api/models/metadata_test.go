@@ -42,7 +42,7 @@ func TestToLabel(t *testing.T) {
 			expectedLabels: map[string]string{
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
-				"gojek.com/environment":  "staging",
+				"gojek.com/environment":  environmentName,
 				"gojek.com/orchestrator": orchestratorName,
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
@@ -82,7 +82,7 @@ func TestToLabel(t *testing.T) {
 			expectedLabels: map[string]string{
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
-				"gojek.com/environment":  "staging",
+				"gojek.com/environment":  environmentName,
 				"gojek.com/orchestrator": orchestratorName,
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
@@ -118,8 +118,8 @@ func TestToLabel(t *testing.T) {
 			expectedLabels: map[string]string{
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
-				"gojek.com/environment":  "staging",
-				"gojek.com/orchestrator": "merlin",
+				"gojek.com/environment":  environmentName,
+				"gojek.com/orchestrator": orchestratorName,
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
 
