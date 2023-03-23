@@ -135,7 +135,6 @@ func TestCreateInferenceServiceSpec(t *testing.T) {
 
 	defer func() {
 		_ = models.InitKubernetesLabeller("", "")
-		assert.NoError(t, err)
 	}()
 
 	project := mlp.Project{
@@ -1559,7 +1558,6 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 
 	defer func() {
 		_ = models.InitKubernetesLabeller("", "")
-		assert.NoError(t, err)
 	}()
 
 	project := mlp.Project{
@@ -2109,7 +2107,6 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 
 	defer func() {
 		_ = models.InitKubernetesLabeller("", "")
-		assert.NoError(t, err)
 	}()
 
 	project := mlp.Project{
@@ -2588,7 +2585,6 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 
 	defer func() {
 		_ = models.InitKubernetesLabeller("", "")
-		assert.NoError(t, err)
 	}()
 
 	project := mlp.Project{

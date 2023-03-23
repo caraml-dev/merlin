@@ -451,7 +451,6 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 
 	defer func() {
 		_ = models.InitKubernetesLabeller("", "")
-		assert.NoError(t, err)
 	}()
 
 	type fields struct {

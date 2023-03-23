@@ -128,7 +128,6 @@ func TestCreateSparkApplicationResource(t *testing.T) {
 
 	defer func() {
 		_ = models.InitKubernetesLabeller("", "")
-		assert.NoError(t, err)
 	}()
 
 	tests := []struct {

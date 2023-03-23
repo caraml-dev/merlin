@@ -209,7 +209,6 @@ func TestBuildImage(t *testing.T) {
 
 	defer func() {
 		_ = models.InitKubernetesLabeller("", "")
-		assert.NoError(t, err)
 	}()
 
 	type args struct {

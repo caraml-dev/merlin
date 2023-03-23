@@ -53,7 +53,6 @@ func Test_mergeProjectVersionLabels(t *testing.T) {
 
 	defer func() {
 		_ = InitKubernetesLabeller("", "")
-		assert.NoError(t, err)
 	}()
 
 	type args struct {
