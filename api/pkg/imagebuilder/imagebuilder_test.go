@@ -44,10 +44,11 @@ import (
 )
 
 const (
-	environmentName = "dev"
-	projectName     = "test-project"
-	modelName       = "mymodel"
-	artifactURI     = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
+	environmentName  = "dev"
+	orchestratorName = "merlin"
+	projectName      = "test-project"
+	modelName        = "mymodel"
+	artifactURI      = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
 
 	buildContextURL = "gs://bucket/build.tar.gz"
 	buildNamespace  = "mynamespace"
@@ -110,7 +111,7 @@ var (
 		BuildTimeoutDuration: timeout,
 		ClusterName:          "my-cluster",
 		GcpProject:           "test-project",
-		Environment:          "dev",
+		Environment:          environmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
 		Resources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
@@ -164,7 +165,7 @@ var (
 		BuildTimeoutDuration: timeout,
 		ClusterName:          "my-cluster",
 		GcpProject:           "test-project",
-		Environment:          "dev",
+		Environment:          environmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
 		Resources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
@@ -242,7 +243,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -258,7 +259,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": "merlin",
+								"gojek.com/orchestrator": orchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -340,7 +341,7 @@ func TestBuildImage(t *testing.T) {
 					Namespace: config.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
@@ -356,7 +357,7 @@ func TestBuildImage(t *testing.T) {
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
-								"gojek.com/orchestrator": "merlin",
+								"gojek.com/orchestrator": orchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 								"gojek.com/environment":  config.Environment,
@@ -420,7 +421,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -436,7 +437,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": "merlin",
+								"gojek.com/orchestrator": orchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -523,7 +524,7 @@ func TestBuildImage(t *testing.T) {
 				BuildTimeoutDuration: timeout,
 				ClusterName:          "my-cluster",
 				GcpProject:           "test-project",
-				Environment:          "dev",
+				Environment:          environmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
 				Resources:            config.Resources,
 				NodeSelectors: map[string]string{
@@ -548,7 +549,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -564,7 +565,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": "merlin",
+								"gojek.com/orchestrator": orchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -656,7 +657,7 @@ func TestBuildImage(t *testing.T) {
 				BuildTimeoutDuration: timeout,
 				ClusterName:          "my-cluster",
 				GcpProject:           "test-project",
-				Environment:          "dev",
+				Environment:          environmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
 				Resources:            config.Resources,
 				Tolerations: []v1.Toleration{
@@ -686,7 +687,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -702,7 +703,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": "merlin",
+								"gojek.com/orchestrator": orchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -818,7 +819,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -834,7 +835,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": "merlin",
+								"gojek.com/orchestrator": orchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -917,7 +918,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -933,7 +934,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": "merlin",
+								"gojek.com/orchestrator": orchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -1019,7 +1020,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -1035,7 +1036,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": "merlin",
+								"gojek.com/orchestrator": orchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -1109,7 +1110,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -1125,7 +1126,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": "merlin",
+								"gojek.com/orchestrator": orchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},

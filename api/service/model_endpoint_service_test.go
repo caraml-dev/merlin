@@ -33,7 +33,8 @@ import (
 )
 
 const (
-	environmentName = "staging"
+	environmentName  = "staging"
+	orchestratorName = "merlin"
 )
 
 func Test_modelEndpointsService_DeployEndpoint(t *testing.T) {
@@ -264,7 +265,7 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				istioClients:           map[string]istio.Client{env.Name: &istioCliMock.Client{}},
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
-				environment:            "staging",
+				environment:            environmentName,
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, updatedModelEndpointReq)
@@ -322,7 +323,7 @@ func Test_modelEndpointsService_UpdateEndpoint(t *testing.T) {
 				istioClients:           map[string]istio.Client{env.Name: &istioCliMock.Client{}},
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
-				environment:            "staging",
+				environment:            environmentName,
 			},
 			func(s *modelEndpointsService) {
 				vs, _ := s.createVirtualService(model1, modelEndpointRequestWrongEnvironment)
@@ -391,7 +392,7 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 				istioClients:           map[string]istio.Client{env.Name: &istioCliMock.Client{}},
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
-				environment:            "staging",
+				environment:            environmentName,
 			},
 			mockFunc: func(s *modelEndpointsService) {
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
@@ -414,7 +415,7 @@ func Test_modelEndpointsService_UndeployEndpoint(t *testing.T) {
 				istioClients:           map[string]istio.Client{env.Name: &istioCliMock.Client{}},
 				modelEndpointStorage:   &storageMock.ModelEndpointStorage{},
 				versionEndpointStorage: &storageMock.VersionEndpointStorage{},
-				environment:            "staging",
+				environment:            environmentName,
 			},
 			func(s *modelEndpointsService) {
 				mockIstio := s.istioClients[env.Name].(*istioCliMock.Client)
@@ -472,7 +473,7 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 		{
 			name: "success: http_json",
 			fields: fields{
-				environment: "staging",
+				environment: environmentName,
 			},
 			args: args{
 				model:         model1,
@@ -485,8 +486,8 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          model1.Name,
 						"gojek.com/component":    models.ComponentModelEndpoint,
-						"gojek.com/environment":  "staging",
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       model1.Project.Stream,
 						"gojek.com/team":         model1.Project.Team,
 						"sample":                 "true",
@@ -532,7 +533,7 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 		{
 			name: "success: upiv1",
 			fields: fields{
-				environment: "staging",
+				environment: environmentName,
 			},
 			args: args{
 				model: model1,
@@ -565,8 +566,8 @@ func TestModelEndpointService_createVirtualService(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          model1.Name,
 						"gojek.com/component":    models.ComponentModelEndpoint,
-						"gojek.com/environment":  "staging",
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  environmentName,
+						"gojek.com/orchestrator": orchestratorName,
 						"gojek.com/stream":       model1.Project.Stream,
 						"gojek.com/team":         model1.Project.Team,
 						"sample":                 "true",
