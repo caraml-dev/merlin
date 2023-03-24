@@ -48,7 +48,7 @@ func TestGetValidInferenceURL(t *testing.T) {
 }
 
 func Test_mergeProjectVersionLabels(t *testing.T) {
-	err := InitKubernetesLabeller("gojek.com/", environmentName)
+	err := InitKubernetesLabeller("gojek.com/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {

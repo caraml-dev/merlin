@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	environmentName  = "dev"
-	orchestratorName = "merlin"
+	testEnvironmentName  = "dev"
+	testOrchestratorName = "merlin"
 )
 
 var (
@@ -69,8 +69,8 @@ var (
 
 		labelAppName:          modelName,
 		labelComponentName:    models.ComponentBatchJob,
-		labelEnvironment:      environmentName,
-		labelOrchestratorName: orchestratorName,
+		labelEnvironment:      testEnvironmentName,
+		labelOrchestratorName: testOrchestratorName,
 		labelStreamName:       streamName,
 		labelTeamName:         teamName,
 
@@ -123,7 +123,7 @@ var (
 )
 
 func TestCreateSparkApplicationResource(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", environmentName)
+	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {

@@ -44,20 +44,20 @@ import (
 )
 
 const (
-	environmentName  = "dev"
-	orchestratorName = "merlin"
-	projectName      = "test-project"
-	modelName        = "mymodel"
-	artifactURI      = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
+	testEnvironmentName  = "dev"
+	testOrchestratorName = "merlin"
+	testProjectName      = "test-project"
+	testModelName        = "mymodel"
+	testArtifactURI      = "gs://bucket-name/mlflow/11/68eb8538374c4053b3ecad99a44170bd/artifacts"
 
-	buildContextURL = "gs://bucket/build.tar.gz"
-	buildNamespace  = "mynamespace"
-	dockerRegistry  = "ghcr.io"
+	testBuildContextURL = "gs://bucket/build.tar.gz"
+	testBuildNamespace  = "mynamespace"
+	testDockerRegistry  = "ghcr.io"
 )
 
 var (
 	project = mlp.Project{
-		Name:   projectName,
+		Name:   testProjectName,
 		Team:   "dsp",
 		Stream: "dsp",
 		Labels: mlp.Labels{
@@ -69,12 +69,12 @@ var (
 	}
 
 	model = &models.Model{
-		Name: modelName,
+		Name: testModelName,
 	}
 
 	modelVersion = &models.Version{
 		ID:            models.ID(1),
-		ArtifactURI:   artifactURI,
+		ArtifactURI:   testArtifactURI,
 		PythonVersion: "3.10.*",
 	}
 
@@ -83,35 +83,35 @@ var (
 	jobBackOffLimit = int32(3)
 
 	config = Config{
-		BuildNamespace: buildNamespace,
+		BuildNamespace: testBuildNamespace,
 		ContextSubPath: "python/pyfunc-server",
 		BaseImages: cfg.BaseImageConfigs{
 			"3.7.*": cfg.BaseImageConfig{
 				ImageName:       "gojek/base-image:1",
-				BuildContextURI: buildContextURL,
+				BuildContextURI: testBuildContextURL,
 				DockerfilePath:  "./Dockerfile",
 			},
 			"3.8.*": cfg.BaseImageConfig{
 				ImageName:       "gojek/base-image:2",
-				BuildContextURI: buildContextURL,
+				BuildContextURI: testBuildContextURL,
 				DockerfilePath:  "./Dockerfile",
 			},
 			"3.9.*": cfg.BaseImageConfig{
 				ImageName:       "gojek/base-image:3",
-				BuildContextURI: buildContextURL,
+				BuildContextURI: testBuildContextURL,
 				DockerfilePath:  "./Dockerfile",
 			},
 			"3.10.*": cfg.BaseImageConfig{
 				ImageName:       "gojek/base-image:4",
-				BuildContextURI: buildContextURL,
+				BuildContextURI: testBuildContextURL,
 				DockerfilePath:  "./Dockerfile",
 			},
 		},
-		DockerRegistry:       dockerRegistry,
+		DockerRegistry:       testDockerRegistry,
 		BuildTimeoutDuration: timeout,
 		ClusterName:          "my-cluster",
 		GcpProject:           "test-project",
-		Environment:          environmentName,
+		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
 		Resources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
@@ -137,35 +137,35 @@ var (
 		MaximumRetry: jobBackOffLimit,
 	}
 	configWithSa = Config{
-		BuildNamespace: buildNamespace,
+		BuildNamespace: testBuildNamespace,
 		ContextSubPath: "python/pyfunc-server",
 		BaseImages: cfg.BaseImageConfigs{
 			"3.7.*": cfg.BaseImageConfig{
 				ImageName:       "gojek/base-image:1",
-				BuildContextURI: buildContextURL,
+				BuildContextURI: testBuildContextURL,
 				DockerfilePath:  "./Dockerfile",
 			},
 			"3.8.*": cfg.BaseImageConfig{
 				ImageName:       "gojek/base-image:2",
-				BuildContextURI: buildContextURL,
+				BuildContextURI: testBuildContextURL,
 				DockerfilePath:  "./Dockerfile",
 			},
 			"3.9.*": cfg.BaseImageConfig{
 				ImageName:       "gojek/base-image:3",
-				BuildContextURI: buildContextURL,
+				BuildContextURI: testBuildContextURL,
 				DockerfilePath:  "./Dockerfile",
 			},
 			"3.10.*": cfg.BaseImageConfig{
 				ImageName:       "gojek/base-image:4",
-				BuildContextURI: buildContextURL,
+				BuildContextURI: testBuildContextURL,
 				DockerfilePath:  "./Dockerfile",
 			},
 		},
-		DockerRegistry:       dockerRegistry,
+		DockerRegistry:       testDockerRegistry,
 		BuildTimeoutDuration: timeout,
 		ClusterName:          "my-cluster",
 		GcpProject:           "test-project",
-		Environment:          environmentName,
+		Environment:          testEnvironmentName,
 		KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
 		Resources: cfg.ResourceRequestsLimits{
 			Requests: cfg.Resource{
@@ -205,7 +205,7 @@ var (
 )
 
 func TestBuildImage(t *testing.T) {
-	err := models.InitKubernetesLabeller("gojek.com/", environmentName)
+	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {
@@ -243,7 +243,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": orchestratorName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -259,7 +259,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": orchestratorName,
+								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -341,7 +341,7 @@ func TestBuildImage(t *testing.T) {
 					Namespace: config.BuildNamespace,
 					Labels: map[string]string{
 						"gojek.com/app":          model.Name,
-						"gojek.com/orchestrator": orchestratorName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
@@ -357,7 +357,7 @@ func TestBuildImage(t *testing.T) {
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
 								"gojek.com/app":          model.Name,
-								"gojek.com/orchestrator": orchestratorName,
+								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 								"gojek.com/environment":  config.Environment,
@@ -421,7 +421,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": orchestratorName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -437,7 +437,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": orchestratorName,
+								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -496,35 +496,35 @@ func TestBuildImage(t *testing.T) {
 			wantDeleteJobName: "",
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config: Config{
-				BuildNamespace: buildNamespace,
+				BuildNamespace: testBuildNamespace,
 				ContextSubPath: "python/pyfunc-server",
 				BaseImages: cfg.BaseImageConfigs{
 					"3.7.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:1",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 					"3.8.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:2",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 					"3.9.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:3",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 					"3.10.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:4",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 				},
-				DockerRegistry:       dockerRegistry,
+				DockerRegistry:       testDockerRegistry,
 				BuildTimeoutDuration: timeout,
 				ClusterName:          "my-cluster",
 				GcpProject:           "test-project",
-				Environment:          environmentName,
+				Environment:          testEnvironmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
 				Resources:            config.Resources,
 				NodeSelectors: map[string]string{
@@ -549,7 +549,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": orchestratorName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -565,7 +565,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": orchestratorName,
+								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -629,35 +629,35 @@ func TestBuildImage(t *testing.T) {
 			wantDeleteJobName: "",
 			wantImageRef:      fmt.Sprintf("%s/%s-%s:%s", config.DockerRegistry, project.Name, model.Name, modelVersion.ID),
 			config: Config{
-				BuildNamespace: buildNamespace,
+				BuildNamespace: testBuildNamespace,
 				ContextSubPath: "python/pyfunc-server",
 				BaseImages: cfg.BaseImageConfigs{
 					"3.7.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:1",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 					"3.8.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:2",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 					"3.9.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:3",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 					"3.10.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:4",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 				},
-				DockerRegistry:       dockerRegistry,
+				DockerRegistry:       testDockerRegistry,
 				BuildTimeoutDuration: timeout,
 				ClusterName:          "my-cluster",
 				GcpProject:           "test-project",
-				Environment:          environmentName,
+				Environment:          testEnvironmentName,
 				KanikoImage:          "gcr.io/kaniko-project/executor:v1.1.0",
 				Resources:            config.Resources,
 				Tolerations: []v1.Toleration{
@@ -687,7 +687,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": orchestratorName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -703,7 +703,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": orchestratorName,
+								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -773,22 +773,22 @@ func TestBuildImage(t *testing.T) {
 				BaseImages: cfg.BaseImageConfigs{
 					"3.7.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:1",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 					"3.8.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:2",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 					"3.9.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:3",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 					"3.10.*": cfg.BaseImageConfig{
 						ImageName:       "gojek/base-image:4",
-						BuildContextURI: buildContextURL,
+						BuildContextURI: testBuildContextURL,
 						DockerfilePath:  "./Dockerfile",
 					},
 				},
@@ -819,7 +819,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": orchestratorName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -835,7 +835,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": orchestratorName,
+								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -918,7 +918,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": orchestratorName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -934,7 +934,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": orchestratorName,
+								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -1020,7 +1020,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": orchestratorName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -1036,7 +1036,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": orchestratorName,
+								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -1110,7 +1110,7 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/app":          model.Name,
 						"gojek.com/component":    models.ComponentImageBuilder,
 						"gojek.com/environment":  config.Environment,
-						"gojek.com/orchestrator": orchestratorName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
 					},
@@ -1126,7 +1126,7 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/app":          model.Name,
 								"gojek.com/component":    models.ComponentImageBuilder,
 								"gojek.com/environment":  config.Environment,
-								"gojek.com/orchestrator": orchestratorName,
+								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
 							},
@@ -1267,14 +1267,14 @@ func TestBuildImage(t *testing.T) {
 
 func TestGetContainers(t *testing.T) {
 	project := mlp.Project{
-		Name: projectName,
+		Name: testProjectName,
 	}
 	model := &models.Model{
-		Name: modelName,
+		Name: testModelName,
 	}
 	modelVersion := &models.Version{
 		ID:          models.ID(1),
-		ArtifactURI: artifactURI,
+		ArtifactURI: testArtifactURI,
 	}
 
 	type args struct {
@@ -1330,7 +1330,7 @@ func TestGetContainers(t *testing.T) {
 
 	for _, tt := range tests {
 		kubeClient := fake.NewSimpleClientset()
-		client := kubeClient.CoreV1().Pods(buildNamespace).(*fakecorev1.FakePods)
+		client := kubeClient.CoreV1().Pods(testBuildNamespace).(*fakecorev1.FakePods)
 		client.Fake.PrependReactor("list", "pods", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 			return true, tt.mock, nil
 		})

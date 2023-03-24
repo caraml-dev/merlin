@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	orchestratorName = "merlin"
+	testOrchestratorName = "merlin"
 )
 
 func Test_controller_ListJobs(t *testing.T) {
@@ -46,7 +46,7 @@ func Test_controller_ListJobs(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "batch-image-builder-1",
 						Labels: map[string]string{
-							"gojek.com/orchestrator": orchestratorName,
+							"gojek.com/orchestrator": testOrchestratorName,
 						},
 					},
 					Spec: batchv1.JobSpec{
@@ -63,7 +63,7 @@ func Test_controller_ListJobs(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "batch-image-builder-2",
 						Labels: map[string]string{
-							"gojek.com/orchestrator": orchestratorName,
+							"gojek.com/orchestrator": testOrchestratorName,
 						},
 					},
 					Spec: batchv1.JobSpec{

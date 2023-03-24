@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	environmentName  = "staging"
-	orchestratorName = "merlin"
+	testEnvironmentName  = "staging"
+	testOrchestratorName = "merlin"
 )
 
 func TestToLabel(t *testing.T) {
-	err := InitKubernetesLabeller("gojek.com/", environmentName)
+	err := InitKubernetesLabeller("gojek.com/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {
@@ -42,8 +42,8 @@ func TestToLabel(t *testing.T) {
 			expectedLabels: map[string]string{
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
-				"gojek.com/environment":  environmentName,
-				"gojek.com/orchestrator": orchestratorName,
+				"gojek.com/environment":  testEnvironmentName,
+				"gojek.com/orchestrator": testOrchestratorName,
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
 				"key":                    "value",
@@ -82,8 +82,8 @@ func TestToLabel(t *testing.T) {
 			expectedLabels: map[string]string{
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
-				"gojek.com/environment":  environmentName,
-				"gojek.com/orchestrator": orchestratorName,
+				"gojek.com/environment":  testEnvironmentName,
+				"gojek.com/orchestrator": testOrchestratorName,
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
 
@@ -118,8 +118,8 @@ func TestToLabel(t *testing.T) {
 			expectedLabels: map[string]string{
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
-				"gojek.com/environment":  environmentName,
-				"gojek.com/orchestrator": orchestratorName,
+				"gojek.com/environment":  testEnvironmentName,
+				"gojek.com/orchestrator": testOrchestratorName,
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
 
@@ -136,7 +136,7 @@ func TestToLabel(t *testing.T) {
 }
 
 func TestInitKubernetesLabeller(t *testing.T) {
-	err := InitKubernetesLabeller("gojek.com/", environmentName)
+	err := InitKubernetesLabeller("gojek.com/", testEnvironmentName)
 	assert.NoError(t, err)
 
 	defer func() {
@@ -182,7 +182,7 @@ func TestInitKubernetesLabeller(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.prefix, func(t *testing.T) {
-			if err := InitKubernetesLabeller(tt.prefix, environmentName); (err != nil) != tt.wantErr {
+			if err := InitKubernetesLabeller(tt.prefix, testEnvironmentName); (err != nil) != tt.wantErr {
 				t.Errorf("InitKubernetesLabeller() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
