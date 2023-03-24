@@ -7,9 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testEnvironmentName  = "staging"
+	testOrchestratorName = "merlin"
+)
+
 func TestToLabel(t *testing.T) {
-	InitKubernetesLabeller("gojek.com/") //nolint:errcheck
-	defer InitKubernetesLabeller("")     //nolint:errcheck
+	err := InitKubernetesLabeller("gojek.com/", testEnvironmentName)
+	assert.NoError(t, err)
+
+	defer func() {
+		_ = InitKubernetesLabeller("", "")
+	}()
 
 	testCases := []struct {
 		desc           string
@@ -19,11 +28,10 @@ func TestToLabel(t *testing.T) {
 		{
 			desc: "All keys and value is valid",
 			metadata: Metadata{
-				App:         "app",
-				Component:   "model-version",
-				Environment: "staging",
-				Stream:      "abc",
-				Team:        "abc",
+				App:       "app",
+				Component: "model-version",
+				Stream:    "abc",
+				Team:      "abc",
 				Labels: mlp.Labels{
 					{
 						Key:   "key",
@@ -34,8 +42,8 @@ func TestToLabel(t *testing.T) {
 			expectedLabels: map[string]string{
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
-				"gojek.com/environment":  "staging",
-				"gojek.com/orchestrator": "merlin",
+				"gojek.com/environment":  testEnvironmentName,
+				"gojek.com/orchestrator": testOrchestratorName,
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
 				"key":                    "value",
@@ -44,11 +52,10 @@ func TestToLabel(t *testing.T) {
 		{
 			desc: "MLP labels has using reserved keys",
 			metadata: Metadata{
-				App:         "app",
-				Component:   "model-version",
-				Environment: "staging",
-				Stream:      "abc",
-				Team:        "abc",
+				App:       "app",
+				Component: "model-version",
+				Stream:    "abc",
+				Team:      "abc",
 				Labels: mlp.Labels{
 					{
 						Key:   "app",
@@ -75,8 +82,8 @@ func TestToLabel(t *testing.T) {
 			expectedLabels: map[string]string{
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
-				"gojek.com/environment":  "staging",
-				"gojek.com/orchestrator": "merlin",
+				"gojek.com/environment":  testEnvironmentName,
+				"gojek.com/orchestrator": testOrchestratorName,
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
 
@@ -89,11 +96,10 @@ func TestToLabel(t *testing.T) {
 		{
 			desc: "Should ignored invalid labels",
 			metadata: Metadata{
-				App:         "app",
-				Component:   "model-version",
-				Environment: "staging",
-				Stream:      "abc",
-				Team:        "abc",
+				App:       "app",
+				Component: "model-version",
+				Stream:    "abc",
+				Team:      "abc",
 				Labels: mlp.Labels{
 					{
 						Key:   "key",
@@ -112,8 +118,8 @@ func TestToLabel(t *testing.T) {
 			expectedLabels: map[string]string{
 				"gojek.com/app":          "app",
 				"gojek.com/component":    "model-version",
-				"gojek.com/environment":  "staging",
-				"gojek.com/orchestrator": "merlin",
+				"gojek.com/environment":  testEnvironmentName,
+				"gojek.com/orchestrator": testOrchestratorName,
 				"gojek.com/stream":       "abc",
 				"gojek.com/team":         "abc",
 
@@ -130,8 +136,12 @@ func TestToLabel(t *testing.T) {
 }
 
 func TestInitKubernetesLabeller(t *testing.T) {
-	InitKubernetesLabeller("gojek.com/") //nolint:errcheck
-	defer InitKubernetesLabeller("")     //nolint:errcheck
+	err := InitKubernetesLabeller("gojek.com/", testEnvironmentName)
+	assert.NoError(t, err)
+
+	defer func() {
+		_ = InitKubernetesLabeller("", "")
+	}()
 
 	tests := []struct {
 		prefix  string
@@ -172,7 +182,7 @@ func TestInitKubernetesLabeller(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.prefix, func(t *testing.T) {
-			if err := InitKubernetesLabeller(tt.prefix); (err != nil) != tt.wantErr {
+			if err := InitKubernetesLabeller(tt.prefix, testEnvironmentName); (err != nil) != tt.wantErr {
 				t.Errorf("InitKubernetesLabeller() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

@@ -332,11 +332,10 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 	imageRef := c.imageRef(project, model, version)
 
 	metadata := models.Metadata{
-		App:         model.Name,
-		Component:   models.ComponentImageBuilder,
-		Environment: c.config.Environment,
-		Stream:      project.Stream,
-		Team:        project.Team,
+		App:       model.Name,
+		Component: models.ComponentImageBuilder,
+		Stream:    project.Stream,
+		Team:      project.Team,
 	}
 
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
