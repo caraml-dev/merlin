@@ -13,8 +13,6 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"github.com/jinzhu/copier"
 )
 
 type PredictionLogOp struct {
@@ -49,22 +47,17 @@ func (pl *PredictionLogOp) buildPredictionLog(predictionResult *types.Prediction
 		return nil, fmt.Errorf("type of prediction request is not valid: %T", originalRequest)
 	}
 
-	upiRequest := &types.UPIPredictionRequest{}
-	if err := copier.CopyWithOption(upiRequest, request, copier.Option{IgnoreEmpty: true, DeepCopy: true}); err != nil {
-		return nil, err
-	}
-
 	log := &upiv1.PredictionLog{}
 	log.ModelName = predictionResult.Metadata.ModelName
 	log.ModelVersion = predictionResult.Metadata.ModelVersion
 	log.ProjectName = predictionResult.Metadata.Project
-	log.TargetName = upiRequest.TargetName
+	log.TargetName = request.TargetName
 	log.TableSchemaVersion = converter.TableSchemaV1
-	if metadata := upiRequest.Metadata; metadata != nil {
+	if metadata := request.Metadata; metadata != nil {
 		log.PredictionId = metadata.PredictionId
 	}
 
-	modelInput, err := pl.buildModelInput(upiRequest, env)
+	modelInput, err := pl.buildModelInput(request, env)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +79,13 @@ func (pl *PredictionLogOp) buildModelInput(request *types.UPIPredictionRequest, 
 
 	requestHeaders := env.SymbolRegistry().RawRequestHeaders()
 	modelInput.Headers = buildLogHeaders(requestHeaders)
-	if request.PredictionTable != nil {
-		featuresTbl, err := converter.TableToStruct(request.PredictionTable, converter.TableSchemaV1)
+	preprocessResponse := env.PreprocessResponse()
+	transformedRequest, valid := preprocessResponse.(*types.UPIPredictionRequest)
+	if !valid {
+		return nil, fmt.Errorf("type of preprocess response is not valid %T", preprocessResponse)
+	}
+	if transformedRequest != nil && transformedRequest.PredictionTable != nil {
+		featuresTbl, err := converter.TableToStruct(transformedRequest.PredictionTable, converter.TableSchemaV1)
 		if err != nil {
 			return nil, err
 		}

@@ -6,7 +6,6 @@ import (
 
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
-	"github.com/jinzhu/copier"
 )
 
 // UPIPostprocessOutputOp
@@ -35,10 +34,7 @@ func (up *UPIPostprocessOutputOp) Execute(ctx context.Context, env *Environment)
 		return fmt.Errorf("not valid type %T", modelResponse)
 	}
 
-	copiedResponse := &types.UPIPredictionResponse{}
-	if err := copier.CopyWithOption(copiedResponse, upiModelResponse, copier.Option{IgnoreEmpty: true, DeepCopy: true}); err != nil {
-		return err
-	}
+	copiedResponse := upiModelResponse
 	predictionResultTable, err := getUPITableFromName(up.outputSpec.PredictionResultTableName, env)
 	if err != nil {
 		return err

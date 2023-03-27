@@ -306,12 +306,13 @@ type StandardTransformerConfig struct {
 	Kafka              KafkaConfig
 }
 
-// Kafka configuration
+// Kafka configuration for publishing prediction log
 type KafkaConfig struct {
 	Topic               string `envconfig:"KAFKA_TOPIC"`
 	Brokers             string `envconfig:"KAFKA_BROKERS"`
 	CompressionType     string `envconfig:"KAFKA_COMPRESSION_TYPE" default:"none"`
 	MaxMessageSizeBytes int    `envconfig:"KAFKA_MAX_MESSAGE_SIZE_BYTES" default:"1048588"`
+	ConnectTimeoutMS    int    `envconfig:"KAFKA_CONNECT_TIMEOUT_MS" default:"1000"`
 	SerializationFmt    string `envconfig:"KAFKA_SERIALIZATION_FORMAT" default:"protobuf"`
 }
 

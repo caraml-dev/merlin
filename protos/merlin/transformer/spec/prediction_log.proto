@@ -4,8 +4,12 @@ package merlin.transformer;
 
 option go_package = "github.com/caraml-dev/merlin/pkg/transformer/spec";
 
+// PredictionLogConfig contains information about prediction log
 message PredictionLogConfig {
+    // flag to enable the prediction log
     bool enable = 1;
+    // name of table that will be used to populate `rawFeaturesTable` field in prediction log
     string rawFeaturesTable = 2;
+    // name of table that will be used to populate `entitiesTable` field in prediction log
     string entitiesTable = 3;
 }

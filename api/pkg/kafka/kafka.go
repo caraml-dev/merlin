@@ -12,10 +12,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const (
-	kafkaConnectTimeoutMs = 1000
-)
-
 // Producer
 type Producer struct {
 	topic               string
@@ -43,7 +39,7 @@ func NewProducer(cfg Config, logger *zap.Logger) (*Producer, error) {
 
 	// Test that we are able to query the broker on the topic. If the topic
 	// does not already exist on the broker, this should create it.
-	_, err = producer.GetMetadata(&cfg.Topic, false, kafkaConnectTimeoutMs)
+	_, err = producer.GetMetadata(&cfg.Topic, false, cfg.ConnectTimeoutMS)
 	if err != nil {
 		return nil, errors.Wrapf(err,
 			"Error Querying topic %s from Kafka broker(s)", cfg.Topic)

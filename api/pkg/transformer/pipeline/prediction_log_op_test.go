@@ -239,7 +239,8 @@ func TestPredictionLogOp_ProducePredictionLog(t *testing.T) {
 					symbolRegistry: sr,
 					logger:         logger,
 				}
-				env.SymbolRegistry().SetRawRequest((*types.UPIPredictionRequest)(request))
+				env.symbolRegistry.SetRawRequest((*types.UPIPredictionRequest)(request))
+				env.symbolRegistry.SetPreprocessResponse((*types.UPIPredictionRequest)(request))
 				env.symbolRegistry.SetRawRequestHeaders(map[string]string{
 					"predictionID": "caraml_1",
 					"timezone":     "asia/jakarta",
@@ -334,6 +335,7 @@ func TestPredictionLogOp_ProducePredictionLog(t *testing.T) {
 					logger:         logger,
 				}
 				env.SymbolRegistry().SetRawRequest((*types.UPIPredictionRequest)(request))
+				env.symbolRegistry.SetPreprocessResponse((*types.UPIPredictionRequest)(request))
 				env.symbolRegistry.SetRawRequestHeaders(map[string]string{
 					"predictionID": "caraml_1",
 					"timezone":     "asia/jakarta",
@@ -373,6 +375,7 @@ func TestPredictionLogOp_ProducePredictionLog(t *testing.T) {
 					logger:         logger,
 				}
 				env.SymbolRegistry().SetRawRequest((*types.UPIPredictionRequest)(request))
+				env.symbolRegistry.SetPreprocessResponse((*types.UPIPredictionRequest)(request))
 				env.symbolRegistry.SetRawRequestHeaders(map[string]string{
 					"predictionID": "caraml_1",
 					"timezone":     "asia/jakarta",
@@ -413,6 +416,7 @@ func TestPredictionLogOp_ProducePredictionLog(t *testing.T) {
 					logger:         logger,
 				}
 				env.SymbolRegistry().SetRawRequest((*types.UPIPredictionRequest)(request))
+				env.symbolRegistry.SetPreprocessResponse((*types.UPIPredictionRequest)(request))
 				env.symbolRegistry.SetRawRequestHeaders(map[string]string{
 					"predictionID": "caraml_1",
 					"timezone":     "asia/jakarta",
@@ -489,6 +493,7 @@ func TestPredictionLogOp_ProducePredictionLog(t *testing.T) {
 					logger:         logger,
 				}
 				env.SymbolRegistry().SetRawRequest((*types.UPIPredictionRequest)(request))
+				env.symbolRegistry.SetPreprocessResponse((*types.UPIPredictionRequest)(request))
 				return env
 			}(),
 			predictionResult: &types.PredictionResult{
@@ -562,6 +567,7 @@ func TestPredictionLogOp_ProducePredictionLog(t *testing.T) {
 					logger:         logger,
 				}
 				env.SymbolRegistry().SetRawRequest((*types.UPIPredictionRequest)(request))
+				env.symbolRegistry.SetPreprocessResponse((*types.UPIPredictionRequest)(request))
 				env.symbolRegistry.SetRawRequestHeaders(map[string]string{
 					"predictionID": "caraml_1",
 					"timezone":     "asia/jakarta",
@@ -644,6 +650,7 @@ func TestPredictionLogOp_ProducePredictionLog(t *testing.T) {
 					logger:         logger,
 				}
 				env.SymbolRegistry().SetRawRequest((*types.UPIPredictionRequest)(request))
+				env.symbolRegistry.SetPreprocessResponse((*types.UPIPredictionRequest)(request))
 				env.symbolRegistry.SetRawRequestHeaders(map[string]string{
 					"predictionID": "caraml_1",
 					"timezone":     "asia/jakarta",

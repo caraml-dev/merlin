@@ -20,14 +20,18 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// PredictionLogConfig contains information about prediction log
 type PredictionLogConfig struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Enable           bool   `protobuf:"varint,1,opt,name=enable,proto3" json:"enable,omitempty"`
+	// flag to enable the prediction log
+	Enable bool `protobuf:"varint,1,opt,name=enable,proto3" json:"enable,omitempty"`
+	// name of table that will be used to populate `rawFeaturesTable` field in prediction log
 	RawFeaturesTable string `protobuf:"bytes,2,opt,name=rawFeaturesTable,proto3" json:"rawFeaturesTable,omitempty"`
-	EntitiesTable    string `protobuf:"bytes,3,opt,name=entitiesTable,proto3" json:"entitiesTable,omitempty"`
+	// name of table that will be used to populate `entitiesTable` field in prediction log
+	EntitiesTable string `protobuf:"bytes,3,opt,name=entitiesTable,proto3" json:"entitiesTable,omitempty"`
 }
 
 func (x *PredictionLogConfig) Reset() {

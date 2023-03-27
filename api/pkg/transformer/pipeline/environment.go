@@ -44,11 +44,11 @@ func (e *Environment) Preprocess(ctx context.Context, rawRequest types.Payload, 
 	e.symbolRegistry.SetRawRequestHeaders(rawRequestHeaders)
 	e.SetOutput(rawRequest)
 
-	if !e.IsPreprocessOpExist() {
-		return rawRequest, nil
+	response, err := e.compiledPipeline.Preprocess(ctx, e)
+	if err == nil {
+		e.SetPreprocessResponse(response)
 	}
-
-	return e.compiledPipeline.Preprocess(ctx, e)
+	return response, err
 }
 
 func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Payload, modelResponseHeaders map[string]string) (types.Payload, error) {
@@ -58,10 +58,6 @@ func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Paylo
 	e.symbolRegistry.SetModelResponse(modelResponse)
 	e.symbolRegistry.SetModelResponseHeaders(modelResponseHeaders)
 	e.SetOutput(modelResponse)
-
-	if !e.IsPostProcessOpExist() {
-		return modelResponse, nil
-	}
 
 	return e.compiledPipeline.Postprocess(ctx, e)
 }
@@ -80,6 +76,14 @@ func (e *Environment) IsPostProcessOpExist() bool {
 
 func (e *Environment) IsPreprocessOpExist() bool {
 	return len(e.compiledPipeline.preprocessOps) > 0
+}
+
+func (e *Environment) SetPreprocessResponse(payload types.Payload) {
+	e.symbolRegistry.SetPreprocessResponse(payload)
+}
+
+func (e *Environment) PreprocessResponse() types.Payload {
+	return e.symbolRegistry.PreprocessResponse()
 }
 
 func (e *Environment) SetOutput(payload types.Payload) {
