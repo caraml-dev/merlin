@@ -17,7 +17,7 @@ package cronjob
 import (
 	"testing"
 
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/models"
 	"github.com/stretchr/testify/assert"
 )
 

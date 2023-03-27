@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gojek/merlin/mlp"
+	"github.com/caraml-dev/merlin/mlp"
 )
 
 const (

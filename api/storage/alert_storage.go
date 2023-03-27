@@ -17,7 +17,7 @@ package storage
 import (
 	"github.com/jinzhu/gorm"
 
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/models"
 )
 
 // AlertStorage interface.

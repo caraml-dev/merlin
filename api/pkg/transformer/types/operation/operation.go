@@ -3,7 +3,7 @@ package operation
 import (
 	"fmt"
 
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 )
 
 // Operator interface including arithmetic operator, logical operator and comparator

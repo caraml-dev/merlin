@@ -15,9 +15,9 @@
 package models
 
 import (
-	"github.com/gojek/merlin/pkg/protocol"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/google/uuid"
 )
 

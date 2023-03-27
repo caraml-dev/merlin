@@ -6,7 +6,7 @@ import "transformer/spec/common.proto";
 import "transformer/spec/scaler.proto";
 import "google/protobuf/wrappers.proto";
 
-option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
+option go_package = "github.com/caraml-dev/merlin/pkg/transformer/spec";
 
 
 message Table {

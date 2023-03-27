@@ -23,13 +23,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
-	mErrors "github.com/gojek/merlin/pkg/errors"
-	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
-	"github.com/gojek/merlin/pkg/transformer/pipeline"
-	"github.com/gojek/merlin/pkg/transformer/server/config"
-	"github.com/gojek/merlin/pkg/transformer/server/instrumentation"
-	"github.com/gojek/merlin/pkg/transformer/server/response"
-	"github.com/gojek/merlin/pkg/transformer/types"
+	mErrors "github.com/caraml-dev/merlin/pkg/errors"
+	hystrixpkg "github.com/caraml-dev/merlin/pkg/hystrix"
+	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
+	"github.com/caraml-dev/merlin/pkg/transformer/server/config"
+	"github.com/caraml-dev/merlin/pkg/transformer/server/instrumentation"
+	"github.com/caraml-dev/merlin/pkg/transformer/server/response"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"

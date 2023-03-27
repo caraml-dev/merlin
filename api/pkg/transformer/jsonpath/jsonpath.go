@@ -6,10 +6,10 @@ import (
 	"reflect"
 	"regexp"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 	"github.com/caraml-dev/protopath"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
 	"github.com/gojekfarm/jsonpath"
 	"google.golang.org/protobuf/proto"
 )

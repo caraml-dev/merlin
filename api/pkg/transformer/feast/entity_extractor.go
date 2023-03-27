@@ -6,12 +6,12 @@ import (
 	"github.com/antonmedv/expr"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 
-	"github.com/gojek/merlin/pkg/transformer/jsonpath"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
-	"github.com/gojek/merlin/pkg/transformer/types/expression"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/expression"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 )
 
 // EntityExtractor is responsible to extract entity values from symbol registry

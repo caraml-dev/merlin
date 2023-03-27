@@ -6,9 +6,9 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 type FeastOp struct {

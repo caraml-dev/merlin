@@ -3,7 +3,7 @@ package symbol
 import (
 	"strings"
 
-	"github.com/gojek/merlin/pkg/transformer/symbol/function"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol/function"
 )
 
 // Geohash calculates geohash of latitude and longitude with the given character precision

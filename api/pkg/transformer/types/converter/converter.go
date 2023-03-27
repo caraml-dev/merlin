@@ -11,8 +11,8 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	feastType "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	feastType2 "github.com/gojek/merlin/pkg/transformer/types/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	feastType2 "github.com/caraml-dev/merlin/pkg/transformer/types/feast"
 )
 
 func ToString(val interface{}) (string, error) {

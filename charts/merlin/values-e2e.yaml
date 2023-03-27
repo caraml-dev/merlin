@@ -66,13 +66,13 @@ merlin:
       3.7.*: 
         imageName: pyfunc-py37:v0.1.0
         dockerfilePath: "docker/Dockerfile"
-        buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.19.0"
+        buildContextURI: "git://github.com/caraml-dev/merlin.git#refs/tags/v0.19.0"
         mainAppPath: /merlin-spark-app/main.py
     predictionJobBaseImages: 
       3.7.*: 
         imageName: pyspark-py37:v0.1.0
         dockerfilePath: "docker/app.Dockerfile"
-        buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.19.0"
+        buildContextURI: "git://github.com/caraml-dev/merlin.git#refs/tags/v0.19.0"
         mainAppPath: /merlin-spark-app/main.py
     resources:
       requests:

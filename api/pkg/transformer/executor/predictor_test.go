@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
+	prt "github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
-	prt "github.com/gojek/merlin/pkg/protocol"
-	"github.com/gojek/merlin/pkg/transformer/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"

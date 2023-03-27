@@ -22,11 +22,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/merlin/pkg/autoscaling"
-	"github.com/gojek/merlin/pkg/deployment"
-	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -36,17 +36,17 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/gojek/merlin/cluster"
-	clusterMock "github.com/gojek/merlin/cluster/mocks"
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	imageBuilderMock "github.com/gojek/merlin/pkg/imagebuilder/mocks"
-	"github.com/gojek/merlin/pkg/transformer"
-	feastmocks "github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	queueMock "github.com/gojek/merlin/queue/mocks"
-	"github.com/gojek/merlin/storage/mocks"
+	"github.com/caraml-dev/merlin/cluster"
+	clusterMock "github.com/caraml-dev/merlin/cluster/mocks"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	imageBuilderMock "github.com/caraml-dev/merlin/pkg/imagebuilder/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer"
+	feastmocks "github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	queueMock "github.com/caraml-dev/merlin/queue/mocks"
+	"github.com/caraml-dev/merlin/storage/mocks"
 )
 
 var (
@@ -272,7 +272,7 @@ func TestDeployEndpoint(t *testing.T) {
 				&models.VersionEndpoint{
 					Transformer: &models.Transformer{
 						Enabled:         true,
-						Image:           "ghcr.io/gojek/merlin-transformer-test",
+						Image:           "ghcr.io/caraml-dev/merlin-transformer-test",
 						ResourceRequest: env.DefaultResourceRequest,
 					},
 				},
@@ -287,7 +287,7 @@ func TestDeployEndpoint(t *testing.T) {
 				Status:               models.EndpointPending,
 				Transformer: &models.Transformer{
 					Enabled:         true,
-					Image:           "ghcr.io/gojek/merlin-transformer-test",
+					Image:           "ghcr.io/caraml-dev/merlin-transformer-test",
 					ResourceRequest: env.DefaultResourceRequest,
 				},
 				Protocol: protocol.HttpJson,

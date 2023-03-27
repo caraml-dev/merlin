@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	mErrors "github.com/caraml-dev/merlin/pkg/errors"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
-	mErrors "github.com/gojek/merlin/pkg/errors"
-	"github.com/gojek/merlin/pkg/transformer/types"
-	"github.com/gojek/merlin/pkg/transformer/types/table"
 )
 
 // UPIAutoloadingOp operation to load all the inputs from incoming request to Standard Transformer or model response

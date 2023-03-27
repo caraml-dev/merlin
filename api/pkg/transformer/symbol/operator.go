@@ -1,8 +1,8 @@
 package symbol
 
 import (
-	"github.com/gojek/merlin/pkg/transformer/types/operation"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/operation"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 )
 
 // GreaterOp is function that override default '>' operator that originally only applicable to numeric type

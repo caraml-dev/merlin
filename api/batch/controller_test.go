@@ -34,14 +34,14 @@ import (
 	ktesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 
-	jobspec "github.com/gojek/merlin-pyspark-app/pkg/spec"
+	jobspec "github.com/caraml-dev/merlin-pyspark-app/pkg/spec"
 
-	batchMock "github.com/gojek/merlin/batch/mocks"
-	"github.com/gojek/merlin/cluster"
-	"github.com/gojek/merlin/mlp"
-	mlpMock "github.com/gojek/merlin/mlp/mocks"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/storage/mocks"
+	batchMock "github.com/caraml-dev/merlin/batch/mocks"
+	"github.com/caraml-dev/merlin/cluster"
+	"github.com/caraml-dev/merlin/mlp"
+	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/storage/mocks"
 )
 
 const (

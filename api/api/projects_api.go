@@ -21,8 +21,8 @@ import (
 	"github.com/gojek/mlp/api/client"
 	"github.com/gojek/mlp/api/pkg/authz/enforcer"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 // ProjectsController controls projects API.

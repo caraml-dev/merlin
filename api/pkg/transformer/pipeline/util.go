@@ -5,9 +5,9 @@ import (
 
 	"github.com/antonmedv/expr"
 
-	mErrors "github.com/gojek/merlin/pkg/errors"
-	"github.com/gojek/merlin/pkg/transformer/types/operation"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	mErrors "github.com/caraml-dev/merlin/pkg/errors"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/operation"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 )
 
 func evalJSONPath(env *Environment, jsonPath string) (interface{}, error) {

@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	feastStorage "github.com/feast-dev/feast/sdk/go/protos/feast/storage"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/spaolacci/murmur3"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"

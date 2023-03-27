@@ -18,7 +18,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/models"
 )
 
 const maxMessageChar = 2048

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
+	mErrors "github.com/caraml-dev/merlin/pkg/errors"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/go-gota/gota/series"
-	mErrors "github.com/gojek/merlin/pkg/errors"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
 )
 
 type (

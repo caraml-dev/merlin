@@ -20,8 +20,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/models"
 )
 
 // AlertsController controls alerts API.

@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/stretchr/testify/assert"
 	"knative.dev/pkg/apis"
 )

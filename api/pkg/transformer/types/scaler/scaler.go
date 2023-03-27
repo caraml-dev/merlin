@@ -1,8 +1,8 @@
 package scaler
 
 import (
-	mErrors "github.com/gojek/merlin/pkg/errors"
-	"github.com/gojek/merlin/pkg/transformer/spec"
+	mErrors "github.com/caraml-dev/merlin/pkg/errors"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 )
 
 type Scaler interface {

@@ -3,7 +3,7 @@ package autoscaling
 import (
 	"testing"
 
-	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/deployment"
 )
 
 func TestValidateAutoscalingPolicy(t *testing.T) {

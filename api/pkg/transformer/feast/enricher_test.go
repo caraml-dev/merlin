@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types"
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
+	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 func TestTransformer_Transform(t *testing.T) {

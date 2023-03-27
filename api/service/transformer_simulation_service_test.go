@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gojek/merlin/pkg/transformer/executor/mocks"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/executor/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/stretchr/testify/mock"
 )
 

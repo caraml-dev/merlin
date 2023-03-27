@@ -3,8 +3,8 @@ package symbol
 import (
 	"testing"
 
-	"github.com/gojek/merlin/pkg/transformer/jsonpath"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 	"github.com/stretchr/testify/assert"
 )
 

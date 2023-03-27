@@ -28,7 +28,7 @@ import (
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	ktesting "k8s.io/client-go/testing"
 
-	"github.com/gojek/merlin/config"
+	"github.com/caraml-dev/merlin/config"
 )
 
 func TestContainer_GetContainers(t *testing.T) {

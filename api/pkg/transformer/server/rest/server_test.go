@@ -25,14 +25,14 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
 
-	"github.com/gojek/merlin/pkg/protocol"
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/pkg/transformer/pipeline"
-	"github.com/gojek/merlin/pkg/transformer/server/config"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
-	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
+	"github.com/caraml-dev/merlin/pkg/transformer/server/config"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 func TestServer_PredictHandler_NoTransformation(t *testing.T) {

@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	feastmocks "github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	feastmocks "github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 func TestCall_do(t *testing.T) {

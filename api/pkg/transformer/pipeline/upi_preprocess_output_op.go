@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types"
 )
 
 // UPIPreprocessOutputOp operation to convert all the preprocess result into types.UPIPredictionRequest

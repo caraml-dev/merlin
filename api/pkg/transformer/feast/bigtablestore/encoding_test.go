@@ -11,10 +11,10 @@ import (
 	"cloud.google.com/go/bigtable"
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/linkedin/goavro/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

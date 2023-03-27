@@ -21,15 +21,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/autoscaling"
-	"github.com/gojek/merlin/pkg/deployment"
-	prt "github.com/gojek/merlin/pkg/protocol"
-	transformerpkg "github.com/gojek/merlin/pkg/transformer"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	prt "github.com/caraml-dev/merlin/pkg/protocol"
+	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	corev1 "k8s.io/api/core/v1"
@@ -37,7 +37,7 @@ import (
 	knautoscaling "knative.dev/serving/pkg/apis/autoscaling"
 	knserving "knative.dev/serving/pkg/apis/serving"
 
-	"github.com/gojek/merlin/utils"
+	"github.com/caraml-dev/merlin/utils"
 )
 
 const (

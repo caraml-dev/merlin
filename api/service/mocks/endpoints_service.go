@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	models "github.com/gojek/merlin/models"
+	models "github.com/caraml-dev/merlin/models"
 	mock "github.com/stretchr/testify/mock"
 
 	uuid "github.com/google/uuid"

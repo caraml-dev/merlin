@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/go-redis/redis/v8"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/proto"

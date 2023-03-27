@@ -8,11 +8,11 @@ import (
 	"math"
 	"time"
 
-	mErrors "github.com/gojek/merlin/pkg/errors"
-	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	mErrors "github.com/caraml-dev/merlin/pkg/errors"
+	hystrixpkg "github.com/caraml-dev/merlin/pkg/hystrix"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
+	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

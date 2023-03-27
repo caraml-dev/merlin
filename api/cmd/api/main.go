@@ -37,17 +37,17 @@ import (
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 
-	"github.com/gojek/merlin/api"
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/mlflow"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/gitlab"
-	"github.com/gojek/merlin/queue"
-	"github.com/gojek/merlin/queue/work"
-	"github.com/gojek/merlin/service"
-	"github.com/gojek/merlin/storage"
-	"github.com/gojek/merlin/warden"
+	"github.com/caraml-dev/merlin/api"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/mlflow"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/gitlab"
+	"github.com/caraml-dev/merlin/queue"
+	"github.com/caraml-dev/merlin/queue/work"
+	"github.com/caraml-dev/merlin/service"
+	"github.com/caraml-dev/merlin/storage"
+	"github.com/caraml-dev/merlin/warden"
 )
 
 var (

@@ -38,9 +38,9 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 const (

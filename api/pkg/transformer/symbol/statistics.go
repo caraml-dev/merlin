@@ -3,7 +3,7 @@ package symbol
 import (
 	"reflect"
 
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 )
 
 // CumulativeValue is function that accumulate values based on the index

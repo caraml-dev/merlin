@@ -6,8 +6,8 @@ import (
 
 	"cloud.google.com/go/bigtable"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	feast "github.com/feast-dev/feast/sdk/go"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"

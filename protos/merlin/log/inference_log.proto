@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package merlin.log;
 
-option go_package = "github.com/gojek/merlin/pkg/log";
+option go_package = "github.com/caraml-dev/merlin/pkg/log";
 
 import "google/protobuf/timestamp.proto";
 

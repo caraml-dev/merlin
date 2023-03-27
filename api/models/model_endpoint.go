@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/google/uuid"
 )
 

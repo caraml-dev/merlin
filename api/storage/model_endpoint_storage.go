@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/models"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )

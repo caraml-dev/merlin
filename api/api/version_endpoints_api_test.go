@@ -20,10 +20,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/merlin/pkg/deployment"
-	"github.com/gojek/merlin/pkg/protocol"
 	"github.com/gojek/mlp/api/client"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
@@ -31,12 +31,12 @@ import (
 	"github.com/stretchr/testify/mock"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/transformer"
-	feastmocks "github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/service/mocks"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/transformer"
+	feastmocks "github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/service/mocks"
 )
 
 func TestListEndpoint(t *testing.T) {

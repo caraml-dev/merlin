@@ -4,8 +4,8 @@ Try out the notebooks below to learn how to deploy PyFunc Models to Merlin.
 
 ## Deploy PyFunc Model
 
-{% embed url="https://github.com/gojek/merlin/blob/main/examples/pyfunc/Pyfunc.ipynb" %}
+{% embed url="https://github.com/caraml-dev/merlin/blob/main/examples/pyfunc/Pyfunc.ipynb" %}
 
 ## Deploy PyFunc Model with Custom Prometheus Metrics
 
-{% embed url="https://github.com/gojek/merlin/blob/main/examples/metrics/Metrics.ipynb" %}
+{% embed url="https://github.com/caraml-dev/merlin/blob/main/examples/metrics/Metrics.ipynb" %}

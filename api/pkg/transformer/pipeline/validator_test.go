@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	prt "github.com/gojek/merlin/pkg/protocol"
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/pkg/transformer/spec"
+	prt "github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 )
 
 type mockFeastCoreResponse struct {

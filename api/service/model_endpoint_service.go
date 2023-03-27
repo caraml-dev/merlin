@@ -20,17 +20,17 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gojek/merlin/pkg/protocol"
-	"github.com/gojek/merlin/storage"
+	"github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/storage"
 	"github.com/pkg/errors"
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gojek/merlin/istio"
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/istio"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/models"
 )
 
 const (

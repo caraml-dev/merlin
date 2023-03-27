@@ -2,7 +2,7 @@ merlin:
   image:
     pullPolicy: IfNotPresent
     registry: ghcr.io
-    repository: gojek/merlin
+    repository: caraml-dev/merlin
     tag: 0.7.0
 
   replicaCount: "2"
@@ -56,13 +56,13 @@ merlin:
       3.7.*:
         imageName: pyfunc-py37:v0.1.0
         dockerfilePath: "docker/Dockerfile"
-        buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
+        buildContextURI: "git://github.com/caraml-dev/merlin.git#refs/tags/v0.1"
         mainAppPath: /merlin-spark-app/main.py
     predictionJobBaseImages:
       3.7.*:
         imageName: pyspark-py37:v0.1.0
         dockerfilePath: "docker/app.Dockerfile"
-        buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.1"
+        buildContextURI: "git://github.com/caraml-dev/merlin.git#refs/tags/v0.1"
         mainAppPath: /merlin-spark-app/main.py
     namespace: "mlp"
     dockerRegistry: "gojek"
@@ -241,7 +241,7 @@ merlin:
     docsURL:
       [
         {
-          "href": "https://github.com/gojek/merlin/blob/main/docs/getting-started/README.md",
+          "href": "https://github.com/caraml-dev/merlin/blob/main/docs/getting-started/README.md",
           "label": "Getting Started with Merlin",
         },
       ]

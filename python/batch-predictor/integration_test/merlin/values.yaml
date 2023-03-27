@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: gojek/e2e-merlin-app
+  repository: caraml-dev/e2e-merlin-app
   tag: latest
 
 serviceAccount: ""

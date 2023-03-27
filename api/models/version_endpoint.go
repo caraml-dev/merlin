@@ -18,13 +18,13 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/gojek/merlin/pkg/autoscaling"
-	"github.com/gojek/merlin/pkg/deployment"
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/google/uuid"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
 )
 
 // VersionEndpoint represents the deployment of a model version in certain environment

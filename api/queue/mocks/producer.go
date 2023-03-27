@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	queue "github.com/gojek/merlin/queue"
+	queue "github.com/caraml-dev/merlin/queue"
 	mock "github.com/stretchr/testify/mock"
 )
 

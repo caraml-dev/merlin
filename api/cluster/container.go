@@ -17,7 +17,7 @@ package cluster
 import (
 	"context"
 
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )

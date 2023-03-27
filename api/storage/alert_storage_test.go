@@ -23,9 +23,9 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/it/database"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {

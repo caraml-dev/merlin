@@ -7,11 +7,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"github.com/go-gota/gota/dataframe"
 	gotaSeries "github.com/go-gota/gota/series"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
 	"github.com/stretchr/testify/assert"
 )
 

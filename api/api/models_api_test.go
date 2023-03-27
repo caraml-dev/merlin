@@ -26,9 +26,9 @@ import (
 
 	"github.com/gojek/mlp/api/client"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/service/mocks"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/service/mocks"
 )
 
 func TestListModel(t *testing.T) {

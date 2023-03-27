@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
-	"github.com/gojek/merlin/pkg/transformer/types/encoder"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/encoder"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )

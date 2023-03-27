@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	gitlab "github.com/gojek/merlin/pkg/gitlab"
+	gitlab "github.com/caraml-dev/merlin/pkg/gitlab"
 	mock "github.com/stretchr/testify/mock"
 )
 

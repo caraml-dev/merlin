@@ -5,8 +5,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/gojek/merlin/pkg/cronjob"
-	"github.com/gojek/merlin/storage"
+	"github.com/caraml-dev/merlin/pkg/cronjob"
+	"github.com/caraml-dev/merlin/storage"
 )
 
 func initCronJob(dependencies deps, db *gorm.DB) error {

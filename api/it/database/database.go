@@ -28,7 +28,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jinzhu/gorm"
 
-	"github.com/gojek/merlin/log"
+	"github.com/caraml-dev/merlin/log"
 )
 
 func connectionString(db string) string {
