@@ -2088,6 +2088,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.KafkaTopic, Value: "caraml-project-model-prediction-log"},
 										{Name: transformerpkg.KafkaBrokers, Value: standardTransformerConfig.Kafka.Brokers},
 										{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.MaxMessageSizeBytes)},
+										{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.ConnectTimeoutMS)},
 										{Name: transformerpkg.KafkaSerialization, Value: string(standardTransformerConfig.Kafka.SerializationFmt)},
 										{Name: transformerpkg.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
 										{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},

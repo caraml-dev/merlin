@@ -13,8 +13,8 @@ type MetricsType string
 
 // List of MetricsType
 const (
-	CONCURRENCY_MetricsType        MetricsType = "concurrency"
-	CPU_UTILIZATION_MetricsType    MetricsType = "cpu_utilization"
-	MEMORY_UTILIZATION_MetricsType MetricsType = "memory_utilization"
-	RPS_MetricsType                MetricsType = "rps"
+	CONCURRENCY        MetricsType = "concurrency"
+	CPU_UTILIZATION    MetricsType = "cpu_utilization"
+	MEMORY_UTILIZATION MetricsType = "memory_utilization"
+	RPS                MetricsType = "rps"
 )

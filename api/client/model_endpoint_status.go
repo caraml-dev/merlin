@@ -13,9 +13,9 @@ type EndpointStatus string
 
 // List of EndpointStatus
 const (
-	PENDING_EndpointStatus    EndpointStatus = "pending"
-	RUNNING_EndpointStatus    EndpointStatus = "running"
-	SERVING_EndpointStatus    EndpointStatus = "serving"
-	FAILED_EndpointStatus     EndpointStatus = "failed"
-	TERMINATED_EndpointStatus EndpointStatus = "terminated"
+	PENDING    EndpointStatus = "pending"
+	RUNNING    EndpointStatus = "running"
+	SERVING    EndpointStatus = "serving"
+	FAILED     EndpointStatus = "failed"
+	TERMINATED EndpointStatus = "terminated"
 )

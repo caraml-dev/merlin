@@ -13,7 +13,7 @@ type LoggerMode string
 
 // List of LoggerMode
 const (
-	ALL_LoggerMode      LoggerMode = "all"
-	REQUEST_LoggerMode  LoggerMode = "request"
-	RESPONSE_LoggerMode LoggerMode = "response"
+	ALL      LoggerMode = "all"
+	REQUEST  LoggerMode = "request"
+	RESPONSE LoggerMode = "response"
 )

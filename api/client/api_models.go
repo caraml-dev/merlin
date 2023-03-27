@@ -29,7 +29,7 @@ type ModelsApiService service
 
 /*
 ModelsApiService Lists teams for alert notification channel.
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 
 @return []string
 */
@@ -98,9 +98,7 @@ func (a *ModelsApiService) AlertsTeamsGet(ctx context.Context) ([]string, *http.
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -128,8 +126,8 @@ func (a *ModelsApiService) AlertsTeamsGet(ctx context.Context) ([]string, *http.
 
 /*
 ModelsApiService Lists alerts for given model.
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
 
 @return []ModelEndpointAlert
 */
@@ -199,9 +197,7 @@ func (a *ModelsApiService) ModelsModelIdAlertsGet(ctx context.Context, modelId i
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -229,9 +225,9 @@ func (a *ModelsApiService) ModelsModelIdAlertsGet(ctx context.Context, modelId i
 
 /*
 ModelsApiService Gets alert for given model endpoint.
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param modelId
-  - @param modelEndpointId
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param modelId
+ * @param modelEndpointId
 
 @return ModelEndpointAlert
 */
@@ -302,9 +298,7 @@ func (a *ModelsApiService) ModelsModelIdEndpointsModelEndpointIdAlertGet(ctx con
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -611,9 +605,7 @@ func (a *ModelsApiService) ProjectsProjectIdModelsGet(ctx context.Context, proje
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -641,9 +633,9 @@ func (a *ModelsApiService) ProjectsProjectIdModelsGet(ctx context.Context, proje
 
 /*
 ModelsApiService Get model
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param projectId project id of the project to be retrieved
-  - @param modelId model id of the model to be retrieved
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param projectId project id of the project to be retrieved
+ * @param modelId model id of the model to be retrieved
 
 @return []Model
 */
@@ -714,9 +706,7 @@ func (a *ModelsApiService) ProjectsProjectIdModelsModelIdGet(ctx context.Context
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
@@ -831,9 +821,7 @@ func (a *ModelsApiService) ProjectsProjectIdModelsPost(ctx context.Context, proj
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
 		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
-		if err == nil {
-			return localVarReturnValue, localVarHttpResponse, err
-		}
+		return localVarReturnValue, localVarHttpResponse, err
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {

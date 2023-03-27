@@ -13,6 +13,6 @@ type AlertConditionSeverity string
 
 // List of AlertConditionSeverity
 const (
-	WARNING_AlertConditionSeverity  AlertConditionSeverity = "WARNING"
-	CRITICAL_AlertConditionSeverity AlertConditionSeverity = "CRITICAL"
+	WARNING  AlertConditionSeverity = "WARNING"
+	CRITICAL AlertConditionSeverity = "CRITICAL"
 )

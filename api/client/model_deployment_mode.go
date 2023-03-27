@@ -13,6 +13,6 @@ type DeploymentMode string
 
 // List of DeploymentMode
 const (
-	SERVERLESS_DeploymentMode     DeploymentMode = "serverless"
-	RAW_DEPLOYMENT_DeploymentMode DeploymentMode = "raw_deployment"
+	SERVERLESS     DeploymentMode = "serverless"
+	RAW_DEPLOYMENT DeploymentMode = "raw_deployment"
 )
