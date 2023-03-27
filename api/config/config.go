@@ -271,9 +271,9 @@ type MlpAPIConfig struct {
 // FeastServingKeepAliveConfig config for feast serving grpc keepalive
 type FeastServingKeepAliveConfig struct {
 	// Enable the client grpc keepalive
-	Enabled bool `envconfig:"FEAST_SERVING_KEEP_ALIVE_ENABLED" default:"true"`
+	Enabled bool `envconfig:"FEAST_SERVING_KEEP_ALIVE_ENABLED" default:"false"`
 	// Duration of time no activity until client try to PING gRPC server
-	Time time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIME" default:"30s"`
+	Time time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIME" default:"60s"`
 	// Duration of time client waits if no activity connection will be closed
 	Timeout time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIMEOUT" default:"1s"`
 }
@@ -281,7 +281,7 @@ type FeastServingKeepAliveConfig struct {
 // ModelClientKeepAliveConfig config for merlin model predictor grpc keepalive
 type ModelClientKeepAliveConfig struct {
 	// Enable the client grpc keepalive
-	Enabled bool `envconfig:"MODEL_CLIENT_KEEP_ALIVE_ENABLED" default:"true"`
+	Enabled bool `envconfig:"MODEL_CLIENT_KEEP_ALIVE_ENABLED" default:"false"`
 	// Duration of time no activity until client try to PING gRPC server
 	Time time.Duration `envconfig:"MODEL_CLIENT_KEEP_ALIVE_TIME" default:"60s"`
 	// Duration of time client waits if no activity connection will be closed

@@ -112,7 +112,7 @@ type Options struct {
 	FeastClientErrorPercentThreshold int `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
 
 	// Flag to enable feast keep alive
-	FeastServingKeepAliveEnabled bool `envconfig:"FEAST_SERVING_KEEP_ALIVE_ENABLED" default:"true"`
+	FeastServingKeepAliveEnabled bool `envconfig:"FEAST_SERVING_KEEP_ALIVE_ENABLED" default:"false"`
 	// Duration of interval between keep alive PING
 	FeastServingKeepAliveTime time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIME" default:"60s"`
 	// Duration of PING that considered as TIMEOUT

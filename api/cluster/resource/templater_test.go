@@ -2141,8 +2141,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
 						"gojek.com/component":    models.ComponentModelVersion,
-						"gojek.com/environment":  modelSvc.Metadata.Environment,
-						"gojek.com/orchestrator": "merlin",
+						"gojek.com/environment":  testEnvironmentName,
+						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       modelSvc.Metadata.Stream,
 						"gojek.com/team":         modelSvc.Metadata.Team,
 						"sample":                 "true",
