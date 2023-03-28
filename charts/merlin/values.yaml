@@ -30,6 +30,7 @@ merlin:
 
   environment: dev
   deploymentLabelPrefix: "gojek.com/"
+  pyfuncGRPCOptions : "{}"
 
   loggerDestinationURL: "http://yourDestinationLogger"
 
@@ -149,12 +150,15 @@ merlin:
       #   pool_size: 5
       #   keep_alive_interval: "2m"
       #   keep_alive_timeout: "1m"
-
       defaultFeastSource: BIGTABLE
       bigtableCredential:
       coreURL: core.feast.dev
       coreAuthAudience: core.feast.dev
       authEnabled: false
+      grpc:
+        keepAliveEnabled: false
+        keepAliveTime: 60s
+        keepAliveTimeout: 5s
     image: merlin-transformer:1.0.0
     jaeger:
       agentHost: localhost
@@ -162,6 +166,11 @@ merlin:
       samplerType: const
       samplerParam: 1
       disabled: false
+    model:
+      grpc:
+        keepAliveEnabled: false
+        keepAliveTime: 60s
+        keepAliveTimeout: 5s
 
   # Google service account used to access GCP's resources.
   #

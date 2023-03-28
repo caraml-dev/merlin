@@ -24,12 +24,14 @@ import (
 	"github.com/soheilhy/cmux"
 
 	"github.com/afex/hystrix-go/hystrix"
+
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -65,6 +67,14 @@ type UPIServer struct {
 func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentationRouter *mux.Router, logger *zap.Logger) (*UPIServer, error) {
 	dialOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	if opts.ModelGRPCKeepAliveEnabled {
+		dialOpts = append(dialOpts, grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Timeout:             opts.ModelGRPCKeepAliveTime,
+			Time:                opts.ModelGRPCKeepAliveTimeout,
+			PermitWithoutStream: true,
+		}))
 	}
 
 	conn, err := grpc.Dial(opts.ModelPredictURL, dialOpts...)

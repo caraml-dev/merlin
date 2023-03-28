@@ -219,7 +219,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 			isDefaultPredictionJob = &envCfg.IsDefaultPredictionJob
 		}
 
-		cfg := config.ParseDeploymentConfig(envCfg)
+		deploymentCfg := config.ParseDeploymentConfig(envCfg, cfg.PyfuncGRPCOptions)
 
 		env, err := envSvc.GetEnvironment(envCfg.Name)
 		if err != nil {
@@ -237,16 +237,16 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 				GcpProject: envCfg.GcpProject,
 				MaxCPU:     envCfg.MaxCPU,
 				DefaultResourceRequest: &models.ResourceRequest{
-					MinReplica:    cfg.DefaultModelResourceRequests.MinReplica,
-					MaxReplica:    cfg.DefaultModelResourceRequests.MaxReplica,
-					CPURequest:    cfg.DefaultModelResourceRequests.CPURequest,
-					MemoryRequest: cfg.DefaultModelResourceRequests.MemoryRequest,
+					MinReplica:    deploymentCfg.DefaultModelResourceRequests.MinReplica,
+					MaxReplica:    deploymentCfg.DefaultModelResourceRequests.MaxReplica,
+					CPURequest:    deploymentCfg.DefaultModelResourceRequests.CPURequest,
+					MemoryRequest: deploymentCfg.DefaultModelResourceRequests.MemoryRequest,
 				},
 				DefaultTransformerResourceRequest: &models.ResourceRequest{
-					MinReplica:    cfg.DefaultTransformerResourceRequests.MinReplica,
-					MaxReplica:    cfg.DefaultTransformerResourceRequests.MaxReplica,
-					CPURequest:    cfg.DefaultTransformerResourceRequests.CPURequest,
-					MemoryRequest: cfg.DefaultTransformerResourceRequests.MemoryRequest,
+					MinReplica:    deploymentCfg.DefaultTransformerResourceRequests.MinReplica,
+					MaxReplica:    deploymentCfg.DefaultTransformerResourceRequests.MaxReplica,
+					CPURequest:    deploymentCfg.DefaultTransformerResourceRequests.CPURequest,
+					MemoryRequest: deploymentCfg.DefaultTransformerResourceRequests.MemoryRequest,
 				},
 				IsDefaultPredictionJob: isDefaultPredictionJob,
 				IsPredictionJobEnabled: envCfg.IsPredictionJobEnabled,
@@ -273,16 +273,16 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 			env.MaxCPU = envCfg.MaxCPU
 			env.MaxMemory = envCfg.MaxMemory
 			env.DefaultResourceRequest = &models.ResourceRequest{
-				MinReplica:    cfg.DefaultModelResourceRequests.MinReplica,
-				MaxReplica:    cfg.DefaultModelResourceRequests.MaxReplica,
-				CPURequest:    cfg.DefaultModelResourceRequests.CPURequest,
-				MemoryRequest: cfg.DefaultModelResourceRequests.MemoryRequest,
+				MinReplica:    deploymentCfg.DefaultModelResourceRequests.MinReplica,
+				MaxReplica:    deploymentCfg.DefaultModelResourceRequests.MaxReplica,
+				CPURequest:    deploymentCfg.DefaultModelResourceRequests.CPURequest,
+				MemoryRequest: deploymentCfg.DefaultModelResourceRequests.MemoryRequest,
 			}
 			env.DefaultTransformerResourceRequest = &models.ResourceRequest{
-				MinReplica:    cfg.DefaultTransformerResourceRequests.MinReplica,
-				MaxReplica:    cfg.DefaultTransformerResourceRequests.MaxReplica,
-				CPURequest:    cfg.DefaultTransformerResourceRequests.CPURequest,
-				MemoryRequest: cfg.DefaultTransformerResourceRequests.MemoryRequest,
+				MinReplica:    deploymentCfg.DefaultTransformerResourceRequests.MinReplica,
+				MaxReplica:    deploymentCfg.DefaultTransformerResourceRequests.MaxReplica,
+				CPURequest:    deploymentCfg.DefaultTransformerResourceRequests.CPURequest,
+				MemoryRequest: deploymentCfg.DefaultTransformerResourceRequests.MemoryRequest,
 			}
 			env.IsDefaultPredictionJob = isDefaultPredictionJob
 			env.IsPredictionJobEnabled = envCfg.IsPredictionJobEnabled
@@ -440,7 +440,7 @@ func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 			ClusterName: clusterName,
 			GcpProject:  env.GcpProject,
 		},
-			config.ParseDeploymentConfig(env),
+			config.ParseDeploymentConfig(env, cfg.PyfuncGRPCOptions),
 			cfg.StandardTransformerConfig)
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)
@@ -491,7 +491,7 @@ func initLogService(cfg *config.Config) service.LogService {
 			ClusterName: clusterName,
 			GcpProject:  env.GcpProject,
 		},
-			config.ParseDeploymentConfig(env),
+			config.ParseDeploymentConfig(env, cfg.PyfuncGRPCOptions),
 			cfg.StandardTransformerConfig)
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)

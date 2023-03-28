@@ -6,25 +6,43 @@ import (
 	"github.com/gojek/merlin/pkg/protocol"
 )
 
+// Option show all configuration for transformer server
 type Options struct {
+	// Assigned port number for HTTP endpoint
 	HTTPPort string `envconfig:"CARAML_HTTP_PORT" default:"8081"`
+	// Assigned port number for gRPC service
 	GRPCPort string `envconfig:"CARAML_GRPC_PORT" default:"9000"`
 
-	ModelFullName   string            `envconfig:"CARAML_MODEL_FULL_NAME" default:"model"`
-	ModelPredictURL string            `envconfig:"CARAML_PREDICTOR_HOST" default:"localhost:8080"`
-	Protocol        protocol.Protocol `envconfig:"CARAML_PROTOCOL" default:"HTTP_JSON"`
+	// Full name of the model, usually including model name and model version
+	ModelFullName string `envconfig:"CARAML_MODEL_FULL_NAME" default:"model"`
+	// URL for model predictor
+	ModelPredictURL string `envconfig:"CARAML_PREDICTOR_HOST" default:"localhost:8080"`
+	// Choosen protocol for transformer server. There are two protocols "HTTP_JSON" and "UPI_V1", by default "HTTP_JSON" is choosed
+	Protocol protocol.Protocol `envconfig:"CARAML_PROTOCOL" default:"HTTP_JSON"`
 
+	// Timeout for http server
 	ServerTimeout time.Duration `envconfig:"SERVER_TIMEOUT" default:"30s"`
-	ClientTimeout time.Duration `envconfig:"CLIENT_TIMEOUT" default:"1s"`
 
-	ModelTimeout                         time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
-	ModelHTTPHystrixCommandName          string        `envconfig:"MODEL_HTTP_HYSTRIX_COMMAND_NAME" default:"http_model_predict"`
-	ModelGRPCHystrixCommandName          string        `envconfig:"MODEL_GRPC_HYSTRIX_COMMAND_NAME" default:"grpc_model_predict"`
-	ModelHystrixMaxConcurrentRequests    int           `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
-	ModelHystrixRetryCount               int           `envconfig:"MODEL_HYSTRIX_RETRY_COUNT" default:"0"`
-	ModelHystrixRetryBackoffInterval     time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_BACKOFF_INTERVAL" default:"5ms"`
-	ModelHystrixRetryMaxJitterInterval   time.Duration `envconfig:"MODEL_HYSTRIX_RETRY_MAX_JITTER_INTERVAL" default:"5ms"`
-	ModelHystrixErrorPercentageThreshold int           `envconfig:"MODEL_HYSTRIX_ERROR_PERCENTAGE_THRESHOLD" default:"25"`
-	ModelHystrixRequestVolumeThreshold   int           `envconfig:"MODEL_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
-	ModelHystrixSleepWindowMs            int           `envconfig:"MODEL_HYSTRIX_SLEEP_WINDOW_MS" default:"10"`
+	// Timeout duration of model prediction, the default is 1 second
+	ModelTimeout time.Duration `envconfig:"MODEL_TIMEOUT" default:"1s"`
+	// Name of hystrix command for model prediction that use HTTP_JSON protocol
+	ModelHTTPHystrixCommandName string `envconfig:"MODEL_HTTP_HYSTRIX_COMMAND_NAME" default:"http_model_predict"`
+	// Name of hystrix command for model prediction that use UPI_V1 protocol
+	ModelGRPCHystrixCommandName string `envconfig:"MODEL_GRPC_HYSTRIX_COMMAND_NAME" default:"grpc_model_predict"`
+
+	// Maximum concurrent requests when call model predictor
+	ModelHystrixMaxConcurrentRequests int `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
+	// Threshold of error percentage, once breach circuit will be open
+	ModelHystrixErrorPercentageThreshold int `envconfig:"MODEL_HYSTRIX_ERROR_PERCENTAGE_THRESHOLD" default:"25"`
+	// Threshold of number of request to model predictor
+	ModelHystrixRequestVolumeThreshold int `envconfig:"MODEL_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
+	// Sleep window is duration of rejecting calling model predictor once the circuit is open
+	ModelHystrixSleepWindowMs int `envconfig:"MODEL_HYSTRIX_SLEEP_WINDOW_MS" default:"10"`
+
+	// Flag to enable UPI_V1 model predictor keep alive
+	ModelGRPCKeepAliveEnabled bool `envconfig:"MODEL_GRPC_KEEP_ALIVE_ENABLED" default:"false"`
+	// Duration of interval between keep alive PING
+	ModelGRPCKeepAliveTime time.Duration `envconfig:"MODEL_GRPC_KEEP_ALIVE_TIME" default:"60s"`
+	// Duration of PING that considered as TIMEOUT
+	ModelGRPCKeepAliveTimeout time.Duration `envconfig:"MODEL_GRPC_KEEP_ALIVE_TIMEOUT" default:"5s"`
 }

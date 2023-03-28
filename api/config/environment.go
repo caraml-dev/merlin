@@ -75,7 +75,7 @@ func initEnvironmentConfigs(path string) []EnvironmentConfig {
 	return configs
 }
 
-func ParseDeploymentConfig(cfg EnvironmentConfig) DeploymentConfig {
+func ParseDeploymentConfig(cfg EnvironmentConfig, pyfuncGRPCOptions string) DeploymentConfig {
 	return DeploymentConfig{
 		DeploymentTimeout: cfg.DeploymentTimeout,
 		NamespaceTimeout:  cfg.NamespaceTimeout,
@@ -94,5 +94,6 @@ func ParseDeploymentConfig(cfg EnvironmentConfig) DeploymentConfig {
 		MaxCPU:                  resource.MustParse(cfg.MaxCPU),
 		MaxMemory:               resource.MustParse(cfg.MaxMemory),
 		QueueResourcePercentage: cfg.QueueResourcePercentage,
+		PyfuncGRPCOptions:       pyfuncGRPCOptions,
 	}
 }

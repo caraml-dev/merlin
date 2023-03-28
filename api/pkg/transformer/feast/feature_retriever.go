@@ -80,22 +80,43 @@ func NewFeastRetriever(
 
 // Options for the Feast transformer.
 type Options struct {
-	StorageConfigs     FeastStorageConfig `envconfig:"FEAST_STORAGE_CONFIGS" required:"true"`
+	// Configuration of feast storage for direct retrieval
+	StorageConfigs FeastStorageConfig `envconfig:"FEAST_STORAGE_CONFIGS" required:"true"`
+	// Default feast source, there are two options REDIS and BIGTABLE
 	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" required:"true"`
 
-	StatusMonitoringEnabled bool          `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
-	ValueMonitoringEnabled  bool          `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
-	BatchSize               int           `envconfig:"FEAST_BATCH_SIZE" default:"50"`
-	CacheEnabled            bool          `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
-	CacheTTL                time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
-	CacheSizeInMB           int           `envconfig:"CACHE_SIZE_IN_MB" default:"100"`
+	// Flag to emit metric of features status retrieved from feast
+	StatusMonitoringEnabled bool `envconfig:"FEAST_FEATURE_STATUS_MONITORING_ENABLED" default:"false"`
+	// Flat to emit metric of feature value retrieved from feast
+	ValueMonitoringEnabled bool `envconfig:"FEAST_FEATURE_VALUE_MONITORING_ENABLED" default:"false"`
+	// Number of entities in one batch of feast call
+	BatchSize int `envconfig:"FEAST_BATCH_SIZE" default:"50"`
+	// Flag to enable cache of feast retrieval result
+	CacheEnabled bool `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
+	// Duration of cache will be lived and used as response
+	CacheTTL time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
+	// Size of cache that can be store
+	CacheSizeInMB int `envconfig:"CACHE_SIZE_IN_MB" default:"100"`
 
-	FeastTimeout                      time.Duration `envconfig:"FEAST_TIMEOUT" default:"1s"`
-	FeastClientHystrixCommandName     string        `envconfig:"FEAST_HYSTRIX_COMMAND_NAME" default:"feast_retrieval"`
-	FeastClientMaxConcurrentRequests  int           `envconfig:"FEAST_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
-	FeastClientRequestVolumeThreshold int           `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
-	FeastClientSleepWindow            int           `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"1000"` // How long, in milliseconds, to wait after a circuit opens before testing for recovery
-	FeastClientErrorPercentThreshold  int           `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
+	// Timeout of feast request
+	FeastTimeout time.Duration `envconfig:"FEAST_TIMEOUT" default:"1s"`
+	// Name of feast call command
+	FeastClientHystrixCommandName string `envconfig:"FEAST_HYSTRIX_COMMAND_NAME" default:"feast_retrieval"`
+	// Maximum concurrent requests when call feast
+	FeastClientMaxConcurrentRequests int `envconfig:"FEAST_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`
+	// Threshold of error percentage, once breach circuit will be open
+	FeastClientRequestVolumeThreshold int `envconfig:"FEAST_HYSTRIX_REQUEST_VOLUME_THRESHOLD" default:"100"`
+	// Sleep window is duration of rejecting calling feast once the circuit is open
+	FeastClientSleepWindow int `envconfig:"FEAST_HYSTRIX_SLEEP_WINDOW" default:"1000"` // How long, in milliseconds, to wait after a circuit opens before testing for recovery
+	// Threshold of number of request to model predictor
+	FeastClientErrorPercentThreshold int `envconfig:"FEAST_HYSTRIX_ERROR_PERCENT_THRESHOLD" default:"25"`
+
+	// Flag to enable feast keep alive
+	FeastServingKeepAliveEnabled bool `envconfig:"FEAST_SERVING_KEEP_ALIVE_ENABLED" default:"false"`
+	// Duration of interval between keep alive PING
+	FeastServingKeepAliveTime time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIME" default:"60s"`
+	// Duration of PING that considered as TIMEOUT
+	FeastServingKeepAliveTimeout time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIMEOUT" default:"5s"`
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {
