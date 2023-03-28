@@ -21,12 +21,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/gitlab"
-	gitlabmocks "github.com/gojek/merlin/pkg/gitlab/mocks"
-	storagemocks "github.com/gojek/merlin/storage/mocks"
-	wardenmocks "github.com/gojek/merlin/warden/mocks"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/gitlab"
+	gitlabmocks "github.com/caraml-dev/merlin/pkg/gitlab/mocks"
+	storagemocks "github.com/caraml-dev/merlin/storage/mocks"
+	wardenmocks "github.com/caraml-dev/merlin/warden/mocks"
 )
 
 func Test_modelEndpointAlertService_ListTeams(t *testing.T) {

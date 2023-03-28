@@ -25,10 +25,10 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin-pyspark-app/pkg/spec"
-	"github.com/gojek/merlin/it/database"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin-pyspark-app/pkg/spec"
+	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 func TestPredictionJobStorage_SaveAndGet(t *testing.T) {

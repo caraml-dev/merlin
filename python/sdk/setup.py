@@ -66,7 +66,7 @@ setup(
     name="merlin-sdk",
     version=version,
     description="Python SDK for Merlin",
-    url="https://github.com/gojek/merlin",
+    url="https://github.com/caraml-dev/merlin",
     author="Merlin",
     packages=find_packages(),
     package_data={"merlin": [

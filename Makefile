@@ -201,9 +201,9 @@ generate-proto:
 	@cd protos/merlin && \
 		protoc -I=. \
 		--go_out=../../api \
-		--go_opt=module=github.com/gojek/merlin \
+		--go_opt=module=github.com/caraml-dev/merlin \
 		--go-json_out=../../api \
-		--go-json_opt=module=github.com/gojek/merlin \
+		--go-json_opt=module=github.com/caraml-dev/merlin \
 		transformer/**/*.proto log/*.proto
 
 # ============================================================

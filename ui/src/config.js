@@ -27,7 +27,7 @@ export const appConfig = {
   appIcon: "machineLearningApp",
   docsUrl: getEnv("REACT_APP_MERLIN_DOCS_URL") || [
     {
-      href: "https://github.com/gojek/merlin/blob/main/docs/getting-started/README.md",
+      href: "https://github.com/caraml-dev/merlin/blob/main/docs/getting-started/README.md",
       label: "Getting Started with Merlin",
     },
   ],

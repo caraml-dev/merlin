@@ -20,19 +20,19 @@ import (
 	"fmt"
 	"net/http"
 
-	merror "github.com/gojek/merlin/pkg/errors"
-	"github.com/gojek/merlin/pkg/protocol"
+	merror "github.com/caraml-dev/merlin/pkg/errors"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/transformer"
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/pipeline"
-	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/transformer"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 )
 
 type EndpointsController struct {

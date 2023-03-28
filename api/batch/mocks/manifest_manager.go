@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	spec "github.com/gojek/merlin-pyspark-app/pkg/spec"
+	spec "github.com/caraml-dev/merlin-pyspark-app/pkg/spec"
 	mock "github.com/stretchr/testify/mock"
 )
 

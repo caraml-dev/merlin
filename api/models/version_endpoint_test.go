@@ -17,9 +17,9 @@ package models
 import (
 	"testing"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/pkg/deployment"
 	"github.com/stretchr/testify/assert"
 )
 

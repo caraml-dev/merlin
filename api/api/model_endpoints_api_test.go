@@ -19,9 +19,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/service/mocks"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/service/mocks"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

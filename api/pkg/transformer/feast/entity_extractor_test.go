@@ -11,13 +11,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/pkg/transformer/jsonpath"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
-	"github.com/gojek/merlin/pkg/transformer/types/expression"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
-	"github.com/gojek/merlin/pkg/transformer/types/table"
+	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
+	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/expression"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
 )
 
 func TestEntityExtractor_ExtractValuesFromSymbolRegistry(t *testing.T) {

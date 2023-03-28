@@ -20,12 +20,12 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/pkg/transformer/jsonpath"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
-	"github.com/gojek/merlin/pkg/transformer/types/expression"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
+	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/expression"
 )
 
 var (

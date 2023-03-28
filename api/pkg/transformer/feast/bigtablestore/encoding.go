@@ -13,11 +13,11 @@ import (
 
 	"cloud.google.com/go/bigtable"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
 	"github.com/linkedin/goavro/v2"
 	"github.com/spaolacci/murmur3"
 	"google.golang.org/protobuf/proto"

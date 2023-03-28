@@ -3,7 +3,7 @@ package table
 import (
 	"testing"
 
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 )
 
 // Add old update column function in table_test.go
@@ -33,11 +33,11 @@ func (t *Table) oldUpdateColumnsRaw(columnValues map[string]interface{}) error {
 
 // goos: darwin
 // goarch: amd64
-// pkg: github.com/gojek/merlin/pkg/transformer/types/table
+// pkg: github.com/caraml-dev/merlin/pkg/transformer/types/table
 // Benchmark_oldUpdateColumnsRaw-12    	  175756	      6568 ns/op
 // Benchmark_UpdateColumnsRaw-12       	  181879	      6454 ns/op
 // PASS
-// ok  	github.com/gojek/merlin/pkg/transformer/types/table	2.728s
+// ok  	github.com/caraml-dev/merlin/pkg/transformer/types/table	2.728s
 // Add two new benchmark functions. For the old one and new one
 func Benchmark_oldUpdateColumnsRaw(b *testing.B) { // old
 	table := New(

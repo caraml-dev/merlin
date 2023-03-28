@@ -3,7 +3,7 @@ package models
 import (
 	"testing"
 
-	"github.com/gojek/merlin/mlp"
+	"github.com/caraml-dev/merlin/mlp"
 	"github.com/stretchr/testify/assert"
 )
 

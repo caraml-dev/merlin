@@ -3,8 +3,8 @@ package operation
 import (
 	"fmt"
 
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 )
 
 func andOp(left interface{}, right interface{}) (interface{}, error) {

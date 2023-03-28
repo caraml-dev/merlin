@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 )
 
 // GetAllFeatureTableMetadata retrieves all metadata for feature tables

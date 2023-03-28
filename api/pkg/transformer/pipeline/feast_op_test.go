@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
-	"github.com/gojek/merlin/pkg/transformer/types/table"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
+	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
 )
 
 func TestFeastOp_Execute(t *testing.T) {

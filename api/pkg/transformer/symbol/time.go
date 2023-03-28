@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gojek/merlin/pkg/transformer/symbol/function"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol/function"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 )
 
 // Now() returns current local time

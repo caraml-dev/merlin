@@ -17,7 +17,7 @@ package service
 import (
 	"context"
 
-	"github.com/gojek/merlin/mlp"
+	"github.com/caraml-dev/merlin/mlp"
 )
 
 type ProjectsService interface {

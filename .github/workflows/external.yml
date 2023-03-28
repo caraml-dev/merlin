@@ -16,7 +16,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
           registry: ghcr.io
-          repository: gojek/mlflow
+          repository: caraml-dev/mlflow
           path: mlflow
           dockerfile: mlflow/Dockerfile
           build_args: MLFLOW_VERSION=1.3.0

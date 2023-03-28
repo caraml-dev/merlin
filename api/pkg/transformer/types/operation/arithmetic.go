@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 )
 
 func addOp(left, right interface{}, indexes *series.Series) (interface{}, error) {

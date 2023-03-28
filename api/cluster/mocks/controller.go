@@ -13,7 +13,7 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	models "github.com/gojek/merlin/models"
+	models "github.com/caraml-dev/merlin/models"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

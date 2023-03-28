@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/autoscaling"
-	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"k8s.io/apimachinery/pkg/api/resource"
 	knautoscaling "knative.dev/serving/pkg/apis/autoscaling"

@@ -19,10 +19,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gojek/merlin/pkg/autoscaling"
-	"github.com/gojek/merlin/pkg/deployment"
-	"github.com/gojek/merlin/pkg/protocol"
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/transformer"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/stretchr/testify/assert"
@@ -32,9 +32,9 @@ import (
 	knautoscaling "knative.dev/serving/pkg/apis/autoscaling"
 	knserving "knative.dev/serving/pkg/apis/serving"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 const (

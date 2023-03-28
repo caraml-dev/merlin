@@ -20,14 +20,14 @@ package storage
 import (
 	"testing"
 
-	"github.com/gojek/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/deployment"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/it/database"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 func TestDeploymentStorage_List(t *testing.T) {

@@ -15,7 +15,7 @@ jobs:
         uses: caraml-dev/docs/.github/actions/trigger-remote-docs-sync@main
         with:
           module: 'model'
-          git_https: 'https://github.com/gojek/merlin.git'
+          git_https: 'https://github.com/caraml-dev/merlin.git'
           doc_folder: 'docs'
           ref_name: ${{ github.ref_name }}
           ref_type: ${{ github.ref_type }}

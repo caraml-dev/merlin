@@ -6,8 +6,8 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/pkg/transformer/types/series"
-	"github.com/gojek/merlin/pkg/transformer/types/table"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
 )
 
 func TestFeatureTable_AsDataFrame(t *testing.T) {

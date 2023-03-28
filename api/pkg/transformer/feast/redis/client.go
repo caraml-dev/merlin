@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/go-redis/redis/v8"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 

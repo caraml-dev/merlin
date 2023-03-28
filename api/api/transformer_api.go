@@ -3,9 +3,9 @@ package api
 import (
 	"net/http"
 
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 )
 
 // TransformerController

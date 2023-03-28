@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/gojek/merlin/pkg/deployment"
-	merror "github.com/gojek/merlin/pkg/errors"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	merror "github.com/caraml-dev/merlin/pkg/errors"
 )
 
 // MetricsType are supported metrics for autoscaling

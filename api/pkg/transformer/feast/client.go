@@ -5,10 +5,10 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/feast/bigtablestore"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast/redis"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	feastSdk "github.com/feast-dev/feast/sdk/go"
-	"github.com/gojek/merlin/pkg/transformer/feast/bigtablestore"
-	"github.com/gojek/merlin/pkg/transformer/feast/redis"
-	"github.com/gojek/merlin/pkg/transformer/spec"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"

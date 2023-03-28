@@ -18,17 +18,17 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/gojek/merlin/pkg/hystrix"
-	"github.com/gojek/merlin/pkg/protocol"
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/jsonpath"
-	"github.com/gojek/merlin/pkg/transformer/pipeline"
-	serverConf "github.com/gojek/merlin/pkg/transformer/server/config"
-	grpc "github.com/gojek/merlin/pkg/transformer/server/grpc"
-	rest "github.com/gojek/merlin/pkg/transformer/server/rest"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
-	"github.com/gojek/merlin/pkg/transformer/types/expression"
+	"github.com/caraml-dev/merlin/pkg/hystrix"
+	"github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
+	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
+	serverConf "github.com/caraml-dev/merlin/pkg/transformer/server/config"
+	grpc "github.com/caraml-dev/merlin/pkg/transformer/server/grpc"
+	rest "github.com/caraml-dev/merlin/pkg/transformer/server/rest"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/expression"
 )
 
 func init() {

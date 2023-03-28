@@ -4,7 +4,7 @@ package merlin.transformer;
 
 import "transformer/spec/common.proto";
 
-option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
+option go_package = "github.com/caraml-dev/merlin/pkg/transformer/spec";
 
 message Encoder {
   string name = 1;

@@ -23,8 +23,8 @@ import (
 	"github.com/gojek/mlp/api/pkg/authz/enforcer"
 	"github.com/gorilla/mux"
 
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/service"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/service"
 )
 
 func NewAuthorizer(enforcer enforcer.Enforcer, endpointService service.EndpointsService, modelService service.ModelsService) *Authorizer {

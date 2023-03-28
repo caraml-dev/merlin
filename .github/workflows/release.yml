@@ -50,7 +50,7 @@ jobs:
           name: merlin.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
         run: |
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/gojek/merlin:${{ inputs.version }}"
+          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/caraml-dev/merlin:${{ inputs.version }}"
           docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
           docker image load --input merlin.${{ inputs.version }}.tar
           docker tag merlin:${{ inputs.version }} ${IMAGE_TAG}
@@ -65,7 +65,7 @@ jobs:
           name: merlin-transformer.${{ inputs.version }}.tar
       - name: Retag and Push Docker Image
         run: |
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/gojek/merlin-transformer:${{ inputs.version }}"
+          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/caraml-dev/merlin-transformer:${{ inputs.version }}"
           docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
           docker image load --input merlin-transformer.${{ inputs.version }}.tar
           docker tag merlin-transformer:${{ inputs.version }} ${IMAGE_TAG}

@@ -3,9 +3,9 @@ package encoder
 import (
 	"strings"
 
-	mErrors "github.com/gojek/merlin/pkg/errors"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
+	mErrors "github.com/caraml-dev/merlin/pkg/errors"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 )
 
 type OrdinalEncoder struct {

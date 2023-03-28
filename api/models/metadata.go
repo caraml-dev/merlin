@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/utils"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/utils"
 )
 
 const (

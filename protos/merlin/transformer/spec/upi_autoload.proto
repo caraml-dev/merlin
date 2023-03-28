@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package merlin.transformer;
 
-option go_package = "github.com/gojek/merlin/pkg/transformer/spec";
+option go_package = "github.com/caraml-dev/merlin/pkg/transformer/spec";
 
 // UPIAutoload responsible to load given table names or variable names from request/response to standard transformer
 message UPIAutoload {

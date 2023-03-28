@@ -3,9 +3,9 @@ package types
 import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
-	"github.com/gojek/merlin/pkg/transformer/types/table"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
 )
 
 type ValueRow []interface{}

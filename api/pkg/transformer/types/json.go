@@ -1,6 +1,6 @@
 package types
 
-import "github.com/gojek/merlin/pkg/transformer/spec"
+import "github.com/caraml-dev/merlin/pkg/transformer/spec"
 
 type JSONObject map[string]interface{}
 

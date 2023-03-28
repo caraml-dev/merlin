@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/caraml-dev/merlin/pkg/transformer"
 	"github.com/go-redis/redis/v8"
-	"github.com/gojek/merlin/pkg/transformer"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )

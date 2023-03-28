@@ -20,13 +20,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gojek/merlin/log"
+	"github.com/caraml-dev/merlin/log"
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 type VersionsService interface {

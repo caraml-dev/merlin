@@ -3,7 +3,7 @@ package feast
 import (
 	"testing"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 )
 
 func TestGetTableName(t *testing.T) {

@@ -6,17 +6,17 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/gojek/merlin/pkg/transformer/feast/mocks"
-	"github.com/gojek/merlin/pkg/transformer/jsonpath"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
-	"github.com/gojek/merlin/pkg/transformer/types/expression"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
+	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/expression"
 )
 
 // goos: darwin
 // goarch: amd64
-// pkg: github.com/gojek/merlin/pkg/transformer/feast
+// pkg: github.com/caraml-dev/merlin/pkg/transformer/feast
 // cpu: Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
 // Benchmark_buildEntitiesRequest_geohashArrays-8   	   94250	     12922 ns/op	    4818 B/op	     196 allocs/op
 // PASS

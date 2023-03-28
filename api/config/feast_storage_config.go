@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
 	"github.com/go-playground/validator"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	internalValidator "github.com/gojek/merlin/pkg/validator"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 

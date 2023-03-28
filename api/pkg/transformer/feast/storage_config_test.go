@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/durationpb"
 )

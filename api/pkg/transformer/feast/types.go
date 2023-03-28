@@ -6,7 +6,7 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 
-	transTypes "github.com/gojek/merlin/pkg/transformer/types"
+	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 // internalFeatureTable helper type for internal table processing

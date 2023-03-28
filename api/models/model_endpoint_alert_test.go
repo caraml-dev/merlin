@@ -20,8 +20,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	yamlv3 "gopkg.in/yaml.v3"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 )
 
 const (

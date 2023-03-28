@@ -1,9 +1,9 @@
 package service
 
 import (
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/google/uuid"
 )
 

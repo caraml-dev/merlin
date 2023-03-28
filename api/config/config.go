@@ -22,9 +22,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	resourcev1 "k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	internalValidator "github.com/gojek/merlin/pkg/validator"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
 	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"

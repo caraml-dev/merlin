@@ -3,7 +3,7 @@ package symbol
 import (
 	"encoding/json"
 
-	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 var (

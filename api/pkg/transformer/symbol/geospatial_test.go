@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gojek/merlin/pkg/transformer/jsonpath"
-	"github.com/gojek/merlin/pkg/transformer/symbol/function"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol/function"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 	"github.com/mmcloughlin/geohash"
 	"github.com/stretchr/testify/assert"
 )

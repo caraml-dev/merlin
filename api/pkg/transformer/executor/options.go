@@ -1,8 +1,8 @@
 package executor
 
 import (
-	prt "github.com/gojek/merlin/pkg/protocol"
-	"github.com/gojek/merlin/pkg/transformer/feast"
+	prt "github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"go.uber.org/zap"
 )
 

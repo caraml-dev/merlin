@@ -19,7 +19,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/gojek/merlin/cluster/resource"
+	"github.com/caraml-dev/merlin/cluster/resource"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kservev1beta1client "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
 
@@ -32,9 +32,9 @@ import (
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/models"
 	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
 )
 

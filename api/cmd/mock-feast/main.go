@@ -11,8 +11,8 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"google.golang.org/grpc"
 
-	"github.com/gojek/merlin/log"
-	feastType2 "github.com/gojek/merlin/pkg/transformer/types/feast"
+	"github.com/caraml-dev/merlin/log"
+	feastType2 "github.com/caraml-dev/merlin/pkg/transformer/types/feast"
 )
 
 const (

@@ -30,11 +30,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/gojek/merlin/cluster"
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/storage"
+	"github.com/caraml-dev/merlin/cluster"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/storage"
 )
 
 const (

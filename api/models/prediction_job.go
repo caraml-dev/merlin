@@ -20,7 +20,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/gojek/merlin-pyspark-app/pkg/spec"
+	"github.com/caraml-dev/merlin-pyspark-app/pkg/spec"
 )
 
 type PredictionJob struct {

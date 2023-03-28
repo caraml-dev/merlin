@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gojek/merlin/config"
+	"github.com/caraml-dev/merlin/config"
 )
 
 type uiEnvHandler struct {

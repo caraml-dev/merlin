@@ -3,7 +3,7 @@ package queue
 import (
 	"sync"
 
-	"github.com/gojek/merlin/log"
+	"github.com/caraml-dev/merlin/log"
 	"github.com/jinzhu/gorm"
 )
 

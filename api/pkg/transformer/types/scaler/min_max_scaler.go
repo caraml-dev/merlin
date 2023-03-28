@@ -3,8 +3,8 @@ package scaler
 import (
 	"fmt"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 )
 
 type MinMaxScaler struct {

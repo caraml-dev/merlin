@@ -8,7 +8,7 @@ import (
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 func TestFeatureCache_FetchFeatureTable(t *testing.T) {

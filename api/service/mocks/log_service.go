@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	service "github.com/gojek/merlin/service"
+	service "github.com/caraml-dev/merlin/service"
 	mock "github.com/stretchr/testify/mock"
 )
 

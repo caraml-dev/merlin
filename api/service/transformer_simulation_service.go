@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/transformer/executor"
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/transformer/executor"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 
 	"go.uber.org/zap"
 )

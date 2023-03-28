@@ -26,13 +26,13 @@ import (
 	"github.com/stretchr/testify/mock"
 	"k8s.io/apimachinery/pkg/util/clock"
 
-	"github.com/gojek/merlin/batch"
-	"github.com/gojek/merlin/batch/mocks"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	imageBuilderMock "github.com/gojek/merlin/pkg/imagebuilder/mocks"
-	queueMock "github.com/gojek/merlin/queue/mocks"
-	storageMock "github.com/gojek/merlin/storage/mocks"
+	"github.com/caraml-dev/merlin/batch"
+	"github.com/caraml-dev/merlin/batch/mocks"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	imageBuilderMock "github.com/caraml-dev/merlin/pkg/imagebuilder/mocks"
+	queueMock "github.com/caraml-dev/merlin/queue/mocks"
+	storageMock "github.com/caraml-dev/merlin/storage/mocks"
 )
 
 const (

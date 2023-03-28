@@ -5,8 +5,8 @@ import (
 
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 )
 
 type defaultValues map[string]*feastTypes.Value

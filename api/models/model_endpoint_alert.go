@@ -22,7 +22,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/prometheus/prometheus/promql"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"

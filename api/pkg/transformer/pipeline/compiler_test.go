@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	prt "github.com/gojek/merlin/pkg/protocol"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
-	"github.com/gojek/merlin/pkg/transformer/types/table"
+	prt "github.com/caraml-dev/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -14,9 +14,9 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
 
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
 )
 
 func TestCompiler_Compile(t *testing.T) {

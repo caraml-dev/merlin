@@ -20,10 +20,10 @@ import (
 
 	mlpclient "github.com/gojek/mlp/api/client"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/pkg/autoscaling"
-	"github.com/gojek/merlin/pkg/deployment"
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 	"knative.dev/pkg/apis"
 )
 

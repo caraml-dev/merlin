@@ -27,8 +27,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gojek/merlin/cluster"
-	"github.com/gojek/merlin/cluster/mocks"
+	"github.com/caraml-dev/merlin/cluster"
+	"github.com/caraml-dev/merlin/cluster/mocks"
 )
 
 func TestLogLine_generateText(t *testing.T) {

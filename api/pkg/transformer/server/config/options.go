@@ -3,7 +3,7 @@ package config
 import (
 	"time"
 
-	"github.com/gojek/merlin/pkg/protocol"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 )
 
 // Option show all configuration for transformer server
