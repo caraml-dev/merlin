@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/caraml-dev/merlin/client"
-	"golang.org/x/oauth2/google"
+	"github.com/gojek/mlp/api/pkg/auth"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 
 	// Create an HTTP client with Google default credential
 	httpClient := http.DefaultClient
-	googleClient, err := google.DefaultClient(ctx, "https://www.googleapis.com/auth/userinfo.email")
+	googleClient, err := auth.InitGoogleClient(context.Background())
 	if err == nil {
 		httpClient = googleClient
 	} else {

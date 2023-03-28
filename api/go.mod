@@ -10,6 +10,7 @@ require (
 	github.com/antonmedv/expr v1.8.9
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
+	github.com/caraml-dev/merlin-pyspark-app v0.0.3
 	github.com/caraml-dev/protopath v0.1.0
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/cespare/xxhash v1.1.0
@@ -24,8 +25,7 @@ require (
 	github.com/go-playground/validator v9.30.0+incompatible
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gogo/protobuf v1.3.2
-	github.com/caraml-dev/merlin-pyspark-app v0.0.3
-	github.com/gojek/mlp v1.7.5-0.20230117024729-05ede139570e
+	github.com/gojek/mlp v1.7.6-0.20230328080720-45464eaa4bc7
 	github.com/gojekfarm/jsonpath v0.1.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
@@ -192,8 +192,8 @@ require (
 )
 
 replace (
-	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20230221101638-6cd9260bd598
 	github.com/caraml-dev/merlin-pyspark-app => ../python/batch-predictor
+	github.com/go-gota/gota => github.com/gojekfarm/gota v0.12.1-0.20230221101638-6cd9260bd598
 	github.com/googleapis/gnostic => github.com/google/gnostic v0.5.5
 	github.com/prometheus/tsdb => github.com/prometheus/tsdb v0.3.1
 	k8s.io/api => k8s.io/api v0.21.3

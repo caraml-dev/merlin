@@ -10,10 +10,10 @@ import (
 	"github.com/GoogleCloudPlatform/spark-on-k8s-operator/pkg/client/clientset/versioned"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
+	"github.com/gojek/mlp/api/pkg/auth"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jinzhu/gorm"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/apimachinery/pkg/util/clock"
@@ -86,7 +86,7 @@ func runDBMigration(db *gorm.DB, migrationPath string) {
 
 func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClient {
 	mlpHTTPClient := http.DefaultClient
-	googleClient, err := google.DefaultClient(ctx, "https://www.googleapis.com/auth/userinfo.email")
+	googleClient, err := auth.InitGoogleClient(context.Background())
 	if err == nil {
 		mlpHTTPClient = googleClient
 	} else {
