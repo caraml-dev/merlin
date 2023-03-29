@@ -25,7 +25,7 @@ require (
 	github.com/go-playground/validator v9.30.0+incompatible
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gogo/protobuf v1.3.2
-	github.com/gojek/mlp v1.7.6-0.20230328080720-45464eaa4bc7
+	github.com/gojek/mlp v1.7.6-0.20230329030735-c28dca2aeef9
 	github.com/gojekfarm/jsonpath v0.1.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
