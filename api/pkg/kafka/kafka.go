@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// Producer
+// Producer responsible to produce log to kafka
 type Producer struct {
 	topic               string
 	producer            producer

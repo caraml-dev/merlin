@@ -22,7 +22,6 @@ import (
 	"github.com/caraml-dev/merlin/pkg/autoscaling"
 	"github.com/caraml-dev/merlin/pkg/deployment"
 	"github.com/caraml-dev/merlin/pkg/protocol"
-	"github.com/caraml-dev/merlin/pkg/transformer"
 	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
@@ -1970,22 +1969,22 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Image: standardTransformerConfig.ImageName,
 									Env: models.MergeEnvVars(models.EnvVars{
 										{
-											Name:  transformer.DefaultFeastSource,
+											Name:  transformerpkg.DefaultFeastSource,
 											Value: standardTransformerConfig.DefaultFeastSource.String(),
 										},
 										{
-											Name:  transformer.FeastStorageConfigs,
+											Name:  transformerpkg.FeastStorageConfigs,
 											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 										},
-										{Name: transformer.FeastServingKeepAliveEnabled, Value: "true"},
-										{Name: transformer.FeastServingKeepAliveTime, Value: "30s"},
-										{Name: transformer.FeastServingKeepAliveTimeout, Value: "1s"},
-										{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
-										{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
-										{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
-										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
-										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
-										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
+										{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: "true"},
+										{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
+										{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
+										{Name: transformerpkg.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
+										{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+										{Name: transformerpkg.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
+										{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
+										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 									}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
 									Resources:     expDefaultTransformerResourceRequests,
 									LivenessProbe: transformerProbeConfig,
@@ -2129,7 +2128,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 					TransformerType: models.StandardTransformerType,
 					EnvVars: models.EnvVars{
 						{
-							Name:  transformer.StandardTransformerConfigEnvName,
+							Name:  transformerpkg.StandardTransformerConfigEnvName,
 							Value: `{"standard_transformer": null}`,
 						},
 					},
@@ -2191,30 +2190,30 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 									Image: standardTransformerConfig.ImageName,
 									Env: models.MergeEnvVars(models.EnvVars{
 										{
-											Name:  transformer.DefaultFeastSource,
+											Name:  transformerpkg.DefaultFeastSource,
 											Value: standardTransformerConfig.DefaultFeastSource.String(),
 										},
 										{
-											Name:  transformer.FeastStorageConfigs,
+											Name:  transformerpkg.FeastStorageConfigs,
 											Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 										},
-										{Name: transformer.ModelGRPCKeepAliveEnabled, Value: "true"},
-										{Name: transformer.ModelGRPCKeepAliveTime, Value: "45s"},
-										{Name: transformer.ModelGRPCKeepAliveTimeout, Value: "5s"},
-										{Name: transformer.FeastServingKeepAliveEnabled, Value: "true"},
-										{Name: transformer.FeastServingKeepAliveTime, Value: "30s"},
-										{Name: transformer.FeastServingKeepAliveTimeout, Value: "1s"},
+										{Name: transformerpkg.ModelGRPCKeepAliveEnabled, Value: "true"},
+										{Name: transformerpkg.ModelGRPCKeepAliveTime, Value: "45s"},
+										{Name: transformerpkg.ModelGRPCKeepAliveTimeout, Value: "5s"},
+										{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: "true"},
+										{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
+										{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
 										{Name: transformerpkg.KafkaTopic, Value: "caraml-project-model-prediction-log"},
 										{Name: transformerpkg.KafkaBrokers, Value: standardTransformerConfig.Kafka.Brokers},
 										{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.MaxMessageSizeBytes)},
 										{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.ConnectTimeoutMS)},
 										{Name: transformerpkg.KafkaSerialization, Value: string(standardTransformerConfig.Kafka.SerializationFmt)},
-										{Name: transformer.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
-										{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
-										{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
-										{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
-										{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
-										{Name: transformer.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
+										{Name: transformerpkg.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
+										{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+										{Name: transformerpkg.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
+										{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
+										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
 									Resources:     expDefaultTransformerResourceRequests,
 									Ports:         grpcContainerPorts,
@@ -3495,7 +3494,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 						MemoryRequest: memoryRequest,
 					},
 					EnvVars: models.EnvVars{
-						{Name: transformer.JaegerAgentHost, Value: "NEW_HOST"}, // test user overwrite
+						{Name: transformerpkg.JaegerAgentHost, Value: "NEW_HOST"}, // test user overwrite
 					},
 				},
 				&config.DeploymentConfig{},
@@ -3509,19 +3508,19 @@ func TestCreateTransformerSpec(t *testing.T) {
 							Command: []string{"python"},
 							Args:    []string{"main.py"},
 							Env: models.MergeEnvVars(models.EnvVars{
-								{Name: transformer.DefaultFeastSource, Value: standardTransformerConfig.DefaultFeastSource.String()},
+								{Name: transformerpkg.DefaultFeastSource, Value: standardTransformerConfig.DefaultFeastSource.String()},
 								{
-									Name:  transformer.FeastStorageConfigs,
+									Name:  transformerpkg.FeastStorageConfigs,
 									Value: `{"1":{"redisCluster":{"feastServingUrl":"localhost:6866","redisAddress":["10.1.1.2","10.1.1.3"],"option":{"poolSize":5,"minIdleConnections":2}}},"2":{"bigtable":{"feastServingUrl":"localhost:6867","project":"gcp-project","instance":"instance","appProfile":"default","option":{"grpcConnectionPool":4,"keepAliveInterval":"120s","keepAliveTimeout":"60s","credentialJson":"eyJrZXkiOiJ2YWx1ZSJ9"}}}}`,
 								},
-								{Name: transformer.FeastServingKeepAliveEnabled, Value: "true"},
-								{Name: transformer.FeastServingKeepAliveTime, Value: "30s"},
-								{Name: transformer.FeastServingKeepAliveTimeout, Value: "1s"},
-								{Name: transformer.JaegerAgentHost, Value: "NEW_HOST"},
-								{Name: transformer.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
-								{Name: transformer.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
-								{Name: transformer.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
-								{Name: transformer.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
+								{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: "true"},
+								{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
+								{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
+								{Name: transformerpkg.JaegerAgentHost, Value: "NEW_HOST"},
+								{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+								{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
+								{Name: transformerpkg.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
+								{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 							}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
