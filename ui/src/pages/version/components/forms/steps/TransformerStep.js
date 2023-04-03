@@ -11,10 +11,11 @@ import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";
 import { ResourcesPanel } from "../components/ResourcesPanel";
 import { SelectTransformerPanel } from "../components/SelectTransformerPanel";
+import {PROTOCOL} from "../../../../../services/version_endpoint/VersionEndpoint"
 
 export const TransformerStep = () => {
   const {
-    data: { transformer, logger },
+    data: { transformer, logger, protocol},
     onChangeHandler
   } = useContext(FormContext);
   const { onChange } = useOnChangeHandler(onChangeHandler);
@@ -40,14 +41,16 @@ export const TransformerStep = () => {
               errors={get(errors, "transformer.resource_request")}
             />
           </EuiFlexItem>
-
-          <EuiFlexItem grow={false}>
-            <LoggerPanel
-              loggerConfig={logger.transformer || {}}
-              onChangeHandler={onChange("logger.transformer")}
-              errors={get(errors, "logger.transformer")}
-            />
-          </EuiFlexItem>
+          { protocol !== PROTOCOL.UPI_V1 && (
+              <EuiFlexItem grow={false}>
+                <LoggerPanel
+                  loggerConfig={logger.transformer || {}}
+                  onChangeHandler={onChange("logger.transformer")}
+                  errors={get(errors, "logger.transformer")}
+                />
+              </EuiFlexItem>
+            )
+          }
 
           <EuiFlexItem grow={false}>
             <EnvVariablesPanel

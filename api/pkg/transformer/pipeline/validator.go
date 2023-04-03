@@ -18,7 +18,12 @@ func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceC
 	}
 
 	// compile pipeline
-	compiler := NewCompiler(symbol.NewRegistry(), nil, feastOptions, nil, false, protocol)
+	compiler := NewCompiler(
+		symbol.NewRegistry(),
+		nil,
+		feastOptions,
+		WithProtocol(protocol),
+	)
 	_, err := compiler.Compile(transformerConfig)
 	if err != nil {
 		return err
@@ -60,6 +65,10 @@ func httpTransformerValidation(config *spec.StandardTransformerConfig) error {
 		return nil
 	}
 
+	if config.PredictionLogConfig != nil && config.PredictionLogConfig.Enable {
+		return fmt.Errorf("prediction log config only available for UPI_V1 protocol")
+	}
+
 	validationFn := func(step *spec.Pipeline) error {
 		for _, input := range step.Inputs {
 			if input.Autoload != nil {
@@ -91,6 +100,7 @@ func upiTransformerValidation(spec *spec.StandardTransformerConfig) error {
 	if spec.TransformerConfig == nil {
 		return nil
 	}
+
 	if preprocess := spec.TransformerConfig.Preprocess; preprocess != nil {
 		for _, output := range preprocess.Outputs {
 			if output.JsonOutput != nil {

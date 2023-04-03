@@ -21,7 +21,7 @@ ARG BRANCH
 ARG REVISION
 ARG VERSION
 
-RUN apk update && apk add --no-cache git ca-certificates bash
+RUN apk update && apk add --no-cache git ca-certificates bash build-base librdkafka
 RUN mkdir -p src/api
 
 WORKDIR /src/api
@@ -38,7 +38,7 @@ COPY api .
 COPY python/batch-predictor ../python/batch-predictor
 
 RUN go mod tidy
-RUN go build -o bin/transformer \
+RUN go build -o bin/transformer -tags musl \
     ./cmd/transformer/main.go
 
 # ============================================================

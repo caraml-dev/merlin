@@ -9,11 +9,13 @@ import "transformer/spec/json.proto";
 import "transformer/spec/encoder.proto";
 import "transformer/spec/upi_output.proto";
 import "transformer/spec/upi_autoload.proto";
+import "transformer/spec/prediction_log.proto";
 
 option go_package = "github.com/caraml-dev/merlin/pkg/transformer/spec";
 
 message StandardTransformerConfig {
   TransformerConfig transformerConfig = 1;
+  PredictionLogConfig predictionLogConfig = 2;
 }
 
 message TransformerConfig {

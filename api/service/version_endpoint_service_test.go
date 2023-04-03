@@ -1908,6 +1908,184 @@ func TestDeployEndpoint_StandardTransformer(t *testing.T) {
 			},
 			expectedFeatureTableMetadata: []*spec.FeatureTableMetadata{},
 		},
+		{
+			desc:        "Success: transformer with preprocess and postprocess without feast input; enabled prediction log",
+			environment: env,
+			model:       model,
+			version:     version,
+			endpoint: &models.VersionEndpoint{
+				Protocol:             protocol.UpiV1,
+				VersionID:            version.ID,
+				Status:               models.EndpointPending,
+				InferenceServiceName: iSvcName,
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica:    2,
+					MaxReplica:    4,
+					CPURequest:    resource.MustParse("1"),
+					MemoryRequest: resource.MustParse("1Gi"),
+				},
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					TransformerType: models.StandardTransformerType,
+					Image:           "std-transformer:v1",
+					EnvVars: models.EnvVars{
+						{
+							Name: transformer.StandardTransformerConfigEnvName,
+							Value: `{
+								"transformerConfig": {
+								  "preprocess": {
+									"inputs": [
+									  {
+										"autoload": {
+										  "tableNames": [
+											"rawFeatures",
+											"entities"
+										  ]
+										}
+									  },
+									  {
+										"variables": [
+										  {
+											"name": "country",
+											"jsonPath": "$.prediction_context[0].string_value"
+										  }
+										]
+									  }
+									]
+								  },
+								  "postprocess": {
+									"inputs": [
+									  {
+										"autoload": {
+										  "tableNames": [
+											"prediction_result"
+										  ]
+										}
+									  }
+									],
+									"transformations": [
+									  {
+										"tableTransformation": {
+										  "inputTable": "prediction_result",
+										  "outputTable": "output_table",
+										  "steps": [
+											{
+											  "updateColumns": [
+												{
+												  "column": "country",
+												  "expression": "country"
+												}
+											  ]
+											}
+										  ]
+										}
+									  }
+									],
+									"outputs": [
+									  {
+										"upiPostprocessOutput": {
+										  "predictionResultTableName": "output_table"
+										}
+									  }
+									]
+								  }
+								},
+								"predictionLogConfig": {
+								  "enable": true,
+								  "rawFeaturesTable": "rawFeatures",
+								  "entitiesTable": "entities"
+								}
+							  }`,
+						},
+					},
+				},
+				Logger: &models.Logger{
+					Prediction: &models.PredictionLoggerConfig{
+						Enabled:          true,
+						RawFeaturesTable: "rawFeatures",
+						EntitiesTable:    "entities",
+					},
+					Model: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogAll,
+					},
+					Transformer: &models.LoggerConfig{
+						Enabled: true,
+						Mode:    models.LogAll,
+					},
+				},
+			},
+			feastCoreMock: func() *feastmocks.CoreServiceClient {
+				client := &feastmocks.CoreServiceClient{}
+				return client
+			},
+			expectedStandardTransformerConfig: &spec.StandardTransformerConfig{
+				PredictionLogConfig: &spec.PredictionLogConfig{
+					Enable:           true,
+					RawFeaturesTable: "rawFeatures",
+					EntitiesTable:    "entities",
+				},
+				TransformerConfig: &spec.TransformerConfig{
+					Preprocess: &spec.Pipeline{
+						Inputs: []*spec.Input{
+							{
+								Autoload: &spec.UPIAutoload{
+									TableNames: []string{
+										"rawFeatures",
+										"entities",
+									},
+								},
+							},
+							{
+								Variables: []*spec.Variable{
+									{
+										Name: "country",
+										Value: &spec.Variable_JsonPath{
+											JsonPath: "$.prediction_context[0].string_value",
+										},
+									},
+								},
+							},
+						},
+					},
+					Postprocess: &spec.Pipeline{
+						Inputs: []*spec.Input{
+							{
+								Autoload: &spec.UPIAutoload{
+									TableNames: []string{"prediction_result"},
+								},
+							},
+						},
+						Transformations: []*spec.Transformation{
+							{
+								TableTransformation: &spec.TableTransformation{
+									InputTable:  "prediction_result",
+									OutputTable: "output_table",
+									Steps: []*spec.TransformationStep{
+										{
+											UpdateColumns: []*spec.UpdateColumn{
+												{
+													Column:     "country",
+													Expression: "country",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						Outputs: []*spec.Output{
+							{
+								UpiPostprocessOutput: &spec.UPIPostprocessOutput{
+									PredictionResultTableName: "output_table",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedFeatureTableMetadata: []*spec.FeatureTableMetadata{},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {

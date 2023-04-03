@@ -172,31 +172,6 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 		left.ResourceRequest = right.ResourceRequest
 	}
 
-	// override transformer config
-	if right.Transformer != nil {
-		if right.Transformer.ResourceRequest == nil {
-			right.Transformer.ResourceRequest = environment.DefaultTransformerResourceRequest
-		}
-
-		if right.Transformer.TransformerType == models.DefaultTransformerType {
-			right.Transformer.TransformerType = models.CustomTransformerType
-		}
-
-		if right.Transformer.TransformerType == models.StandardTransformerType {
-			// update standard transformer config
-			// 1. Add feature table metadata variables to transformer
-			// 2. Update feature table source if empty
-			updatedStandardTransformer, err := k.reconfigureStandardTransformer(right.Transformer)
-			if err != nil {
-				return err
-			}
-			left.Transformer = updatedStandardTransformer
-		}
-
-		left.Transformer = right.Transformer
-		left.Transformer.VersionEndpointID = left.ID
-	}
-
 	// override logger
 	if right.Logger != nil {
 		left.Logger = right.Logger
@@ -211,6 +186,41 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 			transformerLogger.SanitizeMode()
 			left.Logger.Transformer = transformerLogger
 		}
+
+		// disable payload logging if protocol UPI
+		if right.Protocol == protocol.UpiV1 {
+			left.Logger.Model = nil
+			left.Logger.Transformer = nil
+		}
+	}
+
+	// override transformer config
+	if right.Transformer != nil {
+		if right.Transformer.ResourceRequest == nil {
+			right.Transformer.ResourceRequest = environment.DefaultTransformerResourceRequest
+		}
+
+		if right.Transformer.TransformerType == models.DefaultTransformerType {
+			right.Transformer.TransformerType = models.CustomTransformerType
+		}
+
+		if right.Transformer.TransformerType == models.StandardTransformerType {
+			// update standard transformer config
+			// 1. Add feature table metadata variables to transformer
+			// 2. Update feature table source if empty
+			var predictionLogger *models.PredictionLoggerConfig
+			if right.Logger != nil {
+				predictionLogger = right.Logger.Prediction
+			}
+			updatedStandardTransformer, err := k.reconfigureStandardTransformer(right.Transformer, predictionLogger)
+			if err != nil {
+				return err
+			}
+			left.Transformer = updatedStandardTransformer
+		}
+
+		left.Transformer = right.Transformer
+		left.Transformer.VersionEndpointID = left.ID
 	}
 
 	// override env vars
@@ -295,7 +305,7 @@ func (k *endpointService) ListContainers(ctx context.Context, model *models.Mode
 	return containers, nil
 }
 
-func (k *endpointService) reconfigureStandardTransformer(standardTransformer *models.Transformer) (*models.Transformer, error) {
+func (k *endpointService) reconfigureStandardTransformer(standardTransformer *models.Transformer, predictionLogger *models.PredictionLoggerConfig) (*models.Transformer, error) {
 	envVars := standardTransformer.EnvVars
 	envVarsMap := envVars.ToMap()
 	stdTransformerConfigString := envVarsMap[transformer.StandardTransformerConfigEnvName]
@@ -303,6 +313,11 @@ func (k *endpointService) reconfigureStandardTransformer(standardTransformer *mo
 	err := protojson.Unmarshal([]byte(stdTransformerConfigString), stdTransformerConfig)
 	if err != nil {
 		return nil, err
+	}
+
+	if predictionLogger != nil {
+		predictionLogCfg := predictionLogger.ToPredictionLogConfig()
+		stdTransformerConfig.PredictionLogConfig = predictionLogCfg
 	}
 	// add feature table metadata
 	standardTransformer, err = k.addFeatureTableMetadata(standardTransformer, stdTransformerConfig)

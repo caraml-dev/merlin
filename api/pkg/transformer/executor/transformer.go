@@ -56,7 +56,14 @@ func NewStandardTransformerWithConfig(ctx context.Context, transformerConfig *sp
 		return nil, err
 	}
 
-	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &executorConfig.feastOpts, executorConfig.logger, executorConfig.traceEnabled, executorConfig.protocol)
+	compiler := pipeline.NewCompiler(
+		symbol.NewRegistry(),
+		feastServingClients,
+		&executorConfig.feastOpts,
+		pipeline.WithLogger(executorConfig.logger),
+		pipeline.WithOperationTracingEnabled(executorConfig.traceEnabled),
+		pipeline.WithProtocol(executorConfig.protocol),
+	)
 	compiledPipeline, err := compiler.Compile(transformerConfig)
 	if err != nil {
 		return nil, err

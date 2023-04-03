@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 )
 
@@ -45,12 +46,31 @@ func (l LoggerMode) isValid() bool {
 	}
 }
 
+// Logger configuration for all logging mechanism in merlin
 type Logger struct {
-	DestinationURL string        `json:"-"`
-	Model          *LoggerConfig `json:"model"`
-	Transformer    *LoggerConfig `json:"transformer"`
+	DestinationURL string                  `json:"-"`
+	Model          *LoggerConfig           `json:"model"`
+	Transformer    *LoggerConfig           `json:"transformer"`
+	Prediction     *PredictionLoggerConfig `json:"prediction"`
 }
 
+// PredictionLoggerConfig holds information about prediction logger
+type PredictionLoggerConfig struct {
+	Enabled          bool   `json:"enabled"`
+	RawFeaturesTable string `json:"raw_features_table"`
+	EntitiesTable    string `json:"entities_table"`
+}
+
+// ToPredictionLogConfig convert prediction logger config into standard transformer log config
+func (plc *PredictionLoggerConfig) ToPredictionLogConfig() *spec.PredictionLogConfig {
+	return &spec.PredictionLogConfig{
+		Enable:           plc.Enabled,
+		RawFeaturesTable: plc.RawFeaturesTable,
+		EntitiesTable:    plc.EntitiesTable,
+	}
+}
+
+// LoggerConfig is configuration for enable payload logging
 type LoggerConfig struct {
 	Enabled bool       `json:"enabled"`
 	Mode    LoggerMode `json:"mode"`

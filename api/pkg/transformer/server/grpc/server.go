@@ -19,6 +19,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/server/instrumentation"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/copier"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/soheilhy/cmux"
@@ -61,6 +62,8 @@ type UPIServer struct {
 	// response parameter for this function must be in types.UPIPredictionResponse type
 	// output payload of this function must be in types.UPIPredictionResponse type
 	PostprocessHandler func(ctx context.Context, response types.Payload, responseHeaders map[string]string) (types.Payload, error)
+	// PredictionLogHandler function to publish prediction log
+	PredictionLogHandler func(ctx context.Context, predictionResult *types.PredictionResult)
 }
 
 // NewUPIServer creates GRPC server that implement UPI Service
@@ -103,6 +106,7 @@ func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentati
 		svr.ContextModifier = handler.EmbedEnvironment
 		svr.PreprocessHandler = handler.Preprocess
 		svr.PostprocessHandler = handler.Postprocess
+		svr.PredictionLogHandler = handler.PredictionLogHandler
 	}
 
 	return svr, nil
@@ -194,7 +198,7 @@ func setupSignalHandler() (stopCh <-chan struct{}) {
 
 // PredictValues method to performing model prediction
 // it is including preprocessing - model infer - postprocessing
-func (us *UPIServer) PredictValues(ctx context.Context, request *upiv1.PredictValuesRequest) (*upiv1.PredictValuesResponse, error) {
+func (us *UPIServer) PredictValues(ctx context.Context, request *upiv1.PredictValuesRequest) (response *upiv1.PredictValuesResponse, grpcErr error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
 	defer span.Finish()
 
@@ -202,6 +206,28 @@ func (us *UPIServer) PredictValues(ctx context.Context, request *upiv1.PredictVa
 		ctx = us.ContextModifier(ctx)
 	}
 	meta := getMetadata(ctx)
+
+	if us.PredictionLogHandler != nil {
+		defer func() {
+			var copiedResponse *upiv1.PredictValuesResponse
+			if response != nil {
+				copiedResponse = &upiv1.PredictValuesResponse{}
+				if err := copier.CopyWithOption(copiedResponse, response, copier.Option{IgnoreEmpty: true, DeepCopy: true}); err != nil {
+					us.logger.Error("fail to copy response", zap.Error(err))
+				}
+			}
+			us.PredictionLogHandler(ctx, &types.PredictionResult{
+				Response: (*types.UPIPredictionResponse)(copiedResponse),
+				Error:    grpcErr,
+				Metadata: types.PredictionMetadata{
+					ModelName:    us.opts.ModelName,
+					ModelVersion: us.opts.ModelVersion,
+					Project:      us.opts.Project,
+				},
+			})
+		}()
+	}
+
 	preprocessOutput, err := us.preprocess(ctx, request, meta)
 	if err != nil {
 		us.logger.Error("preprocess error", zap.Error(err))

@@ -19,6 +19,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/caraml-dev/merlin/pkg/hystrix"
+	"github.com/caraml-dev/merlin/pkg/kafka"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
@@ -54,6 +55,8 @@ type AppConfig struct {
 	RedisOverwriteConfig feast.RedisOverwriteConfig
 	// BigtableOverwriteConfig is user configuration for bigtable that will overwrite default configuration supplied by merlin
 	BigtableOverwriteConfig feast.BigtableOverwriteConfig
+	// Kafka config
+	KafkaConfig kafka.Config
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
@@ -104,7 +107,30 @@ func main() {
 		return
 	}
 
-	handler, err := createPipelineHandler(appConfig, transformerConfig, featureTableMetadata, logger, appConfig.Server.Protocol)
+	opts := []pipeline.CompilerOptions{
+		pipeline.WithProtocol(appConfig.Server.Protocol),
+		pipeline.WithLogger(logger),
+	}
+
+	predictionLogConfig := transformerConfig.PredictionLogConfig
+	if predictionLogConfig != nil && predictionLogConfig.Enable && appConfig.Server.Protocol == protocol.UpiV1 {
+		producer, err := kafka.NewProducer(appConfig.KafkaConfig, logger)
+		if err != nil {
+			logger.Fatal("failed to initialize kafka producer", zap.Error(err))
+		}
+
+		opts = append(opts, pipeline.WithPredictionLogProducer(producer))
+
+		defer producer.Close()
+	}
+
+	handler, err := createPipelineHandler(
+		appConfig,
+		transformerConfig,
+		featureTableMetadata,
+		logger,
+		opts...,
+	)
 	if err != nil {
 		logger.Fatal("got error when creating handler", zap.Error(err))
 	}
@@ -190,7 +216,7 @@ func parseFeatureTableMetadata(featureTableSpecsJson string) ([]*spec.FeatureTab
 	return featureSpecs, nil
 }
 
-func createPipelineHandler(appConfig AppConfig, transformerConfig *spec.StandardTransformerConfig, featureTableMetadata []*spec.FeatureTableMetadata, logger *zap.Logger, protocol protocol.Protocol) (*pipeline.Handler, error) {
+func createPipelineHandler(appConfig AppConfig, transformerConfig *spec.StandardTransformerConfig, featureTableMetadata []*spec.FeatureTableMetadata, logger *zap.Logger, options ...pipeline.CompilerOptions) (*pipeline.Handler, error) {
 	feastOpts := feast.OverwriteFeastOptionsConfig(appConfig.Feast, appConfig.RedisOverwriteConfig, appConfig.BigtableOverwriteConfig)
 	logger.Info("feast options", zap.Any("val", feastOpts))
 
@@ -199,7 +225,12 @@ func createPipelineHandler(appConfig AppConfig, transformerConfig *spec.Standard
 		return nil, errors.Wrap(err, "unable to initialize feast clients")
 	}
 
-	compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastServingClients, &feastOpts, logger, false, protocol)
+	compiler := pipeline.NewCompiler(
+		symbol.NewRegistry(),
+		feastServingClients,
+		&feastOpts,
+		options...,
+	)
 	compiledPipeline, err := compiler.Compile(transformerConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to compile standard transformer")

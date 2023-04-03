@@ -28,10 +28,6 @@ func (h *Handler) Preprocess(ctx context.Context, rawRequest types.Payload, rawR
 	defer span.Finish()
 
 	env := getEnvironment(ctx)
-	if !env.IsPreprocessOpExist() {
-		return rawRequest, nil
-	}
-
 	rawRequestObj, err := rawRequest.AsInput()
 	if err != nil {
 		return nil, err
@@ -68,6 +64,11 @@ func (h *Handler) Postprocess(ctx context.Context, modelResponse types.Payload, 
 	}
 
 	return transformedResponse.AsOutput()
+}
+
+func (h *Handler) PredictionLogHandler(ctx context.Context, result *types.PredictionResult) {
+	env := getEnvironment(ctx)
+	env.PublishPredictionLog(context.Background(), result)
 }
 
 func (h *Handler) EmbedEnvironment(ctx context.Context) context.Context {

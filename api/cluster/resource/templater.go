@@ -58,6 +58,7 @@ const (
 	envModelName            = "CARAML_MODEL_NAME"
 	envModelVersion         = "CARAML_MODEL_VERSION"
 	envModelFullName        = "CARAML_MODEL_FULL_NAME"
+	envProject              = "CARAML_PROJECT"
 	envPredictorHost        = "CARAML_PREDICTOR_HOST"
 	envArtifactLocation     = "CARAML_ARTIFACT_LOCATION"
 	envDisableLivenessProbe = "CARAML_DISABLE_LIVENESS_PROBE"
@@ -410,6 +411,16 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTime, Value: keepaliveCfg.Time.String()})
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: keepaliveCfg.Timeout.String()})
 
+	// add kafka configuration
+	if modelService.Protocol == protocol.UpiV1 {
+		kafkaCfg := t.standardTransformerConfig.Kafka
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaTopic, Value: modelService.GetPredictionLogTopic()})
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaBrokers, Value: kafkaCfg.Brokers})
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", kafkaCfg.MaxMessageSizeBytes)})
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", kafkaCfg.ConnectTimeoutMS)})
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaSerialization, Value: string(kafkaCfg.SerializationFmt)})
+	}
+
 	jaegerCfg := t.standardTransformerConfig.Jaeger
 	jaegerEnvVars := []models.EnvVar{
 		{Name: transformerpkg.JaegerAgentHost, Value: jaegerCfg.AgentHost},
@@ -552,6 +563,7 @@ func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVar
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelName, Value: modelService.ModelName})
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelVersion, Value: modelService.ModelVersion})
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envModelFullName, Value: modelService.Name})
+	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envProject, Value: modelService.Namespace})
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envPredictorHost, Value: createPredictorHost(modelService)})
 	defaultEnvVars = append(defaultEnvVars, models.EnvVar{Name: envProtocol, Value: fmt.Sprint(modelService.Protocol)})
 	return defaultEnvVars

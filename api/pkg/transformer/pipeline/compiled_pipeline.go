@@ -18,9 +18,10 @@ type CompiledPipeline struct {
 	compiledExpression *expression.Storage
 	preloadedTables    map[string]table.Table
 
-	preprocessOps  []Op
-	postprocessOps []Op
-	tracingEnabled bool
+	preprocessOps   []Op
+	postprocessOps  []Op
+	predictionLogOp *PredictionLogOp
+	tracingEnabled  bool
 }
 
 func NewCompiledPipeline(
@@ -29,6 +30,7 @@ func NewCompiledPipeline(
 	preloadedTables map[string]table.Table,
 	preprocessOps []Op,
 	postprocessOps []Op,
+	predictionLogOp *PredictionLogOp,
 	tracingEnabled bool,
 ) *CompiledPipeline {
 	return &CompiledPipeline{
@@ -36,9 +38,10 @@ func NewCompiledPipeline(
 		compiledExpression: compiledExpression,
 		preloadedTables:    preloadedTables,
 
-		preprocessOps:  preprocessOps,
-		postprocessOps: postprocessOps,
-		tracingEnabled: tracingEnabled,
+		preprocessOps:   preprocessOps,
+		postprocessOps:  postprocessOps,
+		predictionLogOp: predictionLogOp,
+		tracingEnabled:  tracingEnabled,
 	}
 }
 

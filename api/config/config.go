@@ -303,6 +303,17 @@ type StandardTransformerConfig struct {
 	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
 	Jaeger             JaegerConfig
 	SimulationFeast    SimulationFeastConfig
+	Kafka              KafkaConfig
+}
+
+// Kafka configuration for publishing prediction log
+type KafkaConfig struct {
+	Topic               string `envconfig:"KAFKA_TOPIC"`
+	Brokers             string `envconfig:"KAFKA_BROKERS"`
+	CompressionType     string `envconfig:"KAFKA_COMPRESSION_TYPE" default:"none"`
+	MaxMessageSizeBytes int    `envconfig:"KAFKA_MAX_MESSAGE_SIZE_BYTES" default:"1048588"`
+	ConnectTimeoutMS    int    `envconfig:"KAFKA_CONNECT_TIMEOUT_MS" default:"1000"`
+	SerializationFmt    string `envconfig:"KAFKA_SERIALIZATION_FORMAT" default:"protobuf"`
 }
 
 // SimulationFeastConfig feast config that aimed to be used only for simulation of standard transformer

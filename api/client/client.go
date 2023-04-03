@@ -63,6 +63,8 @@ type APIClient struct {
 
 	SecretApi *SecretApiService
 
+	StandardTransformerApi *StandardTransformerApiService
+
 	VersionApi *VersionApiService
 }
 
@@ -91,6 +93,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.PredictionJobsApi = (*PredictionJobsApiService)(&c.common)
 	c.ProjectApi = (*ProjectApiService)(&c.common)
 	c.SecretApi = (*SecretApiService)(&c.common)
+	c.StandardTransformerApi = (*StandardTransformerApiService)(&c.common)
 	c.VersionApi = (*VersionApiService)(&c.common)
 
 	return c

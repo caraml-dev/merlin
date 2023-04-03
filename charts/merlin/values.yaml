@@ -171,6 +171,9 @@ merlin:
         keepAliveEnabled: false
         keepAliveTime: 60s
         keepAliveTimeout: 5s
+    kafka:
+      # brokers: 
+      maxMessageSize: "1048588"
 
   # Google service account used to access GCP's resources.
   #

@@ -22,6 +22,7 @@ type ModelEndpoint struct {
 	Rule            *ModelEndpointRule `json:"rule,omitempty"`
 	EnvironmentName string             `json:"environment_name,omitempty"`
 	Environment     *Environment       `json:"environment,omitempty"`
+	Protocol        *Protocol          `json:"protocol,omitempty"`
 	CreatedAt       time.Time          `json:"created_at,omitempty"`
 	UpdatedAt       time.Time          `json:"updated_at,omitempty"`
 }

@@ -17,6 +17,7 @@ const (
 
 	rawRequestHeadersKey    = "raw_request_headers"
 	modelResponseHeadersKey = "model_response_headers"
+	preprocessResponseKey   = "preprocess_response"
 
 	preprocessTracingKey  = "__preprocess_tracing_detail__"
 	postprocessTracingKey = "__postprocess_tracing_detail__"
@@ -49,6 +50,18 @@ func (sr Registry) SetRawRequest(obj types.Payload) {
 
 func (sr Registry) RawRequest() types.Payload {
 	return sr.PayloadContainer()[spec.PayloadType_RAW_REQUEST]
+}
+
+func (sr Registry) SetPreprocessResponse(obj types.Payload) {
+	sr[preprocessResponseKey] = obj
+}
+
+func (sr Registry) PreprocessResponse() types.Payload {
+	response := sr[preprocessResponseKey]
+	if response == nil {
+		return nil
+	}
+	return response.(types.Payload)
 }
 
 func (sr Registry) ModelResponse() types.Payload {
@@ -92,8 +105,24 @@ func (sr Registry) SetRawRequestHeaders(headers map[string]string) {
 	sr[rawRequestHeadersKey] = headers
 }
 
+func (sr Registry) RawRequestHeaders() map[string]string {
+	rawRequestHeaders := sr[rawRequestHeadersKey]
+	if rawRequestHeaders == nil {
+		return nil
+	}
+	return rawRequestHeaders.(map[string]string)
+}
+
 func (sr Registry) SetModelResponseHeaders(headers map[string]string) {
 	sr[modelResponseHeadersKey] = headers
+}
+
+func (sr Registry) ModelResponseHeaders() map[string]string {
+	rawResponseHeaders := sr[modelResponseHeadersKey]
+	if rawResponseHeaders == nil {
+		return nil
+	}
+	return rawResponseHeaders.(map[string]string)
 }
 
 // evalArg evaluate argument

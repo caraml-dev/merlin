@@ -429,6 +429,16 @@ func (t *Table) ColumnNames() []string {
 	return t.dataFrame.Names()
 }
 
+func (t *Table) ColumnExist(columnName string) bool {
+	columnNames := t.ColumnNames()
+	for _, colName := range columnNames {
+		if colName == columnName {
+			return true
+		}
+	}
+	return false
+}
+
 // Columns return slice of series containing all column values
 func (t *Table) Columns() []*series.Series {
 	columnNames := t.ColumnNames()

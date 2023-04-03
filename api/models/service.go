@@ -73,6 +73,10 @@ func NewService(model *Model, version *Version, modelOpt *ModelOption, endpoint 
 	}
 }
 
+func (svc *Service) GetPredictionLogTopic() string {
+	return fmt.Sprintf("caraml-%s-%s-prediction-log", svc.Namespace, svc.ModelName)
+}
+
 func MergeProjectVersionLabels(projectLabels mlp.Labels, versionLabels KV) mlp.Labels {
 	projectLabelsMap := map[string]int{}
 	for index, projectLabel := range projectLabels {

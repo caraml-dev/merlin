@@ -7,7 +7,6 @@ import (
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	ptc "github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
@@ -37,33 +36,28 @@ type Compiler struct {
 	operationTracingEnabled bool
 	transformerValidationFn func(*spec.StandardTransformerConfig) error
 	jsonpathSourceType      jsonpath.SourceType
+
+	predictionLogProducer PredictionLogProducer
 }
 
 // NewCompiler create new compiler instance
 func NewCompiler(sr symbol.Registry,
 	feastClients feast.Clients,
 	feastOptions *feast.Options,
-	logger *zap.Logger,
-	tracingEnabled bool,
-	protocol ptc.Protocol) *Compiler {
+	opts ...CompilerOptions) *Compiler {
 
-	var validationFn func(*spec.StandardTransformerConfig) error
-	jsonpathSourceType := jsonpath.Map
-	if protocol == ptc.UpiV1 {
-		validationFn = upiTransformerValidation
-		jsonpathSourceType = jsonpath.Proto
-	} else {
-		validationFn = httpTransformerValidation
-	}
-	return &Compiler{
+	compiler := &Compiler{
 		sr:                      sr,
 		feastClients:            feastClients,
 		feastOptions:            feastOptions,
-		logger:                  logger,
-		operationTracingEnabled: tracingEnabled,
-		transformerValidationFn: validationFn,
-		jsonpathSourceType:      jsonpathSourceType,
+		operationTracingEnabled: false,
 	}
+
+	for _, opt := range opts {
+		opt(compiler)
+	}
+
+	return compiler
 }
 
 // Compile does compilation of operation for standard transformer including validation whether the configuration is valid or not
@@ -73,6 +67,8 @@ func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipel
 	preloadedTables := map[string]table.Table{}
 	jsonPathStorage := jsonpath.NewStorage()
 	expressionStorage := expression.NewStorage()
+
+	var predictionLogOp *PredictionLogOp
 	if spec.TransformerConfig == nil {
 		return NewCompiledPipeline(
 			jsonPathStorage,
@@ -80,6 +76,7 @@ func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipel
 			preloadedTables,
 			preprocessOps,
 			postprocessOps,
+			predictionLogOp,
 			c.operationTracingEnabled,
 		), nil
 	}
@@ -113,14 +110,37 @@ func (c *Compiler) Compile(spec *spec.StandardTransformerConfig) (*CompiledPipel
 		}
 	}
 
+	if spec.PredictionLogConfig != nil && spec.PredictionLogConfig.Enable {
+		logOp, err := c.doCompilePredictionLog(spec.PredictionLogConfig)
+		if err != nil {
+			return nil, err
+		}
+		predictionLogOp = logOp
+	}
+
 	return NewCompiledPipeline(
 		jsonPathStorage,
 		expressionStorage,
 		preloadedTables,
 		preprocessOps,
 		postprocessOps,
+		predictionLogOp,
 		c.operationTracingEnabled,
 	), nil
+}
+
+func (c *Compiler) doCompilePredictionLog(predictionLogCfg *spec.PredictionLogConfig) (*PredictionLogOp, error) {
+	if predictionLogCfg.EntitiesTable != "" {
+		if err := c.checkVariableRegistered(predictionLogCfg.EntitiesTable); err != nil {
+			return nil, err
+		}
+	}
+	if predictionLogCfg.RawFeaturesTable != "" {
+		if err := c.checkVariableRegistered(predictionLogCfg.RawFeaturesTable); err != nil {
+			return nil, err
+		}
+	}
+	return NewPredictionLogOp(predictionLogCfg, c.predictionLogProducer), nil
 }
 
 func (c *Compiler) doCompilePipeline(pipeline *spec.Pipeline, pipelineType types.Pipeline, compiledJsonPaths *jsonpath.Storage, compiledExpressions *expression.Storage) ([]Op, map[string]table.Table, error) {

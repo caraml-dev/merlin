@@ -44,7 +44,11 @@ func (e *Environment) Preprocess(ctx context.Context, rawRequest types.Payload, 
 	e.symbolRegistry.SetRawRequestHeaders(rawRequestHeaders)
 	e.SetOutput(rawRequest)
 
-	return e.compiledPipeline.Preprocess(ctx, e)
+	response, err := e.compiledPipeline.Preprocess(ctx, e)
+	if err == nil {
+		e.SetPreprocessResponse(response)
+	}
+	return response, err
 }
 
 func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Payload, modelResponseHeaders map[string]string) (types.Payload, error) {
@@ -58,12 +62,28 @@ func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Paylo
 	return e.compiledPipeline.Postprocess(ctx, e)
 }
 
+func (e *Environment) PublishPredictionLog(ctx context.Context, result *types.PredictionResult) {
+	predictionLogOp := e.compiledPipeline.predictionLogOp
+	if predictionLogOp == nil {
+		return
+	}
+	go predictionLogOp.ProducePredictionLog(ctx, result, e) //nolint:errcheck
+}
+
 func (e *Environment) IsPostProcessOpExist() bool {
 	return len(e.compiledPipeline.postprocessOps) > 0
 }
 
 func (e *Environment) IsPreprocessOpExist() bool {
 	return len(e.compiledPipeline.preprocessOps) > 0
+}
+
+func (e *Environment) SetPreprocessResponse(payload types.Payload) {
+	e.symbolRegistry.SetPreprocessResponse(payload)
+}
+
+func (e *Environment) PreprocessResponse() types.Payload {
+	return e.symbolRegistry.PreprocessResponse()
 }
 
 func (e *Environment) SetOutput(payload types.Payload) {

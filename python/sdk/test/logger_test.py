@@ -14,7 +14,7 @@
 
 import pytest
 import client
-from merlin.logger import Logger,LoggerMode,LoggerConfig
+from merlin.logger import Logger,LoggerMode,LoggerConfig,PredictionLoggerConfig
 
 
 @pytest.mark.unit
@@ -26,6 +26,7 @@ def test_from_logger_response():
     assert result.model.enabled == expected_result.model.enabled
     assert result.model.mode == expected_result.model.mode
     assert result.transformer is None
+    assert result.prediction is None
 
     logger_response = client.Logger(model=client.LoggerConfig(enabled=False, mode=""))
     result = Logger.from_logger_response(logger_response)
@@ -34,6 +35,7 @@ def test_from_logger_response():
     assert result.model.enabled == expected_result.model.enabled
     assert result.model.mode == expected_result.model.mode
     assert result.transformer is None
+    assert result.prediction is None
 
     logger_response = client.Logger(transformer=client.LoggerConfig(enabled=True, mode=client.LoggerMode.REQUEST))
     result = Logger.from_logger_response(logger_response)
@@ -42,6 +44,7 @@ def test_from_logger_response():
     assert result.transformer.enabled == expected_result.transformer.enabled
     assert result.transformer.mode == expected_result.transformer.mode
     assert result.model is None
+    assert result.prediction is None
 
     logger_response = client.Logger(model=client.LoggerConfig(enabled=True, mode=client.LoggerMode.ALL),
                                     transformer=client.LoggerConfig(enabled=True, mode=client.LoggerMode.ALL))
@@ -54,10 +57,30 @@ def test_from_logger_response():
     assert result.model is not None
     assert result.model.enabled == expected_result.model.enabled
     assert result.model.mode == expected_result.model.mode
+    assert result.prediction is None
 
     result = Logger.from_logger_response(None)
     assert result.model is None
     assert result.transformer is None
+
+    logger_response = client.Logger(model=client.LoggerConfig(enabled=True, mode=client.LoggerMode.ALL),
+                                    transformer=client.LoggerConfig(enabled=True, mode=client.LoggerMode.ALL),
+                                    prediction=client.PredictionLoggerConfig(enabled=True, raw_features_table="rawFeatures", entities_table="entities"))
+    result = Logger.from_logger_response(logger_response)
+    expected_result = Logger(model=LoggerConfig(enabled=True, mode=LoggerMode.ALL),
+                             transformer=LoggerConfig(enabled=True, mode=LoggerMode.ALL),
+                             prediction=PredictionLoggerConfig(enabled=True, raw_features_table="rawFeatures", entities_table="entities"))
+    assert result.transformer is not None
+    assert result.transformer.enabled == expected_result.transformer.enabled
+    assert result.transformer.mode == expected_result.transformer.mode
+    assert result.model is not None
+    assert result.model.enabled == expected_result.model.enabled
+    assert result.model.mode == expected_result.model.mode
+    assert result.prediction is not None
+    assert result.prediction.enabled == expected_result.prediction.enabled
+    assert result.prediction.raw_features_table == expected_result.prediction.raw_features_table
+    assert result.prediction.entities_table == expected_result.prediction.entities_table
+
 
 
 @pytest.mark.unit
@@ -69,6 +92,7 @@ def test_to_logger_spec():
     assert result.model.enabled == expected_result.model.enabled
     assert result.model.mode == expected_result.model.mode
     assert result.transformer is None
+    assert result.prediction is None
 
     logger = Logger(transformer=LoggerConfig(enabled=True, mode=LoggerMode.RESPONSE))
     result = logger.to_logger_spec()
@@ -77,6 +101,8 @@ def test_to_logger_spec():
     assert result.transformer.enabled == expected_result.transformer.enabled
     assert result.transformer.mode == expected_result.transformer.mode
     assert result.model is None
+    assert result.prediction is None
+
 
     logger = Logger(model=LoggerConfig(enabled=True, mode=LoggerMode.ALL),
                     transformer=LoggerConfig(enabled=True, mode=LoggerMode.ALL))
@@ -89,6 +115,26 @@ def test_to_logger_spec():
     assert result.model is not None
     assert result.model.enabled == expected_result.model.enabled
     assert result.model.mode == expected_result.model.mode
+    assert result.prediction is None
+
+
+    logger = Logger(model=LoggerConfig(enabled=True, mode=LoggerMode.ALL),
+                    transformer=LoggerConfig(enabled=True, mode=LoggerMode.ALL),
+                    prediction=PredictionLoggerConfig(enabled=True, raw_features_table="rawFeatures", entities_table="entities"))
+    result = logger.to_logger_spec()
+    expected_result = client.Logger(model=client.LoggerConfig(enabled=True, mode=client.LoggerMode.ALL),
+                                    transformer=client.LoggerConfig(enabled=True, mode=client.LoggerMode.ALL),
+                                    prediction=client.PredictionLoggerConfig(enabled=True, raw_features_table="rawFeatures", entities_table="entities"))
+    assert result.transformer is not None
+    assert result.transformer.enabled == expected_result.transformer.enabled
+    assert result.transformer.mode == expected_result.transformer.mode
+    assert result.model is not None
+    assert result.model.enabled == expected_result.model.enabled
+    assert result.model.mode == expected_result.model.mode
+    assert result.prediction is not None
+    assert result.prediction.enabled == expected_result.prediction.enabled
+    assert result.prediction.raw_features_table == expected_result.prediction.raw_features_table
+    assert result.prediction.entities_table == expected_result.prediction.entities_table
 
     logger = Logger()
     result = logger.to_logger_spec()
