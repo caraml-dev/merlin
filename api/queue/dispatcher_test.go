@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gojek/merlin/it/database"
-	"github.com/gojek/merlin/log"
+	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/log"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

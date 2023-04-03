@@ -25,10 +25,10 @@ import (
 	networking "istio.io/api/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gojek/merlin/istio"
-	"github.com/gojek/merlin/istio/mocks"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/istio"
+	"github.com/caraml-dev/merlin/istio/mocks"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 )
 

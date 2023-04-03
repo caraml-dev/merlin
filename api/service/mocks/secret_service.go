@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	mlp "github.com/gojek/merlin/mlp"
+	mlp "github.com/caraml-dev/merlin/mlp"
 	mock "github.com/stretchr/testify/mock"
 )
 

@@ -25,11 +25,11 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/prometheus/common/log"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/transformer"
-	"github.com/gojek/merlin/pkg/transformer/pipeline"
-	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/transformer"
+	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 )
 
 type EndpointsController struct {

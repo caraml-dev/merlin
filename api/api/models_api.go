@@ -20,8 +20,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/gojek/merlin/mlflow"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/mlflow"
+	"github.com/caraml-dev/merlin/models"
 )
 
 // ModelsController controls models API.

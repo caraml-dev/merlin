@@ -19,7 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/mlp"
+	"github.com/caraml-dev/merlin/mlp"
 )
 
 const (

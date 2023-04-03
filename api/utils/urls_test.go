@@ -19,7 +19,7 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/gojek/merlin/utils"
+	"github.com/caraml-dev/merlin/utils"
 	"github.com/stretchr/testify/assert"
 )
 

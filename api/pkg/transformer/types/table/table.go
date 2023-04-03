@@ -9,8 +9,8 @@ import (
 	"github.com/go-gota/gota/dataframe"
 	gota "github.com/go-gota/gota/series"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 )
 
 type Table struct {

@@ -4,7 +4,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/caraml-dev/merlin/pkg/transformer"
 )
 
 var (

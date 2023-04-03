@@ -19,14 +19,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/gojek/merlin/cluster"
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/imagebuilder"
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/queue"
-	"github.com/gojek/merlin/queue/work"
-	"github.com/gojek/merlin/storage"
+	"github.com/caraml-dev/merlin/cluster"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/imagebuilder"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/queue"
+	"github.com/caraml-dev/merlin/queue/work"
+	"github.com/caraml-dev/merlin/storage"
 )
 
 type EndpointsService interface {

@@ -21,4 +21,4 @@ unit-test: type_check
 .PHONY: proto
 proto:
 	go get github.com/mitchellh/protoc-gen-go-json
-	protoc -I=. --python_out=merlinpyspark --mypy_out=spec --go_out=pkg/ --go-json_out=pkg/ --go_opt=paths=source_relative spec/*.proto
+	protoc -I=. --python_out=merlinpyspark --mypy_out=merlinpyspark --go_out=pkg/ --go-json_out=pkg/ --go_opt=paths=source_relative spec/*.proto

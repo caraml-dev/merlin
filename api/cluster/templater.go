@@ -24,10 +24,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/models"
-	transformerpkg "github.com/gojek/merlin/pkg/transformer"
-	"github.com/gojek/merlin/utils"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/models"
+	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
+	"github.com/caraml-dev/merlin/utils"
 )
 
 const (

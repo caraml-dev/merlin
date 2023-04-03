@@ -30,13 +30,13 @@ import (
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 
-	"github.com/gojek/merlin/config"
+	"github.com/caraml-dev/merlin/config"
 
-	"github.com/gojek/merlin/middleware"
-	"github.com/gojek/merlin/mlflow"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/service"
+	"github.com/caraml-dev/merlin/middleware"
+	"github.com/caraml-dev/merlin/mlflow"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/service"
 )
 
 // AppContext contains the services of the Merlin application.

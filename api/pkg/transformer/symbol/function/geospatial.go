@@ -9,7 +9,7 @@ import (
 	"github.com/golang/geo/s2"
 	"github.com/mmcloughlin/geohash"
 
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 )
 
 const (

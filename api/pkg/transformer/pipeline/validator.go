@@ -5,10 +5,10 @@ import (
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 
-	"github.com/gojek/merlin/pkg/transformer/cache"
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/symbol"
+	"github.com/caraml-dev/merlin/pkg/transformer/cache"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
 )
 
 func ValidateTransformerConfig(ctx context.Context, coreClient core.CoreServiceClient, transformerConfig *spec.StandardTransformerConfig) error {

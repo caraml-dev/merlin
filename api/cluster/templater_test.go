@@ -27,11 +27,11 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/pkg/transformer"
-	"github.com/gojek/merlin/utils"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/transformer"
+	"github.com/caraml-dev/merlin/utils"
 )
 
 var (
@@ -618,7 +618,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				Metadata:    model.Metadata,
 				Transformer: &models.Transformer{
 					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 					Command: "python",
 					Args:    "main.py",
 				},
@@ -655,7 +655,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
 									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []v1.EnvVar{
@@ -686,7 +686,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 				Metadata:    model.Metadata,
 				Transformer: &models.Transformer{
 					Enabled:         true,
-					Image:           "ghcr.io/gojek/merlin-transformer-test",
+					Image:           "ghcr.io/caraml-dev/merlin-transformer-test",
 					Command:         "python",
 					Args:            "main.py",
 					ResourceRequest: userResourceRequests,
@@ -731,7 +731,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
 									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []v1.EnvVar{
@@ -946,7 +946,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				Metadata:    model.Metadata,
 				Transformer: &models.Transformer{
 					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 					Command: "python",
 					Args:    "main.py",
 				},
@@ -994,7 +994,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
 									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []v1.EnvVar{
@@ -1025,7 +1025,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				Metadata:    model.Metadata,
 				Transformer: &models.Transformer{
 					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 					Command: "python",
 					Args:    "main.py",
 				},
@@ -1069,7 +1069,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
 									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []v1.EnvVar{
@@ -1100,7 +1100,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				Metadata:    model.Metadata,
 				Transformer: &models.Transformer{
 					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 					Command: "python",
 					Args:    "main.py",
 				},
@@ -1144,7 +1144,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
 									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []v1.EnvVar{
@@ -1179,7 +1179,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 				Metadata:    model.Metadata,
 				Transformer: &models.Transformer{
 					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 					Command: "python",
 					Args:    "main.py",
 				},
@@ -1223,7 +1223,7 @@ func TestCreateInferenceServiceSpecWithLogger(t *testing.T) {
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
 									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []v1.EnvVar{
@@ -1387,7 +1387,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 				Metadata:    model.Metadata,
 				Transformer: &models.Transformer{
 					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 					Command: "python",
 					Args:    "main.py",
 					ResourceRequest: &models.ResourceRequest{
@@ -1453,7 +1453,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
 									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []v1.EnvVar{
@@ -1519,7 +1519,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 							Custom: &kfsv1alpha2.CustomSpec{
 								Container: v1.Container{
 									Name:    "transformer",
-									Image:   "ghcr.io/gojek/merlin-transformer-test",
+									Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 									Command: []string{"python"},
 									Args:    []string{"main.py"},
 									Env: []v1.EnvVar{
@@ -1740,7 +1740,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 					Namespace: "test",
 				},
 				&models.Transformer{
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 					Command: "python",
 					Args:    "main.py",
 					ResourceRequest: &models.ResourceRequest{
@@ -1756,7 +1756,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 				Custom: &kfsv1alpha2.CustomSpec{
 					Container: v1.Container{
 						Name:    "transformer",
-						Image:   "ghcr.io/gojek/merlin-transformer-test",
+						Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 						Command: []string{"python"},
 						Args:    []string{"main.py"},
 						Env: []v1.EnvVar{

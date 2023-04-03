@@ -23,9 +23,9 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/it/database"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 func TestVersionEndpointsStorage_Get(t *testing.T) {
@@ -176,7 +176,7 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 		EnvironmentName: env2.Name,
 		Transformer: &models.Transformer{
 			Enabled: true,
-			Image:   "ghcr.io/gojek/merlin-transformer-test",
+			Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 		},
 	}
 	db.Create(&ep3)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-gota/gota/series"
 
-	"github.com/gojek/merlin/pkg/transformer/types/converter"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/converter"
 )
 
 type Type string

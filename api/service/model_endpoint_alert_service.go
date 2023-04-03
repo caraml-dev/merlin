@@ -19,10 +19,10 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/gojek/merlin/gitlab"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/storage"
-	"github.com/gojek/merlin/warden"
+	"github.com/caraml-dev/merlin/gitlab"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/storage"
+	"github.com/caraml-dev/merlin/warden"
 )
 
 // ModelEndpointAlertService interface.

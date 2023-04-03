@@ -22,8 +22,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/service/mocks"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/service/mocks"
 )
 
 func TestCreateSecret(t *testing.T) {

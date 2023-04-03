@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/gojek/merlin/pkg/transformer"
+	"github.com/caraml-dev/merlin/pkg/transformer"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )

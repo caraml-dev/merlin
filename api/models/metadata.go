@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/gojek/merlin/mlp"
+	"github.com/caraml-dev/merlin/mlp"
 )
 
 type Metadata struct {

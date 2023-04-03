@@ -35,8 +35,8 @@ import (
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	ktesting "k8s.io/client-go/testing"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 const (
@@ -757,7 +757,7 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 			name:   "gcr image ref exists",
 			fields: fields{},
 			args: args{
-				imageName: "gojek/merlin-api",
+				imageName: "caraml-dev/merlin-api",
 				imageTag:  "1.0.0",
 			},
 			responseBody: []byte(`{"tags":["1.0.0", "0.9.0"]}`),
@@ -768,7 +768,7 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 			name:   "gcr image ref not exists",
 			fields: fields{},
 			args: args{
-				imageName: "gojek/merlin-api",
+				imageName: "caraml-dev/merlin-api",
 				imageTag:  "1.0.0",
 			},
 			responseBody: []byte(`{"tags":["0.9.0"]}`),
@@ -779,7 +779,7 @@ func Test_kanikoBuilder_imageRefExists(t *testing.T) {
 			name:   "gcr image not exists",
 			fields: fields{},
 			args: args{
-				imageName: "gojek/merlin-api",
+				imageName: "caraml-dev/merlin-api",
 				imageTag:  "1.0.0",
 			},
 			responseBody: []byte(`{"tags":[]}`),

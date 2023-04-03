@@ -8,8 +8,8 @@ import (
 	gotaSeries "github.com/go-gota/gota/series"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
-	"github.com/gojek/merlin/pkg/transformer/types/series"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 )
 
 func TestTable_New(t *testing.T) {

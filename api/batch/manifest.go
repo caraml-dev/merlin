@@ -20,8 +20,8 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gojek/merlin-pyspark-app/pkg/spec"
-	"github.com/gojek/merlin/log"
+	"github.com/caraml-dev/merlin-pyspark-app/pkg/spec"
+	"github.com/caraml-dev/merlin/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/rbac/v1"

@@ -34,9 +34,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 type ImageBuilder interface {
@@ -191,7 +191,7 @@ func (c *imageBuilder) GetContainers(project mlp.Project, model *models.Model, v
 //  * alpine:3.5
 //  * library/alpine:3.5
 //  * docker.io/fluxcd/flux:1.1.0
-//  * gojek/merlin-api:1.0.0
+//  * caraml-dev/merlin-api:1.0.0
 //  * localhost:5000/arbitrary/path/to/repo:revision-sha1
 func (c *imageBuilder) imageRef(project mlp.Project, model *models.Model, version *models.Version) string {
 	return fmt.Sprintf("%s:%s", c.nameGenerator.generateDockerImageName(project, model), version.ID)

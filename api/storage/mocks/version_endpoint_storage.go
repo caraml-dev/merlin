@@ -3,7 +3,7 @@
 package mocks
 
 import mock "github.com/stretchr/testify/mock"
-import models "github.com/gojek/merlin/models"
+import models "github.com/caraml-dev/merlin/models"
 
 import uuid "github.com/google/uuid"
 

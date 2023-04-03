@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	mlflow "github.com/gojek/merlin/mlflow"
+	mlflow "github.com/caraml-dev/merlin/mlflow"
 	mock "github.com/stretchr/testify/mock"
 )
 

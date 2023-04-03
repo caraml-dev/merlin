@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gojek/merlin/client"
+	"github.com/caraml-dev/merlin/client"
 	"golang.org/x/oauth2/google"
 )
 

@@ -23,13 +23,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	clock2 "k8s.io/apimachinery/pkg/util/clock"
 
-	"github.com/gojek/merlin/batch"
-	"github.com/gojek/merlin/imagebuilder"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/queue"
-	"github.com/gojek/merlin/queue/work"
-	"github.com/gojek/merlin/storage"
+	"github.com/caraml-dev/merlin/batch"
+	"github.com/caraml-dev/merlin/imagebuilder"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/queue"
+	"github.com/caraml-dev/merlin/queue/work"
+	"github.com/caraml-dev/merlin/storage"
 )
 
 type PredictionJobService interface {

@@ -3,7 +3,7 @@ package table
 import (
 	"errors"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 )
 
 const (

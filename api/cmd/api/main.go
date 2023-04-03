@@ -36,17 +36,17 @@ import (
 	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
 
-	"github.com/gojek/merlin/api"
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/cronjob"
-	"github.com/gojek/merlin/gitlab"
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/mlflow"
-	"github.com/gojek/merlin/queue"
-	"github.com/gojek/merlin/queue/work"
-	"github.com/gojek/merlin/service"
-	"github.com/gojek/merlin/storage"
-	"github.com/gojek/merlin/warden"
+	"github.com/caraml-dev/merlin/api"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/cronjob"
+	"github.com/caraml-dev/merlin/gitlab"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/mlflow"
+	"github.com/caraml-dev/merlin/queue"
+	"github.com/caraml-dev/merlin/queue/work"
+	"github.com/caraml-dev/merlin/service"
+	"github.com/caraml-dev/merlin/storage"
+	"github.com/caraml-dev/merlin/warden"
 )
 
 var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}

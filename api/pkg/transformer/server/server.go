@@ -25,8 +25,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
-	hystrixpkg "github.com/gojek/merlin/pkg/hystrix"
-	"github.com/gojek/merlin/pkg/transformer/server/response"
+	hystrixpkg "github.com/caraml-dev/merlin/pkg/hystrix"
+	"github.com/caraml-dev/merlin/pkg/transformer/server/response"
 )
 
 const MerlinLogIdHeader = "X-Merlin-Log-Id"

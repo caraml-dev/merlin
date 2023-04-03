@@ -27,10 +27,10 @@ import (
 	"github.com/gojek/mlp/api/pkg/authz/enforcer"
 	enforcerMock "github.com/gojek/mlp/api/pkg/authz/enforcer/mocks"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	"github.com/gojek/merlin/service/mocks"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/service/mocks"
 )
 
 var (

@@ -20,8 +20,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
 )
 
 type VersionEndpoint struct {

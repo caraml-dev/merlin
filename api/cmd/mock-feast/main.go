@@ -8,7 +8,7 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"google.golang.org/grpc"
 
-	"github.com/gojek/merlin/log"
+	"github.com/caraml-dev/merlin/log"
 )
 
 const (

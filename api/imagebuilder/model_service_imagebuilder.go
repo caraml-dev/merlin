@@ -19,8 +19,8 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 // NewModelServiceImageBuilder create an ImageBuilder that will be used to build docker image of model service

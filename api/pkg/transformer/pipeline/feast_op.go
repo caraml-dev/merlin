@@ -8,9 +8,9 @@ import (
 	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/opentracing/opentracing-go"
 
-	"github.com/gojek/merlin/pkg/transformer/cache"
-	"github.com/gojek/merlin/pkg/transformer/feast"
-	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/cache"
+	"github.com/caraml-dev/merlin/pkg/transformer/feast"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 )
 
 type FeastOp struct {

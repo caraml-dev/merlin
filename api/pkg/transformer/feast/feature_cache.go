@@ -11,9 +11,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	"github.com/gojek/merlin/pkg/transformer"
-	"github.com/gojek/merlin/pkg/transformer/cache"
-	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer"
+	"github.com/caraml-dev/merlin/pkg/transformer/cache"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 type CacheKey struct {

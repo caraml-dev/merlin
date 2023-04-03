@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gojek/merlin/utils"
+	"github.com/caraml-dev/merlin/utils"
 	v1 "k8s.io/api/core/v1"
 )
 

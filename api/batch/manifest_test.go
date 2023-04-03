@@ -31,7 +31,7 @@ import (
 	fake2 "k8s.io/client-go/kubernetes/typed/rbac/v1/fake"
 	ktesting "k8s.io/client-go/testing"
 
-	jobspec "github.com/gojek/merlin-pyspark-app/pkg/spec"
+	jobspec "github.com/caraml-dev/merlin-pyspark-app/pkg/spec"
 )
 
 const (

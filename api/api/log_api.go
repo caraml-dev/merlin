@@ -21,8 +21,8 @@ import (
 
 	"github.com/gorilla/schema"
 
-	"github.com/gojek/merlin/log"
-	"github.com/gojek/merlin/service"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/service"
 )
 
 var decoder = schema.NewDecoder()

@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gojek/merlin/pkg/transformer/cache/mocks"
-	"github.com/gojek/merlin/pkg/transformer/types"
+	"github.com/caraml-dev/merlin/pkg/transformer/cache/mocks"
+	"github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 func TestFetchFeaturesFromCache(t *testing.T) {

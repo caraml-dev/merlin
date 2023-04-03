@@ -24,11 +24,11 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gojek/merlin/istio"
-	"github.com/gojek/merlin/istio/mocks"
-	"github.com/gojek/merlin/it/database"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/istio"
+	"github.com/caraml-dev/merlin/istio/mocks"
+	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 var env1Name = "id-env"

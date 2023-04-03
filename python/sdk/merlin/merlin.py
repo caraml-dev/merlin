@@ -115,7 +115,7 @@ def scaffold(project, model_name, env):
         )
     else:
         try:
-            cookiecutter("git@github.com:gojek/merlin/python/pyfunc-scaffolding",
+            cookiecutter("git@github.com:caraml-dev/merlin/python/pyfunc-scaffolding",
                 checkout="tags/v0.1",
                 no_input=True, directory="python/pyfunc-scaffolding",
                 extra_context={'project_name': project, 'model_name': model_name, 'environment_name': env})

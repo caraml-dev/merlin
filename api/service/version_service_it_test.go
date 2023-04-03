@@ -27,11 +27,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/it/database"
-	"github.com/gojek/merlin/mlp"
-	mlpMock "github.com/gojek/merlin/mlp/mocks"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/mlp"
+	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
+	"github.com/caraml-dev/merlin/models"
 )
 
 func TestVersionsService_FindById(t *testing.T) {
@@ -91,7 +91,7 @@ func TestVersionsService_FindById(t *testing.T) {
 			EnvironmentName: env.Name,
 			Transformer: &models.Transformer{
 				Enabled: true,
-				Image:   "ghcr.io/gojek/merlin-transformer-test",
+				Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 			},
 		}
 		db.Create(&endpoint3)
@@ -203,7 +203,7 @@ func TestVersionsService_ListVersions(t *testing.T) {
 				EnvironmentName: env.Name,
 				Transformer: &models.Transformer{
 					Enabled: true,
-					Image:   "ghcr.io/gojek/merlin-transformer-test",
+					Image:   "ghcr.io/caraml-dev/merlin-transformer-test",
 				},
 			}
 			db.Create(&endpoint3)

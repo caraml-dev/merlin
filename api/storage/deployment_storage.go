@@ -15,7 +15,7 @@
 package storage
 
 import (
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/models"
 	"github.com/jinzhu/gorm"
 )
 

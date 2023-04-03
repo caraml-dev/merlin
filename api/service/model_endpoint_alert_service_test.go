@@ -17,7 +17,7 @@ package service
 import (
 	"testing"
 
-	wardenmocks "github.com/gojek/merlin/warden/mocks"
+	wardenmocks "github.com/caraml-dev/merlin/warden/mocks"
 	"github.com/stretchr/testify/assert"
 )
 

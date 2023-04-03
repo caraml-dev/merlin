@@ -37,9 +37,9 @@ import (
 	ktesting "k8s.io/client-go/testing"
 	"knative.dev/pkg/apis"
 
-	"github.com/gojek/merlin/config"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 const (

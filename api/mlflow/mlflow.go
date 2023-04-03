@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gojek/merlin/utils"
+	"github.com/caraml-dev/merlin/utils"
 )
 
 type Client interface {

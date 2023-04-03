@@ -23,8 +23,8 @@ import (
 
 	"github.com/gojek/mlp/api/client"
 
-	"github.com/gojek/merlin/mlp"
-	mlpMock "github.com/gojek/merlin/mlp/mocks"
+	"github.com/caraml-dev/merlin/mlp"
+	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
 )
 
 func Test_projectService(t *testing.T) {

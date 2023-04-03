@@ -1385,9 +1385,9 @@ class ModelVersion:
     def _run_pyfunc_local_server(self, artifact_path, env_vars, port, pyfunc_base_image):
         if pyfunc_base_image is None:
             if "dev" in VERSION:
-                pyfunc_base_image = "ghcr.io/gojek/merlin-pyfunc-base:dev"
+                pyfunc_base_image = "ghcr.io/caraml-dev/merlin-pyfunc-base:dev"
             else:
-                pyfunc_base_image = f"ghcr.io/gojek/merlin-pyfunc-base:v{VERSION}"
+                pyfunc_base_image = f"ghcr.io/caraml-dev/merlin-pyfunc-base:v{VERSION}"
 
         dockerfile_path = copy_pyfunc_dockerfile(artifact_path)
         image_tag = f"{self.model.project.name}-{self.model.name}:{self.id}"

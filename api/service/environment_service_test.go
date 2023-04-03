@@ -24,8 +24,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/gojek/merlin/it/database"
-	"github.com/gojek/merlin/models"
+	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/models"
 )
 
 func TestSave(t *testing.T) {

@@ -224,7 +224,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
           registry: ghcr.io
-          repository: gojek/merlin-transformer
+          repository: caraml-dev/merlin-transformer
           build_args: BRANCH=${{ github.ref }},REVISION=${{ github.sha }},VERSION=${{ github.ref }}
           dockerfile: transformer.Dockerfile
           tags: ${{ env.branch_name }}
@@ -252,7 +252,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
           registry: ghcr.io
-          repository: gojek/merlin-pyfunc-base
+          repository: caraml-dev/merlin-pyfunc-base
           path: python/pyfunc-server
           dockerfile: python/pyfunc-server/base.Dockerfile
           tags: ${{ env.branch_name }}
@@ -280,7 +280,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
           registry: ghcr.io
-          repository: gojek/merlin-pyspark-base
+          repository: caraml-dev/merlin-pyspark-base
           path: python
           dockerfile: python/batch-predictor/docker/base.Dockerfile
           tags: ${{ env.branch_name }}
@@ -306,7 +306,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
           registry: ghcr.io
-          repository: gojek/mlflow
+          repository: caraml-dev/mlflow
           path: mlflow
           dockerfile: mlflow/Dockerfile
           build_args: MLFLOW_VERSION=1.3.0

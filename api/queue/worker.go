@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gojek/merlin/log"
+	"github.com/caraml-dev/merlin/log"
 	"github.com/jinzhu/gorm"
 )
 

@@ -26,14 +26,14 @@ import (
 	"github.com/stretchr/testify/mock"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/gojek/merlin/cluster"
-	clusterMock "github.com/gojek/merlin/cluster/mocks"
-	"github.com/gojek/merlin/config"
-	imageBuilderMock "github.com/gojek/merlin/imagebuilder/mocks"
-	"github.com/gojek/merlin/mlp"
-	"github.com/gojek/merlin/models"
-	queueMock "github.com/gojek/merlin/queue/mocks"
-	"github.com/gojek/merlin/storage/mocks"
+	"github.com/caraml-dev/merlin/cluster"
+	clusterMock "github.com/caraml-dev/merlin/cluster/mocks"
+	"github.com/caraml-dev/merlin/config"
+	imageBuilderMock "github.com/caraml-dev/merlin/imagebuilder/mocks"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
+	queueMock "github.com/caraml-dev/merlin/queue/mocks"
+	"github.com/caraml-dev/merlin/storage/mocks"
 )
 
 var isDefaultTrue = true
@@ -221,14 +221,14 @@ func TestDeployEndpoint(t *testing.T) {
 				&models.VersionEndpoint{
 					Transformer: &models.Transformer{
 						Enabled:         true,
-						Image:           "ghcr.io/gojek/merlin-transformer-test",
+						Image:           "ghcr.io/caraml-dev/merlin-transformer-test",
 						ResourceRequest: env.DefaultResourceRequest,
 					},
 				},
 				&models.VersionEndpoint{
 					Transformer: &models.Transformer{
 						Enabled:         true,
-						Image:           "ghcr.io/gojek/merlin-transformer-test",
+						Image:           "ghcr.io/caraml-dev/merlin-transformer-test",
 						ResourceRequest: env.DefaultResourceRequest,
 					},
 				},

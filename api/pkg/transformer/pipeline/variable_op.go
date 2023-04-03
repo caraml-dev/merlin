@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gojek/merlin/pkg/transformer/spec"
+	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/opentracing/opentracing-go"
 )
 
