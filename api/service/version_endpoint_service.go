@@ -176,10 +176,6 @@ func (k *endpointService) override(left *models.VersionEndpoint, right *models.V
 	if right.Logger != nil {
 		left.Logger = right.Logger
 		left.Logger.DestinationURL = k.loggerDestinationURL
-		predictionLogger := left.Logger.Prediction
-		if predictionLogger != nil && right.Protocol == protocol.UpiV1 {
-			left.Logger.Prediction = predictionLogger
-		}
 		modelLogger := left.Logger.Model
 		if modelLogger != nil {
 			modelLogger.SanitizeMode()
