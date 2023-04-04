@@ -79,6 +79,11 @@ RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MI
     $CONDA_DIR/bin/conda clean -afy && \
     echo "source $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.bashrc
 
+# Install conda addons for faster search
+RUN conda update -n base conda && \
+    conda install -n base conda-libmamba-solver && \
+    conda config --set solver libmamba
+
 # Copy batch predictor application
 COPY --chown=${UID}:${GID} batch-predictor ${HOME}/merlin-spark-app
 COPY --chown=${UID}:${GID} sdk ${HOME}/sdk

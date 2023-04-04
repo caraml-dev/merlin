@@ -23,6 +23,12 @@ ENV PATH=$PATH:/google-cloud-sdk/bin
 COPY pyfunc-server /pyfunc-server
 COPY sdk /sdk
 ENV SDK_PATH=/sdk
+
+# Install conda addons for faster search
+RUN conda update -n base conda && \
+    conda install -n base conda-libmamba-solver && \
+    conda config --set solver libmamba
+
 RUN conda env create -f /pyfunc-server/docker/env${PYTHON_VERSION}.yaml && \
     rm -rf /root/.cache
 
