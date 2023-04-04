@@ -71,7 +71,7 @@ WORKDIR ${HOME}
 # Install miniconda
 ENV CONDA_DIR ${HOME}/miniconda3
 ENV PATH ${CONDA_DIR}/bin:$PATH
-ENV MINIFORGE_VERSION=4.14.0-0
+ENV MINIFORGE_VERSION=22.11.1-4
 
 RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/Miniforge3-${MINIFORGE_VERSION}-Linux-x86_64.sh -O miniconda.sh && \
     /bin/bash miniconda.sh -b -p ${CONDA_DIR} && \
@@ -80,8 +80,7 @@ RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/${MI
     echo "source $CONDA_DIR/etc/profile.d/conda.sh" >> $HOME/.bashrc
 
 # Install conda addons for faster search
-RUN conda update -n base conda && \
-    conda install -n base conda-libmamba-solver && \
+RUN conda install -n base conda-libmamba-solver && \
     conda config --set solver libmamba
 
 # Copy batch predictor application

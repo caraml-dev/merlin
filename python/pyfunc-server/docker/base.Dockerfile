@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM condaforge/miniforge3:4.14.0-0
+FROM condaforge/miniforge3:22.11.1-4
 
 ARG PYTHON_VERSION
 
@@ -25,8 +25,7 @@ COPY sdk /sdk
 ENV SDK_PATH=/sdk
 
 # Install conda addons for faster search
-RUN conda update -n base conda && \
-    conda install -n base conda-libmamba-solver && \
+RUN conda install -n base conda-libmamba-solver && \
     conda config --set solver libmamba
 
 RUN conda env create -f /pyfunc-server/docker/env${PYTHON_VERSION}.yaml && \
