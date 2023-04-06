@@ -9,7 +9,7 @@ API_PATH=api
 API_ALL_PACKAGES := $(shell cd ${API_PATH} && go list ./... | grep -v github.com/gojek/mlp/api/client | grep -v -e mocks -e client)
 VERSION := $(or ${VERSION}, $(shell git describe --tags --always --first-parent))
 
-GOLANGCI_LINT_VERSION="v1.49.0"
+GOLANGCI_LINT_VERSION="v1.51.2"
 PROTOC_GEN_GO_JSON_VERSION="v1.1.0"
 PROTOC_GEN_GO_VERSION="v1.26"
 PYTHON_VERSION ?= "37"	#set as 37 38 39 310 for 3.7-3.10 respectively
