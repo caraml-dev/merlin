@@ -176,8 +176,8 @@ func main() {
 		log.Errorw("Failed to bring up agent, shutting down.", zap.Error(err))
 		// This extra flush is needed because defers are not handled via os.Exit calls.
 		_ = log.Sync()
-		os.Stdout.Sync()
-		os.Stderr.Sync()
+		_ = os.Stdout.Sync()
+		_ = os.Stderr.Sync()
 		os.Exit(1)
 	case <-ctx.Done():
 		log.Info("Received TERM signal, attempting to gracefully shutdown servers.")

@@ -29,16 +29,18 @@ WORKDIR /src/log-collector
 # Caching dependencies
 COPY api/go.mod .
 COPY api/go.sum .
+COPY python/batch-predictor/go.mod ../python/batch-predictor/go.mod
+COPY python/batch-predictor/go.sum ../python/batch-predictor/go.sum
 
 RUN go mod download
 
 COPY api .
+COPY python/batch-predictor ../python/batch-predictor
 
 RUN go mod tidy
 RUN go build \
-    -mod=vendor \
     -tags musl \
-    -o bin/log-collector ./cmd/main.go
+    -o bin/log-collector ./cmd/inference-logger/main.go
 
 # ============================================================
 # Build stage 2: Copy binary

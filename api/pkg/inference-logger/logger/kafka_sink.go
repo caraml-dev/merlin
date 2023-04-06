@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -108,12 +109,15 @@ func (k *KafkaSink) Sink(rawLogEntries []*LogEntry) error {
 		}, deliveryChan)
 
 		if err != nil {
+			var kafkaError kafka.Error
 			close(deliveryChan)
-			if err.(kafka.Error).Code() == kafka.ErrQueueFull {
-				// Producer queue is full, wait 1s for messages
-				// to be delivered then try again.
-				time.Sleep(time.Second)
-				continue
+			if errors.As(err, &kafkaError) {
+				if kafkaError.Code() == kafka.ErrQueueFull {
+					// Producer queue is full, wait 1s for messages
+					// to be delivered then try again.
+					time.Sleep(time.Second)
+					continue
+				}
 			}
 			k.logger.Errorf("Failed to produce message: %v\n", err)
 			return err
@@ -138,13 +142,13 @@ func (k *KafkaSink) buildNewKafkaMessage(
 	// Marshal the key
 	keyBytes, err = proto.Marshal(key)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to marshal kafka key, %s", err)
+		return nil, nil, fmt.Errorf("unable to marshal kafka key, %w", err)
 	}
 
 	// Marshal the message
 	valueBytes, err = proto.Marshal(merlinLog)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to marshal kafka value, %s", err)
+		return nil, nil, fmt.Errorf("unable to marshal kafka value, %w", err)
 	}
 
 	return keyBytes, valueBytes, nil

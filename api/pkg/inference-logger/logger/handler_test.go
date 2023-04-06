@@ -168,7 +168,8 @@ func Test(t *testing.T) {
 					// wait for work to be pickedup
 					time.Sleep(5 * time.Millisecond)
 
-					b2, _ := io.ReadAll(w.Result().Body)
+					respBody := w.Result().Body
+					b2, _ := io.ReadAll(respBody)
 					assert.Equal(t, test.response, b2)
 					assert.Equal(t, test.statusCode, w.Code)
 					// check that logger forward the response headers
@@ -179,6 +180,7 @@ func Test(t *testing.T) {
 					mockNewRelicLogsClient.AssertCalled(t, "CreateLogEntry", mock.Anything, mock.Anything)
 					mockNewRelicLogsClient.AssertExpectations(t)
 
+					_ = respBody.Close()
 					dispatcher.Stop()
 				case Kafka:
 					l, _ := zap.NewDevelopment()
@@ -200,7 +202,8 @@ func Test(t *testing.T) {
 					// wait for work to be pickedup
 					time.Sleep(5 * time.Millisecond)
 
-					b2, _ := io.ReadAll(w.Result().Body)
+					respBody := w.Result().Body
+					b2, _ := io.ReadAll(respBody)
 					assert.Equal(t, test.response, b2)
 					assert.Equal(t, test.statusCode, w.Code)
 					// check that logger forward the response headers
@@ -211,6 +214,7 @@ func Test(t *testing.T) {
 					mockKafkaProducer.AssertCalled(t, "Produce", mock.Anything, mock.Anything)
 					mockKafkaProducer.AssertExpectations(t)
 
+					_ = respBody.Close()
 					dispatcher.Stop()
 				}
 			})

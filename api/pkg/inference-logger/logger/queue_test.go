@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"errors"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -39,7 +40,7 @@ func TestSync(t *testing.T) {
 		t.Errorf("Unexpected error value: %v", e)
 	}
 
-	if e := b.Put(4); e != ErrClosed {
+	if e := b.Put(4); !errors.Is(e, ErrClosed) {
 		t.Errorf("Unexpected error value: %v", e)
 	}
 
@@ -48,7 +49,7 @@ func TestSync(t *testing.T) {
 		t.Errorf("unexpected message count in batch: %v", len(msgs))
 	}
 	// close twice
-	if e := b.Close(); e != ErrClosed {
+	if e := b.Close(); !errors.Is(e, ErrClosed) {
 		t.Errorf("Unexpected error value: %v", e)
 	}
 }
@@ -69,7 +70,7 @@ func TestLimits(t *testing.T) {
 	if e := b.Put(1, 2); e != nil {
 		t.Errorf("Unexpected error value: %v", e)
 	}
-	if e := b.Put(3, 4, 5, 6, 7, 8); e != ErrTooManyMessages {
+	if e := b.Put(3, 4, 5, 6, 7, 8); !errors.Is(e, ErrTooManyMessages) {
 		t.Errorf("Unexpected error value: %v", e)
 	}
 	if e := b.Put(3, 4); e != nil {
@@ -131,7 +132,7 @@ func TestGetMinMax(t *testing.T) {
 	if len(result) != 2 {
 		t.Errorf("Unexpected result: %v", result)
 	}
-	b.Close()
+	_ = b.Close()
 	<-quit
 }
 
@@ -161,7 +162,7 @@ func TestGetMin(t *testing.T) {
 	if len(result) != 2 {
 		t.Errorf("Unexpected result: %v", result)
 	}
-	b.Close()
+	_ = b.Close()
 	<-quit
 }
 
@@ -186,7 +187,7 @@ func TestGetAll(t *testing.T) {
 	if e := b.Put(2, 2); e != nil {
 		t.Errorf("Unexpected error value: %v", e)
 	}
-	b.Close()
+	_ = b.Close()
 	if res := b.GetAll(); len(res) != 2 {
 		t.Errorf("Unexpected result: %v", res)
 	}
@@ -233,7 +234,7 @@ func test(t *testing.T, b *BatchQueue, sc, rc int, dur time.Duration) {
 	}
 
 	time.Sleep(dur)
-	b.Close()
+	_ = b.Close()
 
 	for i := 0; i < sc+rc; i++ {
 		<-exit
@@ -285,5 +286,5 @@ func benchmarkWait(b *testing.B, max int) {
 		q.GetMax(max)
 	}
 	b.StopTimer()
-	q.Close()
+	_ = q.Close()
 }
