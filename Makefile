@@ -3,11 +3,14 @@ export
 
 BIN_NAME=merlin
 TRANSFORMER_BIN_NAME=merlin-transformer
+INFERENCE_LOGGER_BIN_NAME=merlin-logger
 UI_PATH := ui
 UI_BUILD_PATH := ${UI_PATH}/build
 API_PATH=api
 API_ALL_PACKAGES := $(shell cd ${API_PATH} && go list ./... | grep -v github.com/gojek/mlp/api/client | grep -v -e mocks -e client)
 VERSION := $(or ${VERSION}, $(shell git describe --tags --always --first-parent))
+LOG_URL?=localhost:8002
+TEST_TAGS?=
 
 GOLANGCI_LINT_VERSION="v1.51.2"
 PROTOC_GEN_GO_JSON_VERSION="v1.1.0"
@@ -115,6 +118,11 @@ build-transformer:
 	@echo "> Building Transformer binary ..."
 	@cd ${API_PATH} && go build -o ../bin/${TRANSFORMER_BIN_NAME} ./cmd/transformer
 
+.PHONY: build-inference-logger
+build-inference-logger:
+	@echo "> Building Inference Logger binary ..."
+	@cd ${API_PATH} && go build -o ../bin/${INFERENCE_LOGGER_BIN_NAME} ./cmd/inference-logger
+
 # ============================================================
 # Run recipe
 # ============================================================
@@ -127,6 +135,16 @@ run:
 run-ui:
 	@echo "> Running UI ..."
 	@cd ui && yarn start
+
+.PHONY: run-inference-logger
+run-inference-logger:
+	@echo "> Running Inference Logger ..."
+	@rm /tmp/agent.sock || true
+	@cd api && SERVING_READINESS_PROBE='{"tcpSocket":{"port":8080,"host":"127.0.0.1"},"successThreshold":1}' UNIX_SOCKET_PATH="/tmp/agent.sock" go run $(TEST_TAGS) cmd/inference-logger/main.go -log-url="$(LOG_URL)"
+
+.PHONY: run-mock-model-server
+run-mock-model-server:
+	@cd api && go run pkg/inference-logger/mock-server/mock_server.go
 
 # ============================================================
 # Utility recipes

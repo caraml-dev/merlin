@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 
-	"github.com/caraml-dev/merlin/pkg/inference-logger/pkg/mocks"
+	"github.com/caraml-dev/merlin/pkg/inference-logger/mocks"
 )
 
 func Test(t *testing.T) {

@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"fmt"
+
 	"go.uber.org/zap"
 )
 
@@ -40,5 +42,8 @@ func (d *Dispatcher) Submit(logEntry *LogEntry) error {
 }
 
 func (d *Dispatcher) Stop() {
-	d.workerQueue.Close()
+	err := d.workerQueue.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
 }

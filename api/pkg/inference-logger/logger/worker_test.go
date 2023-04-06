@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/caraml-dev/merlin/pkg/inference-logger/pkg/mocks"
+	"github.com/caraml-dev/merlin/pkg/inference-logger/mocks"
 )
 
 const (

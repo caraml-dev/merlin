@@ -26,8 +26,8 @@ import (
 	"knative.dev/serving/pkg/queue/health"
 	"knative.dev/serving/pkg/queue/readiness"
 
-	"github.com/caraml-dev/merlin/pkg/inference-logger/pkg/liveness"
-	merlinlogger "github.com/caraml-dev/merlin/pkg/inference-logger/pkg/logger"
+	"github.com/caraml-dev/merlin/pkg/inference-logger/liveness"
+	merlinlogger "github.com/caraml-dev/merlin/pkg/inference-logger/logger"
 )
 
 var (

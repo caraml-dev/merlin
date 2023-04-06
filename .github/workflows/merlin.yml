@@ -148,12 +148,6 @@ jobs:
           # Ensure the same version as the one defined in Makefile
           version: v1.51.2
           working-directory: api
-      - name: Lint Inference Logger
-        uses: golangci/golangci-lint-action@v3
-        with:
-          # Ensure the same version as the one defined in Makefile
-          version: v1.49
-          working-directory: pkg/inference-logger
 
   test-api:
     runs-on: ubuntu-latest
@@ -192,17 +186,6 @@ jobs:
           POSTGRES_USER: ${{ secrets.DB_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: make it-test-api-ci
-  
-  test-inference-logger:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.20'
-      - name: Unit tests
-        working-directory: ./pkg/inference-logger
-        run: make test
 
   build-ui:
     runs-on: ubuntu-latest
@@ -355,20 +338,15 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - create-version
-      - test-inference-logger
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
-          go-version: '1.20'
+          go-version: ${{ env.GO_VERSION }}
       - name: Build Inference Logger
-        working-directory: ./pkg/inference-logger
-        run: make build
+        run: make build-inference-logger
       - name: Build Inference Logger Docker
-        working-directory: ./pkg/inference-logger
-        run: |
-          make vendor
-          docker build -t merlin-logger:${{ needs.create-version.outputs.version }} .
+        run: docker build -t merlin-logger:${{ needs.create-version.outputs.version }} -f inference-logger.Dockerfile .
       - name: Save Inference Logger Docker
         run: docker image save --output merlin-logger.${{ needs.create-version.outputs.version }}.tar merlin-logger:${{ needs.create-version.outputs.version }}
       - name: Publish Inference Logger Docker Artifact
