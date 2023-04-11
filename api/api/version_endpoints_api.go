@@ -274,12 +274,9 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 			}
 		}
 
-		// Should not allow changing the deployment mode of a pending/running/serving model for 2 reasons:
-		// * For "serving" models it's risky as, we can't guarantee graceful re-deployment
-		// * Kserve uses slightly different deployment resource naming under the hood and doesn't clean up the older deployment
-		if (endpoint.IsRunning() || endpoint.IsServing()) && newEndpoint.DeploymentMode != endpoint.DeploymentMode {
-			return BadRequest(fmt.Sprintf("Changing deployment type of a %s model is not allowed, please terminate it first.",
-				endpoint.Status))
+		// Should not allow redeploying a "serving" model and changing its deployment type since we can't guaratee graceful deployment
+		if endpoint.IsServing() && newEndpoint.DeploymentMode != endpoint.DeploymentMode {
+			return BadRequest("Changing deployment type of a serving model is not allowed")
 		}
 
 		endpoint, err = c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)
