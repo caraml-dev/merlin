@@ -15,6 +15,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/cespare/xxhash v1.1.0
 	github.com/confluentinc/confluent-kafka-go v1.9.2
+	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
 	github.com/coocood/freecache v1.1.1
 	github.com/fatih/color v1.9.0
 	github.com/feast-dev/feast/sdk/go v0.9.4
@@ -30,6 +31,7 @@ require (
 	github.com/gojekfarm/jsonpath v0.1.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
+	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.7.1-0.20211118220127-abdc633f8305
 	github.com/google/uuid v1.3.0
@@ -42,6 +44,7 @@ require (
 	github.com/kserve/kserve v0.8.0
 	github.com/linkedin/goavro/v2 v2.11.1
 	github.com/mmcloughlin/geohash v0.10.0
+	github.com/newrelic/newrelic-client-go/v2 v2.17.0
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pilagod/gorm-cursor-paginator v1.3.0
@@ -72,6 +75,7 @@ require (
 	k8s.io/api v0.23.4
 	k8s.io/apimachinery v0.26.0
 	k8s.io/client-go v0.26.0
+	knative.dev/networking v0.0.0-20211209101835-8ef631418fc0
 	knative.dev/pkg v0.0.0-20211206113427-18589ac7627e
 	knative.dev/serving v0.28.0
 	sigs.k8s.io/controller-runtime v0.11.0
@@ -85,12 +89,16 @@ require (
 	cloud.google.com/go/iam v0.8.0 // indirect
 	cloud.google.com/go/longrunning v0.3.0 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
+	contrib.go.opencensus.io/exporter/ocagent v0.7.1-0.20200907061046-05415f1de66d // indirect
+	contrib.go.opencensus.io/exporter/prometheus v0.4.0 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220804214150-8b0cc382067f // indirect
 	github.com/apache/thrift v0.15.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/aws/aws-sdk-go v1.35.24 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/blendle/zapdriver v1.3.1 // indirect
+	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/certifi/gocertifi v0.0.0-20191021191039-0944d244cd40 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.11.3 // indirect
@@ -106,6 +114,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/getsentry/raven-go v0.2.0 // indirect
 	github.com/go-kit/kit v0.9.0 // indirect
+	github.com/go-kit/log v0.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/analysis v0.19.5 // indirect
@@ -119,14 +128,15 @@ require (
 	github.com/go-openapi/validate v0.19.8 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/googleapis/google-cloud-go-testing v0.0.0-20210719221736-1c9a4c676720 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -157,11 +167,14 @@ require (
 	github.com/ory/keto-client-go v0.4.4-alpha.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
+	github.com/prometheus/statsd_exporter v0.21.0 // indirect
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
+	github.com/valyala/fastjson v1.6.3 // indirect
 	go.mongodb.org/mongo-driver v1.1.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
@@ -178,7 +191,6 @@ require (
 	google.golang.org/grpc/examples v0.0.0-20221026183349-3c09650e0524 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	istio.io/gogo-genproto v0.0.0-20190930162913-45029607206a // indirect
-	knative.dev/networking v0.0.0-20211209101835-8ef631418fc0 // indirect
 )
 
 require (

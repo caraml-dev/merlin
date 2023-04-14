@@ -122,3 +122,18 @@ jobs:
           docker image load --input merlin-pyfunc-base-py${{ matrix.python-version }}.${{ inputs.version }}.tar
           docker tag merlin-pyfunc-base-py${{ matrix.python-version }}:${{ inputs.version }} ${IMAGE_TAG}
           docker push ${IMAGE_TAG}
+
+  publish-inference-logger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download API Docker Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: merlin-logger.${{ inputs.version }}.tar
+      - name: Retag and Push Docker Image
+        run: |
+          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/caraml-dev/merlin-logger:${{ inputs.version }}"
+          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
+          docker image load --input merlin-logger.${{ inputs.version }}.tar
+          docker tag merlin-logger:${{ inputs.version }} ${IMAGE_TAG}
+          docker push ${IMAGE_TAG}
