@@ -336,6 +336,15 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		Component: models.ComponentImageBuilder,
 		Stream:    project.Stream,
 		Team:      project.Team,
+		Labels:    models.MergeProjectVersionLabels(project.Labels, version.Labels),
+	}
+
+	annotations := make(map[string]string)
+	if !c.config.SafeToEvict {
+		// The image-building jobs are timing out. We found that one of the root causes is the node pool got scaled down resulting in the image building pods to be rescheduled.
+		// Adding "cluster-autoscaler.kubernetes.io/safe-to-evict": "false" to avoid the pod get killed and rescheduled.
+		// https://kubernetes.io/docs/reference/labels-annotations-taints/#cluster-autoscaler-kubernetes-io-safe-to-evict
+		annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
 	}
 
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
@@ -411,9 +420,10 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kanikoPodName,
-			Namespace: c.config.BuildNamespace,
-			Labels:    metadata.ToLabel(),
+			Name:        kanikoPodName,
+			Namespace:   c.config.BuildNamespace,
+			Labels:      metadata.ToLabel(),
+			Annotations: annotations,
 		},
 		Spec: batchv1.JobSpec{
 			Completions:             &jobCompletions,
@@ -422,7 +432,8 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: metadata.ToLabel(),
+					Labels:      metadata.ToLabel(),
+					Annotations: annotations,
 				},
 				Spec: v1.PodSpec{
 					// https://stackoverflow.com/questions/54091659/kubernetes-pods-disappear-after-failed-jobs

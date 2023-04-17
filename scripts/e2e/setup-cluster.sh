@@ -116,7 +116,7 @@ install_kserve() {
     echo "::group::KServe Deployment"
     wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
     kubectl apply -k config/kserve
-    kubectl rollout status statefulset/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
+    kubectl rollout status deployment/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
     kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
 }
 

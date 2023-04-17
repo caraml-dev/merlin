@@ -3,22 +3,26 @@ kind: StatefulSet
 metadata:
   name: kserve-controller-manager
   namespace: kserve
+$patch: delete
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kserve-controller-manager
+  namespace: kserve
 spec:
   template:
     spec:
       containers:
-      - name: manager
-        image: kserve/kserve-controller:v0.9.0
-        resources:
-          limits:
-            cpu: 1
-            memory: 300Mi
-          requests:
-            cpu: 100m
-            memory: 64Mi
-
+        - name: manager
+          resources:
+            limits:
+              cpu: ~
+              memory: 300Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
 ---
-
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -202,6 +202,7 @@ type ImageBuilderConfig struct {
 	NodeSelectors DictEnv              `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
 	MaximumRetry  int32                `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
 	K8sConfig     mlpcluster.K8sConfig `envconfig:"IMG_BUILDER_K8S_CONFIG"`
+	SafeToEvict   bool                 `envconfig:"IMG_BUILDER_SAFE_TO_EVICT" default:"false"`
 }
 
 type Tolerations []v1.Toleration

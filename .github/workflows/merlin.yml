@@ -10,7 +10,7 @@ on:
 env:
   ARTIFACT_RETENTION_DAYS: 7
   DOCKER_BUILDKIT: 1
-  GO_VERSION: '1.20'
+  GO_VERSION: "1.20"
 
 jobs:
   create-version:
@@ -477,7 +477,7 @@ jobs:
           echo "::endgroup::"
 
           echo "::group::KServe log"
-          kubectl logs statefulset/kserve-controller-manager -n kserve -c manager
+          kubectl logs deployment/kserve-controller-manager -n kserve -c manager
           echo "::endgroup::"
 
           echo "::group::KServe events"

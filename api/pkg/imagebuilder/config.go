@@ -45,6 +45,8 @@ type Config struct {
 	NodeSelectors map[string]string
 	// Maximum number of retry of image builder job
 	MaximumRetry int32
+	// Value for cluster-autoscaler.kubernetes.io/safe-to-evict annotation
+	SafeToEvict bool
 
 	// Cluster Name
 	ClusterName string
