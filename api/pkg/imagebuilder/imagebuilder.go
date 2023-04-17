@@ -339,8 +339,9 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		Labels:    models.MergeProjectVersionLabels(project.Labels, version.Labels),
 	}
 
-	annotations := map[string]string{
-		"cluster-autoscaler.kubernetes.io/safe-to-evict": fmt.Sprint(c.config.JobSafeToEvict),
+	annotations := make(map[string]string)
+	if !c.config.SafeToEvict {
+		annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = fmt.Sprint(c.config.SafeToEvict)
 	}
 
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]

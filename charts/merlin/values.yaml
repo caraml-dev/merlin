@@ -82,7 +82,7 @@ merlin:
     nodeSelectors: {}
     maxRetry: 3
     k8sConfig: ""
-    jobSafeToEvict: false
+    safeToEvict: false
 
   gitlab:
     baseURL: https://gitlab.com/

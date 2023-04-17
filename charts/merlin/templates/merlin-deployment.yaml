@@ -289,8 +289,8 @@ spec:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /etc/gcp_service_account/service-account.json
           {{- end }}
-          - name: IMG_BUILDER_JOB_SAFE_TO_EVICT
-            value: "{{ .Values.merlin.imageBuilder.jobSafeToEvict }}"
+          - name: IMG_BUILDER_SAFE_TO_EVICT
+            value: "{{ .Values.merlin.imageBuilder.safeToEvict }}"
         volumeMounts:
         - mountPath: /opt/config
           name: config
