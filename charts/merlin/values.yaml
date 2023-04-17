@@ -30,7 +30,7 @@ merlin:
 
   environment: dev
   deploymentLabelPrefix: "gojek.com/"
-  pyfuncGRPCOptions : "{}"
+  pyfuncGRPCOptions: "{}"
 
   loggerDestinationURL: "http://yourDestinationLogger"
 
@@ -82,6 +82,7 @@ merlin:
     nodeSelectors: {}
     maxRetry: 3
     k8sConfig: ""
+    jobSafeToEvict: false
 
   gitlab:
     baseURL: https://gitlab.com/
@@ -172,7 +173,7 @@ merlin:
         keepAliveTime: 60s
         keepAliveTimeout: 5s
     kafka:
-      # brokers: 
+      # brokers:
       maxMessageSize: "1048588"
 
   # Google service account used to access GCP's resources.
@@ -425,7 +426,7 @@ swagger:
     externalPort: 8080
 
 mlp:
-  environmentConfigSecret: 
+  environmentConfigSecret:
     name: ""
     envKey: environment.yaml
     imageBuilderKey: imageBuilderK8sConfig

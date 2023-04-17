@@ -144,6 +144,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
 		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
 		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
+		JobSafeToEvict:       cfg.ImageBuilderConfig.JobSafeToEvict,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
@@ -164,6 +165,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		Tolerations:          cfg.ImageBuilderConfig.Tolerations,
 		NodeSelectors:        cfg.ImageBuilderConfig.NodeSelectors,
 		MaximumRetry:         cfg.ImageBuilderConfig.MaximumRetry,
+		JobSafeToEvict:       cfg.ImageBuilderConfig.JobSafeToEvict,
 
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,

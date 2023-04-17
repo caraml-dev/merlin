@@ -197,11 +197,12 @@ type ImageBuilderConfig struct {
 	KanikoServiceAccount         string                 `envconfig:"IMG_BUILDER_KANIKO_SERVICE_ACCOUNT"`
 	Resources                    ResourceRequestsLimits `envconfig:"IMG_BUILDER_RESOURCES"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
-	Retention     time.Duration        `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
-	Tolerations   Tolerations          `envconfig:"IMG_BUILDER_TOLERATIONS"`
-	NodeSelectors DictEnv              `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
-	MaximumRetry  int32                `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
-	K8sConfig     mlpcluster.K8sConfig `envconfig:"IMG_BUILDER_K8S_CONFIG"`
+	Retention      time.Duration        `envconfig:"IMG_BUILDER_RETENTION" default:"48h"`
+	Tolerations    Tolerations          `envconfig:"IMG_BUILDER_TOLERATIONS"`
+	NodeSelectors  DictEnv              `envconfig:"IMG_BUILDER_NODE_SELECTORS"`
+	MaximumRetry   int32                `envconfig:"IMG_BUILDER_MAX_RETRY" default:"3"`
+	K8sConfig      mlpcluster.K8sConfig `envconfig:"IMG_BUILDER_K8S_CONFIG"`
+	JobSafeToEvict bool                 `envconfig:"IMG_BUILDER_JOB_SAFE_TO_EVICT" default:"false"`
 }
 
 type Tolerations []v1.Toleration

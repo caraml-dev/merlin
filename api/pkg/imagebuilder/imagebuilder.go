@@ -336,6 +336,11 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 		Component: models.ComponentImageBuilder,
 		Stream:    project.Stream,
 		Team:      project.Team,
+		Labels:    models.MergeProjectVersionLabels(project.Labels, version.Labels),
+	}
+
+	annotations := map[string]string{
+		"cluster-autoscaler.kubernetes.io/safe-to-evict": fmt.Sprint(c.config.JobSafeToEvict),
 	}
 
 	baseImageTag, ok := c.config.BaseImages[version.PythonVersion]
@@ -411,9 +416,10 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kanikoPodName,
-			Namespace: c.config.BuildNamespace,
-			Labels:    metadata.ToLabel(),
+			Name:        kanikoPodName,
+			Namespace:   c.config.BuildNamespace,
+			Labels:      metadata.ToLabel(),
+			Annotations: annotations,
 		},
 		Spec: batchv1.JobSpec{
 			Completions:             &jobCompletions,
@@ -422,7 +428,8 @@ func (c *imageBuilder) createKanikoJobSpec(project mlp.Project, model *models.Mo
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: metadata.ToLabel(),
+					Labels:      metadata.ToLabel(),
+					Annotations: annotations,
 				},
 				Spec: v1.PodSpec{
 					// https://stackoverflow.com/questions/54091659/kubernetes-pods-disappear-after-failed-jobs

@@ -76,6 +76,9 @@ var (
 		ID:            models.ID(1),
 		ArtifactURI:   testArtifactURI,
 		PythonVersion: "3.10.*",
+		Labels: models.KV{
+			"test": "true",
+		},
 	}
 
 	timeout, _      = time.ParseDuration("10s")
@@ -246,6 +249,11 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -262,6 +270,11 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 							},
 						},
 						Spec: v1.PodSpec{
@@ -346,6 +359,11 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/team":         project.Team,
 						"gojek.com/environment":  config.Environment,
 						"gojek.com/component":    "image-builder",
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -362,6 +380,11 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/team":         project.Team,
 								"gojek.com/environment":  config.Environment,
 								"gojek.com/component":    "image-builder",
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 							},
 						},
 						Spec: v1.PodSpec{
@@ -424,6 +447,11 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -440,6 +468,11 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 							},
 						},
 						Spec: v1.PodSpec{
@@ -552,6 +585,11 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -568,6 +606,11 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 							},
 						},
 						Spec: v1.PodSpec{
@@ -690,6 +733,11 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -706,6 +754,11 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 							},
 						},
 						Spec: v1.PodSpec{
@@ -822,6 +875,11 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -838,6 +896,11 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 							},
 						},
 						Spec: v1.PodSpec{
@@ -921,6 +984,11 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -937,6 +1005,11 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 							},
 						},
 						Spec: v1.PodSpec{
@@ -1023,6 +1096,11 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -1039,6 +1117,11 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 							},
 						},
 						Spec: v1.PodSpec{
@@ -1113,6 +1196,11 @@ func TestBuildImage(t *testing.T) {
 						"gojek.com/orchestrator": testOrchestratorName,
 						"gojek.com/stream":       project.Stream,
 						"gojek.com/team":         project.Team,
+						"sample":                 "true",
+						"test":                   "true",
+					},
+					Annotations: map[string]string{
+						"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 					},
 				},
 				Spec: batchv1.JobSpec{
@@ -1129,6 +1217,11 @@ func TestBuildImage(t *testing.T) {
 								"gojek.com/orchestrator": testOrchestratorName,
 								"gojek.com/stream":       project.Stream,
 								"gojek.com/team":         project.Team,
+								"sample":                 "true",
+								"test":                   "true",
+							},
+							Annotations: map[string]string{
+								"cluster-autoscaler.kubernetes.io/safe-to-evict": "false",
 							},
 						},
 						Spec: v1.PodSpec{
