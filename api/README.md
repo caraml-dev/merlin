@@ -15,7 +15,7 @@ Related repo:
 
 Requirements:
 
-- Golang 1.20
+- Golang
 - Docker
 - [Swagger Codegen 2.X](https://github.com/swagger-api/swagger-codegen)
 
