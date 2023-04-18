@@ -17,6 +17,7 @@ package config
 import (
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -34,6 +35,8 @@ type DeploymentConfig struct {
 	MaxCPU resource.Quantity
 	// Max Memory of machine
 	MaxMemory resource.Quantity
+	// TopologySpreadConstraints to be applied on the pods of each model deployment
+	TopologySpreadConstraints []corev1.TopologySpreadConstraint
 	// Percentage of knative's queue proxy resource request from the inference service resource request
 	QueueResourcePercentage string
 	// GRPC Options for Pyfunc server

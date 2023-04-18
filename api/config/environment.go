@@ -15,13 +15,16 @@
 package config
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"time"
 
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	sigyaml "sigs.k8s.io/yaml"
 )
 
 type EnvironmentConfig struct {
@@ -36,8 +39,9 @@ type EnvironmentConfig struct {
 	DeploymentTimeout time.Duration `yaml:"deployment_timeout"`
 	NamespaceTimeout  time.Duration `yaml:"namespace_timeout"`
 
-	MaxCPU    string `yaml:"max_cpu"`
-	MaxMemory string `yaml:"max_memory"`
+	MaxCPU                    string                    `yaml:"max_cpu"`
+	MaxMemory                 string                    `yaml:"max_memory"`
+	TopologySpreadConstraints TopologySpreadConstraints `yaml:"topology_spread_constraints"`
 
 	QueueResourcePercentage string `yaml:"queue_resource_percentage"`
 
@@ -45,6 +49,40 @@ type EnvironmentConfig struct {
 	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
 	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
 	K8sConfig                  *mlpcluster.K8sConfig               `yaml:"k8s_config"`
+}
+
+type TopologySpreadConstraints []corev1.TopologySpreadConstraint
+
+// UnmarshalYAML implements Unmarshal interface
+// Since TopologySpreadConstraint fields only have json tags, sigyaml.Unmarshal needs to be used
+// to unmarshal all the fields. This method reads TopologySpreadConstraint into a map[string]interface{},
+// marshals it into a byte for, before passing to sigyaml.Unmarshal
+func (t *TopologySpreadConstraints) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var kubeconfig []map[string]interface{}
+	// Unmarshal into map[string]interface{}
+	if err := unmarshal(&kubeconfig); err != nil {
+		return err
+	}
+	// convert back to byte string
+	byteForm, err := yaml.Marshal(kubeconfig)
+	if err != nil {
+		return err
+	}
+	// use sigyaml.Unmarshal to convert to json object then unmarshal
+	if err := sigyaml.Unmarshal(byteForm, t); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Decode provides topologySpreadConstraints steps to parse env var to TopologySpreadConstraints struct
+func (t *TopologySpreadConstraints) Decode(value string) error {
+	var topologySpreadConstraints TopologySpreadConstraints
+	if err := json.Unmarshal([]byte(value), &topologySpreadConstraints); err != nil {
+		return err
+	}
+	*t = topologySpreadConstraints
+	return nil
 }
 
 type PredictionJobResourceRequestConfig struct {
@@ -91,9 +129,10 @@ func ParseDeploymentConfig(cfg EnvironmentConfig, pyfuncGRPCOptions string) Depl
 			CPURequest:    resource.MustParse(cfg.DefaultTransformerConfig.CPURequest),
 			MemoryRequest: resource.MustParse(cfg.DefaultTransformerConfig.MemoryRequest),
 		},
-		MaxCPU:                  resource.MustParse(cfg.MaxCPU),
-		MaxMemory:               resource.MustParse(cfg.MaxMemory),
-		QueueResourcePercentage: cfg.QueueResourcePercentage,
-		PyfuncGRPCOptions:       pyfuncGRPCOptions,
+		MaxCPU:                    resource.MustParse(cfg.MaxCPU),
+		MaxMemory:                 resource.MustParse(cfg.MaxMemory),
+		TopologySpreadConstraints: cfg.TopologySpreadConstraints,
+		QueueResourcePercentage:   cfg.QueueResourcePercentage,
+		PyfuncGRPCOptions:         pyfuncGRPCOptions,
 	}
 }

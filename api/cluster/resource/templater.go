@@ -32,6 +32,7 @@ import (
 	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
+	"github.com/mitchellh/copystructure"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	knautoscaling "knative.dev/serving/pkg/apis/autoscaling"
@@ -128,10 +129,15 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 		Annotations: annotations,
 	}
 
+	predictorSpec, err := createPredictorSpec(modelService, config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create predictor spec: %w", err)
+	}
+
 	inferenceService := &kservev1beta1.InferenceService{
 		ObjectMeta: objectMeta,
 		Spec: kservev1beta1.InferenceServiceSpec{
-			Predictor: createPredictorSpec(modelService, config),
+			Predictor: *predictorSpec,
 		},
 	}
 
@@ -151,7 +157,11 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
 	}
 	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
-	orig.Spec.Predictor = createPredictorSpec(modelService, config)
+	predictor, err := createPredictorSpec(modelService, config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create predictor spec: %w", err)
+	}
+	orig.Spec.Predictor = *predictor
 
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
@@ -160,7 +170,10 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	return orig, nil
 }
 
-func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
+func createPredictorSpec(
+	modelService *models.Service,
+	config *config.DeploymentConfig,
+) (*kservev1beta1.PredictorSpec, error) {
 	envVars := modelService.EnvVars
 
 	// Set cpu limit and memory limit to be 2x of the requests
@@ -281,11 +294,20 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		loggerSpec = createLoggerSpec(logger.DestinationURL, *logger.Model)
 	}
 
+	topologySpreadConstraints, err := appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
+		config.TopologySpreadConstraints,
+		modelService.Name,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	predictorSpec.MinReplicas = &(modelService.ResourceRequest.MinReplica)
 	predictorSpec.MaxReplicas = modelService.ResourceRequest.MaxReplica
+	predictorSpec.TopologySpreadConstraints = topologySpreadConstraints
 	predictorSpec.Logger = loggerSpec
 
-	return predictorSpec
+	return &predictorSpec, nil
 }
 
 func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
@@ -548,6 +570,47 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kserv
 		URL:  &loggerURL,
 		Mode: loggerMode,
 	}
+}
+
+// appendPodSpreadingLabelSelectorsToTopologySpreadConstraints makes a deep copy of the config topology spread
+// constraints and then adds the given revisionName as a label to the match labels of each topology spread constraint
+// to spread out all the pods across the specified topologyKey
+func appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
+	templateTopologySpreadConstraints []corev1.TopologySpreadConstraint,
+	revisionName string,
+) ([]corev1.TopologySpreadConstraint, error) {
+	topologySpreadConstraints, err := copyTopologySpreadConstraints(templateTopologySpreadConstraints)
+	if err != nil {
+		return nil, err
+	}
+	for i := range topologySpreadConstraints {
+		if topologySpreadConstraints[i].LabelSelector == nil {
+			topologySpreadConstraints[i].LabelSelector = &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": revisionName},
+			}
+		} else {
+			if topologySpreadConstraints[i].LabelSelector.MatchLabels == nil {
+				topologySpreadConstraints[i].LabelSelector.MatchLabels = make(map[string]string)
+			}
+			topologySpreadConstraints[i].LabelSelector.MatchLabels["app"] = revisionName
+		}
+	}
+	return topologySpreadConstraints, nil
+}
+
+// copyTopologySpreadConstraints copies the topology spread constraints using the service builder's as a template
+func copyTopologySpreadConstraints(
+	topologySpreadConstraints []corev1.TopologySpreadConstraint,
+) ([]corev1.TopologySpreadConstraint, error) {
+	topologySpreadConstraintsRaw, err := copystructure.Copy(topologySpreadConstraints)
+	if err != nil {
+		return nil, fmt.Errorf("Error copying topology spread constraints: %w", err)
+	}
+	topologySpreadConstraints, ok := topologySpreadConstraintsRaw.([]corev1.TopologySpreadConstraint)
+	if !ok {
+		return nil, fmt.Errorf("Error in type assertion of copied topology spread constraints interface: %w", err)
+	}
+	return topologySpreadConstraints, nil
 }
 
 func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVars {
