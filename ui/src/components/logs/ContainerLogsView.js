@@ -145,7 +145,7 @@ export const ContainerLogsView = ({
             model_id: model.id,
             model_name: model.name,
             version_id: versionId,
-            prediction_job_id: jobId
+            prediction_job_id: jobId ? jobId : ""
           };
           const logParams = new URLSearchParams(containerQuery).toString();
           const newLogUrl = config.MERLIN_API + "/logs?" + logParams;
