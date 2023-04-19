@@ -17,8 +17,8 @@ package mlp
 import (
 	"net/http"
 
-	"github.com/gojek/mlp/api/client"
-	"github.com/gojek/mlp/api/util"
+	"github.com/caraml-dev/mlp/api/client"
+	"github.com/caraml-dev/mlp/api/util"
 )
 
 // APIClient is interface to mlp-api client.

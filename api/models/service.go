@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	mlpclient "github.com/gojek/mlp/api/client"
+	mlpclient "github.com/caraml-dev/mlp/api/client"
 
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/pkg/autoscaling"

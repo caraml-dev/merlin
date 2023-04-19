@@ -19,7 +19,7 @@ import (
 	"os"
 	"time"
 
-	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
+	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/api/resource"
 )

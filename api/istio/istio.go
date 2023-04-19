@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 
-	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
+	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	istiov1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	networkingv1beta1 "istio.io/client-go/pkg/clientset/versioned/typed/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

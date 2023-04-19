@@ -20,7 +20,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gojek/mlp/api/client"
+	"github.com/caraml-dev/mlp/api/client"
 	"github.com/stretchr/testify/assert"
 )
 

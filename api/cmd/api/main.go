@@ -33,9 +33,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 
-	"github.com/gojek/mlp/api/pkg/authz/enforcer"
-	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
-	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
+	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
+	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
+	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
 
 	"github.com/caraml-dev/merlin/api"
 	"github.com/caraml-dev/merlin/config"

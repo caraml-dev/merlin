@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gojek/mlp/api/pkg/authz/enforcer"
-	enforcerMock "github.com/gojek/mlp/api/pkg/authz/enforcer/mocks"
+	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
+	enforcerMock "github.com/caraml-dev/mlp/api/pkg/authz/enforcer/mocks"
 	"github.com/gorilla/mux"
 	mux2 "github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"

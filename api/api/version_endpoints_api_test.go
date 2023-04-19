@@ -30,7 +30,7 @@ import (
 	"github.com/caraml-dev/merlin/service/mocks"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/gojek/mlp/api/client"
+	"github.com/caraml-dev/mlp/api/client"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
