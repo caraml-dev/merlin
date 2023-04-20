@@ -241,6 +241,8 @@ github.com/c2h5oh/datasize v0.0.0-20200112174442-28bbd4740fee/go.mod h1:S/7n9cop
 github.com/caddyserver/caddy v1.0.3/go.mod h1:G+ouvOY32gENkJC+jhgl62TyhvqEsFaDiZ4uw0RzP1E=
 github.com/caraml-dev/mlp v1.7.7-0.20230419034750-0b8e501b5331 h1:z98B1NNZPcN0rNfxRSWrzbqR3M6VcorgOTHtN3bDbNU=
 github.com/caraml-dev/mlp v1.7.7-0.20230419034750-0b8e501b5331/go.mod h1:ahdKpb/SKFEyHE6817AOh0b2fyroTzJmXM8U+2BG75M=
+github.com/caraml-dev/mlp v1.7.7-0.20230420024248-2eaf397867ff h1:L3MkTdlSKgNZD3IMIrG9xInntD3/e/fQj8Ln064fH/o=
+github.com/caraml-dev/mlp v1.7.7-0.20230420024248-2eaf397867ff/go.mod h1:ahdKpb/SKFEyHE6817AOh0b2fyroTzJmXM8U+2BG75M=
 github.com/caraml-dev/protopath v0.1.0 h1:hjJ/U9RGD6QZ0Ee9SIYbVmwPugps4S5EpL6R+5ZrBe0=
 github.com/caraml-dev/protopath v0.1.0/go.mod h1:hVA2HkTrMYv+Q57gtrzu9/P7EXlNtBUcTz43z6EE010=
 github.com/caraml-dev/universal-prediction-interface v0.3.4 h1:cPytzpjXE/8RhSw3iS0JFZzNdM3tJ/l8UcHTPrxQWEo=
