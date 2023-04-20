@@ -30,7 +30,7 @@ export const useFeastApi = (
   callImmediately = true
 ) => {
   /* Use undefined for authCtx so that the authorization header passed in the options
-   * will be used instead of being overwritten. Ref: https://github.com/gojek/mlp/blob/main/ui/packages/lib/src/utils/fetchJson.js#L39*/
+   * will be used instead of being overwritten. Ref: https://github.com/caraml-dev/mlp/blob/main/ui/packages/lib/src/utils/fetchJson.js#L39*/
 
   return useApi(
     endpoint,

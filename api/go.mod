@@ -11,6 +11,7 @@ require (
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
+	github.com/caraml-dev/mlp v1.7.7-0.20230420024248-2eaf397867ff
 	github.com/caraml-dev/protopath v0.1.0
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/cespare/xxhash v1.1.0
@@ -27,7 +28,6 @@ require (
 	github.com/go-playground/validator v9.30.0+incompatible
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gogo/protobuf v1.3.2
-	github.com/gojek/mlp v1.7.6-0.20230329030735-c28dca2aeef9
 	github.com/gojekfarm/jsonpath v0.1.1
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
@@ -65,7 +65,7 @@ require (
 	go.uber.org/zap v1.21.0
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	golang.org/x/text v0.6.0
-	google.golang.org/api v0.103.0
+	google.golang.org/api v0.106.0
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
@@ -83,12 +83,12 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.105.0 // indirect
+	cloud.google.com/go v0.107.0 // indirect
 	cloud.google.com/go/compute v1.14.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.8.0 // indirect
 	cloud.google.com/go/longrunning v0.3.0 // indirect
-	cloud.google.com/go/storage v1.27.0 // indirect
+	cloud.google.com/go/storage v1.29.0 // indirect
 	contrib.go.opencensus.io/exporter/ocagent v0.7.1-0.20200907061046-05415f1de66d // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.4.0 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220804214150-8b0cc382067f // indirect
@@ -131,7 +131,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.2.1 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/googleapis/google-cloud-go-testing v0.0.0-20210719221736-1c9a4c676720 // indirect
@@ -187,7 +187,7 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	gonum.org/v1/gonum v0.9.1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230104163317-caabf589fcbf // indirect
+	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	google.golang.org/grpc/examples v0.0.0-20221026183349-3c09650e0524 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	istio.io/gogo-genproto v0.0.0-20190930162913-45029607206a // indirect

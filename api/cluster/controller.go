@@ -35,7 +35,7 @@ import (
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
-	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
+	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 )
 
 type Controller interface {

@@ -25,9 +25,9 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
-	mlpcluster "github.com/gojek/mlp/api/pkg/cluster"
-	"github.com/gojek/mlp/api/pkg/instrumentation/newrelic"
-	"github.com/gojek/mlp/api/pkg/instrumentation/sentry"
+	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
+	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
+	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
 )
 
 const (

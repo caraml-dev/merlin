@@ -30,7 +30,7 @@ import (
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/service/mocks"
-	"github.com/gojek/mlp/api/client"
+	"github.com/caraml-dev/mlp/api/client"
 )
 
 func TestList(t *testing.T) {

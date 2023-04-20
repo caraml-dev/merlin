@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gojek/mlp/api/client"
-	"github.com/gojek/mlp/api/pkg/authz/enforcer"
+	"github.com/caraml-dev/mlp/api/client"
+	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
 
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"

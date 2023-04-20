@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/caraml-dev/merlin/client"
-	"github.com/gojek/mlp/api/pkg/auth"
+	"github.com/caraml-dev/mlp/api/pkg/auth"
 )
 
 func main() {

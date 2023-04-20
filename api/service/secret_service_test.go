@@ -22,7 +22,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/gojek/mlp/api/client"
+	"github.com/caraml-dev/mlp/api/client"
 
 	"github.com/caraml-dev/merlin/mlp"
 	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
