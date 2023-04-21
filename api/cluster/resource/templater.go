@@ -129,20 +129,38 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 		Annotations: annotations,
 	}
 
-	predictorSpec, err := createPredictorSpec(modelService, config)
+	predictorSpec := createPredictorSpec(modelService, config)
+	predictorTopologySpreadConstraints, err := createNewInferenceServiceTopologySpreadConstraints(
+		modelService,
+		config,
+		kservev1beta1.PredictorComponent,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create predictor spec: %w", err)
+		return nil, fmt.Errorf("unable to create predictor topology spread constraints: %w", err)
 	}
+	predictorSpec.TopologySpreadConstraints = predictorTopologySpreadConstraints
 
 	inferenceService := &kservev1beta1.InferenceService{
 		ObjectMeta: objectMeta,
 		Spec: kservev1beta1.InferenceServiceSpec{
-			Predictor: *predictorSpec,
+			Predictor: predictorSpec,
 		},
 	}
 
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		inferenceService.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		inferenceService.Spec.Transformer, err = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
+		}
+		transformerTopologySpreadConstraints, err := createNewInferenceServiceTopologySpreadConstraints(
+			modelService,
+			config,
+			kservev1beta1.TransformerComponent,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
+		}
+		inferenceService.Spec.Transformer.TopologySpreadConstraints = transformerTopologySpreadConstraints
 	}
 
 	return inferenceService, nil
@@ -157,27 +175,37 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
 	}
 	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
-	predictor, err := createPredictorSpec(modelService, config)
+	predictor := createPredictorSpec(modelService, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create predictor spec: %w", err)
 	}
 
-	newRevisionName, err := getNewRevisionNameForExistingInferenceService(
-		orig.Status.Components[kservev1beta1.PredictorComponent].LatestRolledoutRevision,
+	predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
+		orig,
+		config,
+		kservev1beta1.PredictorComponent,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to generate new revision name: %w", err)
+		return nil, fmt.Errorf("unable to create predictor topology spread constraints: %w", err)
 	}
-	predictor.TopologySpreadConstraints, err = appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
-		config.TopologySpreadConstraints,
-		newRevisionName,
-	)
 
-	orig.Spec.Predictor = *predictor
+	orig.Spec.Predictor = predictor
 
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		orig.Spec.Transformer, err = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
+		}
+		transformerTopologySpreadConstraints, err := updateExistingInferenceServiceTopologySpreadConstraints(
+			orig,
+			config,
+			kservev1beta1.TransformerComponent,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
+		}
+		orig.Spec.Transformer.TopologySpreadConstraints = transformerTopologySpreadConstraints
 	}
 	return orig, nil
 }
@@ -185,7 +213,7 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 func createPredictorSpec(
 	modelService *models.Service,
 	config *config.DeploymentConfig,
-) (*kservev1beta1.PredictorSpec, error) {
+) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
 	// Set cpu limit and memory limit to be 2x of the requests
@@ -306,29 +334,18 @@ func createPredictorSpec(
 		loggerSpec = createLoggerSpec(logger.DestinationURL, *logger.Model)
 	}
 
-	var newRevisionName string
-	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s-predictor-default", modelService.Name, modelService.ModelVersion)
-	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
-		newRevisionName = fmt.Sprintf("%s-%s-predictor-default-00001", modelService.Name, modelService.ModelVersion)
-	}
-	topologySpreadConstraints, err := appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
-		config.TopologySpreadConstraints,
-		newRevisionName,
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	predictorSpec.MinReplicas = &(modelService.ResourceRequest.MinReplica)
 	predictorSpec.MaxReplicas = modelService.ResourceRequest.MaxReplica
-	predictorSpec.TopologySpreadConstraints = topologySpreadConstraints
 	predictorSpec.Logger = loggerSpec
 
-	return &predictorSpec, nil
+	return predictorSpec
 }
 
-func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
+func (t *InferenceServiceTemplater) createTransformerSpec(
+	modelService *models.Service,
+	transformer *models.Transformer,
+	config *config.DeploymentConfig,
+) (*kservev1beta1.TransformerSpec, error) {
 	// Set cpu limit and memory limit to be 2x of the requests
 	cpuLimit := transformer.ResourceRequest.CPURequest.DeepCopy()
 	cpuLimit.Add(transformer.ResourceRequest.CPURequest)
@@ -377,6 +394,21 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
+
+	var newRevisionName string
+	if modelService.DeploymentMode == deployment.RawDeploymentMode {
+		newRevisionName = fmt.Sprintf("isvc.%s-%s-transformer-default", modelService.Name, modelService.ModelVersion)
+	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
+		newRevisionName = fmt.Sprintf("%s-%s-transformer-default-00001", modelService.Name, modelService.ModelVersion)
+	}
+	topologySpreadConstraints, err := appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
+		config.TopologySpreadConstraints,
+		newRevisionName,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	transformerSpec := &kservev1beta1.TransformerSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
@@ -400,6 +432,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 					Ports:         containerPorts,
 				},
 			},
+			TopologySpreadConstraints: topologySpreadConstraints,
 		},
 		ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 			MinReplicas: &(transformer.ResourceRequest.MinReplica),
@@ -408,7 +441,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.S
 		},
 	}
 
-	return transformerSpec
+	return transformerSpec, nil
 }
 
 func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelService *models.Service, envVars models.EnvVars) models.EnvVars {
@@ -588,6 +621,44 @@ func createLoggerSpec(loggerURL string, loggerConfig models.LoggerConfig) *kserv
 		URL:  &loggerURL,
 		Mode: loggerMode,
 	}
+}
+
+// createNewInferenceServiceTopologySpreadConstraints creates topology spread constrains for a component of a new
+// inference service
+func createNewInferenceServiceTopologySpreadConstraints(
+	modelService *models.Service,
+	config *config.DeploymentConfig,
+	component kservev1beta1.ComponentType,
+) ([]corev1.TopologySpreadConstraint, error) {
+	var newRevisionName string
+	if modelService.DeploymentMode == deployment.RawDeploymentMode {
+		newRevisionName = fmt.Sprintf("isvc.%s-%s-%s-default", modelService.Name, modelService.ModelVersion, component)
+	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
+		newRevisionName = fmt.Sprintf("%s-%s-%s-default-00001", modelService.Name, modelService.ModelVersion, component)
+	}
+	return appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
+		config.TopologySpreadConstraints,
+		newRevisionName,
+	)
+}
+
+// updateExistingInferenceServiceTopologySpreadConstraints creates topology spread constraints for a component of a new
+// inference service
+func updateExistingInferenceServiceTopologySpreadConstraints(
+	orig *kservev1beta1.InferenceService,
+	config *config.DeploymentConfig,
+	component kservev1beta1.ComponentType,
+) ([]corev1.TopologySpreadConstraint, error) {
+	newRevisionName, err := getNewRevisionNameForExistingInferenceService(
+		orig.Status.Components[component].LatestRolledoutRevision,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to generate new revision name: %w", err)
+	}
+	return appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
+		config.TopologySpreadConstraints,
+		newRevisionName,
+	)
 }
 
 // appendPodSpreadingLabelSelectorsToTopologySpreadConstraints makes a deep copy of the config topology spread
