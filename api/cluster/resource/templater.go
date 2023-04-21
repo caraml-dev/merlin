@@ -204,10 +204,7 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	return orig, nil
 }
 
-func createPredictorSpec(
-	modelService *models.Service,
-	config *config.DeploymentConfig,
-) kservev1beta1.PredictorSpec {
+func createPredictorSpec(modelService *models.Service, config *config.DeploymentConfig) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
 	// Set cpu limit and memory limit to be 2x of the requests
@@ -335,11 +332,7 @@ func createPredictorSpec(
 	return predictorSpec
 }
 
-func (t *InferenceServiceTemplater) createTransformerSpec(
-	modelService *models.Service,
-	transformer *models.Transformer,
-	config *config.DeploymentConfig,
-) *kservev1beta1.TransformerSpec {
+func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
 	// Set cpu limit and memory limit to be 2x of the requests
 	cpuLimit := transformer.ResourceRequest.CPURequest.DeepCopy()
 	cpuLimit.Add(transformer.ResourceRequest.CPURequest)
