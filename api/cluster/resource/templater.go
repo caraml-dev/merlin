@@ -130,7 +130,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	}
 
 	predictorSpec := createPredictorSpec(modelService, config)
-	predictorTopologySpreadConstraints, err := createNewInferenceServiceTopologySpreadConstraints(
+	predictorSpec.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
 		modelService,
 		config,
 		kservev1beta1.PredictorComponent,
@@ -138,7 +138,6 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	if err != nil {
 		return nil, fmt.Errorf("unable to create predictor topology spread constraints: %w", err)
 	}
-	predictorSpec.TopologySpreadConstraints = predictorTopologySpreadConstraints
 
 	inferenceService := &kservev1beta1.InferenceService{
 		ObjectMeta: objectMeta,
@@ -152,7 +151,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
 		}
-		transformerTopologySpreadConstraints, err := createNewInferenceServiceTopologySpreadConstraints(
+		inferenceService.Spec.Transformer.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
 			modelService,
 			config,
 			kservev1beta1.TransformerComponent,
@@ -160,7 +159,6 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
 		}
-		inferenceService.Spec.Transformer.TopologySpreadConstraints = transformerTopologySpreadConstraints
 	}
 
 	return inferenceService, nil
@@ -175,12 +173,11 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
 	}
 	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
-	predictor := createPredictorSpec(modelService, config)
+	orig.Spec.Predictor = createPredictorSpec(modelService, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create predictor spec: %w", err)
 	}
-
-	predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
+	orig.Spec.Predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
 		orig,
 		config,
 		kservev1beta1.PredictorComponent,
@@ -189,15 +186,13 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 		return nil, fmt.Errorf("unable to create predictor topology spread constraints: %w", err)
 	}
 
-	orig.Spec.Predictor = predictor
-
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
 		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
 		}
-		transformerTopologySpreadConstraints, err := updateExistingInferenceServiceTopologySpreadConstraints(
+		orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
 			orig,
 			config,
 			kservev1beta1.TransformerComponent,
@@ -205,7 +200,6 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
 		}
-		orig.Spec.Transformer.TopologySpreadConstraints = transformerTopologySpreadConstraints
 	}
 	return orig, nil
 }
