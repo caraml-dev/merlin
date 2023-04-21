@@ -601,11 +601,17 @@ func createNewInferenceServiceTopologySpreadConstraints(
 	config *config.DeploymentConfig,
 	component kservev1beta1.ComponentType,
 ) ([]corev1.TopologySpreadConstraint, error) {
+	if len(config.TopologySpreadConstraints) == 0 {
+		return nil, nil
+	}
 	var newRevisionName string
 	if modelService.DeploymentMode == deployment.RawDeploymentMode {
 		newRevisionName = fmt.Sprintf("isvc.%s-%s-%s-default", modelService.Name, modelService.ModelVersion, component)
-	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
+	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
+		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
 		newRevisionName = fmt.Sprintf("%s-%s-%s-default-00001", modelService.Name, modelService.ModelVersion, component)
+	} else {
+		return nil, fmt.Errorf("invalid deployment mode: %s", modelService.DeploymentMode)
 	}
 	return appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
 		config.TopologySpreadConstraints,
@@ -620,8 +626,11 @@ func updateExistingInferenceServiceTopologySpreadConstraints(
 	config *config.DeploymentConfig,
 	component kservev1beta1.ComponentType,
 ) ([]corev1.TopologySpreadConstraint, error) {
+	if len(config.TopologySpreadConstraints) == 0 {
+		return nil, nil
+	}
 	newRevisionName, err := getNewRevisionNameForExistingInferenceService(
-		orig.Status.Components[component].LatestRolledoutRevision,
+		orig.Status.Components[component].LatestReadyRevision,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate new revision name: %w", err)
