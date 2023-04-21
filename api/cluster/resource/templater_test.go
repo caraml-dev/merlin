@@ -3599,7 +3599,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			got := tpl.createTransformerSpec(tt.args.modelService, tt.args.transformer, tt.args.config)
+			got := tpl.createTransformerSpec(tt.args.modelService, tt.args.transformer)
 			assert.Equal(t, tt.want, got)
 		})
 	}

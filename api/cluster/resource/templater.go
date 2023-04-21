@@ -147,7 +147,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	}
 
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		inferenceService.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		inferenceService.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
 		}
@@ -188,7 +188,7 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
 		}
@@ -332,7 +332,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	return predictorSpec
 }
 
-func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer, config *config.DeploymentConfig) *kservev1beta1.TransformerSpec {
+func (t *InferenceServiceTemplater) createTransformerSpec(modelService *models.Service, transformer *models.Transformer) *kservev1beta1.TransformerSpec {
 	// Set cpu limit and memory limit to be 2x of the requests
 	cpuLimit := transformer.ResourceRequest.CPURequest.DeepCopy()
 	cpuLimit.Add(transformer.ResourceRequest.CPURequest)
