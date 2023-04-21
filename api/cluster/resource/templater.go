@@ -148,7 +148,7 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	}
 
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		inferenceService.Spec.Transformer, err = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		inferenceService.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
 		}
@@ -193,7 +193,7 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
-		orig.Spec.Transformer, err = t.createTransformerSpec(modelService, modelService.Transformer, config)
+		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer, config)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
 		}
@@ -345,7 +345,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	modelService *models.Service,
 	transformer *models.Transformer,
 	config *config.DeploymentConfig,
-) (*kservev1beta1.TransformerSpec, error) {
+) *kservev1beta1.TransformerSpec {
 	// Set cpu limit and memory limit to be 2x of the requests
 	cpuLimit := transformer.ResourceRequest.CPURequest.DeepCopy()
 	cpuLimit.Add(transformer.ResourceRequest.CPURequest)
@@ -394,21 +394,6 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
-
-	var newRevisionName string
-	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s-transformer-default", modelService.Name, modelService.ModelVersion)
-	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
-		newRevisionName = fmt.Sprintf("%s-%s-transformer-default-00001", modelService.Name, modelService.ModelVersion)
-	}
-	topologySpreadConstraints, err := appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
-		config.TopologySpreadConstraints,
-		newRevisionName,
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	transformerSpec := &kservev1beta1.TransformerSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
@@ -432,7 +417,6 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 					Ports:         containerPorts,
 				},
 			},
-			TopologySpreadConstraints: topologySpreadConstraints,
 		},
 		ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 			MinReplicas: &(transformer.ResourceRequest.MinReplica),
@@ -441,7 +425,7 @@ func (t *InferenceServiceTemplater) createTransformerSpec(
 		},
 	}
 
-	return transformerSpec, nil
+	return transformerSpec
 }
 
 func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelService *models.Service, envVars models.EnvVars) models.EnvVars {
