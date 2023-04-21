@@ -161,6 +161,18 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	if err != nil {
 		return nil, fmt.Errorf("unable to create predictor spec: %w", err)
 	}
+
+	newRevisionName, err := getNewRevisionNameForExistingInferenceService(
+		orig.Status.Components[kservev1beta1.PredictorComponent].LatestRolledoutRevision,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to generate new revision name: %w", err)
+	}
+	predictor.TopologySpreadConstraints, err = appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
+		config.TopologySpreadConstraints,
+		newRevisionName,
+	)
+
 	orig.Spec.Predictor = *predictor
 
 	orig.Spec.Transformer = nil
@@ -294,9 +306,15 @@ func createPredictorSpec(
 		loggerSpec = createLoggerSpec(logger.DestinationURL, *logger.Model)
 	}
 
+	var newRevisionName string
+	if modelService.DeploymentMode == deployment.RawDeploymentMode {
+		newRevisionName = fmt.Sprintf("isvc.%s-%s-predictor-default", modelService.Name, modelService.ModelVersion)
+	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
+		newRevisionName = fmt.Sprintf("%s-%s-predictor-default-00001", modelService.Name, modelService.ModelVersion)
+	}
 	topologySpreadConstraints, err := appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
 		config.TopologySpreadConstraints,
-		modelService.Name,
+		newRevisionName,
 	)
 	if err != nil {
 		return nil, err
@@ -611,6 +629,20 @@ func copyTopologySpreadConstraints(
 		return nil, fmt.Errorf("Error in type assertion of copied topology spread constraints interface: %w", err)
 	}
 	return topologySpreadConstraints, nil
+}
+
+// getNewRevisionNameForExistingInferenceService examines the current revision name of an inference service (
+// serverless deployment) app name that is given to it and increments the last value of the revision number by 1, e.g.
+// sklearn-sample-predictor-default-00001 -> sklearn-sample-predictor-default-00002
+func getNewRevisionNameForExistingInferenceService(currentRevisionName string) (string, error) {
+	revisionNameElements := strings.Split(currentRevisionName, "-")
+	currentRevisionNumber, err := strconv.Atoi(revisionNameElements[len(revisionNameElements)-1])
+	if err != nil {
+		return "", err
+	}
+
+	revisionNameElements[len(revisionNameElements)-1] = fmt.Sprintf("%05d", currentRevisionNumber+1)
+	return strings.Join(revisionNameElements, "-"), nil
 }
 
 func createDefaultTransformerEnvVars(modelService *models.Service) models.EnvVars {

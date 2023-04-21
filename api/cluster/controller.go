@@ -149,7 +149,7 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 
 	isvcName := modelService.Name
 	s, err := k.servingClient.InferenceServices(modelService.Namespace).Get(isvcName, metav1.GetOptions{})
-	if err != nil {
+	if err != nil { // service to deploy is either a new inference service or a new or existing raw deployment
 		if !kerrors.IsNotFound(err) {
 			log.Errorf("unable to check inference service %s %v", isvcName, err)
 			return nil, ErrUnableToGetInferenceServiceStatus
@@ -167,7 +167,7 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			log.Errorf("unable to create inference service %s %v", isvcName, err)
 			return nil, ErrUnableToCreateInferenceService
 		}
-	} else {
+	} else { // service to deploy is an inference service to be updated
 		patchedSpec, err := k.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, k.deploymentConfig)
 		if err != nil {
 			log.Errorf("unable to update inference service %s %v", isvcName, err)
