@@ -179,6 +179,7 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	}
 	orig.Spec.Predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
 		orig,
+		modelService,
 		config,
 		kservev1beta1.PredictorComponent,
 	)
@@ -194,6 +195,7 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 		}
 		orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
 			orig,
+			modelService,
 			config,
 			kservev1beta1.TransformerComponent,
 		)
@@ -624,6 +626,7 @@ func createNewInferenceServiceTopologySpreadConstraints(
 // inference service
 func updateExistingInferenceServiceTopologySpreadConstraints(
 	orig *kservev1beta1.InferenceService,
+	modelService *models.Service,
 	config *config.DeploymentConfig,
 	component kservev1beta1.ComponentType,
 ) ([]corev1.TopologySpreadConstraint, error) {
@@ -631,11 +634,20 @@ func updateExistingInferenceServiceTopologySpreadConstraints(
 		var topologySpreadConstraints []corev1.TopologySpreadConstraint
 		return topologySpreadConstraints, nil
 	}
-	newRevisionName, err := getNewRevisionNameForExistingInferenceService(
-		orig.Status.Components[component].LatestReadyRevision,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("unable to generate new revision name: %w", err)
+	var newRevisionName string
+	if modelService.DeploymentMode == deployment.RawDeploymentMode {
+		newRevisionName = fmt.Sprintf("isvc.%s-%s-%s-default", modelService.Name, modelService.ModelVersion, component)
+	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
+		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
+		var err error
+		newRevisionName, err = getNewRevisionNameForExistingSeverlessDeployment(
+			orig.Status.Components[component].LatestReadyRevision,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("unable to generate new revision name: %w", err)
+		}
+	} else {
+		return nil, fmt.Errorf("invalid deployment mode: %s", modelService.DeploymentMode)
 	}
 	return appendPodSpreadingLabelSelectorsToTopologySpreadConstraints(
 		config.TopologySpreadConstraints,
@@ -684,10 +696,10 @@ func copyTopologySpreadConstraints(
 	return topologySpreadConstraints, nil
 }
 
-// getNewRevisionNameForExistingInferenceService examines the current revision name of an inference service (
+// getNewRevisionNameForExistingSeverlessDeployment examines the current revision name of an inference service (
 // serverless deployment) app name that is given to it and increments the last value of the revision number by 1, e.g.
 // sklearn-sample-predictor-default-00001 -> sklearn-sample-predictor-default-00002
-func getNewRevisionNameForExistingInferenceService(currentRevisionName string) (string, error) {
+func getNewRevisionNameForExistingSeverlessDeployment(currentRevisionName string) (string, error) {
 	revisionNameElements := strings.Split(currentRevisionName, "-")
 	currentRevisionNumber, err := strconv.Atoi(revisionNameElements[len(revisionNameElements)-1])
 	if err != nil {
