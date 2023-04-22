@@ -602,7 +602,8 @@ func createNewInferenceServiceTopologySpreadConstraints(
 	component kservev1beta1.ComponentType,
 ) ([]corev1.TopologySpreadConstraint, error) {
 	if len(config.TopologySpreadConstraints) == 0 {
-		return nil, nil
+		var topologySpreadConstraints []corev1.TopologySpreadConstraint
+		return topologySpreadConstraints, nil
 	}
 	var newRevisionName string
 	if modelService.DeploymentMode == deployment.RawDeploymentMode {
@@ -627,7 +628,8 @@ func updateExistingInferenceServiceTopologySpreadConstraints(
 	component kservev1beta1.ComponentType,
 ) ([]corev1.TopologySpreadConstraint, error) {
 	if len(config.TopologySpreadConstraints) == 0 {
-		return nil, nil
+		var topologySpreadConstraints []corev1.TopologySpreadConstraint
+		return topologySpreadConstraints, nil
 	}
 	newRevisionName, err := getNewRevisionNameForExistingInferenceService(
 		orig.Status.Components[component].LatestReadyRevision,
