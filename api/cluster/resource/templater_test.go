@@ -2835,7 +2835,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00001",
+											"app": "model-1-predictor-default-00001",
 										},
 									},
 								},
@@ -2845,7 +2845,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00001",
+											"app": "model-1-predictor-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -2863,7 +2863,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-predictor-default-00001",
+											"app":       "model-1-predictor-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -2937,7 +2937,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00001",
+											"app": "model-1-predictor-default-00001",
 										},
 									},
 								},
@@ -2947,7 +2947,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00001",
+											"app": "model-1-predictor-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -2965,7 +2965,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-predictor-default-00001",
+											"app":       "model-1-predictor-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3039,7 +3039,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-predictor-default",
+											"app": "isvc.model-1-predictor-default",
 										},
 									},
 								},
@@ -3049,7 +3049,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-predictor-default",
+											"app": "isvc.model-1-predictor-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3067,7 +3067,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "isvc.model-1-1-predictor-default",
+											"app":       "isvc.model-1-predictor-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3146,7 +3146,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00001",
+											"app": "model-1-predictor-default-00001",
 										},
 									},
 								},
@@ -3156,7 +3156,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00001",
+											"app": "model-1-predictor-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3174,7 +3174,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-predictor-default-00001",
+											"app":       "model-1-predictor-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3208,7 +3208,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-transformer-default-00001",
+											"app": "model-1-transformer-default-00001",
 										},
 									},
 								},
@@ -3218,7 +3218,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-transformer-default-00001",
+											"app": "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3236,7 +3236,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-transformer-default-00001",
+											"app":       "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3320,7 +3320,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00001",
+											"app": "model-1-predictor-default-00001",
 										},
 									},
 								},
@@ -3330,7 +3330,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00001",
+											"app": "model-1-predictor-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3348,7 +3348,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-predictor-default-00001",
+											"app":       "model-1-predictor-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3382,7 +3382,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-transformer-default-00001",
+											"app": "model-1-transformer-default-00001",
 										},
 									},
 								},
@@ -3392,7 +3392,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-transformer-default-00001",
+											"app": "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3410,7 +3410,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-transformer-default-00001",
+											"app":       "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3494,7 +3494,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-predictor-default",
+											"app": "isvc.model-1-predictor-default",
 										},
 									},
 								},
@@ -3504,7 +3504,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-predictor-default",
+											"app": "isvc.model-1-predictor-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3522,7 +3522,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "isvc.model-1-1-predictor-default",
+											"app":       "isvc.model-1-predictor-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3556,7 +3556,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-transformer-default",
+											"app": "isvc.model-1-transformer-default",
 										},
 									},
 								},
@@ -3566,7 +3566,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-transformer-default",
+											"app": "isvc.model-1-transformer-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -3584,7 +3584,7 @@ func TestCreateInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "isvc.model-1-1-transformer-default",
+											"app":       "isvc.model-1-transformer-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -4478,8 +4478,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-predictor-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -4527,7 +4526,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00002",
+											"app": "model-1-predictor-default-00002",
 										},
 									},
 								},
@@ -4537,7 +4536,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00002",
+											"app": "model-1-predictor-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -4555,7 +4554,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-predictor-default-00002",
+											"app":       "model-1-predictor-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -4573,8 +4572,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-predictor-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -4625,8 +4623,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-predictor-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -4674,7 +4671,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00002",
+											"app": "model-1-predictor-default-00002",
 										},
 									},
 								},
@@ -4684,7 +4681,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00002",
+											"app": "model-1-predictor-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -4702,7 +4699,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-predictor-default-00002",
+											"app":       "model-1-predictor-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -4720,8 +4717,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-predictor-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -4813,7 +4809,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-predictor-default",
+											"app": "isvc.model-1-predictor-default",
 										},
 									},
 								},
@@ -4823,7 +4819,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-predictor-default",
+											"app": "isvc.model-1-predictor-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -4841,7 +4837,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "isvc.model-1-1-predictor-default",
+											"app":       "isvc.model-1-predictor-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -4914,12 +4910,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-predictor-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 						kservev1beta1.TransformerComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-transformer-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -4967,7 +4961,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00002",
+											"app": "model-1-predictor-default-00002",
 										},
 									},
 								},
@@ -4977,7 +4971,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00002",
+											"app": "model-1-predictor-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -4995,7 +4989,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-predictor-default-00002",
+											"app":       "model-1-predictor-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5038,7 +5032,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00002",
 										},
 									},
 								},
@@ -5048,7 +5042,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5066,7 +5060,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-transformer-default-00002",
+											"app":       "model-1-transformer-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5088,12 +5082,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-predictor-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 						kservev1beta1.TransformerComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-transformer-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -5156,12 +5148,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-predictor-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 						kservev1beta1.TransformerComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-transformer-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -5209,7 +5199,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00002",
+											"app": "model-1-predictor-default-00002",
 										},
 									},
 								},
@@ -5219,7 +5209,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-predictor-default-00002",
+											"app": "model-1-predictor-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5237,7 +5227,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-predictor-default-00002",
+											"app":       "model-1-predictor-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5280,7 +5270,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00002",
 										},
 									},
 								},
@@ -5290,7 +5280,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5308,7 +5298,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-1-transformer-default-00002",
+											"app":       "model-1-transformer-default-00002",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5330,12 +5320,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-predictor-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 						kservev1beta1.TransformerComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-%s-transformer-default-00001", modelSvc.Name,
-								modelSvc.ModelVersion),
+							LatestReadyRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -5439,7 +5427,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-predictor-default",
+											"app": "isvc.model-1-predictor-default",
 										},
 									},
 								},
@@ -5449,7 +5437,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-predictor-default",
+											"app": "isvc.model-1-predictor-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5467,7 +5455,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "isvc.model-1-1-predictor-default",
+											"app":       "isvc.model-1-predictor-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5510,7 +5498,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-transformer-default",
+											"app": "isvc.model-1-transformer-default",
 										},
 									},
 								},
@@ -5520,7 +5508,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "isvc.model-1-1-transformer-default",
+											"app": "isvc.model-1-transformer-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5538,7 +5526,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "isvc.model-1-1-transformer-default",
+											"app":       "isvc.model-1-transformer-default",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{

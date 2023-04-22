@@ -609,10 +609,10 @@ func createNewInferenceServiceTopologySpreadConstraints(
 	}
 	var newRevisionName string
 	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s-%s-default", modelService.Name, modelService.ModelVersion, component)
+		newRevisionName = fmt.Sprintf("isvc.%s-%s-default", modelService.Name, component)
 	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-		newRevisionName = fmt.Sprintf("%s-%s-%s-default-00001", modelService.Name, modelService.ModelVersion, component)
+		newRevisionName = fmt.Sprintf("%s-%s-default-00001", modelService.Name, component)
 	} else {
 		return nil, fmt.Errorf("invalid deployment mode: %s", modelService.DeploymentMode)
 	}
@@ -636,7 +636,7 @@ func updateExistingInferenceServiceTopologySpreadConstraints(
 	}
 	var newRevisionName string
 	if modelService.DeploymentMode == deployment.RawDeploymentMode {
-		newRevisionName = fmt.Sprintf("isvc.%s-%s-%s-default", modelService.Name, modelService.ModelVersion, component)
+		newRevisionName = fmt.Sprintf("isvc.%s-%s-default", modelService.Name, component)
 	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
 		var err error
