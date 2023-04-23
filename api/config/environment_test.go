@@ -15,6 +15,12 @@ func TestUnmarshalTopologySpreadConstraints(t *testing.T) {
 		exp       TopologySpreadConstraints
 		errString string
 	}{
+		"invalid config schema": {
+			input: `- maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway`,
+			errString: "yaml: line 3: mapping values are not allowed in this context",
+		},
 		"valid configs": {
 			input: `- maxSkew: 1
   topologyKey: kubernetes.io/hostname
@@ -47,12 +53,8 @@ func TestUnmarshalTopologySpreadConstraints(t *testing.T) {
 					TopologyKey:       "kubernetes.io/hostname",
 					WhenUnsatisfiable: corev1.DoNotSchedule,
 					LabelSelector: &metav1.LabelSelector{
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{
-								Key:      "app-expression",
-								Operator: metav1.LabelSelectorOpIn,
-								Values:   []string{"1"},
-							},
+						MatchLabels: map[string]string{
+							"app-label": "spread",
 						},
 					},
 				},
@@ -79,15 +81,16 @@ func TestUnmarshalTopologySpreadConstraints(t *testing.T) {
 
 	for testName, tC := range testCases {
 		t.Run(testName, func(t *testing.T) {
-			var configs TopologySpreadConstraints
+			var topologySpreadConstraints TopologySpreadConstraints
 			inputByte := []byte(tC.input)
-			err := yaml.Unmarshal(inputByte, &configs)
+			err := yaml.Unmarshal(inputByte, &topologySpreadConstraints)
 
 			if tC.errString == "" {
 				assert.NoError(t, err)
-				assert.Equal(t, tC.exp, configs)
+				assert.Equal(t, tC.exp, topologySpreadConstraints)
 			} else {
 				assert.EqualError(t, err, tC.errString)
+				assert.Nil(t, topologySpreadConstraints)
 			}
 		})
 	}
