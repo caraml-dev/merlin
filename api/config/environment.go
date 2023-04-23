@@ -58,13 +58,13 @@ type TopologySpreadConstraints []corev1.TopologySpreadConstraint
 // to unmarshal all the fields. This method reads TopologySpreadConstraint into a map[string]interface{},
 // marshals it into a byte for, before passing to sigyaml.Unmarshal
 func (t *TopologySpreadConstraints) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var kubeconfig []map[string]interface{}
+	var topologySpreadConstraints []map[string]interface{}
 	// Unmarshal into map[string]interface{}
-	if err := unmarshal(&kubeconfig); err != nil {
+	if err := unmarshal(&topologySpreadConstraints); err != nil {
 		return err
 	}
 	// convert back to byte string
-	byteForm, err := yaml.Marshal(kubeconfig)
+	byteForm, err := yaml.Marshal(topologySpreadConstraints)
 	if err != nil {
 		return err
 	}
