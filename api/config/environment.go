@@ -15,7 +15,6 @@
 package config
 
 import (
-	"encoding/json"
 	"log"
 	"os"
 	"time"
@@ -72,16 +71,6 @@ func (t *TopologySpreadConstraints) UnmarshalYAML(unmarshal func(interface{}) er
 	if err := sigyaml.Unmarshal(byteForm, t); err != nil {
 		return err
 	}
-	return nil
-}
-
-// Decode provides topologySpreadConstraints steps to parse env var to TopologySpreadConstraints struct
-func (t *TopologySpreadConstraints) Decode(value string) error {
-	var topologySpreadConstraints TopologySpreadConstraints
-	if err := json.Unmarshal([]byte(value), &topologySpreadConstraints); err != nil {
-		return err
-	}
-	*t = topologySpreadConstraints
 	return nil
 }
 
