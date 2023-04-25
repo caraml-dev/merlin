@@ -15,7 +15,7 @@
  */
 
 import React, { Fragment, useState } from "react";
-import { Link } from "@reach/router";
+import { Link } from "react-router-dom";
 import {
   EuiBadge,
   EuiCallOut,

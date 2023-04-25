@@ -21,13 +21,14 @@ import {
   EuiPanel,
   EuiSpacer
 } from "@elastic/eui";
+import { useParams } from "react-router-dom";
 import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import mocks from "../mocks";
 import JobListTable from "../job/JobListTable";
-import PropTypes from "prop-types";
 
-const Jobs = ({ projectId, modelId }) => {
+const Jobs = () => {
+  const { projectId, modelId } = useParams();
   const createJobURL = `/merlin/projects/${projectId}/models/${modelId}/create-job`;
 
   const [{ data, isLoaded, error }] = useMerlinApi(
@@ -86,11 +87,6 @@ const Jobs = ({ projectId, modelId }) => {
       <EuiSpacer size="l" />
     </EuiPageTemplate>
   );
-};
-
-Jobs.propTypes = {
-  projectId: PropTypes.string,
-  modelId: PropTypes.string
 };
 
 export default Jobs;

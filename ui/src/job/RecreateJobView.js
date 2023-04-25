@@ -15,6 +15,7 @@
  */
 
 import React from "react";
+import { useParams } from "react-router-dom";
 import { JobFormContextProvider } from "./form/context";
 import { JobForm } from "./form/JobForm";
 import { Job } from "./job";
@@ -25,9 +26,9 @@ import {
   EuiSpacer,
   EuiTextAlign
 } from "@elastic/eui";
-import PropTypes from "prop-types";
 
-const RecreateJobView = ({ projectId, modelId, versionId, jobId }) => {
+const RecreateJobView = () => {
+  const { projectId, modelId, versionId, jobId } = useParams();
   const [{ data, isLoaded, error }] = useMerlinApi(
     `models/${modelId}/versions/${versionId}/jobs/${jobId}`,
     {},
@@ -56,13 +57,6 @@ const RecreateJobView = ({ projectId, modelId, versionId, jobId }) => {
       />
     </JobFormContextProvider>
   );
-};
-
-RecreateJobView.propTypes = {
-  projectId: PropTypes.string,
-  modelId: PropTypes.string,
-  versionId: PropTypes.string,
-  jobId: PropTypes.string
 };
 
 export default RecreateJobView;

@@ -16,7 +16,7 @@
 
 import React, { Fragment, useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import {
   EuiSuperSelect,
   EuiText,
@@ -51,6 +51,7 @@ const EnvironmentDropdownOption = ({ environment, endpoint, disabled }) => {
 };
 
 export const EnvironmentDropdown = ({ version, selected, environments }) => {
+  const navigate = useNavigate();
   const [environmentOptions, setEnvironmentOptions] = useState([]);
 
   useEffect(() => {

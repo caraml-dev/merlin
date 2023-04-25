@@ -15,7 +15,7 @@
  */
 
 import React, { Fragment, useEffect, useState } from "react";
-import { Link, Router } from "@reach/router";
+import { Link, Route, Routes, useParams } from "react-router-dom";
 import {
   EuiButton,
   EuiEmptyPrompt,
@@ -39,19 +39,9 @@ import { VersionTabNavigation } from "./VersionTabNavigation";
 /**
  * VersionDetails page containing detailed information of a model version.
  * In this page users can also manage all deployed endpoint created from the model version.
- *
- * @param {*} projectId Project ID
- * @param {*} modelId Model ID
- * @param {*} versionId Model version ID
- * @param {*} endpointId(optional) ID of the endpoint that will be openened when opening the page.
  */
-const VersionDetails = ({
-  projectId,
-  modelId,
-  versionId,
-  endpointId,
-  ...props
-}) => {
+const VersionDetails = () => {
+  const { projectId, modelId, versionId, endpointId, "*": section } = useParams();
   const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
@@ -139,7 +129,7 @@ const VersionDetails = ({
 
             <EuiPageTemplate.Section color={"transparent"}>
               <EuiSpacer size="l" />
-              {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+              {!(section === "deploy" || section === "redeploy") &&
                 model &&
                 modelLoaded &&
                 version &&
@@ -150,7 +140,7 @@ const VersionDetails = ({
                   </Fragment>
               )}
 
-              {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+              {!(section === "deploy" || section === "redeploy") &&
                 model &&
                 modelLoaded &&
                 version &&
@@ -168,16 +158,16 @@ const VersionDetails = ({
                   </Fragment>
               )}
 
-            {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+            {!(section === "deploy" || section === "redeploy") &&
               endpoint &&
               isDeployed && (
                 <Fragment>
-                  <VersionTabNavigation endpoint={endpoint} {...props} />
+                  <VersionTabNavigation endpoint={endpoint} selectedTab={section} />
                   <EuiSpacer size="m" />
                 </Fragment>
               )}
 
-            {!(props["*"] === "deploy" || props["*"] === "redeploy") &&
+            {!(section === "deploy" || section === "redeploy") &&
               model &&
               modelLoaded &&
               version &&
@@ -206,21 +196,29 @@ const VersionDetails = ({
               )}
 
               {model && modelLoaded && version && versionLoaded && endpoint && (
-                <Router primary={false}>
-                  <EndpointDetails
+                <Routes>
+                  <Route
+                    index
                     path="details"
-                    model={model}
-                    version={version}
-                    endpoint={endpoint}
+                    element={
+                      <EndpointDetails
+                        model={model}
+                        version={version}
+                        endpoint={endpoint}
+                      />
+                    }
                   />
-
-                  <ContainerLogsView
+                  <Route
                     path="logs"
-                    model={model}
-                    versionId={versionId}
-                    fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
+                    element={
+                      <ContainerLogsView
+                        model={model}
+                        versionId={versionId}
+                        fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
+                      />
+                    }
                   />
-                </Router>
+                </Routes>
               )}
             </EuiPageTemplate.Section>
           </Fragment>

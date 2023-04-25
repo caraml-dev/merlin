@@ -79,7 +79,7 @@ const MoreActionsButton = ({ actions }) => {
   );
 };
 
-export const TabNavigation = ({ tabs, actions, selectedTab, ...props }) => (
+export const TabNavigation = ({ tabs, actions, selectedTab, navigate }) => (
   <EuiFlexGroup direction="row" gutterSize="none">
     <EuiFlexItem grow={true}>
       <EuiTabs>
@@ -87,7 +87,7 @@ export const TabNavigation = ({ tabs, actions, selectedTab, ...props }) => (
           <EuiTab
             {...(tab.href
               ? { href: tab.href, target: tab.target }
-              : { onClick: () => props.navigate(`./${tab.id}`) })}
+              : { onClick: () => navigate(`./${tab.id}`) })}
             isSelected={tab.id === selectedTab}
             disabled={tab.disabled}
             key={index}>

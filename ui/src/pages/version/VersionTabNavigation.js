@@ -15,10 +15,12 @@
  */
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { EuiIcon } from "@elastic/eui";
 import { TabNavigation } from "../../components/TabNavigation";
 
-export const VersionTabNavigation = ({ endpoint, actions, ...props }) => {
+export const VersionTabNavigation = ({ endpoint, actions, selectedTab }) => {
+  const navigate = useNavigate();
   const tabs = [
     {
       id: "details",
@@ -45,8 +47,8 @@ export const VersionTabNavigation = ({ endpoint, actions, ...props }) => {
     <TabNavigation
       tabs={tabs}
       actions={actions}
-      selectedTab={props["*"]}
-      {...props}
+      selectedTab={selectedTab}
+      navigate={navigate}
     />
   );
 };

@@ -15,7 +15,7 @@
  */
 
 import React, { Fragment, useEffect, useState } from "react";
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import {
   EuiButtonEmpty,
   EuiFlexGroup,
@@ -42,6 +42,7 @@ const ActionButton = ({ action }) => (
 );
 
 export const DeploymentActions = ({ model, version, endpoint }) => {
+  const navigate = useNavigate();
   const [isServeEndpointModalVisible, toggleServeEndpointModal] = useToggle();
   const [
     isStopServeEndpointModalVisible,

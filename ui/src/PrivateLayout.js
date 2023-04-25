@@ -15,41 +15,41 @@
  */
 
 import React from "react";
-import { navigate } from "@reach/router";
-import PropTypes from "prop-types";
+import { Outlet, useNavigate } from "react-router-dom";
 import {
+  ApplicationsContext,
   ApplicationsContextProvider,
-  CurrentProjectContextProvider,
   Header,
+  PrivateRoute,
   ProjectsContextProvider
 } from "@gojek/mlp-ui";
-import config, { appConfig } from "./config";
+import urlJoin from "proper-url-join";
+import { appConfig } from "./config";
 import { EnvironmentsContextProvider } from "./providers/environments/context";
 
 import "./PrivateLayout.scss";
 
-export const PrivateLayout = Component => {
-  return props => (
-    <ApplicationsContextProvider>
-      <ProjectsContextProvider>
-        <CurrentProjectContextProvider {...props}>
-          <Header
-            homeUrl={config.HOMEPAGE}
-            appIcon="machineLearningApp"
-            docLinks={appConfig.docsUrl}
-            onProjectSelect={projectId =>
-              navigate(`${config.HOMEPAGE}/projects/${projectId}/models`)
-            }
-          />
+export const PrivateLayout = () => {
+  const navigate = useNavigate();
+  return (
+    <PrivateRoute>
+      <ApplicationsContextProvider>
+        <ProjectsContextProvider>
           <EnvironmentsContextProvider>
-            <Component {...props} />
+            <ApplicationsContext.Consumer>
+              {({ currentApp }) => (
+                <Header
+                  appIcon="machineLearningApp"
+                  docLinks={appConfig.docsUrl}
+                  onProjectSelect={pId =>
+                    navigate(urlJoin(currentApp?.homepage, "projects", pId, "models"))
+                  }
+              />)}
+            </ApplicationsContext.Consumer>
+            <Outlet />
           </EnvironmentsContextProvider>
-        </CurrentProjectContextProvider>
-      </ProjectsContextProvider>
-    </ApplicationsContextProvider>
+        </ProjectsContextProvider>
+      </ApplicationsContextProvider>
+    </PrivateRoute>
   );
-};
-
-PrivateLayout.propTypes = {
-  projectId: PropTypes.string
 };

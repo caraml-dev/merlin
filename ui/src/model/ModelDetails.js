@@ -15,17 +15,16 @@
  */
 
 import React, { useEffect, useState } from "react";
+import { Route, Routes, useLocation, useParams } from "react-router-dom";
 import {
   EuiLoadingContent,
   EuiPageTemplate,
   EuiSpacer
 } from "@elastic/eui";
-import { Router } from "@reach/router";
 import { get } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import { ModelAlert } from "./alert/ModelAlert";
 import { featureToggleConfig } from "../config";
-import PropTypes from "prop-types";
 
 const LoadingContent = () => (
   <EuiPageTemplate.Section>
@@ -33,8 +32,10 @@ const LoadingContent = () => (
   </EuiPageTemplate.Section>
 );
 
-export const ModelDetails = ({ projectId, modelId, location: { state } }) => {
-  const [model, setModel] = useState(get(state, "model"));
+export const ModelDetails = () => {
+  const { projectId, modelId } = useParams();
+  const location = useLocation();
+  const [model, setModel] = useState(get(location.state, "model"));
   const [breadcrumbs, setBreadcrumbs] = useState([]);
 
   const [{ data: models, isLoaded: modelsLoaded }] = useMerlinApi(
@@ -74,26 +75,18 @@ export const ModelDetails = ({ projectId, modelId, location: { state } }) => {
       <EuiSpacer size="l" />
       <EuiPageTemplate.Section color={"transparent"}>
         {featureToggleConfig.alertEnabled && (
-          <Router>
-            {model && (
-              <ModelAlert
+          <Routes>
+            <Route index element={<LoadingContent default />} />
+            {model && (<Route path="endpoints/:endpointId/alert" element={<ModelAlert
                 path="endpoints/:endpointId/alert"
                 breadcrumbs={breadcrumbs}
                 model={model}
-              />
-            )}
-            <LoadingContent default />
-          </Router>
+              />} />)}
+          </Routes>
         )}
        
       </EuiPageTemplate.Section>
       <EuiSpacer size="l" />
     </EuiPageTemplate>
   );
-};
-
-ModelDetails.propTypes = {
-  projectId: PropTypes.string,
-  modelId: PropTypes.string,
-  state: PropTypes.object
 };

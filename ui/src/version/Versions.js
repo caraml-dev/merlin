@@ -29,8 +29,10 @@ import {
   UndeployVersionEndpointModal
 } from "../components/modals";
 import { CursorPagination } from "../components/CursorPagination";
+import { useParams } from "react-router-dom";
 
-const Versions = ({ projectId, modelId, ...props }) => {
+const Versions = ({ ...props }) => {
+  const { projectId, modelId } = useParams();
   const [
     isUndeployEndpointModalVisible,
     toggleUndeployEndpointModal

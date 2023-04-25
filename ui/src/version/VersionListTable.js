@@ -39,7 +39,7 @@ import { DateFromNow } from "@gojek/mlp-ui";
 import PropTypes from "prop-types";
 
 import VersionEndpointActions from "./VersionEndpointActions";
-import { Link, navigate } from "@reach/router";
+import { Link, useNavigate } from "react-router-dom";
 import EllipsisText from "react-ellipsis-text";
 import useCollapse from "react-collapsed";
 import { versionEndpointUrl } from "../utils/versionEndpointUrl";
@@ -116,6 +116,7 @@ const VersionListTable = ({
   environments,
   ...props
 }) => {
+  const navigate = useNavigate();
   const healthColor = (status) => {
     switch (status) {
       case "serving":

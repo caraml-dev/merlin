@@ -5,6 +5,7 @@ import {
   EuiPanel,
   EuiSpacer
 } from "@elastic/eui";
+import { useNavigate, useParams } from "react-router-dom";
 import { FormContextProvider, replaceBreadcrumbs } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import mocks from "../../../mocks";
@@ -13,13 +14,9 @@ import { VersionEndpoint } from "../../../services/version_endpoint/VersionEndpo
 
 import { DeployModelVersionForm } from "../components/forms/DeployModelVersionForm";
 
-const RedeployModelVersionView = ({
-  projectId,
-  modelId,
-  versionId,
-  endpointId,
-  ...props
-}) => {
+const RedeployModelVersionView = () => {
+  const navigate = useNavigate();
+  const { projectId, modelId, versionId, endpointId } = useParams();
   const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
@@ -84,7 +81,7 @@ const RedeployModelVersionView = ({
                 model={model}
                 version={Version.fromJson(version)}
                 onCancel={() => window.history.back()}
-                onSuccess={redirectUrl => props.navigate(redirectUrl)}
+                onSuccess={redirectUrl => navigate(redirectUrl)}
                 submissionResponse={submissionResponse}
                 submitForm={submitForm}
                 actionTitle="Redeploy"

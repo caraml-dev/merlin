@@ -51,7 +51,6 @@ export const EndpointDetails = ({ endpoint, version }) => {
 };
 
 EndpointDetails.propTypes = {
-  model: PropTypes.object.isRequired,
   version: PropTypes.object.isRequired,
   endpoint: PropTypes.object.isRequired
 };

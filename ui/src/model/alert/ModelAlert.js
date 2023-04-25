@@ -15,7 +15,7 @@
  */
 
 import React, { Fragment, useEffect, useState } from "react";
-import { navigate } from "@reach/router";
+import { useNavigate } from "react-router-dom";
 import {
   EuiButton,
   EuiButtonEmpty,
@@ -31,6 +31,7 @@ import { ModelAlertForm } from "./components/ModelAlertForm";
 import PropTypes from "prop-types";
 
 export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
+  const navigate = useNavigate();
   const redirectUrl = `/merlin/projects/${model.project_id}`;
 
   useEffect(() => {
@@ -105,7 +106,7 @@ export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
     ) {
       navigate(redirectUrl);
     }
-  }, [createAlertResponse, updateAlertResponse, redirectUrl]);
+  }, [createAlertResponse, updateAlertResponse, redirectUrl, navigate]);
 
   return (
     <Fragment>

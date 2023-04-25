@@ -15,7 +15,7 @@
  */
 
 import React, { Fragment, useContext, useEffect, useState } from "react";
-import { navigate } from "@reach/router";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   EuiPageTemplate,
   EuiPanel,
@@ -68,7 +68,9 @@ const isOthersConfigured = job => {
   );
 };
 
-export const JobForm = ({ projectId, modelId, versionId, isNewJob = true }) => {
+export const JobForm = ({ isNewJob = true }) => {
+  const { projectId, modelId, versionId } = useParams();
+  const navigate = useNavigate();
   const [model, setModel] = useState();
   const [{ data: models, isLoaded: modelsLoaded }] = useMerlinApi(
     `/projects/${projectId}/models`,
@@ -162,7 +164,7 @@ export const JobForm = ({ projectId, modelId, versionId, isNewJob = true }) => {
         `/merlin/projects/${projectId}/models/${modelId}/versions/all/jobs`
       );
     }
-  }, [submissionResponse, projectId, modelId, isNewJob]);
+  }, [submissionResponse, projectId, modelId, isNewJob, navigate]);
 
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -247,8 +249,5 @@ export const JobForm = ({ projectId, modelId, versionId, isNewJob = true }) => {
 };
 
 JobForm.propTypes = {
-  projectId: PropTypes.string,
-  modelId: PropTypes.string,
-  versionId: PropTypes.string,
   isNewJob: PropTypes.bool
 };
