@@ -1,6 +1,6 @@
 import React from "react";
 import { EuiForm, EuiFormRow, EuiSuperSelect } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 
 export const SelectUpdateColumnStrategy = ({
   strategy, //current selected strategy (if any)

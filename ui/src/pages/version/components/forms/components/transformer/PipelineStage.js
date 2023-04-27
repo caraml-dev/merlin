@@ -4,7 +4,7 @@ import {
   FormValidationContext,
   get,
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import React, { useContext } from "react";
 import { Element } from "react-scroll";
 import { FeastProjectsContextProvider } from "../../../../../../providers/feast/FeastProjectsContext";

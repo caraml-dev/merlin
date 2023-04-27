@@ -15,7 +15,7 @@
  */
 
  import { EuiFormRow, EuiToolTip, EuiIcon, EuiFlexGroup, EuiFlexItem } from "@elastic/eui";
- import { FormContext, useOnChangeHandler } from "@gojek/mlp-ui";
+ import { FormContext, useOnChangeHandler } from "@caraml-dev/ui-lib";
  import { React, useContext } from "react";
  import { StandardTransformerStep } from "../version/components/forms/steps/StandardTransformerStep";
  import { ProtocolDropdown } from "../version/components/forms/components/ProtocolDropdown";

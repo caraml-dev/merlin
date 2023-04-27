@@ -12,7 +12,7 @@ import {
 } from "@elastic/eui";
 import {
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import { DraggableHeader } from "../../../DraggableHeader";
 
 export const UpiPostprocessOutputCard = ({ output, onDelete, onChangeHandler, errors = {}, ...props }) => {

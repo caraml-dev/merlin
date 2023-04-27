@@ -26,7 +26,7 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { replaceBreadcrumbs } from "@gojek/mlp-ui";
+import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import config from "../../config";
 import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";

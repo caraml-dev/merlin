@@ -6,7 +6,7 @@ import {
   EuiSpacer,
   EuiFieldText
 } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { DraggableHeader } from "../../../DraggableHeader";
 import { ConditionalUpdatePanel } from "./ConditionalUpdatePanel";
 import { SelectUpdateColumnStrategy } from "./SelectUpdateColumnStrategy";

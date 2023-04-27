@@ -8,7 +8,7 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { DraggableHeader } from "../../../DraggableHeader";
 import { TableTransformationStepPanel } from "./TableTransformationStepPanel";
 

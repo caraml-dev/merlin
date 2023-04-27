@@ -16,7 +16,7 @@
 
 import React, { useEffect } from "react";
 import { EuiPageTemplate, EuiPanel, EuiSpacer } from "@elastic/eui";
-import { replaceBreadcrumbs } from "@gojek/mlp-ui";
+import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import mocks from "../mocks";
 import ModelListTable from "../model/ModelListTable";

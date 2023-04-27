@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { EuiComboBox, EuiFormRow } from "@elastic/eui";
-import { get } from "@gojek/mlp-ui";
+import { get } from "@caraml-dev/ui-lib";
 
 export const ColumnsComboBox = ({
   columns,

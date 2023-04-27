@@ -22,7 +22,7 @@ import {
   EuiFlexItem,
   EuiText
 } from "@elastic/eui";
-import { useToggle } from "@gojek/mlp-ui";
+import { useToggle } from "@caraml-dev/ui-lib";
 import config from "../../config";
 import {
   ServeVersionEndpointModal,

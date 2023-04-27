@@ -15,7 +15,7 @@
  */
 
 import { useContext } from "react";
-import { AuthContext, useApi } from "@gojek/mlp-ui";
+import { AuthContext, useApi } from "@caraml-dev/ui-lib";
 import config from "../config";
 
 export const useMerlinApi = (

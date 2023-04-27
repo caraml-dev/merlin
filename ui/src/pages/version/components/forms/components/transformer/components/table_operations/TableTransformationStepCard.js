@@ -7,7 +7,7 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { get, useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { DraggableHeader } from "../../../DraggableHeader";
 import { ColumnsComboBox } from "./ColumnsComboBox";
 import { EncodeColumns } from "./EncodeColumns";

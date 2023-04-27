@@ -11,7 +11,7 @@ import {
   FormLabelWithToolTip,
   SelectDockerImageComboBox,
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import { appConfig } from "../../../../../../config";
 import DockerRegistriesContext from "../../../../../../providers/docker/context";
 import { Panel } from "../Panel";

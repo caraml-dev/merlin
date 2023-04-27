@@ -22,7 +22,7 @@ import {
   EuiSpacer,
   EuiSteps,
 } from "@elastic/eui";
-import { addToast, replaceBreadcrumbs } from "@gojek/mlp-ui";
+import { addToast, replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import {
   validateBigqueryTable,

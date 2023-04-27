@@ -5,7 +5,7 @@ import {
   FormValidationContext,
   get,
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import { InputPanel } from "../components/transformer/InputPanel";
 import { OutputPanel } from "../components/transformer/OutputPanel";
 import { TransformationPanel } from "../components/transformer/TransformationPanel";

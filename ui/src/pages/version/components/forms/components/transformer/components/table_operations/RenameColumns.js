@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { EuiButtonIcon, EuiFieldText, EuiFormRow } from "@elastic/eui";
-import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
+import { InMemoryTableForm, useOnChangeHandler } from "@caraml-dev/ui-lib";
 
 export const RenameColumns = ({ columns, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);

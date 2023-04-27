@@ -16,7 +16,7 @@ import {
   FormValidationContext,
   get,
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import React, { useContext, useState } from "react";
 import { Element, scroller } from "react-scroll";
 import { simulationIcon } from "../components/transformer/components/simulation/constants";

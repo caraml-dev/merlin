@@ -14,7 +14,7 @@ import { DraggableHeader } from "../../../DraggableHeader";
 import { FromJson } from "../../../../../../../../services/transformer/TransformerConfig";
 import { TableColumnsInput } from "./TableColumnsInput";
 import { TableFromFileSchema } from "./TableFromFileSchema";
-import { FormLabelWithToolTip, get } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip, get } from "@caraml-dev/ui-lib";
 
 export const TableInputCard = ({
   index = 0,

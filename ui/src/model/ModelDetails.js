@@ -21,7 +21,7 @@ import {
   EuiPageTemplate,
   EuiSpacer
 } from "@elastic/eui";
-import { get } from "@gojek/mlp-ui";
+import { get } from "@caraml-dev/ui-lib";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import { ModelAlert } from "./alert/ModelAlert";
 import { featureToggleConfig } from "../config";

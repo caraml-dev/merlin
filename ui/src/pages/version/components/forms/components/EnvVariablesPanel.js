@@ -1,6 +1,6 @@
 import React from "react";
 import { EuiButtonIcon, EuiFieldText, EuiSpacer } from "@elastic/eui";
-import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
+import { InMemoryTableForm, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { Panel } from "./Panel";
 import { STANDARD_TRANSFORMER_CONFIG_ENV_NAME } from "../../../../../services/transformer/TransformerConfig";
 

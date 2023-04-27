@@ -212,7 +212,7 @@ export OAUTH_CLIENT_ID="<put your oauth client id here>"
 
 kubectl create namespace mlp
 
-git clone git@github.com:gojek/mlp.git
+git clone git@github.com:caraml-dev/mlp.git
 
 helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yaml \
   --set mlp.image.tag=main \

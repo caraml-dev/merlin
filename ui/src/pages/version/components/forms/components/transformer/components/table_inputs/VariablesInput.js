@@ -1,6 +1,6 @@
 import React from "react";
 import { EuiButtonIcon, EuiFieldText, EuiSuperSelect } from "@elastic/eui";
-import { get, InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, InMemoryTableForm, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { JsonPathConfigInput } from "../../JsonPathConfigInput";
 import "../../RowCell.scss";
 

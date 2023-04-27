@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useApi } from "@gojek/mlp-ui";
+import { useApi } from "@caraml-dev/ui-lib";
 import config from "../config";
 
 export const feastEndpoints = {

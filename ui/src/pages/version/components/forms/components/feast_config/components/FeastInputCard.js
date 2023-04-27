@@ -8,7 +8,7 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { get } from "@gojek/mlp-ui";
+import { get } from "@caraml-dev/ui-lib";
 import "./FeastInputCard.scss";
 import { FeastProjectComboBox } from "./FeastProjectComboBox";
 import { DraggableHeader } from "../../DraggableHeader";

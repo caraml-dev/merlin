@@ -7,7 +7,7 @@ import {
   EuiText,
   EuiSpacer
 } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { SelectValueType } from "./SelectValueType";
 import { OrdinalEncoderMapper } from "./OrdinalEncoderMapper";
 

@@ -6,7 +6,7 @@ import {
   EuiSpacer
 } from "@elastic/eui";
 import { useNavigate, useParams } from "react-router-dom";
-import { FormContextProvider, replaceBreadcrumbs } from "@gojek/mlp-ui";
+import { FormContextProvider, replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import mocks from "../../../mocks";
 import { Version } from "../../../services/version/Version";

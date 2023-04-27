@@ -21,7 +21,7 @@ import {
   EuiSpacer
 } from "@elastic/eui";
 import VersionListTable from "./VersionListTable";
-import { get, replaceBreadcrumbs, useToggle } from "@gojek/mlp-ui";
+import { get, replaceBreadcrumbs, useToggle } from "@caraml-dev/ui-lib";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import mocks from "../mocks";
 import {

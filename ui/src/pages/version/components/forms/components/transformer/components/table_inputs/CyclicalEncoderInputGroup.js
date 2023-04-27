@@ -6,7 +6,7 @@ import {
   EuiFieldNumber,
   EuiFormRow
 } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { SelectCyclicalEncodeType } from "./SelectCyclicalEncodeType";
 import { SelectPeriodType } from "./SelectPeriodType";
 

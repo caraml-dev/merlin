@@ -4,7 +4,7 @@ import {
   DescribedFormGroup,
   FormLabelWithToolTip,
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import { Panel } from "./Panel";
 import {
   Config,

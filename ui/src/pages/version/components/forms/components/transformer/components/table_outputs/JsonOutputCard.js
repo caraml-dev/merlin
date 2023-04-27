@@ -11,7 +11,7 @@ import {
   EuiToolTip,
   EuiText
 } from "@elastic/eui";
-import { get, useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { AddButton } from "../../components/AddButton";
 import { JsonOutputFieldCard } from "./JsonOutputFieldCard";
 import { BaseJsonOutputCard } from "./BaseJsonOutputCard";

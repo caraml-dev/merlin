@@ -5,7 +5,7 @@ import {
   FormValidationContext,
   get,
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import { DockerDeploymentPanel } from "../components/docker_config/DockerDeploymentPanel";
 import { DockerRegistriesContextProvider } from "../../../../../providers/docker/context";
 

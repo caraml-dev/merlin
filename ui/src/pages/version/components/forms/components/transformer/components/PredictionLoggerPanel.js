@@ -9,7 +9,7 @@ import {
   EuiText,
 } from "@elastic/eui";
 
-import { useOnChangeHandler, FormLabelWithToolTip } from "@gojek/mlp-ui";
+import { useOnChangeHandler, FormLabelWithToolTip } from "@caraml-dev/ui-lib";
 import { Panel } from "../../Panel";
 
 export const PredictionLoggerPanel = ({

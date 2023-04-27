@@ -22,7 +22,7 @@ import {
   EuiSpacer
 } from "@elastic/eui";
 import { useParams } from "react-router-dom";
-import { replaceBreadcrumbs } from "@gojek/mlp-ui";
+import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import mocks from "../mocks";
 import JobListTable from "../job/JobListTable";

@@ -17,7 +17,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { EuiText } from "@elastic/eui";
-import { DateFromNow } from "@gojek/mlp-ui";
+import { DateFromNow } from "@caraml-dev/ui-lib";
 import { ConfigSection, ConfigSectionPanel } from "../../components/section";
 import { CopyableUrl } from "../../components/CopyableUrl";
 import { DeploymentStatus } from "../../components/DeploymentStatus";

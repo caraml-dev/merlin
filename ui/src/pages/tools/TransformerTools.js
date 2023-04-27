@@ -15,7 +15,7 @@
  */
 
 import { EuiPageTemplate, EuiPanel, EuiSpacer } from "@elastic/eui";
-import { FormContextProvider } from "@gojek/mlp-ui";
+import { FormContextProvider } from "@caraml-dev/ui-lib";
 import { React } from "react";
 import {
   Config,

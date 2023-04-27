@@ -6,7 +6,7 @@ import {
   EuiIcon,
   EuiToolTip
 } from "@elastic/eui";
-import { get, InMemoryTableForm } from "@gojek/mlp-ui";
+import { get, InMemoryTableForm } from "@caraml-dev/ui-lib";
 import { JsonPathConfigInput } from "../../transformer/JsonPathConfigInput";
 import "../../transformer/RowCell.scss";
 
