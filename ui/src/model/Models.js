@@ -20,9 +20,10 @@ import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import mocks from "../mocks";
 import ModelListTable from "../model/ModelListTable";
-import PropTypes from "prop-types";
+import { useParams } from "react-router-dom";
 
-const Models = ({ projectId }) => {
+const Models = () => {
+  const { projectId } = useParams();
   const [{ data, isLoaded, error }, fetchModels] = useMerlinApi(
     `/projects/${projectId}/models`,
     { mock: mocks.modelList },
@@ -62,10 +63,6 @@ const Models = ({ projectId }) => {
       <EuiSpacer size="l" />
     </EuiPageTemplate>
   );
-};
-
-Models.propTypes = {
-  modelId: PropTypes.string
 };
 
 export default Models;

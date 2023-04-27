@@ -19,16 +19,16 @@ import {
   EuiPageTemplate,
   EuiSpacer
 } from "@elastic/eui";
-import { Router } from "@reach/router";
+import { Route, Routes, useParams } from "react-router-dom";
 import JobConfig from "./JobConfig";
 import RecreateJobView from "./RecreateJobView";
 import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
-import PropTypes from "prop-types";
 import { ContainerLogsView } from "../components/logs/ContainerLogsView";
 import { replaceBreadcrumbs } from "@gojek/mlp-ui";
 
-const JobLog = ({ projectId, model, versionId, jobId, breadcrumbs }) => {
+const JobLog = ({ model, breadcrumbs }) => {
+  const { projectId, versionId, jobId } = useParams();
   useEffect(() => {
     breadcrumbs && replaceBreadcrumbs([...breadcrumbs, { text: "Logs" }]);
   }, [breadcrumbs]);
@@ -49,7 +49,8 @@ const JobLog = ({ projectId, model, versionId, jobId, breadcrumbs }) => {
   );
 };
 
-const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
+const JobDetails = () => {
+  const { projectId, modelId, versionId, jobId } = useParams();
   const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
@@ -97,33 +98,38 @@ const JobDetails = ({ projectId, modelId, versionId, jobId }) => {
       />
     
       <EuiPageTemplate.Section color={"transparent"}>
-        <Router>
-          <JobConfig path="/" breadcrumbs={breadcrumbs} />
-
+        <Routes>
+          <Route
+            index
+            element={
+              <JobConfig path="/" breadcrumbs={breadcrumbs} />
+            }
+          />
           {projectId && modelLoaded && model && (
-            <JobLog
+            <Route
               path="logs"
-              projectId={projectId}
-              model={model}
-              versionId={versionId}
-              jobId={jobId}
-              breadcrumbs={breadcrumbs}
+              element={
+                <JobLog
+                  projectId={projectId}
+                  model={model}
+                  versionId={versionId}
+                  jobId={jobId}
+                  breadcrumbs={breadcrumbs}
+                />
+              }
             />
           )}
-          <RecreateJobView path="recreate" breadcrumbs={breadcrumbs} />
-        </Router>
-   
+          <Route
+            path="recreate"
+            element={
+              <RecreateJobView breadcrumbs={breadcrumbs} />
+            }
+          />
+        </Routes>
       </EuiPageTemplate.Section>
       <EuiSpacer size="l" />
     </EuiPageTemplate>
   );
-};
-
-JobDetails.propTypes = {
-  projectId: PropTypes.string,
-  modelId: PropTypes.string,
-  versionId: PropTypes.string,
-  jobId: PropTypes.string
 };
 
 export default JobDetails;

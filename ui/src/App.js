@@ -21,28 +21,13 @@ import {
   Login,
   MlpApiContextProvider,
   Page404,
-  PrivateRoute,
   Toast,
 } from "@gojek/mlp-ui";
-import { Redirect, Router } from "@reach/router";
+import { Route, Routes } from "react-router-dom";
 import React from "react";
 import config from "./config";
-import Home from "./Home";
-import { CreateJobView } from "./job/CreateJobView";
-import JobDetails from "./job/JobDetails";
-import Jobs from "./job/Jobs";
-import { ModelDetails } from "./model/ModelDetails";
-import Models from "./model/Models";
 import { PrivateLayout } from "./PrivateLayout";
-import Versions from "./version/Versions";
-
-// The new UI architecture will have all UI pages inside of `pages` folder
-import {
-  DeployModelVersionView,
-  RedeployModelVersionView,
-  TransformerTools,
-  VersionDetails,
-} from "./pages";
+import AppRoutes from "./AppRoutes";
 
 const App = () => {
   return (
@@ -51,119 +36,15 @@ const App = () => {
         <MlpApiContextProvider
           mlpApiUrl={config.MLP_API}
           timeout={config.TIMEOUT}
-          useMockData={config.USE_MOCK_DATA}
-        >
+          useMockData={config.USE_MOCK_DATA}>
           <AuthProvider clientId={config.OAUTH_CLIENT_ID}>
-            <Router role="group">
-              <Login path="/login" />
-
-              <Redirect from="/" to={config.HOMEPAGE} noThrow />
-
-              <PrivateRoute
-                path={config.HOMEPAGE}
-                render={PrivateLayout(Home)}
-              />
-
-              <Redirect
-                from={`${config.HOMEPAGE}/projects/:projectId`}
-                to={`${config.HOMEPAGE}/projects/:projectId/models`}
-                noThrow
-              />
-
-              {/* MODELS */}
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models`}
-                render={PrivateLayout(Models)}
-              />
-
-              {/* MODELS DETAILS (Sub-router) */}
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/*`}
-                render={PrivateLayout(ModelDetails)}
-              />
-              <Redirect
-                from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId`}
-                to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions`}
-                noThrow
-              />
-
-              {/* VERSIONS */}
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions`}
-                render={PrivateLayout(Versions)}
-              />
-
-              {/* Deploy model version */}
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/deploy`}
-                render={PrivateLayout(DeployModelVersionView)}
-              />
-
-              {/* Redeploy model version */}
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/redeploy`}
-                render={PrivateLayout(RedeployModelVersionView)}
-              />
-
-              {/* Version pages (and its sub-routers) */}
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/*`}
-                render={PrivateLayout(VersionDetails)}
-              />
-
-              <Redirect
-                from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId`}
-                to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/details`}
-                noThrow
-              />
-
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/*`}
-                render={PrivateLayout(VersionDetails)}
-              />
-
-              <Redirect
-                from={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId`}
-                to={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/endpoints/:endpointId/details`}
-                noThrow
-              />
-
-              {/* Prediction Job */}
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/jobs`}
-                render={PrivateLayout(Jobs)}
-              />
-
-              {/* Prediction Job Details (Sub-router) */}
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/jobs/:jobId/*`}
-                render={PrivateLayout(JobDetails)}
-              />
-
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/create-job`}
-                render={PrivateLayout(CreateJobView)}
-              />
-
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/models/:modelId/versions/:versionId/create-job`}
-                render={PrivateLayout(CreateJobView)}
-              />
-
-              {/* Tools */}
-              <PrivateRoute
-                path={`${config.HOMEPAGE}/projects/:projectId/transformer-simulator`}
-                render={PrivateLayout(TransformerTools)}
-              />
-
-              {/* For backward compatibility */}
-              <TransformerTools
-                path={`${config.HOMEPAGE}/-/tools/transformer`}
-              />
-
-              {/* DEFAULT */}
-              <Page404 default />
-            </Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route element={<PrivateLayout />}>
+                <Route path="/*" element={<AppRoutes />} />
+              </Route>
+              <Route path="/pages/404" element={<Page404 />} />
+            </Routes>
             <Toast />
           </AuthProvider>
         </MlpApiContextProvider>

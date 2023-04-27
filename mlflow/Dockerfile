@@ -1,12 +1,11 @@
-FROM python:3.7.2-slim
+FROM python:3.8-slim
 
 RUN apt-get update && \
     apt-get install -y \
         build-essential \
         make \
         gcc \
-        locales \
-        libgdal20 libgdal-dev && \
+        locales && \
     apt-get clean
 
 RUN pip install google-cloud-storage

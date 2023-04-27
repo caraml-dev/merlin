@@ -15,13 +15,15 @@
  */
 
 import React from "react";
+import { useParams } from "react-router-dom";
 import { EuiPageTemplate, EuiSpacer } from "@elastic/eui";
 import { JobFormContextProvider } from "./form/context";
 import { JobForm } from "./form/JobForm";
 import { Job } from "./job";
 import PropTypes from "prop-types";
 
-export const CreateJobView = ({ projectId, modelId, versionId }) => {
+export const CreateJobView = () => {
+  const { projectId, modelId, versionId } = useParams();
   return (
     <EuiPageTemplate restrictWidth="90%" paddingSize="none">
       <EuiSpacer size="l" />

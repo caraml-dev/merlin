@@ -26,12 +26,13 @@ import {
   EuiDescriptionListTitle,
   EuiDescriptionListDescription
 } from "@elastic/eui";
+import { useParams } from "react-router-dom";
 import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import { replaceBreadcrumbs } from "@gojek/mlp-ui";
-import PropTypes from "prop-types";
 
-const JobConfig = ({ projectId, modelId, versionId, jobId }) => {
+const JobConfig = () => {
+  const { projectId, modelId, versionId, jobId } = useParams();
   const [{ data, isLoaded, error }] = useMerlinApi(
     `/models/${modelId}/versions/${versionId}/jobs/${jobId}`,
     { mock: mocks.job },
@@ -312,13 +313,6 @@ const JobConfig = ({ projectId, modelId, versionId, jobId }) => {
       </EuiFlexItem>
     </EuiFlexGroup>
   );
-};
-
-JobConfig.propTypes = {
-  projectId: PropTypes.string,
-  modelId: PropTypes.string,
-  versionId: PropTypes.string,
-  jobId: PropTypes.string
 };
 
 export default JobConfig;

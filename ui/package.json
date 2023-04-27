@@ -12,9 +12,8 @@
     "@elastic/eui": "64.0.0",
     "@emotion/cache": "11.10.3",
     "@emotion/react": "^11.9.0",
-    "@gojek/mlp-ui": "1.6.2",
+    "@gojek/mlp-ui": "1.7.0",
     "@monaco-editor/react": "4.4.5",
-    "@reach/router": "1.3.4",
     "@sentry/browser": "5.15.5",
     "@types/react": "^17.0.0",
     "dagre": "^0.8.5",
@@ -33,6 +32,7 @@
     "react-ellipsis-text": "^1.2.1",
     "react-flow-renderer": "10.3.17",
     "react-lazylog": "git+https://github.com/gojekfarm/react-lazylog.git#e3a7f026983df0dc59d25843fe87ce7e37e24e82",
+    "react-router-dom": "^6.3.0",
     "react-scripts": "^5.0.1",
     "use-query-params": "^2.1.0",
     "yup": "^0.29.1"

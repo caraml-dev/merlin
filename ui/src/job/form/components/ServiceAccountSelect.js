@@ -15,11 +15,13 @@
  */
 
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { EuiFormRow, EuiSuperSelect } from "@elastic/eui";
 import { useMerlinApi } from "../../../hooks/useMerlinApi";
 import PropTypes from "prop-types";
 
-export const ServiceAccountSelect = ({ projectId, selected, onChange }) => {
+export const ServiceAccountSelect = ({ selected, onChange }) => {
+  const { projectId } = useParams();
   const [options, setOptions] = useState([]);
 
   const [{ data: secrets }] = useMerlinApi(
@@ -71,7 +73,6 @@ export const ServiceAccountSelect = ({ projectId, selected, onChange }) => {
 };
 
 ServiceAccountSelect.propTypes = {
-  projectId: PropTypes.string,
   selected: PropTypes.string,
   onChange: PropTypes.func
 };

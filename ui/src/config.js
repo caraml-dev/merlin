@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import React from "react";
+import objectAssignDeep from "object-assign-deep";
+
 const getEnv = (env) => {
   return window.env && env in window.env ? window.env[env] : process.env[env];
 };
@@ -93,3 +96,16 @@ const config = {
 };
 
 export default config;
+
+const ConfigContext = React.createContext({});
+
+export const ConfigProvider = ({ children }) => {
+  const runTimeConfig = window.config;
+  const config = objectAssignDeep({}, runTimeConfig);
+
+  return (
+    <ConfigContext.Provider value={config}>{children}</ConfigContext.Provider>
+  );
+};
+
+export const useConfig = () => React.useContext(ConfigContext);
