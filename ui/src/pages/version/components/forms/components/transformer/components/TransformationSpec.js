@@ -7,7 +7,7 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { FormContext, useOnChangeHandler } from "@gojek/mlp-ui";
+import { FormContext, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import React, { useContext } from "react";
 import { Config } from "../../../../../../../services/transformer/TransformerConfig";
 

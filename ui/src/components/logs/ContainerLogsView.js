@@ -10,7 +10,7 @@ import {
   EuiTitle
 } from "@elastic/eui";
 import { LazyLog, ScrollFollow } from "react-lazylog";
-import { AuthContext } from "@gojek/mlp-ui";
+import { AuthContext } from "@caraml-dev/ui-lib";
 import config from "../../config";
 import mocks from "../../mocks";
 import { LogsSearchBar } from "./LogsSearchBar";

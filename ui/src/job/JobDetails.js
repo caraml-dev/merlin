@@ -25,7 +25,7 @@ import RecreateJobView from "./RecreateJobView";
 import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
 import { ContainerLogsView } from "../components/logs/ContainerLogsView";
-import { replaceBreadcrumbs } from "@gojek/mlp-ui";
+import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 
 const JobLog = ({ model, breadcrumbs }) => {
   const { projectId, versionId, jobId } = useParams();

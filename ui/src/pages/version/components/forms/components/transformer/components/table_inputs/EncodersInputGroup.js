@@ -9,7 +9,7 @@ import {
   EuiPanel,
   EuiSpacer
 } from "@elastic/eui";
-import { get, useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { DraggableHeader } from "../../../DraggableHeader";
 import { AddButton } from "../../../transformer/components/AddButton";
 import { EncoderInputCard } from "./EncoderInputCard";

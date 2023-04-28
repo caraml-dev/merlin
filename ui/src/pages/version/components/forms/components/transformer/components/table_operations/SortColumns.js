@@ -1,6 +1,6 @@
 import React from "react";
 import { EuiButtonIcon, EuiFieldText, EuiSuperSelect } from "@elastic/eui";
-import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
+import { InMemoryTableForm, useOnChangeHandler } from "@caraml-dev/ui-lib";
 
 export const SortColumns = ({ columns, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);

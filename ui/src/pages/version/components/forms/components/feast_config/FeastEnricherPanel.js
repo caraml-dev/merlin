@@ -10,7 +10,7 @@ import {
   EuiSpacer,
   EuiText
 } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { Panel } from "../Panel";
 import { FeastInputCard } from "./components/FeastInputCard";
 import { FeastResourcesContextProvider } from "../../../../../../providers/feast/FeastResourcesContext";

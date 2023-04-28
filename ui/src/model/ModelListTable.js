@@ -35,7 +35,7 @@ import {
   EuiToolTip,
   EuiSearchBar,
 } from "@elastic/eui";
-import { DateFromNow } from "@gojek/mlp-ui";
+import { DateFromNow } from "@caraml-dev/ui-lib";
 import ModelEndpointActions from "./ModelEndpointActions";
 import PropTypes from "prop-types";
 

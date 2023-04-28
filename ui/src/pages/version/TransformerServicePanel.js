@@ -29,7 +29,7 @@ import {
   Config,
   STANDARD_TRANSFORMER_CONFIG_ENV_NAME
 } from "../../services/transformer/TransformerConfig";
-import { FormContextProvider } from "@gojek/mlp-ui";
+import { FormContextProvider } from "@caraml-dev/ui-lib";
 import { PipelineSidebarPanel } from "./components/forms/components/transformer/PipelineSidebarPanel";
 import { VersionEndpoint } from "../../services/version_endpoint/VersionEndpoint";
 

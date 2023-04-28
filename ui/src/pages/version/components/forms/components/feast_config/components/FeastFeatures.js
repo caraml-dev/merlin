@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { EuiButtonIcon, EuiComboBox, EuiFieldText } from "@elastic/eui";
-import { get, InMemoryTableForm } from "@gojek/mlp-ui";
+import { get, InMemoryTableForm } from "@caraml-dev/ui-lib";
 
 const getSelectedOption = value => (value ? [{ label: value }] : []);
 

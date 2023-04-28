@@ -1,6 +1,6 @@
 import React from "react";
 import { EuiForm, EuiFormRow, EuiSuperSelect } from "@elastic/eui";
-import { FormLabelWithToolTip } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip } from "@caraml-dev/ui-lib";
 
 export const SelectValueType = ({
   valueType, //current selected value type (if any)

@@ -8,7 +8,7 @@ import {
   EuiFlexItem,
   EuiSpacer
 } from "@elastic/eui";
-import { get, useOnChangeHandler } from "@gojek/mlp-ui";
+import { get, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { Panel } from "../Panel";
 import { AddButton } from "./components/AddButton";
 import { TableJoinCard } from "./components/table_operations/TableJoinCard";

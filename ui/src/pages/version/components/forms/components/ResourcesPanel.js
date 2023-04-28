@@ -9,7 +9,7 @@ import {
   EuiSpacer,
   EuiCallOut,
 } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { Panel } from "./Panel";
 import { calculateCost } from "../../../../../utils/costEstimation";
 

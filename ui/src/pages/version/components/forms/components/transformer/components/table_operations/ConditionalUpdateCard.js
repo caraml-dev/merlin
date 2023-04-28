@@ -7,7 +7,7 @@ import {
   EuiSpacer,
   EuiFieldText
 } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@gojek/mlp-ui";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { DraggableHeader } from "../../../DraggableHeader";
 export const ConditionalUpdateCard = ({
   index = 0,

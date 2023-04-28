@@ -5,7 +5,7 @@ import {
   FormValidationContext,
   get,
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import { appConfig } from "../../../../../config";
 import { EnvVariablesPanel } from "../components/EnvVariablesPanel";
 import { LoggerPanel } from "../components/LoggerPanel";

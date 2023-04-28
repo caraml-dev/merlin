@@ -5,7 +5,7 @@ import {
   FormValidationContext,
   get,
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import { FeastEnricherPanel } from "../components/feast_config/FeastEnricherPanel";
 import { FeastProjectsContextProvider } from "../../../../../providers/feast/FeastProjectsContext";
 import { TransformationSpec } from "../components/transformer/components/TransformationSpec";

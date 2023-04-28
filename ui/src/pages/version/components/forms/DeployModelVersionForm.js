@@ -4,7 +4,7 @@ import {
   ConfirmationModal,
   FormContext,
   StepsWizardHorizontal,
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import { DeploymentSummary } from "./components/DeploymentSummary";
 import { CustomTransformerStep } from "./steps/CustomTransformerStep";
 import { FeastTransformerStep } from "./steps/FeastTransformerStep";

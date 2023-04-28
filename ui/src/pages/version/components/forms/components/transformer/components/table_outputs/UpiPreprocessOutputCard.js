@@ -13,7 +13,7 @@ import {
 import {
   get, 
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import {ColumnsComboBox} from "../table_operations/ColumnsComboBox"
 import { DraggableHeader } from "../../../DraggableHeader";
 

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { EuiPanel, EuiTabbedContent } from "@elastic/eui";
 import { TransformationGraph } from "./components/TransformationGraph";
 import { TransformationSpec } from "./components/TransformationSpec";
-import { FormContext } from "@gojek/mlp-ui";
+import { FormContext } from "@caraml-dev/ui-lib";
 
 export const PipelineSidebarPanel = ({ importEnabled = true }) => {
   const {

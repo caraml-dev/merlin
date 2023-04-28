@@ -4,7 +4,7 @@ import {
   FormValidationContext,
   get,
   useOnChangeHandler
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import {PredictionLoggerPanel} from "../components/transformer/components/PredictionLoggerPanel"
 
 

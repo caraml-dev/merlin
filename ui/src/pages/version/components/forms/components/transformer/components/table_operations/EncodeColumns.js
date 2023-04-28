@@ -1,8 +1,8 @@
 import React from "react";
 import { EuiButtonIcon, EuiFieldText, EuiFormRow, EuiCode } from "@elastic/eui";
-import { InMemoryTableForm, useOnChangeHandler } from "@gojek/mlp-ui";
+import { InMemoryTableForm, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { ColumnsComboBox } from "./ColumnsComboBox";
-import { get } from "@gojek/mlp-ui";
+import { get } from "@caraml-dev/ui-lib";
 
 export const EncodeColumns = ({ columns, onChangeHandler, errors = {} }) => {
   const { onChange } = useOnChangeHandler(onChangeHandler);

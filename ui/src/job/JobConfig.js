@@ -29,7 +29,7 @@ import {
 import { useParams } from "react-router-dom";
 import mocks from "../mocks";
 import { useMerlinApi } from "../hooks/useMerlinApi";
-import { replaceBreadcrumbs } from "@gojek/mlp-ui";
+import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 
 const JobConfig = () => {
   const { projectId, modelId, versionId, jobId } = useParams();

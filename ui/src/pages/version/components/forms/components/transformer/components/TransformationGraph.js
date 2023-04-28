@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import DagreGraph from "dagre-d3-react";
-import { FormContext, get } from "@gojek/mlp-ui";
+import { FormContext, get } from "@caraml-dev/ui-lib";
 import "./TransformationGraph.scss";
 
 const MODEL_RESPONSE_PREFIX = "$.model_response";

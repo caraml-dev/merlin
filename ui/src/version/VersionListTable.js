@@ -35,7 +35,7 @@ import {
   EuiBadgeGroup,
   EuiSearchBar,
 } from "@elastic/eui";
-import { DateFromNow } from "@gojek/mlp-ui";
+import { DateFromNow } from "@caraml-dev/ui-lib";
 import PropTypes from "prop-types";
 
 import VersionEndpointActions from "./VersionEndpointActions";

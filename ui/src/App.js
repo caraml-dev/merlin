@@ -22,7 +22,7 @@ import {
   MlpApiContextProvider,
   Page404,
   Toast,
-} from "@gojek/mlp-ui";
+} from "@caraml-dev/ui-lib";
 import { Route, Routes } from "react-router-dom";
 import React from "react";
 import config from "./config";

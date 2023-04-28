@@ -6,8 +6,8 @@ import {
   EuiToolTip,
   EuiText
   } from "@elastic/eui";
-import { get } from "@gojek/mlp-ui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { get } from "@caraml-dev/ui-lib";
+import { useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { ColumnsComboBox} from "../table_operations/ColumnsComboBox"
 import { DraggableHeader } from "../../../DraggableHeader";
   

@@ -7,7 +7,7 @@ import {
   EuiText,
   EuiToolTip
 } from "@elastic/eui";
-import { useOnChangeHandler } from "@gojek/mlp-ui";
+import { useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { Panel } from "./Panel";
 
 export const LoggerPanel = ({ loggerConfig, onChangeHandler, errors = {} }) => {
