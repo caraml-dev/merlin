@@ -76,6 +76,11 @@ type config struct {
 func main() {
 	flag.Parse()
 
+	// Avoid unused variable linting error
+	_ = *sourceUri
+	_ = *endpoint
+	_ = *component
+
 	l, _ := zap.NewProduction()
 	log := l.Sugar()
 
