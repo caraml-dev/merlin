@@ -38,6 +38,11 @@ var (
 	logMode          = flag.String("log-mode", string(merlinlogger.LogModeAll), "Whether to log 'request', 'response' or 'all'")
 	inferenceService = flag.String("inference-service", "my-model-1", "The InferenceService name to add as header to log events")
 	namespace        = flag.String("namespace", "my-project", "The namespace to add as header to log events")
+
+	// These flags are not needed by our logger but provided by Kserve, hence we need to parse it to avoid error.
+	sourceUri = flag.String("source-uri", "", "The source URI to use when publishing cloudevents")
+	endpoint  = flag.String("endpoint", "", "The endpoint name to add as header to log events")
+	component = flag.String("component", "", "The component name (predictor, explainer, transformer) to add as header to log events")
 )
 
 const (
