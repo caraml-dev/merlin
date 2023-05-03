@@ -4478,7 +4478,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -4572,7 +4572,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -4623,7 +4623,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -4717,7 +4717,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -4910,10 +4910,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 						kservev1beta1.TransformerComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -5082,10 +5082,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 						kservev1beta1.TransformerComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -5148,10 +5148,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 						kservev1beta1.TransformerComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -5320,10 +5320,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				Status: kservev1beta1.InferenceServiceStatus{
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
 						kservev1beta1.TransformerComponent: {
-							LatestReadyRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
+							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},

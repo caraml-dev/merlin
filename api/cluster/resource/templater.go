@@ -641,7 +641,7 @@ func updateExistingInferenceServiceTopologySpreadConstraints(
 		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
 		var err error
 		newRevisionName, err = getNewRevisionNameForExistingSeverlessDeployment(
-			orig.Status.Components[component].LatestReadyRevision,
+			orig.Status.Components[component].LatestCreatedRevision,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("unable to generate new revision name: %w", err)
