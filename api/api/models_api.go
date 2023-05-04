@@ -16,8 +16,9 @@ package api
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"net/http"
+
+	"github.com/jinzhu/gorm"
 
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
@@ -133,5 +134,5 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	//	return InternalServerError(err.Error())
 	//}
 
-	return Ok(modelID)
+	return Ok(model)
 }
