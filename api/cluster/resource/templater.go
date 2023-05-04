@@ -640,7 +640,7 @@ func updateExistingInferenceServiceTopologySpreadConstraints(
 	} else if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 		modelService.DeploymentMode == deployment.EmptyDeploymentMode {
 		var err error
-		newRevisionName, err = getNewRevisionNameForExistingSeverlessDeployment(
+		newRevisionName, err = getNewRevisionNameForExistingServerlessDeployment(
 			orig.Status.Components[component].LatestCreatedRevision,
 		)
 		if err != nil {
@@ -696,11 +696,15 @@ func copyTopologySpreadConstraints(
 	return topologySpreadConstraints, nil
 }
 
-// getNewRevisionNameForExistingSeverlessDeployment examines the current revision name of an inference service (
+// getNewRevisionNameForExistingServerlessDeployment examines the current revision name of an inference service (
 // serverless deployment) app name that is given to it and increments the last value of the revision number by 1, e.g.
 // sklearn-sample-predictor-default-00001 -> sklearn-sample-predictor-default-00002
-func getNewRevisionNameForExistingSeverlessDeployment(currentRevisionName string) (string, error) {
+func getNewRevisionNameForExistingServerlessDeployment(currentRevisionName string) (string, error) {
 	revisionNameElements := strings.Split(currentRevisionName, "-")
+	if len(revisionNameElements) < 5 {
+		return "", fmt.Errorf("unexpected revision name format that is not in at least 4 parts: %s",
+			currentRevisionName)
+	}
 	currentRevisionNumber, err := strconv.Atoi(revisionNameElements[len(revisionNameElements)-1])
 	if err != nil {
 		return "", err
