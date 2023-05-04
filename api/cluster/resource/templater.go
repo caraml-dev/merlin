@@ -174,9 +174,6 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	}
 	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
 	orig.Spec.Predictor = createPredictorSpec(modelService, config)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create predictor spec: %w", err)
-	}
 	orig.Spec.Predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
 		orig,
 		modelService,
@@ -190,9 +187,6 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
 		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
-		if err != nil {
-			return nil, fmt.Errorf("unable to create transformer spec: %w", err)
-		}
 		orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
 			orig,
 			modelService,
