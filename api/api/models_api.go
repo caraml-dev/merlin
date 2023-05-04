@@ -16,9 +16,8 @@ package api
 
 import (
 	"fmt"
-	"net/http"
-
 	"github.com/jinzhu/gorm"
+	"net/http"
 
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
@@ -99,4 +98,40 @@ func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, bod
 	}
 
 	return Ok(model)
+}
+
+// DeleteModel delete a model given a project and model ID
+func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, body interface{}) *Response {
+	ctx := r.Context()
+
+	projectID, _ := models.ParseID(vars["project_id"])
+	modelID, _ := models.ParseID(vars["model_id"])
+
+	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
+	if err != nil {
+		return NotFound(err.Error())
+	}
+
+	model, err := c.ModelsService.FindByID(ctx, modelID)
+	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Model id %s not found", modelID))
+		}
+		return InternalServerError(err.Error())
+	}
+
+	// Delete Data from DB
+	//err = c.ModelsService.Delete(model)
+	//if err != nil {
+	//	return InternalServerError(err.Error())
+	//}
+
+	// Delete Data from mlflow
+	//s := strconv.FormatUint(uint64(model.ExperimentID), 10)
+	//err = c.MlflowDeleteService.DeleteExperiment(ctx, s, true)
+	//if err != nil {
+	//	return InternalServerError(err.Error())
+	//}
+
+	return Ok(modelID)
 }

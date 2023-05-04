@@ -27,6 +27,7 @@ type ModelsService interface {
 	Save(ctx context.Context, model *models.Model) (*models.Model, error)
 	Update(ctx context.Context, model *models.Model) (*models.Model, error)
 	FindByID(ctx context.Context, modelID models.ID) (*models.Model, error)
+	Delete(model *models.Model) error
 }
 
 func NewModelsService(db *gorm.DB, mlpAPIClient mlp.APIClient) ModelsService {
@@ -102,4 +103,8 @@ func (service *modelsService) FindByID(ctx context.Context, modelID models.ID) (
 	model.MlflowURL = project.MlflowExperimentURL(model.ExperimentID.String())
 
 	return &model, nil
+}
+
+func (service *modelsService) Delete(model *models.Model) error {
+	return service.db.Delete(model).Error
 }
