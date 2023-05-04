@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	mlflowDelete "github.com/caraml-dev/mlp/api/pkg/client/mlflow"
+
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
@@ -62,6 +64,7 @@ type AppContext struct {
 	SecretService             service.SecretService
 	ModelEndpointAlertService service.ModelEndpointAlertService
 	TransformerService        service.TransformerService
+	MlflowDeleteService       mlflowDelete.Service
 
 	AuthorizationEnabled bool
 	AlertEnabled         bool
@@ -183,6 +186,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 		{http.MethodGet, "/projects/{project_id:[0-9]+}/models/{model_id:[0-9]+}", nil, modelsController.GetModel, "GetModel"},
 		{http.MethodGet, "/projects/{project_id:[0-9]+}/models", nil, modelsController.ListModels, "ListModels"},
 		{http.MethodPost, "/projects/{project_id:[0-9]+}/models", models.Model{}, modelsController.CreateModel, "CreateModel"},
+		{http.MethodDelete, "/projects/{project_id:[0-9]+}/models/{model_id:[0-9]+}", nil, modelsController.DeleteModel, "DeleteModel"},
 
 		// Model Endpoints API
 		{http.MethodGet, "/projects/{project_id:[0-9]+}/model_endpoints", nil, modelEndpointsController.ListModelEndpointInProject, "ListModelEndpointInProject"},
