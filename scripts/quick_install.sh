@@ -12,9 +12,9 @@ export KFSERVING_VERSION=v0.8.0
 export MINIO_VERSION=7.0.2
 
 export OAUTH_CLIENT_ID=""
-export MLP_CHART_VERSION=0.4.11
-# export MERLIN_VERSION=0.0.0-82ca798e8b50ea20ca0f6bb5d6283e5eb104216c
-export MERLIN_VERSION=82ca798 # TODO: update to use new merlin version once vault dependency removed
+export MLP_CHART_VERSION=0.4.18
+export MERLIN_CHART_VERSION=0.10.16
+export MERLIN_VERSION=0.27.0
 
 ## Install Istio
 curl --location https://git.io/getLatestIstio | sh -
@@ -200,21 +200,22 @@ EOF
 
 # create new e2e file containing cluster credentials
 output=$(yq e -o json '.k8s_config' k8s_config.yaml | jq -r -M -c .)
-yq '.merlin.environmentConfigs[0] *= load("k8s_config.yaml")' ../charts/merlin/values-e2e.yaml > ../charts/merlin/values-e2e-with-k8s_config.yaml
-output="$output" yq '.merlin.imageBuilder.k8sConfig |= strenv(output)' -i ../charts/merlin/values-e2e-with-k8s_config.yaml
+yq '.environmentConfigs[0] *= load("k8s_config.yaml")' ./values-e2e.yaml > ./values-e2e-with-k8s_config.yaml
+output="$output" yq '.merlin.imageBuilder.k8sConfig |= strenv(output)' -i ./values-e2e-with-k8s_config.yaml
 
-helm upgrade --install merlin ../charts/merlin --namespace=mlp --values=../charts/merlin/values-e2e-with-k8s_config.yaml \
-  --set merlin.image.tag=${MERLIN_VERSION} \
-  --set merlin.oauthClientID=${OAUTH_CLIENT_ID} \
-  --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}.nip.io/v1 \
-  --set merlin.mlpApi.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
-  --set merlin.ingress.enabled=true \
-  --set merlin.ingress.class=istio \
-  --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST}.nip.io \
-  --set merlin.ingress.path="/*" \
+helm upgrade --install merlin caraml/merlin --namespace=mlp --values=./values-e2e-with-k8s_config.yaml \
+  --version ${MERLIN_CHART_VERSION} \
+  --set deployment.image.tag=${VERSION} \
+  --set ui.oauthClientID=${OAUTH_CLIENT_ID} \
+  --set mlpApi.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
+  --set ingress.enabled=true \
+  --set ingress.class=istio \
+  --set ingress.host=merlin.mlp.${INGRESS_HOST}.nip.io \
+  --set ingress.path="/*" \
   --set mlflow.ingress.enabled=true \
   --set mlflow.ingress.class=istio \
   --set mlflow.ingress.host=mlflow.mlp.${INGRESS_HOST}.nip.io \
   --set mlflow.ingress.path="/*" \
+  --timeout=5m \
   --timeout=5m \
   --wait

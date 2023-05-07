@@ -40,7 +40,7 @@ install_merlin() {
 
   helm upgrade --install --debug merlin caraml/merlin --namespace=mlp --create-namespace \
     --version ${MERLIN_CHART_VERSION} \
-    -f values-e2e.yaml \
+    --values values-e2e.yaml \
     --set deployment.image.registry=${DOCKER_REGISTRY} \
     --set deployment.image.tag=${VERSION} \
     --set transformer.image=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \

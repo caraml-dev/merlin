@@ -12,7 +12,7 @@ If you already have existing development cluster, you can run [`quick_install.sh
 4. Knative v1.3.2
 5. Cert Manager v1.9.1
 6. Kserve v0.8.0
-8. Minio v7.0.2
+7. Minio v7.0.2
 
 ## Provision Minikube cluster
 
@@ -209,20 +209,20 @@ MLP and Merlin use Google Sign-in to authenticate the user to access the API and
 
 ```bash
 export OAUTH_CLIENT_ID="<put your oauth client id here>"
+export MLP_CHART_VERSION=0.4.18
 
 kubectl create namespace mlp
 
-git clone git@github.com:caraml-dev/mlp.git
+helm repo add caraml https://caraml-dev.github.io/helm-charts
 
-helm install mlp ./mlp/chart --namespace=mlp --values=./mlp/chart/values-e2e.yaml \
-  --set mlp.image.tag=main \
-  --set mlp.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
-  --set mlp.oauthClientID=${OAUTH_CLIENT_ID} \
-  --set mlp.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST}.nip.io \
-  --set mlp.ingress.enabled=true \
-  --set mlp.ingress.class=istio \
-  --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
-  --set mlp.ingress.path="/*" \
+helm upgrade --install --debug mlp caraml/mlp --namespace=mlp \
+  --version ${MLP_CHART_VERSION} \
+  --set fullnameOverride=mlp \
+  --set deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
+  --set deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST}.nip.io \
+  --set ingress.enabled=true \
+  --set ingress.class=istio \
+  --set ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
   --wait --timeout=5m
 
 cat <<EOF > mlp-ingress.yaml
@@ -250,21 +250,22 @@ EOF
 ## Install Merlin
 
 ```bash
-export MERLIN_VERSION=82ca798 # TODO: update to use new merlin version once vault dependency removed
+export MERLIN_CHART_VERSION=0.10.16
+export MERLIN_VERSION=0.27.0
 
 output=$(yq e -o json '.k8s_config' k8s_config.yaml | jq -r -M -c .)
-yq '.merlin.environmentConfigs[0] *= load("k8s_config.yaml")' ../charts/merlin/values-e2e.yaml > ../charts/merlin/values-e2e-with-k8s_config.yaml
-output="$output" yq '.merlin.imageBuilder.k8sConfig |= strenv(output)' -i ../charts/merlin/values-e2e-with-k8s_config.yaml
+yq '.environmentConfigs[0] *= load("k8s_config.yaml")' ./values-e2e.yaml > ./values-e2e-with-k8s_config.yaml
+output="$output" yq '.merlin.imageBuilder.k8sConfig |= strenv(output)' -i ./values-e2e-with-k8s_config.yaml
 
-helm upgrade --install merlin ../charts/merlin --namespace=mlp --values=../charts/merlin/values-e2e-with-k8s_config.yaml \
-  --set merlin.image.tag=${MERLIN_VERSION} \
-  --set merlin.oauthClientID=${OAUTH_CLIENT_ID} \
-  --set merlin.apiHost=http://merlin.mlp.${INGRESS_HOST}.nip.io/v1 \
-  --set merlin.mlpApi.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
-  --set merlin.ingress.enabled=true \
-  --set merlin.ingress.class=istio \
-  --set merlin.ingress.host=merlin.mlp.${INGRESS_HOST}.nip.io \
-  --set merlin.ingress.path="/*" \
+helm upgrade --install merlin caraml/merlin --namespace=mlp --values=./values-e2e-with-k8s_config.yaml \
+  --version ${MERLIN_CHART_VERSION} \
+  --set deployment.image.tag=${MERLIN_VERSION} \
+  --set ui.oauthClientID=${OAUTH_CLIENT_ID} \
+  --set mlpApi.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
+  --set ingress.enabled=true \
+  --set ingress.class=istio \
+  --set ingress.host=merlin.mlp.${INGRESS_HOST}.nip.io \
+  --set ingress.path="/*" \
   --set mlflow.ingress.enabled=true \
   --set mlflow.ingress.class=istio \
   --set mlflow.ingress.host=mlflow.mlp.${INGRESS_HOST}.nip.io \
@@ -278,11 +279,12 @@ helm upgrade --install merlin ../charts/merlin --namespace=mlp --values=../chart
 ```bash
 kubectl get po -n mlp
 NAME                             READY   STATUS    RESTARTS   AGE
-merlin-64c9c75dfc-djs4t          1/1     Running   0          12m
-merlin-mlflow-5c7dd6d9df-g2s6v   1/1     Running   0          12m
-merlin-postgresql-0              1/1     Running   0          12m
-mlp-6877d8567-msqg9              1/1     Running   0          15m
-mlp-postgresql-0                 1/1     Running   0          15m
+mlp-mlp-postgresql-0             1/1     Running   0             17m
+mlp-77b8b555d-pmx2x              1/1     Running   0             17m
+merlin-merlin-postgresql-0       1/1     Running   0             15m
+merlin-855cd8dddf-hphpl          1/1     Running   0             15m
+merlin-mlflow-postgresql-0       1/1     Running   0             15m
+merlin-mlflow-7b986f4456-p45pc   1/1     Running   0             15m
 ```
 
 Once everything is Running, you can open Merlin in <http://merlin.mlp.${INGRESS_HOST}.nip.io/merlin>. From here, you can run Jupyter notebook examples by setting `merlin.set_url("merlin.mlp.${INGRESS_HOST}.nip.io")`.
