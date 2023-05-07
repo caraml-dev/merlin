@@ -105,6 +105,7 @@ mlflow:
     requests:
       cpu: 25m
       memory: 64Mi
+  artifactRoot: s3://mlflow
   ingress:
     enabled: true
     class: istio
