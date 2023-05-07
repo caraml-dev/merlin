@@ -7,14 +7,14 @@ spec:
   template:
     spec:
       containers:
-      - name: activator
-        resources:
-          requests:
-            cpu: 20m
-            memory: 64Mi
-          limits:
-            cpu: 100m
-            memory: 600Mi
+        - name: activator
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 600Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -25,14 +25,14 @@ spec:
   template:
     spec:
       containers:
-      - name: autoscaler
-        resources:
-          requests:
-            cpu: 20m
-            memory: 64Mi
-          limits:
-            cpu: 100m
-            memory: 600Mi
+        - name: autoscaler
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 600Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -43,14 +43,14 @@ spec:
   template:
     spec:
       containers:
-      - name: controller
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 100m
-            memory: 600Mi
+        - name: controller
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 600Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -61,14 +61,11 @@ spec:
   template:
     spec:
       containers:
-      - name: webhook
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 200m
-            memory: 600Mi
+        - name: webhook
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -79,14 +76,14 @@ spec:
   template:
     spec:
       containers:
-      - name: domain-mapping
-        resources:
-          requests:
-            cpu: 20m
-            memory: 64Mi
-          limits:
-            cpu: 100m
-            memory: 600Mi
+        - name: domain-mapping
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 600Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -97,14 +94,14 @@ spec:
   template:
     spec:
       containers:
-      - name: domainmapping-webhook
-        resources:
-          requests:
-            cpu: 20m
-            memory: 64Mi
-          limits:
-            cpu: 100m
-            memory: 600Mi
+        - name: domainmapping-webhook
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 600Mi
 
 ---
 apiVersion: v1
@@ -116,7 +113,6 @@ data:
   127.0.0.1.nip.io: ""
 
 ---
-
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:

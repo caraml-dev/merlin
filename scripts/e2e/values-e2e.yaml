@@ -107,7 +107,7 @@ mlflow:
       memory: 64Mi
   ingress:
     enabled: true
-    class: "nginx"
+    class: istio
     path: /
   extraEnvs:
     AWS_ACCESS_KEY_ID: YOURACCESSKEY
