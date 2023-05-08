@@ -25,7 +25,7 @@ RUN if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then gcloud auth activate-ser
 RUN gsutil cp -r ${MODEL_URL} .
 RUN /bin/bash -c ". activate merlin-model && \
     sed -i 's/mlflow$/mlflow==1.23.0/' model/conda.yaml && \
-    conda env update --name merlin-model --file model/conda.yaml && \
+    conda env update -v -v --name merlin-model --file model/conda.yaml && \
     python -m pyfuncserver --model_dir model --dry_run"
 
 CMD ["/bin/bash", "./run.sh"]
