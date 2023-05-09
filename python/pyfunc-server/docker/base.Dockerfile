@@ -14,6 +14,8 @@
 
 FROM condaforge/miniforge3:4.14.0-0
 
+RUN apt-get update --fix-missing --allow-releaseinfo-change && apt-get install -y gcc
+
 ARG PYTHON_VERSION
 
 ENV GCLOUD_VERSION=405.0.1
