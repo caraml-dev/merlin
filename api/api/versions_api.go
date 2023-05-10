@@ -172,7 +172,7 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 			return BadRequest("There are active prediction job using this model version")
 		}
 	}
-	// DELETE ENDPOINT
+	// CHECK IF THERE IS ANY ENDPOINT WITH STATUS NOT TERMINATED
 	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
 	if err != nil {
 		log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
@@ -181,11 +181,7 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 
 	for _, item := range endpoints {
 		if item.Status != models.EndpointTerminated {
-			_, err = c.EndpointsService.UndeployEndpoint(ctx, item.Environment, model, version, item)
-			if err != nil {
-				log.Errorf("failed to undeploy endpoint job %v", err)
-				return InternalServerError(fmt.Sprintf("Failed to delete Endpoint %s", err))
-			}
+			return BadRequest("There are endpoint that still using this model version")
 		}
 	}
 
@@ -195,6 +191,17 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 		if err != nil {
 			log.Errorf("failed to stop prediction job %v", err)
 			return BadRequest(fmt.Sprintf("Failed stopping prediction job %s", err))
+		}
+	}
+
+	// DELETE ENDPOINTS
+	for _, item := range endpoints {
+		if item.Status != models.EndpointTerminated {
+			err = c.EndpointsService.DeleteEndpoint(version, item)
+			if err != nil {
+				log.Errorf("failed to undeploy endpoint job %v", err)
+				return InternalServerError(fmt.Sprintf("Failed to delete Endpoint %s", err))
+			}
 		}
 	}
 

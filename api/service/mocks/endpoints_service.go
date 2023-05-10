@@ -40,6 +40,20 @@ func (_m *EndpointsService) CountEndpoints(ctx context.Context, environment *mod
 	return r0, r1
 }
 
+// DeleteEndpoint provides a mock function with given fields: version, endpoint
+func (_m *EndpointsService) DeleteEndpoint(version *models.Version, endpoint *models.VersionEndpoint) error {
+	ret := _m.Called(version, endpoint)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*models.Version, *models.VersionEndpoint) error); ok {
+		r0 = rf(version, endpoint)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeployEndpoint provides a mock function with given fields: ctx, environment, model, version, endpoint
 func (_m *EndpointsService) DeployEndpoint(ctx context.Context, environment *models.Environment, model *models.Model, version *models.Version, endpoint *models.VersionEndpoint) (*models.VersionEndpoint, error) {
 	ret := _m.Called(ctx, environment, model, version, endpoint)
