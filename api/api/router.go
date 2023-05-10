@@ -201,6 +201,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 		{http.MethodPost, "/models/{model_id:[0-9]+}/versions", models.VersionPost{}, versionsController.CreateVersion, "CreateVersion"},
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", nil, versionsController.GetVersion, "GetVersion"},
 		{http.MethodPatch, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", models.VersionPatch{}, versionsController.PatchVersion, "PatchVersion"},
+		{http.MethodDelete, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", nil, versionsController.DeleteVersion, "DeleteVersion"},
 
 		// Version Endpoint API
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/endpoint", nil, endpointsController.ListEndpoint, "ListEndpoint"},

@@ -141,6 +141,76 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 	return Created(version)
 }
 
+func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {
+	ctx := r.Context()
+
+	modelID, _ := models.ParseID(vars["model_id"])
+	versionID, _ := models.ParseID(vars["version_id"])
+
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
+	if err != nil {
+		if !gorm.IsRecordNotFoundError(err) {
+			return InternalServerError(err.Error())
+		}
+		return NotFound(err.Error())
+	}
+
+	// CHECK PREDICTION JOBS
+	query := &service.ListPredictionJobQuery{
+		ModelID:   modelID,
+		VersionID: versionID,
+	}
+
+	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+	if err != nil {
+		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
+		return InternalServerError("Failed listing prediction job")
+	}
+
+	for _, item := range jobs {
+		if item.Status == models.JobPending {
+			return BadRequest("There are active prediction job using this model version")
+		}
+	}
+	// DELETE ENDPOINT
+	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
+	for index, item := range endpoints {
+		fmt.Println(index, item)
+		if item.Status != models.EndpointTerminated {
+			_, err = c.EndpointsService.UndeployEndpoint(ctx, item.Environment, model, version, item)
+			if err != nil {
+				log.Errorf("failed to undeploy endpoint job %v", err)
+				return InternalServerError(fmt.Sprintf("Failed to delete Endpoint %s", err))
+			}
+		}
+	}
+
+	// DELETE PREDICTION JOBS
+	for _, item := range jobs {
+		_, err = c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
+		if err != nil {
+			log.Errorf("failed to stop prediction job %v", err)
+			return BadRequest(fmt.Sprintf("Failed stopping prediction job %s", err))
+		}
+	}
+
+	// DELETE MLFLOW RUN
+	err = c.MlflowDeleteService.DeleteRun(ctx, version.RunID, version.ArtifactURI, true)
+	if err != nil {
+		log.Errorf("failed to delete mlflow run %v", err)
+		return InternalServerError(fmt.Sprintf("Delete Failed:  %s", err.Error()))
+	}
+
+	// DELETE MODEL VERSIONS
+	err = c.VersionsService.Delete(version)
+	if err != nil {
+		log.Errorf("failed to delete model version %v", err)
+		return InternalServerError(fmt.Sprintf("Delete Failed:  %s", err.Error()))
+	}
+
+	return Ok(versionID)
+}
+
 func validateLabels(labels models.KV) bool {
 	for key, element := range labels {
 		value, ok := element.(string)

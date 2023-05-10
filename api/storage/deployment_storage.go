@@ -26,6 +26,7 @@ type DeploymentStorage interface {
 	Save(deployment *models.Deployment) (*models.Deployment, error)
 	// GetFirstSuccessModelVersionPerModel Return mapping of model id and the first model version with a successful model version
 	GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error)
+	Delete(id models.ID) error
 }
 
 type deploymentStorage struct {
@@ -69,4 +70,8 @@ func (d *deploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID
 		resultMap[modelID] = versionID
 	}
 	return resultMap, nil
+}
+
+func (d *deploymentStorage) Delete(id models.ID) error {
+	return d.db.Delete(models.Deployment{}).Where("version_id = ?", id).Error
 }
