@@ -17,6 +17,10 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/service"
 
 	"github.com/jinzhu/gorm"
 
@@ -120,18 +124,111 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		return InternalServerError(err.Error())
 	}
 
-	// Delete Data from DB
-	//err = c.ModelsService.Delete(model)
-	//if err != nil {
-	//	return InternalServerError(err.Error())
-	//}
+	// GET MODEL VERSION
+	versions, _, err := c.VersionsService.ListVersions(ctx, modelID, c.MonitoringConfig, service.VersionQuery{})
+	if err != nil {
+		return InternalServerError(err.Error())
+	}
+
+	// CHECK CONDITION FOR EVERY VERSION
+	for _, version := range versions {
+		// CHECK PREDICTION JOBS
+		query := &service.ListPredictionJobQuery{
+			ModelID:   modelID,
+			VersionID: version.ID,
+		}
+
+		jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+		if err != nil {
+			log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
+			return InternalServerError("Failed listing prediction job")
+		}
+
+		for _, item := range jobs {
+			if item.Status == models.JobPending {
+				return BadRequest("There are active prediction job using this model version")
+			}
+		}
+		// CHECK IF THERE IS ANY ENDPOINT WITH STATUS NOT TERMINATED
+		endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
+		if err != nil {
+			log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
+			return InternalServerError("Failed listing model version endpoint")
+		}
+
+		for _, item := range endpoints {
+			if item.Status != models.EndpointTerminated {
+				return BadRequest("There are endpoint that still using this model version")
+			}
+		}
+
+	}
+
+	// DELETING ALL THE RELATED ENTITY
+	for _, version := range versions {
+
+		query := &service.ListPredictionJobQuery{
+			ModelID:   modelID,
+			VersionID: version.ID,
+		}
+
+		jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+		if err != nil {
+			log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
+			return InternalServerError("Failed listing prediction job")
+		}
+
+		// DELETE PREDICTION JOBS
+		for _, item := range jobs {
+			_, err = c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
+			if err != nil {
+				log.Errorf("failed to stop prediction job %v", err)
+				return BadRequest(fmt.Sprintf("Failed stopping prediction job %s", err))
+			}
+		}
+
+		endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
+		if err != nil {
+			log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
+			return InternalServerError("Failed listing model version endpoint")
+		}
+
+		// DELETE ENDPOINTS
+		for _, item := range endpoints {
+			if item.Status != models.EndpointTerminated {
+				err = c.EndpointsService.DeleteEndpoint(version, item)
+				if err != nil {
+					log.Errorf("failed to undeploy endpoint job %v", err)
+					return InternalServerError(fmt.Sprintf("Failed to delete Endpoint %s", err))
+				}
+			}
+		}
+	}
+
+	// UNDEPLOY MODEL ENDPOINT
+	modelEndpoints, err := c.ModelEndpointsService.ListModelEndpoints(ctx, modelID)
+	if err != nil {
+		return InternalServerError(err.Error())
+	}
+
+	for _, modelEndpoint := range modelEndpoints {
+		_, err := c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
+		if err != nil {
+			return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
+		}
+	}
+	//Delete Data from DB
+	err = c.ModelsService.Delete(model)
+	if err != nil {
+		return InternalServerError(err.Error())
+	}
 
 	// Delete Data from mlflow
-	//s := strconv.FormatUint(uint64(model.ExperimentID), 10)
-	//err = c.MlflowDeleteService.DeleteExperiment(ctx, s, true)
-	//if err != nil {
-	//	return InternalServerError(err.Error())
-	//}
+	s := strconv.FormatUint(uint64(model.ExperimentID), 10)
+	err = c.MlflowDeleteService.DeleteExperiment(ctx, s, true)
+	if err != nil {
+		return InternalServerError(err.Error())
+	}
 
 	return Ok(model)
 }
