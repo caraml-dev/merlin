@@ -8,13 +8,15 @@ on:
 jobs:
   publish-mlflow-docker:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@v2
       - name: Build and push MLflow Docker image
         uses: docker/build-push-action@v1
         with:
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
           repository: caraml-dev/mlflow
           path: mlflow

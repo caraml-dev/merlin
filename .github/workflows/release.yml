@@ -43,6 +43,8 @@ jobs:
 
   publish-api:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
@@ -58,6 +60,8 @@ jobs:
 
   publish-transformer:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
@@ -125,6 +129,8 @@ jobs:
 
   publish-inference-logger:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
