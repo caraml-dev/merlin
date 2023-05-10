@@ -169,7 +169,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	}
 
 	// check that UPI is supported
-	if model.Type != models.ModelTypePyFunc && newEndpoint.Protocol == protocol.UpiV1 {
+	if !isModelSupportUPI(model) && newEndpoint.Protocol == protocol.UpiV1 {
 		return BadRequest(
 			fmt.Sprintf("%s model is not supported by UPI", model.Type))
 	}
@@ -210,6 +210,22 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	}
 
 	return Created(endpoint)
+}
+
+var (
+	supportedUPIModelTypes = []string{
+		models.ModelTypePyFunc,
+		models.ModelTypeCustom,
+	}
+)
+
+func isModelSupportUPI(model *models.Model) bool {
+	for _, modelType := range supportedUPIModelTypes {
+		if model.Type == modelType {
+			return true
+		}
+	}
+	return false
 }
 
 // UpdateEndpoint update a an existing endpoint i.e. trigger redeployment
