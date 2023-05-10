@@ -264,16 +264,6 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 		return nil, err
 	}
 
-	err = k.deploymentStorage.Delete(version.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = k.storage.Delete(endpoint)
-	if err != nil {
-		return nil, err
-	}
-
 	return endpoint, nil
 }
 
