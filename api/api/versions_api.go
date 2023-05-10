@@ -174,8 +174,12 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 	}
 	// DELETE ENDPOINT
 	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
-	for index, item := range endpoints {
-		fmt.Println(index, item)
+	if err != nil {
+		log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
+		return InternalServerError("Failed listing model version endpoint")
+	}
+
+	for _, item := range endpoints {
 		if item.Status != models.EndpointTerminated {
 			_, err = c.EndpointsService.UndeployEndpoint(ctx, item.Environment, model, version, item)
 			if err != nil {
