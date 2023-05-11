@@ -213,19 +213,16 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 }
 
 var (
-	supportedUPIModelTypes = []string{
-		models.ModelTypePyFunc,
-		models.ModelTypeCustom,
+	supportedUPIModelTypes = map[string]bool{
+		models.ModelTypePyFunc: true,
+		models.ModelTypeCustom: true,
 	}
 )
 
 func isModelSupportUPI(model *models.Model) bool {
-	for _, modelType := range supportedUPIModelTypes {
-		if model.Type == modelType {
-			return true
-		}
-	}
-	return false
+	_, isSupported := supportedUPIModelTypes[model.Type]
+
+	return isSupported
 }
 
 // UpdateEndpoint update a an existing endpoint i.e. trigger redeployment

@@ -1,14 +1,11 @@
 # Custom Model
-Custom model enables users to to deploy any docker image that satisfy merlin requirements. Users is responsible to develop their own web service, build and publish the docker image, which later on can be deployed through Merlin.
+Custom model enables users to deploy any docker image that satisfy merlin requirements. Users are responsible to develop their own web service, build and publish the docker image, which later on can be deployed through Merlin.
 
 ## Why Custom Model 
 
 Users should consider to use custom model, if they have one of the following conditions:
-
+* Model needs custom complex transformations (preprocess and postprocess) and wanto to use other languages than Python.
 * Using non standard model, e.g using heuristic or other ml framework model that have not been introduced in merlin.
-
-* Model needs custom complex transformations (preprocess and postprocess) and having strict latency requirement.
-
 * Having dependencies with some os distribution packages.
 
 ## Comparison With PyFunc Model
@@ -23,7 +20,7 @@ In high level PyFunc and custom model has similarity, they both enable users to 
 
 ## Web Service Implementation
 
-Users need to implement their own web service using any tech stack that suitable for their use case. Currently user can deploy web service using `HTTP_JSON` or `UPI_V1` protocol, both have different requirements that must be satisfied by the web server.
+Users need to implement their own web service using any tech stack that suitable for their use case. Currently users can deploy web service using `HTTP_JSON` or `UPI_V1` protocol, both have different requirements that must be satisfied by the web server.
 
 ### HTTP_JSON Custom Model
 Users can add the artifact (model or anything else) in addition to the docker image when uploading the model. During the deployment, these artifacts will be made available in the directory specified by `CARAML_ARTIFACT_LOCATION` environment variable.
@@ -39,15 +36,26 @@ Web service MUST implement the following endpoints:
 | `/metrics` | GET | This endpoint is used by prometheus to pull the metrics produced by the predictor. The implementation of this endpoint is handled by prometheus library, for example [this](https://prometheus.io/docs/guides/go-application/) is how to implement the endpoint with golang.
 
 ### UPI_V1 Custom Model
-Similar with `HTTP_JSON` custom model, user can add the artifact during model uploading, and the uploaded artifacts will be available in the directory specified by `CARAML_ARTIFACT_LOCATION` environment variable. The web server must implement service that defined in the [UPI interface](https://github.com/caraml-dev/universal-prediction-interface/blob/main/proto/caraml/upi/v1/upi.proto#L11), also the server must open and listen to the port number given by `CARAML_GRPC_PORT` environment variable.
+Similar with `HTTP_JSON` custom model, users can add the artifact during model uploading, and the uploaded artifacts will be available in the directory specified by `CARAML_ARTIFACT_LOCATION` environment variable. The web server must implement service that defined in the [UPI interface](https://github.com/caraml-dev/universal-prediction-interface/blob/main/proto/caraml/upi/v1/upi.proto#L11), also the server must open and listen to the port number given by `CARAML_GRPC_PORT` environment variable.
 
 If users want to emit metrics from this web server, they need to create scrape metrics REST endpoint. The challenge here, the knative (the underlying k8s deployment tools that merlin use) doesn't open multiple ports, hence the REST endpoint must be running on the same port as gRPC server (using port number given by `CARAML_GRPC_PORT`). Not every programming language can support running multiple protocol (gRPC and HTTP in this case) on the same port, for Go language users can use [cmux](https://github.com/soheilhy/cmux) to solve this problem, otherwise users can use push metrics to [pushgateway](https://prometheus.io/docs/instrumenting/pushing/)
 
+### Environment Variables
+As mentioned in the previous section, there are several environment variables that will be supplied by merlin control plan to custom model. Below are the list of the variables
+
+| Name | Description |
+|------|-------------|
+| STORAGE_URI | Contains the URI where the `model` artifacts is remotely stored |
+| CARAML_HTTP_PORT | Port that must be listen and open by custom model server that use `HTTP_JSON` protocol |
+| CARAML_GRPC_PORT | Port that must be listen and open by custom model server that use `UPI_V1` protocol |
+| CARAML_MODEL_NAME | Name of merlin model |
+| CARAML_MODEL_VERSION | Merlin model version |
+| CARAML_MODEL_FULL_NAME | Full name merlin model, per current version it use `{CARAML_MODEL_NAME}-{CARAML_MODEL_VERSION}` format |
+| CARAML_ARTIFACT_LOCATION | Local path where the model artifacts will be stored |
+
 ## Docker Image
 
-Docker image must contains web service application and dependencies that must be installed in order to run the web service. Users are responsible for building the docker image as well as for publishing it. Currently there are only two kind of docker registries that can be used:
-* Artifactory
-* GCR that is owned by gods GCP project
+Docker image must contains web service application and dependencies that must be installed in order to run the web service. Users are responsible for building the docker image as well as for publishing it. Please make sure the k8s cluster (where model will be deployed) have access to pull the docker image. 
 
 ## Deployment
 
@@ -61,8 +69,15 @@ with merlin.new_model_version() as v:
 
 endpoint = merlin.deploy(v, resource_request= resource_request, protocol = Protocol.HTTP_JSON)
 # endpoint = merlin.deploy(v, resource_request= resource_request, protocol = Protocol.UPI_V1) if using UPI
-
 ```
+
+Most of the method that used in the above snipped is commonly used by all the model deployment, but `log_custom_model` method. `log_custom_model` is method exclusively used to upload custom model. Below are the method parameters that can be specified during the invocation
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| `image` | Docker image that will be used as predictor | Yes |
+| `model_dir` | Directory that will be uploaded to MLFlow | No |
+| `command` | Command to run docker image | No |
+| `args` | Arguments that needs to be specified when running docker | No |
 
 ### Deployment Flow:
 
