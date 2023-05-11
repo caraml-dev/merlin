@@ -97,8 +97,6 @@ merlin-postgresql:
       memory: 64Mi
   persistence:
     enabled: false
-mlp:
-  enabled: false
 mlflow:
   trackingURL: "http://merlin-mlflow"
   resources:
@@ -133,3 +131,9 @@ minio:
   enabled: false
 kserve:
   enabled: false
+mlp:
+  enabled: true
+  fullnameOverride: mlp
+  ingress:
+    enabled: true
+    class: istio

@@ -369,7 +369,6 @@ jobs:
       LOCAL_REGISTRY_PORT: 12345
       LOCAL_REGISTRY: "dev.localhost"
       INGRESS_HOST: "127.0.0.1.nip.io"
-      MLP_CHART_VERSION: 0.4.18
       MERLIN_CHART_VERSION: 0.10.16
       E2E_PYTHON_VERSION: "3.10.6"
     steps:
@@ -423,7 +422,7 @@ jobs:
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
-        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MLP_CHART_VERSION }} ${{ env.MERLIN_CHART_VERSION }}
+        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MERLIN_CHART_VERSION }}
       - name: Run E2E Test
         timeout-minutes: 30
         id: run-e2e-test

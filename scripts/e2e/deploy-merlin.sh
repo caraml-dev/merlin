@@ -9,34 +9,18 @@ INGRESS_HOST="$1"
 DOCKER_REGISTRY="$2"
 VERSION="$3"
 GIT_REF="$4"
-MLP_CHART_VERSION="$5"
-MERLIN_CHART_VERSION="$6"
+MERLIN_CHART_VERSION="$5"
 
 TIMEOUT=300s
 
-install_mlp() {
-  echo "::group::MLP Deployment"
-
-  helm upgrade --install --debug mlp caraml/mlp --namespace mlp --create-namespace \
-    --version ${MLP_CHART_VERSION} \
-    --set fullnameOverride=mlp \
-    --set deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
-    --set deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
-    --set ingress.enabled=true \
-    --set ingress.class=istio \
-    --set ingress.host=mlp.mlp.${INGRESS_HOST} \
-    --wait --timeout=${TIMEOUT}
-
-   kubectl rollout status deployment/mlp -n mlp -w --timeout=${TIMEOUT}
-
-   kubectl apply -f config/mock/message-dumper.yaml
-}
-
 install_merlin() {
-    echo "::group::Merlin Deployment"
-# build in json first, then convert to yaml
+  echo "::group::Merlin Deployment"
+
+  # build in json first, then convert to yaml
   output=$(yq e -o json '.k8s_config' /tmp/temp_k8sconfig.yaml | jq -r -M -c .)
   output="$output" yq '.environmentConfigs[0] *= load("/tmp/temp_k8sconfig.yaml") | .imageBuilder.k8sConfig |= strenv(output)' -i "./values-e2e.yaml"
+
+  helm repo add caraml https://caraml-dev.github.io/helm-charts
 
   helm upgrade --install --debug merlin caraml/merlin --namespace=mlp --create-namespace \
     --version ${MERLIN_CHART_VERSION} \
@@ -63,12 +47,13 @@ install_merlin() {
     --set imageBuilder.predictionJobBaseImages."3\.10\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
     --set ingress.host=merlin.mlp.${INGRESS_HOST} \
     --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \
+    --set mlp.deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
+    --set mlp.deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
+    --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST} \
     --wait --timeout=${TIMEOUT}
 
+  kubectl rollout status deployment/mlp -n mlp -w --timeout=${TIMEOUT}
   kubectl rollout status deployment/merlin -n mlp -w --timeout=${TIMEOUT}
 }
 
-helm repo add caraml https://caraml-dev.github.io/helm-charts
-
-install_mlp
 install_merlin
