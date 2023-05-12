@@ -22,14 +22,6 @@ spec:
             requests:
               cpu: 300m
               memory: 64Mi
-        - name: webhook-server
-          resources:
-            limits:
-              cpu: ~
-              memory: 400Mi
-            requests:
-              cpu: 300m
-              memory: 200Mi
 ---
 apiVersion: v1
 kind: ConfigMap
