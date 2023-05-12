@@ -488,6 +488,10 @@ jobs:
           kubectl logs deploy/controller -n knative-serving
           echo "::endgroup::"
 
+          echo "::group::Get Knative pods"
+          kubectl get pods -n knative-serving -o yaml
+          echo "::endgroup::"
+
           echo "::group::Get Event"
           kubectl get events -A
           echo "::endgroup::"
