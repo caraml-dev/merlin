@@ -4,7 +4,7 @@ Custom model enables users to deploy any docker image that satisfy merlin requir
 ## Why Custom Model 
 
 Users should consider to use custom model, if they have one of the following conditions:
-* Model needs custom complex transformations (preprocess and postprocess) and wanto to use other languages than Python.
+* Model needs custom complex transformations (preprocess and postprocess) and want to use other languages than Python.
 * Using non standard model, e.g using heuristic or other ml framework model that have not been introduced in merlin.
 * Having dependencies with some os distribution packages.
 
@@ -36,7 +36,7 @@ Web service MUST implement the following endpoints:
 | `/metrics` | GET | This endpoint is used by prometheus to pull the metrics produced by the predictor. The implementation of this endpoint is handled by prometheus library, for example [this](https://prometheus.io/docs/guides/go-application/) is how to implement the endpoint with golang.
 
 ### UPI_V1 Custom Model
-Similar with `HTTP_JSON` custom model, users can add the artifact during model uploading, and the uploaded artifacts will be available in the directory specified by `CARAML_ARTIFACT_LOCATION` environment variable. The web server must implement service that defined in the [UPI interface](https://github.com/caraml-dev/universal-prediction-interface/blob/main/proto/caraml/upi/v1/upi.proto#L11), also the server must open and listen to the port number given by `CARAML_GRPC_PORT` environment variable.
+Similar with `HTTP_JSON` custom model, users can add the artifact during model upload, and the uploaded artifacts will be available in the directory specified by `CARAML_ARTIFACT_LOCATION` environment variable. The web server must implement service that defined in the [UPI interface](https://github.com/caraml-dev/universal-prediction-interface/blob/main/proto/caraml/upi/v1/upi.proto#L11), also the server must open and listen to the port number given by `CARAML_GRPC_PORT` environment variable.
 
 If users want to emit metrics from this web server, they need to create scrape metrics REST endpoint. The challenge here, the knative (the underlying k8s deployment tools that merlin use) doesn't open multiple ports, hence the REST endpoint must be running on the same port as gRPC server (using port number given by `CARAML_GRPC_PORT`). Not every programming language can support running multiple protocol (gRPC and HTTP in this case) on the same port, for Go language users can use [cmux](https://github.com/soheilhy/cmux) to solve this problem, otherwise users can use push metrics to [pushgateway](https://prometheus.io/docs/instrumenting/pushing/)
 
@@ -46,8 +46,8 @@ As mentioned in the previous section, there are several environment variables th
 | Name | Description |
 |------|-------------|
 | STORAGE_URI | Contains the URI where the `model` artifacts is remotely stored |
-| CARAML_HTTP_PORT | Port that must be listen and open by custom model server that use `HTTP_JSON` protocol |
-| CARAML_GRPC_PORT | Port that must be listen and open by custom model server that use `UPI_V1` protocol |
+| CARAML_HTTP_PORT | Port that must be openend when the model is deployed with `HTTP_JSON` protocol |
+| CARAML_GRPC_PORT | Port that must be opened when the model is deployed with `UPI_V1` protocol |
 | CARAML_MODEL_NAME | Name of merlin model |
 | CARAML_MODEL_VERSION | Merlin model version |
 | CARAML_MODEL_FULL_NAME | Full name merlin model, per current version it use `{CARAML_MODEL_NAME}-{CARAML_MODEL_VERSION}` format |
