@@ -1,9 +1,7 @@
 package logger
 
 import (
-	"errors"
 	"fmt"
-	"time"
 
 	mlogs "github.com/caraml-dev/merlin/pkg/log"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -14,6 +12,7 @@ import (
 type KafkaProducer interface {
 	GetMetadata(*string, bool, int) (*kafka.Metadata, error)
 	Produce(*kafka.Message, chan kafka.Event) error
+	Events() chan kafka.Event
 }
 
 const (
@@ -45,7 +44,7 @@ func NewKafkaSink(
 	modelVersion string,
 	topic string,
 ) LogSink {
-	return &KafkaSink{
+	sink := &KafkaSink{
 		logger:       logger,
 		producer:     producer,
 		topic:        topic,
@@ -54,6 +53,9 @@ func NewKafkaSink(
 		modelName:    modelName,
 		modelVersion: modelVersion,
 	}
+	go sink.handleMessageDelivery()
+
+	return sink
 }
 
 func (k *KafkaSink) Sink(rawLogEntries []*LogEntry) error {
@@ -63,38 +65,7 @@ func (k *KafkaSink) Sink(rawLogEntries []*LogEntry) error {
 		return err
 	}
 
-	// A delivery channel for each message sent.
-	// This permits to receive delivery reports
-	// separately and to handle the use case
-	// of a server that has multiple concurrent
-	// produce requests and needs to deliver the replies
-	// to many different response channels.
-	deliveryChan := make(chan kafka.Event)
 	for _, inferenceLog := range inferenceLogs {
-		go func() {
-			for e := range deliveryChan {
-				switch ev := e.(type) {
-				case *kafka.Message:
-					// The message delivery report, indicating success or
-					// permanent failure after retries have been exhausted.
-					// Application level retries won't help since the client
-					// is already configured to do that.
-					m := ev
-					if m.TopicPartition.Error != nil {
-						k.logger.Errorf("Delivery failed: %v\n", m.TopicPartition.Error)
-					} else {
-						k.logger.Debugf("Delivered message to topic %s [%d] at offset %v\n",
-							*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
-					}
-				default:
-					k.logger.Infof("Ignored event: %s\n", ev)
-				}
-				// In this case the caller knows that this channel is used only
-				// for one Produce call, so it can close it.
-				close(deliveryChan)
-			}
-		}()
-
 		keyBytes, valueBytes, err := k.buildNewKafkaMessage(inferenceLog)
 		if err != nil {
 			return err
@@ -106,25 +77,24 @@ func (k *KafkaSink) Sink(rawLogEntries []*LogEntry) error {
 				Partition: kafka.PartitionAny},
 			Value: valueBytes,
 			Key:   keyBytes,
-		}, deliveryChan)
-
+		}, nil)
 		if err != nil {
-			var kafkaError kafka.Error
-			close(deliveryChan)
-			if errors.As(err, &kafkaError) {
-				if kafkaError.Code() == kafka.ErrQueueFull {
-					// Producer queue is full, wait 1s for messages
-					// to be delivered then try again.
-					time.Sleep(time.Second)
-					continue
-				}
-			}
-			k.logger.Errorf("Failed to produce message: %v\n", err)
-			return err
+			k.logger.Errorf("Produce failed: %v\n", err)
 		}
 	}
 
 	return nil
+}
+
+func (k *KafkaSink) handleMessageDelivery() {
+	for e := range k.producer.Events() {
+		switch ev := e.(type) {
+		case *kafka.Message:
+			if ev.TopicPartition.Error != nil {
+				k.logger.Errorf("Delivery failed: %v\n", ev.TopicPartition.Error)
+			}
+		}
+	}
 }
 
 func (k *KafkaSink) buildNewKafkaMessage(
