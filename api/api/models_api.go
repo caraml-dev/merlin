@@ -21,6 +21,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
@@ -185,6 +186,13 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		err = c.VersionsService.Delete(version)
 		if err != nil {
 			return InternalServerError(fmt.Sprintf("Delete version id %d failed: %s", version.ID, err.Error()))
+		}
+
+		// DELETE VERSION
+		err = c.VersionsService.Delete(version)
+		if err != nil {
+			log.Errorf("failed to delete model version %v", err)
+			return InternalServerError(fmt.Sprintf("Delete Failed:  %s", err.Error()))
 		}
 	}
 
