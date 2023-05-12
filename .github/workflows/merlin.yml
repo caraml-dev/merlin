@@ -436,6 +436,32 @@ jobs:
           kubectl logs deploy/cert-manager -n cert-manager
           echo "::endgroup::"
 
+          echo "::group::Get kserve pods"
+          kubectl get pods -n kserve -o wide
+          kubectl get pods -n kserve -o yaml
+          echo "::endgroup::"
+
+          echo "::group::KServe log"
+          kubectl logs deployment/kserve-controller-manager -n kserve -c manager
+          echo "::endgroup::"
+
+          echo "::group::KServe events"
+          kubectl get events -n kserve
+          echo "::endgroup::"
+
+          echo "::group::Knative log"
+          kubectl logs deploy/controller -n knative-serving
+          echo "::endgroup::"
+
+          echo "::group::Get Knative pods"
+          kubectl get pods -n knative-serving -o wide
+          kubectl get pods -n knative-serving -o yaml
+          echo "::endgroup::"
+
+          echo "::group::Get Event"
+          kubectl get events -A
+          echo "::endgroup::"
+
           echo "::group::Get deployment mlp namespace"
           kubectl get deployment -n mlp
           echo "::endgroup::"
@@ -460,10 +486,6 @@ jobs:
           kubectl describe pod -n merlin-e2e
           echo "::endgroup::"
 
-          echo "::group::Get Inference Service merlin-e2e namespace"
-          kubectl get isvc -n merlin-e2e -o yaml
-          echo "::endgroup::"
-
           echo "::group::Get events merlin-e2e namespace"
           kubectl get events -n merlin-e2e
           echo "::endgroup::"
@@ -472,28 +494,8 @@ jobs:
           kubectl logs deploy/merlin -n mlp -c merlin
           echo "::endgroup::"
 
-          echo "::group::Get kserve pods"
-          kubectl get pods -n kserve -o yaml
-          echo "::endgroup::"
-
-          echo "::group::KServe log"
-          kubectl logs deployment/kserve-controller-manager -n kserve -c manager
-          echo "::endgroup::"
-
-          echo "::group::KServe events"
-          kubectl get events -n kserve
-          echo "::endgroup::"
-
-          echo "::group::Knative log"
-          kubectl logs deploy/controller -n knative-serving
-          echo "::endgroup::"
-
-          echo "::group::Get Knative pods"
-          kubectl get pods -n knative-serving -o yaml
-          echo "::endgroup::"
-
-          echo "::group::Get Event"
-          kubectl get events -A
+          echo "::group::Get Inference Service merlin-e2e namespace"
+          kubectl get isvc -n merlin-e2e -o yaml
           echo "::endgroup::"
 
           echo "::group::Model log"
