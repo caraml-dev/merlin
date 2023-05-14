@@ -113,7 +113,7 @@ data:
   127.0.0.1.nip.io: ""
 
 ---
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: webhook
