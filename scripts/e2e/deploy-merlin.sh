@@ -48,7 +48,7 @@ install_merlin() {
     --set ingress.host=merlin.mlp.${INGRESS_HOST} \
     --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \
     --set mlp.deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
-    --set mlp.deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST} \
+    --set mlp.deployment.mlflowTrackingUrl=http://merlin-mlflow.mlp.${INGRESS_HOST} \
     --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST} \
     --wait --timeout=${TIMEOUT}
 

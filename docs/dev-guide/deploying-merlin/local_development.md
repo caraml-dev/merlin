@@ -32,7 +32,7 @@ Lastly, we need to enable Minikube's LoadBalancer services by running `minikube 
 We recommend installing Istio without service mesh (sidecar injection disabled). We also need to enable Istio Kubernetes Ingress enabled so we can access Merlin API and UI.
 
 ```bash
-export ISTIO_VERSION=1.12.3
+export ISTIO_VERSION=1.16.3
 
 curl --location https://git.io/getLatestIstio | sh -
 
@@ -99,8 +99,8 @@ istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f istio-config.yaml
 In this step, we install Knative Serving and configure it to use Istio as ingress controller.
 
 ```bash
-export KNATIVE_VERSION=v1.3.2
-export KNATIVE_NET_ISTIO_VERSION=v1.3.0
+export KNATIVE_VERSION=v1.8.6
+export KNATIVE_NET_ISTIO_VERSION=v1.9.2
 
 kubectl apply --filename=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-crds.yaml
 kubectl apply --filename=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-core.yaml
@@ -132,7 +132,7 @@ kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/downl
 Kserve manages the deployment of Merlin models.
 
 ```bash
-export KSERVE_VERSION=v0.8.0
+export KSERVE_VERSION=v0.9.0
 
 kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve.yaml
 kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve-runtimes.yaml
@@ -203,62 +203,24 @@ helm repo add minio https://helm.min.io/
 helm install minio minio/minio --version=${MINIO_VERSION} --namespace=minio --values=minio-values.yaml --wait --timeout=600s
 ```
 
-## Install MLP
+## Install MLP and Merlin
 
 MLP and Merlin use Google Sign-in to authenticate the user to access the API and UI. Please follow [this documentation](https://developers.google.com/identity/protocols/oauth2/javascript-implicit-flow) to create Google Authorization credential. You must specify Javascript origins and redirect URIs with both `http://mlp.mlp.${INGRESS_HOST}.nip.io` and `http://merlin.mlp.${INGRESS_HOST}.nip.io`. After you get the client ID, specify it into `OAUTH_CLIENT_ID`.
 
 ```bash
 export OAUTH_CLIENT_ID="<put your oauth client id here>"
-export MLP_CHART_VERSION=0.4.18
-
-kubectl create namespace mlp
-
-helm repo add caraml https://caraml-dev.github.io/helm-charts
-
-helm upgrade --install --debug mlp caraml/mlp --namespace=mlp \
-  --version ${MLP_CHART_VERSION} \
-  --set fullnameOverride=mlp \
-  --set deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
-  --set deployment.mlflowTrackingUrl=http://mlflow.mlp.${INGRESS_HOST}.nip.io \
-  --set ingress.enabled=true \
-  --set ingress.class=istio \
-  --set ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
-  --wait --timeout=5m
-
-cat <<EOF > mlp-ingress.yaml
-apiVersion: networking.k8s.io/v1beta1
-kind: Ingress
-metadata:
-  name: mlp
-  namespace: mlp
-  annotations:
-    kubernetes.io/ingress.class: istio
-  labels:
-    app: mlp
-spec:
-  rules:
-    - host: 'mlp.mlp.${INGRESS_HOST}.nip.io'
-      http:
-        paths:
-          - path: /*
-            backend:
-              serviceName: mlp
-              servicePort: 8080
-EOF
-```
-
-## Install Merlin
-
-```bash
 export MERLIN_CHART_VERSION=0.10.16
 export MERLIN_VERSION=0.27.0
 
 output=$(yq e -o json '.k8s_config' k8s_config.yaml | jq -r -M -c .)
-yq '.environmentConfigs[0] *= load("k8s_config.yaml")' ./values-e2e.yaml > ./values-e2e-with-k8s_config.yaml
+yq '.environmentConfigs[0] *= load("k8s_config.yaml")' ./scripts/e2e/values-e2e.yaml > ./values-e2e-with-k8s_config.yaml
 output="$output" yq '.merlin.imageBuilder.k8sConfig |= strenv(output)' -i ./values-e2e-with-k8s_config.yaml
 
-helm upgrade --install merlin caraml/merlin --namespace=mlp --values=./values-e2e-with-k8s_config.yaml \
+helm repo add caraml https://caraml-dev.github.io/helm-charts
+
+helm upgrade --install --debug merlin caraml/merlin --namespace=mlp --create-namespace \
   --version ${MERLIN_CHART_VERSION} \
+  --values=./values-e2e-with-k8s_config.yaml
   --set deployment.image.tag=${MERLIN_VERSION} \
   --set ui.oauthClientID=${OAUTH_CLIENT_ID} \
   --set mlpApi.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
@@ -268,10 +230,15 @@ helm upgrade --install merlin caraml/merlin --namespace=mlp --values=./values-e2
   --set ingress.path="/*" \
   --set mlflow.ingress.enabled=true \
   --set mlflow.ingress.class=istio \
-  --set mlflow.ingress.host=mlflow.mlp.${INGRESS_HOST}.nip.io \
+  --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
   --set mlflow.ingress.path="/*" \
-  --timeout=5m \
-  --wait
+  --set mlp.deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
+  --set mlp.deployment.mlflowTrackingUrl=http://merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
+  --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
+  --set mlp.ingress.path="/*" \
+  --set minio.enabled=false \
+  --set kserve.enabled=false \
+  --wait --timeout=5m
 ```
 
 ### Check Merlin installation
