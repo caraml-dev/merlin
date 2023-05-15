@@ -187,6 +187,7 @@ func Test(t *testing.T) {
 					zapLogger := l.Sugar()
 
 					mockKafkaProducer := &mocks.KafkaProducer{}
+					mockKafkaProducer.On("Events", mock.Anything, mock.Anything).Return(nil)
 					mockKafkaProducer.On("Produce", mock.Anything, mock.Anything).Return(nil)
 					workerConfig := &WorkerConfig{
 						MinBatchSize: 1,

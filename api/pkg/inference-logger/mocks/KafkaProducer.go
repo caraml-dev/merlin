@@ -39,6 +39,22 @@ func (_m *KafkaProducer) GetMetadata(_a0 *string, _a1 bool, _a2 int) (*kafka.Met
 	return r0, r1
 }
 
+// Events provides a mock function with given fields:
+func (_m *KafkaProducer) Events() chan kafka.Event {
+	ret := _m.Called()
+
+	var r0 chan kafka.Event
+	if rf, ok := ret.Get(0).(func() chan kafka.Event); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(chan kafka.Event)
+		}
+	}
+
+	return r0
+}
+
 // Produce provides a mock function with given fields: _a0, _a1
 func (_m *KafkaProducer) Produce(_a0 *kafka.Message, _a1 chan kafka.Event) error {
 	ret := _m.Called(_a0, _a1)
