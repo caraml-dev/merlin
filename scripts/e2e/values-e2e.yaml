@@ -1,0 +1,139 @@
+deployment:
+  image:
+    repository: merlin
+  replicaCount: 1
+  podLabels:
+    environment: e2e
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+environment: dev
+loggerDestinationURL: "http://message-dumper.mlp.svc.cluster.local"
+mlpApi:
+  apiHost: http://mlp.mlp:8080/v1
+  encryptionKey: password
+imageBuilder:
+  serviceAccount:
+    create: true
+    name: "kaniko"
+    annotations: {}
+    labels: {}
+  clusterName: "merlin-cluster"
+  baseImages:
+    3.7.*:
+      imageName: pyfunc-py37:v0.27.0
+      dockerfilePath: "docker/Dockerfile"
+      buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
+      mainAppPath: /merlin-spark-app/main.py
+  predictionJobBaseImages:
+    3.7.*:
+      imageName: pyspark-py37:v0.27.0
+      dockerfilePath: "docker/app.Dockerfile"
+      buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
+      mainAppPath: /merlin-spark-app/main.py
+  predictionJobContextSubPath: "python/batch-predictor"
+  namespace: "mlp"
+  dockerRegistry: "dockerRegistry"
+  timeout: "10m"
+  retention: "48h"
+  kanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
+  resources:
+    requests:
+      cpu: "1"
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  maxRetry: 3
+  safeToEvict: false
+transformer:
+  image: ghcr.io/caraml-dev/merlin-transformer:0.27.0
+environmentConfigs:
+  - name: dev
+    is_default: true
+    cluster: merlin-cluster
+    region: id
+    gcp_project: gcp-project
+    deployment_timeout: 10m
+    namespace_timeout: 2m
+    max_cpu: 250m
+    max_memory: 256Mi
+    queue_resource_percentage: 20
+    is_prediction_job_enabled: true
+    is_default_prediction_job: true
+    default_prediction_job_config:
+      executor_replica: 1
+      driver_cpu_request: 25m
+      driver_memory_request: 128Mi
+      executor_cpu_request: 25m
+      executor_memory_request: 128Mi
+    default_deployment_config:
+      min_replica: 0
+      max_replica: 1
+      cpu_request: "25m"
+      memory_request: "128Mi"
+    default_transformer_config:
+      min_replica: 0
+      max_replica: 1
+      cpu_request: "25m"
+      memory_request: "64Mi"
+authorization:
+  enabled: false
+ingress:
+  enabled: true
+  class: istio
+  path: /
+merlin-postgresql:
+  enabled: true
+  postgresqlUsername: merlin
+  postgresqlDatabase: merlin
+  postgresqlPassword: merlin
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+  persistence:
+    enabled: false
+mlflow:
+  trackingURL: "http://merlin-mlflow"
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+  artifactRoot: s3://mlflow
+  ingress:
+    enabled: true
+    class: istio
+    path: /
+  extraEnvs:
+    AWS_ACCESS_KEY_ID: YOURACCESSKEY
+    AWS_SECRET_ACCESS_KEY: YOURSECRETKEY
+    AWS_DEFAULT_REGION: ap-southeast-2
+    MLFLOW_S3_ENDPOINT_URL: http://minio.minio.svc.cluster.local:9000
+mlflow-postgresql:
+  enabled: true
+  postgresqlUsername: mlflow
+  postgresqlDatabase: mlflow
+  postgresqlPassword: mlflow
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+  persistence:
+    enabled: false
+swagger:
+  enabled: false
+minio:
+  enabled: false
+kserve:
+  enabled: false
+mlp:
+  enabled: true
+  fullnameOverride: mlp
+  ingress:
+    enabled: true
+    class: istio

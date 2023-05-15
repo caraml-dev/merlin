@@ -17,10 +17,10 @@ set -o nounset
 CLUSTER_NAME=$1
 INGRESS_HOST=$2
 
-ISTIO_VERSION=1.13.2
+ISTIO_VERSION=1.16.3
 # queue proxy version in config/knative/overlay.yaml should also be modified to upgrade knative
-KNATIVE_VERSION=1.7.4
-KNATIVE_NET_ISTIO_VERSION=1.7.1
+KNATIVE_VERSION=1.8.6
+KNATIVE_NET_ISTIO_VERSION=1.9.2
 CERT_MANAGER_VERSION=1.7.2
 MINIO_VERSION=3.6.3
 KSERVE_VERSION=0.9.0
@@ -29,8 +29,8 @@ TIMEOUT=180s
 
 add_helm_repo() {
     helm repo add hashicorp https://helm.releases.hashicorp.com
-    helm repo add minio https://charts.min.io/
     helm repo add istio https://istio-release.storage.googleapis.com/charts
+    helm repo add minio https://charts.min.io/
     helm repo update
 }
 
@@ -84,7 +84,7 @@ install_knative() {
     kubectl rollout status deployment/webhook -n knative-serving -w --timeout=${TIMEOUT}
 
     # Install knative-istio
-    kubectl apply -f https://github.com/knative/net-istio/releases/download/knative-v${KNATIVE_NET_ISTIO_VERSION}/net-istio.yaml
+    kubectl apply -f https://github.com/knative-sandbox/net-istio/releases/download/knative-v${KNATIVE_NET_ISTIO_VERSION}/net-istio.yaml
 
     kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}

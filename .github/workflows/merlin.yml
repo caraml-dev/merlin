@@ -369,7 +369,7 @@ jobs:
       LOCAL_REGISTRY_PORT: 12345
       LOCAL_REGISTRY: "dev.localhost"
       INGRESS_HOST: "127.0.0.1.nip.io"
-      MLP_CHART_VERSION: 0.3.4
+      MERLIN_CHART_VERSION: 0.10.16
       E2E_PYTHON_VERSION: "3.10.6"
     steps:
       - uses: actions/checkout@v2
@@ -405,7 +405,7 @@ jobs:
       - name: Create Test Cluster
         run: |
           k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
-          k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.22.15-k3s1 --k3s-arg '--no-deploy=traefik,metrics-server@server:*' --port 80:80@loadbalancer
+          k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.25.9-k3s1 --k3s-arg '--disable=traefik,metrics-server@server:*' --port 80:80@loadbalancer
       - name: Publish images to k3d registry
         run: |
           # Merlin API
@@ -422,7 +422,7 @@ jobs:
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
-        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ../../charts/merlin ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MLP_CHART_VERSION }}
+        run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MERLIN_CHART_VERSION }}
       - name: Run E2E Test
         timeout-minutes: 30
         id: run-e2e-test

@@ -5,7 +5,6 @@
 
 bin/
 build/
-charts/
 docs/
 examples/
 python/pyfunc-scaffolding
