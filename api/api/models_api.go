@@ -164,6 +164,10 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		// save all endpoint for deletion process later on
 		inactiveEndpointsInModel = append(inactiveEndpointsInModel, endpoints)
 
+			// SAVE ENTITY TO A LIST
+			allEndpointInModel = append(allEndpointInModel, endpoints...)
+
+		}
 	}
 
 	// DELETING ALL THE RELATED ENTITY
@@ -187,7 +191,6 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		if err != nil {
 			return InternalServerError(fmt.Sprintf("Delete version id %d failed: %s", version.ID, err.Error()))
 		}
-
 		// DELETE VERSION
 		err = c.VersionsService.Delete(version)
 		if err != nil {
@@ -205,7 +208,14 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	for _, modelEndpoint := range modelEndpoints {
 		err := c.ModelEndpointsService.DeleteModelEndpoint(modelEndpoint)
 		if err != nil {
-			return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
+			return InternalServerError(err.Error())
+		}
+
+		for _, modelEndpoint := range modelEndpoints {
+			_, err := c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
+			if err != nil {
+				return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
+			}
 		}
 	}
 

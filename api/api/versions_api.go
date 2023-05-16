@@ -236,7 +236,6 @@ func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context
 		if item.Status != models.EndpointTerminated && item.Status != models.EndpointFailed {
 			return nil, BadRequest("There are active endpoint that still using this model version")
 		}
-	}
 
 	return endpoints, nil
 }
