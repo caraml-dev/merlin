@@ -308,7 +308,7 @@ func (k *endpointService) ListContainers(ctx context.Context, model *models.Mode
 }
 
 func (k *endpointService) DeleteEndpoint(version *models.Version, endpoint *models.VersionEndpoint) error {
-	err := k.deploymentStorage.Delete(version.ID)
+	err := k.deploymentStorage.Delete(version.ModelID, version.ID)
 	if err != nil {
 		return err
 	}

@@ -12,13 +12,13 @@ type DeploymentStorage struct {
 	mock.Mock
 }
 
-// Delete provides a mock function with given fields: id
-func (_m *DeploymentStorage) Delete(id models.ID) error {
-	ret := _m.Called(id)
+// Delete provides a mock function with given fields: modelID, versionID
+func (_m *DeploymentStorage) Delete(modelID models.ID, versionID models.ID) error {
+	ret := _m.Called(modelID, versionID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(models.ID) error); ok {
-		r0 = rf(id)
+	if rf, ok := ret.Get(0).(func(models.ID, models.ID) error); ok {
+		r0 = rf(modelID, versionID)
 	} else {
 		r0 = ret.Error(0)
 	}
