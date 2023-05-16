@@ -132,59 +132,65 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 
 	var allJobInModel []*models.PredictionJob
 	var allEndpointInModel []*models.VersionEndpoint
+
 	// CHECK CONDITION FOR EVERY VERSION
 	for _, version := range versions {
-		// CHECK PREDICTION JOBS
-		query := &service.ListPredictionJobQuery{
-			ModelID:   modelID,
-			VersionID: version.ID,
-		}
-
-		jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
-		if err != nil {
-			log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
-			return InternalServerError("Failed listing prediction job")
-		}
-
-		for _, item := range jobs {
-			if item.Status == models.JobPending {
-				return BadRequest("There are active prediction job using this model version")
+		if model.Type == "pyfunc_v2" {
+			// CHECK PREDICTION JOBS
+			query := &service.ListPredictionJobQuery{
+				ModelID:   modelID,
+				VersionID: version.ID,
 			}
-		}
-		// CHECK IF THERE IS ANY ENDPOINT WITH STATUS NOT TERMINATED
-		endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
-		if err != nil {
-			log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
-			return InternalServerError("Failed listing model version endpoint")
-		}
 
-		for _, item := range endpoints {
-			if item.Status != models.EndpointTerminated {
-				return BadRequest("There are endpoint that still using this model version")
+			jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
+			if err != nil {
+				log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
+				return InternalServerError("Failed listing prediction job")
 			}
+
+			for _, item := range jobs {
+				if item.Status == models.JobPending {
+					return BadRequest("There are active prediction job using this model version")
+				}
+			}
+
+			// SAVE ENTITY TO A LIST
+			allJobInModel = append(allJobInModel, jobs...)
+
+		} else {
+			// CHECK IF THERE IS ANY ENDPOINT WITH STATUS NOT TERMINATED
+			endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
+			if err != nil {
+				log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
+				return InternalServerError("Failed listing model version endpoint")
+			}
+
+			for _, item := range endpoints {
+				if item.Status != models.EndpointTerminated {
+					return BadRequest("There are endpoint that still using this model version")
+				}
+			}
+
+			// SAVE ENTITY TO A LIST
+			allEndpointInModel = append(allEndpointInModel, endpoints...)
+
 		}
-
-		// SAVE ENTITY TO A LIST
-		allJobInModel = append(allJobInModel, jobs...)
-		allEndpointInModel = append(allEndpointInModel, endpoints...)
-
 	}
 
 	// DELETING ALL THE RELATED ENTITY
 	for _, version := range versions {
-
-		// DELETE PREDICTION JOBS
-		for _, job := range allJobInModel {
-			_, err = c.PredictionJobService.StopPredictionJob(ctx, job.Environment, model, version, job.ID)
-			if err != nil {
-				log.Errorf("failed to stop prediction job %v", err)
-				return BadRequest(fmt.Sprintf("Failed stopping prediction job %s", err))
+		if model.Type == "pyfunc_v2" {
+			// DELETE PREDICTION JOBS
+			for _, job := range allJobInModel {
+				_, err = c.PredictionJobService.StopPredictionJob(ctx, job.Environment, model, version, job.ID)
+				if err != nil {
+					log.Errorf("failed to stop prediction job %v", err)
+					return BadRequest(fmt.Sprintf("Failed stopping prediction job %s", err))
+				}
 			}
-		}
-
-		// DELETE ENDPOINTS
-		for _, endpoint := range allEndpointInModel {
-			if endpoint.Status != models.EndpointTerminated {
+		} else {
+			// DELETE ENDPOINTS
+			for _, endpoint := range allEndpointInModel {
 				err = c.EndpointsService.DeleteEndpoint(version, endpoint)
 				if err != nil {
 					log.Errorf("failed to undeploy endpoint job %v", err)
@@ -192,7 +198,6 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 				}
 			}
 		}
-
 		// DELETE VERSION
 		err = c.VersionsService.Delete(version)
 		if err != nil {
@@ -200,19 +205,21 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			return InternalServerError(fmt.Sprintf("Delete Failed:  %s", err.Error()))
 		}
 	}
-
-	// UNDEPLOY MODEL ENDPOINT
-	modelEndpoints, err := c.ModelEndpointsService.ListModelEndpoints(ctx, modelID)
-	if err != nil {
-		return InternalServerError(err.Error())
-	}
-
-	for _, modelEndpoint := range modelEndpoints {
-		_, err := c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
+	if model.Type != "pyfunc_v2" {
+		// UNDEPLOY MODEL ENDPOINT
+		modelEndpoints, err := c.ModelEndpointsService.ListModelEndpoints(ctx, modelID)
 		if err != nil {
-			return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
+			return InternalServerError(err.Error())
+		}
+
+		for _, modelEndpoint := range modelEndpoints {
+			_, err := c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
+			if err != nil {
+				return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
+			}
 		}
 	}
+
 	// Delete Data from DB
 	err = c.ModelsService.Delete(model)
 	if err != nil {

@@ -155,56 +155,61 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 		return NotFound(err.Error())
 	}
 
-	// CHECK PREDICTION JOBS
-	query := &service.ListPredictionJobQuery{
-		ModelID:   modelID,
-		VersionID: versionID,
-	}
-
-	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
-	if err != nil {
-		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
-		return InternalServerError("Failed listing prediction job")
-	}
-
-	for _, item := range jobs {
-		if item.Status == models.JobPending {
-			return BadRequest("There are active prediction job using this model version")
+	// ONLY FOR PYFUNC MODEL
+	if model.Type == "pyfunc_v2" {
+		// CHECK PREDICTION JOBS
+		jobQuery := &service.ListPredictionJobQuery{
+			ModelID:   modelID,
+			VersionID: versionID,
 		}
-	}
-	// CHECK IF THERE IS ANY ENDPOINT WITH STATUS NOT TERMINATED
-	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
-	if err != nil {
-		log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
-		return InternalServerError("Failed listing model version endpoint")
-	}
 
-	for _, item := range endpoints {
-		if item.Status != models.EndpointTerminated {
-			return BadRequest("There are endpoint that still using this model version")
-		}
-	}
-
-	// DELETE PREDICTION JOBS
-	for _, item := range jobs {
-		_, err = c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
+		jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, jobQuery)
 		if err != nil {
-			log.Errorf("failed to stop prediction job %v", err)
-			return BadRequest(fmt.Sprintf("Failed stopping prediction job %s", err))
+			log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
+			return InternalServerError("Failed listing prediction job")
 		}
-	}
 
-	// DELETE ENDPOINTS
-	for _, item := range endpoints {
-		if item.Status != models.EndpointTerminated {
-			err = c.EndpointsService.DeleteEndpoint(version, item)
+		for _, item := range jobs {
+			if item.Status == models.JobPending {
+				return BadRequest("There are active prediction job using this model version")
+			}
+		}
+
+		// DELETE PREDICTION JOBS
+		for _, item := range jobs {
+			_, err = c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
 			if err != nil {
-				log.Errorf("failed to undeploy endpoint job %v", err)
-				return InternalServerError(fmt.Sprintf("Failed to delete Endpoint %s", err))
+				log.Errorf("failed to stop prediction job %v", err)
+				return BadRequest(fmt.Sprintf("Failed stopping prediction job %s", err))
+			}
+		}
+
+	} else {
+		// ONLY FOR NON PYFUNC MODEL
+		// CHECK IF THERE IS ANY ENDPOINT WITH STATUS NOT TERMINATED
+		endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
+		if err != nil {
+			log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
+			return InternalServerError("Failed listing model version endpoint")
+		}
+
+		for _, item := range endpoints {
+			if item.Status != models.EndpointTerminated {
+				return BadRequest("There are endpoint that still using this model version")
+			}
+		}
+
+		// DELETE ENDPOINTS
+		for _, item := range endpoints {
+			if item.Status != models.EndpointTerminated {
+				err = c.EndpointsService.DeleteEndpoint(version, item)
+				if err != nil {
+					log.Errorf("failed to undeploy endpoint job %v", err)
+					return InternalServerError(fmt.Sprintf("Failed to delete Endpoint %s", err))
+				}
 			}
 		}
 	}
-
 	// DELETE MLFLOW RUN
 	err = c.MlflowDeleteService.DeleteRun(ctx, version.RunID, version.ArtifactURI, true)
 	if err != nil {
