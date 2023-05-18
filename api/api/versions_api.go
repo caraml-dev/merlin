@@ -40,11 +40,11 @@ func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string,
 
 	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		log.Errorf("error getting model version for given model %s version %s", modelID, versionID)
+		log.Errorf("error getting model version for given model %s version %s: %s", modelID, versionID, err)
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model version %s for version %s", modelID, versionID))
 		}
-		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s", modelID, versionID))
+		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s: %s", modelID, versionID, err))
 	}
 
 	return Ok(v)
@@ -58,11 +58,11 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 
 	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		log.Errorf("error getting model version for given model %s version %s", modelID, versionID)
+		log.Errorf("error getting model version for given model %s version %s: %s", modelID, versionID, err)
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model version %s for version %s", modelID, versionID))
 		}
-		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s", modelID, versionID))
+		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s: %s", modelID, versionID, err))
 	}
 
 	versionPatch, ok := body.(*models.VersionPatch)

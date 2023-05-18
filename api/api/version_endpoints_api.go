@@ -53,7 +53,7 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 
 	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
+		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found: %s", versionID, err))
 	}
 
 	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
@@ -89,7 +89,7 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 
 	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
+		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found: %s", versionID, err))
 	}
 
 	endpoint, err := c.EndpointsService.FindByID(ctx, endpointID)
@@ -341,7 +341,7 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 
 		endpoint, ok = version.GetEndpointByEnvironmentName(env.Name)
 		if !ok {
-			return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
+			return NotFound(fmt.Sprintf("Endpoint with given `environment_name: %s` not found: %s", env.Name, err))
 		}
 	} else {
 
@@ -390,7 +390,7 @@ func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]st
 	}
 	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found", versionID))
+		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found: %s", versionID, err))
 	}
 
 	endpoint, err := c.EndpointsService.ListContainers(ctx, model, version, endpointID)

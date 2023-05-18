@@ -109,7 +109,7 @@ func TestGetVersion(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error getting model version for given model 1 version 1"},
+				data: Error{Message: "Error getting model version for given model 1 version 1: DB is down"},
 			},
 		},
 	}
@@ -608,7 +608,7 @@ func TestPatchVersion(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error getting model version for given model 1 version 1"},
+				data: Error{Message: "Error getting model version for given model 1 version 1: DB is down"},
 			},
 		},
 		{

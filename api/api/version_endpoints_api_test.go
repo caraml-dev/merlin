@@ -172,7 +172,7 @@ func TestListEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Version with given `version_id: 1` not found"},
+				data: Error{Message: "Version with given `version_id: 1` not found: record not found"},
 			},
 		},
 		{
@@ -373,7 +373,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Version with given `version_id: 1` not found"},
+				data: Error{Message: "Version with given `version_id: 1` not found: record not found"},
 			},
 		},
 		{
@@ -612,7 +612,7 @@ func TestListContainers(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Version with given `version_id: 1` not found"},
+				data: Error{Message: "Version with given `version_id: 1` not found: record not found"},
 			},
 		},
 		{
