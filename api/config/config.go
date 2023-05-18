@@ -130,10 +130,10 @@ func (docs *Documentations) Decode(value string) error {
 }
 
 type DatabaseConfig struct {
-	Host          string `Validate:"required"`
+	Host          string `validate:"required"`
 	Port          int    `default:"5432"`
-	User          string `Validate:"required"`
-	Password      string `Validate:"required"`
+	User          string `validate:"required"`
+	Password      string `validate:"required"`
 	Database      string `default:"mlp"`
 	MigrationPath string `default:"file://db-migrations"`
 
@@ -145,14 +145,14 @@ type DatabaseConfig struct {
 
 // Resource contains the Kubernetes resource request and limits
 type Resource struct {
-	CPU    string `Validate:"required"`
-	Memory string `Validate:"required"`
+	CPU    string `validate:"required"`
+	Memory string `validate:"required"`
 }
 
 // ResourceRequestsLimits contains the Kubernetes resource request and limits for kaniko
 type ResourceRequestsLimits struct {
-	Requests Resource `Validate:"required"`
-	Limits   Resource `Validate:"required"`
+	Requests Resource `validate:"required"`
+	Limits   Resource `validate:"required"`
 }
 
 func (r *ResourceRequestsLimits) Decode(value string) error {
@@ -278,7 +278,7 @@ type WardenConfig struct {
 }
 
 type MlpAPIConfig struct {
-	APIHost       string `Validate:"required"`
+	APIHost       string `validate:"required"`
 }
 
 // FeastServingKeepAliveConfig config for feast serving grpc keepalive
@@ -302,10 +302,10 @@ type ModelClientKeepAliveConfig struct {
 }
 
 type StandardTransformerConfig struct {
-	ImageName             string           `Validate:"required"`
-	FeastServingURLs      FeastServingURLs `Validate:"required"`
-	FeastCoreURL          string           `Validate:"required"`
-	FeastCoreAuthAudience string           `Validate:"required"`
+	ImageName             string           `validate:"required"`
+	FeastServingURLs      FeastServingURLs `validate:"required"`
+	FeastCoreURL          string           `validate:"required"`
+	FeastCoreAuthAudience string           `validate:"required"`
 	EnableAuth            bool             `default:"false"`
 	FeastRedisConfig      *FeastRedisConfig
 	FeastBigtableConfig   *FeastBigtableConfig
@@ -333,8 +333,8 @@ type KafkaConfig struct {
 
 // SimulationFeastConfig feast config that aimed to be used only for simulation of standard transformer
 type SimulationFeastConfig struct {
-	FeastRedisURL    string `Validate:"required"`
-	FeastBigtableURL string `Validate:"required"`
+	FeastRedisURL    string `validate:"required"`
+	FeastBigtableURL string `validate:"required"`
 }
 
 // ToFeastStorageConfigsForSimulation convert standard transformer config to feast storage config that will be used for transformer simulation
@@ -417,7 +417,7 @@ type JaegerConfig struct {
 }
 
 type MlflowConfig struct {
-	TrackingURL string `Validate:"required"`
+	TrackingURL string `validate:"required"`
 	ArtifactServiceType string `validate:"required"`
 }
 
