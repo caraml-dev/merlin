@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
@@ -27,6 +28,7 @@ import (
 
 	mlflowDelete "github.com/caraml-dev/mlp/api/pkg/client/mlflow"
 
+	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
@@ -34,10 +36,6 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
-
-	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
-	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
-	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
 
 	"github.com/caraml-dev/merlin/api"
 	"github.com/caraml-dev/merlin/config"
@@ -50,6 +48,8 @@ import (
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/storage"
 	"github.com/caraml-dev/merlin/warden"
+	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
+	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 )
 
 var (
@@ -57,13 +57,42 @@ var (
 	onlyOneSignalHandler = make(chan struct{})
 )
 
+type configFlags []string
+
+func (c *configFlags) String() string {
+	return strings.Join(*c, ",")
+}
+
+func (c *configFlags) Set(value string) error {
+	*c = append(*c, value)
+	return nil
+}
+
 func main() {
 	ctx := context.Background()
 
-	cfg, err := config.InitConfigEnv()
-	if err != nil {
-		log.Panicf("Failed initializing config: %v", err)
+	var configFlags configFlags
+	flag.Var(&configFlags, "config", "Path to a configuration file. This flag can be specified multiple "+
+		"times to load multiple configurations.")
+	flag.Parse()
+
+	if len(configFlags) < 1 {
+		log.Panicf("Must specify at least one config path using -config")
 	}
+
+	cfg, err := config.Load(configFlags...)
+	if err != nil {
+		log.Panicf("%s", err)
+	}
+
+	fmt.Printf("%+v\n", cfg)
+
+	cfg.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.EnvironmentConfigPath)
+	if err := cfg.Validate(); err != nil {
+		log.Panicf("Failed validating config: %s", err)
+	}
+
+	fmt.Printf("%+v\n", cfg)
 
 	// Initializing Sentry client
 	cfg.Sentry.Labels = map[string]string{"environment": cfg.Environment}

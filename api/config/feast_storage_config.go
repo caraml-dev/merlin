@@ -48,11 +48,11 @@ type FeastRedisConfig struct {
 	// Flag to indicate whether feast serving using direct REDIS storage or using feast grpc
 	IsUsingDirectStorage bool `json:"is_using_direct_storage"`
 	// Feast GRPC serving URL that use redis
-	ServingURL string `json:"serving_url" validate:"required"`
+	ServingURL string `json:"serving_url" Validate:"required"`
 	// Address of redis
-	RedisAddresses []string `json:"redis_addresses" validate:"required,gt=0"`
+	RedisAddresses []string `json:"redis_addresses" Validate:"required,gt=0"`
 	// Number of maximum pool size of redis connections
-	PoolSize int32 `json:"pool_size" validate:"gt=0"`
+	PoolSize int32 `json:"pool_size" Validate:"gt=0"`
 	// Max retries if redis command returning error
 	MaxRetries int32 `json:"max_retries"`
 	// Backoff duration before attempt retry
@@ -139,15 +139,15 @@ type FeastBigtableConfig struct {
 	// Flag to indicate whether feast serving using direct BIGTABLE storage or using feast grpc
 	IsUsingDirectStorage bool `json:"is_using_direct_storage" default:"false"`
 	// Feast GRPC serving URL that use bigtable
-	ServingURL string `json:"serving_url" validate:"required"`
+	ServingURL string `json:"serving_url" Validate:"required"`
 	// GCP Project where the bigtable instance is located
-	Project string `json:"project" validate:"required"`
+	Project string `json:"project" Validate:"required"`
 	// Name of bigtable instance
-	Instance string `json:"instance" validate:"required"`
+	Instance string `json:"instance" Validate:"required"`
 	// Bigtable app profile
 	AppProfile string `json:"app_profile"`
 	// Number of grpc connnection created
-	PoolSize int32 `json:"pool_size" validate:"gt=0"`
+	PoolSize int32 `json:"pool_size" Validate:"gt=0"`
 	// Interval to send keep-alive packet to established connection
 	KeepAliveInterval *Duration `json:"keep_alive_interval"`
 	// Duration before connection is marks as not healthy and close the connection afterward

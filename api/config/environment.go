@@ -89,7 +89,7 @@ type ResourceRequestConfig struct {
 	MemoryRequest string `yaml:"memory_request"`
 }
 
-func initEnvironmentConfigs(path string) []EnvironmentConfig {
+func InitEnvironmentConfigs(path string) []EnvironmentConfig {
 	cfgFile, err := os.ReadFile(path)
 	if err != nil {
 		log.Panicf("unable to read deployment config file: %s", path)
