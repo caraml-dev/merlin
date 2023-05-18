@@ -68,7 +68,7 @@ func TestFeastRedisConfig(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
-			os.Setenv("FEAST_REDIS_CONFIG", tC.redisConfigString) //nolint:errcheck
+			os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTREDISCONFIG", tC.redisConfigString) //nolint:errcheck
 
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
@@ -128,7 +128,7 @@ func TestFeastBigtableConfig(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
-			os.Setenv("FEAST_BIG_TABLE_CONFIG", tC.bigtableString) //nolint:errcheck
+			os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTBIGTABLECONFIG", tC.bigtableString) //nolint:errcheck
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
 			if err == nil {
@@ -345,13 +345,13 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 
 //nolint:errcheck
 func setRequiredEnvironmentVariables() {
-	os.Setenv("STANDARD_TRANSFORMER_IMAGE_NAME", "image:1")
+	os.Setenv("STANDARDTRANSFORMERCONFIG_IMAGENAME", "image:1")
 	os.Setenv("DEFAULT_FEAST_SERVING_URL", "localhost")
-	os.Setenv("FEAST_SERVING_URLS", `[]`)
-	os.Setenv("FEAST_CORE_URL", "localhost")
-	os.Setenv("FEAST_CORE_AUTH_AUDIENCE", "true")
-	os.Setenv("DEFAULT_FEAST_SOURCE", "BIGTABLE")
-	os.Setenv("SIMULATION_FEAST_BIGTABLE_URL", "online-serving-bt.dev")
-	os.Setenv("SIMULATION_FEAST_REDIS_URL", "online-serving-redis.dev")
-	os.Setenv("KAFKA_BROKERS", "kafka-brokers:9999")
+	os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTSERVINGURLS", `[]`)
+	os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTCOREURL", "localhost")
+	os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTCOREAUTHAUDIENCE", "true")
+	os.Setenv("STANDARDTRANSFORMERCONFIG_DEFAULTFEASTSOURCE", "BIGTABLE")
+	os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTBIGTABLEURL", "online-serving-bt.dev")
+	os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTREDISURL", "online-serving-redis.dev")
+	os.Setenv("STANDARDTRANSFORMERCONFIG_KAFKA_BROKERS", "kafka-brokers:9999")
 }

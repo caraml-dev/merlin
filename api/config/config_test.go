@@ -167,18 +167,18 @@ func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
 			if tC.redisConfig != nil {
-				os.Setenv("FEAST_REDIS_CONFIG", *tC.redisConfig)
+				os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTREDISCONFIG", *tC.redisConfig)
 			}
 			if tC.bigtableConfig != nil {
-				os.Setenv("FEAST_BIG_TABLE_CONFIG", *tC.bigtableConfig)
+				os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTBIGTABLECONFIG", *tC.bigtableConfig)
 			}
 			if tC.simulationBigtableURL != nil {
-				os.Setenv("SIMULATION_FEAST_BIGTABLE_URL", *tC.simulationBigtableURL)
+				os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTBIGTABLEURL", *tC.simulationBigtableURL)
 			}
 			if tC.simulationRedisURL != nil {
-				os.Setenv("SIMULATION_FEAST_REDIS_URL", *tC.simulationRedisURL)
+				os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTREDISURL", *tC.simulationRedisURL)
 			}
-			os.Setenv("FEAST_BIGTABLE_CREDENTIAL", tC.bigtableCredential)
+			os.Setenv("STANDARDTRANSFORMERCONFIG_BIGTABLECREDENTIAL", tC.bigtableCredential)
 
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
@@ -293,14 +293,14 @@ func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
 			if tC.redisConfig != nil {
-				os.Setenv("FEAST_REDIS_CONFIG", *tC.redisConfig)
+				os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTREDISCONFIG", *tC.redisConfig)
 			}
 			if tC.bigtableConfig != nil {
-				os.Setenv("FEAST_BIG_TABLE_CONFIG", *tC.bigtableConfig)
+				os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTBIGTABLECONFIG", *tC.bigtableConfig)
 			}
-			os.Setenv("FEAST_BIGTABLE_CREDENTIAL", tC.bigtableCredential)
-			os.Setenv("SIMULATION_FEAST_BIGTABLE_URL", simulationBigtableURL)
-			os.Setenv("SIMULATION_FEAST_REDIS_URL", simulationRedisURL)
+			os.Setenv("STANDARDTRANSFORMERCONFIG_BIGTABLECREDENTIAL", tC.bigtableCredential)
+			os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTBIGTABLEURL", simulationBigtableURL)
+			os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTREDISURL", simulationRedisURL)
 			var cfg StandardTransformerConfig
 			err := envconfig.Process("", &cfg)
 			require.NoError(t, err)
