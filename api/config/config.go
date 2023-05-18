@@ -470,7 +470,7 @@ func Load(filepaths ...string) (*Config, error) {
 		v.SetConfigFile(f)
 		err := v.MergeInConfig()
 		if err != nil {
-			return nil, fmt.Errorf("failed to read config from file '%s': %s", f, err)
+			return nil, fmt.Errorf("failed to read config from file '%s': %w", f, err)
 		}
 	}
 
@@ -495,7 +495,7 @@ func Load(filepaths ...string) (*Config, error) {
 		)
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config values: %s", err)
+		return nil, fmt.Errorf("failed to unmarshal config values: %w", err)
 	}
 
 	return config, nil

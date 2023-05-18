@@ -82,14 +82,14 @@ func main() {
 
 	cfg, err := config.Load(configFlags...)
 	if err != nil {
-		log.Panicf("%s", err)
+		log.Panicf("%w", err)
 	}
 
 	fmt.Printf("%+v\n", cfg)
 
 	cfg.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.EnvironmentConfigPath)
 	if err := cfg.Validate(); err != nil {
-		log.Panicf("Failed validating config: %s", err)
+		log.Panicf("Failed validating config: %w", err)
 	}
 
 	fmt.Printf("%+v\n", cfg)
