@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/mitchellh/mapstructure"
 	v1 "k8s.io/api/core/v1"
@@ -435,6 +436,11 @@ func InitConfigEnv() (*Config, error) {
 }
 
 func (cfg *Config) Validate() error {
+	v := validator.New()
+	err := v.Struct(cfg)
+	if err != nil {
+		return err
+	}
 	// Validate pyfunc server keep alive config, it must be string in json format
 	var pyfuncGRPCOpts json.RawMessage
 	if err := json.Unmarshal([]byte(cfg.PyfuncGRPCOptions), &pyfuncGRPCOpts); err != nil {
@@ -560,9 +566,12 @@ func setDefaultValues(v *viper.Viper) {
 	v.SetDefault("StandardTransformerConfig::ModelClientKeepAlive::Timeout", "false")
 	v.SetDefault("StandardTransformerConfig::ModelClientKeepAlive::Timeout", "60s")
 	v.SetDefault("StandardTransformerConfig::ModelClientKeepAlive::Timeout", "5s")
+	v.SetDefault("StandardTransformerConfig::BigtableCredential", "")
 	v.SetDefault("StandardTransformerConfig::Jaeger::SamplerType", "probabilistic")
 	v.SetDefault("StandardTransformerConfig::Jaeger::SamplerParam", "0.01")
 	v.SetDefault("StandardTransformerConfig::Jaeger::Disabled", "true")
+	v.SetDefault("StandardTransformerConfig::SimulationFeast::FeastRedisURL", "")
+	v.SetDefault("StandardTransformerConfig::SimulationFeast::FeastBigtableURL", "")
 	v.SetDefault("StandardTransformerConfig::Kafka::CompressionType", "none")
 	v.SetDefault("StandardTransformerConfig::Kafka::MaxMessageSizeBytes", "1048588")
 	v.SetDefault("StandardTransformerConfig::Kafka::ConnectTimeoutMS", "1000")

@@ -1,0 +1,9 @@
+StandardTransformerConfig:
+  FeastBigtableConfig:
+    Project: gcp-project
+    IsUsingDirectStorage: true
+    Instance: instance
+    AppProfile: default
+    PoolSize: 3
+    KeepAliveInterval: 2m
+    KeepAliveTimeout: 1m

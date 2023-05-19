@@ -1,0 +1,9 @@
+StandardTransformerConfig:
+  FeastBigtableConfig:
+    ServingURL: 10.1.1.3
+    IsUsingDirectStorage: true
+    Instance: instance
+    AppProfile: default
+    PoolSize: 3
+    KeepAliveInterval: 2m
+    KeepAliveTimeout: 1m

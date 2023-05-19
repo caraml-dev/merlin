@@ -7,22 +7,25 @@ import (
 	"time"
 
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/go-playground/validator"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func TestFeastRedisConfig(t *testing.T) {
-	tenSecDuration := Duration(time.Second * 10)
+	baseFilePath := "./testdata/config-1.yaml"
+	tenSecDuration := time.Second * 10
 	testCases := []struct {
 		desc                string
-		redisConfigString   string
+		redisCfgFilePath    string
+		env                 map[string]string
 		expectedRedisConfig *FeastRedisConfig
 		err                 error
 	}{
 		{
-			desc:              "Success: valid single redis config",
-			redisConfigString: `{"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`,
+			desc:             "Success: valid single redis config",
+			redisCfgFilePath: "./testdata/valid-single-redis-config.yaml",
+			env:              map[string]string{},
 			expectedRedisConfig: &FeastRedisConfig{
 				ServingURL: "online-storage.merlin.dev",
 				RedisAddresses: []string{
@@ -34,8 +37,8 @@ func TestFeastRedisConfig(t *testing.T) {
 			},
 		},
 		{
-			desc:              "Success: valid redis cluster config",
-			redisConfigString: `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s","min_idle_conn":2}`,
+			desc:             "Success: valid redis cluster config",
+			redisCfgFilePath: "./testdata/valid-single-redis-cluster-config.yaml",
 			expectedRedisConfig: &FeastRedisConfig{
 				IsRedisCluster: true,
 				ServingURL:     "online-storage.merlin.dev",
@@ -49,32 +52,38 @@ func TestFeastRedisConfig(t *testing.T) {
 			},
 		},
 		{
-			desc:              "Invalid: pool_size 0",
-			redisConfigString: `{"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 0,"max_retries": 1,"dial_timeout": "10s"}`,
-			err:               fmt.Errorf(`envconfig.Process: assigning FEAST_REDIS_CONFIG to FeastRedisConfig: converting '{"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 0,"max_retries": 1,"dial_timeout": "10s"}' to type config.FeastRedisConfig. details: Key: 'FeastRedisConfig.PoolSize' Error:Field validation for 'PoolSize' failed on the 'gt' tag`),
+			desc:             "Invalid: pool_size 0",
+			redisCfgFilePath: "./testdata/invalid-redis-config-no-pool-size.yaml",
+			err:              fmt.Errorf("Key: 'FeastRedisConfig.PoolSize' Error:Field validation for 'PoolSize' failed on the 'gt' tag"),
 		},
 		{
-			desc:              "Invalid: serving_url is not set",
-			redisConfigString: `{"serving_url":"","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`,
-			err:               fmt.Errorf(`envconfig.Process: assigning FEAST_REDIS_CONFIG to FeastRedisConfig: converting '{"serving_url":"","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}' to type config.FeastRedisConfig. details: ServingURL is required`),
+			desc:             "Invalid: serving_url is not set",
+			redisCfgFilePath: "./testdata/invalid-redis-config-no-serving-url.yaml",
+			err:              fmt.Errorf("Key: 'FeastRedisConfig.ServingURL' Error:Field validation for 'ServingURL' failed on the 'required' tag"),
 		},
 		{
-			desc:              "Invalid: redis_addresses is not set",
-			redisConfigString: `{"serving_url":"online-storage.merlin.dev","redis_addresses":[],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`,
-			err:               fmt.Errorf(`envconfig.Process: assigning FEAST_REDIS_CONFIG to FeastRedisConfig: converting '{"serving_url":"online-storage.merlin.dev","redis_addresses":[],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}' to type config.FeastRedisConfig. details: Key: 'FeastRedisConfig.RedisAddresses' Error:Field validation for 'RedisAddresses' failed on the 'gt' tag`),
+			desc:             "Invalid: redis_addresses is not set",
+			redisCfgFilePath: "./testdata/invalid-redis-config-no-redis-addresses.yaml",
+			err:              fmt.Errorf("Key: 'FeastRedisConfig.RedisAddresses' Error:Field validation for 'RedisAddresses' failed on the 'required' tag"),
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
-			os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTREDISCONFIG", tC.redisConfigString) //nolint:errcheck
+			filePaths := []string{baseFilePath}
+			filePaths = append(filePaths, tC.redisCfgFilePath)
 
-			var cfg StandardTransformerConfig
-			err := envconfig.Process("", &cfg)
-			if err == nil {
-				assert.Equal(t, tC.expectedRedisConfig, cfg.FeastRedisConfig)
+			cfg, err := Load(filePaths...)
+			assert.Nil(t, err)
+
+			v := validator.New()
+			err = v.Struct(cfg.StandardTransformerConfig.FeastRedisConfig)
+			if tC.err == nil {
+				assert.Nil(t, err)
+				assert.Equal(t, tC.expectedRedisConfig, cfg.StandardTransformerConfig.FeastRedisConfig)
 			} else {
+				assert.NotNil(t, err)
 				assert.EqualError(t, err, tC.err.Error())
 			}
 		})
@@ -82,58 +91,67 @@ func TestFeastRedisConfig(t *testing.T) {
 }
 
 func TestFeastBigtableConfig(t *testing.T) {
-	oneMinuteDuration := Duration(time.Minute * 1)
-	twoMinuteDuration := Duration(time.Minute * 2)
+	baseFilePath := "./testdata/config-1.yaml"
+	oneMinuteDuration := time.Minute * 1
+	twoMinuteDuration := time.Minute * 2
 	testCases := []struct {
 		desc                   string
-		bigtableString         string
+		bigtableCfgFilePath    string
 		expectedBigTableConfig *FeastBigtableConfig
 		err                    error
 	}{
 		{
-			desc:           "Success: valid env variable",
-			bigtableString: `{"serving_url":"10.1.1.3","project":"sample","instance":"bt-instance","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`,
+			desc:                "Success: valid big table config",
+			bigtableCfgFilePath: "./testdata/bigtable-config.yaml",
 			expectedBigTableConfig: &FeastBigtableConfig{
-				ServingURL:        "10.1.1.3",
-				Project:           "sample",
-				Instance:          "bt-instance",
-				AppProfile:        "slave",
-				PoolSize:          4,
-				KeepAliveInterval: &twoMinuteDuration,
-				KeepAliveTimeout:  &oneMinuteDuration,
+				IsUsingDirectStorage: true,
+				ServingURL:           "10.1.1.3",
+				Project:              "gcp-project",
+				Instance:             "instance",
+				AppProfile:           "default",
+				PoolSize:             3,
+				KeepAliveInterval:    &twoMinuteDuration,
+				KeepAliveTimeout:     &oneMinuteDuration,
 			},
 		},
 		{
-			desc:           "Fail: serving_url is not set",
-			bigtableString: `{"serving_url":""}`,
-			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigtableConfig: converting '{"serving_url":""}' to type config.FeastBigtableConfig. details: ServingURL is required`),
+			desc:                "Fail: serving_url is not set",
+			bigtableCfgFilePath: "./testdata/invalid-bigtable-config-no-serving-url.yaml",
+			err:                 fmt.Errorf("Key: 'FeastBigtableConfig.ServingURL' Error:Field validation for 'ServingURL' failed on the 'required' tag"),
 		},
 		{
-			desc:           "Fail: project is not set",
-			bigtableString: `{"serving_url":"10.1.1.3","project":"","instance":"bt-instance","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`,
-			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigtableConfig: converting '{"serving_url":"10.1.1.3","project":"","instance":"bt-instance","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}' to type config.FeastBigtableConfig. details: Project is required`),
+			desc:                "Fail: project is not set",
+			bigtableCfgFilePath: "./testdata/invalid-bigtable-config-no-project.yaml",
+			err:                 fmt.Errorf("Key: 'FeastBigtableConfig.Project' Error:Field validation for 'Project' failed on the 'required' tag"),
 		},
 		{
-			desc:           "Fail: instance is not set",
-			bigtableString: `{"serving_url":"10.1.1.3","project":"sample","instance":"","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`,
-			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigtableConfig: converting '{"serving_url":"10.1.1.3","project":"sample","instance":"","app_profile":"slave","pool_size":4,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}' to type config.FeastBigtableConfig. details: Instance is required`),
+			desc:                "Fail: instance is not set",
+			bigtableCfgFilePath: "./testdata/invalid-bigtable-config-no-instance.yaml",
+			err:                 fmt.Errorf("Key: 'FeastBigtableConfig.Instance' Error:Field validation for 'Instance' failed on the 'required' tag"),
 		},
 		{
-			desc:           "Fail: pool size is 0",
-			bigtableString: `{"serving_url":"10.1.1.3","project":"sample","instance":"bt-instance","app_profile":"slave","pool_size":0,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`,
-			err:            fmt.Errorf(`envconfig.Process: assigning FEAST_BIG_TABLE_CONFIG to FeastBigtableConfig: converting '{"serving_url":"10.1.1.3","project":"sample","instance":"bt-instance","app_profile":"slave","pool_size":0,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}' to type config.FeastBigtableConfig. details: Key: 'FeastBigtableConfig.PoolSize' Error:Field validation for 'PoolSize' failed on the 'gt' tag`),
+			desc:                "Fail: pool size is 0",
+			bigtableCfgFilePath: "./testdata/invalid-bigtable-config-no-pool-size.yaml",
+			err:                 fmt.Errorf("Key: 'FeastBigtableConfig.PoolSize' Error:Field validation for 'PoolSize' failed on the 'gt' tag"),
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
-			os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTBIGTABLECONFIG", tC.bigtableString) //nolint:errcheck
-			var cfg StandardTransformerConfig
-			err := envconfig.Process("", &cfg)
-			if err == nil {
-				assert.Equal(t, tC.expectedBigTableConfig, cfg.FeastBigtableConfig)
+			filePaths := []string{baseFilePath}
+			filePaths = append(filePaths, tC.bigtableCfgFilePath)
+
+			cfg, err := Load(filePaths...)
+			assert.Nil(t, err)
+
+			v := validator.New()
+			err = v.Struct(cfg.StandardTransformerConfig.FeastBigtableConfig)
+			if tC.err == nil {
+				assert.Nil(t, err)
+				assert.Equal(t, tC.expectedBigTableConfig, cfg.StandardTransformerConfig.FeastBigtableConfig)
 			} else {
+				assert.NotNil(t, err)
 				assert.EqualError(t, err, tC.err.Error())
 			}
 		})
@@ -141,7 +159,7 @@ func TestFeastBigtableConfig(t *testing.T) {
 }
 
 func TestRedisConfig_ToFeastStorage(t *testing.T) {
-	timeDuration := Duration(time.Second * 20)
+	timeDuration := time.Second * 20
 	testCases := []struct {
 		desc                 string
 		redisConfig          *FeastRedisConfig
@@ -268,8 +286,8 @@ func TestRedisConfig_ToFeastStorage(t *testing.T) {
 }
 
 func TestBigtableConfig_ToFeastConfig(t *testing.T) {
-	oneMinuteDuration := Duration(time.Minute * 1)
-	twoMinuteDuration := Duration(time.Minute * 2)
+	oneMinuteDuration := time.Minute * 1
+	twoMinuteDuration := time.Minute * 2
 	testCases := []struct {
 		desc                   string
 		bigtableConfig         *FeastBigtableConfig
