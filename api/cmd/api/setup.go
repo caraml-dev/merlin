@@ -93,7 +93,7 @@ func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClien
 		log.Infof("Google default credential not found. Fallback to default HTTP client.")
 	}
 
-	return mlp.NewAPIClient(mlpHTTPClient, cfg.APIHost, cfg.EncryptionKey)
+	return mlp.NewAPIClient(mlpHTTPClient, cfg.APIHost)
 }
 
 func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool) core.CoreServiceClient {

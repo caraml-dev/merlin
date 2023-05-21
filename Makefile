@@ -172,6 +172,11 @@ stop-docker:
 	@echo "> Stopping Docker compose ..."
 	@docker-compose down
 
+.PHONY: fmt
+fmt:
+	@echo "Formatting code..."
+	gofmt -s -w api
+
 .PHONY: swagger-ui
 swagger-ui:
 	@echo "Starting Swagger UI"

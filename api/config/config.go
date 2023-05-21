@@ -265,8 +265,7 @@ type WardenConfig struct {
 }
 
 type MlpAPIConfig struct {
-	APIHost       string `envconfig:"MLP_API_HOST" required:"true"`
-	EncryptionKey string `envconfig:"MLP_API_ENCRYPTION_KEY" required:"true"`
+	APIHost string `envconfig:"MLP_API_HOST" required:"true"`
 }
 
 // FeastServingKeepAliveConfig config for feast serving grpc keepalive
