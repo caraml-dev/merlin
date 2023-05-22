@@ -17,9 +17,13 @@
 import ServeVersionEndpointModal from "./ServeVersionEndpointModal";
 import StopServeVersionEndpointModal from "./StopServeVersionEndpointModal";
 import UndeployVersionEndpointModal from "./UndeployVersionEndpointModal";
+import DeleteModelVersionPyFuncV2Modal from "./DeleteModelVersionPyFuncV2Modal"
+import DeleteModelVersionModal from "./DeleteModelVersionModal";
 
 export {
   ServeVersionEndpointModal,
   StopServeVersionEndpointModal,
-  UndeployVersionEndpointModal
+  UndeployVersionEndpointModal,
+  DeleteModelVersionPyFuncV2Modal,
+  DeleteModelVersionModal
 };
