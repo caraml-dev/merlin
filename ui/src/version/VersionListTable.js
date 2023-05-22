@@ -330,8 +330,6 @@ const VersionListTable = ({
   const handleDeleteModelVersion = (model, version) => {
     setModelForModal(model)
     setVersionForModal(version)
-    console.log(model)
-    console.log(version)
     if (model.type === "pyfunc_v2"){
       toggleDeleteModelVersionPyFuncV2Modal()
     } else {
