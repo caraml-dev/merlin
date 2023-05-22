@@ -194,7 +194,7 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 		}
 
 		for _, item := range endpoints {
-			if item.Status != models.EndpointTerminated {
+			if item.Status != models.EndpointTerminated && item.Status != models.EndpointFailed {
 				return BadRequest("There are endpoint that still using this model version")
 			}
 		}
