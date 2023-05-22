@@ -187,12 +187,20 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
 		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
-		orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
-			orig,
-			modelService,
-			config,
-			kservev1beta1.TransformerComponent,
-		)
+		if orig.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision == "" {
+			orig.Spec.Transformer.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
+				modelService,
+				config,
+				kservev1beta1.TransformerComponent,
+			)
+		} else {
+			orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
+				orig,
+				modelService,
+				config,
+				kservev1beta1.TransformerComponent,
+			)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
 		}
