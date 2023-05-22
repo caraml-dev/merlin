@@ -28,7 +28,7 @@ const DeleteModelPyFuncV2Modal = ({
   const [inactiveJob, setInactiveJob] = useState([])
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
-  const [{ isLoading, isLoaded }, undeployVersion] = useMerlinApi(
+  const [{ isLoading, isLoaded }, deleteModel] = useMerlinApi(
     `projects/${model.project_id}/models/${model.id}`,
     { method: "DELETE", addToast: true, mock: mocks.noBody },
     {},
@@ -58,7 +58,7 @@ const DeleteModelPyFuncV2Modal = ({
       <EuiConfirmModal
         title="Delete Model"
         onCancel={closeModal}
-        onConfirm={undeployVersion}
+        onConfirm={deleteModel}
         cancelButtonText="Cancel"
         confirmButtonText="Delete"
         buttonColor="danger"
