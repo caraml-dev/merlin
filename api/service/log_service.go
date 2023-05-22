@@ -35,7 +35,6 @@ import (
 )
 
 const (
-	ComponentLabelKey          = "component"
 	ImageBuilderLabelKey       = "job-name"
 	KserveIsvcLabelKey         = "serving.kserve.io/inferenceservice"
 	BatchPredictionJobLabelKey = "prediction-job-id"
