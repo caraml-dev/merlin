@@ -85,14 +85,10 @@ func main() {
 		log.Panicf("%w", err)
 	}
 
-	fmt.Printf("%+v\n", cfg)
-
 	cfg.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.EnvironmentConfigPath)
 	if err := cfg.Validate(); err != nil {
 		log.Panicf("Failed validating config: %w", err)
 	}
-
-	fmt.Printf("%+v\n", cfg)
 
 	// Initializing Sentry client
 	cfg.Sentry.Labels = map[string]string{"environment": cfg.Environment}

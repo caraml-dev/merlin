@@ -24,8 +24,10 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/mitchellh/mapstructure"
+	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	resourcev1 "k8s.io/apimachinery/pkg/api/resource"
+	sigyaml "sigs.k8s.io/yaml"
 
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
@@ -503,7 +505,42 @@ func Load(filepaths ...string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config values: %w", err)
 	}
+	config, err = loadImageBuilderConfig(config, v.AllSettings())
+	if err != nil {
+		return nil, fmt.Errorf("Failed to load imagebuilderconfig.k8sconfig, err %s", err)
+	}
 
+	return config, nil
+}
+
+func loadImageBuilderConfig(config *Config, v map[string]interface{}) (*Config, error) {
+	// NOTE: This section is added to parse any fields in ImageBuilderConfig.K8sConfig that does not
+	// have yaml tags.
+	// For example `certificate-authority-data` is not unmarshalled
+	// by vipers unmarshal method.
+
+	clusterConfig, ok := v["imagebuilderconfig"]
+	if !ok {
+		return config, nil
+	}
+	contents := clusterConfig.(map[string]interface{})
+	imageBuilderK8sCfg, ok := contents["k8sconfig"]
+	if !ok {
+		return config, nil
+	}
+	// convert back to byte string
+	var byteForm []byte
+	byteForm, err := yaml.Marshal(imageBuilderK8sCfg)
+	if err != nil {
+		return nil, err
+	}
+	// use sigyaml.Unmarshal to convert to json object then unmarshal
+
+	k8sConfig := mlpcluster.K8sConfig{}
+	if err := sigyaml.Unmarshal(byteForm, &k8sConfig); err != nil {
+		return nil, err
+	}
+	config.ImageBuilderConfig.K8sConfig = k8sConfig
 	return config, nil
 }
 
