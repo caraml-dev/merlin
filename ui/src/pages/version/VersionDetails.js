@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
+import React, { Fragment, useEffect, useState } from "react";
+import { Link, Route, Routes, useParams } from "react-router-dom";
 import {
   EuiButton,
   EuiEmptyPrompt,
@@ -23,17 +24,16 @@ import {
   EuiLoadingContent,
   EuiPageTemplate,
   EuiSpacer,
-  EuiText,
+  EuiText
 } from "@elastic/eui";
-import React, { Fragment, useEffect, useState } from "react";
-import { Link, Route, Routes, useParams } from "react-router-dom";
-import { ContainerLogsView } from "../../components/logs/ContainerLogsView";
+import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import config from "../../config";
-import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
+import { useMerlinApi } from "../../hooks/useMerlinApi";
+import { ContainerLogsView } from "../../components/logs/ContainerLogsView";
 import { DeploymentPanelHeader } from "./DeploymentPanelHeader";
-import { EndpointDetails } from "./EndpointDetails";
 import { ModelVersionPanelHeader } from "./ModelVersionPanelHeader";
+import { EndpointDetails } from "./EndpointDetails";
 import { VersionTabNavigation } from "./VersionTabNavigation";
 
 /**
@@ -41,13 +41,7 @@ import { VersionTabNavigation } from "./VersionTabNavigation";
  * In this page users can also manage all deployed endpoint created from the model version.
  */
 const VersionDetails = () => {
-  const {
-    projectId,
-    modelId,
-    versionId,
-    endpointId,
-    "*": section,
-  } = useParams();
+  const { projectId, modelId, versionId, endpointId, "*": section } = useParams();
   const [{ data: model, isLoaded: modelLoaded }] = useMerlinApi(
     `/projects/${projectId}/models/${modelId}`,
     { mock: mocks.model },
@@ -69,12 +63,12 @@ const VersionDetails = () => {
       if (version.endpoints && version.endpoints.length > 0) {
         setIsDeployed(true);
         setEnvironments(
-          version.endpoints.map((endpoint) => endpoint.environment)
+          version.endpoints.map(endpoint => endpoint.environment)
         );
 
         if (endpointId) {
           setEndpoint(
-            version.endpoints.find((endpoint) => endpoint.id === endpointId)
+            version.endpoints.find(endpoint => endpoint.id === endpointId)
           );
         }
       }
@@ -88,22 +82,22 @@ const VersionDetails = () => {
       breadCrumbs.push(
         {
           text: "Models",
-          href: `/merlin/projects/${model.project_id}/models`,
+          href: `/merlin/projects/${model.project_id}/models`
         },
         {
           text: model.name || "",
-          href: `/merlin/projects/${model.project_id}/models/${model.id}`,
+          href: `/merlin/projects/${model.project_id}/models/${model.id}`
         },
         {
           text: `Model Version ${version.id}`,
-          href: `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}`,
+          href: `/merlin/projects/${model.project_id}/models/${model.id}/versions/${version.id}`
         }
       );
     }
 
     if (endpoint) {
       breadCrumbs.push({
-        text: endpoint.environment_name,
+        text: endpoint.environment_name
       });
     }
 
@@ -114,64 +108,61 @@ const VersionDetails = () => {
     <EuiPageTemplate restrictWidth="90%" paddingSize="none">
       <EuiSpacer size="l" />
       {!modelLoaded && !versionLoaded ? (
-        <EuiFlexGroup direction="row">
-          <EuiFlexItem grow={true}>
-            <EuiLoadingContent lines={3} />
-          </EuiFlexItem>
-        </EuiFlexGroup>
-      ) : (
-        <Fragment>
-          <EuiPageTemplate.Header
-            bottomBorder={false}
-            iconType={"machineLearningApp"}
-            pageTitle={
-              <Fragment>
-                {model.name}
-                {" version "}
-                <strong>{version.id}</strong>
-              </Fragment>
-            }
-          />
-
-          <EuiPageTemplate.Section color={"transparent"}>
-            <EuiSpacer size="l" />
-            {!(section === "deploy" || section === "redeploy") &&
-              model &&
-              modelLoaded &&
-              version &&
-              versionLoaded && (
+          <EuiFlexGroup direction="row">
+            <EuiFlexItem grow={true}>
+              <EuiLoadingContent lines={3} />
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        ) : (
+          <Fragment>
+            <EuiPageTemplate.Header
+              bottomBorder={false}
+              iconType={"machineLearningApp"}
+              pageTitle={
                 <Fragment>
-                  <ModelVersionPanelHeader model={model} version={version} />
-                  <EuiSpacer size="m" />
+                  {model.name}
+                  {" version "}
+                  <strong>{version.id}</strong>
                 </Fragment>
+              }
+            />
+
+            <EuiPageTemplate.Section color={"transparent"}>
+              <EuiSpacer size="l" />
+              {!(section === "deploy" || section === "redeploy") &&
+                model &&
+                modelLoaded &&
+                version &&
+                versionLoaded && (
+                  <Fragment>
+                    <ModelVersionPanelHeader model={model} version={version} />
+                    <EuiSpacer size="m" />
+                  </Fragment>
               )}
 
-            {!(section === "deploy" || section === "redeploy") &&
-              model &&
-              modelLoaded &&
-              version &&
-              versionLoaded &&
-              environments &&
-              isDeployed && (
-                <Fragment>
-                  <DeploymentPanelHeader
-                    model={model}
-                    version={version}
-                    endpoint={endpoint}
-                    environments={environments}
-                  />
-                  <EuiSpacer size="m" />
-                </Fragment>
+              {!(section === "deploy" || section === "redeploy") &&
+                model &&
+                modelLoaded &&
+                version &&
+                versionLoaded &&
+                environments &&
+                isDeployed && (
+                  <Fragment>
+                    <DeploymentPanelHeader
+                      model={model}
+                      version={version}
+                      endpoint={endpoint}
+                      environments={environments}
+                    />
+                    <EuiSpacer size="m" />
+                  </Fragment>
               )}
 
             {!(section === "deploy" || section === "redeploy") &&
               endpoint &&
               isDeployed && (
                 <Fragment>
-                  <VersionTabNavigation
-                    endpoint={endpoint}
-                    selectedTab={section}
-                  />
+                  <VersionTabNavigation endpoint={endpoint} selectedTab={section} />
                   <EuiSpacer size="m" />
                 </Fragment>
               )}
@@ -181,8 +172,7 @@ const VersionDetails = () => {
               modelLoaded &&
               version &&
               versionLoaded &&
-              !isDeployed &&
-              model.type !== "pyfunc_v2" && (
+              !isDeployed && model.type !== "pyfunc_v2" && (
                 <EuiEmptyPrompt
                   title={<h2>Model version is not deployed</h2>}
                   body={
@@ -193,10 +183,11 @@ const VersionDetails = () => {
                       </p>
                       <Link
                         to={`${config.HOMEPAGE}/projects/${model.project_id}/models/${model.id}/versions/${version.id}/deploy`}
-                        state={{ model: model, version: version }}
-                      >
+                        state={{ model: model, version: version }}>
                         <EuiButton iconType="importAction" size="s">
-                          <EuiText size="xs">Deploy</EuiText>
+                          <EuiText size="xs">
+                            Deploy
+                          </EuiText>
                         </EuiButton>
                       </Link>
                     </Fragment>
@@ -204,35 +195,36 @@ const VersionDetails = () => {
                 />
               )}
 
-            {model && modelLoaded && version && versionLoaded && endpoint && (
-              <Routes>
-                <Route
-                  index
-                  path="details"
-                  element={
-                    <EndpointDetails
-                      model={model}
-                      version={version}
-                      endpoint={endpoint}
-                    />
-                  }
-                />
-                <Route
-                  path="logs"
-                  element={
-                    <ContainerLogsView
-                      projectId={projectId}
-                      model={model}
-                      versionId={versionId}
-                      fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
-                    />
-                  }
-                />
-              </Routes>
-            )}
-          </EuiPageTemplate.Section>
-        </Fragment>
-      )}
+              {model && modelLoaded && version && versionLoaded && endpoint && (
+                <Routes>
+                  <Route
+                    index
+                    path="details"
+                    element={
+                      <EndpointDetails
+                        model={model}
+                        version={version}
+                        endpoint={endpoint}
+                      />
+                    }
+                  />
+                  <Route
+                    path="logs"
+                    element={
+                      <ContainerLogsView
+                        projectId={projectId}
+                        model={model}
+                        versionId={versionId}
+                        fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}
+                      />
+                    }
+                  />
+                </Routes>
+              )}
+            </EuiPageTemplate.Section>
+          </Fragment>
+        )}
+
     </EuiPageTemplate>
   );
 };
