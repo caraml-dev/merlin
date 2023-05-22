@@ -4912,9 +4912,6 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 						kservev1beta1.PredictorComponent: {
 							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
-						kservev1beta1.TransformerComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
-						},
 					},
 				},
 			},
@@ -5032,7 +5029,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00001",
 										},
 									},
 								},
@@ -5042,7 +5039,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5060,7 +5057,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-transformer-default-00002",
+											"app":       "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5083,9 +5080,6 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
 							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
-						},
-						kservev1beta1.TransformerComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -5150,9 +5144,6 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 						kservev1beta1.PredictorComponent: {
 							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
-						kservev1beta1.TransformerComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
-						},
 					},
 				},
 			},
@@ -5270,7 +5261,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00001",
 										},
 									},
 								},
@@ -5280,7 +5271,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5298,7 +5289,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-transformer-default-00002",
+											"app":       "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5321,9 +5312,6 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
 							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
-						},
-						kservev1beta1.TransformerComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
