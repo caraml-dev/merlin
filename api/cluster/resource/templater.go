@@ -187,7 +187,8 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
 		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
-		if orig.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision == "" {
+		if _, ok := orig.Status.Components[kservev1beta1.TransformerComponent]; !ok ||
+			orig.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision == "" {
 			orig.Spec.Transformer.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
 				modelService,
 				config,
