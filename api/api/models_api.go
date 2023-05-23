@@ -166,7 +166,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			}
 
 			for _, item := range endpoints {
-				if item.Status != models.EndpointTerminated {
+				if item.Status != models.EndpointTerminated && item.Status != models.EndpointFailed {
 					return BadRequest("There are endpoint that still using this model version")
 				}
 			}

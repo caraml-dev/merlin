@@ -28,7 +28,7 @@ type VersionEndpointStorage interface {
 	Get(uuid.UUID) (*models.VersionEndpoint, error)
 	Save(endpoint *models.VersionEndpoint) error
 	CountEndpoints(environment *models.Environment, model *models.Model) (int, error)
-	Delete(version *models.VersionEndpoint) error
+	Delete(endpoint *models.VersionEndpoint) error
 }
 
 type versionEndpointStorage struct {
@@ -82,6 +82,6 @@ func (v *versionEndpointStorage) query() *gorm.DB {
 		Select("version_endpoints.*")
 }
 
-func (v *versionEndpointStorage) Delete(version *models.VersionEndpoint) error {
-	return v.db.Delete(version).Error
+func (v *versionEndpointStorage) Delete(endpoint *models.VersionEndpoint) error {
+	return v.db.Delete(endpoint).Error
 }

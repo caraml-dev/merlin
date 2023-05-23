@@ -201,12 +201,10 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 
 		// DELETE ENDPOINTS
 		for _, item := range endpoints {
-			if item.Status != models.EndpointTerminated {
-				err = c.EndpointsService.DeleteEndpoint(version, item)
-				if err != nil {
-					log.Errorf("failed to undeploy endpoint job %v", err)
-					return InternalServerError(fmt.Sprintf("Failed to delete Endpoint %s", err))
-				}
+			err = c.EndpointsService.DeleteEndpoint(version, item)
+			if err != nil {
+				log.Errorf("failed to undeploy endpoint job %v", err)
+				return InternalServerError(fmt.Sprintf("Failed to delete Endpoint %s", err))
 			}
 		}
 	}
