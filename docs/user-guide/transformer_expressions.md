@@ -612,7 +612,7 @@ variables:
   expression: yourTableName.Col("avg_order_1_day").IsIn([2000, 3000])
 ```
 Output:
-| boolean_column |
+| bool_column |
 |----------------|
 | true |
 | true |
