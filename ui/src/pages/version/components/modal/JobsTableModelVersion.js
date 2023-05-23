@@ -20,9 +20,7 @@ import {
   EuiBadge,
   EuiCallOut,
   EuiInMemoryTable,
-  EuiLoadingChart,
   EuiText,
-  EuiTextAlign,
   EuiToolTip,
   EuiHealth,
 } from "@elastic/eui";

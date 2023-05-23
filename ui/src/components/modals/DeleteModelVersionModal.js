@@ -37,6 +37,10 @@ const DeleteModelVersionModal = ({
     false
   );
 
+  const servingEndpoint = version.endpoints.find(
+    (endpoint) => endpoint.status === "serving"
+  );
+
   useEffect(() => {
     if (isLoaded) {
       setDeleteConfirmation("")
@@ -67,31 +71,41 @@ const DeleteModelVersionModal = ({
             className="euiProgress-beforePre"
           />
         )}
-        {activeEndpoint.length > 0 ? (
+        {servingEndpoint ? (
           <span>
-            You cannot delete this Model Version because there are <b> {activeEndpoint.length} Endpoints</b> using this version. 
-            <br/> <br/> If you still wish to delete this model version, please <b>Undeploy</b> Endpoints that use this version. <br/>
-          </span>
+            You cannot delete this Model Version because there are <b> Model Endpoints</b> using this version. 
+            <br/> <br/> If you still wish to delete this model version, please <b>Stop Serving</b> this model version. <br/>
+          </span>          
         ) : (
-          <p>
-            You are about to delete model <b>{model.name}</b> version <b>{version.id}</b>. This action cannot be undone. 
+          <div>
+            {activeEndpoint.length > 0 ? (
+              <span>
+                You cannot delete this Model Version because there are <b> {activeEndpoint.length} Endpoints</b> using this version. 
+                <br/> <br/> If you still wish to delete this model version, please <b>Undeploy</b> Endpoints that use this version. <br/>
+              </span>
+            ) : (
+              <p>
+                You are about to delete model <b>{model.name}</b> version <b>{version.id}</b>. This action cannot be undone. 
 
-            <br/> <br/> To confirm, please type "<b>{model.name}-version-{version.id}</b>" in the box below
-              <EuiFieldText     
-                fullWidth            
-                placeholder={`${model.name}-version-${version.id}`}
-                value={deleteConfirmation}
-                onChange={(e) => setDeleteConfirmation(e.target.value)}
-                isInvalid={deleteConfirmation !== `${model.name}-version-${version.id}`} />  
-          </p>
-        )}
-        {activeEndpoint.length === 0 && inactiveEndpoint.length > 0 && (
-            <p>Deleting this Model Version will also delete {inactiveEndpoint.length} <b>Failed</b> Endpoints using this version. </p>
+                <br/> <br/> To confirm, please type "<b>{model.name}-version-{version.id}</b>" in the box below
+                  <EuiFieldText     
+                    fullWidth            
+                    placeholder={`${model.name}-version-${version.id}`}
+                    value={deleteConfirmation}
+                    onChange={(e) => setDeleteConfirmation(e.target.value)}
+                    isInvalid={deleteConfirmation !== `${model.name}-version-${version.id}`} />  
+              </p>
+            )}
+            {activeEndpoint.length === 0 && inactiveEndpoint.length > 0 && (
+                <p>Deleting this Model Version will also delete {inactiveEndpoint.length} <b>Failed</b> Endpoints using this version. </p>
+            )}
+
+            <EndpointsTableModelVersion
+              endpoints={activeEndpoint.length > 0 ? activeEndpoint : inactiveEndpoint}
+            />
+          </div>
         )}
 
-        <EndpointsTableModelVersion
-          endpoints={activeEndpoint.length > 0 ? activeEndpoint : inactiveEndpoint}
-        />
         
       </EuiConfirmModal>
     </EuiOverlayMask>

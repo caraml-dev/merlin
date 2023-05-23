@@ -18,12 +18,8 @@ import React, { Fragment } from "react";
 import { Link } from "react-router-dom";
 import {
   EuiBadge,
-  EuiCallOut,
   EuiInMemoryTable,
-  EuiLoadingChart,
   EuiText,
-  EuiTextAlign,
-  EuiToolTip,
   EuiHealth,
   EuiIcon
 } from "@elastic/eui";

@@ -53,8 +53,11 @@ const DeleteModelModal = ({
     // const inactiveItem = [];
     if (versions.isLoaded){
       for (const item of versions.data){
-        if (item.status in ["pending", "running", "serving"]){
-          activeItem.push(item)
+        const activeEnd = item.endpoints.filter(
+          (endpoint) => ["pending", "running", "serving"].includes(endpoint.status)
+        );
+        if (activeEnd.length > 0){
+          activeItem.push(activeEnd)
         } else{
           // inactiveItem.push(item)
           continue
@@ -90,30 +93,36 @@ const DeleteModelModal = ({
           />
         ) : (
         <div>
-          {model.endpoints.length > 0 && (
+          {model.endpoints.length > 0 ? (
             <span>
               You cannot delete this Model because there are <b> {model.endpoints.length} Endpoints</b> using this model. 
               <br/> <br/> If you still wish to delete this model, please <b>Stop Serving</b> Endpoints that use this model. <br/>
             </span>        
-          )}
-          {activeEndpoint.length > 0 ? (
-            <span>
-              You cannot delete this Model because there are <b> {activeEndpoint.length} Endpoints</b> currently using the model version associated with it. 
-              <br/> <br/> If you still wish to delete this model, please <b>Undeploy</b> Endpoints that use this version. <br/>
-            </span>
           ) : (
-            <p>
-              You are about to delete model <b>{model.name}</b>. This action cannot be undone. 
-              <br/> <br/> Please note that all the related entity of this model (<b>Model version</b> and <b>Model Version Endpoint)</b> will be <b>deleted</b>.
-              <br/> <br/> To confirm, please type "<b>{model.name}</b>" in the box below
-                <EuiFieldText     
-                  fullWidth            
-                  placeholder={model.name}
-                  value={deleteConfirmation}
-                  onChange={(e) => setDeleteConfirmation(e.target.value)}
-                  isInvalid={deleteConfirmation !== model.name} />  
-            </p>
+            <div>
+            {activeEndpoint.length > 0 ? (
+              <span>
+                You cannot delete this Model because there are <b> {activeEndpoint.length} Endpoints</b> currently using the model version associated with it. 
+                <br/> <br/> If you still wish to delete this model, please <b>Undeploy</b> Endpoints that use this version. <br/>
+              </span>
+            ) : (
+              <div>
+                <p>
+                  You are about to delete model <b>{model.name}</b>. This action cannot be undone. 
+                  <br/> <br/> Please note that all the related entity of this model (<b>Model version</b> and <b>Model Version Endpoint)</b> will be <b>deleted</b>.
+                  <br/> <br/> To confirm, please type "<b>{model.name}</b>" in the box below
+                </p>
+                  <EuiFieldText     
+                    fullWidth            
+                    placeholder={model.name}
+                    value={deleteConfirmation}
+                    onChange={(e) => setDeleteConfirmation(e.target.value)}
+                    isInvalid={deleteConfirmation !== model.name} />  
+              </div>
+            )}
+            </div>
           )}
+
         </div>
         )}
         
