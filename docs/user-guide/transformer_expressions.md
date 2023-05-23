@@ -20,6 +20,20 @@ Standard Transformer provides several built-in functions that are useful for com
 | Time       | [FormatTimestamp](#formattimestamp)                          |
 | Time       | [ParseTimestamp](#parsetimestamp)                            |
 | Time       | [ParseDateTime](#parsedatetime)                              |
+| Column     | [Get](#get)                                                  |
+| Column     | [IsIn](#isin)                                                |
+| Column     | [StdDev](#stddev)                                            |
+| Column     | [Mean](#mean)                                                |
+| Column     | [Median](#median)                                            |
+| Column     | [Max](#max)                                                  |
+| Column     | [MaxStr](#maxstr)                                            |
+| Column     | [Min](#min)                                                  |
+| Column     | [MinStr](#minstr)                                            |
+| Column     | [Quantile](#quantile)                                        |
+| Column     | [Sum](#sum)                                                  |
+| Column     | [Flatten](#flatten)                                          |
+| Column     | [Unique](#unique)                                            |
+
 
 ## Geospatial
 
@@ -535,3 +549,397 @@ variables:
 
 Output: `"2021-11-30 15:00:00 +0900 WIT"`
 ```
+
+
+## Column Expression
+Column expression is function that can be invoked by column values in a table
+
+### Get
+`Get` will retrieve a row in column based on the given index
+
+#### Input
+| Name | Description |
+|------|-------------|
+| Index| Position of rows starts with 0 |
+
+#### Output
+Single column row
+
+#### Examples
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+Users try to retrieve index 2 for column `restaurant_id`
+
+Standard Transformer Config:
+```
+variables:
+- name: restaurant_2
+  expression: yourTableName.Col("restaurant_id").Get(2)
+```
+
+Output: 2
+
+### IsIn
+`IsIn` checks whether value in a row is part of the given array, the result will be a new column that has boolean type
+
+#### Input
+| Name | Description |
+|------|-------------|
+| Comparator| Array of value  |
+
+#### Output
+New Column that has boolean type and same dimension with original column
+
+#### Examples
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+Standard Transformer Config:
+```
+variables:
+- name: bool_column
+  expression: yourTableName.Col("avg_order_1_day").IsIn([2000, 3000])
+```
+Output:
+| boolean_column |
+|----------------|
+| true |
+| true |
+| false |
+
+### StdDev
+`StdDev` is a function to calculate standard deviation from column values. The output will be single value
+
+#### Input
+No Input
+
+#### Output
+Single value with float type
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+
+Standard Transformer Config:
+```
+variables:
+- name: std_dev
+  expression: yourTableName.Col("avg_cancellation_rate_30_day").StdDev()
+```
+Output: 0.0068475461947247
+
+### Mean
+`Mean` is a function to calculate mean value from column values. The output will be single value
+
+#### Input
+No Input
+
+#### Output
+Single value with float type
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+Standard Transformer Config:
+```
+variables:
+- name: mean
+  expression: yourTableName.Col("avg_order_1_day").Mean()
+```
+Output: 3000
+
+### Median
+
+`Median` is a function to calculate median value from column values. The output will be single value
+
+#### Input
+No Input
+
+#### Output
+Single value with float type
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+Standard Transformer Config:
+```
+variables:
+- name: median
+  expression: yourTableName.Col("avg_order_1_day").Median()
+```
+Output: 3000
+
+### Max
+
+`Max` is a function to find max value from column values. The output will be single value
+
+#### Input
+No Input
+
+#### Output
+Single value with float type
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+Standard Transformer Config:
+```
+variables:
+- name: max
+  expression: yourTableName.Col("avg_order_1_day").Max()
+```
+Output: 4000
+
+### MaxStr
+
+`MaxStr` is a function to find max value from column values. The output will be single value in string type
+
+#### Input
+No Input
+
+#### Output
+Single value with string type
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+Standard Transformer Config:
+```
+variables:
+- name: max_str
+  expression: yourTableName.Col("avg_order_1_day").MaxStr()
+```
+Output: "4000"
+
+### Min
+
+`Min` is a function to find minimum value from column values. The output will be single value in float type
+
+#### Input
+No Input
+
+#### Output
+Single value with float type
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+Standard Transformer Config:
+```
+variables:
+- name: min
+  expression: yourTableName.Col("avg_order_1_day").Min()
+```
+Output: 2000
+
+### MinStr
+
+`MinStr` is a function to find minimum value from column values. The output will be single value in string type
+
+#### Input
+No Input
+
+#### Output
+Single value with string type
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+Standard Transformer Config:
+```
+variables:
+- name: min_str
+  expression: yourTableName.Col("avg_order_1_day").MinStr()
+```
+Output: "2000"
+
+### Quantile
+
+`Quantile` is a function to returns the sample of x such that x is greater than or equal to the fraction p of samples
+
+#### Input
+Fraction in float type
+
+#### Output
+Single value with float type
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| rank |
+|-------|
+| 1 |
+| 2 | 
+| 3 |
+| 4 |
+| 5 |
+| 6 | 
+| 7 |
+| 8 |
+| 9 |
+| 10 |
+
+Standard Transformer Config:
+```
+variables:
+- name: quantile_0.9
+  expression: yourTableName.Col("rank").Quantile(0.9)
+```
+Output: 9
+
+### Sum
+
+`Sum` is a function to sum all the values in the columns. The output will be single value in float type
+
+#### Input
+No Input
+
+#### Output
+Single value with float type
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | avg_order_1_day | avg_cancellation_rate_30_day |
+|---------------|-----------------|------------------------------|
+| 1 | 2000 | 0.02 |
+| 2 | 3000 | 0.005 |
+| 3 | 4000 | 0.006 |
+
+Standard Transformer Config:
+```
+variables:
+- name: sum
+  expression: yourTableName.Col("avg_order_1_day").Sum()
+```
+Output: 9000
+
+### Flatten
+`Flatten` is a function to flatten all values in a column, this is suitable for column that has list type, for non list the result will be the same with the original columns
+
+#### Input
+No Input
+
+#### Output
+New Column that the value already flatten
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | nearby_restaurant_ids |
+|---------------|-----------------|
+| 1 | [2, 3, 4] |
+| 2 | [4, 5, 6] |
+| 3 | [7, 8, 9] |
+
+Standard Transformer Config:
+```
+variables:
+- name: restaurant_ids
+  expression: yourTableName.Col("nearby_restaurant_ids").Flatten()
+```
+Output:
+| restaurant_ids |
+|----------------|
+| 2 |
+| 3 |
+| 4 |
+| 4 |
+| 5 |
+| 6 |
+| 7 |
+| 8 |
+| 9 |
+
+### Unique
+`Unique` is a function to return all values without duplication. 
+#### Input
+No Input
+
+#### Output
+New Column that has unique value for each row
+
+#### Examples
+
+Suppose users have table `yourTableName`
+
+| restaurant_id | rating |
+|---------------|-----------------|
+| 1 | [2, 3, 4] |
+| 2 | [4, 5, 6] |
+| 1 | [7, 8, 9] |
+
+Standard Transformer Config:
+```
+variables:
+- name: unique_restaurant_id
+  expression: yourTableName.Col("restaurant_id").Unique()
+```
+Output:
+| unique_restaurant_id |
+|----------------|
+| 1 |
+| 2 |
