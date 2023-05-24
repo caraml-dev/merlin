@@ -36,7 +36,7 @@ import (
 
 const (
 	ImageBuilderLabelKey       = "job-name"
-	KnativeServiceLabelKey     = "serving.knative.dev/service"
+	KserveIsvcLabelKey         = "serving.kserve.io/inferenceservice"
 	BatchPredictionJobLabelKey = "prediction-job-id"
 
 	prefixAddPod          = "pod"
@@ -44,9 +44,7 @@ const (
 	prefixAddPodContainer = "pod_and_container"
 )
 
-var (
-	ignoredContainers = []string{"queue-proxy"}
-)
+var ignoredContainers = []string{"queue-proxy"}
 
 // LogLine represents a single log line from a container running in Kubernetes.
 type LogLine struct {
@@ -207,9 +205,9 @@ func (l logService) getLabelSelector(query LogQuery) string {
 			return ImageBuilderLabelKey + "=batch-" + query.ProjectName + "-" + query.ModelName + "-" + query.VersionID
 		}
 	case models.ModelComponentType:
-		return KnativeServiceLabelKey + "=" + query.ModelName + "-" + query.VersionID + "-predictor-default"
+		return "component=predictor," + KserveIsvcLabelKey + "=" + query.ModelName + "-" + query.VersionID
 	case models.TransformerComponentType:
-		return KnativeServiceLabelKey + "=" + query.ModelName + "-" + query.VersionID + "-transformer-default"
+		return "component=transformer," + KserveIsvcLabelKey + "=" + query.ModelName + "-" + query.VersionID
 	case models.BatchJobDriverComponentType:
 		return "spark-role=driver," + BatchPredictionJobLabelKey + "=" + query.PredictionJobID
 	case models.BatchJobExecutorComponentType:
