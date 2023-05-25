@@ -41,7 +41,7 @@ const moment = require("moment");
 const defaultTextSize = "s";
 const defaultIconSize = "xs";
 
-const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
+const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) => {
   const healthColor = status => {
     switch (status) {
       case "running":
@@ -206,7 +206,6 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
               </EuiButtonEmpty>
             </Link>
           </EuiFlexItem>
-          {(item.status === "pending" || item.status === "running") && (
             <EuiFlexItem grow={false} key={`stop-job-${item.id}`}>
               <EuiButtonEmpty
                 onClick={() => {
@@ -214,12 +213,12 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
                   toggleStopPredictionJobModal(true);
                 }}
                 color="danger"
-                iconType="minusInCircle"
+                iconType={item.status === "pending" || item.status === "running" ? 'minusInCircle' : 'trash'}
                 size="xs">
-                <EuiText size="xs">Stop Job</EuiText>
+                <EuiText size="xs">{item.status === "pending" || item.status === "running" ? 'Stop Job' : 'Delete Job'}</EuiText>
+
               </EuiButtonEmpty>
             </EuiFlexItem>
-          )}
         </EuiFlexGroup>
       )
     }
@@ -266,6 +265,7 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
         <StopPredictionJobModal
           job={currentJob}
           closeModal={() => toggleStopPredictionJobModal(false)}
+          fetchJobs={fetchJobs}
         />
       )}
     </Fragment>

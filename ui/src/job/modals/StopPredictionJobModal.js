@@ -20,7 +20,7 @@ import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import PropTypes from "prop-types";
 
-const StopPredictionJobModal = ({ job, closeModal }) => {
+const StopPredictionJobModal = ({ job, closeModal, fetchJobs }) => {
   const [{ isLoading, isLoaded }, stopRunningJob] = useMerlinApi(
     `/models/${job.model_id}/versions/${job.version_id}/jobs/${job.id}/stop`,
     { method: "PUT", addToast: true, mock: mocks.noBody },
@@ -31,20 +31,21 @@ const StopPredictionJobModal = ({ job, closeModal }) => {
   useEffect(() => {
     if (isLoaded) {
       closeModal();
+      fetchJobs()
     }
-  }, [isLoaded, closeModal]);
+  }, [isLoaded, closeModal, fetchJobs]);
 
   return (
     <EuiOverlayMask>
       <EuiConfirmModal
-        title="Stop running job"
+        title={job.status === "pending" || job.status === "running" ? 'Stop Job' : 'Delete Job'}
         onCancel={closeModal}
         onConfirm={stopRunningJob}
         cancelButtonText="Cancel"
-        confirmButtonText="Stop Job"
+        confirmButtonText={job.status === "pending" || job.status === "running" ? 'Stop Job' : 'Delete Job'}
         buttonColor="danger">
         <p>
-          You're about to stop prediction job id <b>{job.id}</b> in version{" "}
+          You're about to {job.status === "pending" || job.status === "running" ? 'stop' : 'delete'} prediction job id <b>{job.id}</b> in version{" "}
           <b>{job.version_id}</b> of model <b>{job.model_id}</b>.
         </p>
         {isLoading && (
