@@ -20,19 +20,19 @@ Standard Transformer provides several built-in functions that are useful for com
 | Time       | [FormatTimestamp](#formattimestamp)                          |
 | Time       | [ParseTimestamp](#parsetimestamp)                            |
 | Time       | [ParseDateTime](#parsedatetime)                              |
-| Column     | [Get](#get)                                                  |
-| Column     | [IsIn](#isin)                                                |
-| Column     | [StdDev](#stddev)                                            |
-| Column     | [Mean](#mean)                                                |
-| Column     | [Median](#median)                                            |
-| Column     | [Max](#max)                                                  |
-| Column     | [MaxStr](#maxstr)                                            |
-| Column     | [Min](#min)                                                  |
-| Column     | [MinStr](#minstr)                                            |
-| Column     | [Quantile](#quantile)                                        |
-| Column     | [Sum](#sum)                                                  |
-| Column     | [Flatten](#flatten)                                          |
-| Column     | [Unique](#unique)                                            |
+| Series     | [Get](#get)                                                  |
+| Series     | [IsIn](#isin)                                                |
+| Series     | [StdDev](#stddev)                                            |
+| Series     | [Mean](#mean)                                                |
+| Series     | [Median](#median)                                            |
+| Series     | [Max](#max)                                                  |
+| Series     | [MaxStr](#maxstr)                                            |
+| Series     | [Min](#min)                                                  |
+| Series     | [MinStr](#minstr)                                            |
+| Series     | [Quantile](#quantile)                                        |
+| Series     | [Sum](#sum)                                                  |
+| Series     | [Flatten](#flatten)                                          |
+| Series     | [Unique](#unique)                                            |
 
 
 ## Geospatial
@@ -551,11 +551,11 @@ Output: `"2021-11-30 15:00:00 +0900 WIT"`
 ```
 
 
-## Column Expression
-Column expression is function that can be invoked by column values in a table
+## Series Expression
+Series expression is function that can be invoked by series (column) values in a table
 
 ### Get
-`Get` will retrieve a row in column based on the given index
+`Get` will retrieve a row in series based on the given index
 
 #### Input
 | Name | Description |
@@ -563,7 +563,7 @@ Column expression is function that can be invoked by column values in a table
 | Index| Position of rows starts with 0 |
 
 #### Output
-Single column row
+Single series row
 
 #### Examples
 Suppose users have table `yourTableName`
@@ -574,19 +574,19 @@ Suppose users have table `yourTableName`
 | 2 | 3000 | 0.005 |
 | 3 | 4000 | 0.006 |
 
-Users try to retrieve index 2 for column `restaurant_id`
+Users try to retrieve index 2 for series `avg_order_1_day`
 
 Standard Transformer Config:
 ```
 variables:
-- name: restaurant_2
-  expression: yourTableName.Col("restaurant_id").Get(2)
+- name: total_order_1_day
+  expression: yourTableName.Col("avg_order_1_day").Get(2)
 ```
 
-Output: 2
+Output: 4000
 
 ### IsIn
-`IsIn` checks whether value in a row is part of the given array, the result will be a new column that has boolean type
+`IsIn` checks whether value in a row is part of the given array, the result will be a new series that has boolean type
 
 #### Input
 | Name | Description |
@@ -594,7 +594,7 @@ Output: 2
 | Comparator| Array of value  |
 
 #### Output
-New Column that has boolean type and same dimension with original column
+New Series that has boolean type and same dimension with original series
 
 #### Examples
 Suppose users have table `yourTableName`
@@ -608,18 +608,18 @@ Suppose users have table `yourTableName`
 Standard Transformer Config:
 ```
 variables:
-- name: bool_column
+- name: bool_series
   expression: yourTableName.Col("avg_order_1_day").IsIn([2000, 3000])
 ```
 Output:
-| bool_column |
+| bool_series |
 |----------------|
 | true |
 | true |
 | false |
 
 ### StdDev
-`StdDev` is a function to calculate standard deviation from column values. The output will be single value
+`StdDev` is a function to calculate standard deviation from series values. The output will be single value
 
 #### Input
 No Input
@@ -647,7 +647,7 @@ variables:
 Output: 0.0068475461947247
 
 ### Mean
-`Mean` is a function to calculate mean value from column values. The output will be single value
+`Mean` is a function to calculate mean value from series values. The output will be single value
 
 #### Input
 No Input
@@ -675,7 +675,7 @@ Output: 3000
 
 ### Median
 
-`Median` is a function to calculate median value from column values. The output will be single value
+`Median` is a function to calculate median value from series values. The output will be single value
 
 #### Input
 No Input
@@ -703,7 +703,7 @@ Output: 3000
 
 ### Max
 
-`Max` is a function to find max value from column values. The output will be single value
+`Max` is a function to find max value from series values. The output will be single value
 
 #### Input
 No Input
@@ -731,7 +731,7 @@ Output: 4000
 
 ### MaxStr
 
-`MaxStr` is a function to find max value from column values. The output will be single value in string type
+`MaxStr` is a function to find max value from series values. The output will be single value in string type
 
 #### Input
 No Input
@@ -759,7 +759,7 @@ Output: "4000"
 
 ### Min
 
-`Min` is a function to find minimum value from column values. The output will be single value in float type
+`Min` is a function to find minimum value from series values. The output will be single value in float type
 
 #### Input
 No Input
@@ -787,7 +787,7 @@ Output: 2000
 
 ### MinStr
 
-`MinStr` is a function to find minimum value from column values. The output will be single value in string type
+`MinStr` is a function to find minimum value from series values. The output will be single value in string type
 
 #### Input
 No Input
@@ -850,7 +850,7 @@ Output: 9
 
 ### Sum
 
-`Sum` is a function to sum all the values in the columns. The output will be single value in float type
+`Sum` is a function to sum all the values in the seriess. The output will be single value in float type
 
 #### Input
 No Input
@@ -877,13 +877,13 @@ variables:
 Output: 9000
 
 ### Flatten
-`Flatten` is a function to flatten all values in a column, this is suitable for column that has list type, for non list the result will be the same with the original columns
+`Flatten` is a function to flatten all values in a series, this is suitable for series that has list type, for non list the result will be the same with the original seriess
 
 #### Input
 No Input
 
 #### Output
-New Column that the value already flatten
+New Series that the value already flatten
 
 #### Examples
 
@@ -915,12 +915,12 @@ Output:
 | 9 |
 
 ### Unique
-`Unique` is a function to return all values without duplication. 
+`Unique` is a function to return all values without duplication.
 #### Input
 No Input
 
 #### Output
-New Column that has unique value for each row
+New Series that has unique value for each row
 
 #### Examples
 
@@ -928,9 +928,9 @@ Suppose users have table `yourTableName`
 
 | restaurant_id | rating |
 |---------------|-----------------|
-| 1 | [2, 3, 4] |
-| 2 | [4, 5, 6] |
-| 1 | [7, 8, 9] |
+| 1 | [2, 2, 4] |
+| 2 | [4, 5, 4] |
+| 1 | [2, 2, 4] |
 
 Standard Transformer Config:
 ```
@@ -943,3 +943,14 @@ Output:
 |----------------|
 | 1 |
 | 2 |
+
+```
+variables:
+- name: rating
+  expression: yourTableName.Col("rating").Unique()
+```
+Output:
+| rating |
+|--------|
+| [2, 2, 4] |
+| [4, 5, 4] |
