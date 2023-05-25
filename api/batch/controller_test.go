@@ -336,9 +336,9 @@ func TestSubmit(t *testing.T) {
 			mockManifestManager.On("CreateSecret", context.Background(), jobName, test.namespace, secret.Data).Return(test.secretCreationResult.secretName, test.secretCreationResult.error)
 			mockManifestManager.On("CreateJobSpec", context.Background(), jobName, test.namespace, predictionJob.Config.JobConfig).Return(test.jobConfigCreationResult.configName, test.jobConfigCreationResult.error)
 			if test.existingServiceAccount.ID != int32(0) {
-				mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(test.existingServiceAccount, nil)
+				mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(test.existingServiceAccount, nil)
 			} else {
-				mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(mlp.Secret{}, errors.New("not found"))
+				mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(mlp.Secret{}, errors.New("not found"))
 			}
 			mockStorage.On("Save", predictionJob).Return(test.saveResult.error)
 
@@ -375,7 +375,7 @@ func TestCleanupAfterSubmitFailed(t *testing.T) {
 	mockStorage.On("Save", predictionJob).Return(nil)
 
 	mockMlpAPIClient := &mlpMock.APIClient{}
-	mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
+	mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
 	mockSparkClient := &sparkOpFake.Clientset{}
 	mockSparkClient.PrependReactor("create", "sparkapplications", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
@@ -402,7 +402,7 @@ func TestOnUpdate(t *testing.T) {
 	mockStorage.On("Get", predictionJob.ID).Return(predictionJob, nil)
 
 	mockMlpAPIClient := &mlpMock.APIClient{}
-	mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
+	mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
 	mockSparkClient := &sparkOpFake.Clientset{}
 	mockKubeClient := &fake2.Clientset{}
@@ -477,7 +477,7 @@ func TestUpdateStatus(t *testing.T) {
 			mockStorage.On("Get", predictionJob.ID).Return(predictionJob, nil)
 
 			mockMlpAPIClient := &mlpMock.APIClient{}
-			mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
+			mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
 			mockSparkClient := &sparkOpFake.Clientset{}
 			mockKubeClient := &fake2.Clientset{}

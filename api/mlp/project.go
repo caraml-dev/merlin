@@ -92,12 +92,12 @@ func MapsToLabels(maps map[string]string) Labels {
 }
 
 func (c *apiClient) ListProjects(ctx context.Context, projectName string) (Projects, error) {
-	var opt *client.ProjectApiProjectsGetOpts
+	var opt *client.ProjectApiV1ProjectsGetOpts
 	if projectName != "" {
-		opt = &client.ProjectApiProjectsGetOpts{Name: optional.NewString(projectName)}
+		opt = &client.ProjectApiV1ProjectsGetOpts{Name: optional.NewString(projectName)}
 	}
 
-	projects, _, err := c.client.ProjectApi.ProjectsGet(ctx, opt) // nolint: bodyclose
+	projects, _, err := c.client.ProjectApi.V1ProjectsGet(ctx, opt) // nolint: bodyclose
 	if err != nil {
 		return nil, fmt.Errorf("mlp-api_ListProjects: %w", err)
 	}
@@ -106,7 +106,7 @@ func (c *apiClient) ListProjects(ctx context.Context, projectName string) (Proje
 }
 
 func (c *apiClient) GetProjectByID(ctx context.Context, projectID int32) (Project, error) {
-	project, _, err := c.client.ProjectApi.ProjectsProjectIdGet(ctx, projectID) // nolint: bodyclose
+	project, _, err := c.client.ProjectApi.V1ProjectsProjectIdGet(ctx, projectID) // nolint: bodyclose
 	if err != nil {
 		return Project{}, fmt.Errorf("mlp-api_GetProjectByID: %w", err)
 	}
@@ -115,11 +115,11 @@ func (c *apiClient) GetProjectByID(ctx context.Context, projectID int32) (Projec
 }
 
 func (c *apiClient) GetProjectByName(ctx context.Context, projectName string) (Project, error) {
-	opt := &client.ProjectApiProjectsGetOpts{
+	opt := &client.ProjectApiV1ProjectsGetOpts{
 		Name: optional.NewString(projectName),
 	}
 
-	projects, _, err := c.client.ProjectApi.ProjectsGet(ctx, opt) // nolint: bodyclose
+	projects, _, err := c.client.ProjectApi.V1ProjectsGet(ctx, opt) // nolint: bodyclose
 	if err != nil {
 		return Project{}, fmt.Errorf("mlp-api_GetProjectByName: %w", err)
 	}
@@ -132,7 +132,7 @@ func (c *apiClient) GetProjectByName(ctx context.Context, projectName string) (P
 }
 
 func (c *apiClient) CreateProject(ctx context.Context, project Project) (Project, error) {
-	newProject, _, err := c.client.ProjectApi.ProjectsPost(ctx, client.Project(project)) // nolint: bodyclose
+	newProject, _, err := c.client.ProjectApi.V1ProjectsPost(ctx, client.Project(project)) // nolint: bodyclose
 	if err != nil {
 		return Project{}, fmt.Errorf("mlp-api_CreateProject: %w", err)
 	}
@@ -140,7 +140,7 @@ func (c *apiClient) CreateProject(ctx context.Context, project Project) (Project
 }
 
 func (c *apiClient) UpdateProject(ctx context.Context, project Project) (Project, error) {
-	updatedProject, _, err := c.client.ProjectApi.ProjectsProjectIdPut(ctx, project.ID, client.Project(project)) // nolint: bodyclose
+	updatedProject, _, err := c.client.ProjectApi.V1ProjectsProjectIdPut(ctx, project.ID, client.Project(project)) // nolint: bodyclose
 	if err != nil {
 		return Project{}, fmt.Errorf("mlp-api_UpdateProject: %w", err)
 	}
