@@ -25,7 +25,6 @@ import {
 import PropTypes from "prop-types";
 
 
-const moment = require("moment");
 
 const defaultTextSize = "s";
 const defaultIconSize = "s"
