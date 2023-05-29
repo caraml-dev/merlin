@@ -17,7 +17,6 @@
 import React, { Fragment } from "react";
 import { Link } from "react-router-dom";
 import {
-  EuiBadge,
   EuiCallOut,
   EuiInMemoryTable,
   EuiText,
@@ -71,9 +70,6 @@ const JobsTableModelVersion = ({ jobs, isLoaded, error }) => {
           <span className="cell-first-column" size={defaultTextSize}>
             {name}
           </span>
-          {moment().diff(item.created_at, "hours") <= 1 && (
-            <EuiBadge color="success">New</EuiBadge>
-          )}
         </Link>
       )
     },
