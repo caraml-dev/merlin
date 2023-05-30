@@ -117,6 +117,8 @@ type Options struct {
 	FeastServingKeepAliveTime time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIME" default:"60s"`
 	// Duration of PING that considered as TIMEOUT
 	FeastServingKeepAliveTimeout time.Duration `envconfig:"FEAST_SERVING_KEEP_ALIVE_TIMEOUT" default:"5s"`
+	// Number of feast gRPC connection
+	FeastGRPCConnCount int `envconfig:"FEAST_GRPC_CONN_COUNT" default:"10"`
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {

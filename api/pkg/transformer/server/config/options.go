@@ -32,6 +32,8 @@ type Options struct {
 	ModelHTTPHystrixCommandName string `envconfig:"MODEL_HTTP_HYSTRIX_COMMAND_NAME" default:"http_model_predict"`
 	// Name of hystrix command for model prediction that use UPI_V1 protocol
 	ModelGRPCHystrixCommandName string `envconfig:"MODEL_GRPC_HYSTRIX_COMMAND_NAME" default:"grpc_model_predict"`
+	// Number of model predictor connection
+	ModelServerConnCount int `envconfig:"MODEL_SERVER_CONN_COUNT" default:"5"`
 
 	// Maximum concurrent requests when call model predictor
 	ModelHystrixMaxConcurrentRequests int `envconfig:"MODEL_HYSTRIX_MAX_CONCURRENT_REQUESTS" default:"100"`

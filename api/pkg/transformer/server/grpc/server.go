@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/afex/hystrix-go/hystrix"
 	mErrors "github.com/caraml-dev/merlin/pkg/errors"
 	hystrixpkg "github.com/caraml-dev/merlin/pkg/hystrix"
 	"github.com/caraml-dev/merlin/pkg/transformer/pipeline"
@@ -18,13 +19,12 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/server/grpc/interceptors"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/instrumentation"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
+	"github.com/go-coldbrew/grpcpool"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/copier"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/soheilhy/cmux"
-
-	"github.com/afex/hystrix-go/hystrix"
 
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
 	"go.uber.org/zap"
@@ -48,7 +48,7 @@ type UPIServer struct {
 
 	opts                  *config.Options
 	modelClient           upiv1.UniversalPredictionServiceClient
-	conn                  *grpc.ClientConn
+	conn                  grpcpool.ConnPool
 	instrumentationRouter *mux.Router
 	logger                *zap.Logger
 
@@ -80,7 +80,7 @@ func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentati
 		}))
 	}
 
-	conn, err := grpc.Dial(opts.ModelPredictURL, dialOpts...)
+	connPool, err := grpcpool.DialContext(context.Background(), opts.ModelPredictURL, uint(opts.ModelServerConnCount), dialOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -93,11 +93,11 @@ func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentati
 		ErrorPercentThreshold:  opts.ModelHystrixErrorPercentageThreshold,
 	})
 
-	modelClient := upiv1.NewUniversalPredictionServiceClient(conn)
+	modelClient := upiv1.NewUniversalPredictionServiceClient(connPool)
 	svr := &UPIServer{
 		opts:                  opts,
 		modelClient:           modelClient,
-		conn:                  conn,
+		conn:                  connPool,
 		instrumentationRouter: instrumentationRouter,
 		logger:                logger,
 	}
@@ -305,7 +305,7 @@ func (us *UPIServer) predict(ctx context.Context, payload *upiv1.PredictValuesRe
 	predictStartTime := time.Now()
 	var modelResponse *upiv1.PredictValuesResponse
 	err := hystrix.Do(us.opts.ModelGRPCHystrixCommandName, func() error {
-		response, err := us.modelClient.PredictValues(ctx, (*upiv1.PredictValuesRequest)(payload))
+		response, err := us.modelClient.PredictValues(ctx, (*upiv1.PredictValuesRequest)(payload), grpc.WaitForReady(true))
 		if err != nil {
 			return err
 		}
