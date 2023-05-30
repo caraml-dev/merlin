@@ -1454,7 +1454,7 @@ func TestDeleteVersion(t *testing.T) {
 			},
 		},
 		{
-			desc: "Should return 400 if there are active Prediction jobs",
+			desc: "Should return 400 if there are active prediction jobs",
 			vars: map[string]string{
 				"model_id":   "1",
 				"version_id": "1",
