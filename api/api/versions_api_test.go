@@ -17,6 +17,8 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/caraml-dev/merlin/service"
+	"github.com/google/uuid"
 	"net/http"
 	"net/url"
 	"testing"
