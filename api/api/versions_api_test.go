@@ -17,11 +17,12 @@ package api
 import (
 	"errors"
 	"fmt"
-	"github.com/caraml-dev/merlin/service"
-	"github.com/google/uuid"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"github.com/caraml-dev/merlin/service"
+	"github.com/google/uuid"
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlflow"

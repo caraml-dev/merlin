@@ -17,13 +17,14 @@ package api
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/service"
 	mlflowDeleteServiceMocks "github.com/caraml-dev/mlp/api/pkg/client/mlflow/mocks"
 	"github.com/google/uuid"
-	"net/http"
-	"testing"
-	"time"
 
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
