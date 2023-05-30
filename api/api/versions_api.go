@@ -21,6 +21,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/utils"
@@ -315,7 +316,43 @@ func (c *VersionsController) deletePredictionJobs(ctx context.Context, jobs []*m
 	}
 	return nil
 }
+func (c *VersionsController) checkActivePredictionJobs(ctx context.Context, model *models.Model, version *models.Version) (int, []*models.PredictionJob, error) {
+	jobQuery := &service.ListPredictionJobQuery{
+		ModelID:   model.ID,
+		VersionID: version.ID,
+	}
 
+	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, jobQuery)
+	if err != nil {
+		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
+		return 500, nil, fmt.Errorf("Failed listing prediction job")
+	}
+
+	for _, item := range jobs {
+		if item.Status == models.JobPending || item.Status == models.JobRunning {
+			return 400, nil, fmt.Errorf("There are active prediction job that still using this model version")
+		}
+	}
+
+	return 200, jobs, nil
+}
+
+func (c *VersionsController) checkActiveEndpoints(ctx context.Context, model *models.Model, version *models.Version) (int, []*models.VersionEndpoint, error) {
+
+	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
+	if err != nil {
+		log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
+		return 500, nil, fmt.Errorf("Failed listing model version endpoint")
+	}
+
+	for _, item := range endpoints {
+		if item.Status != models.EndpointTerminated && item.Status != models.EndpointFailed {
+			return 400, nil, fmt.Errorf("There are active endpoint that still using this model version")
+		}
+	}
+
+	return 200, endpoints, nil
+}
 func validateLabels(labels models.KV) bool {
 	for key, element := range labels {
 		value, ok := element.(string)

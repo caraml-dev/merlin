@@ -17,6 +17,8 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/caraml-dev/merlin/service"
+	"github.com/google/uuid"
 	"net/http"
 	"net/url"
 	"testing"
@@ -1760,6 +1762,599 @@ func TestDeleteVersion(t *testing.T) {
 			}
 			resp := ctl.DeleteVersion(&http.Request{}, tC.vars, nil)
 			assertEqualResponses(t, tC.expected, resp)
+		})
+	}
+}
+
+func TestDeleteVersion(t *testing.T) {
+	testCases := []struct {
+		desc                 string
+		vars                 map[string]string
+		versionService       func() *mocks.VersionsService
+		modelsService        func() *mocks.ModelsService
+		mlflowDeleteService  func() *mlflowDeleteServiceMocks.Service
+		predictionJobService func() *mocks.PredictionJobService
+		endpointService      func() *mocks.EndpointsService
+		expected             *Response
+	}{
+		{
+			desc: "Should successfully delete version type pyfunc_v2",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc_v2",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc_v2",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					RunID:     "runID1",
+				}, nil)
+				svc.On("Delete", mock.Anything).Return(nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
+					ModelID:   models.ID(1),
+					VersionID: models.ID(1),
+				}).Return([]*models.PredictionJob{}, nil)
+				return svc
+			},
+			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
+				svc := &mlflowDeleteServiceMocks.Service{}
+				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusOK,
+				data: models.ID(1),
+			},
+		},
+		{
+			desc: "Should successfully delete version with type other than pyfunc_v2",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "xgboost",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "xgboost",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					RunID:     "runID1",
+				}, nil)
+				svc.On("Delete", mock.Anything).Return(nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
+				return svc
+			},
+			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
+				svc := &mlflowDeleteServiceMocks.Service{}
+				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusOK,
+				data: models.ID(1),
+			},
+		},
+		{
+			desc: "Should return 400 if there are active Endpoints",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "xgboost",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "xgboost",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					RunID:     "runID1",
+				}, nil)
+				svc.On("Delete", mock.Anything).Return(nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{
+					{
+						ID:             uuid.New(),
+						VersionID:      models.ID(1),
+						VersionModelID: models.ID(1),
+						Status:         models.EndpointServing,
+						URL:            "http://endpoint-1.com",
+						Environment: &models.Environment{
+							ID:      models.ID(1),
+							Name:    "dev",
+							Cluster: "dev",
+						},
+					},
+				}, nil)
+				return svc
+			},
+			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
+				svc := &mlflowDeleteServiceMocks.Service{}
+				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "There are active endpoint that still using this model version"},
+			},
+		},
+		{
+			desc: "Should return 500 if failed to delete inactive endpoint",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "xgboost",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "xgboost",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					RunID:     "runID1",
+				}, nil)
+				svc.On("Delete", mock.Anything).Return(nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{
+					{
+						ID:             uuid.New(),
+						VersionID:      models.ID(1),
+						VersionModelID: models.ID(1),
+						Status:         models.EndpointFailed,
+						URL:            "http://endpoint-1.com",
+						Environment: &models.Environment{
+							ID:      models.ID(1),
+							Name:    "dev",
+							Cluster: "dev",
+						},
+					},
+				}, nil)
+				svc.On("DeleteEndpoint", mock.Anything, mock.Anything).Return(
+					errors.New("failed to delete endpoint"))
+				return svc
+			},
+			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
+				svc := &mlflowDeleteServiceMocks.Service{}
+				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusInternalServerError,
+				data: Error{Message: "Failed to delete endpoint: failed to delete endpoint"},
+			},
+		},
+		{
+			desc: "Should return 400 if there are active Prediction jobs",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc_v2",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc_v2",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					RunID:     "runID1",
+				}, nil)
+				svc.On("Delete", mock.Anything).Return(nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
+					ModelID:   models.ID(1),
+					VersionID: models.ID(1),
+				}).Return([]*models.PredictionJob{
+					{
+						ID:              models.ID(1),
+						Name:            "prediction-job-1",
+						ProjectID:       models.ID(1),
+						VersionID:       models.ID(1),
+						VersionModelID:  models.ID(1),
+						EnvironmentName: "dev",
+						Status:          models.JobRunning,
+					},
+				}, nil)
+				return svc
+			},
+			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
+				svc := &mlflowDeleteServiceMocks.Service{}
+				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusBadRequest,
+				data: Error{Message: "There are active prediction job that still using this model version"},
+			},
+		},
+		{
+			desc: "Should return 500 if failed to delete inactive Prediction jobs",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc_v2",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc_v2",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					RunID:     "runID1",
+				}, nil)
+				svc.On("Delete", mock.Anything).Return(nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
+					ModelID:   models.ID(1),
+					VersionID: models.ID(1),
+				}).Return([]*models.PredictionJob{
+					{
+						ID:              models.ID(1),
+						Name:            "prediction-job-1",
+						ProjectID:       models.ID(1),
+						VersionID:       models.ID(1),
+						VersionModelID:  models.ID(1),
+						EnvironmentName: "dev",
+						Status:          models.JobFailed,
+					},
+				}, nil)
+				svc.On("StopPredictionJob", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+					nil, errors.New("failed to stop prediction job"))
+				return svc
+			},
+			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
+				svc := &mlflowDeleteServiceMocks.Service{}
+				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusInternalServerError,
+				data: Error{Message: "Failed stopping prediction job: failed to stop prediction job"},
+			},
+		},
+		{
+			desc: "Should return 500 if delete mlflow run failed",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc_v2",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc_v2",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					RunID:     "runID1",
+				}, nil)
+				svc.On("Delete", mock.Anything).Return(nil)
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
+					ModelID:   models.ID(1),
+					VersionID: models.ID(1),
+				}).Return([]*models.PredictionJob{}, nil)
+				return svc
+			},
+			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
+				svc := &mlflowDeleteServiceMocks.Service{}
+				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(errors.New("failed to delete mlflow run"))
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusInternalServerError,
+				data: Error{Message: "Delete Failed: failed to delete mlflow run"},
+			},
+		},
+		{
+			desc: "Should return 500 if delete model version from database failed",
+			vars: map[string]string{
+				"model_id":   "1",
+				"version_id": "1",
+			},
+			modelsService: func() *mocks.ModelsService {
+				svc := &mocks.ModelsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
+					ID:        models.ID(1),
+					Name:      "model-1",
+					ProjectID: models.ID(1),
+					Project: mlp.Project{
+						MLFlowTrackingURL: "http://www.notinuse.com",
+					},
+					ExperimentID: 1,
+					Type:         "pyfunc_v2",
+					MlflowURL:    "http://mlflow.com",
+					Endpoints:    nil,
+				}, nil)
+				return svc
+			},
+			versionService: func() *mocks.VersionsService {
+				svc := &mocks.VersionsService{}
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(&models.Version{
+					ID:      models.ID(1),
+					ModelID: models.ID(1),
+					Model: &models.Model{
+						ID:           models.ID(1),
+						Name:         "model-1",
+						ProjectID:    models.ID(1),
+						Project:      mlp.Project{},
+						ExperimentID: 1,
+						Type:         "pyfunc_v2",
+						MlflowURL:    "http://mlflow.com",
+					},
+					MlflowURL: "http://mlflow.com",
+					RunID:     "runID1",
+				}, nil)
+				svc.On("Delete", mock.Anything).Return(errors.New("failed to delete model version"))
+				return svc
+			},
+			predictionJobService: func() *mocks.PredictionJobService {
+				svc := &mocks.PredictionJobService{}
+				svc.On("ListPredictionJobs", mock.Anything, mock.Anything, &service.ListPredictionJobQuery{
+					ModelID:   models.ID(1),
+					VersionID: models.ID(1),
+				}).Return([]*models.PredictionJob{}, nil)
+				return svc
+			},
+			mlflowDeleteService: func() *mlflowDeleteServiceMocks.Service {
+				svc := &mlflowDeleteServiceMocks.Service{}
+				svc.On("DeleteRun", mock.Anything, "runID1", mock.Anything, true).Return(nil)
+				return svc
+			},
+			endpointService: func() *mocks.EndpointsService {
+				svc := &mocks.EndpointsService{}
+				return svc
+			},
+			expected: &Response{
+				code: http.StatusInternalServerError,
+				data: Error{Message: "Delete Failed: failed to delete model version"},
+			},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			versionSvc := tC.versionService()
+			modelsSvc := tC.modelsService()
+			mlflowDeleteSvc := tC.mlflowDeleteService
+			predictionJobSvc := tC.predictionJobService
+			endpointService := tC.endpointService
+
+			ctl := &VersionsController{
+				AppContext: &AppContext{
+					VersionsService: versionSvc,
+					MonitoringConfig: config.MonitoringConfig{
+						MonitoringEnabled: true,
+						MonitoringBaseURL: "http://grafana",
+					},
+					AlertEnabled:         true,
+					ModelsService:        modelsSvc,
+					MlflowDeleteService:  mlflowDeleteSvc(),
+					PredictionJobService: predictionJobSvc(),
+					EndpointsService:     endpointService(),
+				},
+			}
+			resp := ctl.DeleteVersion(&http.Request{}, tC.vars, nil)
+			assert.Equal(t, tC.expected, resp)
 		})
 	}
 }
