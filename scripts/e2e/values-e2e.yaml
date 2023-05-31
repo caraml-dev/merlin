@@ -13,7 +13,7 @@ deployment:
 environment: dev
 loggerDestinationURL: "http://message-dumper.mlp.svc.cluster.local"
 mlpApi:
-  apiHost: http://mlp.mlp:8080/v1
+  apiHost: http://mlp.mlp:8080
   encryptionKey: password
 imageBuilder:
   serviceAccount:

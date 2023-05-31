@@ -18,7 +18,6 @@ import (
 	"net/http"
 
 	"github.com/caraml-dev/mlp/api/client"
-	"github.com/caraml-dev/mlp/api/util"
 )
 
 // APIClient is interface to mlp-api client.
@@ -28,22 +27,18 @@ type APIClient interface {
 }
 
 // NewAPIClient initializes new mlp-api client.
-func NewAPIClient(googleClient *http.Client, basePath, encryptionKey string) APIClient {
+func NewAPIClient(googleClient *http.Client, basePath string) APIClient {
 	cfg := client.NewConfiguration()
 	cfg.BasePath = basePath
 	cfg.HTTPClient = googleClient
 
 	c := client.NewAPIClient(cfg)
 
-	passphrase := util.CreateHash(encryptionKey)
-
 	return &apiClient{
-		client:     c,
-		passphrase: passphrase,
+		client: c,
 	}
 }
 
 type apiClient struct {
-	client     *client.APIClient
-	passphrase string
+	client *client.APIClient
 }
