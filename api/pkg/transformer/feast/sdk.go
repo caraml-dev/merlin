@@ -12,6 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // GrpcClient as wrapper of feastsdk
@@ -27,7 +28,7 @@ func newInsecureGRPCClientWithDialOptions(host string, port int, numConn int, wa
 	adr := fmt.Sprintf("%s:%d", host, port)
 
 	// Compile grpc dial options from security config.
-	options := append(opts, []grpc.DialOption{grpc.WithStatsHandler(&ocgrpc.ClientHandler{}), grpc.WithInsecure()}...)
+	options := append(opts, []grpc.DialOption{grpc.WithStatsHandler(&ocgrpc.ClientHandler{}), grpc.WithTransportCredentials(insecure.NewCredentials())}...)
 	// Configure client TLS.
 
 	// Enable tracing if a global tracer is registered
