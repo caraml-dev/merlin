@@ -173,8 +173,9 @@ func (p *predictionJobService) StopPredictionJob(ctx context.Context, env *model
 		return nil, err
 	}
 
-	if job.Status.IsTerminal() {
-		return job, p.store.Delete(job)
+	if job.Status.IsTerminal() && job.Status != models.JobTerminated {
+		job.Status = models.JobTerminated
+		return job, p.store.Save(job)
 	}
 
 	ctl, ok := p.batchControllers[env.Name]
