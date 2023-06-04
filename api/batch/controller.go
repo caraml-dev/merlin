@@ -285,6 +285,9 @@ func (c *controller) syncStatus(ctx context.Context, key string) error {
 		c.cleanup(ctx, predictionJob, sparkApp.Namespace)
 		modelName := getModelName(predictionJob.Name)
 		BatchCounter.WithLabelValues(sparkApp.Namespace, modelName, string(predictionJob.Status)).Inc()
+		if predictionJob.Status == models.JobTerminated {
+			return c.store.Delete(predictionJob)
+		}
 	}
 
 	return c.store.Save(predictionJob)
