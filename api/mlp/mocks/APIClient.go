@@ -92,7 +92,7 @@ func (_m *APIClient) GetPlainSecretByIDandProjectID(ctx context.Context, secretI
 }
 
 // GetPlainSecretByNameAndProjectID provides a mock function with given fields: ctx, secretName, projectID
-func (_m *APIClient) GetPlainSecretByNameAndProjectID(ctx context.Context, secretName string, projectID int32) (mlp.Secret, error) {
+func (_m *APIClient) GetSecretByName(ctx context.Context, secretName string, projectID int32) (mlp.Secret, error) {
 	ret := _m.Called(ctx, secretName, projectID)
 
 	var r0 mlp.Secret
@@ -155,7 +155,7 @@ func (_m *APIClient) GetProjectByName(ctx context.Context, projectName string) (
 }
 
 // GetSecretByIDandProjectID provides a mock function with given fields: ctx, secretID, projectID
-func (_m *APIClient) GetSecretByIDandProjectID(ctx context.Context, secretID int32, projectID int32) (mlp.Secret, error) {
+func (_m *APIClient) GetSecretByID(ctx context.Context, secretID int32, projectID int32) (mlp.Secret, error) {
 	ret := _m.Called(ctx, secretID, projectID)
 
 	var r0 mlp.Secret

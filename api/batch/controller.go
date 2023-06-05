@@ -145,7 +145,7 @@ func (c *controller) Submit(ctx context.Context, predictionJob *models.Predictio
 		return fmt.Errorf("failed creating spark driver authorization in namespace %s: %w", namespace, err)
 	}
 
-	secret, err := c.mlpAPIClient.GetPlainSecretByNameAndProjectID(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectID))
+	secret, err := c.mlpAPIClient.GetSecretByName(ctx, predictionJob.Config.ServiceAccountName, int32(predictionJob.ProjectID))
 	if err != nil {
 		return fmt.Errorf("service account %s is not found within %s project: %w", predictionJob.Config.ServiceAccountName, namespace, err)
 	}

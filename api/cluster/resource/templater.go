@@ -187,12 +187,21 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
 		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
-		orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
-			orig,
-			modelService,
-			config,
-			kservev1beta1.TransformerComponent,
-		)
+		if _, ok := orig.Status.Components[kservev1beta1.TransformerComponent]; !ok ||
+			orig.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision == "" {
+			orig.Spec.Transformer.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
+				modelService,
+				config,
+				kservev1beta1.TransformerComponent,
+			)
+		} else {
+			orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
+				orig,
+				modelService,
+				config,
+				kservev1beta1.TransformerComponent,
+			)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
 		}
@@ -436,7 +445,6 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	if feastStorageConfigJsonByte, err := json.Marshal(feastStorageConfig); err == nil {
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
 	}
-
 	// Add keepalive configuration for predictor
 	// only pyfunc config that enforced by merlin
 	keepAliveModelCfg := t.standardTransformerConfig.ModelClientKeepAlive
@@ -450,15 +458,18 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: strconv.FormatBool(keepaliveCfg.Enabled)})
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTime, Value: keepaliveCfg.Time.String()})
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: keepaliveCfg.Timeout.String()})
+	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastGRPCConnCount, Value: fmt.Sprintf("%d", t.standardTransformerConfig.FeastGPRCConnCount)})
 
-	// add kafka configuration
 	if modelService.Protocol == protocol.UpiV1 {
+		// add kafka configuration
 		kafkaCfg := t.standardTransformerConfig.Kafka
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaTopic, Value: modelService.GetPredictionLogTopic()})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaBrokers, Value: kafkaCfg.Brokers})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", kafkaCfg.MaxMessageSizeBytes)})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", kafkaCfg.ConnectTimeoutMS)})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaSerialization, Value: string(kafkaCfg.SerializationFmt)})
+
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelServerConnCount, Value: fmt.Sprintf("%d", t.standardTransformerConfig.ModelServerConnCount)})
 	}
 
 	jaegerCfg := t.standardTransformerConfig.Jaeger

@@ -29,8 +29,8 @@ type ModelEndpointsApiService service
 
 /*
 ModelEndpointsApiService List model endpoint
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
 
 @return []ModelEndpoint
 */
@@ -128,11 +128,9 @@ func (a *ModelEndpointsApiService) ModelsModelIdEndpointsGet(ctx context.Context
 
 /*
 ModelEndpointsApiService Stop serving traffic to the model endpoint, then delete it.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param modelEndpointId
-
-
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param modelEndpointId
 */
 func (a *ModelEndpointsApiService) ModelsModelIdEndpointsModelEndpointIdDelete(ctx context.Context, modelId int32, modelEndpointId string) (*http.Response, error) {
 	var (
@@ -211,9 +209,9 @@ func (a *ModelEndpointsApiService) ModelsModelIdEndpointsModelEndpointIdDelete(c
 
 /*
 ModelEndpointsApiService Get a model endpoint
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param modelEndpointId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param modelEndpointId
 
 @return ModelEndpoint
 */
@@ -429,9 +427,9 @@ func (a *ModelEndpointsApiService) ModelsModelIdEndpointsModelEndpointIdPut(ctx 
 
 /*
 ModelEndpointsApiService Create a model endpoint
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param body Model endpoint object that has to be added
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param body Model endpoint object that has to be added
 
 @return ModelEndpoint
 */

@@ -30,7 +30,7 @@ func TestProject(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 
 		switch r.URL.Path {
-		case "/projects":
+		case "/v1/projects":
 			if r.Method == "GET" {
 				_, err := w.Write([]byte(`[{
 					"id": 1,
@@ -44,7 +44,7 @@ func TestProject(t *testing.T) {
 				}`))
 				assert.NoError(t, err)
 			}
-		case "/projects/1":
+		case "/v1/projects/1":
 			if r.Method == "GET" {
 				_, err := w.Write([]byte(`{
 					"id": 1,
@@ -65,7 +65,7 @@ func TestProject(t *testing.T) {
 
 	ctx := context.Background()
 
-	c := NewAPIClient(&http.Client{}, ts.URL, "")
+	c := NewAPIClient(&http.Client{}, ts.URL)
 
 	project1, err := c.CreateProject(ctx, Project{Name: "project-1"})
 	assert.Nil(t, err)

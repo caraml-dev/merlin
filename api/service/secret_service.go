@@ -43,7 +43,7 @@ func (ss *secretService) List(ctx context.Context, projectID int32) (mlp.Secrets
 }
 
 func (ss *secretService) GetByIDandProjectID(ctx context.Context, secretID, projectID int32) (mlp.Secret, error) {
-	return ss.mlpAPIClient.GetSecretByIDandProjectID(ctx, secretID, projectID)
+	return ss.mlpAPIClient.GetSecretByID(ctx, secretID, projectID)
 }
 
 func (ss *secretService) Create(ctx context.Context, projectID int32, secret mlp.Secret) (mlp.Secret, error) {

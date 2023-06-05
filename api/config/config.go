@@ -265,8 +265,7 @@ type WardenConfig struct {
 }
 
 type MlpAPIConfig struct {
-	APIHost       string `envconfig:"MLP_API_HOST" required:"true"`
-	EncryptionKey string `envconfig:"MLP_API_ENCRYPTION_KEY" required:"true"`
+	APIHost string `envconfig:"MLP_API_HOST" required:"true"`
 }
 
 // FeastServingKeepAliveConfig config for feast serving grpc keepalive
@@ -297,8 +296,10 @@ type StandardTransformerConfig struct {
 	EnableAuth            bool                 `envconfig:"FEAST_AUTH_ENABLED" default:"false"`
 	FeastRedisConfig      *FeastRedisConfig    `envconfig:"FEAST_REDIS_CONFIG"`
 	FeastBigtableConfig   *FeastBigtableConfig `envconfig:"FEAST_BIG_TABLE_CONFIG"`
+	FeastGPRCConnCount    int                  `envconfig:"FEAST_GRPC_CONN_COUNT" default:"10"`
 	FeastServingKeepAlive *FeastServingKeepAliveConfig
 	ModelClientKeepAlive  *ModelClientKeepAliveConfig
+	ModelServerConnCount  int `envconfig:"MODEL_SERVER_CONN_COUNT" default:"10"`
 	// Base64 Service Account
 	BigtableCredential string             `envconfig:"FEAST_BIGTABLE_CREDENTIAL"`
 	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`

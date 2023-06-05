@@ -22,6 +22,6 @@ import (
 )
 
 func TestNewAPIClient(t *testing.T) {
-	client := NewAPIClient(&http.Client{}, "", "")
+	client := NewAPIClient(&http.Client{}, "")
 	assert.NotNil(t, client)
 }

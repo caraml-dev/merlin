@@ -110,6 +110,8 @@ var (
 			SamplerParam: "1",
 			Disabled:     "false",
 		},
+		FeastGPRCConnCount:   5,
+		ModelServerConnCount: 3,
 		FeastRedisConfig: &config.FeastRedisConfig{
 			IsRedisCluster: true,
 			ServingURL:     "localhost:6866",
@@ -1979,6 +1981,7 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: "true"},
 										{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
 										{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
+										{Name: transformerpkg.FeastGRPCConnCount, Value: "5"},
 										{Name: transformerpkg.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
 										{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
 										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
@@ -2084,11 +2087,13 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: "true"},
 										{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
 										{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
+										{Name: transformerpkg.FeastGRPCConnCount, Value: "5"},
 										{Name: transformerpkg.KafkaTopic, Value: "caraml-project-model-prediction-log"},
 										{Name: transformerpkg.KafkaBrokers, Value: standardTransformerConfig.Kafka.Brokers},
 										{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.MaxMessageSizeBytes)},
 										{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.ConnectTimeoutMS)},
 										{Name: transformerpkg.KafkaSerialization, Value: string(standardTransformerConfig.Kafka.SerializationFmt)},
+										{Name: transformerpkg.ModelServerConnCount, Value: "3"},
 										{Name: transformerpkg.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
 										{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
 										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
@@ -2203,11 +2208,13 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: "true"},
 										{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
 										{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
+										{Name: transformerpkg.FeastGRPCConnCount, Value: "5"},
 										{Name: transformerpkg.KafkaTopic, Value: "caraml-project-model-prediction-log"},
 										{Name: transformerpkg.KafkaBrokers, Value: standardTransformerConfig.Kafka.Brokers},
 										{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.MaxMessageSizeBytes)},
 										{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.ConnectTimeoutMS)},
 										{Name: transformerpkg.KafkaSerialization, Value: string(standardTransformerConfig.Kafka.SerializationFmt)},
+										{Name: transformerpkg.ModelServerConnCount, Value: "3"},
 										{Name: transformerpkg.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
 										{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
 										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
@@ -4912,9 +4919,6 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 						kservev1beta1.PredictorComponent: {
 							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
-						kservev1beta1.TransformerComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
-						},
 					},
 				},
 			},
@@ -5032,7 +5036,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00001",
 										},
 									},
 								},
@@ -5042,7 +5046,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5060,7 +5064,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-transformer-default-00002",
+											"app":       "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5083,9 +5087,6 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
 							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
-						},
-						kservev1beta1.TransformerComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -5150,9 +5151,6 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 						kservev1beta1.PredictorComponent: {
 							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
 						},
-						kservev1beta1.TransformerComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
-						},
 					},
 				},
 			},
@@ -5270,7 +5268,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.ScheduleAnyway,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00001",
 										},
 									},
 								},
@@ -5280,7 +5278,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									WhenUnsatisfiable: corev1.DoNotSchedule,
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
-											"app": "model-1-transformer-default-00002",
+											"app": "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5298,7 +5296,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 									LabelSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"app-label": "spread",
-											"app":       "model-1-transformer-default-00002",
+											"app":       "model-1-transformer-default-00001",
 										},
 										MatchExpressions: []metav1.LabelSelectorRequirement{
 											{
@@ -5321,9 +5319,6 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
 						kservev1beta1.PredictorComponent: {
 							LatestCreatedRevision: fmt.Sprintf("%s-predictor-default-00001", modelSvc.Name),
-						},
-						kservev1beta1.TransformerComponent: {
-							LatestCreatedRevision: fmt.Sprintf("%s-transformer-default-00001", modelSvc.Name),
 						},
 					},
 				},
@@ -5697,6 +5692,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 								{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: "true"},
 								{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
 								{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
+								{Name: transformerpkg.FeastGRPCConnCount, Value: "5"},
 								{Name: transformerpkg.JaegerAgentHost, Value: "NEW_HOST"},
 								{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
 								{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},

@@ -212,6 +212,7 @@ const VersionDetails = () => {
                     path="logs"
                     element={
                       <ContainerLogsView
+                        projectId={projectId}
                         model={model}
                         versionId={versionId}
                         fetchContainerURL={`/models/${modelId}/versions/${versionId}/endpoint/${endpointId}/containers`}

@@ -263,9 +263,9 @@ func (a *VersionApiService) ModelsModelIdVersionsPost(ctx context.Context, model
 
 /*
 VersionApiService Get version by ID from model
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param versionId
 
 @return Version
 */
