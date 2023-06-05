@@ -90,6 +90,10 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) 
   ] = useState(false);
   const [currentJob, setCurrentJob] = useState(null);
 
+  const isActiveJob = function(status) {
+    return ["pending", "running"].includes(status)
+  }
+
   const columns = [
     {
       field: "name",
@@ -213,9 +217,9 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) 
                   toggleStopPredictionJobModal(true);
                 }}
                 color="danger"
-                iconType={item.status === "pending" || item.status === "running" ? 'minusInCircle' : 'trash'}
+                iconType={isActiveJob(item.status) ? 'minusInCircle' : 'trash'}
                 size="xs">
-                <EuiText size="xs">{item.status === "pending" || item.status === "running" ? 'Stop Job' : 'Delete Job'}</EuiText>
+                <EuiText size="xs">{isActiveJob(item.status) ? 'Stop Job' : 'Terminate Job'}</EuiText>
 
               </EuiButtonEmpty>
             </EuiFlexItem>
@@ -277,7 +281,8 @@ JobListTable.propTypes = {
   modelId: PropTypes.string,
   jobs: PropTypes.array,
   isLoaded: PropTypes.bool,
-  error: PropTypes.object
+  error: PropTypes.object,
+  fetchJobs: PropTypes.func
 };
 
 export default JobListTable;

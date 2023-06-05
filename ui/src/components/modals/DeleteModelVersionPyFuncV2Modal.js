@@ -43,9 +43,13 @@ const DeleteModelVersionPyFuncV2Modal = ({
     []
   );
 
+  const isActiveJob = function(status) {
+    return ["pending", "running"].includes(status)
+  }
+
   useEffect(() => {
-    setActiveJob(jobs.data.filter(item => item.status === "pending" || item.status === "running"))
-    setInactiveJob(jobs.data.filter(item => item.status !== "pending" && item.status !== "running"))
+    setActiveJob(jobs.data.filter(isActiveJob(item.status)))
+    setInactiveJob(jobs.data.filter(!isActiveJob(item.status)))
   }, [jobs])
 
   useEffect(() => {

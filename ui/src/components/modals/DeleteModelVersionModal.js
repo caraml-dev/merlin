@@ -49,9 +49,13 @@ const DeleteModelVersionModal = ({
     }
   }, [isLoaded, closeModal, callback]);
 
+  const isActiveEndpoint = function(status){
+    return ["pending","running","serving"].include(status)
+  }
+
   useEffect(() => {
-    setActiveEndpoint(version.endpoints.filter(item => item.status === "pending" || item.status ==="running" || item.status ==="serving"))
-    setInactiveEndpoint(version.endpoints.filter(item => item.status !== "terminated"))
+    setActiveEndpoint(version.endpoints.filter(item => isActiveEndpoint(item.status)))
+    setInactiveEndpoint(version.endpoints.filter(item => item.status === "failed"))
   }, [version])
 
   return (
@@ -105,8 +109,6 @@ const DeleteModelVersionModal = ({
             />
           </div>
         )}
-
-        
       </EuiConfirmModal>
     </EuiOverlayMask>
   );
