@@ -299,7 +299,7 @@ type StandardTransformerConfig struct {
 	FeastGPRCConnCount    int                  `envconfig:"FEAST_GRPC_CONN_COUNT" default:"10"`
 	FeastServingKeepAlive *FeastServingKeepAliveConfig
 	ModelClientKeepAlive  *ModelClientKeepAliveConfig
-	ModelServerConnCount  int `envconfig:"MODEL_SERVER_CONN_COUNT" default:"5"`
+	ModelServerConnCount  int `envconfig:"MODEL_SERVER_CONN_COUNT" default:"10"`
 	// Base64 Service Account
 	BigtableCredential string             `envconfig:"FEAST_BIGTABLE_CREDENTIAL"`
 	DefaultFeastSource spec.ServingSource `envconfig:"DEFAULT_FEAST_SOURCE" default:"BIGTABLE"`
