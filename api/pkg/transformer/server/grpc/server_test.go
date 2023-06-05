@@ -590,7 +590,7 @@ func TestUPIServer_PredictValues_WithMockPreprocessAndPostprocessHandler(t *test
 				req, _ := tt.expectedPreprocessOutput.(*types.UPIPredictionRequest)
 				incomingReq = (*upiv1.PredictValuesRequest)(req)
 			}
-			clientMock.On("PredictValues", mock.Anything, incomingReq).Return(tt.expectedModelOutput, tt.modelErr)
+			clientMock.On("PredictValues", mock.Anything, incomingReq, mock.Anything).Return(tt.expectedModelOutput, tt.modelErr)
 			us := &UPIServer{
 				modelClient: clientMock,
 				opts: &config.Options{
@@ -3416,7 +3416,7 @@ func TestUPIServer_PredictValues(t *testing.T) {
 			clientMock := &mocks.UniversalPredictionServiceClient{}
 			clientMock.On("PredictValues", mock.Anything, mock.MatchedBy(func(req *upiv1.PredictValuesRequest) bool {
 				return proto.Equal(tt.preprocessOutput, req)
-			})).Return(tt.modelOutput, tt.modelOutputErr)
+			}), mock.Anything).Return(tt.modelOutput, tt.modelOutputErr)
 			mockFeast := &feastMocks.Client{}
 			feastClients := feast.Clients{}
 			feastClients[spec.ServingSource_BIGTABLE] = mockFeast

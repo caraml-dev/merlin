@@ -8,7 +8,6 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/feast/bigtablestore"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast/redis"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
-	feastSdk "github.com/feast-dev/feast/sdk/go"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -56,7 +55,7 @@ func createFeastServingClient(feastOptions Options, featureTableMetadata []*spec
 	return newFeastGrpcClient(servingURL, feastOptions)
 }
 
-func newFeastGrpcClient(url string, options Options) (*feastSdk.GrpcClient, error) {
+func newFeastGrpcClient(url string, options Options) (*GrpcClient, error) {
 	host, port, err := net.SplitHostPort(url)
 	if err != nil {
 		return nil, errors.Errorf("Unable to parse Feast Serving host (%s): %s", url, err)
@@ -75,7 +74,7 @@ func newFeastGrpcClient(url string, options Options) (*feastSdk.GrpcClient, erro
 		})
 		dialOpts = append(dialOpts, keepAliveOpt)
 	}
-	client, err := feastSdk.NewSecureGrpcClientWithDialOptions(host, portInt, feastSdk.SecurityConfig{}, dialOpts...)
+	client, err := newInsecureGRPCClientWithDialOptions(host, portInt, options.FeastGRPCConnCount, true, dialOpts...)
 	if err != nil {
 		return nil, errors.Errorf("Unable to initialize a Feast gRPC client: %s", err)
 	}
