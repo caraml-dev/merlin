@@ -50,7 +50,7 @@ const DeleteModelVersionModal = ({
   }, [isLoaded, closeModal, callback]);
 
   const isActiveEndpoint = function(status){
-    return ["pending","running","serving"].include(status)
+    return ["pending","running","serving"].includes(status)
   }
 
   useEffect(() => {
@@ -88,7 +88,7 @@ const DeleteModelVersionModal = ({
                 <br/> <br/> If you still wish to delete this model version, please <b>Undeploy</b> Endpoints that use this version. <br/>
               </span>
             ) : (
-              <p>
+              <div>
                 You are about to delete model <b>{model.name}</b> version <b>{version.id}</b>. This action cannot be undone. 
 
                 <br/> <br/> To confirm, please type "<b>{model.name}-version-{version.id}</b>" in the box below
@@ -98,8 +98,9 @@ const DeleteModelVersionModal = ({
                     value={deleteConfirmation}
                     onChange={(e) => setDeleteConfirmation(e.target.value)}
                     isInvalid={deleteConfirmation !== `${model.name}-version-${version.id}`} />  
-              </p>
+              </div>
             )}
+            <br></br>
             {activeEndpoint.length === 0 && inactiveEndpoint.length > 0 && (
                 <p>Deleting this Model Version will also delete {inactiveEndpoint.length} <b>Failed</b> Endpoints using this version. </p>
             )}

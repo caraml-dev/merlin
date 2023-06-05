@@ -91,7 +91,7 @@ const DeleteModelVersionPyFuncV2Modal = ({
               </div>
               
             ) : (
-              <p>
+              <div>
                 You are about to delete model <b>{model.name}</b> version <b>{version.id}</b>. This action cannot be undone. 
                 
                 <br/> <br/> To confirm, please type "<b>{model.name}-version-{version.id}</b>" in the box below
@@ -101,8 +101,9 @@ const DeleteModelVersionPyFuncV2Modal = ({
                     value={deleteConfirmation}
                     onChange={(e) => setDeleteConfirmation(e.target.value)}
                     isInvalid={deleteConfirmation !== `${model.name}-version-${version.id}`} />  
-              </p>
+              </div>
             )}
+            <br></br>
             {activeJob.length === 0 && inactiveJob.length > 0 && (
                 <span>Deleting this Model Version will also delete {inactiveJob.length} <b>Inactive</b> Prediction Jobs using this version. <br/> <br/></span>
             )}

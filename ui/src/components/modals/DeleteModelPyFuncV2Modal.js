@@ -89,7 +89,7 @@ const DeleteModelPyFuncV2Modal = ({
               </div>
               
             ) : (
-              <p>
+              <div>
                 You are about to delete model <b>{model.name}</b>. This action cannot be undone. 
                 
                 <br/> <br/> To confirm, please type "<b>{model.name}</b>" in the box below
@@ -99,7 +99,7 @@ const DeleteModelPyFuncV2Modal = ({
                     value={deleteConfirmation}
                     onChange={(e) => setDeleteConfirmation(e.target.value)}
                     isInvalid={deleteConfirmation !== model.name} />  
-              </p>
+              </div>
             )}
             {activeJob.length === 0 && inactiveJob.length > 0 && (
                 <span>Deleting this Model will also delete {inactiveJob.length} <b>Inactive</b> Prediction Jobs using this model. <br/> <br/></span>

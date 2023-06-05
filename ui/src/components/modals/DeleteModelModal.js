@@ -107,11 +107,9 @@ const DeleteModelModal = ({
               </span>
             ) : (
               <div>
-                <p>
                   You are about to delete model <b>{model.name}</b>. This action cannot be undone. 
                   <br/> <br/> Please note that all the related entity of this model (<b>Model version</b> and <b>Model Version Endpoint)</b> will be <b>deleted</b>.
                   <br/> <br/> To confirm, please type "<b>{model.name}</b>" in the box below
-                </p>
                   <EuiFieldText     
                     fullWidth            
                     placeholder={model.name}
