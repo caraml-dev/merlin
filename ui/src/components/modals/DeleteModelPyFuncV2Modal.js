@@ -46,8 +46,8 @@ const DeleteModelPyFuncV2Modal = ({
   }
 
   useEffect(() => {
-    setActiveJob(jobs.data.filter(isActiveJob(item.status)))
-    setInactiveJob(jobs.data.filter(!isActiveJob(item.status)))
+    setActiveJob(jobs.data.filter(item => isActiveJob(item.status)))
+    setInactiveJob(jobs.data.filter(item => !isActiveJob(item.status)))
   }, [jobs])
 
   useEffect(() => {
