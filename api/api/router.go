@@ -46,9 +46,6 @@ import (
 	"github.com/caraml-dev/merlin/service"
 )
 
-// Create a response logger to print logs without the default stacktrace.
-var responseLogger = log.NewLogger(true)
-
 // AppContext contains the services of the Merlin application.
 type AppContext struct {
 	DB       *gorm.DB
@@ -127,11 +124,11 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 
 		// Log unsuccessful responses
 		if response != nil && !response.IsSuccess() {
-			responseLogger.Errorw("Request failed",
+			log.GetLogger().Errorw("Request failed",
 				"route", route.name,
 				"status", response.code,
 				"response", response.data,
-				"stacktrace", response.stacktrace,
+				"stacktrace", response.stacktrace, // Override default stacktrace produced by logger
 			)
 		}
 

@@ -18,20 +18,17 @@ import (
 	"go.uber.org/zap"
 )
 
-var globalLogger = NewLogger(false)
+var globalLogger = NewLogger()
 
 // NewLogger create a new SugaredLogger
-func NewLogger(disableStackTrace bool) *zap.SugaredLogger {
+func NewLogger() *zap.SugaredLogger {
 	logger, _ := zap.NewProduction(zap.AddCallerSkip(1))
-	if disableStackTrace {
-
-	}
 	return logger.Sugar()
 }
 
 // GetLogger() get a Logger from SugaredLogger
-func GetLogger() *zap.Logger {
-	return globalLogger.Desugar()
+func GetLogger() *zap.SugaredLogger {
+	return globalLogger
 }
 
 // Infof uses fmt.Sprintf to log a templated message.
