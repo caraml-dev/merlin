@@ -36,13 +36,13 @@ func (c *ProjectsController) ListProjects(r *http.Request, vars map[string]strin
 
 	projects, err := c.ProjectsService.List(ctx, vars["name"])
 	if err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error listing projects: %v", err))
 	}
 
 	user := vars["user"]
 	projects, err = c.filterAuthorizedProjects(user, projects, enforcer.ActionRead)
 	if err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error filtering authorized projects: %v", err))
 	}
 
 	return Ok(projects)
@@ -54,7 +54,7 @@ func (c *ProjectsController) GetProject(r *http.Request, vars map[string]string,
 	projectID, _ := models.ParseID(vars["project_id"])
 	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
-		return NotFound(err.Error())
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
 	return Ok(project)

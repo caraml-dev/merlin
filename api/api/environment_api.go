@@ -15,6 +15,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -27,7 +28,7 @@ type EnvironmentController struct {
 func (c *EnvironmentController) ListEnvironments(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	environments, err := c.EnvironmentService.ListEnvironments(vars["name"])
 	if err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error listing environments: %v", err))
 	}
 
 	return Ok(environments)

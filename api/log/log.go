@@ -18,11 +18,14 @@ import (
 	"go.uber.org/zap"
 )
 
-var globalLogger = NewLogger()
+var globalLogger = NewLogger(false)
 
 // NewLogger create a new SugaredLogger
-func NewLogger() *zap.SugaredLogger {
+func NewLogger(disableStackTrace bool) *zap.SugaredLogger {
 	logger, _ := zap.NewProduction(zap.AddCallerSkip(1))
+	if disableStackTrace {
+
+	}
 	return logger.Sugar()
 }
 

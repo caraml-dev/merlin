@@ -37,6 +37,7 @@ import (
 
 	"github.com/caraml-dev/merlin/config"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/middleware"
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/mlp"
@@ -44,6 +45,9 @@ import (
 	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
 	"github.com/caraml-dev/merlin/service"
 )
+
+// Create a response logger to print logs without the default stacktrace.
+var responseLogger = log.NewLogger(true)
 
 // AppContext contains the services of the Merlin application.
 type AppContext struct {
@@ -120,6 +124,16 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 			}
 			return route.handler(r, vars, body)
 		}()
+
+		// Log unsuccessful responses
+		if response != nil && !response.IsSuccess() {
+			responseLogger.Errorw("Request failed",
+				"route", route.name,
+				"status", response.code,
+				"response", response.data,
+				"stacktrace", response.stacktrace,
+			)
+		}
 
 		response.WriteTo(w)
 	}

@@ -37,7 +37,7 @@ func (c *ModelsController) ListModels(r *http.Request, vars map[string]string, _
 
 	models, err := c.ModelsService.ListModels(ctx, projectID, vars["name"])
 	if err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error listing models: %v", err))
 	}
 
 	return Ok(models)
@@ -52,7 +52,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 	projectID, _ := models.ParseID(vars["project_id"])
 	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
-		return NotFound(err.Error())
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
 	experimentName := fmt.Sprintf("%s/%s", project.Name, model.Name)
@@ -62,7 +62,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 		case mlflow.ResourceAlreadyExists:
 			return BadRequest(fmt.Sprintf("MLflow experiment for model with name `%s` already exists", model.Name))
 		default:
-			return InternalServerError(fmt.Sprintf("Failed to create mlflow experiment: %s", err.Error()))
+			return InternalServerError(fmt.Sprintf("Failed to create mlflow experiment: %v", err))
 		}
 	}
 
@@ -71,7 +71,7 @@ func (c *ModelsController) CreateModel(r *http.Request, vars map[string]string, 
 
 	model, err = c.ModelsService.Save(ctx, model)
 	if err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error saving model: %v", err))
 	}
 
 	return Created(model)
@@ -86,16 +86,15 @@ func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, bod
 
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
-		return NotFound(err.Error())
+		return NotFound(fmt.Sprintf("Model not found: %v", err))
 	}
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model id %s not found", modelID))
+			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
-
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model: %v", err))
 	}
 
 	return Ok(model)

@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/caraml-dev/merlin/utils"
 )
 
 // Response handles responses of APIs.
@@ -25,6 +27,9 @@ type Response struct {
 	code    int
 	data    interface{}
 	headers map[string]string
+
+	// Debug info
+	stacktrace string
 }
 
 // Error represents the structure of an error response.
@@ -51,6 +56,11 @@ func (r *Response) WriteTo(w http.ResponseWriter) {
 		encoder := json.NewEncoder(w)
 		encoder.Encode(r.data) //nolint:errcheck
 	}
+}
+
+// IsSuccess returns true if the code is in the 2XX range
+func (r *Response) IsSuccess() bool {
+	return r.code >= http.StatusOK && r.code < http.StatusMultipleChoices
 }
 
 // Ok represents the response of status code 200.
@@ -81,34 +91,52 @@ func Created(data interface{}) *Response {
 // NoContent represents the response of status code 204.
 func NoContent() *Response {
 	return &Response{
-		code: http.StatusNoContent,
+		code:       http.StatusNoContent,
+		stacktrace: utils.StackTrace(0),
 	}
 }
 
 // NewError represents the response of a custom status code.
 func NewError(code int, msg string) *Response {
 	return &Response{
-		code: code,
-		data: Error{msg},
+		code:       code,
+		data:       Error{msg},
+		stacktrace: utils.StackTrace(1),
 	}
 }
 
 // NotFound represents the response of status code 404.
 func NotFound(msg string) *Response {
-	return NewError(http.StatusNotFound, msg)
+	return &Response{
+		code:       http.StatusNotFound,
+		data:       Error{msg},
+		stacktrace: utils.StackTrace(1),
+	}
 }
 
 // BadRequest represents the response of status code 400.
 func BadRequest(msg string) *Response {
-	return NewError(http.StatusBadRequest, msg)
+	return &Response{
+		code:       http.StatusBadRequest,
+		data:       Error{msg},
+		stacktrace: utils.StackTrace(1),
+	}
 }
 
 // InternalServerError represents the response of status code 500.
 func InternalServerError(msg string) *Response {
-	return NewError(http.StatusInternalServerError, msg)
+	return &Response{
+		code:       http.StatusInternalServerError,
+		data:       Error{msg},
+		stacktrace: utils.StackTrace(1),
+	}
 }
 
 // Forbidden represents the response of status code 403.
 func Forbidden(msg string) *Response {
-	return NewError(http.StatusForbidden, msg)
+	return &Response{
+		code:       http.StatusForbidden,
+		data:       Error{msg},
+		stacktrace: utils.StackTrace(1),
+	}
 }

@@ -33,7 +33,6 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -208,12 +207,12 @@ func TestListEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("ListEndpoints", context.Background(), mock.Anything, mock.Anything).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("ListEndpoints", context.Background(), mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "DB is down"},
+				data: Error{Message: "Error creating secret: db is down"},
 			},
 		},
 	}
@@ -236,7 +235,7 @@ func TestListEndpoint(t *testing.T) {
 				},
 			}
 			resp := ctl.ListEndpoint(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -338,7 +337,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model with given `model_id: 1` not found"},
+				data: Error{Message: "Model not found: record not found"},
 			},
 		},
 		{
@@ -373,7 +372,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Version with given `version_id: 1` not found: record not found"},
+				data: Error{Message: "Version not found: record not found"},
 			},
 		},
 		{
@@ -410,12 +409,12 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", context.Background(), uuid).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", context.Background(), uuid).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: fmt.Sprintf("Error while getting version endpoint with id %v", uuid)},
+				data: Error{Message: "Error getting version endpoint: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -457,7 +456,7 @@ func TestGetEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: fmt.Sprintf("Version endpoint with id %s not found", uuid)},
+				data: Error{Message: "Version endpoint not found: record not found"},
 			},
 		},
 	}
@@ -480,7 +479,7 @@ func TestGetEndpoint(t *testing.T) {
 				},
 			}
 			resp := ctl.GetEndpoint(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -577,7 +576,7 @@ func TestListContainers(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model with given `model_id: 1` not found"},
+				data: Error{Message: "Model not found: record not found"},
 			},
 		},
 		{
@@ -612,7 +611,7 @@ func TestListContainers(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Version with given `version_id: 1` not found: record not found"},
+				data: Error{Message: "Version not found: record not found"},
 			},
 		},
 		{
@@ -649,12 +648,12 @@ func TestListContainers(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, uuid).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("ListContainers", context.Background(), mock.Anything, mock.Anything, uuid).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: fmt.Sprintf("Error while getting container for endpoint with id %v", uuid)},
+				data: Error{Message: "Error while getting container for endpoint: Error creating secret: db is down"},
 			},
 		},
 	}
@@ -677,7 +676,7 @@ func TestListContainers(t *testing.T) {
 				},
 			}
 			resp := ctl.ListContainers(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -1172,7 +1171,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "model with given id: 1 not found"},
+				data: Error{Message: "Error getting model / version: model with given id: 1 not found"},
 			},
 		},
 		{
@@ -1204,7 +1203,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -1228,7 +1227,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "error retrieving model with id: 1"},
+				data: Error{Message: "Error getting model / version: error retrieving model with id: 1"},
 			},
 		},
 		{
@@ -1309,7 +1308,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
+				data: Error{Message: "Unable to find default environment, specify environment target for deployment: record not found"},
 			},
 		},
 		{
@@ -1399,7 +1398,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Environment not found: dev"},
+				data: Error{Message: "Environment not found: record not found"},
 			},
 		},
 		{
@@ -2018,7 +2017,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "custom predictor image must be set"},
+				data: Error{Message: "Error validating custom predictor: custom predictor image must be set"},
 			},
 		},
 		{
@@ -2796,7 +2795,7 @@ func TestCreateEndpoint(t *testing.T) {
 			expected: &Response{
 				code: http.StatusBadRequest,
 				data: Error{
-					Message: "variable rawFeatures is not registered",
+					Message: "Error validating transformer: variable rawFeatures is not registered",
 				},
 			},
 		},
@@ -3255,7 +3254,7 @@ func TestCreateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "feast source configuration is not valid, servingURL: localhost:6565 source: UNKNOWN"},
+				data: Error{Message: "Error validating transformer: feast source configuration is not valid, servingURL: localhost:6565 source: UNKNOWN"},
 			},
 		},
 	}
@@ -3280,7 +3279,7 @@ func TestCreateEndpoint(t *testing.T) {
 				},
 			}
 			resp := ctl.CreateEndpoint(&http.Request{}, tC.vars, tC.requestBody)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -3520,7 +3519,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "model with given id: 1 not found"},
+				data: Error{Message: "Error getting model / version: model with given id: 1 not found"},
 			},
 		},
 		{
@@ -3633,7 +3632,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Updating endpoint status to running is not allowed when the endpoint is in serving state"},
+				data: Error{Message: "Error validating request: Updating endpoint status to running is not allowed when the endpoint is in serving state"},
 			},
 		},
 		{
@@ -3746,7 +3745,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Updating environment is not allowed, previous: dev, new: staging"},
+				data: Error{Message: "Error validating request: Updating environment is not allowed, previous: dev, new: staging"},
 			},
 		},
 		{
@@ -3859,7 +3858,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Updating endpoint status to pending is not allowed"},
+				data: Error{Message: "Error validating request: Updating endpoint status to pending is not allowed"},
 			},
 		},
 		{
@@ -3963,7 +3962,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Environment not found: dev"},
+				data: Error{Message: "Environment not found: record not found"},
 			},
 		},
 		{
@@ -4389,7 +4388,7 @@ func TestUpdateEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "custom predictor image must be set"},
+				data: Error{Message: "Error validating custom predictor: custom predictor image must be set"},
 			},
 		},
 		{
@@ -4937,7 +4936,7 @@ func TestUpdateEndpoint(t *testing.T) {
 				},
 			}
 			resp := ctl.UpdateEndpoint(&http.Request{}, tC.vars, tC.requestBody)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -5103,7 +5102,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "model with given id: 1 not found"},
+				data: Error{Message: "Error getting model / version: model with given id: 1 not found"},
 			},
 		},
 		{
@@ -5142,7 +5141,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "model version with given id: 1 not found"},
+				data: Error{Message: "Error getting model / version: model version with given id: 1 not found"},
 			},
 		},
 		{
@@ -5195,7 +5194,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusOK,
-				data: fmt.Sprintf("Version endpoint %s is not available", uuid),
+				data: "Endpoint not found: record not found",
 			},
 		},
 		{
@@ -5243,12 +5242,12 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
-				svc.On("FindByID", context.Background(), uuid).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", context.Background(), uuid).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while finding endpoint"},
+				data: Error{Message: "Error while finding endpoint: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -5330,7 +5329,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Unable to find environment dev"},
+				data: Error{Message: "Unable to find environment dev: record not found"},
 			},
 		},
 		{
@@ -5544,7 +5543,7 @@ func TestDeleteEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: fmt.Sprintf("Unable to undeploy version endpoint %s", uuid)},
+				data: Error{Message: fmt.Sprintf("Unable to undeploy version endpoint %s: Connection refused", uuid)},
 			},
 		},
 	}
@@ -5569,7 +5568,7 @@ func TestDeleteEndpoint(t *testing.T) {
 				},
 			}
 			resp := ctl.DeleteEndpoint(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }

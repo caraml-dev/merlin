@@ -27,7 +27,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/transformer"
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
@@ -84,21 +83,20 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
+		return NotFound(fmt.Sprintf("Model not found: %v", err))
 	}
 
 	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found: %s", versionID, err))
+		return NotFound(fmt.Sprintf("Version not found: %v", err))
 	}
 
 	endpoint, err := c.EndpointsService.FindByID(ctx, endpointID)
 	if err != nil {
-		log.Errorf("Error finding version endpoint with id %s, reason: %v", endpointID, err)
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Version endpoint with id %s not found", endpointID))
+			return NotFound(fmt.Sprintf("Version endpoint not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error while getting version endpoint with id %s", endpointID))
+		return InternalServerError(fmt.Sprintf("Error getting version endpoint: %v", err))
 	}
 
 	if c.MonitoringConfig.MonitoringEnabled {
@@ -123,23 +121,23 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return InternalServerError(err.Error())
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
-		return NotFound(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
 	// validate custom predictor
 	if model.Type == models.ModelTypeCustom {
 		err := c.validateCustomPredictor(ctx, version)
 		if err != nil {
-			return BadRequest(err.Error())
+			return BadRequest(fmt.Sprintf("Error validating custom predictor: %v", err))
 		}
 	}
 
 	env, err := c.AppContext.EnvironmentService.GetDefaultEnvironment()
 	if err != nil {
-		return InternalServerError("Unable to find default environment, specify environment target for deployment")
+		return InternalServerError(fmt.Sprintf("Unable to find default environment, specify environment target for deployment: %v", err))
 	}
 
 	newEndpoint := &models.VersionEndpoint{}
@@ -156,12 +154,10 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 		if newEndpoint.EnvironmentName != "" {
 			env, err = c.AppContext.EnvironmentService.GetEnvironment(newEndpoint.EnvironmentName)
 			if err != nil {
-				if !gorm.IsRecordNotFoundError(err) {
-					log.Errorf("Unable to find the specified environment: %s. Err: %s", env.Name, err)
-					return InternalServerError(fmt.Sprintf("Unable to find the specified environment: %s", env.Name))
+				if gorm.IsRecordNotFoundError(err) {
+					return NotFound(fmt.Sprintf("Environment not found: %v", err))
 				}
-
-				return NotFound(fmt.Sprintf("Environment not found: %s", newEndpoint.EnvironmentName))
+				return InternalServerError(fmt.Sprintf("Error getting environment: %v", err))
 			}
 		}
 
@@ -184,7 +180,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	// check that the model version quota
 	deployedModelVersionCount, err := c.EndpointsService.CountEndpoints(ctx, env, model)
 	if err != nil {
-		return InternalServerError(fmt.Sprintf("Unable to count number of endpoint: %s", env.Name))
+		return InternalServerError(fmt.Sprintf("Unable to count number of endpoints in env %s: %v", env.Name, err))
 	}
 
 	if deployedModelVersionCount >= config.MaxDeployedVersion {
@@ -195,18 +191,16 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
 		err := c.validateTransformer(ctx, newEndpoint.Transformer, newEndpoint.Protocol, newEndpoint.Logger)
 		if err != nil {
-			log.Errorf("error validating transformer config: %v", err)
-			return BadRequest(err.Error())
+			return BadRequest(fmt.Sprintf("Error validating transformer: %v", err))
 		}
 	}
 
 	endpoint, err = c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)
 	if err != nil {
 		if errors.Is(err, merror.InvalidInputError) {
-			return BadRequest(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
+			return BadRequest(fmt.Sprintf("Unable to process model version input: %v", err))
 		}
-
-		return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
+		return InternalServerError(fmt.Sprintf("Unable to deploy model version: %v", err))
 	}
 
 	return Created(endpoint)
@@ -235,26 +229,26 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return InternalServerError(err.Error())
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
-		return NotFound(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
 	// validate custom predictor
 	if model.Type == models.ModelTypeCustom {
 		err := c.validateCustomPredictor(ctx, version)
 		if err != nil {
-			return BadRequest(err.Error())
+			return BadRequest(fmt.Sprintf("Error validating custom predictor: %v", err))
 		}
 	}
 
 	endpoint, err := c.EndpointsService.FindByID(ctx, endpointID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return InternalServerError(fmt.Sprintf("Error finding endpoint with ID: %s", endpointID))
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Endpoint not found: %v", err))
 		}
-		return NotFound(fmt.Sprintf("Version endpoint with id %s not found", endpointID))
+		return InternalServerError(fmt.Sprintf("Error getting endpoint: %v", err))
 	}
 
 	newEndpoint, ok := body.(*models.VersionEndpoint)
@@ -264,17 +258,15 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 
 	err = validateUpdateRequest(endpoint, newEndpoint)
 	if err != nil {
-		return BadRequest(err.Error())
+		return BadRequest(fmt.Sprintf("Error validating request: %v", err))
 	}
 
 	env, err := c.AppContext.EnvironmentService.GetEnvironment(newEndpoint.EnvironmentName)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			log.Errorf("Unable to find the specified environment: %s. Err: %s", newEndpoint.EnvironmentName, err)
-			return InternalServerError(fmt.Sprintf("Unable to find the specified environment: %s", newEndpoint.EnvironmentName))
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Environment not found: %v", err))
 		}
-
-		return NotFound(fmt.Sprintf("Environment not found: %s", newEndpoint.EnvironmentName))
+		return InternalServerError(fmt.Sprintf("Error getting the specified environment: %v", err))
 	}
 
 	if newEndpoint.Status == models.EndpointRunning || newEndpoint.Status == models.EndpointServing {
@@ -282,8 +274,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 		if newEndpoint.Transformer != nil && newEndpoint.Transformer.Enabled {
 			err := c.validateTransformer(ctx, newEndpoint.Transformer, newEndpoint.Protocol, newEndpoint.Logger)
 			if err != nil {
-				log.Errorf("error validating transformer config: %v", err)
-				return BadRequest(err.Error())
+				return BadRequest(fmt.Sprintf("Error validating the transformer: %v", err))
 			}
 		}
 
@@ -298,15 +289,15 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 		endpoint, err = c.EndpointsService.DeployEndpoint(ctx, env, model, version, newEndpoint)
 		if err != nil {
 			if errors.Is(err, merror.InvalidInputError) {
-				return BadRequest(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
+				return BadRequest(fmt.Sprintf("Unable to deploy model version: %v", err))
 			}
 
-			return InternalServerError(fmt.Sprintf("Unable to deploy model version: %s", err.Error()))
+			return InternalServerError(fmt.Sprintf("Unable to deploy model version: %v", err))
 		}
 	} else if newEndpoint.Status == models.EndpointTerminated {
 		endpoint, err = c.EndpointsService.UndeployEndpoint(ctx, env, model, version, endpoint)
 		if err != nil {
-			return InternalServerError(fmt.Sprintf("Unable to undeploy version endpoint %s", endpointID))
+			return InternalServerError(fmt.Sprintf("Unable to undeploy version endpoint %s: %v", endpointID, err))
 		}
 	} else {
 		return InternalServerError(fmt.Sprintf("Updating endpoint status to %s is not allowed", newEndpoint.Status))
@@ -326,7 +317,7 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		return NotFound(err.Error())
+		return NotFound(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
 	var env *models.Environment
@@ -336,32 +327,31 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 		// Fetch endpoint in default environment and undeploy it
 		env, err = c.AppContext.EnvironmentService.GetDefaultEnvironment()
 		if err != nil {
-			return NotFound("Unable to find default environment")
+			return NotFound(fmt.Sprintf("Unable to find default environment: %v", err))
 		}
 
 		endpoint, ok = version.GetEndpointByEnvironmentName(env.Name)
 		if !ok {
-			return NotFound(fmt.Sprintf("Endpoint with given `environment_name: %s` not found: %s", env.Name, err))
+			return NotFound(fmt.Sprintf("Endpoint with given `environment_name: %s` not found: %v", env.Name, err))
 		}
 	} else {
 
 		if err != nil {
-			return BadRequest(fmt.Sprintf("Unable to parse endpoint_id %s", rawEndpointID))
+			return BadRequest(fmt.Sprintf("Unable to parse endpoint_id %s: %v", rawEndpointID, err))
 		}
 
 		endpoint, err = c.EndpointsService.FindByID(ctx, endpointID)
 		if err != nil {
-			log.Errorf("error finding endpoint %s: %v", rawEndpointID, err)
 			if gorm.IsRecordNotFoundError(err) {
-				return Ok(fmt.Sprintf("Version endpoint %s is not available", rawEndpointID))
+				// Record does not existing, nothing to delete
+				return Ok(fmt.Sprintf("Endpoint not found: %v", err))
 			}
-			return InternalServerError("Error while finding endpoint")
+			return InternalServerError(fmt.Sprintf("Error while finding endpoint: %v", err))
 		}
 
 		env, err = c.EnvironmentService.GetEnvironment(endpoint.EnvironmentName)
 		if err != nil {
-			log.Errorf("error finding environment %s: %v", endpoint.EnvironmentName, err)
-			return InternalServerError(fmt.Sprintf("Unable to find environment %s", endpoint.EnvironmentName))
+			return InternalServerError(fmt.Sprintf("Unable to find environment %s: %v", endpoint.EnvironmentName, err))
 		}
 	}
 
@@ -371,8 +361,7 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 
 	_, err = c.EndpointsService.UndeployEndpoint(ctx, env, model, version, endpoint)
 	if err != nil {
-		log.Errorf("error undeploying version endpoint %s: %v", rawEndpointID, err)
-		return InternalServerError(fmt.Sprintf("Unable to undeploy version endpoint %s", rawEndpointID))
+		return InternalServerError(fmt.Sprintf("Unable to undeploy version endpoint %s: %v", rawEndpointID, err))
 	}
 	return Ok(nil)
 }
@@ -386,17 +375,16 @@ func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]st
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
+		return NotFound(fmt.Sprintf("Model not found: %v", err))
 	}
 	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found: %s", versionID, err))
+		return NotFound(fmt.Sprintf("Version not found: %v", err))
 	}
 
 	endpoint, err := c.EndpointsService.ListContainers(ctx, model, version, endpointID)
 	if err != nil {
-		log.Errorf("Error finding containers for endpoint %s, reason: %v", endpointID, err)
-		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint with id %s", endpointID))
+		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint: %v", err))
 	}
 	return Ok(endpoint)
 }

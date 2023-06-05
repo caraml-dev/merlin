@@ -20,7 +20,6 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 )
 
@@ -33,8 +32,7 @@ type AlertsController struct {
 func (c *AlertsController) ListTeams(r *http.Request, vars map[string]string, _ interface{}) *Response {
 	teams, err := c.ModelEndpointAlertService.ListTeams()
 	if err != nil {
-		log.Errorf("ListTeams: %s", err)
-		return InternalServerError("ListTeams: Error while getting list of teams for alert notification")
+		return InternalServerError(fmt.Sprintf("Error listing teams: %v", err))
 	}
 
 	return Ok(teams)
@@ -47,9 +45,9 @@ func (c *AlertsController) ListModelEndpointAlerts(r *http.Request, vars map[str
 	modelEndpointAlerts, err := c.ModelEndpointAlertService.ListModelAlerts(modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("ListModelAlerts: Alerts for Model ID %s not found", modelID))
+			return NotFound(fmt.Sprintf("Model alert not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("ListModelAlerts: Error while getting alerts for Model ID %s", modelID))
+		return InternalServerError(fmt.Sprintf("Error listing alerts for model: %v", err))
 	}
 
 	return Ok(modelEndpointAlerts)
@@ -63,9 +61,9 @@ func (c *AlertsController) GetModelEndpointAlert(r *http.Request, vars map[strin
 	modelEndpointAlert, err := c.ModelEndpointAlertService.GetModelEndpointAlert(modelID, modelEndpointID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("GetModelEndpointAlert: Alert for model endpoint with id %s not found", modelEndpointID))
+			return NotFound(fmt.Sprintf("Model alert not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("GetModelEndpointAlert: Error while getting alert for model endpoint with id %s", modelEndpointID))
+		return InternalServerError(fmt.Sprintf("Error getting alert for model: %v", err))
 	}
 
 	return Ok(modelEndpointAlert)
@@ -87,9 +85,9 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model with id %s not found", modelID))
+			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error while getting model with id %s", modelID))
+		return InternalServerError(fmt.Sprintf("Error finding model: %v", err))
 	}
 
 	alert.Model = model
@@ -97,16 +95,15 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 	modelEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model endpoint with id %s not found", modelEndpointID))
+			return NotFound(fmt.Sprintf("Model endpoint not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error while getting model endpoint with id %s", modelEndpointID))
+		return InternalServerError(fmt.Sprintf("Error getting model endpoint: %v", err))
 	}
 	alert.ModelEndpoint = modelEndpoint
 
 	alert, err = c.ModelEndpointAlertService.CreateModelEndpointAlert(user, alert)
 	if err != nil {
-		log.Errorf("CreateModelEndpointAlert: %s", err)
-		return InternalServerError(fmt.Sprintf("Error while creating model endpoint alert for Model %s, Endpoint %s", modelID, modelEndpointID))
+		return InternalServerError(fmt.Sprintf("Error creating alert: %v", err))
 	}
 
 	return Created(alert)
@@ -128,17 +125,17 @@ func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[st
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model with id %s not found", modelID))
+			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error while getting model with id %s", modelID))
+		return InternalServerError(fmt.Sprintf("Error finding model: %v", err))
 	}
 
 	oldAlert, err := c.ModelEndpointAlertService.GetModelEndpointAlert(modelID, modelEndpointID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Alert for Model ID %s and Model Endpoint ID %s not found", modelID, modelEndpointID))
+			return NotFound(fmt.Sprintf("Model endpoint alert not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error while getting alert for Model ID %s and Model Endpoint ID %s", modelID, modelEndpointID))
+		return InternalServerError(fmt.Sprintf("Error finding alert for model endpoint: %v", err))
 	}
 
 	newAlert.ID = oldAlert.ID
@@ -147,8 +144,7 @@ func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[st
 
 	newAlert, err = c.ModelEndpointAlertService.UpdateModelEndpointAlert(user, newAlert)
 	if err != nil {
-		log.Errorf("UpdateModelEndpointAlert: %s", err)
-		return InternalServerError(fmt.Sprintf("Error while updating model endpoint alert for Model %s, Endpoint %s", modelID, modelEndpointID))
+		return InternalServerError(fmt.Sprintf("Error updating model endpoint alert: %v", err))
 	}
 
 	return Created(newAlert)
