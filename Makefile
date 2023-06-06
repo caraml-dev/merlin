@@ -42,7 +42,6 @@ init-dep-ui:
 .PHONY: init-dep-api
 init-dep-api:
 	@echo "> Initializing API dependencies ..."
-	@cd ${API_PATH} && go mod tidy -v
 	@cd ${API_PATH} && go get -v ./...
 
 # ============================================================

@@ -16,10 +16,12 @@ package service
 
 import (
 	"context"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/caraml-dev/mlp/api/client"
 
@@ -29,37 +31,42 @@ import (
 
 func Test_projectService(t *testing.T) {
 	ctx := context.Background()
-
 	mockMlpAPIClient := &mlpMock.APIClient{}
-	ps := NewProjectsService(mockMlpAPIClient)
-	assert.NotNil(t, ps)
-
 	project1 := mlp.Project{
 		ID:   1,
 		Name: "project-1",
 	}
+	project2 := mlp.Project{
+		ID:   2,
+		Name: "project-2",
+	}
 	projects := mlp.Projects{
 		client.Project(project1),
+		client.Project(project2),
 	}
-
 	mockMlpAPIClient.On("ListProjects", mock.Anything, "").
 		Return(projects, nil)
 
+	// Create new service
+	ps, err := NewProjectsService(mockMlpAPIClient)
+	require.NoError(t, err)
+	assert.NotNil(t, ps)
+
+	// Test List
 	got1, err := ps.List(ctx, "")
 	assert.Nil(t, err)
+	sort.SliceStable(got1, func(i, j int) bool {
+		// Sort result by ID
+		return got1[i].ID < got1[j].ID
+	})
 	assert.Equal(t, projects, got1)
 
-	mockMlpAPIClient.On("GetProjectByID", mock.Anything, int32(1)).
-		Return(project1, nil)
-
-	got2, err := ps.GetByID(ctx, int32(1))
+	got2, err := ps.List(ctx, "project-1")
 	assert.Nil(t, err)
-	assert.Equal(t, project1, got2)
+	assert.Equal(t, mlp.Projects{client.Project(project1)}, got2)
 
-	mockMlpAPIClient.On("GetProjectByName", mock.Anything, "project-1").
-		Return(project1, nil)
-
-	got3, err := ps.GetByName(ctx, "project-1")
+	// Test GetByID
+	got3, err := ps.GetByID(ctx, int32(1))
 	assert.Nil(t, err)
 	assert.Equal(t, project1, got3)
 }

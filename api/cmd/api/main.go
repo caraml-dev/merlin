@@ -231,7 +231,10 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		log.Panicf("unable to initialize authorization enforcer %v", err)
 	}
 
-	projectsService := service.NewProjectsService(mlpAPIClient)
+	projectsService, err := service.NewProjectsService(mlpAPIClient)
+	if err != nil {
+		log.Panicf("unable to initialize Projects service: %v", err)
+	}
 	modelsService := service.NewModelsService(db, mlpAPIClient)
 	versionsService := service.NewVersionsService(db, mlpAPIClient)
 	environmentService := initEnvironmentService(cfg, db)
