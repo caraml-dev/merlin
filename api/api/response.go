@@ -92,7 +92,7 @@ func Created(data interface{}) *Response {
 func NoContent() *Response {
 	return &Response{
 		code:       http.StatusNoContent,
-		stacktrace: utils.StackTrace(0),
+		stacktrace: utils.StackTrace(1),
 	}
 }
 
