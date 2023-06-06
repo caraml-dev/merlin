@@ -281,7 +281,7 @@ type WardenConfig struct {
 }
 
 type MlpAPIConfig struct {
-	APIHost       string `validate:"required"`
+	APIHost string `validate:"required"`
 }
 
 // FeastServingKeepAliveConfig config for feast serving grpc keepalive
@@ -312,7 +312,7 @@ type StandardTransformerConfig struct {
 	EnableAuth            bool             `default:"false"`
 	FeastRedisConfig      *FeastRedisConfig
 	FeastBigtableConfig   *FeastBigtableConfig
-	FeastGPRCConnCount    int                  `default:"10"`
+	FeastGPRCConnCount    int `default:"10"`
 	FeastServingKeepAlive *FeastServingKeepAliveConfig
 	ModelClientKeepAlive  *ModelClientKeepAliveConfig
 	ModelServerConnCount  int `default:"10"`
@@ -507,7 +507,7 @@ func Load(filepaths ...string) (*Config, error) {
 	}
 	config, err = loadImageBuilderConfig(config, v.AllSettings())
 	if err != nil {
-		return nil, fmt.Errorf("Failed to load imagebuilderconfig.k8sconfig, err %s", err)
+		return nil, fmt.Errorf("Failed to load imagebuilderconfig.k8sconfig, err %w", err)
 	}
 
 	return config, nil
