@@ -29,9 +29,7 @@ import (
 	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
 )
 
-func Test_projectService(t *testing.T) {
-	ctx := context.Background()
-	mockMlpAPIClient := &mlpMock.APIClient{}
+func TestListProjects(t *testing.T) {
 	project1 := mlp.Project{
 		ID:   1,
 		Name: "project-1",
@@ -44,29 +42,75 @@ func Test_projectService(t *testing.T) {
 		client.Project(project1),
 		client.Project(project2),
 	}
-	mockMlpAPIClient.On("ListProjects", mock.Anything, "").
-		Return(projects, nil)
 
 	// Create new service
-	ps, err := NewProjectsService(mockMlpAPIClient)
+	ps, err := NewProjectsService(createMockMLPClient(projects))
 	require.NoError(t, err)
 	assert.NotNil(t, ps)
 
-	// Test List
-	got1, err := ps.List(ctx, "")
-	assert.Nil(t, err)
-	sort.SliceStable(got1, func(i, j int) bool {
-		// Sort result by ID
-		return got1[i].ID < got1[j].ID
-	})
-	assert.Equal(t, projects, got1)
+	tests := map[string]struct {
+		projectName string
+		expected    mlp.Projects
+	}{
+		"list all projects": {"", mlp.Projects(projects)},
+		"filter by name":    {"project-1", mlp.Projects{client.Project(project1)}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := ps.List(context.Background(), tt.projectName)
+			assert.Nil(t, err)
+			sort.SliceStable(got, func(i, j int) bool {
+				// Sort result by ID
+				return got[i].ID < got[j].ID
+			})
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
 
-	got2, err := ps.List(ctx, "project-1")
-	assert.Nil(t, err)
-	assert.Equal(t, mlp.Projects{client.Project(project1)}, got2)
+func TestGetProjectByID(t *testing.T) {
+	project1 := mlp.Project{
+		ID:   1,
+		Name: "project-1",
+	}
+	project2 := mlp.Project{
+		ID:   2,
+		Name: "project-2",
+	}
+	projects := mlp.Projects{
+		client.Project(project1),
+		client.Project(project2),
+	}
 
-	// Test GetByID
-	got3, err := ps.GetByID(ctx, int32(1))
-	assert.Nil(t, err)
-	assert.Equal(t, project1, got3)
+	// Create new service
+	ps, err := NewProjectsService(createMockMLPClient(projects))
+	require.NoError(t, err)
+	assert.NotNil(t, ps)
+
+	tests := map[string]struct {
+		projectID   int32
+		expected    mlp.Project
+		expectedErr string
+	}{
+		"project exists":         {1, project1, ""},
+		"project does not exist": {100, mlp.Project{}, "Project info for id 100 not found in the cache"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := ps.GetByID(context.Background(), tt.projectID)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tt.expected, got)
+			}
+		})
+	}
+}
+
+func createMockMLPClient(projects mlp.Projects) mlp.APIClient {
+	mockMlpAPIClient := &mlpMock.APIClient{}
+	mockMlpAPIClient.On("ListProjects", mock.Anything, "").
+		Return(projects, nil)
+	return mockMlpAPIClient
 }
