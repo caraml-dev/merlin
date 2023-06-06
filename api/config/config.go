@@ -411,7 +411,8 @@ type JaegerConfig struct {
 }
 
 type MlflowConfig struct {
-	TrackingURL string `envconfig:"MLFLOW_TRACKING_URL" required:"true"`
+	TrackingURL         string `envconfig:"MLFLOW_TRACKING_URL" required:"true"`
+	ArtifactServiceType string `envconfig:"ARTIFACT_SERVICE_TYPE" required:"true"`
 }
 
 func InitConfigEnv() (*Config, error) {

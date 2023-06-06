@@ -99,6 +99,7 @@ merlin-postgresql:
     enabled: false
 mlflow:
   trackingURL: "http://merlin-mlflow"
+  artifactServiceType: "nop"
   resources:
     requests:
       cpu: 25m

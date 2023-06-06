@@ -266,7 +266,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 
 	mlflowDeleteService, err := mlflowDelete.NewMlflowService(http.DefaultClient, mlflowDelete.Config{
 		TrackingURL:         mlflowConfig.TrackingURL,
-		ArtifactServiceType: "nop",
+		ArtifactServiceType: mlflowConfig.ArtifactServiceType,
 	})
 	if err != nil {
 		log.Panicf("failed initializing mlflow delete package: %v", err)
