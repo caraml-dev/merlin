@@ -126,6 +126,7 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 		if response != nil && !response.IsSuccess() {
 			log.GetLogger().Errorw("Request failed",
 				"route", route.name,
+				"path", r.URL.Path,
 				"status", response.code,
 				"response", response.data,
 				"stacktrace", response.stacktrace, // Override default stacktrace produced by logger
