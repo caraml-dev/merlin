@@ -56,7 +56,7 @@ jobs:
   #       run: |
   #         IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/caraml-dev/merlin-sdk:${{ inputs.version }}"
   #         SDK_VERSION="$(sed 's/^v\(.*\)-/\1/' <<< "v0.29.0-rc1")"
-  #         docker build -t ${IMAGE_TAG} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --VERSION=${SDK_VERSION} .
+  #         docker build -t ${IMAGE_TAG} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg VERSION=${SDK_VERSION} .
   #         docker push ${IMAGE_TAG}
 
   publish-api:
