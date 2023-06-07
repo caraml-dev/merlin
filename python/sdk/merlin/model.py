@@ -619,6 +619,17 @@ class Model:
 
         return ModelEndpoint(ep)
 
+    def delete_model(self) -> int:
+        """
+        Delete this model. Please note that any inactive related entity (model versions, endpoints and prediction jobs) will get deleted by this process.
+        Deletion will failed if there are any active related entity (model versions, endpoints and prediction jobs)
+
+        :return: id of deleted model
+        """
+        model_api = ModelsApi(self._api_client)
+        return model_api.projects_project_id_models_model_id_delete(int(self.project.id), int(self.id))
+
+
 
 @autostr
 class ModelVersion:
@@ -1482,6 +1493,17 @@ class ModelVersion:
         if image_id:
             return
         raise BuildError('Unknown', logs)
+    
+    def delete_model_version(self) -> int:
+        """
+        Delete this model version. Please note that any inactive related entity (endpoints and prediction jobs) will get deleted by this process.
+        Deletion will failed if there are any active related entity (endpoints and prediction jobs)
+
+        :return: id of deleted model
+        """
+        versionApi = VersionApi(self._api_client)
+        return versionApi.models_model_id_versions_version_id_delete(int(self.model.id), int(self.id))
+
 
 def _process_conda_env(conda_env: Union[str, Dict[str, Any]], python_version: str) -> Dict[str, Any]:
     """
