@@ -700,7 +700,7 @@ class TestModelVersion:
     @responses.activate
     def test_model_version_deletion(self, version):
         responses.add("DELETE", '/v1/models/1/versions/1',
-                body=json.dumps([1]),
+                body=json.dumps(1),
                 status=200,
                 content_type='application/json')
         response = version.delete_model_version()
@@ -968,7 +968,7 @@ class TestModel:
     @responses.activate
     def test_model_deletion(self, model):
         responses.add("DELETE", '/v1/projects/1/models/1',
-                body=json.dumps([1]),
+                body=json.dumps(1),
                 status=200,
                 content_type='application/json')
         response = model.delete_model()
