@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/mitchellh/mapstructure"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
@@ -424,19 +423,6 @@ type MlflowConfig struct {
 	ArtifactServiceType string `validate:"required"`
 }
 
-func InitConfigEnv() (*Config, error) {
-	var cfg Config
-	if err := envconfig.Process("", &cfg); err != nil {
-		return nil, err
-	}
-	cfg.EnvironmentConfigs = InitEnvironmentConfigs(cfg.EnvironmentConfigPath)
-	if err := cfg.Validate(); err != nil {
-		return nil, err
-	}
-
-	return &cfg, nil
-}
-
 func (cfg *Config) Validate() error {
 	v := validator.New()
 	err := v.Struct(cfg)
@@ -535,7 +521,6 @@ func loadImageBuilderConfig(config *Config, v map[string]interface{}) (*Config, 
 		return nil, err
 	}
 	// use sigyaml.Unmarshal to convert to json object then unmarshal
-
 	k8sConfig := mlpcluster.K8sConfig{}
 	if err := sigyaml.Unmarshal(byteForm, &k8sConfig); err != nil {
 		return nil, err

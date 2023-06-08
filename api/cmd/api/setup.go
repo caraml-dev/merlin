@@ -438,7 +438,6 @@ func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 
 		ctl, err := cluster.NewController(cluster.Config{
 			Credentials: creds,
-
 			ClusterName: clusterName,
 			GcpProject:  env.GcpProject,
 		},
