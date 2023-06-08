@@ -95,9 +95,13 @@ func InitEnvironmentConfigs(path string) []EnvironmentConfig {
 		log.Panicf("unable to read deployment config file: %s", path)
 	}
 	var configs []EnvironmentConfig
-	err = yaml.Unmarshal(cfgFile, &configs)
-	if err != nil {
+	if err = yaml.Unmarshal(cfgFile, &configs); err != nil {
 		log.Panicf("unable to unmarshall deployment config file:\n %s,\nDue to: %v", cfgFile, err)
+	}
+	for _, env := range configs {
+		if env.K8sConfig == nil {
+			log.Panicf("Error, k8sConfig for %s is nil", env.Name)
+		}
 	}
 	return configs
 }
