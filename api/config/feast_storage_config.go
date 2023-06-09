@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -11,35 +10,6 @@ import (
 	"github.com/go-playground/validator"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
-
-type Duration time.Duration
-
-func (d Duration) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Duration(d).String())
-}
-
-func (d *Duration) UnmarshalJSON(b []byte) error {
-	var v interface{}
-	if err := json.Unmarshal(b, &v); err != nil {
-		return err
-	}
-	switch value := v.(type) {
-	case float64:
-		timeDuration := time.Duration(value)
-		*d = Duration(timeDuration)
-		return nil
-	case string:
-		var err error
-		timeDuration, err := time.ParseDuration(value)
-		if err != nil {
-			return err
-		}
-		*d = Duration(timeDuration)
-		return nil
-	default:
-		return errors.New("invalid duration")
-	}
-}
 
 // FeastRedisConfig is redis storage configuration for standard transformer whether it is single or cluster
 type FeastRedisConfig struct {
