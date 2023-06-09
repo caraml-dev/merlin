@@ -2,20 +2,21 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
-	cache "github.com/patrickmn/go-cache"
+	"github.com/coocood/freecache"
 
 	mlp "github.com/caraml-dev/merlin/mlp"
 	mlpClient "github.com/caraml-dev/mlp/api/client"
 )
 
 const (
-	projectCacheExpirySeconds  = 600
-	projectCacheCleanUpSeconds = 900
-	projectCacheKeyPrefix      = "proj:"
+	projectCacheExpirySeconds = 600
+	projectCacheSizeBytes     = 1024 * 1024 // 1 MB
+	projectCacheKeyPrefix     = "proj:"
 
 	// mlpQueryTimeoutSeconds is the timeout that will be used on the API calls to the MLP server.
 	mlpQueryTimeoutSeconds = 30
@@ -31,14 +32,14 @@ type ProjectsService interface {
 
 type projectsService struct {
 	mlpClient mlp.APIClient
-	cache     *cache.Cache
+	cache     *freecache.Cache
 }
 
 // NewProjectsService returns a service that retrieves information that is shared across MLP projects.
 func NewProjectsService(mlpAPIClient mlp.APIClient) (ProjectsService, error) {
 	svc := &projectsService{
 		mlpClient: mlpAPIClient,
-		cache:     cache.New(projectCacheExpirySeconds*time.Second, projectCacheCleanUpSeconds*time.Second),
+		cache:     freecache.NewCache(projectCacheSizeBytes),
 	}
 
 	err := svc.refreshProjects(context.Background())
@@ -79,36 +80,39 @@ func (ps projectsService) GetByID(ctx context.Context, projectID int32) (mlp.Pro
 func (ps projectsService) listProjects(name string) (mlp.Projects, error) {
 	projects := mlp.Projects{}
 	// List all items in the cache
-	cachedItems := ps.cache.Items()
-	for key, item := range cachedItems {
+	iter := ps.cache.NewIterator()
+	for entry := iter.Next(); entry != nil; {
+		key := string(entry.Key)
 		if strings.HasPrefix(key, projectCacheKeyPrefix) {
-			// The item is a project. Convert the type.
-			if project, ok := item.Object.(mlpClient.Project); ok {
+			var project mlpClient.Project
+			if err := json.Unmarshal(entry.Value, &project); err != nil {
+				return mlp.Projects{}, fmt.Errorf("Malformed project info found in the cache for key %s: %w", key, err)
+			} else {
 				// If either the name filter is not set or the project's name matches
 				if name == "" || project.Name == name {
 					projects = append(projects, project)
 				}
-			} else {
-				return mlp.Projects{}, fmt.Errorf("Found unexpected item in prjects cache with key: %s", key)
 			}
 		}
+		// Get next item
+		entry = iter.Next()
 	}
 	return projects, nil
 }
 
 func (ps projectsService) getProject(id int32) (*mlp.Project, error) {
 	key := buildProjectKey(id)
-	cachedValue, found := ps.cache.Get(key)
-	if !found {
+	cachedValue, err := ps.cache.Get([]byte(key))
+	if err != nil {
 		return nil, fmt.Errorf("Project info for id %d not found in the cache", id)
 	}
-	// Cast the data
-	project, ok := cachedValue.(mlpClient.Project)
-	if !ok {
-		return nil, fmt.Errorf("Malformed project info found in the cache for id %d", id)
+	// Unmarshal the data
+	var project mlpClient.Project
+	if err := json.Unmarshal(cachedValue, &project); err != nil {
+		return nil, fmt.Errorf("Malformed project info found in the cache for key %s: %w", key, err)
 	}
-	mlpProject := mlp.Project(project)
 
+	mlpProject := mlp.Project(project)
 	return &mlpProject, nil
 }
 
@@ -122,7 +126,14 @@ func (ps projectsService) refreshProjects(ctx context.Context) error {
 	}
 	for _, project := range projects {
 		key := buildProjectKey(project.ID)
-		ps.cache.Set(key, project, cache.DefaultExpiration)
+		valueBytes, err := json.Marshal(project)
+		if err != nil {
+			return fmt.Errorf("Error marshaling project data: %w", err)
+		}
+		err = ps.cache.Set([]byte(key), valueBytes, projectCacheExpirySeconds)
+		if err != nil {
+			return fmt.Errorf("Error caching project data: %w", err)
+		}
 	}
 	return nil
 }
