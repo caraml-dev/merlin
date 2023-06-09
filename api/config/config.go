@@ -21,21 +21,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-playground/validator"
-	"github.com/mitchellh/mapstructure"
-	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
-	resourcev1 "k8s.io/apimachinery/pkg/api/resource"
-	sigyaml "sigs.k8s.io/yaml"
-
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
+	"github.com/go-playground/validator"
+	"github.com/mitchellh/mapstructure"
 	"github.com/ory/viper"
+	"gopkg.in/yaml.v2"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	resourcev1 "k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
@@ -373,7 +371,7 @@ func (stc *StandardTransformerConfig) ToFeastStorageConfigs() feast.FeastStorage
 	feastStorageConfig := feast.FeastStorageConfig{}
 	validate, _ := internalValidator.NewValidator()
 
-	// need to Validate redis and big table config, because of `FeastRedisConfig` and `FeastBigtableConfig` wont be null when environment variables not set
+	// need to validate redis and big table config, because of `FeastRedisConfig` and `FeastBigtableConfig` wont be null when environment variables not set
 	// this is due to bug in envconfig library https://github.com/kelseyhightower/envconfig/issues/113
 	if stc.FeastRedisConfig != nil && validate.Struct(stc.FeastRedisConfig) == nil {
 		feastStorageConfig[spec.ServingSource_REDIS] = stc.FeastRedisConfig.ToFeastStorage()
@@ -520,9 +518,8 @@ func loadImageBuilderConfig(config *Config, v map[string]interface{}) (*Config, 
 	if err != nil {
 		return nil, err
 	}
-	// use sigyaml.Unmarshal to convert to json object then unmarshal
 	k8sConfig := mlpcluster.K8sConfig{}
-	if err := sigyaml.Unmarshal(byteForm, &k8sConfig); err != nil {
+	if err := yaml.Unmarshal(byteForm, &k8sConfig); err != nil {
 		return nil, err
 	}
 	config.ImageBuilderConfig.K8sConfig = k8sConfig
