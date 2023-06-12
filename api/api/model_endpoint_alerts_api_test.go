@@ -152,7 +152,7 @@ func TestListModelEndpointAlerts(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model alert not found: record not found"},
+				data: Error{Message: "Model endpoint alert not found: record not found"},
 			},
 		},
 	}
@@ -230,7 +230,7 @@ func TestGetModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error getting alert for model: API is down"},
+				data: Error{Message: "Error getting alert for model endpoint: API is down"},
 			},
 		},
 		{
@@ -246,7 +246,7 @@ func TestGetModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model alert not found: record not found"},
+				data: Error{Message: "Model endpoint alert not found: record not found"},
 			},
 		},
 	}
@@ -450,7 +450,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error finding model: Error creating secret: db is down"},
+				data: Error{Message: "Error getting model: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -787,7 +787,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error finding model: Error creating secret: db is down"},
+				data: Error{Message: "Error getting model: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -867,7 +867,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error finding alert for model endpoint: Error creating secret: db is down"},
+				data: Error{Message: "Error getting alert for model endpoint: Error creating secret: db is down"},
 			},
 		},
 		{

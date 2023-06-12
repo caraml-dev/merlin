@@ -52,7 +52,7 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 
 	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found: %s", versionID, err))
+		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found: %v", versionID, err))
 	}
 
 	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)

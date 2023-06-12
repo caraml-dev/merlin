@@ -170,7 +170,10 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 
 	currentEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Environment not found: %v", err))
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Model endpoint not found: %v", err))
+		}
+		return InternalServerError(fmt.Sprintf("Error getting model endpoint: %v", err))
 	}
 
 	if newEndpoint.ID != currentEndpoint.ID {

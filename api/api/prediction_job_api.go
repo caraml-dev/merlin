@@ -113,6 +113,9 @@ func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _
 
 	job, err := c.PredictionJobService.GetPredictionJob(ctx, env, model, version, id)
 	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Prediction job not found: %v", err))
+		}
 		return InternalServerError(fmt.Sprintf("Error getting prediction job: %v", err))
 	}
 
@@ -171,6 +174,9 @@ func (c *PredictionJobController) ListContainers(r *http.Request, vars map[strin
 
 	job, err := c.PredictionJobService.GetPredictionJob(ctx, env, model, version, id)
 	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Prediction job not found: %v", err))
+		}
 		return InternalServerError(fmt.Sprintf("Error getting prediction job: %v", err))
 	}
 

@@ -45,7 +45,7 @@ func (c *AlertsController) ListModelEndpointAlerts(r *http.Request, vars map[str
 	modelEndpointAlerts, err := c.ModelEndpointAlertService.ListModelAlerts(modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model alert not found: %v", err))
+			return NotFound(fmt.Sprintf("Model endpoint alert not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error listing alerts for model: %v", err))
 	}
@@ -61,9 +61,9 @@ func (c *AlertsController) GetModelEndpointAlert(r *http.Request, vars map[strin
 	modelEndpointAlert, err := c.ModelEndpointAlertService.GetModelEndpointAlert(modelID, modelEndpointID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model alert not found: %v", err))
+			return NotFound(fmt.Sprintf("Model endpoint alert not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error getting alert for model: %v", err))
+		return InternalServerError(fmt.Sprintf("Error getting alert for model endpoint: %v", err))
 	}
 
 	return Ok(modelEndpointAlert)
@@ -87,7 +87,7 @@ func (c *AlertsController) CreateModelEndpointAlert(r *http.Request, vars map[st
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error finding model: %v", err))
+		return InternalServerError(fmt.Sprintf("Error getting model: %v", err))
 	}
 
 	alert.Model = model
@@ -127,7 +127,7 @@ func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[st
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error finding model: %v", err))
+		return InternalServerError(fmt.Sprintf("Error getting model: %v", err))
 	}
 
 	oldAlert, err := c.ModelEndpointAlertService.GetModelEndpointAlert(modelID, modelEndpointID)
@@ -135,7 +135,7 @@ func (c *AlertsController) UpdateModelEndpointAlert(r *http.Request, vars map[st
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model endpoint alert not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error finding alert for model endpoint: %v", err))
+		return InternalServerError(fmt.Sprintf("Error getting alert for model endpoint: %v", err))
 	}
 
 	newAlert.ID = oldAlert.ID
