@@ -87,11 +87,10 @@ func (ps projectsService) listProjects(name string) (mlp.Projects, error) {
 			var project mlpClient.Project
 			if err := json.Unmarshal(entry.Value, &project); err != nil {
 				return mlp.Projects{}, fmt.Errorf("Malformed project info found in the cache for key %s: %w", key, err)
-			} else {
-				// If either the name filter is not set or the project's name matches
-				if name == "" || project.Name == name {
-					projects = append(projects, project)
-				}
+			}
+			// If either the name filter is not set or the project's name matches
+			if name == "" || project.Name == name {
+				projects = append(projects, project)
 			}
 		}
 		// Get next item
