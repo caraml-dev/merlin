@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/caraml-dev/mlp/api/client"
@@ -118,7 +117,7 @@ func TestListModel(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "MLP API is down"},
+				data: Error{Message: "Error listing models: MLP API is down"},
 			},
 		},
 	}
@@ -131,7 +130,7 @@ func TestListModel(t *testing.T) {
 				},
 			}
 			resp := ctl.ListModels(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -232,7 +231,7 @@ func TestGetModel(t *testing.T) {
 			},
 			projectService: func() *mocks.ProjectsService {
 				mockSvc := &mocks.ProjectsService{}
-				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{}), fmt.Errorf("Project API is down"))
+				mockSvc.On("GetByID", mock.Anything, int32(1)).Return(mlp.Project(client.Project{}), fmt.Errorf("Model not found: Model not found: Project API is down"))
 				return mockSvc
 			},
 			modelService: func() *mocks.ModelsService {
@@ -241,7 +240,7 @@ func TestGetModel(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Project API is down"},
+				data: Error{Message: "Model not found: Model not found: Model not found: Project API is down"},
 			},
 		},
 		{
@@ -273,7 +272,7 @@ func TestGetModel(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model id 1 not found"},
+				data: Error{Message: "Model not found: record not found"},
 			},
 		},
 		{
@@ -305,7 +304,7 @@ func TestGetModel(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "DB is unreachable"},
+				data: Error{Message: "Error getting model: DB is unreachable"},
 			},
 		},
 	}
@@ -320,7 +319,7 @@ func TestGetModel(t *testing.T) {
 				},
 			}
 			resp := ctl.GetModel(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }

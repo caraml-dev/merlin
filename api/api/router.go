@@ -37,6 +37,7 @@ import (
 
 	"github.com/caraml-dev/merlin/config"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/middleware"
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/mlp"
@@ -120,6 +121,17 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 			}
 			return route.handler(r, vars, body)
 		}()
+
+		// Log unsuccessful responses
+		if response != nil && !response.IsSuccess() {
+			log.GetLogger().Errorw("Request failed",
+				"route", route.name,
+				"path", r.URL.Path,
+				"status", response.code,
+				"response", response.data,
+				"stacktrace", response.stacktrace, // Override default stacktrace produced by logger
+			)
+		}
 
 		response.WriteTo(w)
 	}

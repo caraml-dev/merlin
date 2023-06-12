@@ -20,7 +20,6 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/utils"
@@ -40,11 +39,10 @@ func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string,
 
 	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		log.Errorf("error getting model version for given model %s version %s", modelID, versionID)
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model version %s for version %s", modelID, versionID))
+			return NotFound(fmt.Sprintf("Model version not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s", modelID, versionID))
+		return InternalServerError(fmt.Sprintf("Error getting model version: %sv", err))
 	}
 
 	return Ok(v)
@@ -58,11 +56,10 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 
 	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		log.Errorf("error getting model version for given model %s version %s", modelID, versionID)
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model version %s for version %s", modelID, versionID))
+			return NotFound(fmt.Sprintf("Model version not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error getting model version for given model %s version %s", modelID, versionID))
+		return InternalServerError(fmt.Sprintf("Error getting model version: %v", err))
 	}
 
 	versionPatch, ok := body.(*models.VersionPatch)
@@ -71,12 +68,12 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 	}
 
 	if err := v.Patch(versionPatch); err != nil {
-		return BadRequest(err.Error())
+		return BadRequest(fmt.Sprintf("Error validating version: %v", err))
 	}
 
 	patchedVersion, err := c.VersionsService.Save(ctx, v, c.MonitoringConfig)
 	if err != nil {
-		return InternalServerError(fmt.Sprintf("Error patching model version for given model %s version %s", modelID, versionID))
+		return InternalServerError(fmt.Sprintf("Error patching model version: %v", err))
 	}
 
 	return Ok(patchedVersion)
@@ -87,14 +84,13 @@ func (c *VersionsController) ListVersions(r *http.Request, vars map[string]strin
 
 	var query service.VersionQuery
 	if err := decoder.Decode(&query, r.URL.Query()); err != nil {
-		log.Errorf("Error while parsing query string %v", err)
-		return BadRequest(fmt.Sprintf("Unable to parse query string: %s", err))
+		return BadRequest(fmt.Sprintf("Unable to parse query string: %v", err))
 	}
 
 	modelID, _ := models.ParseID(vars["model_id"])
 	versions, nextCursor, err := c.VersionsService.ListVersions(ctx, modelID, c.MonitoringConfig, query)
 	if err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error listing versions for model: %v", err))
 	}
 
 	responseHeaders := make(map[string]string)
@@ -125,12 +121,12 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
+		return NotFound(fmt.Sprintf("Model not found: %v", err))
 	}
 
 	run, err := c.MlflowClient.CreateRun(fmt.Sprintf("%d", model.ExperimentID))
 	if err != nil {
-		return InternalServerError(fmt.Sprintf("Unable to create mlflow run: %s", err.Error()))
+		return InternalServerError(fmt.Sprintf("Unable to create mlflow run: %v", err))
 	}
 
 	version := &models.Version{

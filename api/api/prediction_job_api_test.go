@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	uuid2 "github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/caraml-dev/merlin/config"
@@ -119,7 +118,7 @@ func TestList(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -132,7 +131,7 @@ func TestList(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "error retrieving model with id: 1"},
+				data: Error{Message: "Error getting model / version: error retrieving model with id: 1"},
 			},
 		},
 		{
@@ -183,7 +182,7 @@ func TestList(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Failed listing prediction job"},
+				data: Error{Message: "Error listing prediction jobs: Connection refused"},
 			},
 		},
 	}
@@ -205,7 +204,7 @@ func TestList(t *testing.T) {
 				},
 			}
 			resp := ctl.List(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -305,7 +304,7 @@ func TestGet(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -322,7 +321,7 @@ func TestGet(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "error retrieving model with id: 1"},
+				data: Error{Message: "Error getting model / version: error retrieving model with id: 1"},
 			},
 		},
 		{
@@ -365,7 +364,7 @@ func TestGet(t *testing.T) {
 			},
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
-				svc.On("GetDefaultPredictionJobEnvironment").Return(nil, fmt.Errorf("DB is down"))
+				svc.On("GetDefaultPredictionJobEnvironment").Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
@@ -374,7 +373,7 @@ func TestGet(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
+				data: Error{Message: "Unable to find default environment, specify environment target for deployment: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -436,7 +435,7 @@ func TestGet(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Failed reading prediction job"},
+				data: Error{Message: "Error getting prediction job: Connection refused"},
 			},
 		},
 	}
@@ -460,7 +459,7 @@ func TestGet(t *testing.T) {
 				},
 			}
 			resp := ctl.Get(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -552,7 +551,7 @@ func TestStop(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -569,7 +568,7 @@ func TestStop(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "error retrieving model with id: 1"},
+				data: Error{Message: "Error getting model / version: error retrieving model with id: 1"},
 			},
 		},
 		{
@@ -612,7 +611,7 @@ func TestStop(t *testing.T) {
 			},
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
-				svc.On("GetDefaultPredictionJobEnvironment").Return(nil, fmt.Errorf("DB is down"))
+				svc.On("GetDefaultPredictionJobEnvironment").Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
@@ -621,7 +620,7 @@ func TestStop(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
+				data: Error{Message: "Unable to find default environment, specify environment target for deployment: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -683,7 +682,7 @@ func TestStop(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Failed stopping prediction job Connection refused"},
+				data: Error{Message: "Error stopping prediction job: Connection refused"},
 			},
 		},
 	}
@@ -707,7 +706,7 @@ func TestStop(t *testing.T) {
 				},
 			}
 			resp := ctl.Stop(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -820,7 +819,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -837,7 +836,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "error retrieving model with id: 1"},
+				data: Error{Message: "Error getting model / version: error retrieving model with id: 1"},
 			},
 		},
 		{
@@ -880,7 +879,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
-				svc.On("GetDefaultPredictionJobEnvironment").Return(nil, fmt.Errorf("DB is down"))
+				svc.On("GetDefaultPredictionJobEnvironment").Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
@@ -889,7 +888,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
+				data: Error{Message: "Unable to find default environment, specify environment target for deployment: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -951,7 +950,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Failed reading prediction job"},
+				data: Error{Message: "Error getting prediction job: Connection refused"},
 			},
 		},
 		{
@@ -1021,7 +1020,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while getting container for endpoint with model 1 and version 1"},
+				data: Error{Message: "Error while getting containers for endpoint: Connection refused"},
 			},
 		},
 	}
@@ -1045,7 +1044,7 @@ func TestListContainers_PredictionJob(t *testing.T) {
 				},
 			}
 			resp := ctl.ListContainers(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -1153,7 +1152,7 @@ func TestCreate(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -1170,7 +1169,7 @@ func TestCreate(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "error retrieving model with id: 1"},
+				data: Error{Message: "Error getting model / version: error retrieving model with id: 1"},
 			},
 		},
 		{
@@ -1219,7 +1218,7 @@ func TestCreate(t *testing.T) {
 			},
 			envService: func() *mocks.EnvironmentService {
 				svc := &mocks.EnvironmentService{}
-				svc.On("GetDefaultPredictionJobEnvironment").Return(nil, fmt.Errorf("DB is down"))
+				svc.On("GetDefaultPredictionJobEnvironment").Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			predictionJobService: func() *mocks.PredictionJobService {
@@ -1228,7 +1227,7 @@ func TestCreate(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Unable to find default environment, specify environment target for deployment"},
+				data: Error{Message: "Unable to find default environment, specify environment target for deployment: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -1296,7 +1295,7 @@ func TestCreate(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "Failed creating prediction job Connection refused"},
+				data: Error{Message: "Error creating prediction job: Connection refused"},
 			},
 		},
 		{
@@ -1375,7 +1374,7 @@ func TestCreate(t *testing.T) {
 				},
 			}
 			resp := ctl.Create(&http.Request{}, tC.vars, tC.requestBody)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -1458,7 +1457,7 @@ func TestListAllInProject(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "API is down"},
+				data: Error{Message: "Project not found: API is down"},
 			},
 		},
 		{
@@ -1485,12 +1484,12 @@ func TestListAllInProject(t *testing.T) {
 				svc.On("ListPredictionJobs", context.Background(), mock.Anything, &service.ListPredictionJobQuery{
 					Name:    "prediction-job",
 					ModelID: models.ID(1),
-				}).Return(nil, fmt.Errorf("DB is down"))
+				}).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Failed listing prediction job"},
+				data: Error{Message: "Error listing prediction jobs: Error creating secret: db is down"},
 			},
 		},
 	}
@@ -1510,7 +1509,7 @@ func TestListAllInProject(t *testing.T) {
 				},
 			}
 			resp := ctl.ListAllInProject(tC.request, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }

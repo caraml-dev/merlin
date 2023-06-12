@@ -5,14 +5,16 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/caraml-dev/merlin/service/mocks"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestTransformerController_SimulateTransformer(t *testing.T) {
@@ -299,7 +301,7 @@ func TestTransformerController_SimulateTransformer(t *testing.T) {
 			want: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{
-					Message: "could not get response",
+					Message: "Error during simulation: could not get response",
 				},
 			},
 		},
@@ -318,7 +320,22 @@ func TestTransformerController_SimulateTransformer(t *testing.T) {
 				},
 			}
 			got := ctl.SimulateTransformer(&http.Request{}, tt.vars, tt.requestBody)
-			assert.Equal(t, tt.want, got)
+			assertEqualPredictionResponses(t, tt.want, got)
 		})
+	}
+}
+
+// Utility function to compare responses without the stacktrace
+func assertEqualPredictionResponses(t *testing.T, want interface{}, got interface{}) {
+	options := []cmp.Option{
+		cmp.AllowUnexported(Response{}),
+		// Transformer API tests rely on the proto type spec.Variable that contains numerous private fields,
+		// that are not important to compare.
+		cmpopts.IgnoreUnexported(spec.Variable{}),
+		cmpopts.IgnoreFields(Response{}, "stacktrace"),
+	}
+	if !cmp.Equal(want, got, options...) {
+		t.Errorf("Responses mismatched")
+		t.Log(cmp.Diff(want, got, options...))
 	}
 }

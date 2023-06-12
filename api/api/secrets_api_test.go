@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/caraml-dev/merlin/mlp"
@@ -80,7 +79,7 @@ func TestCreateSecret(t *testing.T) {
 			},
 			expectedResponse: &Response{
 				code: 404,
-				data: Error{"Project with given `project_id: 1` not found"},
+				data: Error{"Project not found: project not found"},
 			},
 			errFetchingProject: fmt.Errorf("project not found"),
 		},
@@ -96,7 +95,7 @@ func TestCreateSecret(t *testing.T) {
 			},
 			expectedResponse: &Response{
 				code: 500,
-				data: Error{"db is down"},
+				data: Error{"Error creating secret: db is down"},
 			},
 			existingProject: mlp.Project{
 				ID:   1,
@@ -124,7 +123,7 @@ func TestCreateSecret(t *testing.T) {
 			}
 
 			res := controller.CreateSecret(&http.Request{}, tC.vars, tC.body)
-			assert.Equal(t, tC.expectedResponse, res)
+			assertEqualResponses(t, tC.expectedResponse, res)
 		})
 	}
 }
@@ -274,7 +273,7 @@ func TestUpdateSecret(t *testing.T) {
 			errUpdatingSecret: fmt.Errorf("Secret with given `secret_id: 1` and `project_id: 1` not found"),
 			expectedResponse: &Response{
 				code: 500,
-				data: Error{"Secret with given `secret_id: 1` and `project_id: 1` not found"},
+				data: Error{"Error updating secret: Secret with given `secret_id: 1` and `project_id: 1` not found"},
 			},
 		},
 		{
@@ -294,10 +293,10 @@ func TestUpdateSecret(t *testing.T) {
 			body: &mlp.Secret{
 				Name: "name",
 			},
-			errUpdatingSecret: fmt.Errorf("db is down"),
+			errUpdatingSecret: fmt.Errorf("Error creating secret: db is down"),
 			expectedResponse: &Response{
 				code: 500,
-				data: Error{"db is down"},
+				data: Error{"Error updating secret: Error creating secret: db is down"},
 			},
 		},
 	}
@@ -317,7 +316,7 @@ func TestUpdateSecret(t *testing.T) {
 			}
 
 			res := controller.UpdateSecret(&http.Request{}, tC.vars, tC.body)
-			assert.Equal(t, tC.expectedResponse, res)
+			assertEqualResponses(t, tC.expectedResponse, res)
 		})
 	}
 }
@@ -382,10 +381,10 @@ func TestDeleteSecret(t *testing.T) {
 					"admin@domain.com",
 				},
 			},
-			errDeletingSecret: fmt.Errorf("db is down"),
+			errDeletingSecret: fmt.Errorf("Error creating secret: db is down"),
 			expectedResponse: &Response{
 				code: 500,
-				data: Error{"db is down"},
+				data: Error{"Error deleting secret: Error creating secret: db is down"},
 			},
 		},
 	}
@@ -404,7 +403,7 @@ func TestDeleteSecret(t *testing.T) {
 				},
 			}
 			res := controller.DeleteSecret(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expectedResponse, res)
+			assertEqualResponses(t, tC.expectedResponse, res)
 		})
 	}
 }
@@ -481,9 +480,9 @@ func TestListSecret(t *testing.T) {
 			},
 			expectedResponse: &Response{
 				code: 500,
-				data: Error{"db is down"},
+				data: Error{"Error listing secrets: Error creating secret: db is down"},
 			},
-			errListSecrets: fmt.Errorf("db is down"),
+			errListSecrets: fmt.Errorf("Error creating secret: db is down"),
 		},
 	}
 	for _, tC := range testCases {
@@ -502,7 +501,7 @@ func TestListSecret(t *testing.T) {
 			}
 
 			res := controller.ListSecret(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expectedResponse, res)
+			assertEqualResponses(t, tC.expectedResponse, res)
 		})
 	}
 }

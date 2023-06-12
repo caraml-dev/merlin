@@ -27,7 +27,6 @@ import (
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service/mocks"
 	"github.com/jinzhu/gorm"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -93,7 +92,7 @@ func TestGetVersion(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model version 1 for version 1"},
+				data: Error{Message: "Model version not found: record not found"},
 			},
 		},
 		{
@@ -104,12 +103,12 @@ func TestGetVersion(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error getting model version for given model 1 version 1"},
+				data: Error{Message: "Error getting model version: Error creating secret: db is downv"},
 			},
 		},
 	}
@@ -128,7 +127,7 @@ func TestGetVersion(t *testing.T) {
 				},
 			}
 			resp := ctl.GetVersion(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -243,12 +242,12 @@ func TestListVersion(t *testing.T) {
 			},
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
-				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything, mock.Anything).Return(nil, "", fmt.Errorf("DB is down"))
+				svc.On("ListVersions", mock.Anything, models.ID(1), mock.Anything, mock.Anything).Return(nil, "", fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "DB is down"},
+				data: Error{Message: "Error listing versions for model: Error creating secret: db is down"},
 			},
 		},
 	}
@@ -267,7 +266,7 @@ func TestListVersion(t *testing.T) {
 				},
 			}
 			resp := ctl.ListVersions(&http.Request{URL: &url.URL{RawQuery: tC.queryParameter}}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -566,7 +565,7 @@ func TestPatchVersion(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusBadRequest,
-				data: Error{Message: "custom predictor image must be set"},
+				data: Error{Message: "Error validating version: custom predictor image must be set"},
 			},
 		},
 		{
@@ -587,7 +586,7 @@ func TestPatchVersion(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model version 1 for version 1"},
+				data: Error{Message: "Model version not found: record not found"},
 			},
 		},
 		{
@@ -603,12 +602,12 @@ func TestPatchVersion(t *testing.T) {
 			versionService: func() *mocks.VersionsService {
 				svc := &mocks.VersionsService{}
 				svc.On("FindByID", mock.Anything, models.ID(1), models.ID(1), mock.Anything).Return(
-					nil, fmt.Errorf("DB is down"))
+					nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error getting model version for given model 1 version 1"},
+				data: Error{Message: "Error getting model version: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -688,12 +687,12 @@ func TestPatchVersion(t *testing.T) {
 						"name":       "model-1",
 						"created_by": "anonymous",
 					},
-				}, mock.Anything).Return(nil, fmt.Errorf("DB is down"))
+				}, mock.Anything).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error patching model version for given model 1 version 1"},
+				data: Error{Message: "Error patching model version: Error creating secret: db is down"},
 			},
 		},
 	}
@@ -712,7 +711,7 @@ func TestPatchVersion(t *testing.T) {
 				},
 			}
 			resp := ctl.PatchVersion(&http.Request{}, tC.vars, tC.requestBody)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -1159,7 +1158,7 @@ func TestCreateVersion(t *testing.T) {
 				},
 			}
 			resp := ctl.CreateVersion(&http.Request{}, tC.vars, &tC.body)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }

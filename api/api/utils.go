@@ -20,27 +20,24 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 )
 
 func (c *AppContext) getModelAndVersion(ctx context.Context, modelID models.ID, versionID models.ID) (*models.Model, *models.Version, error) {
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			log.Errorf("error retrieving model with id: %d: %v", modelID, err)
-			return nil, nil, fmt.Errorf("error retrieving model with id: %d", modelID)
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, nil, fmt.Errorf("model with given id: %d not found", modelID)
 		}
-		return nil, nil, fmt.Errorf("model with given id: %d not found", modelID)
+		return nil, nil, fmt.Errorf("error retrieving model with id: %d", modelID)
 	}
 
 	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			log.Errorf("error retrieving model version with id: %d: %v", versionID, err)
-			return nil, nil, fmt.Errorf("error retrieving model version with id: %d", versionID)
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, nil, fmt.Errorf("model version with given id: %d not found", versionID)
 		}
-		return nil, nil, fmt.Errorf("model version with given id: %d not found", versionID)
+		return nil, nil, fmt.Errorf("error retrieving model version with id: %d", versionID)
 	}
 
 	return model, version, nil

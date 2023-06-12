@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/jinzhu/gorm"
 )
@@ -37,13 +36,10 @@ func (c *ModelEndpointsController) ListModelEndpointInProject(r *http.Request, v
 
 	modelEndpoints, err := c.ModelEndpointsService.ListModelEndpointsInProject(ctx, projectID, region)
 	if err != nil {
-		log.Errorf("Error finding Model Endpoints for Project ID %s, reason: %v", projectID, err)
-
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model Endpoints for Project ID %s not found", projectID))
+			return NotFound(fmt.Sprintf("Model endpoints not found: %v", err))
 		}
-
-		return InternalServerError(fmt.Sprintf("Error while getting Model Endpoints for Project ID %s", projectID))
+		return InternalServerError(fmt.Sprintf("Error listing model endpoints: %v", err))
 	}
 
 	return Ok(modelEndpoints)
@@ -57,9 +53,9 @@ func (c *ModelEndpointsController) ListModelEndpoints(r *http.Request, vars map[
 	modelEndpoints, err := c.ModelEndpointsService.ListModelEndpoints(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model Endpoints for Model ID %s not found", modelID))
+			return NotFound(fmt.Sprintf("Model endpoints not found: %v", err))
 		}
-		return InternalServerError(fmt.Sprintf("Error while getting Model Endpoints for Model ID %s", modelID))
+		return InternalServerError(fmt.Sprintf("Error listing model endpoints: %v", err))
 	}
 	return Ok(modelEndpoints)
 }
@@ -71,13 +67,10 @@ func (c *ModelEndpointsController) GetModelEndpoint(r *http.Request, vars map[st
 	modelEndpointID, _ := models.ParseID(vars["model_endpoint_id"])
 	modelEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
-		log.Errorf("Error finding model endpoint with id %s, reason: %v", modelEndpointID, err)
-
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model endpoint with id %s not found", modelEndpointID))
+			return NotFound(fmt.Sprintf("Model endpoint not found: %v", err))
 		}
-
-		return InternalServerError(fmt.Sprintf("Error while getting model endpoint with id %s", modelEndpointID))
+		return InternalServerError(fmt.Sprintf("Error getting model endpoint: %v", err))
 	}
 
 	return Ok(modelEndpoint)
@@ -94,11 +87,9 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			log.Errorf("Model ID %s not found. Err: %s", modelID, err)
-			return NotFound(fmt.Sprintf("Model ID %s not found", modelID))
+			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
-
-		return InternalServerError(fmt.Sprintf("Error while getting Model ID %s", modelID))
+		return InternalServerError(fmt.Sprintf("Error getting model: %v", err))
 	}
 
 	endpoint, ok := body.(*models.ModelEndpoint)
@@ -111,19 +102,17 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 		// Use default environment if not specified
 		env, err = c.EnvironmentService.GetDefaultEnvironment()
 		if err != nil {
-			return InternalServerError("Default environment not found, please specify one")
+			return InternalServerError(fmt.Sprintf("Default environment not found, please specify one: %v", err))
 		}
 		endpoint.EnvironmentName = env.Name
 	} else {
 		// Check environment exists
 		env, err = c.AppContext.EnvironmentService.GetEnvironment(endpoint.EnvironmentName)
 		if err != nil {
-			if !gorm.IsRecordNotFoundError(err) {
-				log.Errorf("Unable to find the specified environment: %s. Err: %s", endpoint.EnvironmentName, err)
-				return InternalServerError(fmt.Sprintf("Unable to find the specified environment: %s", endpoint.EnvironmentName))
+			if gorm.IsRecordNotFoundError(err) {
+				return NotFound(fmt.Sprintf("Environment not found: %v", err))
 			}
-
-			return NotFound(fmt.Sprintf("Environment not found: %s", endpoint.EnvironmentName))
+			return InternalServerError(fmt.Sprintf("Error getting environment: %v", err))
 		}
 	}
 	endpoint.Environment = env
@@ -131,8 +120,7 @@ func (c *ModelEndpointsController) CreateModelEndpoint(r *http.Request, vars map
 	// Deploy model endpoint as Istio's VirtualService
 	endpoint, err = c.ModelEndpointsService.DeployEndpoint(ctx, model, endpoint)
 	if err != nil {
-		log.Errorf("Unable to create model endpoint: %s", err)
-		return InternalServerError(fmt.Sprintf("Unable to create model endpoint: %s", err.Error()))
+		return InternalServerError(fmt.Sprintf("Error creating model endpoint: %v", err))
 	}
 
 	// Success. Return endpoint as response.
@@ -148,11 +136,9 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			log.Errorf("Model ID %s not found. Err: %s", modelID, err)
-			return NotFound(fmt.Sprintf("Model ID %s not found", modelID))
+			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
-
-		return InternalServerError(fmt.Sprintf("Error while getting Model ID %s", modelID))
+		return InternalServerError(fmt.Sprintf("Error getting model: %v", err))
 	}
 
 	newEndpoint, ok := body.(*models.ModelEndpoint)
@@ -166,26 +152,28 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 		// Use default environment if not specified
 		env, err = c.EnvironmentService.GetDefaultEnvironment()
 		if err != nil {
-			return InternalServerError("Default environment not found, please specify one")
+			return InternalServerError(fmt.Sprintf("Default environment not found, please specify one: %v", err))
 		}
 		newEndpoint.EnvironmentName = env.Name
 	} else {
 		// Check environment exists
 		env, err = c.AppContext.EnvironmentService.GetEnvironment(newEndpoint.EnvironmentName)
 		if err != nil {
-			if !gorm.IsRecordNotFoundError(err) {
-				log.Errorf("Unable to find the specified environment: %s. Err: %s", newEndpoint.EnvironmentName, err)
-				return InternalServerError(fmt.Sprintf("Unable to find the specified environment: %s", newEndpoint.EnvironmentName))
+			if gorm.IsRecordNotFoundError(err) {
+				return NotFound(fmt.Sprintf("Environment not found: %v", err))
 			}
+			return InternalServerError(fmt.Sprintf("Error getting environment: %v", err))
 
-			return NotFound(fmt.Sprintf("Environment not found: %s", newEndpoint.EnvironmentName))
 		}
 	}
 	newEndpoint.Environment = env
 
 	currentEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
-		return NotFound(fmt.Sprintf("Model Endpoint with given `model_endpoint_id: %d` not found", modelEndpointID))
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Model endpoint not found: %v", err))
+		}
+		return InternalServerError(fmt.Sprintf("Error getting model endpoint: %v", err))
 	}
 
 	if newEndpoint.ID != currentEndpoint.ID {
@@ -200,8 +188,7 @@ func (c *ModelEndpointsController) UpdateModelEndpoint(r *http.Request, vars map
 	}
 
 	if err != nil {
-		log.Errorf("Unable to update model endpoint: %s", err)
-		return InternalServerError(fmt.Sprintf("Unable to update model endpoint: %s", err.Error()))
+		return InternalServerError(fmt.Sprintf("Error updating model endpoint: %v", err))
 	}
 
 	return Ok(newEndpoint)
@@ -221,26 +208,22 @@ func (c *ModelEndpointsController) DeleteModelEndpoint(r *http.Request, vars map
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model ID %s not found", modelID))
+			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
-
-		return InternalServerError(fmt.Sprintf("Error while getting Model ID %s", modelID))
+		return InternalServerError(fmt.Sprintf("Error getting model: %v", err))
 	}
 
 	modelEndpoint, err := c.ModelEndpointsService.FindByID(ctx, modelEndpointID)
 	if err != nil {
-		log.Errorf("Error finding model endpoint with id %s, reason: %v", modelEndpointID, err)
-
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model endpoint with id %s not found", modelEndpointID))
+			return NotFound(fmt.Sprintf("Model endpoint not found: %v", err))
 		}
-
-		return InternalServerError(fmt.Sprintf("Error while getting model endpoint with id %s", modelEndpointID))
+		return InternalServerError(fmt.Sprintf("Error getting model endpoint: %v", err))
 	}
 
 	_, err = c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
 	if err != nil {
-		return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
+		return InternalServerError(fmt.Sprintf("Error deleting model endpoint: %v", err))
 	}
 
 	return Ok(nil)

@@ -23,7 +23,6 @@ import (
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service/mocks"
 	"github.com/jinzhu/gorm"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -93,7 +92,7 @@ func TestListModelEndpointInProject(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model Endpoints for Project ID 1 not found"},
+				data: Error{Message: "Model endpoints not found: record not found"},
 			},
 		},
 		{
@@ -104,12 +103,12 @@ func TestListModelEndpointInProject(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.ID(1), "id").Return(nil, fmt.Errorf("DB is down"))
+				mockSvc.On("ListModelEndpointsInProject", mock.Anything, models.ID(1), "id").Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return mockSvc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while getting Model Endpoints for Project ID 1"},
+				data: Error{Message: "Error listing model endpoints: Error creating secret: db is down"},
 			},
 		},
 	}
@@ -122,7 +121,7 @@ func TestListModelEndpointInProject(t *testing.T) {
 				},
 			}
 			resp := ctl.ListModelEndpointInProject(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -193,7 +192,7 @@ func TestListModelEndpoints(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model Endpoints for Model ID 1 not found"},
+				data: Error{Message: "Model endpoints not found: record not found"},
 			},
 		},
 		{
@@ -204,12 +203,12 @@ func TestListModelEndpoints(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				mockSvc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return mockSvc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while getting Model Endpoints for Model ID 1"},
+				data: Error{Message: "Error listing model endpoints: Error creating secret: db is down"},
 			},
 		},
 	}
@@ -222,7 +221,7 @@ func TestListModelEndpoints(t *testing.T) {
 				},
 			}
 			resp := ctl.ListModelEndpoints(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -287,7 +286,7 @@ func TestGetModelEndpoint(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model endpoint with id 1 not found"},
+				data: Error{Message: "Model endpoint not found: record not found"},
 			},
 		},
 		{
@@ -297,12 +296,12 @@ func TestGetModelEndpoint(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				mockSvc := &mocks.ModelEndpointsService{}
-				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				mockSvc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return mockSvc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while getting model endpoint with id 1"},
+				data: Error{Message: "Error getting model endpoint: Error creating secret: db is down"},
 			},
 		},
 	}
@@ -315,7 +314,7 @@ func TestGetModelEndpoint(t *testing.T) {
 				},
 			}
 			resp := ctl.GetModelEndpoint(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }

@@ -25,7 +25,6 @@ import (
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service/mocks"
 	"github.com/jinzhu/gorm"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestListTeams(t *testing.T) {
@@ -58,7 +57,7 @@ func TestListTeams(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "ListTeams: Error while getting list of teams for alert notification"},
+				data: Error{Message: "Error listing teams: API is down"},
 			},
 		},
 	}
@@ -71,7 +70,7 @@ func TestListTeams(t *testing.T) {
 				},
 			}
 			resp := ctl.ListTeams(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -138,7 +137,7 @@ func TestListModelEndpointAlerts(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "ListModelAlerts: Error while getting alerts for Model ID 1"},
+				data: Error{Message: "Error listing alerts for model: API is down"},
 			},
 		},
 		{
@@ -153,7 +152,7 @@ func TestListModelEndpointAlerts(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "ListModelAlerts: Alerts for Model ID 1 not found"},
+				data: Error{Message: "Model endpoint alert not found: record not found"},
 			},
 		},
 	}
@@ -166,7 +165,7 @@ func TestListModelEndpointAlerts(t *testing.T) {
 				},
 			}
 			resp := ctl.ListModelEndpointAlerts(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -231,7 +230,7 @@ func TestGetModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "GetModelEndpointAlert: Error while getting alert for model endpoint with id 1"},
+				data: Error{Message: "Error getting alert for model endpoint: API is down"},
 			},
 		},
 		{
@@ -247,7 +246,7 @@ func TestGetModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "GetModelEndpointAlert: Alert for model endpoint with id 1 not found"},
+				data: Error{Message: "Model endpoint alert not found: record not found"},
 			},
 		},
 	}
@@ -260,7 +259,7 @@ func TestGetModelEndpointAlert(t *testing.T) {
 				},
 			}
 			resp := ctl.GetModelEndpointAlert(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -414,7 +413,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model with id 1 not found"},
+				data: Error{Message: "Model not found: record not found"},
 			},
 		},
 		{
@@ -438,7 +437,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
@@ -451,7 +450,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while getting model with id 1"},
+				data: Error{Message: "Error getting model: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -495,7 +494,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model endpoint with id 1 not found"},
+				data: Error{Message: "Model endpoint not found: record not found"},
 			},
 		},
 		{
@@ -530,7 +529,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				svc := &mocks.ModelEndpointsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
@@ -539,7 +538,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while getting model endpoint with id 1"},
+				data: Error{Message: "Error getting model endpoint: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -590,7 +589,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while creating model endpoint alert for Model 1, Endpoint 1"},
+				data: Error{Message: "Error creating alert: Connection refused"},
 			},
 		},
 	}
@@ -607,7 +606,7 @@ func TestCreateModelEndpointAlert(t *testing.T) {
 				},
 			}
 			resp := ctl.CreateModelEndpointAlert(&http.Request{}, tC.vars, tC.request)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }
@@ -755,7 +754,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Model with id 1 not found"},
+				data: Error{Message: "Model not found: record not found"},
 			},
 		},
 		{
@@ -779,7 +778,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
-				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("FindByID", mock.Anything, models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
@@ -788,7 +787,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while getting model with id 1"},
+				data: Error{Message: "Error getting model: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -828,7 +827,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusNotFound,
-				data: Error{Message: "Alert for Model ID 1 and Model Endpoint ID 1 not found"},
+				data: Error{Message: "Model endpoint alert not found: record not found"},
 			},
 		},
 		{
@@ -863,12 +862,12 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			modelEndpointAlertService: func() *mocks.ModelEndpointAlertService {
 				svc := &mocks.ModelEndpointAlertService{}
-				svc.On("GetModelEndpointAlert", models.ID(1), models.ID(1)).Return(nil, fmt.Errorf("DB is down"))
+				svc.On("GetModelEndpointAlert", models.ID(1), models.ID(1)).Return(nil, fmt.Errorf("Error creating secret: db is down"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while getting alert for Model ID 1 and Model Endpoint ID 1"},
+				data: Error{Message: "Error getting alert for model endpoint: Error creating secret: db is down"},
 			},
 		},
 		{
@@ -923,7 +922,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Error while updating model endpoint alert for Model 1, Endpoint 1"},
+				data: Error{Message: "Error updating model endpoint alert: Something went wrong"},
 			},
 		},
 	}
@@ -938,7 +937,7 @@ func TestUpdateModelEndpointAlert(t *testing.T) {
 				},
 			}
 			resp := ctl.UpdateModelEndpointAlert(&http.Request{}, tC.vars, tC.request)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }

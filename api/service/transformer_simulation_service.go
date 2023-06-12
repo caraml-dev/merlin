@@ -60,7 +60,6 @@ func (ts *transformerService) createTransformerExecutor(ctx context.Context, sim
 		}
 	}
 
-	// logger := log.GetLogger()
 	logger, _ := zap.NewDevelopment()
 
 	transformerExecutor, err := executor.NewStandardTransformerWithConfig(
