@@ -13,20 +13,20 @@
 # limitations under the License.
 
 from contextlib import contextmanager
-from typing import Optional, List, Any, Dict
+from typing import Any, Dict, List, Optional
 
 from client import PredictionJob
 from merlin.autoscaling import AutoscalingPolicy
-from merlin.deployment_mode import DeploymentMode
 from merlin.batch.config import PredictionJobConfig
 from merlin.client import MerlinClient
+from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import ModelEndpoint, VersionEndpoint
 from merlin.environment import Environment
+from merlin.logger import Logger
 from merlin.model import Model, ModelType, ModelVersion, Project
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.logger import Logger
 
 _merlin_client: Optional[MerlinClient] = None
 _active_project: Optional[Project]
@@ -34,14 +34,14 @@ _active_model: Optional[Model]
 _active_model_version: Optional[ModelVersion]
 
 
-def set_url(url: str, use_google_oauth: bool = True):
+def set_url(url: str, use_google_oauth: bool = True, verify_ssl: bool = True):
     """
     Set Merlin URL
 
     :param url: Merlin URL
     """
     global _merlin_client
-    _merlin_client = MerlinClient(url, use_google_oauth)
+    _merlin_client = MerlinClient(url, use_google_oauth, verify_ssl)
 
 
 def get_url() -> Optional[str]:

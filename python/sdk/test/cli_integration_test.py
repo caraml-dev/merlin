@@ -13,16 +13,14 @@
 # limitations under the License.
 
 import os
-
-from click.testing import CliRunner
-import pytest
-
 import traceback
+from test.utils import undeploy_all_version
 
 import merlin
+import pytest
+from click.testing import CliRunner
 from merlin.merlin import cli
 from merlin.model import ModelType
-from test.utils import undeploy_all_version
 
 
 @pytest.fixture()
@@ -54,10 +52,10 @@ def runner():
 
 @pytest.mark.cli
 @pytest.mark.integration
-def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth):
+def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth, verify_ssl):
 
     model_name = 'cli-test'
-    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(deployment_info['project'])
     merlin.set_model(model_name, ModelType.SKLEARN)
 
@@ -82,7 +80,7 @@ def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth):
     test_deployed_model_version = result.output.split('\n')[0].split(' ')[-1]
 
     # Get latest deployed model's version
-    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(deployment_info['project'])
     merlin.set_model(model_name, ModelType.SKLEARN)
 
@@ -116,10 +114,10 @@ def test_cli_deployment_undeployment(deployment_info, runner, use_google_oauth):
 
 @pytest.mark.cli
 @pytest.mark.integration
-def test_cli_deployment_undeployment_with_resource_request(deployment_info, runner, use_google_oauth):
+def test_cli_deployment_undeployment_with_resource_request(deployment_info, runner, use_google_oauth, verify_ssl):
 
     model_name = 'cli-resource-request-test'
-    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(deployment_info['project'])
     merlin.set_model(model_name, ModelType.SKLEARN)
 
@@ -148,7 +146,7 @@ def test_cli_deployment_undeployment_with_resource_request(deployment_info, runn
     test_deployed_model_version = result.output.split('\n')[0].split(' ')[-1]
 
     # Get latest deployed model's version
-    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth)
+    merlin.set_url(deployment_info['url'], use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(deployment_info['project'])
     merlin.set_model(model_name, ModelType.SKLEARN)
 

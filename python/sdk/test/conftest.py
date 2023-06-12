@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mlflow
 import os
-import pytest
-import requests as requests_lib
 
 import client as cl
+import pytest
+import requests as requests_lib
 from client import ApiClient, Configuration
 from merlin.model import Model, ModelType, ModelVersion, Project
-
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+
+import mlflow
+
 
 @pytest.fixture
 def url():
@@ -118,6 +119,10 @@ def service_account():
 @pytest.fixture
 def use_google_oauth():
     return os.environ.get("E2E_USE_GOOGLE_OAUTH", default=True) == "true"
+
+@pytest.fixture
+def verify_ssl():
+    return os.environ.get("E2E_VERIFY_SSL", default=True) == "true"
 
 @pytest.fixture
 def requests():

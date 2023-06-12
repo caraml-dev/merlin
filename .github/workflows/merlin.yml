@@ -369,7 +369,7 @@ jobs:
       - name: Build Merlin SDK Docker py${{ matrix.python-version }}
         working-directory: ./python/sdk
         run: |
-          IMAGE_TAG="ghcr.io/caraml-dev/merlin-sdk:${{ needs.create-version.outputs.version }}"
+          IMAGE_TAG="ghcr.io/caraml-dev/merlin-sdk:py${{ matrix.python-version }}:-${{ needs.create-version.outputs.version }}"
           SDK_VERSION="$(sed 's/^v\(.*\)-/\1/' <<< "v0.29.0-rc1")"
           docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
           docker build -t ${IMAGE_TAG} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg VERSION=${SDK_VERSION} .

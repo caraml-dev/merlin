@@ -1,25 +1,22 @@
 import os
 import uuid
+from test.utils import undeploy_all_version
 from time import sleep
+from typing import List
 
 import grpc
+import merlin
 import pandas as pd
 import pytest
 import xgboost as xgb
 from caraml.upi.utils import df_to_table, table_to_df
-from caraml.upi.v1 import upi_pb2, upi_pb2_grpc
-from caraml.upi.v1 import type_pb2, variable_pb2
-from sklearn.datasets import load_iris
-from typing import List
-
-
-import merlin
+from caraml.upi.v1 import type_pb2, upi_pb2, upi_pb2_grpc, variable_pb2
 from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import Status
 from merlin.model import ModelType, PyFuncModel
 from merlin.protocol import Protocol
 from merlin.transformer import StandardTransformer
-from test.utils import undeploy_all_version
+from sklearn.datasets import load_iris
 
 
 class IrisClassifier(PyFuncModel):
@@ -69,8 +66,8 @@ class SimpleForwarder(PyFuncModel):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_deploy(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-upi", ModelType.PYFUNC)
 
@@ -97,8 +94,8 @@ def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_with_standard_transformer(integration_test_url, project_name, use_google_oauth, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_pyfunc_with_standard_transformer(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-upi-std", ModelType.PYFUNC)
 
@@ -136,8 +133,8 @@ def test_pyfunc_with_standard_transformer(integration_test_url, project_name, us
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_serve_traffic(integration_test_url, project_name, use_google_oauth, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_serve_traffic(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-upi-serve", ModelType.PYFUNC)
 

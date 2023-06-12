@@ -14,18 +14,17 @@
 
 import os
 import warnings
+from test.utils import undeploy_all_version
 from time import sleep
 
 import joblib
+import merlin
 import numpy as np
 import pytest
 import xgboost as xgb
+from merlin.model import ModelType, PyFuncModel
 from sklearn import svm
 from sklearn.datasets import load_iris
-
-import merlin
-from merlin.model import PyFuncModel, ModelType
-from test.utils import undeploy_all_version
 
 warnings.filterwarnings('ignore')
 
@@ -63,8 +62,8 @@ class EnvVarModel(PyFuncModel):
 @pytest.mark.pyfunc
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_pyfunc(integration_test_url, project_name, use_google_oauth, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_pyfunc(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-sample", ModelType.PYFUNC)
 
@@ -95,8 +94,8 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth, requests):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-env-vars-sample", ModelType.PYFUNC)
 
@@ -133,8 +132,8 @@ class OldInferModel(PyFuncModel):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-old-infer-sample", ModelType.PYFUNC)
 

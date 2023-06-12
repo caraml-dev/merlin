@@ -12,23 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+import os
+from time import sleep
+from typing import Union
 
-from merlin.batch.job import JobStatus
-
+import joblib
 import merlin
+import numpy as np
+import pandas as pd
+import pytest
 from merlin.batch.config import PredictionJobConfig
+from merlin.batch.job import JobStatus
 from merlin.batch.sink import BigQuerySink, SaveMode
 from merlin.batch.source import BigQuerySource
-from merlin.model import PyFuncV2Model, ModelType
-from sklearn.datasets import load_iris
+from merlin.model import ModelType, PyFuncV2Model
 from sklearn import svm
-from time import sleep
-import joblib
-import os
-import pandas as pd
-import numpy as np
-from typing import Union
+from sklearn.datasets import load_iris
 
 MODEL_PATH_ARTIFACT_KEY = "model_path"
 MODEL_DIR = "test/batch/model"
@@ -65,9 +64,9 @@ def batch_gcs_staging_bucket():
 
 @pytest.mark.batch
 @pytest.mark.integration
-def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth,
+def test_batch_pyfunc_v2_batch(integration_test_url, project_name, service_account, use_google_oauth, verify_ssl,
                                batch_bigquery_source, batch_bigquery_sink, batch_gcs_staging_bucket):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("batch-iris", ModelType.PYFUNC_V2)
     service_account_name = "merlin-integration-test@project.iam.gserviceaccount.com"

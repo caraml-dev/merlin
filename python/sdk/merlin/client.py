@@ -16,13 +16,12 @@ import warnings
 from sys import version_info
 from typing import Dict, List, Optional
 
-import google.auth
 import urllib3
+from caraml_auth.id_token_credentials import get_default_id_token_credentials
 from client import (ApiClient, Configuration, EndpointApi, EnvironmentApi,
                     ModelsApi, ProjectApi, VersionApi)
 from google.auth.transport.requests import Request
 from google.auth.transport.urllib3 import AuthorizedHttp
-from caraml_auth.id_token_credentials import get_default_id_token_credentials
 from merlin.autoscaling import AutoscalingPolicy
 from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import VersionEndpoint
@@ -37,10 +36,11 @@ from merlin.version import VERSION
 
 
 class MerlinClient:
-    def __init__(self, merlin_url: str, use_google_oauth: bool=True):
+    def __init__(self, merlin_url: str, use_google_oauth: bool=True, verify_ssl: bool=True):
         self._merlin_url = merlin_url
         config = Configuration()
         config.host = self._merlin_url + "/v1"
+        config.verify_ssl = verify_ssl
 
         self._api_client = ApiClient(config)
         if use_google_oauth:

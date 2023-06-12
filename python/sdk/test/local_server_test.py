@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import random
 import socket
-import requests
+import time
 from multiprocessing import Process
 
-import pytest
-import random
-import os
-
-import requests
-import time
 import merlin
+import pytest
+import requests
 from merlin.model import ModelType
 
 request_json = {
@@ -41,8 +39,8 @@ else:
 @pytest.mark.integration
 @pytest.mark.local_server_test
 @pytest.mark.dependency(depends=["test/integration_test.py::test_sklearn"], scope='session')
-def test_sklearn(integration_test_url, project_name, use_google_oauth):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_sklearn(integration_test_url, project_name, use_google_oauth, verify_ssl):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("sklearn-sample", ModelType.SKLEARN)
     v = _get_latest_version(merlin.active_model())
@@ -61,8 +59,8 @@ def test_sklearn(integration_test_url, project_name, use_google_oauth):
 @pytest.mark.integration
 @pytest.mark.local_server_test
 @pytest.mark.dependency(depends=["test/integration_test.py::test_xgboost"], scope='session')
-def test_xgboost(integration_test_url, project_name, use_google_oauth):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_xgboost(integration_test_url, project_name, use_google_oauth, verify_ssl):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("xgboost-sample", ModelType.XGBOOST)
     v = _get_latest_version(merlin.active_model())
@@ -81,8 +79,8 @@ def test_xgboost(integration_test_url, project_name, use_google_oauth):
 @pytest.mark.integration
 @pytest.mark.local_server_test
 @pytest.mark.dependency(depends=["test/integration_test.py::test_tensorflow"], scope='session')
-def test_tensorflow(integration_test_url, project_name, use_google_oauth):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_tensorflow(integration_test_url, project_name, use_google_oauth, verify_ssl):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("tensorflow-sample", ModelType.TENSORFLOW)
     v = _get_latest_version(merlin.active_model())
@@ -110,8 +108,8 @@ def test_tensorflow(integration_test_url, project_name, use_google_oauth):
 @pytest.mark.integration
 @pytest.mark.local_server_test
 @pytest.mark.dependency(depends=["test/integration_test.py::test_pytorch"], scope='session')
-def test_pytorch(integration_test_url, project_name, use_google_oauth):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_pytorch(integration_test_url, project_name, use_google_oauth, verify_ssl):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("pytorch-sample", ModelType.PYTORCH)
     model_dir = "test/pytorch-model"
@@ -134,8 +132,8 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth):
 @pytest.mark.local_server_test
 @pytest.mark.integration
 @pytest.mark.dependency(depends=["test/pyfunc_integration_test.py::test_pyfunc"], scope='session')
-def test_pyfunc(integration_test_url, project_name, use_google_oauth):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+def test_pyfunc(integration_test_url, project_name, use_google_oauth, verify_ssl):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-sample", ModelType.PYFUNC)
     v = _get_latest_version(merlin.active_model())
