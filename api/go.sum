@@ -250,8 +250,8 @@ github.com/bugsnag/panicwrap v0.0.0-20151223152923-e2c28503fcd0/go.mod h1:D/8v3k
 github.com/c2h5oh/datasize v0.0.0-20171227191756-4eba002a5eae/go.mod h1:S/7n9copUssQ56c7aAgHqftWO4LTf4xY6CGWt8Bc+3M=
 github.com/c2h5oh/datasize v0.0.0-20200112174442-28bbd4740fee/go.mod h1:S/7n9copUssQ56c7aAgHqftWO4LTf4xY6CGWt8Bc+3M=
 github.com/caddyserver/caddy v1.0.3/go.mod h1:G+ouvOY32gENkJC+jhgl62TyhvqEsFaDiZ4uw0RzP1E=
-github.com/caraml-dev/mlp v1.7.7-0.20230519042541-3415407aa27b h1:gnHGvCi48tbpWyvIIN9T51OjjBPN87CSjlNezq74H9s=
-github.com/caraml-dev/mlp v1.7.7-0.20230519042541-3415407aa27b/go.mod h1:KwanmpEzX11cIczhSs7e55M0EvgTuiZWC+uHQYppG5U=
+github.com/caraml-dev/mlp v1.8.1-0.20230613010931-dd63f4364a18 h1:/Rjw7+qVMo+rBaBqzJZrtQ1lKXb3KXeTXP1lJOTT7xI=
+github.com/caraml-dev/mlp v1.8.1-0.20230613010931-dd63f4364a18/go.mod h1:dNqC/QnXYpkxWDaV6XU8y1UJTjmKJC3Z6CpW1n9Hjd0=
 github.com/caraml-dev/protopath v0.1.0 h1:hjJ/U9RGD6QZ0Ee9SIYbVmwPugps4S5EpL6R+5ZrBe0=
 github.com/caraml-dev/protopath v0.1.0/go.mod h1:hVA2HkTrMYv+Q57gtrzu9/P7EXlNtBUcTz43z6EE010=
 github.com/caraml-dev/universal-prediction-interface v0.3.4 h1:cPytzpjXE/8RhSw3iS0JFZzNdM3tJ/l8UcHTPrxQWEo=
@@ -1376,6 +1376,8 @@ github.com/openzipkin/zipkin-go v0.3.0/go.mod h1:4c3sLeE8xjNqehmF5RpAFLPLJxXscc0
 github.com/ory/keto-client-go v0.4.4-alpha.1 h1:eQkXvjovJkqFHawMJYZBUa1CdTQicVjsD7vA5cxeQB4=
 github.com/ory/keto-client-go v0.4.4-alpha.1/go.mod h1:v13bI95oapu8Qh+i3E0y6mtezkVK6SMNzX2l04+0NOs=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
+github.com/patrickmn/go-cache v2.1.0+incompatible h1:HRMgzkcYKYpi3C8ajMPV8OFXaaRUnok+kx1WdO15EQc=
+github.com/patrickmn/go-cache v2.1.0+incompatible/go.mod h1:3Qf8kWWT7OJRJbdiICTKqZju1ZixQ/KpMGzzAfe6+WQ=
 github.com/pborman/uuid v1.2.0/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=
 github.com/pelletier/go-toml v1.1.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
