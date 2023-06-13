@@ -328,7 +328,7 @@ func getLogSink(
 		)
 		if err != nil {
 			log.Info(err)
-			return nil, fmt.Errorf("failed to create new kafka producer: %s", err)
+			return nil, fmt.Errorf("failed to create new kafka producer: %w", err)
 		}
 
 		// Test that we are able to query the broker on the topic. If the topic
@@ -336,7 +336,7 @@ func getLogSink(
 		_, err = kafkaProducer.GetMetadata(&topicName, false, merlinlogger.ConnectTimeoutMS)
 		if err != nil {
 			log.Info(err)
-			return nil, fmt.Errorf("failed to get kafka producer's metadata: %s", err)
+			return nil, fmt.Errorf("failed to get kafka producer's metadata: %w", err)
 		}
 
 		return merlinlogger.NewKafkaSink(log, kafkaProducer, serviceName, projectName, modelName, modelVersion, topicName), nil
