@@ -80,9 +80,25 @@ func (a *Authorizer) AuthorizationMiddleware(next http.Handler) http.Handler {
 
 func (a *Authorizer) getResource(r *http.Request) (string, error) {
 	ctx := r.Context()
-
 	resource := strings.Replace(strings.TrimPrefix(r.URL.Path, "/"), "/", ":", -1)
+
+	// Current paths registered in Merlin are of the following formats:
+	// - /alerts/teams
+	// - /environments
+	// - /logs
+	// - /models/{model_id}/**
+	// - /projects/{project_id}/**
+	// - /standard_transformer/simulate
+	//
+	// /models and /logs endpoints will be authorized based on the respective project they belong to
+	// (see implementation below), which is effectively the same as /projects/{project_id}/**.
+	// Given this, we only care about the permissions up-to 2 levels deep. The rationale is that
+	// if a user has READ/WRITE permissions on /projects/{project_id}, they would also have the same
+	// permissions on all its sub-resources. Thus, trimming the resource identifier to aid quicker
+	// authz matching and to efficiently make use of the in-memory authz cache, if enabled.
+
 	// workaround since models/** APIS is not under projects/**
+	// TODO: move the models endpoint under projects/
 	if strings.HasPrefix(resource, "models") {
 		vars := mux.Vars(r)
 		modelID, _ := models.ParseID(vars["model_id"])
@@ -90,10 +106,11 @@ func (a *Authorizer) getResource(r *http.Request) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("projects:%d:%s", model.Project.ID, resource), nil
+		return fmt.Sprintf("projects:%d", model.Project.ID), nil
 	}
 
 	// workaround since logs API is not under projects/**
+	// TODO: move the logs endpoint under projects/
 	if strings.HasPrefix(resource, "logs") {
 		modelID, err := models.ParseID(r.URL.Query().Get("model_id"))
 		if err != nil {
@@ -105,10 +122,15 @@ func (a *Authorizer) getResource(r *http.Request) (string, error) {
 			return "", err
 		}
 
-		return fmt.Sprintf("projects:%d:logs", model.Project.ID), nil
+		return fmt.Sprintf("projects:%d", model.Project.ID), nil
 	}
 
-	return resource, nil
+	// Trim the resource info, greater than 2 segments
+	parts := strings.Split(resource, ":")
+	if len(parts) > 1 {
+		parts = parts[:2]
+	}
+	return strings.Join(parts, ":"), nil
 }
 
 func methodToAction(method string) string {
