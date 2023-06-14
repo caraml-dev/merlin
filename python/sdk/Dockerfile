@@ -15,6 +15,6 @@ ARG VERSION==0.28.0
 RUN pip install merlin-sdk==${VERSION}
 RUN pip install merlin-sdk[test]==${VERSION}
 
-# RUN useradd -u 1000 merlin
-# RUN chown merlin: /root
-# USER merlin
+RUN useradd -u 1000 merlin
+RUN chown merlin: /root
+USER merlin
