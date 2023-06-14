@@ -51,7 +51,7 @@ tensorflow_request_json = {
 def test_model_version_with_labels(
         integration_test_url, project_name, use_google_oauth
 ):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("sklearn-labels", ModelType.SKLEARN)
 
@@ -79,8 +79,8 @@ def test_model_version_with_labels(
 @pytest.mark.integration
 @pytest.mark.dependency()
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
-def test_sklearn(integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_sklearn(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"sklearn-sample-{deployment_mode_suffix(deployment_mode)}", ModelType.SKLEARN)
 
@@ -104,8 +104,8 @@ def test_sklearn(integration_test_url, project_name, deployment_mode, use_google
 @pytest.mark.integration
 @pytest.mark.dependency()
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
-def test_xgboost(integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_xgboost(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"xgboost-sample-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST)
 
@@ -129,8 +129,8 @@ def test_xgboost(integration_test_url, project_name, deployment_mode, use_google
 
 
 @pytest.mark.integration
-def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("mlflow-test", ModelType.XGBOOST)
 
@@ -177,8 +177,8 @@ def test_mlflow_tracking(integration_test_url, project_name, use_google_oauth, v
 @pytest.mark.integration
 @pytest.mark.dependency()
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
-def test_tensorflow(integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_tensorflow(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"tensorflow-sample-{deployment_mode_suffix(deployment_mode)}", ModelType.TENSORFLOW)
 
@@ -202,8 +202,8 @@ def test_tensorflow(integration_test_url, project_name, deployment_mode, use_goo
 @pytest.mark.pytorch
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_pytorch(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_pytorch(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pytorch-sample", ModelType.PYTORCH)
 
@@ -227,8 +227,8 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth, verify_ss
 
 @pytest.mark.serving
 @pytest.mark.integration
-def test_set_traffic(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_set_traffic(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("set-traffic-sample", ModelType.SKLEARN)
 
@@ -268,8 +268,8 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth, verif
 
 @pytest.mark.serving
 @pytest.mark.integration
-def test_serve_traffic(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_serve_traffic(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("serve-traffic-sample", ModelType.SKLEARN)
 
@@ -308,8 +308,8 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, ver
 
 
 @pytest.mark.integration
-def test_multi_env(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_multi_env(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("multi-env", ModelType.XGBOOST)
 
@@ -342,8 +342,8 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth, verify_
 
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
-def test_resource_request(integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_resource_request(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"resource-request-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST)
 
@@ -378,8 +378,8 @@ def test_resource_request(integration_test_url, project_name, deployment_mode, u
 # Logging is not supported yet in raw_deployment
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
-def test_logger(integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_logger(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"logger-{deployment_mode_suffix(deployment_mode)}", ModelType.TENSORFLOW)
     model_dir = "test/tensorflow-model"
@@ -421,9 +421,9 @@ def test_logger(integration_test_url, project_name, deployment_mode, use_google_
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_custom_transformer(
-        integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests
+        integration_test_url, project_name, deployment_mode, use_google_oauth, requests
 ):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"custom-transformer-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
@@ -469,8 +469,8 @@ def test_custom_transformer(
 @pytest.mark.feast
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
-def test_feast_enricher(integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_feast_enricher(integration_test_url, project_name, deployment_mode, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"feast-enricher-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
@@ -497,9 +497,9 @@ def test_feast_enricher(integration_test_url, project_name, deployment_mode, use
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_standard_transformer_without_feast(
-        integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests
+        integration_test_url, project_name, deployment_mode, use_google_oauth, requests
 ):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"std-transformer-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
@@ -548,9 +548,9 @@ def test_standard_transformer_without_feast(
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_standard_transformer_with_feast(
-        integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests
+        integration_test_url, project_name, deployment_mode, use_google_oauth, requests
 ):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"std-transformer-feast-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
@@ -604,7 +604,7 @@ def test_standard_transformer_with_multiple_feast(
         feast_serving_bigtable_url,
         requests
 ):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"std-transformer-feasts-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
@@ -694,7 +694,7 @@ def test_standard_transformer_with_multiple_feast_with_source(
         feast_serving_bigtable_url,
         requests
 ):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"std-trf-feasts-source-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
 
@@ -781,9 +781,9 @@ def test_standard_transformer_with_multiple_feast_with_source(
 
 @pytest.mark.integration
 def test_custom_model_without_artifact(
-        integration_test_url, project_name, use_google_oauth, verify_ssl, requests
+        integration_test_url, project_name, use_google_oauth, requests
 ):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("custom-wo-artifact", ModelType.CUSTOM)
 
@@ -805,9 +805,9 @@ def test_custom_model_without_artifact(
 @pytest.mark.integration
 @pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
 def test_custom_model_with_artifact(
-        integration_test_url, project_name, deployment_mode, use_google_oauth, verify_ssl, requests
+        integration_test_url, project_name, deployment_mode, use_google_oauth, requests
 ):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model(f"custom-w-artifact-{deployment_mode_suffix(deployment_mode)}", ModelType.CUSTOM)
     undeploy_all_version()
@@ -837,11 +837,11 @@ def test_custom_model_with_artifact(
 
 @pytest.mark.raw_deployment
 @pytest.mark.integration
-def test_deployment_mode_for_serving_model(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
+def test_deployment_mode_for_serving_model(integration_test_url, project_name, use_google_oauth, requests):
     """
     Validate that set traffic is working when switching from different deployment mode
     """
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("serve-raw-deployment", ModelType.TENSORFLOW)
     model_dir = "test/tensorflow-model"

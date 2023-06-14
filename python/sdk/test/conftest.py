@@ -121,10 +121,6 @@ def use_google_oauth():
     return os.environ.get("E2E_USE_GOOGLE_OAUTH", default=True) == "true"
 
 @pytest.fixture
-def verify_ssl():
-    return os.environ.get("E2E_VERIFY_SSL", default=True) == "true"
-
-@pytest.fixture
 def requests():
     retry_strategy = Retry(
         total=5,

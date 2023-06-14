@@ -29,20 +29,20 @@ env_1 = cl.Environment(1, "dev", "cluster-1", True, default_resource_request=def
 env_2 = cl.Environment(2, "dev-2", "cluster-2", False, default_resource_request=default_resource_request)
 
 
-def test_set_url(url, use_google_oauth, verify_ssl):
-    merlin.set_url(url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_set_url(url, use_google_oauth):
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
     assert url == merlin.get_url()
 
 
 @responses.activate
-def test_set_project(url, project, mock_oauth, use_google_oauth, verify_ssl):
+def test_set_project(url, project, mock_oauth, use_google_oauth):
     # expect exception when setting project but client is not set
     with pytest.raises(Exception):
         merlin.set_project(project.name)
 
     _mock_get_project_call(project)
 
-    merlin.set_url(url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
     merlin.set_project(project.name)
 
     assert merlin.active_project().name == project.name
@@ -51,12 +51,12 @@ def test_set_project(url, project, mock_oauth, use_google_oauth, verify_ssl):
 
 
 @responses.activate
-def test_set_model(url, project, model, mock_oauth, use_google_oauth, verify_ssl):
+def test_set_model(url, project, model, mock_oauth, use_google_oauth):
     # expect exception when setting model but client and project is not set
     with pytest.raises(Exception):
         merlin.set_model(model.name, model.type)
 
-    merlin.set_url(url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
 
     with pytest.raises(Exception):
         merlin.set_model(model.name, model.type)
@@ -74,14 +74,14 @@ def test_set_model(url, project, model, mock_oauth, use_google_oauth, verify_ssl
 
 
 @responses.activate
-def test_new_model_version(url, project, model, version, mock_oauth, use_google_oauth, verify_ssl):
+def test_new_model_version(url, project, model, version, mock_oauth, use_google_oauth):
     # expect exception when creating new model  version but client and
     # project is not set
     with pytest.raises(Exception):
         with merlin.new_model_version() as v:
             print(v)
 
-    merlin.set_url(url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
 
     with pytest.raises(Exception):
         with merlin.new_model_version() as v:
@@ -106,8 +106,8 @@ def test_new_model_version(url, project, model, version, mock_oauth, use_google_
 
 
 @responses.activate
-def test_new_model_version_with_labels(url, project, model, version, mock_oauth, use_google_oauth, verify_ssl):
-    merlin.set_url(url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_new_model_version_with_labels(url, project, model, version, mock_oauth, use_google_oauth):
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
     _mock_get_project_call(project)
     merlin.set_project(project.name)
     _mock_get_model_call(project, model)
@@ -127,8 +127,8 @@ def test_new_model_version_with_labels(url, project, model, version, mock_oauth,
 
 
 @responses.activate
-def test_list_environment(url, mock_oauth, use_google_oauth, verify_ssl):
-    merlin.set_url(url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_list_environment(url, mock_oauth, use_google_oauth):
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
 
     _mock_list_environment_call()
 
@@ -140,8 +140,8 @@ def test_list_environment(url, mock_oauth, use_google_oauth, verify_ssl):
 
 
 @responses.activate
-def test_get_environment(url, mock_oauth, use_google_oauth, verify_ssl):
-    merlin.set_url(url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_get_environment(url, mock_oauth, use_google_oauth):
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
 
     _mock_list_environment_call()
 
@@ -154,8 +154,8 @@ def test_get_environment(url, mock_oauth, use_google_oauth, verify_ssl):
 
 
 @responses.activate
-def test_get_default_environment(url, mock_oauth, use_google_oauth, verify_ssl):
-    merlin.set_url(url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_get_default_environment(url, mock_oauth, use_google_oauth):
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
 
     _mock_list_environment_call()
 
@@ -167,12 +167,12 @@ def test_get_default_environment(url, mock_oauth, use_google_oauth, verify_ssl):
 
 
 @responses.activate
-def test_mlflow_methods(url, project, model, version, mock_oauth, use_google_oauth, verify_ssl):
+def test_mlflow_methods(url, project, model, version, mock_oauth, use_google_oauth):
     _mock_get_project_call(project)
     _mock_get_model_call(project, model)
     _mock_new_model_version_call(model, version)
 
-    merlin.set_url(url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+    merlin.set_url(url, use_google_oauth=use_google_oauth)
     merlin.set_project(project.name)
     merlin.set_model(model.name, model.type)
     with merlin.new_model_version() as v:

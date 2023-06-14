@@ -36,11 +36,10 @@ from merlin.version import VERSION
 
 
 class MerlinClient:
-    def __init__(self, merlin_url: str, use_google_oauth: bool=True, verify_ssl: bool=True):
+    def __init__(self, merlin_url: str, use_google_oauth: bool=True):
         self._merlin_url = merlin_url
         config = Configuration()
         config.host = self._merlin_url + "/v1"
-        config.verify_ssl = verify_ssl
 
         self._api_client = ApiClient(config)
         if use_google_oauth:

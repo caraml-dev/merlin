@@ -62,8 +62,8 @@ class EnvVarModel(PyFuncModel):
 @pytest.mark.pyfunc
 @pytest.mark.integration
 @pytest.mark.dependency()
-def test_pyfunc(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_pyfunc(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-sample", ModelType.PYFUNC)
 
@@ -94,8 +94,8 @@ def test_pyfunc(integration_test_url, project_name, use_google_oauth, verify_ssl
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_pyfunc_env_vars(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-env-vars-sample", ModelType.PYFUNC)
 
@@ -132,8 +132,8 @@ class OldInferModel(PyFuncModel):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth, verify_ssl, requests):
-    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth, verify_ssl=verify_ssl)
+def test_pyfunc_old_infer(integration_test_url, project_name, use_google_oauth, requests):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-old-infer-sample", ModelType.PYFUNC)
 
