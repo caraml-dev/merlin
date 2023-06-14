@@ -230,8 +230,15 @@ func (d *DictEnv) Decode(value string) error {
 }
 
 type AuthorizationConfig struct {
-	AuthorizationEnabled   bool   `envconfig:"AUTHORIZATION_ENABLED" default:"true"`
-	AuthorizationServerURL string `envconfig:"AUTHORIZATION_SERVER_URL" default:"http://localhost:4466"`
+	AuthorizationEnabled   bool                 `envconfig:"AUTHORIZATION_ENABLED" default:"true"`
+	AuthorizationServerURL string               `envconfig:"AUTHORIZATION_SERVER_URL" default:"http://localhost:4466"`
+	Caching                *InMemoryCacheConfig `validate:"required_if=AuthorizationEnabled True"`
+}
+
+type InMemoryCacheConfig struct {
+	Enabled                     bool `envconfig:"AUTHORIZATION_CACHING_ENABLED"`
+	KeyExpirySeconds            int  `validate:"required_if=Enabled True" default:"600"`
+	CacheCleanUpIntervalSeconds int  `validate:"required_if=Enabled True" default:"900"`
 }
 
 type FeatureToggleConfig struct {
