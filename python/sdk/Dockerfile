@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.source https://github.com/caraml-dev/merlin
 WORKDIR /root
 ENV PYTHONPATH /root
 
-RUN apt-get update && apt-get install build-essential -y
+RUN apt-get update && apt-get install build-essential curl wget -y
 
 COPY . .${WORKDIR}
 
@@ -15,6 +15,6 @@ ARG VERSION==0.28.0
 RUN pip install merlin-sdk==${VERSION}
 RUN pip install merlin-sdk[test]==${VERSION}
 
-RUN useradd -u 1000 merlin
-RUN chown merlin: /root
-USER merlin
+# RUN useradd -u 1000 merlin
+# RUN chown merlin: /root
+# USER merlin
