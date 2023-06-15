@@ -350,7 +350,7 @@ func (c *imageBuilder) waitJobDeleted(ctx context.Context, job *batchv1.Job) err
 		case <-ticker.C:
 			_, err := jobClient.Get(ctx, job.Name, metav1.GetOptions{})
 			if err != nil {
-				if !kerrors.IsNotFound(err) {
+				if kerrors.IsNotFound(err) {
 					return nil
 				}
 				log.Errorf("unable to get job status for job %s: %v", job.Name, err)
