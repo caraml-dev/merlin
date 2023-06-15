@@ -66,7 +66,7 @@ class SimpleForwarder(PyFuncModel):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_deploy(integration_test_url, project_name, use_google_oauth):
+def test_deploy(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-upi", ModelType.PYFUNC)
@@ -94,7 +94,7 @@ def test_deploy(integration_test_url, project_name, use_google_oauth):
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_pyfunc_with_standard_transformer(integration_test_url, project_name, use_google_oauth):
+def test_pyfunc_with_standard_transformer(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-upi-std", ModelType.PYFUNC)
@@ -133,7 +133,7 @@ def test_pyfunc_with_standard_transformer(integration_test_url, project_name, us
 
 @pytest.mark.pyfunc
 @pytest.mark.integration
-def test_serve_traffic(integration_test_url, project_name, use_google_oauth):
+def test_serve_traffic(integration_test_url, project_name, use_google_oauth, requests):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
     merlin.set_model("pyfunc-upi-serve", ModelType.PYFUNC)

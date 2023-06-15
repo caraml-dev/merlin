@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.source https://github.com/caraml-dev/merlin
 WORKDIR /root
 ENV PYTHONPATH /root
 
-RUN apt-get update && apt-get install build-essential curl wget -y
+RUN apt-get update && apt-get install build-essential curl vim wget -y
 
 COPY . .${WORKDIR}
 
