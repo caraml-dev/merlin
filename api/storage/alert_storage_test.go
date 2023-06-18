@@ -31,8 +31,6 @@ import (
 func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {
 	isDefaultTrue := true
 
-	db = db.LogMode(true)
-
 	env1 := models.Environment{
 		Name:      "env-1",
 		Cluster:   "k8s",

@@ -142,7 +142,6 @@ func TestModelEndpointStorage_SaveTerminated(t *testing.T) {
 }
 
 func populateModelEndpointTable(db *gorm.DB) []*models.ModelEndpoint {
-	db = db.LogMode(true)
 	isDefaultTrue := true
 	p := mlp.Project{
 		ID:                1,
