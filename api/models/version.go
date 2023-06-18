@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Version struct {
@@ -101,11 +101,11 @@ func (v *Version) Patch(patch *VersionPatch) error {
 	return nil
 }
 
-func (v *Version) BeforeCreate(scope *gorm.Scope) {
+func (v *Version) BeforeCreate(db *gorm.DB) {
 	if v.ID == 0 {
 		var maxModelVersionID int
 
-		scope.DB().
+		db.
 			Table("versions").
 			Select("COALESCE(MAX(id), 0)").
 			Where("model_id = ?", v.ModelID).

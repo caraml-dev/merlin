@@ -15,10 +15,11 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
@@ -39,7 +40,7 @@ func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string,
 
 	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model version not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model version: %sv", err))
@@ -56,7 +57,7 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 
 	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model version not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model version: %v", err))

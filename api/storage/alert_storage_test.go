@@ -20,8 +20,8 @@ package storage
 import (
 	"testing"
 
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/it/database"
 	"github.com/caraml-dev/merlin/mlp"

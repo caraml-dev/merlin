@@ -19,7 +19,7 @@ import (
 
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type ModelsService interface {

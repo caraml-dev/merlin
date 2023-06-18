@@ -16,7 +16,7 @@ package storage
 
 import (
 	"github.com/caraml-dev/merlin/models"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type DeploymentStorage interface {

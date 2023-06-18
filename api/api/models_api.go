@@ -15,10 +15,11 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
@@ -91,7 +92,7 @@ func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, bod
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model: %v", err))

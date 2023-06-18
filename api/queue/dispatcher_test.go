@@ -24,9 +24,9 @@ import (
 
 	"github.com/caraml-dev/merlin/it/database"
 	"github.com/caraml-dev/merlin/log"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func TestEnqueueJob(t *testing.T) {

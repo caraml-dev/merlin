@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	gorm "github.com/jinzhu/gorm"
+	gorm "gorm.io/gorm"
 	mock "github.com/stretchr/testify/mock"
 )
 

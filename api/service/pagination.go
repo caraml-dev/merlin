@@ -15,7 +15,7 @@
 package service
 
 import (
-	paginator "github.com/pilagod/gorm-cursor-paginator"
+	"github.com/pilagod/gorm-cursor-paginator/v2/paginator"
 )
 
 type order string

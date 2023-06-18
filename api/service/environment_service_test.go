@@ -20,9 +20,9 @@ package service
 import (
 	"testing"
 
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/caraml-dev/merlin/it/database"

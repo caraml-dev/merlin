@@ -3,6 +3,7 @@ package work
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/caraml-dev/merlin/cluster"
@@ -12,8 +13,8 @@ import (
 	"github.com/caraml-dev/merlin/pkg/imagebuilder"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/storage"
-	"github.com/jinzhu/gorm"
 	"github.com/prometheus/client_golang/prometheus"
+	"gorm.io/gorm"
 )
 
 var deploymentCounter = prometheus.NewCounterVec(
@@ -57,7 +58,7 @@ func (depl *ModelServiceDeployment) Deploy(job *queue.Job) error {
 
 	endpointArg := jobArgs.Endpoint
 	endpoint, err := depl.Storage.Get(endpointArg.ID)
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Errorf("could not found version endpoint with id %s and error: %v", endpointArg.ID, err)
 		return err
 	}

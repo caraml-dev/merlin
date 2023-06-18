@@ -26,7 +26,10 @@ import (
 	gomigrate "github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jinzhu/gorm"
+
+	pg "gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/caraml-dev/merlin/log"
 )
@@ -93,7 +96,10 @@ func CreateTestDatabase() (*gorm.DB, func(), error) {
 	if testDb, err = migrate(testDb, testDbName); err != nil {
 		cleanup()
 		return nil, nil, err
-	} else if gormDb, err := gorm.Open("postgres", testDb); err != nil {
+	} else if gormDb, err := gorm.Open(pg.Open(connStr),
+		&gorm.Config{
+			Logger: logger.Default.LogMode(logger.Silent),
+		}); err != nil {
 		cleanup()
 		return nil, nil, err
 	} else {

@@ -25,9 +25,9 @@ import (
 
 	"github.com/caraml-dev/merlin/pkg/deployment"
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/it/database"

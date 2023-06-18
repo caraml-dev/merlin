@@ -26,8 +26,8 @@ import (
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service/mocks"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 )
 
 func TestGetVersion(t *testing.T) {

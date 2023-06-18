@@ -13,9 +13,11 @@ import (
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	pg "gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
 
@@ -50,14 +52,18 @@ func initDB(cfg config.DatabaseConfig) (*gorm.DB, func()) {
 		cfg.Database,
 		cfg.Password)
 
-	db, err := gorm.Open("postgres", databaseURL)
+	db, err := gorm.Open(
+		pg.Open(databaseURL),
+		&gorm.Config{
+			Logger: logger.Default.LogMode(logger.Silent),
+		},
+	)
 	if err != nil {
 		panic(err)
 	}
-	db.LogMode(false)
 
-	sqlDB := db.DB()
-	if sqlDB == nil {
+	sqlDB, err := db.DB()
+	if sqlDB == nil || err != nil {
 		panic("fail to get the underlying database connection")
 	}
 
@@ -66,11 +72,16 @@ func initDB(cfg config.DatabaseConfig) (*gorm.DB, func()) {
 	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
 
-	return db, func() { db.Close() } //nolint:errcheck
+	return db, func() { sqlDB.Close() } //nolint:errcheck
 }
 
 func runDBMigration(db *gorm.DB, migrationPath string) {
-	driver, err := postgres.WithInstance(db.DB(), &postgres.Config{})
+	sqlDB, err := db.DB()
+	if sqlDB == nil || err != nil {
+		panic("fail to get the underlying database connection")
+	}
+
+	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
 	if err != nil {
 		panic(err)
 	}
@@ -225,7 +236,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 
 		env, err := envSvc.GetEnvironment(envCfg.Name)
 		if err != nil {
-			if !gorm.IsRecordNotFoundError(err) {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				log.Panicf("unable to get environment %s: %v", envCfg.Name, err)
 			}
 

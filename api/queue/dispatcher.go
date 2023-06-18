@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/caraml-dev/merlin/log"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Producer interface {

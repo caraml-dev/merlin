@@ -24,7 +24,7 @@ import (
 
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service/mocks"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 func TestListTeams(t *testing.T) {

@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin-pyspark-app/pkg/spec"
 	"github.com/caraml-dev/merlin/it/database"

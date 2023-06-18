@@ -16,7 +16,7 @@ package storage
 
 import (
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/models"
 )
@@ -65,12 +65,12 @@ func sanitizeEndpoint(endpoint *models.VersionEndpoint) {
 }
 
 func (v *versionEndpointStorage) CountEndpoints(environment *models.Environment, model *models.Model) (int, error) {
-	var count int
+	var count int64
 	err := v.query().
 		Model(&models.VersionEndpoint{}).
 		Where("version_endpoints.environment_name = ? AND version_endpoints.version_model_id = ? AND version_endpoints.status IN ('pending', 'running', 'serving')", environment.Name, model.ID).
 		Count(&count).Error
-	return count, err
+	return int(count), err
 }
 
 func (v *versionEndpointStorage) query() *gorm.DB {
