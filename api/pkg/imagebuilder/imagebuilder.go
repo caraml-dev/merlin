@@ -68,8 +68,8 @@ type imageBuilder struct {
 const (
 	containerName    = "pyfunc-image-builder"
 	kanikoSecretName = "kaniko-secret"
-	// jobDeletionTickDurationMilliseconds is the interval at which the API server checks if a job has completed
-	jobCompletedTickDurationSecond = 5
+	// jobCompletionTickDurationSecond is the interval at which the API server checks if a job has completed
+	jobCompletionTickDurationSecond = 5
 	// jobDeletionTimeoutSeconds is the maximum time to wait for a job to be deleted from a cluster
 	jobDeletionTimeoutSeconds = 10
 	// jobDeletionTickDurationMilliseconds is the interval at which the API server checks if a job has been deleted
@@ -296,7 +296,7 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 
 func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) error {
 	timeout := time.After(c.config.BuildTimeoutDuration)
-	ticker := time.NewTicker(time.Second * jobCompletedTickDurationSecond)
+	ticker := time.NewTicker(time.Second * jobCompletionTickDurationSecond)
 	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
 	podClient := c.kubeClient.CoreV1().Pods(c.config.BuildNamespace)
 
