@@ -71,7 +71,7 @@ const (
 	// jobCompletionTickDurationSecond is the interval at which the API server checks if a job has completed
 	jobCompletionTickDurationSecond = 5
 	// jobDeletionTimeoutSeconds is the maximum time to wait for a job to be deleted from a cluster
-	jobDeletionTimeoutSeconds = 10
+	jobDeletionTimeoutSeconds = 30
 	// jobDeletionTickDurationMilliseconds is the interval at which the API server checks if a job has been deleted
 	jobDeletionTickDurationMilliseconds = 100
 
