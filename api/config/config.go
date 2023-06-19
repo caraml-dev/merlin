@@ -238,13 +238,13 @@ func (d *DictEnv) Decode(value string) error {
 type AuthorizationConfig struct {
 	AuthorizationEnabled   bool                 `default:"true"`
 	AuthorizationServerURL string               `default:"http://localhost:4466"`
-	Caching                *InMemoryCacheConfig `Validate:"required_if=AuthorizationEnabled True"`
+	Caching                *InMemoryCacheConfig `validate:"required_if=AuthorizationEnabled True"`
 }
 
 type InMemoryCacheConfig struct {
 	Enabled                     bool
-	KeyExpirySeconds            int `Validate:"required_if=Enabled True" default:"600"`
-	CacheCleanUpIntervalSeconds int `Validate:"required_if=Enabled True" default:"900"`
+	KeyExpirySeconds            int `validate:"required_if=Enabled True" default:"600"`
+	CacheCleanUpIntervalSeconds int `validate:"required_if=Enabled True" default:"900"`
 }
 
 type FeatureToggleConfig struct {
