@@ -243,8 +243,8 @@ type AuthorizationConfig struct {
 
 type InMemoryCacheConfig struct {
 	Enabled                     bool
-	KeyExpirySeconds            int  `Validate:"required_if=Enabled True" default:"600"`
-	CacheCleanUpIntervalSeconds int  `Validate:"required_if=Enabled True" default:"900"`
+	KeyExpirySeconds            int `Validate:"required_if=Enabled True" default:"600"`
+	CacheCleanUpIntervalSeconds int `Validate:"required_if=Enabled True" default:"900"`
 }
 
 type FeatureToggleConfig struct {
