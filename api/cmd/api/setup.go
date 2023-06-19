@@ -210,7 +210,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 		log.Panicf("unable to initialize environment service: %v", err)
 	}
 
-	for _, envCfg := range cfg.EnvironmentConfigs {
+	for _, envCfg := range cfg.ClusterConfig.EnvironmentConfigs {
 		var isDefault *bool = nil
 		if envCfg.IsDefault {
 			isDefault = &envCfg.IsDefault
@@ -352,7 +352,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 
 func initModelEndpointService(cfg *config.Config, db *gorm.DB) service.ModelEndpointsService {
 	istioClients := make(map[string]istio.Client)
-	for _, env := range cfg.EnvironmentConfigs {
+	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
 		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 
 		istioClient, err := istio.NewClient(istio.Config{
@@ -382,7 +382,7 @@ func initBatchDeployment(cfg *config.Config, db *gorm.DB, controllers map[string
 func initBatchControllers(cfg *config.Config, db *gorm.DB, mlpAPIClient mlp.APIClient) map[string]batch.Controller {
 	controllers := make(map[string]batch.Controller)
 	predictionJobStorage := storage.NewPredictionJobStorage(db)
-	for _, env := range cfg.EnvironmentConfigs {
+	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
 		if !env.IsPredictionJobEnabled {
 			continue
 		}
@@ -432,7 +432,7 @@ func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBu
 
 func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 	controllers := make(map[string]cluster.Controller)
-	for _, env := range cfg.EnvironmentConfigs {
+	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
 		clusterName := env.Cluster
 		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 
@@ -483,7 +483,7 @@ func initLogService(cfg *config.Config) service.LogService {
 	clusterControllers := make(map[string]cluster.Controller)
 	clusterControllers[cfg.ImageBuilderConfig.ClusterName] = ctl
 
-	for _, env := range cfg.EnvironmentConfigs {
+	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
 		clusterName := env.Cluster
 		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 

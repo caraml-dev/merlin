@@ -89,12 +89,12 @@ type ResourceRequestConfig struct {
 	MemoryRequest string `yaml:"memory_request"`
 }
 
-func InitEnvironmentConfigs(path string) []EnvironmentConfig {
+func InitEnvironmentConfigs(path string) []*EnvironmentConfig {
 	cfgFile, err := os.ReadFile(path)
 	if err != nil {
 		log.Panicf("unable to read deployment config file: %s", path)
 	}
-	var configs []EnvironmentConfig
+	var configs []*EnvironmentConfig
 	if err = yaml.Unmarshal(cfgFile, &configs); err != nil {
 		log.Panicf("unable to unmarshall deployment config file:\n %s,\nDue to: %v", cfgFile, err)
 	}
@@ -106,7 +106,7 @@ func InitEnvironmentConfigs(path string) []EnvironmentConfig {
 	return configs
 }
 
-func ParseDeploymentConfig(cfg EnvironmentConfig, pyfuncGRPCOptions string) DeploymentConfig {
+func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) DeploymentConfig {
 	return DeploymentConfig{
 		DeploymentTimeout: cfg.DeploymentTimeout,
 		NamespaceTimeout:  cfg.NamespaceTimeout,

@@ -85,7 +85,7 @@ func main() {
 		log.Panicf("%w", err)
 	}
 
-	cfg.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.EnvironmentConfigPath)
+	cfg.ClusterConfig.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
 	if err := cfg.Validate(); err != nil {
 		log.Panicf("Failed validating config: %s", err)
 	}

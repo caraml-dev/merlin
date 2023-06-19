@@ -41,21 +41,20 @@ const (
 )
 
 type Config struct {
-	Environment           string `default:"dev"`
-	Port                  int    `default:"8080"`
-	LoggerDestinationURL  string
-	Sentry                sentry.Config
-	NewRelic              newrelic.Config
-	EnvironmentConfigPath string `validate:"required"`
-	NumOfQueueWorkers     int    `default:"2"`
-	SwaggerPath           string `default:"./swagger.yaml"`
+	Environment          string `default:"dev"`
+	Port                 int    `default:"8080"`
+	LoggerDestinationURL string
+	Sentry               sentry.Config
+	NewRelic             newrelic.Config
+	NumOfQueueWorkers    int    `default:"2"`
+	SwaggerPath          string `default:"./swagger.yaml"`
 
 	DeploymentLabelPrefix string `default:"gojek.com/"`
 	PyfuncGRPCOptions     string `default:"{}"`
 
 	DbConfig                  DatabaseConfig
+	ClusterConfig             ClusterConfig `validate:"required"`
 	ImageBuilderConfig        ImageBuilderConfig
-	EnvironmentConfigs        []EnvironmentConfig
 	AuthorizationConfig       AuthorizationConfig
 	MlpAPIConfig              MlpAPIConfig
 	FeatureToggleConfig       FeatureToggleConfig
@@ -183,6 +182,18 @@ func (r *ResourceRequestsLimits) Decode(value string) error {
 	}
 
 	return nil
+}
+
+// ClusterConfig contains the cluster controller information.
+// Supported features are in cluster configuration and Kubernetes client CA certificates.
+type ClusterConfig struct {
+	// InClusterConfig is a flag if the service account is provided in Kubernetes
+	// and has the relevant credentials to handle all cluster operations.
+	InClusterConfig bool
+
+	// EnvironmentConfigPath refers to a path that contains EnvironmentConfigs
+	EnvironmentConfigPath string `validate:"required_without=InClusterConfig"`
+	EnvironmentConfigs    []*EnvironmentConfig
 }
 
 type ImageBuilderConfig struct {
