@@ -15,7 +15,7 @@ import (
 
 const (
 	projectCacheExpirySeconds = 600
-	projectCacheSizeBytes     = 1024 * 1024 // 1 MB
+	projectCacheSizeBytes     = 1024 * 1024 * 10 // 10 MB
 	projectCacheKeyPrefix     = "proj:"
 
 	// mlpQueryTimeoutSeconds is the timeout that will be used on the API calls to the MLP server.
