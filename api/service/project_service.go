@@ -50,6 +50,14 @@ func NewProjectsService(mlpAPIClient mlp.APIClient) (ProjectsService, error) {
 }
 
 func (ps projectsService) List(ctx context.Context, name string) (mlp.Projects, error) {
+	if name != "" {
+		// If looking for a specific project, try fetching the project from local cache first
+		projects, err := ps.listProjects(name)
+		if err != nil && len(projects) > 0 {
+			return projects, nil
+		}
+	}
+	// Refresh cache and try filtering
 	err := ps.refreshProjects(ctx)
 	if err != nil {
 		return nil, err
