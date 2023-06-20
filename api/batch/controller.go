@@ -193,7 +193,14 @@ func (c *controller) Stop(ctx context.Context, predictionJob *models.PredictionJ
 	})
 
 	if len(sparkResources.Items) == 0 {
-		return fmt.Errorf("unable to retrieve spark application of prediction job id %s from spark client", predictionJob.ID.String())
+		// If error (spark resource doesn't exist)
+		// proceed with cleanup
+		c.cleanup(ctx, predictionJob, namespace)
+		// update jobs to terminated, to be deleted by runner
+		predictionJob.Status = models.JobTerminated
+		log.Warnf("unable to retrieve spark application of prediction job id %s from spark client", predictionJob.ID.String())
+
+		return c.store.Save(predictionJob)
 	}
 
 	for _, resource := range sparkResources.Items {
