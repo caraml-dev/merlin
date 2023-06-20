@@ -45,7 +45,9 @@ func NewStandardTransformerWithConfig(ctx context.Context, transformerConfig *sp
 	executorConfig := &transformerExecutorConfig{
 		transformerConfig: transformerConfig,
 		modelPredictor:    defaultModelPredictor,
-		feastOpts:         feast.Options{},
+		feastOpts: feast.Options{
+			FeastGRPCConnCount: 1,
+		},
 	}
 	for _, opt := range opts {
 		opt(executorConfig)

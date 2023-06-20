@@ -72,6 +72,7 @@ func (ts *transformerService) createTransformerExecutor(ctx context.Context, sim
 			StorageConfigs:     ts.cfg.ToFeastStorageConfigsForSimulation(),
 			DefaultFeastSource: ts.cfg.DefaultFeastSource,
 			BatchSize:          defaultFeastBatchSize,
+			FeastGRPCConnCount: ts.cfg.FeastGPRCConnCount,
 		}),
 		executor.WithProtocol(simulationPayload.Protocol),
 	)
