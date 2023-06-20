@@ -268,34 +268,57 @@ func (c *VersionsController) checkActivePredictionJobs(ctx context.Context, mode
 	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, jobQuery)
 	if err != nil {
 		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
-		return 500, nil, fmt.Errorf("Failed listing prediction job")
+		return nil, InternalServerError("Failed listing prediction job")
 	}
 
 	for _, item := range jobs {
 		if item.Status == models.JobPending || item.Status == models.JobRunning {
-			return 400, nil, fmt.Errorf("There are active prediction job that still using this model version")
+			return nil, BadRequest("There are active prediction job that still using this model version")
 		}
 	}
 
-	return 200, jobs, nil
+	return jobs, nil
 }
 
-func (c *VersionsController) checkActiveEndpoints(ctx context.Context, model *models.Model, version *models.Version) (int, []*models.VersionEndpoint, error) {
+func (c *VersionsController) checkActiveEndpoints(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, *Response) {
 
 	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
 	if err != nil {
 		log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
-		return 500, nil, fmt.Errorf("Failed listing model version endpoint")
+		return nil, InternalServerError("Failed listing model version endpoint")
 	}
 
 	for _, item := range endpoints {
 		if item.Status != models.EndpointTerminated && item.Status != models.EndpointFailed {
-			return 400, nil, fmt.Errorf("There are active endpoint that still using this model version")
+			return nil, BadRequest("There are active endpoint that still using this model version")
 		}
 	}
 
-	return 200, endpoints, nil
+	return endpoints, nil
 }
+
+func (c *VersionsController) deleteInactiveVersionEndpoints(endpoints []*models.VersionEndpoint, version *models.Version) *Response {
+	for _, item := range endpoints {
+		err := c.EndpointsService.DeleteEndpoint(version, item)
+		if err != nil {
+			log.Errorf("failed to undeploy endpoint job %v", err)
+			return InternalServerError(fmt.Sprintf("Failed to delete endpoint: %s", err))
+		}
+	}
+	return nil
+}
+
+func (c *VersionsController) deleteInactivePredictionJobs(ctx context.Context, jobs []*models.PredictionJob, model *models.Model, version *models.Version) *Response {
+	for _, item := range jobs {
+		_, err := c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
+		if err != nil {
+			log.Errorf("failed to stop prediction job %v", err)
+			return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
+		}
+	}
+	return nil
+}
+
 func validateLabels(labels models.KV) bool {
 	for key, element := range labels {
 		value, ok := element.(string)
