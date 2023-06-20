@@ -21,6 +21,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/caraml-dev/merlin/service"
 	"github.com/google/uuid"
 
