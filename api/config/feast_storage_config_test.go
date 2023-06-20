@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/durationpb"
 )

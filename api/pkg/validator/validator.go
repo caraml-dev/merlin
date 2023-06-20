@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-playground/locales/en_US"
 	ut "github.com/go-playground/universal-translator"
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 )
 
 var (

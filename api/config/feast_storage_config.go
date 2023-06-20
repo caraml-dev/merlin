@@ -7,7 +7,7 @@ import (
 
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 

@@ -27,7 +27,7 @@ import (
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/ory/viper"
 	"gopkg.in/yaml.v2"

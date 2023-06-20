@@ -27,7 +27,7 @@ import (
 	mlflowDelete "github.com/caraml-dev/mlp/api/pkg/client/mlflow"
 
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"github.com/prometheus/client_golang/prometheus"
