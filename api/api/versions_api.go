@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/caraml-dev/merlin/log"
+
 	"github.com/jinzhu/gorm"
 
 	"github.com/caraml-dev/merlin/models"
