@@ -86,6 +86,10 @@ func main() {
 	}
 
 	cfg.ClusterConfig.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
+	if cfg.ClusterConfig.InClusterConfig && len(cfg.ClusterConfig.EnvironmentConfigs) > 1 {
+		log.Panicf("There should only be one cluster if in cluster credentials are used")
+	}
+
 	if err := cfg.Validate(); err != nil {
 		log.Panicf("Failed validating config: %s", err)
 	}
