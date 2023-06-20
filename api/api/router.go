@@ -158,9 +158,9 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 	}
 	environmentController := EnvironmentController{&appCtx}
 	projectsController := ProjectsController{&appCtx}
-	modelsController := ModelsController{&appCtx}
 	modelEndpointsController := ModelEndpointsController{&appCtx}
 	versionsController := VersionsController{&appCtx}
+	modelsController := ModelsController{&appCtx, &versionsController}
 	endpointsController := EndpointsController{&appCtx}
 	predictionJobController := PredictionJobController{&appCtx}
 	logController := LogController{&appCtx}

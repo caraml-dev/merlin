@@ -15,7 +15,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -32,6 +31,7 @@ import (
 // ModelsController controls models API.
 type ModelsController struct {
 	*AppContext
+	*VersionsController
 }
 
 // ListModels list all models of a project.
@@ -109,10 +109,16 @@ func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, bod
 func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, body interface{}) *Response {
 	ctx := r.Context()
 
-	projectID, _ := models.ParseID(vars["project_id"])
-	modelID, _ := models.ParseID(vars["model_id"])
+	projectID, err := models.ParseID(vars["project_id"])
+	if err != nil {
+		return BadRequest("Unable to parse project_id")
+	}
+	modelID, err := models.ParseID(vars["model_id"])
+	if err != nil {
+		return BadRequest("Unable to parse model_id")
+	}
 
-	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
+	_, err = c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
 		return NotFound(err.Error())
 	}
@@ -120,7 +126,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return NotFound(fmt.Sprintf("Model id %s not found", modelID))
+			return NotFound(fmt.Sprintf("Model is not found: %s", err.Error()))
 		}
 		return InternalServerError(err.Error())
 	}
@@ -139,9 +145,9 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		if model.Type == "pyfunc_v2" {
 			// check active prediction job
 			// if there are any active prediction job using the model version, deletion of the model version are prohibited
-			httpStatus, jobs, err := c.checkActivePredictionJobs(ctx, model, version)
-			if err != nil {
-				return NewError(httpStatus, err.Error())
+			jobs, response := c.VersionsController.checkActivePredictionJobs(ctx, model, version)
+			if response != nil {
+				return response
 			}
 
 			// save all prediction jobs for deletion process later on
@@ -151,9 +157,9 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			// handle for model with type non pyfunc
 			// check active endpoints
 			// if there are any active endpoint using the model version, deletion of the model version are prohibited
-			httpStatus, endpoints, err := c.checkActiveEndpoints(ctx, model, version)
-			if err != nil {
-				return NewError(httpStatus, err.Error())
+			endpoints, response := c.VersionsController.checkActiveEndpoints(ctx, model, version)
+			if response != nil {
+				return response
 			}
 
 			// save all endpoint for deletion process later on
@@ -166,21 +172,19 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	for _, version := range versions {
 		if model.Type == "pyfunc_v2" {
 			// DELETE PREDICTION JOBS
-			for _, job := range allJobInModel {
-				_, err = c.PredictionJobService.StopPredictionJob(ctx, job.Environment, model, version, job.ID)
-				if err != nil {
-					log.Errorf("failed to stop prediction job %v", err)
-					return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
-				}
+			response := c.VersionsController.deleteInactivePredictionJobs(ctx, allJobInModel, model, version)
+			if response != nil {
+				log.Errorf("failed to stop prediction job %v", response.data)
+				//return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
+				return response
 			}
 		} else {
 			// DELETE ENDPOINTS
-			for _, endpoint := range allEndpointInModel {
-				err = c.EndpointsService.DeleteEndpoint(version, endpoint)
-				if err != nil {
-					log.Errorf("failed to undeploy endpoint job %v", err)
-					return InternalServerError(fmt.Sprintf("Failed to delete endpoint: %s", err))
-				}
+			response := c.VersionsController.deleteInactiveVersionEndpoints(allEndpointInModel, version)
+			if response != nil {
+				log.Errorf("failed to delete version endpoints %v", response.data)
+				//return InternalServerError(fmt.Sprintf("Failed deleting version endpoints: %s", err))
+				return response
 			}
 		}
 		// DELETE VERSION
@@ -190,6 +194,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
 		}
 	}
+
 	if model.Type != "pyfunc_v2" {
 		// undeploy all existing model endpoint
 		modelEndpoints, err := c.ModelEndpointsService.ListModelEndpoints(ctx, modelID)
@@ -219,42 +224,4 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	}
 
 	return Ok(model.ID)
-}
-
-func (c *ModelsController) checkActivePredictionJobs(ctx context.Context, model *models.Model, version *models.Version) (int, []*models.PredictionJob, error) {
-	jobQuery := &service.ListPredictionJobQuery{
-		ModelID:   model.ID,
-		VersionID: version.ID,
-	}
-
-	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, jobQuery)
-	if err != nil {
-		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
-		return 500, nil, fmt.Errorf("Failed listing prediction job")
-	}
-
-	for _, item := range jobs {
-		if item.Status == models.JobPending || item.Status == models.JobRunning {
-			return 400, nil, fmt.Errorf("There are active prediction job that still using this model version")
-		}
-	}
-
-	return 200, jobs, nil
-}
-
-func (c *ModelsController) checkActiveEndpoints(ctx context.Context, model *models.Model, version *models.Version) (int, []*models.VersionEndpoint, error) {
-
-	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
-	if err != nil {
-		log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
-		return 500, nil, fmt.Errorf("Failed listing model version endpoint")
-	}
-
-	for _, item := range endpoints {
-		if item.Status != models.EndpointTerminated && item.Status != models.EndpointFailed {
-			return 400, nil, fmt.Errorf("There are active endpoint that still using this model version")
-		}
-	}
-
-	return 200, endpoints, nil
 }
