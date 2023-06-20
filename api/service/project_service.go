@@ -53,7 +53,7 @@ func (ps projectsService) List(ctx context.Context, name string) (mlp.Projects, 
 	if name != "" {
 		// If looking for a specific project, try fetching the project from local cache first
 		projects, err := ps.listProjects(name)
-		if err != nil && len(projects) > 0 {
+		if err == nil && len(projects) > 0 {
 			return projects, nil
 		}
 	}
