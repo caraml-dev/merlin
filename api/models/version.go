@@ -101,7 +101,7 @@ func (v *Version) Patch(patch *VersionPatch) error {
 	return nil
 }
 
-func (v *Version) BeforeCreate(db *gorm.DB) {
+func (v *Version) BeforeCreate(db *gorm.DB) error {
 	if v.ID == 0 {
 		var maxModelVersionID int
 
@@ -114,6 +114,7 @@ func (v *Version) BeforeCreate(db *gorm.DB) {
 
 		v.ID = ID(maxModelVersionID + 1)
 	}
+	return nil
 }
 
 // GetEndpointByEnvironmentName return endpoint of this model version which is deployed in environment name

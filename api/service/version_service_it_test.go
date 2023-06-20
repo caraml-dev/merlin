@@ -30,7 +30,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/mlp"
 	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
 	"github.com/caraml-dev/merlin/models"

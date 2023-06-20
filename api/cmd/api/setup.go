@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -11,13 +10,9 @@ import (
 	"github.com/caraml-dev/mlp/api/pkg/auth"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	pg "gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
 
@@ -42,57 +37,6 @@ type deps struct {
 	modelDeployment     *work.ModelServiceDeployment
 	batchDeployment     *work.BatchDeployment
 	imageBuilderJanitor *imagebuilder.Janitor
-}
-
-func initDB(cfg config.DatabaseConfig) (*gorm.DB, func()) {
-	databaseURL := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
-		cfg.Host,
-		cfg.Port,
-		cfg.User,
-		cfg.Database,
-		cfg.Password)
-
-	db, err := gorm.Open(
-		pg.Open(databaseURL),
-		&gorm.Config{
-			Logger: logger.Default.LogMode(logger.Silent),
-		},
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	sqlDB, err := db.DB()
-	if sqlDB == nil || err != nil {
-		panic("fail to get the underlying database connection")
-	}
-
-	sqlDB.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
-	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
-	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
-	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
-
-	return db, func() { sqlDB.Close() } //nolint:errcheck
-}
-
-func runDBMigration(db *gorm.DB, migrationPath string) {
-	sqlDB, err := db.DB()
-	if sqlDB == nil || err != nil {
-		panic("fail to get the underlying database connection")
-	}
-
-	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
-	if err != nil {
-		panic(err)
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(migrationPath, "postgres", driver)
-	if err != nil {
-		panic(err)
-	}
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		panic(err)
-	}
 }
 
 func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClient {

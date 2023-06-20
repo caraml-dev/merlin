@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

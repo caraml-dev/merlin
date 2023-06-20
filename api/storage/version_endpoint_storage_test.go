@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 
-	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/deployment"
@@ -128,7 +128,6 @@ func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 		Name:              "project",
 		MLFlowTrackingURL: "http://mlflow:5000",
 	}
-	db.Create(&p)
 
 	m := models.Model{
 		ID:           1,

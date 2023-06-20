@@ -25,7 +25,7 @@ import (
 	"gorm.io/gorm"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/models"
 )
 

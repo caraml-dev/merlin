@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 
-	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 )

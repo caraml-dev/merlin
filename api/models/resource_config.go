@@ -27,7 +27,7 @@ type ResourceConfig struct {
 	CreatedUpdated
 }
 
-func (v *ResourceConfig) BeforeCreate(db *gorm.DB) {
+func (v *ResourceConfig) BeforeCreate(db *gorm.DB) error {
 	if v.Version == 0 {
 		var maxVersion int
 
@@ -40,4 +40,5 @@ func (v *ResourceConfig) BeforeCreate(db *gorm.DB) {
 
 		v.Version = ID(maxVersion + 1)
 	}
+	return nil
 }

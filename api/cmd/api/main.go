@@ -38,6 +38,7 @@ import (
 
 	"github.com/caraml-dev/merlin/api"
 	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
@@ -75,10 +76,21 @@ func main() {
 	}
 	defer newrelic.Shutdown(5 * time.Second)
 
-	db, dbDeferFunc := initDB(cfg.DbConfig)
-	defer dbDeferFunc()
-
-	runDBMigration(db, cfg.DbConfig.MigrationPath)
+	// Init db
+	db, err := database.InitDB(&cfg.DbConfig)
+	if err != nil {
+		panic(err)
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		err := sqlDB.Close()
+		if err != nil {
+			log.Infof("Error closing connection: %w", err)
+		}
+	}()
 
 	dispatcher := queue.NewDispatcher(queue.Config{
 		NumWorkers: cfg.NumOfQueueWorkers,

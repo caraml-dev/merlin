@@ -26,7 +26,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin-pyspark-app/pkg/spec"
-	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 )
@@ -48,7 +48,6 @@ func TestPredictionJobStorage_SaveAndGet(t *testing.T) {
 			Name:              "project",
 			MLFlowTrackingURL: "http://mlflow:5000",
 		}
-		db.Create(&p)
 
 		m := models.Model{
 			ID:           1,
@@ -163,7 +162,6 @@ func TestPredictionJobStorage_List(t *testing.T) {
 			Name:              "project",
 			MLFlowTrackingURL: "http://mlflow:5000",
 		}
-		db.Create(&p)
 
 		m := models.Model{
 			ID:           1,
