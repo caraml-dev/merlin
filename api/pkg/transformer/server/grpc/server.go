@@ -23,6 +23,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/copier"
 	"github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/pkg/errors"
 	"github.com/soheilhy/cmux"
 
@@ -51,6 +54,7 @@ type UPIServer struct {
 	conn                  grpcpool.ConnPool
 	instrumentationRouter *mux.Router
 	logger                *zap.Logger
+	tracer                trace.Tracer
 
 	// ContextModifier function to modify or store value in a context
 	ContextModifier func(ctx context.Context) context.Context
@@ -100,6 +104,7 @@ func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentati
 		conn:                  connPool,
 		instrumentationRouter: instrumentationRouter,
 		logger:                logger,
+		tracer:                otel.Tracer("pkg.transformer.server.grpcserver.go"),
 	}
 
 	if handler != nil {
@@ -301,6 +306,10 @@ func (us *UPIServer) postprocess(ctx context.Context, response *upiv1.PredictVal
 func (us *UPIServer) predict(ctx context.Context, payload *upiv1.PredictValuesRequest) (*upiv1.PredictValuesResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
 	defer span.Finish()
+
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		ctx = metadata.NewOutgoingContext(ctx, md)
+	}
 
 	predictStartTime := time.Now()
 	var modelResponse *upiv1.PredictValuesResponse

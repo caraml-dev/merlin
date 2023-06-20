@@ -1,19 +1,22 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"io"
 	"log"
 
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
 	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
-	jcfg "github.com/uber/jaeger-client-go/config"
-	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
+	"go.opentelemetry.io/contrib/propagators/b3"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/sdk/resource"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	_ "go.uber.org/automaxprocs"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -60,6 +63,14 @@ type AppConfig struct {
 
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
+
+	Tracing JaegerTracing
+}
+
+type JaegerTracing struct {
+	Disabled           bool    `envconfig:"JAEGER_DISABLED" default:"true"`
+	CollectorURL       string  `envconfig:"JAEGER_COLLECTOR"`
+	SamplerProbability float64 `envconfig:"JAEGER_SAMPLER_PARAM" default:"0.1"`
 }
 
 // Trick GC frequency based on this https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap-26c2462549a2/
@@ -83,13 +94,19 @@ func main() {
 
 	logger.Info("configuration loaded", zap.Any("appConfig", appConfig))
 
-	closer, err := initTracing(appConfig.Server.ModelFullName + "-transformer")
+	tracingProvider, err := initTracing(appConfig.Server.ModelFullName+"-transformer", appConfig.Tracing)
 	if err != nil {
 		logger.Error("Unable to initialize tracing", zap.Error(err))
 	}
-	if closer != nil {
-		defer closer.Close() //nolint:errcheck
-	}
+	otel.SetTracerProvider(tracingProvider)
+	propagator := b3.New(b3.WithInjectEncoding(b3.B3MultipleHeader | b3.B3SingleHeader))
+	otel.SetTextMapPropagator(propagator)
+
+	defer func() {
+		if err := tracingProvider.Shutdown(context.Background()); err != nil {
+			logger.Error("Error shutting down tracer provider", zap.Error(err))
+		}
+	}()
 
 	transformerConfig := &spec.StandardTransformerConfig{}
 	if err := protojson.Unmarshal([]byte(appConfig.StandardTransformerConfigJSON), transformerConfig); err != nil {
@@ -253,26 +270,22 @@ func runGrpcServer(opts *serverConf.Options, handler *pipeline.Handler, instrume
 	s.Run()
 }
 
-func initTracing(serviceName string) (io.Closer, error) {
-	// Set tracing configuration defaults.
-	cfg := &jcfg.Configuration{
-		ServiceName: serviceName,
+func initTracing(serviceName string, tracingCfg JaegerTracing) (*tracesdk.TracerProvider, error) {
+	if tracingCfg.Disabled {
+		return tracesdk.NewTracerProvider(tracesdk.WithSampler(tracesdk.NeverSample())), nil
 	}
-
-	// Available options can be seen here:
-	// https://github.com/jaegertracing/jaeger-client-go#environment-variables
-	cfg, err := cfg.FromEnv()
+	// Create the Jaeger exporter
+	exporter, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(tracingCfg.CollectorURL)))
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to get tracing config from environment")
+		return nil, err
 	}
-
-	tracer, closer, err := cfg.NewTracer(
-		jcfg.Metrics(jprom.New()),
+	tp := tracesdk.NewTracerProvider(
+		tracesdk.WithBatcher(exporter),
+		tracesdk.WithSampler(tracesdk.TraceIDRatioBased(tracingCfg.SamplerProbability)),
+		tracesdk.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(serviceName),
+		)),
 	)
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to initialize tracer")
-	}
-
-	opentracing.SetGlobalTracer(tracer)
-	return closer, nil
+	return tp, nil
 }
