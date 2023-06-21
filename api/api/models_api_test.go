@@ -909,7 +909,7 @@ func TestDeleteModel(t *testing.T) {
 			},
 		},
 		{
-			desc: "Should return 500 if undeploy endpoint failed",
+			desc: "Should return 500 if delete model endpoint failed",
 			vars: map[string]string{
 				"model_id":   "1",
 				"project_id": "1",
@@ -1000,12 +1000,12 @@ func TestDeleteModel(t *testing.T) {
 						},
 					},
 				}, nil)
-				svc.On("UndeployEndpoint", mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("failed to undeploy model endpoint"))
+				svc.On("DeleteModelEndpoint", mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("failed to delete model endpoint"))
 				return svc
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Unable to delete model endpoint: failed to undeploy model endpoint"},
+				data: Error{Message: "Unable to delete model endpoint: failed to delete model endpoint"},
 			},
 		},
 		{
@@ -1204,6 +1204,7 @@ func TestDeleteModel(t *testing.T) {
 			},
 			modelsService: func() *mocks.ModelsService {
 				svc := &mocks.ModelsService{}
+				svc.On("Delete", mock.Anything).Return(errors.New("failed to delete model"))
 				svc.On("FindByID", mock.Anything, models.ID(1)).Return(&models.Model{
 					ID:        models.ID(1),
 					Name:      "model-1",
@@ -1216,7 +1217,6 @@ func TestDeleteModel(t *testing.T) {
 					MlflowURL:    "http://mlflow.com",
 					Endpoints:    nil,
 				}, nil)
-				svc.On("Delete", mock.Anything).Return(errors.New("failed to delete model"))
 				return svc
 			},
 			versionService: func() *mocks.VersionsService {
@@ -1270,8 +1270,8 @@ func TestDeleteModel(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			versionSvc := tC.versionService()
-			modelsSvc := tC.modelsService()
+			versionSvc := tC.versionService
+			modelsSvc := tC.modelsService
 			mlflowDeleteSvc := tC.mlflowDeleteService
 			predictionJobSvc := tC.predictionJobService
 			endpointSvc := tC.endpointService
@@ -1280,13 +1280,13 @@ func TestDeleteModel(t *testing.T) {
 
 			ctl := &ModelsController{
 				AppContext: &AppContext{
-					VersionsService: versionSvc,
+					VersionsService: versionSvc(),
 					MonitoringConfig: config.MonitoringConfig{
 						MonitoringEnabled: true,
 						MonitoringBaseURL: "http://grafana",
 					},
 					AlertEnabled:          true,
-					ModelsService:         modelsSvc,
+					ModelsService:         modelsSvc(),
 					MlflowDeleteService:   mlflowDeleteSvc(),
 					PredictionJobService:  predictionJobSvc(),
 					EndpointsService:      endpointSvc(),
@@ -1295,13 +1295,12 @@ func TestDeleteModel(t *testing.T) {
 				},
 				VersionsController: &VersionsController{
 					AppContext: &AppContext{
-						VersionsService: versionSvc,
+						VersionsService: versionSvc(),
 						MonitoringConfig: config.MonitoringConfig{
 							MonitoringEnabled: true,
 							MonitoringBaseURL: "http://grafana",
 						},
 						AlertEnabled:         true,
-						ModelsService:        modelsSvc,
 						MlflowDeleteService:  mlflowDeleteSvc(),
 						PredictionJobService: predictionJobSvc(),
 						EndpointsService:     endpointSvc(),

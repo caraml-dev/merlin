@@ -203,7 +203,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		}
 
 		for _, modelEndpoint := range modelEndpoints {
-			_, err := c.ModelEndpointsService.UndeployEndpoint(ctx, model, modelEndpoint)
+			err := c.ModelEndpointsService.DeleteModelEndpoint(modelEndpoint)
 			if err != nil {
 				return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
 			}
