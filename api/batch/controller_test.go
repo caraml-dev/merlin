@@ -557,10 +557,8 @@ func TestStop(t *testing.T) {
 			namespace: defaultNamespace,
 			sparkResourceListResult: sparkResourceListResult{
 				resource: &v1beta2.SparkApplicationList{},
-				error:    errRaised,
+				error:    nil,
 			},
-			wantError:    true,
-			wantErrorMsg: fmt.Sprintf("unable to retrieve spark application of prediction job id %s from spark client", models.ID(1).String()),
 		},
 	}
 	for _, test := range tests {

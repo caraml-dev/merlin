@@ -188,19 +188,21 @@ func (c *controller) Run(stopCh <-chan struct{}) {
 }
 
 func (c *controller) Stop(ctx context.Context, predictionJob *models.PredictionJob, namespace string) error {
-	sparkResources, _ := c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).List(ctx, metav1.ListOptions{
+	sparkResources, err := c.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", labelPredictionJobID, predictionJob.ID.String()),
 	})
 
+	if err != nil {
+		// error while fetching the spark application, return error
+		return fmt.Errorf("unable to retrieve spark application of prediction job id %s from spark client", predictionJob.ID.String())
+	}
 	if len(sparkResources.Items) == 0 {
-		// If error (spark resource doesn't exist)
-		// proceed with cleanup
+		// Spark Apllication Not found, we do not consider this as an error because its just no further
+		// action required on this part.
 		c.cleanup(ctx, predictionJob, namespace)
-		// update jobs to terminated, to be deleted by runner
-		predictionJob.Status = models.JobTerminated
-		log.Warnf("unable to retrieve spark application of prediction job id %s from spark client", predictionJob.ID.String())
+		log.Warnf("no spark application of prediction job id %s from spark client", predictionJob.ID.String())
 
-		return c.store.Save(predictionJob)
+		return c.store.Delete(predictionJob)
 	}
 
 	for _, resource := range sparkResources.Items {
@@ -211,9 +213,8 @@ func (c *controller) Stop(ctx context.Context, predictionJob *models.PredictionJ
 	}
 
 	c.cleanup(ctx, predictionJob, namespace)
-	predictionJob.Status = models.JobTerminated
 
-	return c.store.Save(predictionJob)
+	return c.store.Delete(predictionJob)
 }
 
 func (c *controller) cleanup(ctx context.Context, job *models.PredictionJob, namespace string) {
@@ -292,9 +293,6 @@ func (c *controller) syncStatus(ctx context.Context, key string) error {
 		c.cleanup(ctx, predictionJob, sparkApp.Namespace)
 		modelName := getModelName(predictionJob.Name)
 		BatchCounter.WithLabelValues(sparkApp.Namespace, modelName, string(predictionJob.Status)).Inc()
-		if predictionJob.Status == models.JobTerminated {
-			return c.store.Delete(predictionJob)
-		}
 	}
 
 	return c.store.Save(predictionJob)

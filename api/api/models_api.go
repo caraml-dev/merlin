@@ -210,11 +210,13 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		}
 	}
 
-	// Delete mlflow experiment and artifact
-	s := strconv.FormatUint(uint64(model.ExperimentID), 10)
-	err = c.MlflowDeleteService.DeleteExperiment(ctx, s, true)
-	if err != nil {
-		return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
+	// Delete mlflow experiment and artifact if there are model version
+	if len(versions) != 0 {
+		s := strconv.FormatUint(uint64(model.ExperimentID), 10)
+		err = c.MlflowDeleteService.DeleteExperiment(ctx, s, true)
+		if err != nil {
+			return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
+		}
 	}
 
 	// Delete model data from DB
