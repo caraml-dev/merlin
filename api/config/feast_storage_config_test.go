@@ -14,6 +14,7 @@ import (
 
 func TestFeastRedisConfig(t *testing.T) {
 	baseFilePath := "./testdata/config-1.yaml"
+	zeroSecDuration := time.Second * 0
 	tenSecDuration := time.Second * 10
 	testCases := []struct {
 		desc                string
@@ -31,9 +32,16 @@ func TestFeastRedisConfig(t *testing.T) {
 				RedisAddresses: []string{
 					"10.1.1.10", "10.1.1.11",
 				},
-				PoolSize:    4,
-				MaxRetries:  1,
-				DialTimeout: &tenSecDuration,
+				PoolSize:           4,
+				MaxRetries:         1,
+				MinRetryBackoff:    &zeroSecDuration,
+				DialTimeout:        &tenSecDuration,
+				ReadTimeout:        &zeroSecDuration,
+				WriteTimeout:       &zeroSecDuration,
+				MaxConnAge:         &zeroSecDuration,
+				PoolTimeout:        &zeroSecDuration,
+				IdleTimeout:        &zeroSecDuration,
+				IdleCheckFrequency: &zeroSecDuration,
 			},
 		},
 		{
@@ -45,10 +53,17 @@ func TestFeastRedisConfig(t *testing.T) {
 				RedisAddresses: []string{
 					"10.1.1.10", "10.1.1.11",
 				},
-				PoolSize:    4,
-				MaxRetries:  1,
-				DialTimeout: &tenSecDuration,
-				MinIdleConn: 2,
+				PoolSize:           4,
+				MaxRetries:         1,
+				MinIdleConn:        2,
+				MinRetryBackoff:    &zeroSecDuration,
+				DialTimeout:        &tenSecDuration,
+				ReadTimeout:        &zeroSecDuration,
+				WriteTimeout:       &zeroSecDuration,
+				MaxConnAge:         &zeroSecDuration,
+				PoolTimeout:        &zeroSecDuration,
+				IdleTimeout:        &zeroSecDuration,
+				IdleCheckFrequency: &zeroSecDuration,
 			},
 		},
 		{
@@ -64,7 +79,7 @@ func TestFeastRedisConfig(t *testing.T) {
 		{
 			desc:             "Invalid: redis_addresses is not set",
 			redisCfgFilePath: "./testdata/invalid-redis-config-no-redis-addresses.yaml",
-			err:              fmt.Errorf("Key: 'FeastRedisConfig.RedisAddresses' Error:Field validation for 'RedisAddresses' failed on the 'required' tag"),
+			err:              fmt.Errorf("Key: 'FeastRedisConfig.RedisAddresses' Error:Field validation for 'RedisAddresses' failed on the 'gt' tag"),
 		},
 	}
 	for _, tC := range testCases {
@@ -74,7 +89,8 @@ func TestFeastRedisConfig(t *testing.T) {
 			filePaths := []string{baseFilePath}
 			filePaths = append(filePaths, tC.redisCfgFilePath)
 
-			cfg, err := Load(filePaths...)
+			var emptyCfg Config
+			cfg, err := Load(&emptyCfg, filePaths...)
 			assert.Nil(t, err)
 
 			v := validator.New()
@@ -142,7 +158,8 @@ func TestFeastBigtableConfig(t *testing.T) {
 			filePaths := []string{baseFilePath}
 			filePaths = append(filePaths, tC.bigtableCfgFilePath)
 
-			cfg, err := Load(filePaths...)
+			var emptyCfg Config
+			cfg, err := Load(&emptyCfg, filePaths...)
 			assert.Nil(t, err)
 
 			v := validator.New()
@@ -196,14 +213,14 @@ func TestRedisConfig_ToFeastStorage(t *testing.T) {
 						Option: &spec.RedisOption{
 							MaxRetries:         0,
 							PoolSize:           5,
-							MinRetryBackoff:    durationpb.New(time.Duration(timeDuration)),
-							DialTimeout:        durationpb.New(time.Duration(timeDuration)),
-							ReadTimeout:        durationpb.New(time.Duration(timeDuration)),
-							WriteTimeout:       durationpb.New(time.Duration(timeDuration)),
-							MaxConnAge:         durationpb.New(time.Duration(timeDuration)),
-							PoolTimeout:        durationpb.New(time.Duration(timeDuration)),
-							IdleTimeout:        durationpb.New(time.Duration(timeDuration)),
-							IdleCheckFrequency: durationpb.New(time.Duration(timeDuration)),
+							MinRetryBackoff:    durationpb.New(timeDuration),
+							DialTimeout:        durationpb.New(timeDuration),
+							ReadTimeout:        durationpb.New(timeDuration),
+							WriteTimeout:       durationpb.New(timeDuration),
+							MaxConnAge:         durationpb.New(timeDuration),
+							PoolTimeout:        durationpb.New(timeDuration),
+							IdleTimeout:        durationpb.New(timeDuration),
+							IdleCheckFrequency: durationpb.New(timeDuration),
 						},
 					},
 				},
@@ -237,14 +254,14 @@ func TestRedisConfig_ToFeastStorage(t *testing.T) {
 						Option: &spec.RedisOption{
 							MaxRetries:         0,
 							PoolSize:           5,
-							MinRetryBackoff:    durationpb.New(time.Duration(timeDuration)),
-							DialTimeout:        durationpb.New(time.Duration(timeDuration)),
-							ReadTimeout:        durationpb.New(time.Duration(timeDuration)),
-							WriteTimeout:       durationpb.New(time.Duration(timeDuration)),
-							MaxConnAge:         durationpb.New(time.Duration(timeDuration)),
-							PoolTimeout:        durationpb.New(time.Duration(timeDuration)),
-							IdleTimeout:        durationpb.New(time.Duration(timeDuration)),
-							IdleCheckFrequency: durationpb.New(time.Duration(timeDuration)),
+							MinRetryBackoff:    durationpb.New(timeDuration),
+							DialTimeout:        durationpb.New(timeDuration),
+							ReadTimeout:        durationpb.New(timeDuration),
+							WriteTimeout:       durationpb.New(timeDuration),
+							MaxConnAge:         durationpb.New(timeDuration),
+							PoolTimeout:        durationpb.New(timeDuration),
+							IdleTimeout:        durationpb.New(timeDuration),
+							IdleCheckFrequency: durationpb.New(timeDuration),
 						},
 					},
 				},
@@ -365,10 +382,10 @@ func TestBigtableConfig_ToFeastConfig(t *testing.T) {
 func setRequiredEnvironmentVariables() {
 	os.Setenv("STANDARDTRANSFORMERCONFIG_IMAGENAME", "image:1")
 	os.Setenv("DEFAULT_FEAST_SERVING_URL", "localhost")
-	os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTSERVINGURLS", `[]`)
+	os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTSERVINGURLS", "")
 	os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTCOREURL", "localhost")
 	os.Setenv("STANDARDTRANSFORMERCONFIG_FEASTCOREAUTHAUDIENCE", "true")
-	os.Setenv("STANDARDTRANSFORMERCONFIG_DEFAULTFEASTSOURCE", "BIGTABLE")
+	os.Setenv("STANDARDTRANSFORMERCONFIG_DEFAULTFEASTSOURCE", "2")
 	os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTBIGTABLEURL", "online-serving-bt.dev")
 	os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTREDISURL", "online-serving-redis.dev")
 	os.Setenv("STANDARDTRANSFORMERCONFIG_KAFKA_BROKERS", "kafka-brokers:9999")

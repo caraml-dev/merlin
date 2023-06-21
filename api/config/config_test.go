@@ -82,9 +82,16 @@ func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing
 							FeastServingUrl: "online-redis-serving.dev",
 							RedisAddress:    []string{"10.1.1.10", "10.1.1.11"},
 							Option: &spec.RedisOption{
-								PoolSize:    4,
-								MaxRetries:  1,
-								DialTimeout: durationpb.New(time.Second * 10),
+								PoolSize:           4,
+								MaxRetries:         1,
+								MinRetryBackoff:    durationpb.New(time.Second * 0),
+								DialTimeout:        durationpb.New(time.Second * 10),
+								ReadTimeout:        durationpb.New(time.Second * 0),
+								WriteTimeout:       durationpb.New(time.Second * 0),
+								MaxConnAge:         durationpb.New(time.Second * 0),
+								PoolTimeout:        durationpb.New(time.Second * 0),
+								IdleTimeout:        durationpb.New(time.Second * 0),
+								IdleCheckFrequency: durationpb.New(time.Second * 0),
 							},
 						},
 					},
@@ -122,9 +129,16 @@ func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing
 							FeastServingUrl: "online-redis-serving.dev",
 							RedisAddress:    []string{"10.1.1.10", "10.1.1.11"},
 							Option: &spec.RedisOption{
-								PoolSize:    4,
-								MaxRetries:  1,
-								DialTimeout: durationpb.New(time.Second * 10),
+								PoolSize:           4,
+								MaxRetries:         1,
+								MinRetryBackoff:    durationpb.New(time.Second * 0),
+								DialTimeout:        durationpb.New(time.Second * 10),
+								ReadTimeout:        durationpb.New(time.Second * 0),
+								WriteTimeout:       durationpb.New(time.Second * 0),
+								MaxConnAge:         durationpb.New(time.Second * 0),
+								PoolTimeout:        durationpb.New(time.Second * 0),
+								IdleTimeout:        durationpb.New(time.Second * 0),
+								IdleCheckFrequency: durationpb.New(time.Second * 0),
 							},
 						},
 					},
@@ -180,7 +194,8 @@ func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing
 				os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTREDISURL", *tC.simulationRedisURL)
 			}
 			os.Setenv("STANDARDTRANSFORMERCONFIG_BIGTABLECREDENTIAL", tC.bigtableCredential)
-			cfg, err := Load(filePaths...)
+			var emptyCfg Config
+			cfg, err := Load(&emptyCfg, filePaths...)
 			require.NoError(t, err)
 			got := cfg.StandardTransformerConfig.ToFeastStorageConfigsForSimulation()
 			assert.Equal(t, tC.feastStorageCfg, got)
@@ -214,9 +229,16 @@ func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
 							FeastServingUrl: "online-storage.merlin.dev",
 							RedisAddress:    []string{"10.1.1.10", "10.1.1.11"},
 							Option: &spec.RedisOption{
-								PoolSize:    4,
-								MaxRetries:  1,
-								DialTimeout: durationpb.New(time.Second * 10),
+								PoolSize:           4,
+								MaxRetries:         1,
+								MinRetryBackoff:    durationpb.New(time.Second * 0),
+								DialTimeout:        durationpb.New(time.Second * 10),
+								ReadTimeout:        durationpb.New(time.Second * 0),
+								WriteTimeout:       durationpb.New(time.Second * 0),
+								MaxConnAge:         durationpb.New(time.Second * 0),
+								PoolTimeout:        durationpb.New(time.Second * 0),
+								IdleTimeout:        durationpb.New(time.Second * 0),
+								IdleCheckFrequency: durationpb.New(time.Second * 0),
 							},
 						},
 					},
@@ -252,9 +274,16 @@ func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
 							FeastServingUrl: "online-storage.merlin.dev",
 							RedisAddress:    []string{"10.1.1.10", "10.1.1.11"},
 							Option: &spec.RedisOption{
-								PoolSize:    4,
-								MaxRetries:  1,
-								DialTimeout: durationpb.New(time.Second * 10),
+								PoolSize:           4,
+								MaxRetries:         1,
+								MinRetryBackoff:    durationpb.New(time.Second * 0),
+								DialTimeout:        durationpb.New(time.Second * 10),
+								ReadTimeout:        durationpb.New(time.Second * 0),
+								WriteTimeout:       durationpb.New(time.Second * 0),
+								MaxConnAge:         durationpb.New(time.Second * 0),
+								PoolTimeout:        durationpb.New(time.Second * 0),
+								IdleTimeout:        durationpb.New(time.Second * 0),
+								IdleCheckFrequency: durationpb.New(time.Second * 0),
 							},
 						},
 					},
@@ -302,7 +331,8 @@ func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
 			os.Setenv("STANDARDTRANSFORMERCONFIG_BIGTABLECREDENTIAL", tC.bigtableCredential)
 			os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTBIGTABLEURL", simulationBigtableURL)
 			os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTREDISURL", simulationRedisURL)
-			cfg, err := Load(filePaths...)
+			var emptyCfg Config
+			cfg, err := Load(&emptyCfg, filePaths...)
 			require.NoError(t, err)
 			got := cfg.StandardTransformerConfig.ToFeastStorageConfigs()
 			assert.Equal(t, tC.feastStorageCfg, got)

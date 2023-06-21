@@ -217,9 +217,9 @@ type ImageBuilderConfig struct {
 	Retention     time.Duration `validate:"required" default:"48h"`
 	Tolerations   Tolerations
 	NodeSelectors DictEnv
-	MaximumRetry  int32                `validate:"required" default:"3"`
-	K8sConfig     mlpcluster.K8sConfig `validate:"required"`
-	SafeToEvict   bool                 `validate:"required" default:"false"`
+	MaximumRetry  int32                 `validate:"required" default:"3"`
+	K8sConfig     *mlpcluster.K8sConfig `validate:"required" default:"-"`
+	SafeToEvict   bool                  `validate:"required" default:"false"`
 }
 
 type Tolerations []v1.Toleration
@@ -325,8 +325,8 @@ type StandardTransformerConfig struct {
 	ModelClientKeepAlive  *ModelClientKeepAliveConfig  `validate:"required"`
 	ModelServerConnCount  int                          `validate:"required" default:"10"`
 	// Base64 Service Account
-	BigtableCredential string                `validate:"required" default:""`
-	DefaultFeastSource spec.ServingSource    `validate:"required" default:"BIGTABLE"`
+	BigtableCredential string                `validate:"required"`
+	DefaultFeastSource spec.ServingSource    `validate:"required" default:"2"`
 	Jaeger             JaegerConfig          `validate:"required"`
 	SimulationFeast    SimulationFeastConfig `validate:"required"`
 	Kafka              KafkaConfig           `validate:"required"`
@@ -454,19 +454,21 @@ func (cfg *Config) Validate() error {
 //
 // These config files will override the default config values (refer to setDefaultValues function)
 // and can be overridden by the values from environment variables. Nested keys in the config
-// can be set from environment variable name separed by "_". For instance the config value for
+// can be set from environment variable name separated by "_". For instance the config value for
 // "DbConfig.Port" can be overridden by environment variable name "DBCONFIG_PORT". Note that
 // all environment variable names must be upper case.
 //
 // If no config file is provided, only the default config values and config values from environment
-// varibales will be loaded.
+// variables will be loaded.
 //
 // Refer to example.yaml for an example of config file.
-func Load(filepaths ...string) (*Config, error) {
-	v := viper.NewWithOptions(viper.KeyDelimiter("::"))
+func Load(spec interface{}, filepaths ...string) (*Config, error) {
+	v := viper.New()
 
-	// Load default config values
-	setDefaultValues(v)
+	err := reflectViperConfig("", spec, v)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read default config via reflection: %s", err)
+	}
 
 	// Load config values from the provided config files
 	for _, f := range filepaths {
@@ -480,17 +482,15 @@ func Load(filepaths ...string) (*Config, error) {
 	// Load config values from environment variables.
 	// Nested keys in the config is represented by variable name separated by '_'.
 	// For example, DbConfig.Host can be set from environment variable DBCONFIG_HOST.
-	v.SetEnvKeyReplacer(strings.NewReplacer("::", "_"))
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
-
-	config := &Config{}
 
 	// Unmarshal config values into the config object.
 	// Add StringToQuantityHookFunc() to the default DecodeHook in order to parse quantity string
 	// into quantity object. Refs:
 	// https://github.com/spf13/viper/blob/493643fd5e4b44796124c05d59ee04ba5f809e19/viper.go#L1003-L1005
 	// https://github.com/mitchellh/mapstructure/blob/9e1e4717f8567d7ead72d070d064ad17d444a67e/decode_hooks_test.go#L128
-	err := v.Unmarshal(config, func(c *mapstructure.DecoderConfig) {
+	err = v.Unmarshal(spec, func(c *mapstructure.DecoderConfig) {
 		c.DecodeHook = mapstructure.ComposeDecodeHookFunc(
 			mapstructure.StringToTimeDurationHookFunc(),
 			mapstructure.StringToSliceHookFunc(","),
@@ -500,28 +500,92 @@ func Load(filepaths ...string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config values: %w", err)
 	}
-	config, err = loadImageBuilderConfig(config, v.AllSettings())
+
+	config, ok := spec.(*Config)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse config values into Config object")
+	}
+	config.ImageBuilderConfig.K8sConfig, err = loadImageBuilderConfig(v.AllSettings())
 	if err != nil {
-		return nil, fmt.Errorf("Failed to load imagebuilderconfig.k8sconfig, err %w", err)
+		return nil, fmt.Errorf("failed to load imagebuilderconfig.k8sconfig, err %w", err)
 	}
 
 	return config, nil
 }
 
-func loadImageBuilderConfig(config *Config, v map[string]interface{}) (*Config, error) {
+func reflectViperConfig(prefix string, spec interface{}, v *viper.Viper) error {
+	s := reflect.ValueOf(spec)
+	s = s.Elem()
+	typeOfSpec := s.Type()
+
+	for i := 0; i < s.NumField(); i++ {
+		f := s.Field(i)
+		ftype := typeOfSpec.Field(i)
+
+		viperKey := ftype.Name
+		// Nested struct tags
+		if prefix != "" {
+			viperKey = fmt.Sprintf("%s.%s", prefix, ftype.Name)
+		}
+		value := ftype.Tag.Get("default")
+		if value == "-" {
+			continue
+		}
+		v.SetDefault(viperKey, value)
+		// Create dynamic map using reflection
+		if ftype.Type.Kind() == reflect.Map {
+			mapValue := reflect.MakeMapWithSize(ftype.Type, 0)
+			v.SetDefault(viperKey, mapValue)
+		}
+
+		for f.Kind() == reflect.Ptr {
+			if f.IsNil() {
+				if f.Type().Elem().Kind() != reflect.Struct {
+					// nil pointer to a non-struct: leave it alone
+					break
+				}
+				// nil pointer to struct: create a zero instance
+				f.Set(reflect.New(f.Type().Elem()))
+			}
+			f = f.Elem()
+		}
+
+		if f.Kind() == reflect.Struct {
+			// Capture information about the config parent prefix
+			parentPrefix := prefix
+			if !ftype.Anonymous {
+				parentPrefix = viperKey
+			}
+
+			// Use recursion to resolve nested config
+			nestedPtr := f.Addr().Interface()
+			err := reflectViperConfig(parentPrefix, nestedPtr, v)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+	}
+
+	return nil
+}
+
+func loadImageBuilderConfig(v map[string]interface{}) (*mlpcluster.K8sConfig, error) {
 	// NOTE: This section is added to parse any fields in ImageBuilderConfig.K8sConfig that does not
 	// have yaml tags.
 	// For example `certificate-authority-data` is not unmarshalled
 	// by vipers unmarshal method.
+	fmt.Printf("%+v\n", v)
 
 	clusterConfig, ok := v["imagebuilderconfig"]
+	fmt.Printf("%+v\n", clusterConfig)
 	if !ok {
-		return config, nil
+		return nil, nil
 	}
 	contents := clusterConfig.(map[string]interface{})
 	imageBuilderK8sCfg, ok := contents["k8sconfig"]
 	if !ok {
-		return config, nil
+		return nil, nil
 	}
 	// convert back to byte string
 	var byteForm []byte
@@ -533,82 +597,8 @@ func loadImageBuilderConfig(config *Config, v map[string]interface{}) (*Config, 
 	if err := yaml.Unmarshal(byteForm, &k8sConfig); err != nil {
 		return nil, err
 	}
-	config.ImageBuilderConfig.K8sConfig = k8sConfig
-	return config, nil
-}
-
-// setDefaultValues for all keys in Viper config. We need to set values for all keys so that
-// we can always use environment variables to override the config keys. In Viper v1, if the
-// keys do not have default values, and the key does not appear in the config file, it cannot
-// be overridden by environment variables, unless each key is called with BindEnv.
-// https://github.com/spf13/viper/issues/188
-// https://github.com/spf13/viper/issues/761
-func setDefaultValues(v *viper.Viper) {
-	v.SetDefault("Environment", "dev")
-	v.SetDefault("Port", "8080")
-	v.SetDefault("NumOfQueueWorkers", "2")
-	v.SetDefault("SwaggerPath", "./swagger.yaml")
-
-	v.SetDefault("DeploymentLabelPrefix", "gojek.com/")
-	v.SetDefault("PyfuncGRPCOptions", "{}")
-
-	v.SetDefault("DatabaseConfig::Port", "false")
-	v.SetDefault("AuthConfig::URL", "")
-
-	//v.SetDefault("DbConfig::Host", "localhost")
-	v.SetDefault("DbConfig::Port", "5432")
-	//v.SetDefault("DbConfig::User", "")
-	//v.SetDefault("DbConfig::Password", "")
-	v.SetDefault("DbConfig::Database", "mlp")
-	v.SetDefault("DbConfig::MigrationPath", "file://db-migrations")
-	v.SetDefault("DbConfig::ConnMaxIdleTime", "0s")
-	v.SetDefault("DbConfig::ConnMaxLifetime", "0s")
-	v.SetDefault("DbConfig::MaxIdleConns", "0")
-	v.SetDefault("DbConfig::MaxOpenConns", "0")
-
-	v.SetDefault("ImageBuilderConfig::DockerfilePath", "./Dockerfile")
-	v.SetDefault("ImageBuilderConfig::PredictionJobDockerfilePath", "./Dockerfile")
-	v.SetDefault("ImageBuilderConfig::BuildNamespace", "mlp")
-	v.SetDefault("ImageBuilderConfig::BuildTimeout", "10m")
-	v.SetDefault("ImageBuilderConfig::KanikoImage", "gcr.io/kaniko-project/executor:v1.6.0")
-	v.SetDefault("ImageBuilderConfig::Retention", "48h")
-	v.SetDefault("ImageBuilderConfig::MaximumRetry", "3")
-	v.SetDefault("ImageBuilderConfig::SafeToEvict", "false")
-
-	v.SetDefault("AuthorizationConfig::AuthorizationEnabled", "true")
-	v.SetDefault("AuthorizationConfig::AuthorizationServerURL", "http://localhost:4466")
-
-	v.SetDefault("FeatureToggleConfig::MonitoringConfig::MonitoringEnabled", "false")
-	v.SetDefault("FeatureToggleConfig::AlertConfig::AlertEnabled", "false")
-	v.SetDefault("FeatureToggleConfig::AlertConfig::GitlabConfig::DashboardBranch", "master")
-	v.SetDefault("FeatureToggleConfig::AlertConfig::GitlabConfig::AlertBranch", "master")
-
-	v.SetDefault("ReactAppConfig::MaxAllowedReplica", "20")
-
-	v.SetDefault("UI::StaticPath", "ui/build")
-	v.SetDefault("UI::IndexPath", "index.html")
-
-	v.SetDefault("StandardTransformerConfig::EnableAuth", "false")
-	v.SetDefault("StandardTransformerConfig::FeastBigtableConfig::IsUsingDirectStorage", "false")
-	v.SetDefault("StandardTransformerConfig::FeastServingKeepAlive::Enabled", "false")
-	v.SetDefault("StandardTransformerConfig::FeastServingKeepAlive::Time", "60s")
-	v.SetDefault("StandardTransformerConfig::FeastServingKeepAlive::Timeout", "1s")
-	v.SetDefault("StandardTransformerConfig::ModelClientKeepAlive::Timeout", "false")
-	v.SetDefault("StandardTransformerConfig::ModelClientKeepAlive::Timeout", "60s")
-	v.SetDefault("StandardTransformerConfig::ModelClientKeepAlive::Timeout", "5s")
-	v.SetDefault("StandardTransformerConfig::BigtableCredential", "")
-	v.SetDefault("StandardTransformerConfig::Jaeger::SamplerType", "probabilistic")
-	v.SetDefault("StandardTransformerConfig::Jaeger::SamplerParam", "0.01")
-	v.SetDefault("StandardTransformerConfig::Jaeger::Disabled", "true")
-	v.SetDefault("StandardTransformerConfig::SimulationFeast::FeastRedisURL", "")
-	v.SetDefault("StandardTransformerConfig::SimulationFeast::FeastBigtableURL", "")
-	v.SetDefault("StandardTransformerConfig::Kafka::CompressionType", "none")
-	v.SetDefault("StandardTransformerConfig::Kafka::MaxMessageSizeBytes", "1048588")
-	v.SetDefault("StandardTransformerConfig::Kafka::ConnectTimeoutMS", "1000")
-	v.SetDefault("StandardTransformerConfig::Kafka::SerializationFmt", "protobuf")
-
-	v.SetDefault("Sentry::Enabled", "false")
-	v.SetDefault("Sentry::DSN", "")
+	//config.ImageBuilderConfig.K8sConfig = &k8sConfig
+	return &k8sConfig, nil
 }
 
 // Quantity is an alias for resource.Quantity

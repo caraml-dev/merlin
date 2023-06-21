@@ -4,5 +4,3 @@ DbConfig:
   Database: merlin
   User: merlin
   Password: WmU3blo4OTFzS3J1
-
-EnvironmentConfigPath: /opt/config/environment.yaml

@@ -26,22 +26,22 @@ type FeastRedisConfig struct {
 	// Max retries if redis command returning error
 	MaxRetries int32 `json:"max_retries"`
 	// Backoff duration before attempt retry
-	MinRetryBackoff *time.Duration `json:"min_retry_backoff"`
+	MinRetryBackoff *time.Duration `json:"min_retry_backoff" default:"0s"`
 	// Maximum duration before timeout to establishing new redis connection
-	DialTimeout *time.Duration `json:"dial_timeout"`
+	DialTimeout *time.Duration `json:"dial_timeout" default:"0"`
 	// Maximum duration before timeout to read from redis
-	ReadTimeout *time.Duration `json:"read_timeout"`
+	ReadTimeout *time.Duration `json:"read_timeout" default:"0"`
 	// Maximum duration before timeout to write to redis
-	WriteTimeout *time.Duration `json:"write_timeout"`
+	WriteTimeout *time.Duration `json:"write_timeout" default:"0"`
 	// Maximum age of a connection before mark it as stale and destroy the connection
-	MaxConnAge *time.Duration `json:"max_conn_age"`
+	MaxConnAge *time.Duration `json:"max_conn_age" default:"0"`
 	// Amount of time client waits for connection if all connections
 	// are busy before returning an error.
-	PoolTimeout *time.Duration `json:"pool_timeout"`
+	PoolTimeout *time.Duration `json:"pool_timeout" default:"0"`
 	// Amount of time after which client closes idle connections
-	IdleTimeout *time.Duration `json:"idle_timeout"`
+	IdleTimeout *time.Duration `json:"idle_timeout" default:"0"`
 	// Frequency of idle checks
-	IdleCheckFrequency *time.Duration `json:"idle_check_frequency"`
+	IdleCheckFrequency *time.Duration `json:"idle_check_frequency" default:"0s"`
 	// Minimum number of idle connections
 	MinIdleConn int32 `json:"min_idle_conn"`
 }
@@ -119,9 +119,9 @@ type FeastBigtableConfig struct {
 	// Number of grpc connnection created
 	PoolSize int32 `json:"pool_size" validate:"gt=0"`
 	// Interval to send keep-alive packet to established connection
-	KeepAliveInterval *time.Duration `json:"keep_alive_interval"`
+	KeepAliveInterval *time.Duration `json:"keep_alive_interval" default:"0s"`
 	// Duration before connection is marks as not healthy and close the connection afterward
-	KeepAliveTimeout *time.Duration `json:"keep_alive_timeout"`
+	KeepAliveTimeout *time.Duration `json:"keep_alive_timeout" default:"0s"`
 }
 
 func (bigtableCfg *FeastBigtableConfig) Decode(value string) error {

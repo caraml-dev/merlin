@@ -80,7 +80,8 @@ func main() {
 		log.Panicf("Must specify at least one config path using -config")
 	}
 
-	cfg, err := config.Load(configFlags...)
+	var emptyCfg config.Config
+	cfg, err := config.Load(&emptyCfg, configFlags...)
 	if err != nil {
 		log.Panicf("%w", err)
 	}
