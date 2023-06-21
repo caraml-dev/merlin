@@ -21,8 +21,6 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/caraml-dev/merlin/service"
 	"github.com/google/uuid"
 
@@ -1758,7 +1756,7 @@ func TestDeleteVersion(t *testing.T) {
 				},
 			}
 			resp := ctl.DeleteVersion(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }

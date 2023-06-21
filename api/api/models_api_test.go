@@ -21,8 +21,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/service"
 	mlflowDeleteServiceMocks "github.com/caraml-dev/mlp/api/pkg/client/mlflow/mocks"
@@ -1295,9 +1293,23 @@ func TestDeleteModel(t *testing.T) {
 					ProjectsService:       projectSvc(),
 					ModelEndpointsService: modelEndpointSvc(),
 				},
+				VersionsController: &VersionsController{
+					AppContext: &AppContext{
+						VersionsService: versionSvc,
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
+						AlertEnabled:         true,
+						ModelsService:        modelsSvc,
+						MlflowDeleteService:  mlflowDeleteSvc(),
+						PredictionJobService: predictionJobSvc(),
+						EndpointsService:     endpointSvc(),
+					},
+				},
 			}
 			resp := ctl.DeleteModel(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 
