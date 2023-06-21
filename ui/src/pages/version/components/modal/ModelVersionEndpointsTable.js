@@ -29,7 +29,7 @@ import PropTypes from "prop-types";
 const defaultTextSize = "s";
 const defaultIconSize = "s"
 
-const EndpointsTableModelVersion = ({ endpoints }) => {
+const ModelVersionEndpointsTable = ({ endpoints }) => {
 
   const healthColor = status => {
     switch (status) {
@@ -84,8 +84,8 @@ const EndpointsTableModelVersion = ({ endpoints }) => {
       field: "endpoint",
       name: "Endpoint",
       width: "20%",
-      render: (url, status) => (
-        status === "failed" ? (<EuiText size={defaultTextSize}>{url}</EuiText>) : (
+      render: (_, item) => (
+        item.status !== "failed" ? (<EuiText size={defaultTextSize}>{item.url}</EuiText>) : (
           <EuiText size={defaultTextSize}>
             <EuiIcon
               type={"alert"}
@@ -123,10 +123,10 @@ const EndpointsTableModelVersion = ({ endpoints }) => {
   );
 };
 
-EndpointsTableModelVersion.propTypes = {
+ModelVersionEndpointsTable.propTypes = {
   projectId: PropTypes.string,
   modelId: PropTypes.string,
   endpoints: PropTypes.array,
 };
 
-export default EndpointsTableModelVersion;
+export default ModelVersionEndpointsTable;

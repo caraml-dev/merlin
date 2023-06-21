@@ -30,7 +30,7 @@ const moment = require("moment");
 
 const defaultTextSize = "s";
 
-const JobsTableModelVersion = ({ jobs, isLoaded, error }) => {
+const ModelVersionJobsTable = ({ jobs, isLoaded, error }) => {
 
   const healthColor = status => {
     switch (status) {
@@ -142,7 +142,7 @@ const JobsTableModelVersion = ({ jobs, isLoaded, error }) => {
   );
 };
 
-JobsTableModelVersion.propTypes = {
+ModelVersionJobsTable.propTypes = {
   projectId: PropTypes.string,
   modelId: PropTypes.string,
   jobs: PropTypes.array,
@@ -150,4 +150,4 @@ JobsTableModelVersion.propTypes = {
   error: PropTypes.object
 };
 
-export default JobsTableModelVersion;
+export default ModelVersionJobsTable;
