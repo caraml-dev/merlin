@@ -41,22 +41,22 @@ const (
 )
 
 type Config struct {
-	Environment          string `default:"dev"`
-	Port                 int    `default:"8080"`
+	Environment          string `validate:"required" default:"dev"`
+	Port                 int    `validate:"required" default:"8080"`
 	LoggerDestinationURL string
 	Sentry               sentry.Config
 	NewRelic             newrelic.Config
-	NumOfQueueWorkers    int    `default:"2"`
-	SwaggerPath          string `default:"./swagger.yaml"`
+	NumOfQueueWorkers    int    `validate:"required" default:"2"`
+	SwaggerPath          string `validate:"required" default:"./swagger.yaml"`
 
-	DeploymentLabelPrefix string `default:"gojek.com/"`
-	PyfuncGRPCOptions     string `default:"{}"`
+	DeploymentLabelPrefix string `validate:"required" default:"gojek.com/"`
+	PyfuncGRPCOptions     string `validate:"required" default:"{}"`
 
-	DbConfig                  DatabaseConfig
-	ClusterConfig             ClusterConfig `validate:"required"`
-	ImageBuilderConfig        ImageBuilderConfig
+	DbConfig                  DatabaseConfig     `validate:"required"`
+	ClusterConfig             ClusterConfig      `validate:"required"`
+	ImageBuilderConfig        ImageBuilderConfig `validate:"required"`
 	AuthorizationConfig       AuthorizationConfig
-	MlpAPIConfig              MlpAPIConfig
+	MlpAPIConfig              MlpAPIConfig `validate:"required"`
 	FeatureToggleConfig       FeatureToggleConfig
 	ReactAppConfig            ReactAppConfig
 	UI                        UIConfig
@@ -66,8 +66,8 @@ type Config struct {
 
 // UIConfig stores the configuration for the UI.
 type UIConfig struct {
-	StaticPath string `default:"ui/build"`
-	IndexPath  string `default:"index.html"`
+	StaticPath string `validate:"required" default:"ui/build"`
+	IndexPath  string `validate:"required" default:"index.html"`
 }
 
 type ReactAppConfig struct {
@@ -91,13 +91,13 @@ type BaseImageConfigs map[string]BaseImageConfig
 // A struct containing configuration details for each base image type
 type BaseImageConfig struct {
 	// docker image name with path
-	ImageName string `json:"imageName"`
+	ImageName string `validate:"required" json:"imageName"`
 	// Dockerfile Path within the build context
-	DockerfilePath string `json:"dockerfilePath"`
+	DockerfilePath string `validate:"required" json:"dockerfilePath"`
 	// GCS URL Containing build context
-	BuildContextURI string `json:"buildContextURI"`
+	BuildContextURI string `validate:"required" json:"buildContextURI"`
 	// path to main file to run application
-	MainAppPath string `json:"mainAppPath"`
+	MainAppPath string `validate:"required" json:"mainAppPath"`
 }
 
 // Decoder to decode the env variable which is a nested map into a list of BaseImageConfig
@@ -130,16 +130,16 @@ func (docs *Documentations) Decode(value string) error {
 
 type DatabaseConfig struct {
 	Host          string `validate:"required"`
-	Port          int    `default:"5432"`
+	Port          int    `validate:"required" default:"5432"`
 	User          string `validate:"required"`
 	Password      string `validate:"required"`
-	Database      string `default:"mlp"`
-	MigrationPath string `default:"file://db-migrations"`
+	Database      string `validate:"required" default:"mlp"`
+	MigrationPath string `validate:"required" default:"file://db-migrations"`
 
-	ConnMaxIdleTime time.Duration `default:"0s"`
-	ConnMaxLifetime time.Duration `default:"0s"`
-	MaxIdleConns    int           `default:"0"`
-	MaxOpenConns    int           `default:"0"`
+	ConnMaxIdleTime time.Duration `validate:"required" default:"0s"`
+	ConnMaxLifetime time.Duration `validate:"required" default:"0s"`
+	MaxIdleConns    int           `validate:"required" default:"0"`
+	MaxOpenConns    int           `validate:"required" default:"0"`
 }
 
 // Resource contains the Kubernetes resource request and limits
@@ -197,29 +197,29 @@ type ClusterConfig struct {
 }
 
 type ImageBuilderConfig struct {
-	ClusterName                  string
-	GcpProject                   string
-	BuildContextURI              string
-	ContextSubPath               string
-	DockerfilePath               string `default:"./Dockerfile"`
-	BaseImages                   BaseImageConfigs
-	PredictionJobBuildContextURI string
-	PredictionJobContextSubPath  string
-	PredictionJobDockerfilePath  string `default:"./Dockerfile"`
-	PredictionJobBaseImages      BaseImageConfigs
-	BuildNamespace               string `default:"mlp"`
-	DockerRegistry               string
-	BuildTimeout                 string `default:"10m"`
-	KanikoImage                  string `default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	ClusterName                  string           `validate:"required"`
+	GcpProject                   string           `validate:"required"`
+	BuildContextURI              string           `validate:"required"`
+	ContextSubPath               string           `validate:"required"`
+	DockerfilePath               string           `validate:"required" default:"./Dockerfile"`
+	BaseImages                   BaseImageConfigs `validate:"required"`
+	PredictionJobBuildContextURI string           `validate:"required"`
+	PredictionJobContextSubPath  string           `validate:"required"`
+	PredictionJobDockerfilePath  string           `validate:"required" default:"./Dockerfile"`
+	PredictionJobBaseImages      BaseImageConfigs `validate:"required"`
+	BuildNamespace               string           `validate:"required" default:"mlp"`
+	DockerRegistry               string           `validate:"required"`
+	BuildTimeout                 string           `validate:"required" default:"10m"`
+	KanikoImage                  string           `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
 	KanikoServiceAccount         string
-	Resources                    ResourceRequestsLimits
+	Resources                    ResourceRequestsLimits `validate:"required"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
-	Retention     time.Duration `default:"48h"`
+	Retention     time.Duration `validate:"required" default:"48h"`
 	Tolerations   Tolerations
 	NodeSelectors DictEnv
-	MaximumRetry  int32 `default:"3"`
-	K8sConfig     mlpcluster.K8sConfig
-	SafeToEvict   bool `default:"false"`
+	MaximumRetry  int32                `validate:"required" default:"3"`
+	K8sConfig     mlpcluster.K8sConfig `validate:"required"`
+	SafeToEvict   bool                 `validate:"required" default:"false"`
 }
 
 type Tolerations []v1.Toleration
@@ -264,13 +264,13 @@ type FeatureToggleConfig struct {
 }
 
 type MonitoringConfig struct {
-	MonitoringEnabled    bool `default:"false"`
-	MonitoringBaseURL    string
-	MonitoringJobBaseURL string
+	MonitoringEnabled    bool   `validate:"required" default:"false"`
+	MonitoringBaseURL    string `validate:"required_if=Enabled True"`
+	MonitoringJobBaseURL string `validate:"required_if=Enabled True"`
 }
 
 type AlertConfig struct {
-	AlertEnabled bool `default:"false"`
+	AlertEnabled bool `validate:"required" default:"false"`
 	GitlabConfig GitlabConfig
 	WardenConfig WardenConfig
 }
@@ -297,9 +297,9 @@ type FeastServingKeepAliveConfig struct {
 	// Enable the client grpc keepalive
 	Enabled bool `default:"false"`
 	// Duration of time no activity until client try to PING gRPC server
-	Time time.Duration `default:"60s"`
+	Time time.Duration `validate:"required_if=Enabled True" default:"60s"`
 	// Duration of time client waits if no activity connection will be closed
-	Timeout time.Duration `default:"1s"`
+	Timeout time.Duration `validate:"required_if=Enabled True" default:"1s"`
 }
 
 // ModelClientKeepAliveConfig config for merlin model predictor grpc keepalive
@@ -307,39 +307,39 @@ type ModelClientKeepAliveConfig struct {
 	// Enable the client grpc keepalive
 	Enabled bool `default:"false"`
 	// Duration of time no activity until client try to PING gRPC server
-	Time time.Duration `default:"60s"`
+	Time time.Duration `validate:"required_if=Enabled True" default:"60s"`
 	// Duration of time client waits if no activity connection will be closed
-	Timeout time.Duration `default:"5s"`
+	Timeout time.Duration `validate:"required_if=Enabled True" default:"5s"`
 }
 
 type StandardTransformerConfig struct {
-	ImageName             string           `validate:"required"`
-	FeastServingURLs      FeastServingURLs `validate:"required"`
-	FeastCoreURL          string           `validate:"required"`
-	FeastCoreAuthAudience string           `validate:"required"`
-	EnableAuth            bool             `default:"false"`
-	FeastRedisConfig      *FeastRedisConfig
-	FeastBigtableConfig   *FeastBigtableConfig
-	FeastGPRCConnCount    int `default:"10"`
-	FeastServingKeepAlive *FeastServingKeepAliveConfig
-	ModelClientKeepAlive  *ModelClientKeepAliveConfig
-	ModelServerConnCount  int `default:"10"`
+	ImageName             string                       `validate:"required"`
+	FeastServingURLs      FeastServingURLs             `validate:"required"`
+	FeastCoreURL          string                       `validate:"required"`
+	FeastCoreAuthAudience string                       `validate:"required"`
+	EnableAuth            bool                         `validate:"required" default:"false"`
+	FeastRedisConfig      *FeastRedisConfig            `validate:"required"`
+	FeastBigtableConfig   *FeastBigtableConfig         `validate:"required"`
+	FeastGPRCConnCount    int                          `validate:"required" default:"10"`
+	FeastServingKeepAlive *FeastServingKeepAliveConfig `validate:"required"`
+	ModelClientKeepAlive  *ModelClientKeepAliveConfig  `validate:"required"`
+	ModelServerConnCount  int                          `validate:"required" default:"10"`
 	// Base64 Service Account
-	BigtableCredential string
-	DefaultFeastSource spec.ServingSource `default:"BIGTABLE"`
-	Jaeger             JaegerConfig
-	SimulationFeast    SimulationFeastConfig
-	Kafka              KafkaConfig
+	BigtableCredential string                `validate:"required" default:""`
+	DefaultFeastSource spec.ServingSource    `validate:"required" default:"BIGTABLE"`
+	Jaeger             JaegerConfig          `validate:"required"`
+	SimulationFeast    SimulationFeastConfig `validate:"required"`
+	Kafka              KafkaConfig           `validate:"required"`
 }
 
 // Kafka configuration for publishing prediction log
 type KafkaConfig struct {
-	Topic               string
-	Brokers             string
-	CompressionType     string `default:"none"`
-	MaxMessageSizeBytes int    `default:"1048588"`
-	ConnectTimeoutMS    int    `default:"1000"`
-	SerializationFmt    string `default:"protobuf"`
+	Topic               string `validate:"required"`
+	Brokers             string `validate:"required"`
+	CompressionType     string `validate:"required" default:"none"`
+	MaxMessageSizeBytes int    `validate:"required" default:"1048588"`
+	ConnectTimeoutMS    int    `validate:"required" default:"1000"`
+	SerializationFmt    string `validate:"required" default:"protobuf"`
 }
 
 // SimulationFeastConfig feast config that aimed to be used only for simulation of standard transformer
@@ -422,9 +422,9 @@ func (u *FeastServingURLs) URLs() []string {
 type JaegerConfig struct {
 	AgentHost    string
 	AgentPort    string
-	SamplerType  string `default:"probabilistic"`
-	SamplerParam string `default:"0.01"`
-	Disabled     string `default:"true"`
+	SamplerType  string `validate:"required" default:"probabilistic"`
+	SamplerParam string `validate:"required" default:"0.01"`
+	Disabled     string `validate:"required" default:"true"`
 }
 
 type MlflowConfig struct {

@@ -27,7 +27,7 @@ import (
 )
 
 type EnvironmentConfig struct {
-	Name                   string `yaml:"name"`
+	Name                   string `validate:"required" yaml:"name"`
 	Cluster                string `yaml:"cluster"`
 	IsDefault              bool   `yaml:"is_default"`
 	IsPredictionJobEnabled bool   `yaml:"is_prediction_job_enabled"`
@@ -47,7 +47,7 @@ type EnvironmentConfig struct {
 	DefaultPredictionJobConfig *PredictionJobResourceRequestConfig `yaml:"default_prediction_job_config"`
 	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
 	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
-	K8sConfig                  *mlpcluster.K8sConfig               `yaml:"k8s_config"`
+	K8sConfig                  *mlpcluster.K8sConfig               `validate:"required" yaml:"k8s_config"`
 }
 
 type TopologySpreadConstraints []corev1.TopologySpreadConstraint
