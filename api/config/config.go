@@ -575,10 +575,7 @@ func loadImageBuilderConfig(v map[string]interface{}) (*mlpcluster.K8sConfig, er
 	// have yaml tags.
 	// For example `certificate-authority-data` is not unmarshalled
 	// by vipers unmarshal method.
-	fmt.Printf("%+v\n", v)
-
 	clusterConfig, ok := v["imagebuilderconfig"]
-	fmt.Printf("%+v\n", clusterConfig)
 	if !ok {
 		return nil, nil
 	}
@@ -597,7 +594,6 @@ func loadImageBuilderConfig(v map[string]interface{}) (*mlpcluster.K8sConfig, er
 	if err := yaml.Unmarshal(byteForm, &k8sConfig); err != nil {
 		return nil, err
 	}
-	//config.ImageBuilderConfig.K8sConfig = &k8sConfig
 	return &k8sConfig, nil
 }
 
