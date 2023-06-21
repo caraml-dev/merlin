@@ -38,14 +38,14 @@ const StopPredictionJobModal = ({ job, closeModal, fetchJobs }) => {
   return (
     <EuiOverlayMask>
       <EuiConfirmModal
-        title={job.status === "pending" || job.status === "running" ? 'Stop Job' : 'Delete Job'}
+        title={job.status === "pending" || job.status === "running" ? "Stop Job" : "Delete Job"}
         onCancel={closeModal}
         onConfirm={stopRunningJob}
         cancelButtonText="Cancel"
-        confirmButtonText={job.status === "pending" || job.status === "running" ? 'Stop Job' : 'Delete Job'}
+        confirmButtonText={job.status === "pending" || job.status === "running" ? "Stop Job" : "Delete Job"}
         buttonColor="danger">
         <p>
-          You're about to {job.status === "pending" || job.status === "running" ? 'stop' : 'delete'} prediction job id <b>{job.id}</b> in version{" "}
+          You're about to {job.status === "pending" || job.status === "running" ? "stop" : "delete"} prediction job id <b>{job.id}</b> in version{" "}
           <b>{job.version_id}</b> of model <b>{job.model_id}</b>.
         </p>
         {isLoading && (
