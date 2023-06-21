@@ -1000,7 +1000,7 @@ func TestDeleteModel(t *testing.T) {
 						},
 					},
 				}, nil)
-				svc.On("DeleteModelEndpoint", mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("failed to delete model endpoint"))
+				svc.On("DeleteModelEndpoint", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("failed to delete model endpoint"))
 				return svc
 			},
 			expected: &Response{
