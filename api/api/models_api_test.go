@@ -21,8 +21,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/service"
 	mlflowDeleteServiceMocks "github.com/caraml-dev/mlp/api/pkg/client/mlflow/mocks"
