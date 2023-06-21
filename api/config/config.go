@@ -467,7 +467,7 @@ func Load(spec interface{}, filepaths ...string) (*Config, error) {
 
 	err := reflectViperConfig("", spec, v)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read default config via reflection: %s", err)
+		return nil, fmt.Errorf("failed to read default config via reflection: %w", err)
 	}
 
 	// Load config values from the provided config files

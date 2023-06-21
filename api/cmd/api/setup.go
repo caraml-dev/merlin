@@ -126,7 +126,7 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 		clusterCfg.InClusterConfig = true
 		restConfig, err = rest.InClusterConfig()
 	} else {
-		clusterCfg.Credentials = mlpcluster.NewK8sClusterCreds(&cfg.ImageBuilderConfig.K8sConfig)
+		clusterCfg.Credentials = mlpcluster.NewK8sClusterCreds(cfg.ImageBuilderConfig.K8sConfig)
 		restConfig, err = clusterCfg.Credentials.ToRestConfig()
 	}
 	if err != nil {
@@ -498,7 +498,7 @@ func initLogService(cfg *config.Config) service.LogService {
 	if cfg.ClusterConfig.InClusterConfig {
 		clusterCfg.InClusterConfig = true
 	} else {
-		clusterCfg.Credentials = mlpcluster.NewK8sClusterCreds(&cfg.ImageBuilderConfig.K8sConfig)
+		clusterCfg.Credentials = mlpcluster.NewK8sClusterCreds(cfg.ImageBuilderConfig.K8sConfig)
 	}
 
 	ctl, err := cluster.NewController(
