@@ -18,7 +18,7 @@ import React, { useEffect, useState } from "react";
 import { EuiConfirmModal, EuiFieldText, EuiOverlayMask, EuiProgress } from "@elastic/eui";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
-import JobsTableModelVersion from "../../pages/version/components/modal/JobsTableModelVersion";
+import ModelVersionJobsTable from "../../pages/version/components/modal/ModelVersionJobsTable";
 
 const DeleteModelVersionPyFuncV2Modal = ({
   version,
@@ -26,8 +26,8 @@ const DeleteModelVersionPyFuncV2Modal = ({
   callback,
   closeModal
 }) => {
-  const [activeJob, setActiveJob] = useState([])
-  const [inactiveJob, setInactiveJob] = useState([])
+  const [activeJobs, setActiveJobs] = useState([])
+  const [inactiveJobs, setInactiveJobs] = useState([])
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   const [{ isLoading, isLoaded }, undeployVersion] = useMerlinApi(
@@ -48,8 +48,8 @@ const DeleteModelVersionPyFuncV2Modal = ({
   }
 
   useEffect(() => {
-    setActiveJob(jobs.data.filter(item => isActiveJob(item.status)))
-    setInactiveJob(jobs.data.filter(item => !isActiveJob(item.status)))
+    setActiveJobs(jobs.data.filter(item => isActiveJob(item.status)))
+    setInactiveJobs(jobs.data.filter(item => !isActiveJob(item.status)))
   }, [jobs])
 
   useEffect(() => {
@@ -68,14 +68,7 @@ const DeleteModelVersionPyFuncV2Modal = ({
         cancelButtonText="Cancel"
         confirmButtonText="Delete"
         buttonColor="danger"
-        confirmButtonDisabled={deleteConfirmation !== `${model.name}-version-${version.id}` || activeJob.length > 0}>
-        {isLoading && (
-          <EuiProgress
-            size="xs"
-            color="accent"
-            className="euiProgress-beforePre"
-          />
-        )}
+        confirmButtonDisabled={deleteConfirmation !== `${model.name}-version-${version.id}` || activeJobs.length > 0}>
         {jobs.isLoading ? (
                     <EuiProgress
                     size="xs"
@@ -84,9 +77,9 @@ const DeleteModelVersionPyFuncV2Modal = ({
                   />
         ) : (
           <div>
-            {activeJob.length > 0 ? (
+            {activeJobs.length > 0 ? (
               <div>
-                You cannot delete this Model Version because there are <b> {activeJob.length} Active Prediction Jobs</b> using this version. 
+                You cannot delete this Model Version because there are <b> {activeJobs.length} Active Prediction Jobs</b> using this version. 
                 <br/> <br/> If you still wish to delete this model version, please <b>Terminate</b> Prediction Jobs that use this version or wait until the job completes.         
               </div>
               
@@ -104,13 +97,21 @@ const DeleteModelVersionPyFuncV2Modal = ({
               </div>
             )}
             <br></br>
-            {activeJob.length === 0 && inactiveJob.length > 0 && (
-                <span>Deleting this Model Version will also delete {inactiveJob.length} <b>Inactive</b> Prediction Jobs using this version. <br/> <br/></span>
+            {activeJobs.length === 0 && inactiveJobs.length > 0 && (
+                <span>Deleting this Model Version will also delete {inactiveJobs.length} <b>Inactive</b> Prediction Jobs using this version. <br/> <br/></span>
             )}
-            <JobsTableModelVersion jobs={activeJob.length > 0 ? activeJob : inactiveJob} isLoaded={jobs.isLoaded} error={jobs.error} />
+            <ModelVersionJobsTable jobs={activeJobs.length > 0 ? activeJobs : inactiveJobs} isLoaded={jobs.isLoaded} error={jobs.error} />
           </div>
         )}
-        
+        {isLoading && (
+          <span>
+            <EuiProgress
+              size="xs"
+              color="accent"
+              className="euiProgress-beforePre"
+            />
+          </span>
+        )}
       </EuiConfirmModal>
     </EuiOverlayMask>
   );

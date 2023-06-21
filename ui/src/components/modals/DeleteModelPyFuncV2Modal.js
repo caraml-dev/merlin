@@ -24,8 +24,8 @@ const DeleteModelPyFuncV2Modal = ({
   callback,
   closeModal
 }) => {
-  const [activeJob, setActiveJob] = useState([])
-  const [inactiveJob, setInactiveJob] = useState([])
+  const [activeJobs, setActiveJobs] = useState([])
+  const [inactiveJobs, setInactiveJobs] = useState([])
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   const [{ isLoading, isLoaded }, deleteModel] = useMerlinApi(
@@ -46,8 +46,8 @@ const DeleteModelPyFuncV2Modal = ({
   }
 
   useEffect(() => {
-    setActiveJob(jobs.data.filter(item => isActiveJob(item.status)))
-    setInactiveJob(jobs.data.filter(item => !isActiveJob(item.status)))
+    setActiveJobs(jobs.data.filter(item => isActiveJob(item.status)))
+    setInactiveJobs(jobs.data.filter(item => !isActiveJob(item.status)))
   }, [jobs])
 
   useEffect(() => {
@@ -66,14 +66,7 @@ const DeleteModelPyFuncV2Modal = ({
         cancelButtonText="Cancel"
         confirmButtonText="Delete"
         buttonColor="danger"
-        confirmButtonDisabled={deleteConfirmation !== model.name || activeJob.length > 0}>
-        {isLoading && (
-          <EuiProgress
-            size="xs"
-            color="accent"
-            className="euiProgress-beforePre"
-          />
-        )}
+        confirmButtonDisabled={deleteConfirmation !== model.name || activeJobs.length > 0}>
         {jobs.isLoading ? (
           <EuiProgress
           size="xs"
@@ -82,9 +75,9 @@ const DeleteModelPyFuncV2Modal = ({
           />
         ) : (
           <div>
-            {activeJob.length > 0 ? (
+            {activeJobs.length > 0 ? (
               <div>
-                You cannot delete this Model because there are <b> {activeJob.length} Active Prediction Jobs</b> using this model. 
+                You cannot delete this Model because there are <b> {activeJobs.length} Active Prediction Jobs</b> using this model. 
                 <br/> <br/> If you still wish to delete this model, please <b>Terminate</b> Prediction Jobs that use this model or wait until the job completes.         
               </div>
               
@@ -101,13 +94,20 @@ const DeleteModelPyFuncV2Modal = ({
                     isInvalid={deleteConfirmation !== model.name} />  
               </div>
             )}
-            {activeJob.length === 0 && inactiveJob.length > 0 && (
-                <span>Deleting this Model will also delete {inactiveJob.length} <b>Inactive</b> Prediction Jobs using this model. <br/> <br/></span>
+            {activeJobs.length === 0 && inactiveJobs.length > 0 && (
+                <span>Deleting this Model will also delete {inactiveJobs.length} <b>Inactive</b> Prediction Jobs using this model. <br/> <br/></span>
             )}
-            {/* <JobsTableModelVersion jobs={activeJob.length > 0 ? activeJob : inactiveJob} isLoaded={jobs.isLoaded} error={jobs.error} /> */}
           </div>
         )}
-        
+        {isLoading && (
+          <span>
+            <EuiProgress
+              size="xs"
+              color="accent"
+              className="euiProgress-beforePre"
+            />
+          </span>
+        )}
       </EuiConfirmModal>
     </EuiOverlayMask>
   );

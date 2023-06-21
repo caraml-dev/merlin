@@ -24,8 +24,9 @@ const DeleteModelModal = ({
   callback,
   closeModal
 }) => {
-  const [activeEndpoint, setActiveEndpoint] = useState([])
-  // const [inactiveEndpoint, setInactiveEndpoint] = useState([])
+  const [activeEndpoints, setActiveEndpoints] = useState([])
+  const [activeModelEndpoints, setActiveModelEndpoints] = useState([])
+
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   const [{ isLoading, isLoaded }, deleteModel] = useMerlinApi(
@@ -50,7 +51,6 @@ const DeleteModelModal = ({
 
   useEffect(() => {
     const activeItem = [];
-    // const inactiveItem = [];
     if (versions.isLoaded){
       for (const item of versions.data){
         const activeEnd = item.endpoints.filter(
@@ -58,15 +58,15 @@ const DeleteModelModal = ({
         );
         if (activeEnd.length > 0){
           activeItem.push(activeEnd)
-        } else{
-          // inactiveItem.push(item)
-          continue
-        }
+        } 
       }
     }
-    setActiveEndpoint(activeItem)
-    // setInactiveEndpoint(inactiveItem) 
+    setActiveEndpoints(activeItem)
   }, [versions])
+
+  useEffect(() => {
+    setActiveModelEndpoints(model.endpoints.filter(endpoint => endpoint.status !== "terminated"));
+  }, [model])
 
   return (
     <EuiOverlayMask>
@@ -77,14 +77,8 @@ const DeleteModelModal = ({
         cancelButtonText="Cancel"
         confirmButtonText="Delete"
         buttonColor="danger"
-        confirmButtonDisabled={deleteConfirmation !== model.name || activeEndpoint.length > 0}>
-        {isLoading && (
-          <EuiProgress
-            size="xs"
-            color="accent"
-            className="euiProgress-beforePre"
-          />
-        )}
+        confirmButtonDisabled={deleteConfirmation !== model.name || activeEndpoints.length > 0}>
+
         {versions.isLoading ? (
             <EuiProgress
             size="xs"
@@ -93,22 +87,22 @@ const DeleteModelModal = ({
           />
         ) : (
         <div>
-          {model.endpoints.length > 0 ? (
+          {activeModelEndpoints.length > 0 ? (
             <span>
-              You cannot delete this Model because there are <b> {model.endpoints.length} Endpoints</b> using this model. 
+              You cannot delete this Model because there are <b> {activeModelEndpoints.length} Endpoints</b> using this model. 
               <br/> <br/> If you still wish to delete this model, please <b>Stop Serving</b> Endpoints that use this model. <br/>
             </span>        
           ) : (
             <div>
-            {activeEndpoint.length > 0 ? (
+            {activeEndpoints.length > 0 ? (
               <span>
-                You cannot delete this Model because there are <b> {activeEndpoint.length} Endpoints</b> currently using the model version associated with it. 
+                You cannot delete this Model because there are <b> {activeEndpoints.length} Endpoints</b> currently using the model version associated with it. 
                 <br/> <br/> If you still wish to delete this model, please <b>Undeploy</b> Endpoints that use this version. <br/>
               </span>
             ) : (
               <div>
                   You are about to delete model <b>{model.name}</b>. This action cannot be undone. 
-                  <br/> <br/> Please note that all the related entity of this model (<b>Model version</b> and <b>Model Version Endpoint)</b> will be <b>deleted</b>.
+                  <br/> <br/> Please note that all the related entities of this model (<b>Model Version</b> and <b>Model Version Endpoint)</b> will be <b>deleted</b>.
                   <br/> <br/> To confirm, please type "<b>{model.name}</b>" in the box below
                   <EuiFieldText     
                     fullWidth            
@@ -120,10 +114,17 @@ const DeleteModelModal = ({
             )}
             </div>
           )}
-
         </div>
         )}
-        
+        {isLoading && (
+          <span>
+            <EuiProgress
+              size="xs"
+              color="accent"
+              className="euiProgress-beforePre"
+            />
+          </span>
+        )}
       </EuiConfirmModal>
     </EuiOverlayMask>
   );

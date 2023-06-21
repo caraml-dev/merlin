@@ -18,7 +18,7 @@ import React, { useEffect, useState } from "react";
 import { EuiConfirmModal, EuiFieldText, EuiOverlayMask, EuiProgress } from "@elastic/eui";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
-import EndpointsTableModelVersion from "../../pages/version/components/modal/EndpointsTableModelVersion";
+import ModelVersionEndpointsTable from "../../pages/version/components/modal/ModelVersionEndpointsTable";
 
 const DeleteModelVersionModal = ({
   version,
@@ -26,8 +26,8 @@ const DeleteModelVersionModal = ({
   callback,
   closeModal
 }) => {
-  const [activeEndpoint, setActiveEndpoint] = useState([])
-  const [inactiveEndpoint, setInactiveEndpoint] = useState([])
+  const [activeEndpoints, setActiveEndpoints] = useState([])
+  const [inactiveEndpoints, setInactiveEndpoints] = useState([])
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   const [{ isLoading, isLoaded }, undeployVersion] = useMerlinApi(
@@ -54,8 +54,8 @@ const DeleteModelVersionModal = ({
   }
 
   useEffect(() => {
-    setActiveEndpoint(version.endpoints.filter(item => isActiveEndpoint(item.status)))
-    setInactiveEndpoint(version.endpoints.filter(item => item.status === "failed"))
+    setActiveEndpoints(version.endpoints.filter(item => isActiveEndpoint(item.status)))
+    setInactiveEndpoints(version.endpoints.filter(item => item.status === "failed"))
   }, [version])
 
   return (
@@ -67,14 +67,7 @@ const DeleteModelVersionModal = ({
         cancelButtonText="Cancel"
         confirmButtonText="Delete"
         buttonColor="danger"
-        confirmButtonDisabled={deleteConfirmation !== `${model.name}-version-${version.id}` || activeEndpoint.length > 0}>
-        {isLoading && (
-          <EuiProgress
-            size="xs"
-            color="accent"
-            className="euiProgress-beforePre"
-          />
-        )}
+        confirmButtonDisabled={deleteConfirmation !== `${model.name}-version-${version.id}` || activeEndpoints.length > 0}>
         {servingEndpoint ? (
           <span>
             You cannot delete this Model Version because there are <b> Model Endpoints</b> using this version. 
@@ -82,9 +75,9 @@ const DeleteModelVersionModal = ({
           </span>          
         ) : (
           <div>
-            {activeEndpoint.length > 0 ? (
+            {activeEndpoints.length > 0 ? (
               <span>
-                You cannot delete this Model Version because there are <b> {activeEndpoint.length} Endpoints</b> using this version. 
+                You cannot delete this Model Version because there are <b> {activeEndpoints.length} Endpoints</b> using this version. 
                 <br/> <br/> If you still wish to delete this model version, please <b>Undeploy</b> Endpoints that use this version. <br/>
               </span>
             ) : (
@@ -101,14 +94,23 @@ const DeleteModelVersionModal = ({
               </div>
             )}
             <br></br>
-            {activeEndpoint.length === 0 && inactiveEndpoint.length > 0 && (
-                <p>Deleting this Model Version will also delete {inactiveEndpoint.length} <b>Failed</b> Endpoints using this version. </p>
+            {activeEndpoints.length === 0 && inactiveEndpoints.length > 0 && (
+                <p>Deleting this Model Version will also delete {inactiveEndpoints.length} <b>Failed</b> Endpoints using this version. </p>
             )}
 
-            <EndpointsTableModelVersion
-              endpoints={activeEndpoint.length > 0 ? activeEndpoint : inactiveEndpoint}
+            <ModelVersionEndpointsTable
+              endpoints={activeEndpoints.length > 0 ? activeEndpoints : inactiveEndpoints}
             />
           </div>
+        )}
+        {isLoading && (
+          <span>
+            <EuiProgress
+              size="xs"
+              color="accent"
+              className="euiProgress-beforePre"
+            />
+          </span>
         )}
       </EuiConfirmModal>
     </EuiOverlayMask>
