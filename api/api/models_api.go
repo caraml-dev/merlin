@@ -145,7 +145,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		if model.Type == "pyfunc_v2" {
 			// check active prediction job
 			// if there are any active prediction job using the model version, deletion of the model version are prohibited
-			jobs, response := c.VersionsController.checkActivePredictionJobs(ctx, model, version)
+			jobs, response := c.VersionsController.getInactivePredictionJobsForDeletion(ctx, model, version)
 			if response != nil {
 				return response
 			}
@@ -157,7 +157,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			// handle for model with type non pyfunc
 			// check active endpoints
 			// if there are any active endpoint using the model version, deletion of the model version are prohibited
-			endpoints, response := c.VersionsController.checkActiveEndpoints(ctx, model, version)
+			endpoints, response := c.VersionsController.getInactiveEndpointsForDeletion(ctx, model, version)
 			if response != nil {
 				return response
 			}

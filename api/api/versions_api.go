@@ -168,7 +168,7 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 	if model.Type == "pyfunc_v2" {
 		// check active prediction job
 		// if there are any active prediction job using the model version, deletion of the model version are prohibited
-		jobs, response := c.checkActivePredictionJobs(ctx, model, version)
+		jobs, response := c.getInactivePredictionJobsForDeletion(ctx, model, version)
 		if response != nil {
 			return response
 		}
@@ -179,10 +179,10 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 			return response
 		}
 	} else {
-		// handle for model with type non pyfunc
+		// handle for model with type non pyfunc_v2
 		// check active endpoints
 		// if there are any active endpoint using the model version, deletion of the model version are prohibited
-		endpoints, response := c.checkActiveEndpoints(ctx, model, version)
+		endpoints, response := c.getInactiveEndpointsForDeletion(ctx, model, version)
 		if response != nil {
 			return response
 		}
@@ -209,7 +209,7 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 
 	return Ok(versionID)
 }
-func (c *VersionsController) checkActivePredictionJobs(ctx context.Context, model *models.Model, version *models.Version) ([]*models.PredictionJob, *Response) {
+func (c *VersionsController) getInactivePredictionJobsForDeletion(ctx context.Context, model *models.Model, version *models.Version) ([]*models.PredictionJob, *Response) {
 	jobQuery := &service.ListPredictionJobQuery{
 		ModelID:   model.ID,
 		VersionID: version.ID,
@@ -230,7 +230,7 @@ func (c *VersionsController) checkActivePredictionJobs(ctx context.Context, mode
 	return jobs, nil
 }
 
-func (c *VersionsController) checkActiveEndpoints(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, *Response) {
+func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, *Response) {
 
 	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
 	if err != nil {
