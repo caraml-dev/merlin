@@ -14,7 +14,6 @@ import (
 
 func TestFeastRedisConfig(t *testing.T) {
 	baseFilePath := "./testdata/config-1.yaml"
-	zeroSecDuration := time.Second * 0
 	tenSecDuration := time.Second * 10
 	testCases := []struct {
 		desc                string
@@ -32,16 +31,9 @@ func TestFeastRedisConfig(t *testing.T) {
 				RedisAddresses: []string{
 					"10.1.1.10", "10.1.1.11",
 				},
-				PoolSize:           4,
-				MaxRetries:         1,
-				MinRetryBackoff:    &zeroSecDuration,
-				DialTimeout:        &tenSecDuration,
-				ReadTimeout:        &zeroSecDuration,
-				WriteTimeout:       &zeroSecDuration,
-				MaxConnAge:         &zeroSecDuration,
-				PoolTimeout:        &zeroSecDuration,
-				IdleTimeout:        &zeroSecDuration,
-				IdleCheckFrequency: &zeroSecDuration,
+				PoolSize:    4,
+				MaxRetries:  1,
+				DialTimeout: &tenSecDuration,
 			},
 		},
 		{
@@ -53,17 +45,10 @@ func TestFeastRedisConfig(t *testing.T) {
 				RedisAddresses: []string{
 					"10.1.1.10", "10.1.1.11",
 				},
-				PoolSize:           4,
-				MaxRetries:         1,
-				MinIdleConn:        2,
-				MinRetryBackoff:    &zeroSecDuration,
-				DialTimeout:        &tenSecDuration,
-				ReadTimeout:        &zeroSecDuration,
-				WriteTimeout:       &zeroSecDuration,
-				MaxConnAge:         &zeroSecDuration,
-				PoolTimeout:        &zeroSecDuration,
-				IdleTimeout:        &zeroSecDuration,
-				IdleCheckFrequency: &zeroSecDuration,
+				PoolSize:    4,
+				MaxRetries:  1,
+				MinIdleConn: 2,
+				DialTimeout: &tenSecDuration,
 			},
 		},
 		{
@@ -79,7 +64,7 @@ func TestFeastRedisConfig(t *testing.T) {
 		{
 			desc:             "Invalid: redis_addresses is not set",
 			redisCfgFilePath: "./testdata/invalid-redis-config-no-redis-addresses.yaml",
-			err:              fmt.Errorf("Key: 'FeastRedisConfig.RedisAddresses' Error:Field validation for 'RedisAddresses' failed on the 'gt' tag"),
+			err:              fmt.Errorf("Key: 'FeastRedisConfig.RedisAddresses' Error:Field validation for 'RedisAddresses' failed on the 'required' tag"),
 		},
 	}
 	for _, tC := range testCases {
