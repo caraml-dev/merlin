@@ -168,13 +168,13 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 	if model.Type == "pyfunc_v2" {
 		// check active prediction job
 		// if there are any active prediction job using the model version, deletion of the model version are prohibited
-		jobs, response := c.getInactivePredictionJobsForDeletion(ctx, model, version)
+		inactiveJobs, response := c.getInactivePredictionJobsForDeletion(ctx, model, version)
 		if response != nil {
 			return response
 		}
 
 		// delete inactive prediction job
-		response = c.deleteInactivePredictionJobs(ctx, jobs, model, version)
+		response = c.deletePredictionJobs(ctx, inactiveJobs, model, version)
 		if response != nil {
 			return response
 		}
@@ -182,12 +182,12 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 
 	// check active endpoints for all model
 	// if there are any active endpoint using the model version, deletion of the model version are prohibited
-	endpoints, response := c.getInactiveEndpointsForDeletion(ctx, model, version)
+	inactiveEndpoints, response := c.getInactiveEndpointsForDeletion(ctx, model, version)
 	if response != nil {
 		return response
 	}
 	// delete inactive endpoint
-	response = c.deleteInactiveVersionEndpoints(endpoints, version)
+	response = c.deleteVersionEndpoints(inactiveEndpoints, version)
 	if response != nil {
 		return response
 	}
@@ -246,7 +246,7 @@ func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context
 	return endpoints, nil
 }
 
-func (c *VersionsController) deleteInactiveVersionEndpoints(endpoints []*models.VersionEndpoint, version *models.Version) *Response {
+func (c *VersionsController) deleteVersionEndpoints(endpoints []*models.VersionEndpoint, version *models.Version) *Response {
 	for _, item := range endpoints {
 		err := c.EndpointsService.DeleteEndpoint(version, item)
 		if err != nil {
@@ -257,7 +257,7 @@ func (c *VersionsController) deleteInactiveVersionEndpoints(endpoints []*models.
 	return nil
 }
 
-func (c *VersionsController) deleteInactivePredictionJobs(ctx context.Context, jobs []*models.PredictionJob, model *models.Model, version *models.Version) *Response {
+func (c *VersionsController) deletePredictionJobs(ctx context.Context, jobs []*models.PredictionJob, model *models.Model, version *models.Version) *Response {
 	for _, item := range jobs {
 		_, err := c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
 		if err != nil {

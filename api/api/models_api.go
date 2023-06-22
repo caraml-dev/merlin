@@ -137,8 +137,8 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		return InternalServerError(err.Error())
 	}
 
-	var allJobInModel [][]*models.PredictionJob
-	var allEndpointInModel [][]*models.VersionEndpoint
+	var inactiveJobsInModel [][]*models.PredictionJob
+	var inactiveEndpointsInModel [][]*models.VersionEndpoint
 
 	// iterate for every version, check the active prediction job / active endpoint
 	for _, version := range versions {
@@ -151,7 +151,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			}
 
 			// save all prediction jobs for deletion process later on
-			allJobInModel = append(allJobInModel, jobs)
+			inactiveJobsInModel = append(inactiveJobsInModel, jobs)
 
 		}
 
@@ -163,7 +163,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		}
 
 		// save all endpoint for deletion process later on
-		allEndpointInModel = append(allEndpointInModel, endpoints)
+		inactiveEndpointsInModel = append(inactiveEndpointsInModel, endpoints)
 
 	}
 
@@ -171,7 +171,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	for index, version := range versions {
 		if model.Type == "pyfunc_v2" {
 			// delete inactive prediction jobs for model with type pyfunc_v2
-			response := c.VersionsController.deleteInactivePredictionJobs(ctx, allJobInModel[index], model, version)
+			response := c.VersionsController.deletePredictionJobs(ctx, inactiveJobsInModel[index], model, version)
 			if response != nil {
 				log.Errorf("failed to stop prediction job %v", response.data)
 				//return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
@@ -180,7 +180,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		}
 
 		// DELETE ENDPOINTS
-		response := c.VersionsController.deleteInactiveVersionEndpoints(allEndpointInModel[index], version)
+		response := c.VersionsController.deleteVersionEndpoints(inactiveEndpointsInModel[index], version)
 		if response != nil {
 			log.Errorf("failed to delete version endpoints %v", response.data)
 			//return InternalServerError(fmt.Sprintf("Failed deleting version endpoints: %s", err))
