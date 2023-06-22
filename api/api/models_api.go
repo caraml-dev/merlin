@@ -137,8 +137,8 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		return InternalServerError(err.Error())
 	}
 
-	var allJobInModel []*models.PredictionJob
-	var allEndpointInModel []*models.VersionEndpoint
+	var allJobInModel [][]*models.PredictionJob
+	var allEndpointInModel [][]*models.VersionEndpoint
 
 	// iterate for every version, check the active prediction job / active endpoint
 	for _, version := range versions {
@@ -151,7 +151,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			}
 
 			// save all prediction jobs for deletion process later on
-			allJobInModel = append(allJobInModel, jobs...)
+			allJobInModel = append(allJobInModel, jobs)
 
 		} else {
 			// handle for model with type non pyfunc
@@ -163,16 +163,16 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			}
 
 			// save all endpoint for deletion process later on
-			allEndpointInModel = append(allEndpointInModel, endpoints...)
+			allEndpointInModel = append(allEndpointInModel, endpoints)
 
 		}
 	}
 
 	// DELETING ALL THE RELATED ENTITY
-	for _, version := range versions {
+	for index, version := range versions {
 		if model.Type == "pyfunc_v2" {
 			// DELETE PREDICTION JOBS
-			response := c.VersionsController.deleteInactivePredictionJobs(ctx, allJobInModel, model, version)
+			response := c.VersionsController.deleteInactivePredictionJobs(ctx, allJobInModel[index], model, version)
 			if response != nil {
 				log.Errorf("failed to stop prediction job %v", response.data)
 				//return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
@@ -180,7 +180,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			}
 		} else {
 			// DELETE ENDPOINTS
-			response := c.VersionsController.deleteInactiveVersionEndpoints(allEndpointInModel, version)
+			response := c.VersionsController.deleteInactiveVersionEndpoints(allEndpointInModel[index], version)
 			if response != nil {
 				log.Errorf("failed to delete version endpoints %v", response.data)
 				//return InternalServerError(fmt.Sprintf("Failed deleting version endpoints: %s", err))
