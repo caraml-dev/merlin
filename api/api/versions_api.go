@@ -282,7 +282,7 @@ func (c *VersionsController) checkActivePredictionJobs(ctx context.Context, mode
 	return jobs, nil
 }
 
-func (c *VersionsController) checkActiveEndpoints(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, *Response) {
+func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, *Response) {
 
 	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
 	if err != nil {
