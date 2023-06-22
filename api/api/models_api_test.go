@@ -420,10 +420,12 @@ func TestDeleteModel(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				svc := &mocks.ModelEndpointsService{}
+				svc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return([]*models.ModelEndpoint{}, nil)
 				return svc
 			},
 			expected: &Response{
@@ -897,6 +899,7 @@ func TestDeleteModel(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
@@ -1083,10 +1086,12 @@ func TestDeleteModel(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				svc := &mocks.ModelEndpointsService{}
+				svc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return([]*models.ModelEndpoint{}, nil)
 				return svc
 			},
 			expected: &Response{
@@ -1169,10 +1174,12 @@ func TestDeleteModel(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				svc := &mocks.ModelEndpointsService{}
+				svc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return([]*models.ModelEndpoint{}, nil)
 				return svc
 			},
 			expected: &Response{
@@ -1256,10 +1263,12 @@ func TestDeleteModel(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
 			modelEndpointService: func() *mocks.ModelEndpointsService {
 				svc := &mocks.ModelEndpointsService{}
+				svc.On("ListModelEndpoints", mock.Anything, models.ID(1)).Return([]*models.ModelEndpoint{}, nil)
 				return svc
 			},
 			expected: &Response{

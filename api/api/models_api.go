@@ -153,40 +153,40 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			// save all prediction jobs for deletion process later on
 			allJobInModel = append(allJobInModel, jobs)
 
-		} else {
-			// handle for model with type non pyfunc
-			// check active endpoints
-			// if there are any active endpoint using the model version, deletion of the model version are prohibited
-			endpoints, response := c.VersionsController.getInactiveEndpointsForDeletion(ctx, model, version)
-			if response != nil {
-				return response
-			}
-
-			// save all endpoint for deletion process later on
-			allEndpointInModel = append(allEndpointInModel, endpoints)
-
 		}
+
+		// check active endpoints for all model type
+		// if there are any active endpoint using the model version, deletion of the model version are prohibited
+		endpoints, response := c.VersionsController.getInactiveEndpointsForDeletion(ctx, model, version)
+		if response != nil {
+			return response
+		}
+
+		// save all endpoint for deletion process later on
+		allEndpointInModel = append(allEndpointInModel, endpoints)
+
 	}
 
 	// DELETING ALL THE RELATED ENTITY
 	for index, version := range versions {
 		if model.Type == "pyfunc_v2" {
-			// DELETE PREDICTION JOBS
+			// delete inactive prediction jobs for model with type pyfunc_v2
 			response := c.VersionsController.deleteInactivePredictionJobs(ctx, allJobInModel[index], model, version)
 			if response != nil {
 				log.Errorf("failed to stop prediction job %v", response.data)
 				//return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
 				return response
 			}
-		} else {
-			// DELETE ENDPOINTS
-			response := c.VersionsController.deleteInactiveVersionEndpoints(allEndpointInModel[index], version)
-			if response != nil {
-				log.Errorf("failed to delete version endpoints %v", response.data)
-				//return InternalServerError(fmt.Sprintf("Failed deleting version endpoints: %s", err))
-				return response
-			}
 		}
+
+		// DELETE ENDPOINTS
+		response := c.VersionsController.deleteInactiveVersionEndpoints(allEndpointInModel[index], version)
+		if response != nil {
+			log.Errorf("failed to delete version endpoints %v", response.data)
+			//return InternalServerError(fmt.Sprintf("Failed deleting version endpoints: %s", err))
+			return response
+		}
+
 		// DELETE VERSION
 		err = c.VersionsService.Delete(version)
 		if err != nil {
@@ -195,18 +195,16 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		}
 	}
 
-	if model.Type != "pyfunc_v2" {
-		// undeploy all existing model endpoint
-		modelEndpoints, err := c.ModelEndpointsService.ListModelEndpoints(ctx, modelID)
-		if err != nil {
-			return InternalServerError(err.Error())
-		}
+	// undeploy all existing model endpoint
+	modelEndpoints, err := c.ModelEndpointsService.ListModelEndpoints(ctx, modelID)
+	if err != nil {
+		return InternalServerError(err.Error())
+	}
 
-		for _, modelEndpoint := range modelEndpoints {
-			err := c.ModelEndpointsService.DeleteModelEndpoint(modelEndpoint)
-			if err != nil {
-				return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
-			}
+	for _, modelEndpoint := range modelEndpoints {
+		err := c.ModelEndpointsService.DeleteModelEndpoint(modelEndpoint)
+		if err != nil {
+			return InternalServerError(fmt.Sprintf("Unable to delete model endpoint: %s", err.Error()))
 		}
 	}
 

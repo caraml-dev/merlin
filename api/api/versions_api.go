@@ -178,21 +178,20 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 		if response != nil {
 			return response
 		}
-	} else {
-		// handle for model with type non pyfunc_v2
-		// check active endpoints
-		// if there are any active endpoint using the model version, deletion of the model version are prohibited
-		endpoints, response := c.getInactiveEndpointsForDeletion(ctx, model, version)
-		if response != nil {
-			return response
-		}
-		// delete inactive endpoint
-		response = c.deleteInactiveVersionEndpoints(endpoints, version)
-		if response != nil {
-			return response
-		}
-
 	}
+
+	// check active endpoints for all model
+	// if there are any active endpoint using the model version, deletion of the model version are prohibited
+	endpoints, response := c.getInactiveEndpointsForDeletion(ctx, model, version)
+	if response != nil {
+		return response
+	}
+	// delete inactive endpoint
+	response = c.deleteInactiveVersionEndpoints(endpoints, version)
+	if response != nil {
+		return response
+	}
+
 	// delete mlflow run and artifact
 	err = c.MlflowDeleteService.DeleteRun(ctx, version.RunID, version.ArtifactURI, true)
 	if err != nil {

@@ -1236,6 +1236,7 @@ func TestDeleteVersion(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
 			expected: &Response{
@@ -1661,6 +1662,7 @@ func TestDeleteVersion(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
 			expected: &Response{
@@ -1725,6 +1727,7 @@ func TestDeleteVersion(t *testing.T) {
 			},
 			endpointService: func() *mocks.EndpointsService {
 				svc := &mocks.EndpointsService{}
+				svc.On("ListEndpoints", mock.Anything, mock.Anything, mock.Anything).Return([]*models.VersionEndpoint{}, nil)
 				return svc
 			},
 			expected: &Response{
