@@ -136,10 +136,10 @@ type DatabaseConfig struct {
 	Database      string `validate:"required" default:"mlp"`
 	MigrationPath string `validate:"required" default:"file://db-migrations"`
 
-	ConnMaxIdleTime time.Duration `validate:"required" default:"0s"`
-	ConnMaxLifetime time.Duration `validate:"required" default:"0s"`
-	MaxIdleConns    int           `validate:"required" default:"0"`
-	MaxOpenConns    int           `validate:"required" default:"0"`
+	ConnMaxIdleTime time.Duration `default:"0s"`
+	ConnMaxLifetime time.Duration `default:"0s"`
+	MaxIdleConns    int
+	MaxOpenConns    int
 }
 
 // Resource contains the Kubernetes resource request and limits
@@ -197,14 +197,14 @@ type ClusterConfig struct {
 }
 
 type ImageBuilderConfig struct {
-	ClusterName                  string           `validate:"required"`
-	GcpProject                   string           `validate:"required"`
-	BuildContextURI              string           `validate:"required"`
-	ContextSubPath               string           `validate:"required"`
+	ClusterName                  string `validate:"required"`
+	GcpProject                   string
+	BuildContextURI              string `validate:"required"`
+	ContextSubPath               string
 	DockerfilePath               string           `validate:"required" default:"./Dockerfile"`
 	BaseImages                   BaseImageConfigs `validate:"required"`
 	PredictionJobBuildContextURI string           `validate:"required"`
-	PredictionJobContextSubPath  string           `validate:"required"`
+	PredictionJobContextSubPath  string
 	PredictionJobDockerfilePath  string           `validate:"required" default:"./Dockerfile"`
 	PredictionJobBaseImages      BaseImageConfigs `validate:"required"`
 	BuildNamespace               string           `validate:"required" default:"mlp"`
@@ -219,7 +219,7 @@ type ImageBuilderConfig struct {
 	NodeSelectors DictEnv
 	MaximumRetry  int32                 `validate:"required" default:"3"`
 	K8sConfig     *mlpcluster.K8sConfig `validate:"required" default:"-"`
-	SafeToEvict   bool                  `validate:"required" default:"false"`
+	SafeToEvict   bool                  `default:"false"`
 }
 
 type Tolerations []v1.Toleration
@@ -264,13 +264,13 @@ type FeatureToggleConfig struct {
 }
 
 type MonitoringConfig struct {
-	MonitoringEnabled    bool   `validate:"required" default:"false"`
+	MonitoringEnabled    bool   `default:"false"`
 	MonitoringBaseURL    string `validate:"required_if=Enabled True"`
 	MonitoringJobBaseURL string `validate:"required_if=Enabled True"`
 }
 
 type AlertConfig struct {
-	AlertEnabled bool `validate:"required" default:"false"`
+	AlertEnabled bool `default:"false"`
 	GitlabConfig GitlabConfig
 	WardenConfig WardenConfig
 }
@@ -313,26 +313,26 @@ type ModelClientKeepAliveConfig struct {
 }
 
 type StandardTransformerConfig struct {
-	ImageName             string                       `validate:"required"`
-	FeastServingURLs      FeastServingURLs             `validate:"required"`
-	FeastCoreURL          string                       `validate:"required"`
-	FeastCoreAuthAudience string                       `validate:"required"`
-	EnableAuth            bool                         `validate:"required" default:"false"`
-	FeastRedisConfig      *FeastRedisConfig            `validate:"required"`
+	ImageName             string `validate:"required"`
+	FeastServingURLs      FeastServingURLs
+	FeastCoreURL          string `validate:"required"`
+	FeastCoreAuthAudience string `validate:"required"`
+	EnableAuth            bool   `default:"false"`
+	FeastRedisConfig      *FeastRedisConfig
 	FeastBigtableConfig   *FeastBigtableConfig         `validate:"required"`
 	FeastGPRCConnCount    int                          `validate:"required" default:"10"`
 	FeastServingKeepAlive *FeastServingKeepAliveConfig `validate:"required"`
 	ModelClientKeepAlive  *ModelClientKeepAliveConfig  `validate:"required"`
 	ModelServerConnCount  int                          `validate:"required" default:"10"`
 	// Base64 Service Account
-	BigtableCredential string                `validate:"required"`
+	BigtableCredential string
 	DefaultFeastSource spec.ServingSource    `validate:"required" default:"2"`
 	Jaeger             JaegerConfig          `validate:"required"`
 	SimulationFeast    SimulationFeastConfig `validate:"required"`
 	Kafka              KafkaConfig           `validate:"required"`
 }
 
-// Kafka configuration for publishing prediction log
+// KafkaConfig configuration for publishing prediction log
 type KafkaConfig struct {
 	Topic               string `validate:"required"`
 	Brokers             string `validate:"required"`
