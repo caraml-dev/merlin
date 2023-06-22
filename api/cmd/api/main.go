@@ -83,7 +83,7 @@ func main() {
 	var emptyCfg config.Config
 	cfg, err := config.Load(&emptyCfg, configFlags...)
 	if err != nil {
-		log.Panicf("%w", err)
+		log.Panicf("Failed initializing config: %v", err)
 	}
 
 	cfg.ClusterConfig.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
