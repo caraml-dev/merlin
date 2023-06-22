@@ -299,7 +299,7 @@ func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context
 	return endpoints, nil
 }
 
-func (c *VersionsController) deleteInactiveVersionEndpoints(endpoints []*models.VersionEndpoint, version *models.Version) *Response {
+func (c *VersionsController) deleteVersionEndpoints(endpoints []*models.VersionEndpoint, version *models.Version) *Response {
 	for _, item := range endpoints {
 		err := c.EndpointsService.DeleteEndpoint(version, item)
 		if err != nil {
@@ -310,7 +310,7 @@ func (c *VersionsController) deleteInactiveVersionEndpoints(endpoints []*models.
 	return nil
 }
 
-func (c *VersionsController) deleteInactivePredictionJobs(ctx context.Context, jobs []*models.PredictionJob, model *models.Model, version *models.Version) *Response {
+func (c *VersionsController) deletePredictionJobs(ctx context.Context, jobs []*models.PredictionJob, model *models.Model, version *models.Version) *Response {
 	for _, item := range jobs {
 		_, err := c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
 		if err != nil {

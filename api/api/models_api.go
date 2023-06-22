@@ -175,7 +175,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		}
 
 		// save all endpoint for deletion process later on
-		allEndpointInModel = append(allEndpointInModel, endpoints)
+		inactiveEndpointsInModel = append(inactiveEndpointsInModel, endpoints)
 
 	}
 
