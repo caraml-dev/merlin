@@ -315,14 +315,14 @@ type ModelClientKeepAliveConfig struct {
 type StandardTransformerConfig struct {
 	ImageName             string `validate:"required"`
 	FeastServingURLs      FeastServingURLs
-	FeastCoreURL          string `validate:"required"`
-	FeastCoreAuthAudience string `validate:"required"`
-	EnableAuth            bool   `default:"false"`
-	FeastRedisConfig      *FeastRedisConfig
-	FeastBigtableConfig   *FeastBigtableConfig         `validate:"required"`
+	FeastCoreURL          string                       `validate:"required"`
+	FeastCoreAuthAudience string                       `validate:"required"`
+	EnableAuth            bool                         `default:"false"`
+	FeastRedisConfig      *FeastRedisConfig            `default:"-"`
+	FeastBigtableConfig   *FeastBigtableConfig         `default:"-"`
 	FeastGPRCConnCount    int                          `validate:"required" default:"10"`
-	FeastServingKeepAlive *FeastServingKeepAliveConfig `validate:"required"`
-	ModelClientKeepAlive  *ModelClientKeepAliveConfig  `validate:"required"`
+	FeastServingKeepAlive *FeastServingKeepAliveConfig `default:"-"`
+	ModelClientKeepAlive  *ModelClientKeepAliveConfig  `default:"-"`
 	ModelServerConnCount  int                          `validate:"required" default:"10"`
 	// Base64 Service Account
 	BigtableCredential string
@@ -334,7 +334,7 @@ type StandardTransformerConfig struct {
 
 // KafkaConfig configuration for publishing prediction log
 type KafkaConfig struct {
-	Topic               string `validate:"required"`
+	Topic               string
 	Brokers             string `validate:"required"`
 	CompressionType     string `validate:"required" default:"none"`
 	MaxMessageSizeBytes int    `validate:"required" default:"1048588"`
