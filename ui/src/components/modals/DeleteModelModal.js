@@ -24,7 +24,7 @@ const DeleteModelModal = ({
   callback,
   closeModal
 }) => {
-  const [activeEndpoints, setActiveEndpoints] = useState([])
+  const [activeVersionEndpoints, setActiveVersionEndpoints] = useState([])
   const [activeModelEndpoints, setActiveModelEndpoints] = useState([])
 
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -50,18 +50,18 @@ const DeleteModelModal = ({
   }, [isLoaded, closeModal, callback]);
 
   useEffect(() => {
-    const activeItem = [];
+    const tempActiveVersionEndpoint = [];
     if (versions.isLoaded){
       for (const item of versions.data){
-        const activeEnd = item.endpoints.filter(
+        const activeEndpoint = item.endpoints.filter(
           (endpoint) => ["pending", "running", "serving"].includes(endpoint.status)
         );
-        if (activeEnd.length > 0){
-          activeItem.push(activeEnd)
+        if (activeEndpoint.length > 0){
+          tempActiveVersionEndpoint.push(activeEndpoint)
         } 
       }
     }
-    setActiveEndpoints(activeItem)
+    setActiveVersionEndpoints(tempActiveVersionEndpoint)
   }, [versions])
 
   useEffect(() => {
@@ -77,7 +77,7 @@ const DeleteModelModal = ({
         cancelButtonText="Cancel"
         confirmButtonText="Delete"
         buttonColor="danger"
-        confirmButtonDisabled={deleteConfirmation !== model.name || activeEndpoints.length > 0}>
+        confirmButtonDisabled={deleteConfirmation !== model.name || activeVersionEndpoints.length > 0}>
 
         {versions.isLoading ? (
             <EuiProgress
@@ -94,9 +94,9 @@ const DeleteModelModal = ({
             </span>        
           ) : (
             <div>
-            {activeEndpoints.length > 0 ? (
+            {activeVersionEndpoints.length > 0 ? (
               <span>
-                You cannot delete this Model because there are <b> {activeEndpoints.length} Endpoints</b> currently using the model version associated with it. 
+                You cannot delete this Model because there are <b> {activeVersionEndpoints.length} Endpoints</b> currently using the model version associated with it. 
                 <br/> <br/> If you still wish to delete this model, please <b>Undeploy</b> Endpoints that use this version. <br/>
               </span>
             ) : (
