@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/service"
 
 	"github.com/jinzhu/gorm"
@@ -173,24 +172,19 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 			// delete inactive prediction jobs for model with type pyfunc_v2
 			response := c.VersionsController.deletePredictionJobs(ctx, inactiveJobsInModel[index], model, version)
 			if response != nil {
-				log.Errorf("failed to stop prediction job %v", response.data)
-				//return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
 				return response
 			}
 		}
 
-		// DELETE ENDPOINTS
+		// delete inactive endpoints for all model type
 		response := c.VersionsController.deleteVersionEndpoints(inactiveEndpointsInModel[index], version)
 		if response != nil {
-			log.Errorf("failed to delete version endpoints %v", response.data)
-			//return InternalServerError(fmt.Sprintf("Failed deleting version endpoints: %s", err))
 			return response
 		}
 
 		// DELETE VERSION
 		err = c.VersionsService.Delete(version)
 		if err != nil {
-			log.Errorf("failed to delete model version %v", err)
 			return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
 		}
 	}
