@@ -19,12 +19,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/caraml-dev/merlin/service"
-
 	"github.com/jinzhu/gorm"
 
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/service"
 )
 
 // ModelsController controls models API.
@@ -185,7 +184,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		// DELETE VERSION
 		err = c.VersionsService.Delete(version)
 		if err != nil {
-			return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
+			return InternalServerError(fmt.Sprintf("Delete version id %d failed: %s", version.ID, err.Error()))
 		}
 	}
 
@@ -207,14 +206,14 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		s := strconv.FormatUint(uint64(model.ExperimentID), 10)
 		err = c.MlflowDeleteService.DeleteExperiment(ctx, s, true)
 		if err != nil {
-			return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
+			return InternalServerError(fmt.Sprintf("Delete mlflow experiment failed: %s", err.Error()))
 		}
 	}
 
 	// Delete model data from DB
 	err = c.ModelsService.Delete(model)
 	if err != nil {
-		return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
+		return InternalServerError(fmt.Sprintf("Delete model failed: %s", err.Error()))
 	}
 
 	return Ok(model.ID)

@@ -1667,7 +1667,7 @@ func TestDeleteVersion(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Delete Failed: failed to delete mlflow run"},
+				data: Error{Message: "Delete mlflow run failed: failed to delete mlflow run"},
 			},
 		},
 		{
@@ -1732,7 +1732,7 @@ func TestDeleteVersion(t *testing.T) {
 			},
 			expected: &Response{
 				code: http.StatusInternalServerError,
-				data: Error{Message: "Delete Failed: failed to delete model version"},
+				data: Error{Message: "Delete model version failed: failed to delete model version"},
 			},
 		},
 	}

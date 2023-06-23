@@ -193,13 +193,13 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 	// delete mlflow run and artifact
 	err = c.MlflowDeleteService.DeleteRun(ctx, version.RunID, version.ArtifactURI, true)
 	if err != nil {
-		return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
+		return InternalServerError(fmt.Sprintf("Delete mlflow run failed: %s", err.Error()))
 	}
 
 	// delete model version from db
 	err = c.VersionsService.Delete(version)
 	if err != nil {
-		return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
+		return InternalServerError(fmt.Sprintf("Delete model version failed: %s", err.Error()))
 	}
 
 	return Ok(versionID)
