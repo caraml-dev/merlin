@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/caraml-dev/merlin/log"
-
 	"github.com/jinzhu/gorm"
 
 	"github.com/caraml-dev/merlin/models"
@@ -286,7 +284,6 @@ func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context
 
 	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
 	if err != nil {
-		log.Errorf("failed to list all endpoint for model %s version %s: %v", model.Name, version.ID, err)
 		return nil, InternalServerError("Failed listing model version endpoint")
 	}
 
@@ -303,7 +300,6 @@ func (c *VersionsController) deleteVersionEndpoints(endpoints []*models.VersionE
 	for _, item := range endpoints {
 		err := c.EndpointsService.DeleteEndpoint(version, item)
 		if err != nil {
-			log.Errorf("failed to undeploy endpoint job %v", err)
 			return InternalServerError(fmt.Sprintf("Failed to delete endpoint: %s", err))
 		}
 	}
@@ -314,7 +310,6 @@ func (c *VersionsController) deletePredictionJobs(ctx context.Context, jobs []*m
 	for _, item := range jobs {
 		_, err := c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
 		if err != nil {
-			log.Errorf("failed to stop prediction job %v", err)
 			return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
 		}
 	}
