@@ -156,38 +156,38 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return InternalServerError(err.Error())
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
-		return NotFound(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
 	// handle for pyfunc v2, since the prediction job feature is only available for pyfunc_v2 model
 	if model.Type == "pyfunc_v2" {
 		// check active prediction job
 		// if there are any active prediction job using the model version, deletion of the model version are prohibited
-		inactiveJobs, response := c.getInactivePredictionJobsForDeletion(ctx, model, version)
-		if response != nil {
-			return response
+		inactiveJobs, errResponse := c.getInactivePredictionJobsForDeletion(ctx, model, version)
+		if errResponse != nil {
+			return errResponse
 		}
 
 		// delete inactive prediction job
-		response = c.deletePredictionJobs(ctx, inactiveJobs, model, version)
-		if response != nil {
-			return response
+		errResponse = c.deletePredictionJobs(ctx, inactiveJobs, model, version)
+		if errResponse != nil {
+			return errResponse
 		}
 	}
 
 	// check active endpoints for all model
 	// if there are any active endpoint using the model version, deletion of the model version are prohibited
-	inactiveEndpoints, response := c.getInactiveEndpointsForDeletion(ctx, model, version)
-	if response != nil {
-		return response
+	inactiveEndpoints, errResponse := c.getInactiveEndpointsForDeletion(ctx, model, version)
+	if errResponse != nil {
+		return errResponse
 	}
 	// delete inactive endpoint
-	response = c.deleteVersionEndpoints(inactiveEndpoints, version)
-	if response != nil {
-		return response
+	errResponse = c.deleteVersionEndpoints(inactiveEndpoints, version)
+	if errResponse != nil {
+		return errResponse
 	}
 
 	// delete mlflow run and artifact
@@ -204,6 +204,7 @@ func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]stri
 
 	return Ok(versionID)
 }
+
 func (c *VersionsController) getInactivePredictionJobsForDeletion(ctx context.Context, model *models.Model, version *models.Version) ([]*models.PredictionJob, *Response) {
 	jobQuery := &service.ListPredictionJobQuery{
 		ModelID:   model.ID,

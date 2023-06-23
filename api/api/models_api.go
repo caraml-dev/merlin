@@ -118,7 +118,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 
 	_, err = c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
-		return NotFound(err.Error())
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
@@ -126,13 +126,13 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		if gorm.IsRecordNotFoundError(err) {
 			return NotFound(fmt.Sprintf("Model is not found: %s", err.Error()))
 		}
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model: %v", err.Error()))
 	}
 
 	// get all model version for this model
 	versions, _, err := c.VersionsService.ListVersions(ctx, modelID, c.MonitoringConfig, service.VersionQuery{})
 	if err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting list of versions: %v", err.Error()))
 	}
 
 	var inactiveJobsInModel [][]*models.PredictionJob
@@ -143,9 +143,9 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		if model.Type == "pyfunc_v2" {
 			// check active prediction job
 			// if there are any active prediction job using the model version, deletion of the model version are prohibited
-			jobs, response := c.VersionsController.getInactivePredictionJobsForDeletion(ctx, model, version)
-			if response != nil {
-				return response
+			jobs, errResponse := c.VersionsController.getInactivePredictionJobsForDeletion(ctx, model, version)
+			if errResponse != nil {
+				return errResponse
 			}
 
 			// save all prediction jobs for deletion process later on
@@ -155,9 +155,9 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 
 		// check active endpoints for all model type
 		// if there are any active endpoint using the model version, deletion of the model version are prohibited
-		endpoints, response := c.VersionsController.getInactiveEndpointsForDeletion(ctx, model, version)
-		if response != nil {
-			return response
+		endpoints, errResponse := c.VersionsController.getInactiveEndpointsForDeletion(ctx, model, version)
+		if errResponse != nil {
+			return errResponse
 		}
 
 		// save all endpoint for deletion process later on
@@ -169,16 +169,16 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	for index, version := range versions {
 		if model.Type == "pyfunc_v2" {
 			// delete inactive prediction jobs for model with type pyfunc_v2
-			response := c.VersionsController.deletePredictionJobs(ctx, inactiveJobsInModel[index], model, version)
-			if response != nil {
-				return response
+			errResponse := c.VersionsController.deletePredictionJobs(ctx, inactiveJobsInModel[index], model, version)
+			if errResponse != nil {
+				return errResponse
 			}
 		}
 
 		// delete inactive endpoints for all model type
-		response := c.VersionsController.deleteVersionEndpoints(inactiveEndpointsInModel[index], version)
-		if response != nil {
-			return response
+		errResponse := c.VersionsController.deleteVersionEndpoints(inactiveEndpointsInModel[index], version)
+		if errResponse != nil {
+			return errResponse
 		}
 
 		// DELETE VERSION
@@ -191,7 +191,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	// undeploy all existing model endpoint
 	modelEndpoints, err := c.ModelEndpointsService.ListModelEndpoints(ctx, modelID)
 	if err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting list of model endpoint: %v", err.Error()))
 	}
 
 	for _, modelEndpoint := range modelEndpoints {
