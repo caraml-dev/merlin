@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
-import { EuiConfirmModal, EuiOverlayMask, EuiProgress } from "@elastic/eui";
+import React, { useEffect, useState } from "react";
+import { EuiConfirmModal, EuiOverlayMask, EuiProgress, EuiFieldText } from "@elastic/eui";
 import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import PropTypes from "prop-types";
@@ -27,6 +27,8 @@ const StopPredictionJobModal = ({ job, closeModal, fetchJobs }) => {
     {},
     false
   );
+
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   useEffect(() => {
     if (isLoaded) {
@@ -43,11 +45,20 @@ const StopPredictionJobModal = ({ job, closeModal, fetchJobs }) => {
         onConfirm={stopRunningJob}
         cancelButtonText="Cancel"
         confirmButtonText={job.status === "pending" || job.status === "running" ? "Stop Job" : "Delete Job"}
-        buttonColor="danger">
-        <p>
+        buttonColor="danger"
+        confirmButtonDisabled={deleteConfirmation !== `id-${job.id}-model-${job.model_id}-version-${job.version_id}`}>
+        <div>
           You're about to {job.status === "pending" || job.status === "running" ? "stop" : "delete"} prediction job id <b>{job.id}</b> in version{" "}
           <b>{job.version_id}</b> of model <b>{job.model_id}</b>.
-        </p>
+
+          <br/> <br/> To confirm, please type "<b>id-{job.id}-model-{job.model_id}-version-{job.version_id}</b>" in the box below
+            <EuiFieldText     
+              fullWidth            
+              placeholder={`id-${job.id}-model-${job.model_id}-version-${job.version_id}`}
+              value={deleteConfirmation}
+              onChange={(e) => setDeleteConfirmation(e.target.value)}
+              isInvalid={deleteConfirmation !== `id-${job.id}-model-${job.model_id}-version-${job.version_id}`} />  
+        </div>
         {isLoading && (
           <EuiProgress
             size="xs"

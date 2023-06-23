@@ -79,6 +79,8 @@ const DeleteModelVersionModal = ({
               <span>
                 You cannot delete this Model Version because there are <b> {activeEndpoints.length} Endpoints</b> using this version. 
                 <br/> <br/> If you still wish to delete this model version, please <b>Undeploy</b> Endpoints that use this version. <br/>
+
+                <ModelVersionEndpointsTable endpoints={activeEndpoints}/>
               </span>
             ) : (
               <div>
@@ -95,12 +97,12 @@ const DeleteModelVersionModal = ({
             )}
             <br></br>
             {activeEndpoints.length === 0 && inactiveEndpoints.length > 0 && (
+              <div>
                 <p>Deleting this Model Version will also delete {inactiveEndpoints.length} <b>Failed</b> Endpoints using this version. </p>
+                <ModelVersionEndpointsTable endpoints={inactiveEndpoints} />
+              </div>
+            
             )}
-
-            <ModelVersionEndpointsTable
-              endpoints={activeEndpoints.length > 0 ? activeEndpoints : inactiveEndpoints}
-            />
           </div>
         )}
         {isLoading && (

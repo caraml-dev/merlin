@@ -81,8 +81,8 @@ const DeleteModelVersionPyFuncV2Modal = ({
               <div>
                 You cannot delete this Model Version because there are <b> {activeJobs.length} Active Prediction Jobs</b> using this version. 
                 <br/> <br/> If you still wish to delete this model version, please <b>Terminate</b> Prediction Jobs that use this version or wait until the job completes.         
+                <ModelVersionJobsTable jobs={activeJobs} isLoaded={jobs.isLoaded} error={jobs.error} />
               </div>
-              
             ) : (
               <div>
                 You are about to delete model <b>{model.name}</b> version <b>{version.id}</b>. This action cannot be undone. 
@@ -98,9 +98,11 @@ const DeleteModelVersionPyFuncV2Modal = ({
             )}
             <br></br>
             {activeJobs.length === 0 && inactiveJobs.length > 0 && (
+              <div>
                 <span>Deleting this Model Version will also delete {inactiveJobs.length} <b>Inactive</b> Prediction Jobs using this version. <br/> <br/></span>
+                <ModelVersionJobsTable jobs={inactiveJobs} isLoaded={jobs.isLoaded} error={jobs.error} />
+              </div>
             )}
-            <ModelVersionJobsTable jobs={activeJobs.length > 0 ? activeJobs : inactiveJobs} isLoaded={jobs.isLoaded} error={jobs.error} />
           </div>
         )}
         {isLoading && (
