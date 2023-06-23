@@ -37,15 +37,11 @@ const ModelVersionEndpointsTable = ({ endpoints }) => {
         return "orange";
       case "pending":
         return "gray";
-      case "terminating":
-        return "warning";
       case "terminated":
         return "warning";
       case "failed":
         return "danger";
-      case "failed_submission":
-        return "danger";
-      case "completed":
+      case "serving":
         return "success";
       default:
         return "subdued";
