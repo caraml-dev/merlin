@@ -1,0 +1,6 @@
+DbConfig:
+  Host: 10.148.176.5
+  Port: 5432
+  Database: merlin
+  User: merlin
+  Password: WmU3blo4OTFzS3J1

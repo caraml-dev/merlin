@@ -41,9 +41,9 @@ store_cluster_secret() {
   cat <<EOF |  yq -P - > /tmp/temp_k8sconfig.yaml
 {
     "k8s_config": {
-        "name": $(k3d kubeconfig get "$CLUSTER_NAME" | yq .clusters[0].name -o json -),
+        "name": $(k3d kubeconfig get "$CLUSTER_NAME" | yq '.clusters[0].name' -o json -),
         "cluster": $(k3d kubeconfig get "$CLUSTER_NAME" | yq '.clusters[0].cluster | .server = "https://kubernetes.default.svc.cluster.local:443"' -o json -),
-        "user": $(k3d kubeconfig get "$CLUSTER_NAME" | yq .users[0].user -o json - )
+        "user": $(k3d kubeconfig get "$CLUSTER_NAME" | yq '.users[0].user' -o json - )
     }
 }
 EOF

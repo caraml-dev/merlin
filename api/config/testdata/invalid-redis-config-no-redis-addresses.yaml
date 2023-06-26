@@ -1,0 +1,6 @@
+StandardTransformerConfig:
+  FeastRedisConfig:
+    ServingURL: online-storage.merlin.dev
+    PoolSize: 4
+    MaxRetries: 1
+    DialTimeout: 10s

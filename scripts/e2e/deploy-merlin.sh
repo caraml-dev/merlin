@@ -16,9 +16,9 @@ TIMEOUT=300s
 install_merlin() {
   echo "::group::Merlin Deployment"
 
-  # build in json first, then convert to yaml
-  output=$(yq e -o json '.k8s_config' /tmp/temp_k8sconfig.yaml | jq -r -M -c .)
-  output="$output" yq '.environmentConfigs[0] *= load("/tmp/temp_k8sconfig.yaml") | .imageBuilder.k8sConfig |= strenv(output)' -i "./values-e2e.yaml"
+  # parse cluster credentials to chart values file
+  output=$(yq '.k8s_config' /tmp/temp_k8sconfig.yaml)
+  output="$output" yq ".environmentConfigs[0] *= load(\"/tmp/temp_k8sconfig.yaml\") | .imageBuilder.k8sConfig |= env(output)" -i "./values-e2e.yaml"
 
   helm repo add caraml https://caraml-dev.github.io/helm-charts
 

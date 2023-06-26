@@ -98,8 +98,8 @@ var (
 		},
 	}
 
-	oneMinuteDuration         = config.Duration(time.Minute * 1)
-	twoMinuteDuration         = config.Duration(time.Minute * 2)
+	oneMinuteDuration         = time.Minute * 1
+	twoMinuteDuration         = time.Minute * 2
 	standardTransformerConfig = config.StandardTransformerConfig{
 		ImageName:    "merlin-standard-transformer",
 		FeastCoreURL: "core.feast.dev:8081",
@@ -121,8 +121,8 @@ var (
 		},
 		FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{
 			Enabled: true,
-			Time:    time.Duration(30 * time.Second),
-			Timeout: time.Duration(1 * time.Second),
+			Time:    30 * time.Second,
+			Timeout: 1 * time.Second,
 		},
 		FeastBigtableConfig: &config.FeastBigtableConfig{
 			ServingURL:        "localhost:6867",
@@ -136,8 +136,8 @@ var (
 		BigtableCredential: "eyJrZXkiOiJ2YWx1ZSJ9",
 		ModelClientKeepAlive: &config.ModelClientKeepAliveConfig{
 			Enabled: true,
-			Time:    time.Duration(45 * time.Second),
-			Timeout: time.Duration(5 * time.Second),
+			Time:    45 * time.Second,
+			Timeout: 5 * time.Second,
 		},
 		Kafka: config.KafkaConfig{
 			Topic:               "",

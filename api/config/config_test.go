@@ -22,7 +22,6 @@ import (
 
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -54,26 +53,27 @@ func TestFeastServingURLs_URLs(t *testing.T) {
 
 //nolint:errcheck
 func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing.T) {
-	redisCfg := `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`
-	bigtableCfg := `{"serving_url":"10.1.1.3","project":"gcp-project","is_using_direct_storage":true,"instance":"instance","app_profile":"default","pool_size":3,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`
+	baseFilePath := "./testdata/config-1.yaml"
+	redisCfgFilePath := "./testdata/redis-config.yaml"
+	bigtableCfgFilePath := "./testdata/bigtable-config.yaml"
 	simulationRedisURL := "online-redis-serving.dev"
 	simulationBigtableURL := "online-bt-serving.dev"
 	testCases := []struct {
-		desc                  string
-		redisConfig           *string
-		bigtableConfig        *string
-		simulationRedisURL    *string
-		simulationBigtableURL *string
-		feastStorageCfg       feast.FeastStorageConfig
+		desc                   string
+		redisConfigFilePath    *string
+		bigtableConfigFilePath *string
+		simulationRedisURL     *string
+		simulationBigtableURL  *string
+		feastStorageCfg        feast.FeastStorageConfig
 
 		bigtableCredential string
 	}{
 		{
-			desc:                  "redis config and big table config set",
-			redisConfig:           &redisCfg,
-			bigtableConfig:        &bigtableCfg,
-			simulationRedisURL:    &simulationRedisURL,
-			simulationBigtableURL: &simulationBigtableURL,
+			desc:                   "redis config and big table config set",
+			redisConfigFilePath:    &redisCfgFilePath,
+			bigtableConfigFilePath: &bigtableCfgFilePath,
+			simulationRedisURL:     &simulationRedisURL,
+			simulationBigtableURL:  &simulationBigtableURL,
 			feastStorageCfg: feast.FeastStorageConfig{
 				spec.ServingSource_REDIS: &spec.OnlineStorage{
 					ServingType: spec.ServingType_FEAST_GRPC,
@@ -111,7 +111,7 @@ func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing
 		},
 		{
 			desc:                  "redis config set and big table config not set",
-			redisConfig:           &redisCfg,
+			redisConfigFilePath:   &redisCfgFilePath,
 			simulationRedisURL:    &simulationRedisURL,
 			simulationBigtableURL: &simulationBigtableURL,
 			feastStorageCfg: feast.FeastStorageConfig{
@@ -132,10 +132,10 @@ func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing
 			},
 		},
 		{
-			desc:                  "redis config not set and big table config set",
-			bigtableConfig:        &bigtableCfg,
-			simulationRedisURL:    &simulationRedisURL,
-			simulationBigtableURL: &simulationBigtableURL,
+			desc:                   "redis config not set and big table config set",
+			bigtableConfigFilePath: &bigtableCfgFilePath,
+			simulationRedisURL:     &simulationRedisURL,
+			simulationBigtableURL:  &simulationBigtableURL,
 			feastStorageCfg: feast.FeastStorageConfig{
 				spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
 					ServingType: spec.ServingType_FEAST_GRPC,
@@ -166,24 +166,24 @@ func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing
 		t.Run(tC.desc, func(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
-			if tC.redisConfig != nil {
-				os.Setenv("FEAST_REDIS_CONFIG", *tC.redisConfig)
+			filePaths := []string{baseFilePath}
+			if tC.redisConfigFilePath != nil {
+				filePaths = append(filePaths, *tC.redisConfigFilePath)
 			}
-			if tC.bigtableConfig != nil {
-				os.Setenv("FEAST_BIG_TABLE_CONFIG", *tC.bigtableConfig)
+			if tC.bigtableConfigFilePath != nil {
+				filePaths = append(filePaths, *tC.bigtableConfigFilePath)
 			}
 			if tC.simulationBigtableURL != nil {
-				os.Setenv("SIMULATION_FEAST_BIGTABLE_URL", *tC.simulationBigtableURL)
+				os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTBIGTABLEURL", *tC.simulationBigtableURL)
 			}
 			if tC.simulationRedisURL != nil {
-				os.Setenv("SIMULATION_FEAST_REDIS_URL", *tC.simulationRedisURL)
+				os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTREDISURL", *tC.simulationRedisURL)
 			}
-			os.Setenv("FEAST_BIGTABLE_CREDENTIAL", tC.bigtableCredential)
-
-			var cfg StandardTransformerConfig
-			err := envconfig.Process("", &cfg)
+			os.Setenv("STANDARDTRANSFORMERCONFIG_BIGTABLECREDENTIAL", tC.bigtableCredential)
+			var emptyCfg Config
+			cfg, err := Load(&emptyCfg, filePaths...)
 			require.NoError(t, err)
-			got := cfg.ToFeastStorageConfigsForSimulation()
+			got := cfg.StandardTransformerConfig.ToFeastStorageConfigsForSimulation()
 			assert.Equal(t, tC.feastStorageCfg, got)
 		})
 	}
@@ -191,21 +191,22 @@ func TestStandardTransformerConfig_ToFeastStorageConfigsForSimulation(t *testing
 
 //nolint:errcheck
 func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
-	redisCfg := `{"is_redis_cluster": true,"serving_url":"online-storage.merlin.dev","redis_addresses":["10.1.1.10", "10.1.1.11"],"pool_size": 4,"max_retries": 1,"dial_timeout": "10s"}`
-	bigtableCfg := `{"serving_url":"10.1.1.3","project":"gcp-project","is_using_direct_storage":true,"instance":"instance","app_profile":"default","pool_size":3,"keep_alive_interval":"2m","keep_alive_timeout":"1m"}`
+	baseFilePath := "./testdata/config-1.yaml"
+	redisCfgFilePath := "./testdata/redis-config.yaml"
+	bigtableCfgFilePath := "./testdata/bigtable-config.yaml"
 	simulationRedisURL := "online-redis-serving.dev"
 	simulationBigtableURL := "online-bt-serving.dev"
 	testCases := []struct {
-		desc               string
-		redisConfig        *string
-		bigtableConfig     *string
-		feastStorageCfg    feast.FeastStorageConfig
-		bigtableCredential string
+		desc                   string
+		redisConfigFilePath    *string
+		bigtableConfigFilePath *string
+		feastStorageCfg        feast.FeastStorageConfig
+		bigtableCredential     string
 	}{
 		{
-			desc:           "redis config and big table config set",
-			redisConfig:    &redisCfg,
-			bigtableConfig: &bigtableCfg,
+			desc:                   "redis config and big table config set",
+			redisConfigFilePath:    &redisCfgFilePath,
+			bigtableConfigFilePath: &bigtableCfgFilePath,
 			feastStorageCfg: feast.FeastStorageConfig{
 				spec.ServingSource_REDIS: &spec.OnlineStorage{
 					ServingType: spec.ServingType_FEAST_GRPC,
@@ -242,8 +243,8 @@ func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
 			bigtableCredential: `eyJrZXkiOiJ2YWx1ZSJ9`,
 		},
 		{
-			desc:        "redis config set and big table config not set",
-			redisConfig: &redisCfg,
+			desc:                "redis config set and big table config not set",
+			redisConfigFilePath: &redisCfgFilePath,
 			feastStorageCfg: feast.FeastStorageConfig{
 				spec.ServingSource_REDIS: &spec.OnlineStorage{
 					ServingType: spec.ServingType_FEAST_GRPC,
@@ -262,8 +263,8 @@ func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
 			},
 		},
 		{
-			desc:           "redis config not set and big table config set",
-			bigtableConfig: &bigtableCfg,
+			desc:                   "redis config not set and big table config set",
+			bigtableConfigFilePath: &bigtableCfgFilePath,
 			feastStorageCfg: feast.FeastStorageConfig{
 				spec.ServingSource_BIGTABLE: &spec.OnlineStorage{
 					ServingType: spec.ServingType_DIRECT_STORAGE,
@@ -292,19 +293,20 @@ func TestStandardTransformerConfig_ToFeastStorageConfigs(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			os.Clearenv()
 			setRequiredEnvironmentVariables()
-			if tC.redisConfig != nil {
-				os.Setenv("FEAST_REDIS_CONFIG", *tC.redisConfig)
+			filePaths := []string{baseFilePath}
+			if tC.redisConfigFilePath != nil {
+				filePaths = append(filePaths, *tC.redisConfigFilePath)
 			}
-			if tC.bigtableConfig != nil {
-				os.Setenv("FEAST_BIG_TABLE_CONFIG", *tC.bigtableConfig)
+			if tC.bigtableConfigFilePath != nil {
+				filePaths = append(filePaths, *tC.bigtableConfigFilePath)
 			}
-			os.Setenv("FEAST_BIGTABLE_CREDENTIAL", tC.bigtableCredential)
-			os.Setenv("SIMULATION_FEAST_BIGTABLE_URL", simulationBigtableURL)
-			os.Setenv("SIMULATION_FEAST_REDIS_URL", simulationRedisURL)
-			var cfg StandardTransformerConfig
-			err := envconfig.Process("", &cfg)
+			os.Setenv("STANDARDTRANSFORMERCONFIG_BIGTABLECREDENTIAL", tC.bigtableCredential)
+			os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTBIGTABLEURL", simulationBigtableURL)
+			os.Setenv("STANDARDTRANSFORMERCONFIG_SIMULATIONFEAST_FEASTREDISURL", simulationRedisURL)
+			var emptyCfg Config
+			cfg, err := Load(&emptyCfg, filePaths...)
 			require.NoError(t, err)
-			got := cfg.ToFeastStorageConfigs()
+			got := cfg.StandardTransformerConfig.ToFeastStorageConfigs()
 			assert.Equal(t, tC.feastStorageCfg, got)
 		})
 	}
