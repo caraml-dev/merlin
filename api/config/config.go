@@ -199,7 +199,6 @@ type ClusterConfig struct {
 type ImageBuilderConfig struct {
 	ClusterName                 string `validate:"required"`
 	GcpProject                  string
-	BuildContextURI             string `validate:"required"`
 	ContextSubPath              string
 	DockerfilePath              string           `validate:"required" default:"./Dockerfile"`
 	BaseImages                  BaseImageConfigs `validate:"required"`
