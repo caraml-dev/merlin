@@ -19,6 +19,8 @@
     * [Model Version Endpoint](user-guide/model_version_endpoint.md)
     * [Model Endpoint](user-guide/model_endpoint.md)
     * [Model Deployment and Serving](user-guide/model_deployment_serving.md)
+    * [Delete a Model](user-guide/model_deletion.md)
+    * [Delete a Model Version](user-guide/model_version_deletion.md)
 * [Batch Prediction](user-guide/batch_prediction.md)
 * [Transformer](user-guide/transformer.md)
     * [Standard Transformer](user-guide/standard_transformer.md)
