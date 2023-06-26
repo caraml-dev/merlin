@@ -33,6 +33,7 @@ type VersionsService interface {
 	ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig, query VersionQuery) ([]*models.Version, string, error)
 	Save(ctx context.Context, version *models.Version, monitoringConfig config.MonitoringConfig) (*models.Version, error)
 	FindByID(ctx context.Context, modelID, versionID models.ID, monitoringConfig config.MonitoringConfig) (*models.Version, error)
+	Delete(version *models.Version) error
 }
 
 func NewVersionsService(db *gorm.DB, mlpAPIClient mlp.APIClient) VersionsService {
@@ -300,4 +301,8 @@ func (service *versionsService) FindByID(ctx context.Context, modelID, versionID
 	}
 
 	return &version, nil
+}
+
+func (service *versionsService) Delete(version *models.Version) error {
+	return service.db.Delete(version).Error
 }

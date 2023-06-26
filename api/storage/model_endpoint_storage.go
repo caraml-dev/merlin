@@ -19,6 +19,8 @@ type ModelEndpointStorage interface {
 	ListModelEndpointsInProject(ctx context.Context, projectID models.ID, region string) ([]*models.ModelEndpoint, error)
 	// Save save newModelEndpoint and its nested version endpoint objects
 	Save(ctx context.Context, prevModelEndpoint, newModelEndpoint *models.ModelEndpoint) error
+	// Delete delete a model endpoint from the database
+	Delete(endpoint *models.ModelEndpoint) error
 }
 
 type modelEndpointStorage struct {
@@ -126,6 +128,10 @@ func (m *modelEndpointStorage) Save(ctx context.Context, prevModelEndpoint, newM
 	}
 
 	return nil
+}
+
+func (m *modelEndpointStorage) Delete(endpoint *models.ModelEndpoint) error {
+	return m.db.Delete(endpoint).Error
 }
 
 func (m *modelEndpointStorage) query() *gorm.DB {

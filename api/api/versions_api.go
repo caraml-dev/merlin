@@ -15,6 +15,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -139,6 +140,125 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 
 	version, _ = c.VersionsService.Save(ctx, version, c.MonitoringConfig)
 	return Created(version)
+}
+
+func (c *VersionsController) DeleteVersion(r *http.Request, vars map[string]string, _ interface{}) *Response {
+	ctx := r.Context()
+
+	modelID, err := models.ParseID(vars["model_id"])
+	if err != nil {
+		return BadRequest("Unable to parse model_id")
+	}
+	versionID, err := models.ParseID(vars["version_id"])
+	if err != nil {
+		return BadRequest("Unable to parse version_id")
+	}
+
+	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
+	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
+		}
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
+	}
+
+	// handle for pyfunc v2, since the prediction job feature is only available for pyfunc_v2 model
+	if model.Type == "pyfunc_v2" {
+		// check active prediction job
+		// if there are any active prediction job using the model version, deletion of the model version are prohibited
+		inactiveJobs, errResponse := c.getInactivePredictionJobsForDeletion(ctx, model, version)
+		if errResponse != nil {
+			return errResponse
+		}
+
+		// delete inactive prediction job
+		errResponse = c.deletePredictionJobs(ctx, inactiveJobs, model, version)
+		if errResponse != nil {
+			return errResponse
+		}
+	}
+
+	// check active endpoints for all model
+	// if there are any active endpoint using the model version, deletion of the model version are prohibited
+	inactiveEndpoints, errResponse := c.getInactiveEndpointsForDeletion(ctx, model, version)
+	if errResponse != nil {
+		return errResponse
+	}
+	// delete inactive endpoint
+	errResponse = c.deleteVersionEndpoints(inactiveEndpoints, version)
+	if errResponse != nil {
+		return errResponse
+	}
+
+	// delete mlflow run and artifact
+	err = c.MlflowDeleteService.DeleteRun(ctx, version.RunID, version.ArtifactURI, true)
+	if err != nil {
+		return InternalServerError(fmt.Sprintf("Delete mlflow run failed: %s", err.Error()))
+	}
+
+	// delete model version from db
+	err = c.VersionsService.Delete(version)
+	if err != nil {
+		return InternalServerError(fmt.Sprintf("Delete model version failed: %s", err.Error()))
+	}
+
+	return Ok(versionID)
+}
+
+func (c *VersionsController) getInactivePredictionJobsForDeletion(ctx context.Context, model *models.Model, version *models.Version) ([]*models.PredictionJob, *Response) {
+	jobQuery := &service.ListPredictionJobQuery{
+		ModelID:   model.ID,
+		VersionID: version.ID,
+	}
+
+	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, jobQuery)
+	if err != nil {
+		return nil, InternalServerError("Failed listing prediction job")
+	}
+
+	for _, item := range jobs {
+		if item.Status == models.JobPending || item.Status == models.JobRunning {
+			return nil, BadRequest("There are active prediction job that still using this model version")
+		}
+	}
+
+	return jobs, nil
+}
+
+func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, *Response) {
+
+	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
+	if err != nil {
+		return nil, InternalServerError("Failed listing model version endpoint")
+	}
+
+	for _, item := range endpoints {
+		if item.Status != models.EndpointTerminated && item.Status != models.EndpointFailed {
+			return nil, BadRequest("There are active endpoint that still using this model version")
+		}
+	}
+
+	return endpoints, nil
+}
+
+func (c *VersionsController) deleteVersionEndpoints(endpoints []*models.VersionEndpoint, version *models.Version) *Response {
+	for _, item := range endpoints {
+		err := c.EndpointsService.DeleteEndpoint(version, item)
+		if err != nil {
+			return InternalServerError(fmt.Sprintf("Failed to delete endpoint: %s", err))
+		}
+	}
+	return nil
+}
+
+func (c *VersionsController) deletePredictionJobs(ctx context.Context, jobs []*models.PredictionJob, model *models.Model, version *models.Version) *Response {
+	for _, item := range jobs {
+		_, err := c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
+		if err != nil {
+			return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
+		}
+	}
+	return nil
 }
 
 func validateLabels(labels models.KV) bool {
