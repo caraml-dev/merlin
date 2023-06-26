@@ -216,7 +216,7 @@ type ImageBuilderConfig struct {
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `validate:"required" default:"48h"`
 	Tolerations   Tolerations
-	NodeSelectors DictEnv
+	NodeSelectors map[string]string
 	MaximumRetry  int32                 `validate:"required" default:"3"`
 	K8sConfig     *mlpcluster.K8sConfig `validate:"required" default:"-"`
 	SafeToEvict   bool                  `default:"false"`
@@ -231,18 +231,6 @@ func (spec *Tolerations) Decode(value string) error {
 		return err
 	}
 	*spec = tolerations
-	return nil
-}
-
-type DictEnv map[string]string
-
-func (d *DictEnv) Decode(value string) error {
-	var dict DictEnv
-
-	if err := json.Unmarshal([]byte(value), &dict); err != nil {
-		return err
-	}
-	*d = dict
 	return nil
 }
 
