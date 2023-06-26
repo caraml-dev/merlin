@@ -5,7 +5,7 @@ export LOCAL_REGISTRY=dev.localhost
 export DOCKER_REGISTRY=${LOCAL_REGISTRY}:${LOCAL_REGISTRY_PORT}
 export VERSION=test-local
 export MLP_CHART_VERSION=0.4.18
-export MERLIN_CHART_VERSION=0.11.0
+export MERLIN_CHART_VERSION=0.11.1
 
 
 # Create k3d cluster and managed registry
