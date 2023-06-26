@@ -2,10 +2,10 @@
 
 A Merlin model version can be deleted only if it is not serving any endpoints, does not have any deployed endpoints, or if the model has the `pyfunc_v2` type, the model version must not have any active prediction jobs. Deleting a model version will result in purging the model version and its related entities, such as endpoints or prediction jobs, from the Merlin database. This action is **irreversible**.
 
-If there are any active prediction jobs or endpoints on the related model, the deletion will be prohibited.
+Model version with related active prediction jobs or endpoints can not be deleted.
 
 ## Model Version Deletion Via SDK
-To delete Model Version, you can call `delete_model_version()` function from Merlin Python SDK.
+To delete a Model Version, you can call `delete_model_version()` function from Merlin Python SDK.
 
 ```python
 merlin.set_project("test-project")
