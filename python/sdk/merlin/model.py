@@ -622,7 +622,7 @@ class Model:
     def delete_model(self) -> int:
         """
         Delete this model. Please note that any inactive related entity (model versions, endpoints and prediction jobs) will get deleted by this process.
-        Deletion will failed if there are any active related entity (model versions, endpoints and prediction jobs)
+        Deletion will fail if there are any active related entity (model versions, endpoints and prediction jobs)
 
         :return: id of deleted model
         """
@@ -1497,7 +1497,7 @@ class ModelVersion:
     def delete_model_version(self) -> int:
         """
         Delete this model version. Please note that any inactive related entity (endpoints and prediction jobs) will get deleted by this process.
-        Deletion will failed if there are any active related entity (endpoints and prediction jobs)
+        Deletion will fail if there are any active related entity (endpoints and prediction jobs)
 
         :return: id of deleted model
         """
