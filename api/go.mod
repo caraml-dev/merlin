@@ -7,7 +7,7 @@ require (
 	github.com/GoogleCloudPlatform/spark-on-k8s-operator v0.0.0-20220214044918-55732a6a392c
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/antihax/optional v1.0.0
-	github.com/antonmedv/expr v1.8.9
+	github.com/antonmedv/expr v1.12.5
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
