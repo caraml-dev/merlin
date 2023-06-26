@@ -236,61 +236,6 @@ func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context
 		if item.Status != models.EndpointTerminated && item.Status != models.EndpointFailed {
 			return nil, BadRequest("There are active endpoint that still using this model version")
 		}
-
-	return endpoints, nil
-}
-
-func (c *VersionsController) deleteVersionEndpoints(endpoints []*models.VersionEndpoint, version *models.Version) *Response {
-	for _, item := range endpoints {
-		err := c.EndpointsService.DeleteEndpoint(version, item)
-		if err != nil {
-			return InternalServerError(fmt.Sprintf("Failed to delete endpoint: %s", err))
-		}
-	}
-	return nil
-}
-
-func (c *VersionsController) deletePredictionJobs(ctx context.Context, jobs []*models.PredictionJob, model *models.Model, version *models.Version) *Response {
-	for _, item := range jobs {
-		_, err := c.PredictionJobService.StopPredictionJob(ctx, item.Environment, model, version, item.ID)
-		if err != nil {
-			return InternalServerError(fmt.Sprintf("Failed stopping prediction job: %s", err))
-		}
-	}
-	return nil
-}
-func (c *VersionsController) checkActivePredictionJobs(ctx context.Context, model *models.Model, version *models.Version) (int, []*models.PredictionJob, error) {
-	jobQuery := &service.ListPredictionJobQuery{
-		ModelID:   model.ID,
-		VersionID: version.ID,
-	}
-
-	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, jobQuery)
-	if err != nil {
-		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
-		return nil, InternalServerError("Failed listing prediction job")
-	}
-
-	for _, item := range jobs {
-		if item.Status == models.JobPending || item.Status == models.JobRunning {
-			return nil, BadRequest("There are active prediction job that still using this model version")
-		}
-	}
-
-	return jobs, nil
-}
-
-func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, *Response) {
-
-	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
-	if err != nil {
-		return nil, InternalServerError("Failed listing model version endpoint")
-	}
-
-	for _, item := range endpoints {
-		if item.Status != models.EndpointTerminated && item.Status != models.EndpointFailed {
-			return nil, BadRequest("There are active endpoint that still using this model version")
-		}
 	}
 
 	return endpoints, nil

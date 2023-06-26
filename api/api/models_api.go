@@ -21,7 +21,6 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
@@ -164,19 +163,6 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		// save all endpoint for deletion process later on
 		inactiveEndpointsInModel = append(inactiveEndpointsInModel, endpoints)
 
-			// SAVE ENTITY TO A LIST
-			allEndpointInModel = append(allEndpointInModel, endpoints...)
-
-		// check active endpoints for all model type
-		// if there are any active endpoint using the model version, deletion of the model version are prohibited
-		endpoints, response := c.VersionsController.getInactiveEndpointsForDeletion(ctx, model, version)
-		if response != nil {
-			return response
-		}
-
-		// save all endpoint for deletion process later on
-		inactiveEndpointsInModel = append(inactiveEndpointsInModel, endpoints)
-
 	}
 
 	// DELETING ALL THE RELATED ENTITY
@@ -200,12 +186,6 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 		if err != nil {
 			return InternalServerError(fmt.Sprintf("Delete version id %d failed: %s", version.ID, err.Error()))
 		}
-		// DELETE VERSION
-		err = c.VersionsService.Delete(version)
-		if err != nil {
-			log.Errorf("failed to delete model version %v", err)
-			return InternalServerError(fmt.Sprintf("Delete Failed: %s", err.Error()))
-		}
 	}
 
 	// undeploy all existing model endpoint
@@ -213,12 +193,6 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error getting list of model endpoint: %v", err.Error()))
 	}
-
-	for _, modelEndpoint := range modelEndpoints {
-		err := c.ModelEndpointsService.DeleteModelEndpoint(modelEndpoint)
-		if err != nil {
-			return InternalServerError(err.Error())
-		}
 
 	for _, modelEndpoint := range modelEndpoints {
 		err := c.ModelEndpointsService.DeleteModelEndpoint(modelEndpoint)
