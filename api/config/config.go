@@ -428,7 +428,7 @@ type JaegerConfig struct {
 }
 
 type MlflowConfig struct {
-	TrackingURL string `validate:"required"`
+	TrackingURL         string `validate:"required"`
 	ArtifactServiceType string `validate:"required"`
 }
 
