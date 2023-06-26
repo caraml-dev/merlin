@@ -197,22 +197,21 @@ type ClusterConfig struct {
 }
 
 type ImageBuilderConfig struct {
-	ClusterName                  string `validate:"required"`
-	GcpProject                   string
-	BuildContextURI              string `validate:"required"`
-	ContextSubPath               string
-	DockerfilePath               string           `validate:"required" default:"./Dockerfile"`
-	BaseImages                   BaseImageConfigs `validate:"required"`
-	PredictionJobBuildContextURI string           `validate:"required"`
-	PredictionJobContextSubPath  string
-	PredictionJobDockerfilePath  string           `validate:"required" default:"./Dockerfile"`
-	PredictionJobBaseImages      BaseImageConfigs `validate:"required"`
-	BuildNamespace               string           `validate:"required" default:"mlp"`
-	DockerRegistry               string           `validate:"required"`
-	BuildTimeout                 string           `validate:"required" default:"10m"`
-	KanikoImage                  string           `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
-	KanikoServiceAccount         string
-	Resources                    ResourceRequestsLimits `validate:"required"`
+	ClusterName                 string `validate:"required"`
+	GcpProject                  string
+	BuildContextURI             string `validate:"required"`
+	ContextSubPath              string
+	DockerfilePath              string           `validate:"required" default:"./Dockerfile"`
+	BaseImages                  BaseImageConfigs `validate:"required"`
+	PredictionJobContextSubPath string
+	PredictionJobDockerfilePath string           `validate:"required" default:"./Dockerfile"`
+	PredictionJobBaseImages     BaseImageConfigs `validate:"required"`
+	BuildNamespace              string           `validate:"required" default:"mlp"`
+	DockerRegistry              string           `validate:"required"`
+	BuildTimeout                string           `validate:"required" default:"10m"`
+	KanikoImage                 string           `validate:"required" default:"gcr.io/kaniko-project/executor:v1.6.0"`
+	KanikoServiceAccount        string
+	Resources                   ResourceRequestsLimits `validate:"required"`
 	// How long to keep the image building job resource in the Kubernetes cluster. Default: 2 days (48 hours).
 	Retention     time.Duration `validate:"required" default:"48h"`
 	Tolerations   Tolerations
