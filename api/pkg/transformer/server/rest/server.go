@@ -310,7 +310,6 @@ func run(name string, handler http.Handler, opt *config.Options, logger *zap.Log
 }
 
 func attachInstrumentationRoutes(router *mux.Router) {
-	router.Use(middleware.TracingPropagatorHandler)
 	router.Use(middleware.RecoveryHandler)
 
 	health := healthcheck.NewHandler()

@@ -23,6 +23,7 @@ import (
 	"github.com/gorilla/mux"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/jinzhu/copier"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
@@ -134,7 +135,7 @@ func (us *UPIServer) Run() {
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			interceptors.PanicRecoveryInterceptor(),
-			interceptors.TracingPropagatorInterceptor(),
+			otelgrpc.UnaryServerInterceptor(),
 		)),
 	}
 	grpcServer := grpc.NewServer(opts...)

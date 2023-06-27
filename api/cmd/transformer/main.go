@@ -67,9 +67,13 @@ type AppConfig struct {
 	Tracing JaegerTracing
 }
 
+// JaegerConfig holds configuration about jaeger tracing
 type JaegerTracing struct {
-	Disabled           bool    `envconfig:"JAEGER_DISABLED" default:"true"`
-	CollectorURL       string  `envconfig:"JAEGER_ENDPOINT"`
+	// Disabled the tracing, will create NoOpTracerProvider
+	Disabled bool `envconfig:"JAEGER_DISABLED" default:"true"`
+	// Collector endpoint URL
+	CollectorURL string `envconfig:"JAEGER_ENDPOINT"`
+	// Probability the trace will be sampled
 	SamplerProbability float64 `envconfig:"JAEGER_SAMPLER_PARAM" default:"0.1"`
 }
 
