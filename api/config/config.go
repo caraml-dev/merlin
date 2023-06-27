@@ -301,15 +301,15 @@ type ModelClientKeepAliveConfig struct {
 type StandardTransformerConfig struct {
 	ImageName             string `validate:"required"`
 	FeastServingURLs      FeastServingURLs
-	FeastCoreURL          string                       `validate:"required"`
-	FeastCoreAuthAudience string                       `validate:"required"`
-	EnableAuth            bool                         `default:"false"`
-	FeastRedisConfig      *FeastRedisConfig            `default:"-"`
-	FeastBigtableConfig   *FeastBigtableConfig         `default:"-"`
-	FeastGPRCConnCount    int                          `validate:"required" default:"10"`
-	FeastServingKeepAlive *FeastServingKeepAliveConfig `default:"-"`
-	ModelClientKeepAlive  *ModelClientKeepAliveConfig  `default:"-"`
-	ModelServerConnCount  int                          `validate:"required" default:"10"`
+	FeastCoreURL          string               `validate:"required"`
+	FeastCoreAuthAudience string               `validate:"required"`
+	EnableAuth            bool                 `default:"false"`
+	FeastRedisConfig      *FeastRedisConfig    `default:"-"`
+	FeastBigtableConfig   *FeastBigtableConfig `default:"-"`
+	FeastGPRCConnCount    int                  `validate:"required" default:"10"`
+	FeastServingKeepAlive *FeastServingKeepAliveConfig
+	ModelClientKeepAlive  *ModelClientKeepAliveConfig
+	ModelServerConnCount  int `validate:"required" default:"10"`
 	// Base64 Service Account
 	BigtableCredential string
 	DefaultFeastSource spec.ServingSource    `validate:"required" default:"2"`
