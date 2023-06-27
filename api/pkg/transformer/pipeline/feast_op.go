@@ -3,7 +3,6 @@ package pipeline
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
 	"github.com/caraml-dev/merlin/pkg/transformer/feast"
@@ -38,9 +37,9 @@ func NewFeastOp(feastClients feast.Clients, feastOptions *feast.Options, entityE
 	return feastOp
 }
 
-func (op *FeastOp) Execute(context context.Context, env *Environment) error {
-	span, ctx := opentracing.StartSpanFromContext(context, "pipeline.FeastOp")
-	defer span.Finish()
+func (op *FeastOp) Execute(ctx context.Context, env *Environment) error {
+	ctx, span := tracer.Start(ctx, "pipeline.FeastOp")
+	defer span.End()
 
 	featureTables, err := op.feastRetriever.RetrieveFeatureOfEntityInSymbolRegistry(ctx, env.SymbolRegistry())
 	if err != nil {

@@ -37,6 +37,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.1.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/jinzhu/copier v0.3.5
 	github.com/jinzhu/gorm v1.9.11
@@ -48,7 +49,6 @@ require (
 	github.com/mmcloughlin/geohash v0.10.0
 	github.com/newrelic/newrelic-client-go/v2 v2.17.0
 	github.com/opentracing-contrib/go-grpc v0.0.0-20200813121455-4a6760c71486
-	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/ory/viper v1.7.5
 	github.com/patrickmn/go-cache v2.1.0+incompatible

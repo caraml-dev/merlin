@@ -69,7 +69,7 @@ type AppConfig struct {
 
 type JaegerTracing struct {
 	Disabled           bool    `envconfig:"JAEGER_DISABLED" default:"true"`
-	CollectorURL       string  `envconfig:"JAEGER_COLLECTOR"`
+	CollectorURL       string  `envconfig:"JAEGER_ENDPOINT"`
 	SamplerProbability float64 `envconfig:"JAEGER_SAMPLER_PARAM" default:"0.1"`
 }
 

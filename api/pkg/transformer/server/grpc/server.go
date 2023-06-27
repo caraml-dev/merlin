@@ -21,8 +21,8 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/go-coldbrew/grpcpool"
 	"github.com/gorilla/mux"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/jinzhu/copier"
-	"github.com/opentracing/opentracing-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
@@ -104,7 +104,7 @@ func NewUPIServer(opts *config.Options, handler *pipeline.Handler, instrumentati
 		conn:                  connPool,
 		instrumentationRouter: instrumentationRouter,
 		logger:                logger,
-		tracer:                otel.Tracer("pkg.transformer.server.grpcserver.go"),
+		tracer:                otel.Tracer("pkg/transformer/server/grpc"),
 	}
 
 	if handler != nil {
@@ -132,7 +132,10 @@ func (us *UPIServer) Run() {
 	httpLis := m.Match(cmux.HTTP1Fast())
 
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(interceptors.PanicRecoveryInterceptor()),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			interceptors.PanicRecoveryInterceptor(),
+			interceptors.TracingPropagatorInterceptor(),
+		)),
 	}
 	grpcServer := grpc.NewServer(opts...)
 	reflection.Register(grpcServer)
@@ -204,13 +207,13 @@ func setupSignalHandler() (stopCh <-chan struct{}) {
 // PredictValues method to performing model prediction
 // it is including preprocessing - model infer - postprocessing
 func (us *UPIServer) PredictValues(ctx context.Context, request *upiv1.PredictValuesRequest) (response *upiv1.PredictValuesResponse, grpcErr error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
-	defer span.Finish()
+	meta := getMetadata(ctx)
+	ctx, span := us.tracer.Start(ctx, "PredictHandler")
+	defer span.End()
 
 	if us.ContextModifier != nil {
 		ctx = us.ContextModifier(ctx)
 	}
-	meta := getMetadata(ctx)
 
 	if us.PredictionLogHandler != nil {
 		defer func() {
@@ -255,8 +258,8 @@ func (us *UPIServer) PredictValues(ctx context.Context, request *upiv1.PredictVa
 }
 
 func (us *UPIServer) preprocess(ctx context.Context, request *upiv1.PredictValuesRequest, meta map[string]string) (*upiv1.PredictValuesRequest, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, string(types.Preprocess))
-	defer span.Finish()
+	ctx, span := us.tracer.Start(ctx, string(types.Preprocess))
+	defer span.End()
 
 	if us.PreprocessHandler == nil {
 		return request, nil
@@ -280,8 +283,8 @@ func (us *UPIServer) preprocess(ctx context.Context, request *upiv1.PredictValue
 }
 
 func (us *UPIServer) postprocess(ctx context.Context, response *upiv1.PredictValuesResponse, meta map[string]string) (*upiv1.PredictValuesResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, string(types.Postprocess))
-	defer span.Finish()
+	ctx, span := us.tracer.Start(ctx, string(types.Postprocess))
+	defer span.End()
 
 	if us.PostprocessHandler == nil {
 		return response, nil
@@ -304,8 +307,8 @@ func (us *UPIServer) postprocess(ctx context.Context, response *upiv1.PredictVal
 }
 
 func (us *UPIServer) predict(ctx context.Context, payload *upiv1.PredictValuesRequest) (*upiv1.PredictValuesResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "predict")
-	defer span.Finish()
+	ctx, span := us.tracer.Start(ctx, string("predict"))
+	defer span.End()
 
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		ctx = metadata.NewOutgoingContext(ctx, md)

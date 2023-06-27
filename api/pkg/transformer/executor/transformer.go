@@ -12,7 +12,6 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	upiv1 "github.com/caraml-dev/universal-prediction-interface/gen/go/grpc/caraml/upi/v1"
-	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -81,9 +80,6 @@ func NewStandardTransformerWithConfig(ctx context.Context, transformerConfig *sp
 
 // Predict will process all standard transformer request including preprocessing, model prediction and postprocess
 func (st *standardTransformer) Execute(ctx context.Context, requestBody types.JSONObject, requestHeaders map[string]string) *types.PredictResponse {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "st.Execute")
-	defer span.Finish()
-
 	requestPayload, err := createRequestPayload(st.executorConfig.protocol, requestBody)
 	if err != nil {
 		st.logger.Warn("request payload conversion", zap.Any("err", err.Error()))
