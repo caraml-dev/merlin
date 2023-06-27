@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
-import { EuiConfirmModal, EuiOverlayMask, EuiProgress } from "@elastic/eui";
+import React, { useEffect, useState } from "react";
+import { EuiConfirmModal, EuiOverlayMask, EuiProgress, EuiFieldText } from "@elastic/eui";
 import mocks from "../../mocks";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import PropTypes from "prop-types";
 
-const StopPredictionJobModal = ({ job, closeModal }) => {
+const StopPredictionJobModal = ({ job, closeModal, fetchJobs }) => {
   const [{ isLoading, isLoaded }, stopRunningJob] = useMerlinApi(
     `/models/${job.model_id}/versions/${job.version_id}/jobs/${job.id}/stop`,
     { method: "PUT", addToast: true, mock: mocks.noBody },
@@ -28,25 +28,37 @@ const StopPredictionJobModal = ({ job, closeModal }) => {
     false
   );
 
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+
   useEffect(() => {
     if (isLoaded) {
       closeModal();
+      fetchJobs()
     }
-  }, [isLoaded, closeModal]);
+  }, [isLoaded, closeModal, fetchJobs]);
 
   return (
     <EuiOverlayMask>
       <EuiConfirmModal
-        title="Stop running job"
+        title={job.status === "pending" || job.status === "running" ? "Stop Job" : "Delete Job"}
         onCancel={closeModal}
         onConfirm={stopRunningJob}
         cancelButtonText="Cancel"
-        confirmButtonText="Stop Job"
-        buttonColor="danger">
-        <p>
-          You're about to stop prediction job id <b>{job.id}</b> in version{" "}
+        confirmButtonText={job.status === "pending" || job.status === "running" ? "Stop Job" : "Delete Job"}
+        buttonColor="danger"
+        confirmButtonDisabled={deleteConfirmation !== `id-${job.id}-model-${job.model_id}-version-${job.version_id}`}>
+        <div>
+          You're about to {job.status === "pending" || job.status === "running" ? "stop" : "delete"} prediction job id <b>{job.id}</b> in version{" "}
           <b>{job.version_id}</b> of model <b>{job.model_id}</b>.
-        </p>
+
+          <br/> <br/> To confirm, please type "<b>id-{job.id}-model-{job.model_id}-version-{job.version_id}</b>" in the box below
+            <EuiFieldText     
+              fullWidth            
+              placeholder={`id-${job.id}-model-${job.model_id}-version-${job.version_id}`}
+              value={deleteConfirmation}
+              onChange={(e) => setDeleteConfirmation(e.target.value)}
+              isInvalid={deleteConfirmation !== `id-${job.id}-model-${job.model_id}-version-${job.version_id}`} />  
+        </div>
         {isLoading && (
           <EuiProgress
             size="xs"
