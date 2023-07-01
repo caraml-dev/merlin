@@ -1,4 +1,3 @@
-include .env.sample
 export
 
 BIN_NAME=merlin
@@ -129,7 +128,7 @@ build-inference-logger:
 .PHONY: run
 run:
 	@echo "> Running application ..."
-	@./bin/${BIN_NAME}
+	@./bin/${BIN_NAME} -config ./env-config.yaml
 
 .PHONY: run-ui
 run-ui:

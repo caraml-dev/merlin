@@ -27,7 +27,7 @@ make setup
 
 To start Merlin locally you have to:
 
-- Replace `VAULT_TOKEN` value in .env.sample
+- Generate the local / test cluster credentials and add to `./environment.yaml` and `./env-config.yaml`
 
 Then execute:
 

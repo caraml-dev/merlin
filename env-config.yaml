@@ -1,0 +1,72 @@
+ClusterConfig:
+  EnvironmentConfigPath: ./environment.yaml
+
+DbConfig:
+  Host: localhost
+  Port: 5432
+  User: merlin
+  Password: merlin
+  Database: merlin
+
+ReactAppConfig:
+  HomePage: /merlin
+  MerlinURL: http://localhost:8080/v1
+  MlpURL: http://localhost:8080/v1
+
+NewRelic:
+  Enabled: false
+
+ImageBuilderConfig:
+  ClusterName: id-dev
+  Resources:
+    Requests:
+      CPU: 2
+      Memory: 1Gi
+    Limits:
+      CPU: 2
+      Memory: 1Gi
+  PredictionJobBaseImages:
+    "3.7.*":
+      ImageName: ghcr.io/caraml-dev/merlin-pyspark-base:v0.7.0
+      DockerfilePath:  docker/app.Dockerfile
+      BuildContextURI: ""
+      MainAppPath: /merlin-spark-app/main.py
+  BuildNamespace: mlp
+  DockerRegistry: ghcr.io/caraml-dev
+  BuildTimeout: 10m
+  PredictionJobContextSubPath: python/batch-predictor
+  ContextSubPath: python/pyfunc-server
+  K8sConfig:
+    name: id-dev
+    cluster:
+      server: https://kubernetes.default.svc.cluster.local:443
+      certificate-authority-data: # Add in
+    user:
+      client-certificate-data: # Add in
+      client-key-data: # Add in
+
+AuthorizationConfig:
+  AuthorizationEnabled: false
+
+FeatureToggleConfig:
+  MonitoringConfig:
+    MonitoringEnabled: false
+  AlertConfig:
+    AlertEnabled: false
+
+MlpAPIConfig:
+  APIHost: https://caraml.dev/mlp
+
+StandardTransformerConfig:
+  ImageName: ghcr.io/caraml-dev/merlin-transformer:0.25.0
+  FeastCoreURL: https://caraml.dev/feast
+  FeastCoreAuthAudience: false
+  SimulationFeast:
+    FeastRedisURL: https://caraml.dev/feast/redis
+    FeastBigtableURL: https://caraml.dev/feast/bigtable
+  Kafka:
+    Brokers: localhost:9092
+
+MlflowConfig:
+  TrackingURL: https://caraml.dev/mlflow
+  ArtifactServiceType: nop

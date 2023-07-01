@@ -1,4 +1,3 @@
-include .env.sample
 export
 
 BIN_NAME=feast-transformer
