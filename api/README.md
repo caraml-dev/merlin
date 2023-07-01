@@ -27,7 +27,9 @@ make setup
 
 To start Merlin locally you have to:
 
-- Generate the local / test cluster credentials and add to `./environment.yaml` and `./env-config.yaml`
+```bash
+make build
+```
 
 Then execute:
 

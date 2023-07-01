@@ -39,11 +39,14 @@ ImageBuilderConfig:
   K8sConfig:
     name: id-dev
     cluster:
-      server: https://kubernetes.default.svc.cluster.local:443
-      certificate-authority-data: # Add in
+      server: id-dev.k8s-cluster
+      insecure-skip-tls-verify: true
     user:
-      client-certificate-data: # Add in
-      client-key-data: # Add in
+      exec:
+        apiVersion: client.authentication.k8s.io/v1beta1
+        command: gke-gcloud-auth-plugin
+        interactiveMode: IfAvailable
+        provideClusterInfo: true
 
 AuthorizationConfig:
   AuthorizationEnabled: false
