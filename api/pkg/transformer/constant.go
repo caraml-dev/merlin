@@ -18,11 +18,9 @@ const (
 
 	FeastFeatureJSONField = "feast_features"
 
-	JaegerAgentHost    = "JAEGER_AGENT_HOST"
-	JaegerAgentPort    = "JAEGER_AGENT_PORT"
-	JaegerSamplerType  = "JAEGER_SAMPLER_TYPE"
 	JaegerSamplerParam = "JAEGER_SAMPLER_PARAM"
 	JaegerDisabled     = "JAEGER_DISABLED"
+	JaegerCollectorURL = "JAEGER_COLLECTOR_URL"
 
 	KafkaTopic               = "KAFKA_TOPIC"
 	KafkaBrokers             = "KAFKA_BROKERS"

@@ -72,7 +72,7 @@ type JaegerTracing struct {
 	// Disabled the tracing, will create NoOpTracerProvider
 	Disabled bool `envconfig:"JAEGER_DISABLED" default:"true"`
 	// Collector endpoint URL
-	CollectorURL string `envconfig:"JAEGER_ENDPOINT"`
+	CollectorURL string `envconfig:"JAEGER_COLLECTOR_URL"`
 	// Probability the trace will be sampled
 	SamplerProbability float64 `envconfig:"JAEGER_SAMPLER_PARAM" default:"0.1"`
 }

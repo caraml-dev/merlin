@@ -406,9 +406,7 @@ func (u *FeastServingURLs) URLs() []string {
 }
 
 type JaegerConfig struct {
-	AgentHost    string
-	AgentPort    string
-	SamplerType  string `validate:"required" default:"probabilistic"`
+	CollectorURL string `validate:"required"`
 	SamplerParam string `validate:"required" default:"0.01"`
 	Disabled     string `validate:"required" default:"true"`
 }
