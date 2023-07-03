@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -91,6 +92,60 @@ func TestUnmarshalTopologySpreadConstraints(t *testing.T) {
 			} else {
 				assert.EqualError(t, err, tC.errString)
 				assert.Nil(t, topologySpreadConstraints)
+			}
+		})
+	}
+}
+
+func TestPDBConfig(t *testing.T) {
+	defaultMaxUnavailablePercentage := 20
+
+	testCases := []struct {
+		desc              string
+		envConfigPath     string
+		expectedPDBConfig PodDisruptionBudgetConfig
+		validateErr       error
+	}{
+		{
+			desc:          "Success: valid pdb config",
+			envConfigPath: "./testdata/valid-environment-1.yaml",
+			expectedPDBConfig: PodDisruptionBudgetConfig{
+				Enabled:                  true,
+				MaxUnavailablePercentage: &defaultMaxUnavailablePercentage,
+			},
+		},
+		{
+			desc:          "Invalid: both pdb maxUnavailable and minUnavailable is set",
+			envConfigPath: "./testdata/invalid-pdb-environment-both-set.yaml",
+			validateErr:   fmt.Errorf("invalid environment config: Key: 'EnvironmentConfig.PodDisruptionBudget.max_unavailable_percentage' Error:Field validation for 'max_unavailable_percentage' failed on the 'choose_one[max_unavailable_percentage,min_available_percentage]' tag\nKey: 'EnvironmentConfig.PodDisruptionBudget.min_available_percentage' Error:Field validation for 'min_available_percentage' failed on the 'choose_one[max_unavailable_percentage,min_available_percentage]' tag"),
+		},
+		{
+			desc:          "Invalid: both pdb maxUnavailable and minUnavailable is set",
+			envConfigPath: "./testdata/invalid-pdb-environment-both-nil.yaml",
+			validateErr:   fmt.Errorf("invalid environment config: Key: 'EnvironmentConfig.PodDisruptionBudget.max_unavailable_percentage' Error:Field validation for 'max_unavailable_percentage' failed on the 'choose_one[max_unavailable_percentage,min_available_percentage]' tag\nKey: 'EnvironmentConfig.PodDisruptionBudget.min_available_percentage' Error:Field validation for 'min_available_percentage' failed on the 'choose_one[max_unavailable_percentage,min_available_percentage]' tag"),
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			envConfigs, err := InitEnvironmentConfigs(tC.envConfigPath)
+			if tC.validateErr == nil {
+				assert.Nil(t, err)
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, tC.validateErr, err)
+				return
+			}
+
+			cfg := &Config{
+				ClusterConfig: ClusterConfig{
+					EnvironmentConfigs: envConfigs,
+				},
+			}
+
+			for _, envCfg := range cfg.ClusterConfig.EnvironmentConfigs {
+				deploymentCfg := ParseDeploymentConfig(envCfg, "")
+				assert.Equal(t, tC.expectedPDBConfig, deploymentCfg.PodDisruptionBudget)
 			}
 		})
 	}

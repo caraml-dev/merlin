@@ -41,6 +41,8 @@ type DeploymentConfig struct {
 	QueueResourcePercentage string
 	// GRPC Options for Pyfunc server
 	PyfuncGRPCOptions string
+	// PDB config to be applied on models and transformers
+	PodDisruptionBudget PodDisruptionBudgetConfig
 }
 
 type ResourceRequests struct {
@@ -52,4 +54,13 @@ type ResourceRequests struct {
 	CPURequest resource.Quantity
 	// Memory request of inference service
 	MemoryRequest resource.Quantity
+}
+
+// PodDisruptionBudgetConfig are the configuration for PodDisruptionBudgetConfig for
+// Turing services.
+type PodDisruptionBudgetConfig struct {
+	Enabled bool `yaml:"enabled"`
+	// Can specify only one of maxUnavailable and minAvailable
+	MaxUnavailablePercentage *int `yaml:"max_unavailable_percentage"`
+	MinAvailablePercentage   *int `yaml:"min_available_percentage"`
 }

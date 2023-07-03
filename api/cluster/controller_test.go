@@ -21,11 +21,16 @@ import (
 	"testing"
 	"time"
 
+	clusterresource "github.com/caraml-dev/merlin/cluster/resource"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	fakekserve "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
 	fakekservev1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,14 +38,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/fake"
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
+	fakepolicyv1 "k8s.io/client-go/kubernetes/typed/policy/v1/fake"
 	ktesting "k8s.io/client-go/testing"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
-
-	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/mlp"
-	"github.com/caraml-dev/merlin/models"
 )
 
 const (
@@ -58,6 +60,7 @@ const (
 	namespaceResource = "namespaces"
 	podResource       = "pods"
 	jobResource       = "jobs"
+	pdbResource       = "poddisruptionbudgets"
 
 	baseUrl = "example.com"
 )
@@ -263,6 +266,8 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 				return true, tt.createResult.namespace, tt.createResult.err
 			})
 
+			policyV1Client := fake.NewSimpleClientset().PolicyV1()
+
 			deployConfig := config.DeploymentConfig{
 				NamespaceTimeout:             tt.nsTimeout,
 				DeploymentTimeout:            2 * tickDurationSecond * time.Second,
@@ -270,7 +275,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			ctl, _ := newController(kfClient, v1Client, nil, deployConfig, containerFetcher, nil)
+			ctl, _ := newController(kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, nil)
 			iSvc, err := ctl.Deploy(context.Background(), modelSvc)
 
 			if tt.wantError {
@@ -285,6 +290,8 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 }
 
 func TestController_DeployInferenceService(t *testing.T) {
+	defaultMaxUnavailablePDB := 20
+
 	deployTimeout := 2 * tickDurationSecond * time.Second
 	model := &models.Model{
 		Name: "my-model",
@@ -302,6 +309,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: project.Name},
 		Status:     corev1.NamespaceStatus{Phase: corev1.NamespaceActive},
 	}
+	pdb := &policyv1.PodDisruptionBudget{}
 
 	modelSvc := &models.Service{
 		Name:      isvcName,
@@ -396,11 +404,43 @@ func TestController_DeployInferenceService(t *testing.T) {
 			false,
 		},
 		{
+			"success: create inference service with transformer",
+			&models.Service{
+				Name:      isvcName,
+				Namespace: project.Name,
+				Options:   modelOpt,
+				Transformer: &models.Transformer{
+					Enabled:         true,
+					TransformerType: models.StandardTransformerType,
+					Image:           "ghcr.io/caraml-dev/merlin-transformer-test",
+				},
+			},
+			&inferenceServiceReactor{
+				nil,
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
+			},
+			&inferenceServiceReactor{
+				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
+				nil,
+			},
+			nil,
+			&inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
+					Status:     statusReady,
+				},
+				nil,
+			},
+			deployTimeout,
+			false,
+		},
+		{
 			"error: failed get",
 			modelSvc,
 			&inferenceServiceReactor{
 				nil,
-				errors.New("error")},
+				errors.New("error"),
+			},
 			&inferenceServiceReactor{
 				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil,
@@ -425,7 +465,8 @@ func TestController_DeployInferenceService(t *testing.T) {
 			},
 			&inferenceServiceReactor{
 				nil,
-				errors.New("error creating inference service")},
+				errors.New("error creating inference service"),
+			},
 			nil,
 			&inferenceServiceReactor{
 				&kservev1beta1.InferenceService{
@@ -447,7 +488,8 @@ func TestController_DeployInferenceService(t *testing.T) {
 			nil,
 			&inferenceServiceReactor{
 				nil,
-				errors.New("error updating inference service")},
+				errors.New("error updating inference service"),
+			},
 			&inferenceServiceReactor{
 				&kservev1beta1.InferenceService{
 					ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name},
@@ -635,16 +677,31 @@ func TestController_DeployInferenceService(t *testing.T) {
 				return true, namespace, nil
 			})
 
+			policyV1Client := fake.NewSimpleClientset().PolicyV1().(*fakepolicyv1.FakePolicyV1)
+			policyV1Client.Fake.PrependReactor("patch", pdbResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, pdb, nil
+			})
+
 			deployConfig := config.DeploymentConfig{
-				DeploymentTimeout:            tt.deployTimeout,
-				NamespaceTimeout:             2 * tickDurationSecond * time.Second,
-				MaxCPU:                       resource.MustParse("8"),
-				MaxMemory:                    resource.MustParse("8Gi"),
-				DefaultModelResourceRequests: &config.ResourceRequests{},
+				DeploymentTimeout:                  tt.deployTimeout,
+				NamespaceTimeout:                   2 * tickDurationSecond * time.Second,
+				MaxCPU:                             resource.MustParse("8"),
+				MaxMemory:                          resource.MustParse("8Gi"),
+				DefaultModelResourceRequests:       &config.ResourceRequests{},
+				DefaultTransformerResourceRequests: &config.ResourceRequests{},
+				PodDisruptionBudget: config.PodDisruptionBudgetConfig{
+					Enabled:                  true,
+					MaxUnavailablePercentage: &defaultMaxUnavailablePDB,
+				},
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			ctl, _ := newController(kfClient, v1Client, nil, deployConfig, containerFetcher, nil)
+			templater := clusterresource.NewInferenceServiceTemplater(config.StandardTransformerConfig{
+				ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
+				FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
+			})
+
+			ctl, _ := newController(kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, templater)
 			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
 
 			if tt.wantError {
@@ -782,7 +839,8 @@ func Test_controller_ListPods(t *testing.T) {
 						},
 					},
 				},
-			}}, nil
+			},
+		}, nil
 	})
 
 	ctl := &controller{
