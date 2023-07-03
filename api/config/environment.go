@@ -117,12 +117,12 @@ func InitEnvironmentConfigs(path string) ([]*EnvironmentConfig, error) {
 
 	var configs []*EnvironmentConfig
 	if err = yaml.Unmarshal(cfgFile, &configs); err != nil {
-		return nil, fmt.Errorf("unable to unmarshall deployment config file:\n %s,\nDue to: %v", cfgFile, err)
+		return nil, fmt.Errorf("unable to unmarshall deployment config file:\n %s,\ndue to: %w", cfgFile, err)
 	}
 
 	for _, env := range configs {
 		if err := env.Validate(); err != nil {
-			return nil, fmt.Errorf("invalid environment config: %v", err)
+			return nil, fmt.Errorf("invalid environment config: %w", err)
 		}
 
 		if env.K8sConfig == nil {
