@@ -133,7 +133,7 @@ func TestPDBConfig(t *testing.T) {
 				assert.Nil(t, err)
 			} else {
 				assert.NotNil(t, err)
-				assert.Equal(t, tC.validateErr, err)
+				assert.Equal(t, tC.validateErr.Error(), err.Error())
 				return
 			}
 
