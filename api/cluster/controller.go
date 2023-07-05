@@ -244,7 +244,7 @@ func (k *controller) Delete(ctx context.Context, modelService *models.Service) (
 		pdbs := k.createPodDisruptionBudgets(modelService, k.deploymentConfig.PodDisruptionBudget)
 		if err := k.deletePodDisruptionBudgets(ctx, pdbs); err != nil {
 			log.Errorf("unable to delete pdb %v", err)
-			return nil, ErrUnableToCreatePDB
+			return nil, ErrUnableToDeletePDB
 		}
 	}
 
