@@ -44,7 +44,7 @@ export const ModelDetails = () => {
     },
     {
       text: model.name,
-      href: `/merlin/projects/${projectId}/models/${model.id}`,
+      href: `/merlin/projects/${projectId}/models/${modelId}`,
     },
   ];
 
