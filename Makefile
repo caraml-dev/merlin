@@ -1,5 +1,3 @@
-export
-
 BIN_NAME=merlin
 TRANSFORMER_BIN_NAME=merlin-transformer
 INFERENCE_LOGGER_BIN_NAME=merlin-logger
