@@ -126,7 +126,7 @@ build-inference-logger:
 .PHONY: run
 run:
 	@echo "> Running application ..."
-	@./bin/${BIN_NAME} -config ./env-config.yaml
+	@./bin/${BIN_NAME} -config ./config.yaml
 
 .PHONY: run-ui
 run-ui:
