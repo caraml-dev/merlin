@@ -43,17 +43,14 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1cfg.PodDisruptionBudgetS
 		},
 	}
 
-	if cfg.MaxUnavailablePercentage != nil {
-		maxUnavailable := intstr.FromInt(*cfg.MaxUnavailablePercentage)
-		pdbSpec.MaxUnavailable = &maxUnavailable
-	}
-
 	// Since we can specify only one of maxUnavailable and minAvailable, minAvailable takes precedence
 	// https://kubernetes.io/docs/tasks/run-application/configure-pdb/#specifying-a-poddisruptionbudget
 	if cfg.MinAvailablePercentage != nil {
 		minAvailable := intstr.FromInt(*cfg.MinAvailablePercentage)
 		pdbSpec.MinAvailable = &minAvailable
-		pdbSpec.MaxUnavailable = nil
+	} else if cfg.MaxUnavailablePercentage != nil {
+		maxUnavailable := intstr.FromInt(*cfg.MaxUnavailablePercentage)
+		pdbSpec.MaxUnavailable = &maxUnavailable
 	}
 
 	return pdbSpec, nil
