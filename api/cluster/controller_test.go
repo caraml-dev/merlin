@@ -21,10 +21,6 @@ import (
 	"testing"
 	"time"
 
-	clusterresource "github.com/caraml-dev/merlin/cluster/resource"
-	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/mlp"
-	"github.com/caraml-dev/merlin/models"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	fakekserve "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
 	fakekservev1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
@@ -43,6 +39,11 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
+
+	clusterresource "github.com/caraml-dev/merlin/cluster/resource"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/models"
 )
 
 const (

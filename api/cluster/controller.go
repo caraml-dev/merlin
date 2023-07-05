@@ -19,11 +19,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/caraml-dev/merlin/cluster/resource"
-	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/log"
-	"github.com/caraml-dev/merlin/models"
-	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kservev1beta1client "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
 	"github.com/pkg/errors"
@@ -36,6 +31,12 @@ import (
 	policyv1client "k8s.io/client-go/kubernetes/typed/policy/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/caraml-dev/merlin/cluster/resource"
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/log"
+	"github.com/caraml-dev/merlin/models"
+	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 )
 
 type Controller interface {

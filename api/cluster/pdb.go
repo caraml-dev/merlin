@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	metav1cfg "k8s.io/client-go/applyconfigurations/meta/v1"
 	policyv1cfg "k8s.io/client-go/applyconfigurations/policy/v1"
+
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/models"
 )
 
 type PodDisruptionBudget struct {

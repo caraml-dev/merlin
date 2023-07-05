@@ -18,7 +18,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/caraml-dev/merlin/config"
 	kserveclifake "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
 	kservev1beta1fake "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
 	"github.com/stretchr/testify/assert"
@@ -28,6 +27,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	ktesting "k8s.io/client-go/testing"
+
+	"github.com/caraml-dev/merlin/config"
 )
 
 func TestContainer_GetContainers(t *testing.T) {

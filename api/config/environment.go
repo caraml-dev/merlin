@@ -19,12 +19,13 @@ import (
 	"os"
 	"time"
 
-	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	sigyaml "sigs.k8s.io/yaml"
+
+	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 )
 
 type EnvironmentConfig struct {
