@@ -51,12 +51,19 @@ jobs:
       - publish-python-sdk
     steps:
       - uses: actions/checkout@v2
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Merlin SDK Docker py${{ matrix.python-version }}
+        env:
+          CONTAINER_REGISTRY: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
         working-directory: ./python/sdk
         run: |
-          IMAGE_TAG="ghcr.io/caraml-dev/merlin-sdk:py${{ matrix.python-version }}-${{ inputs.version }}"
+          IMAGE_TAG="${{ env.CONTAINER_REGISTRY }}/merlin-sdk:py${{ matrix.python-version }}-${{ inputs.version }}"
           SDK_VERSION="$(sed 's/^v\(.*\)-/\1/' <<< "${{ inputs.version }}")"
-          docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.ghcr_token }}
           docker build -t ${IMAGE_TAG} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg VERSION=${SDK_VERSION} .
           docker push ${IMAGE_TAG}
 
