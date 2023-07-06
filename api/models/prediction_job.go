@@ -33,7 +33,7 @@ type PredictionJob struct {
 	VersionID       ID           `json:"version_id"`
 	VersionModelID  ID           `json:"model_id"`
 	ProjectID       ID           `json:"project_id"`
-	Environment     *Environment `json:"environment" gorm:"references:Name;association_autoupdate:false;association_autocreate:false;"`
+	Environment     *Environment `json:"environment" gorm:"references:Name;"`
 	EnvironmentName string       `json:"environment_name"`
 	Config          *Config      `json:"config,omitempty"`
 	Status          State        `json:"status"`
