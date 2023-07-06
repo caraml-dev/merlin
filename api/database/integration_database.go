@@ -56,7 +56,7 @@ func create(testDBCfg *config.DatabaseConfig) (*sql.DB, *sql.DB, error) {
 // createTestDatabase connects to test postgreSQL instance (either local or the one
 // at CI environment) and creates a new database with an up-to-date schema
 func createTestDatabase() (*gorm.DB, func(), error) {
-	testDBCfg := getTemporaryDBConfig(fmt.Sprintf("mlp_id_%d", time.Now().UnixNano()))
+	testDBCfg := getTemporaryDBConfig(fmt.Sprintf("merlin_id_%d", time.Now().UnixNano()))
 	mainDB, testDb, err := create(testDBCfg)
 	if err != nil {
 		return nil, nil, err
