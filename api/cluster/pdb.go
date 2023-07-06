@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	metav1cfg "k8s.io/client-go/applyconfigurations/meta/v1"
@@ -107,5 +108,9 @@ func (c *controller) deletePodDisruptionBudgets(ctx context.Context, pdbs []*Pod
 }
 
 func (c *controller) deletePodDisruptionBudget(ctx context.Context, pdb *PodDisruptionBudget) error {
-	return c.policyClient.PodDisruptionBudgets(pdb.Namespace).Delete(ctx, pdb.Name, metav1.DeleteOptions{})
+	err := c.policyClient.PodDisruptionBudgets(pdb.Namespace).Delete(ctx, pdb.Name, metav1.DeleteOptions{})
+	if !kerrors.IsNotFound(err) {
+		return err
+	}
+	return nil
 }
