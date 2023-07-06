@@ -369,7 +369,7 @@ jobs:
       LOCAL_REGISTRY_PORT: 12345
       LOCAL_REGISTRY: "dev.localhost"
       INGRESS_HOST: "127.0.0.1.nip.io"
-      MERLIN_CHART_VERSION: 0.11.1
+      MERLIN_CHART_VERSION: 0.11.4
       E2E_PYTHON_VERSION: "3.10.6"
     steps:
       - uses: actions/checkout@v2
