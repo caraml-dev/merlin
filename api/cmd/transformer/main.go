@@ -48,7 +48,7 @@ type AppConfig struct {
 	// StandardTransformerConfigJSON is standard transformer configuration in JSON string format
 	StandardTransformerConfigJSON string `envconfig:"STANDARD_TRANSFORMER_CONFIG" required:"true"`
 	// FeatureTableSpecJsons is feature table metadata specs in JSON string format
-	FeatureTableSpecJsons string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS" default:""`
+	FeatureTableSpecJsons string `envconfig:"FEAST_FEATURE_TABLE_SPECS_JSONS"`
 	// LogLevel
 	LogLevel string `envconfig:"LOG_LEVEL"`
 	// RedisOverwriteConfig is user configuration for redis that will overwrite default configuration supplied by merlin

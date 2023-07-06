@@ -29,6 +29,7 @@ type PredictionJobStorage interface {
 	// GetFirstSuccessModelVersionPerModel get first model version resulting in a successful batch prediction job
 	// GetFirstSuccessModelVersionPerModel get first model version resulting in a successful batch prediction job
 	GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error)
+	Delete(*models.PredictionJob) error
 }
 
 type predictionJobStorage struct {
@@ -58,6 +59,10 @@ func (p *predictionJobStorage) List(query *models.PredictionJob) (predictionJobs
 // Save save the prediction job to underlying storage
 func (p *predictionJobStorage) Save(predictionJob *models.PredictionJob) error {
 	return p.db.Save(predictionJob).Error
+}
+
+func (p *predictionJobStorage) Delete(predictionJob *models.PredictionJob) error {
+	return p.db.Delete(predictionJob).Error
 }
 
 func (p *predictionJobStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error) {

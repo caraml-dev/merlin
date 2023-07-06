@@ -1,6 +1,3 @@
-include .env.sample
-export
-
 BIN_NAME=feast-transformer
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 REVISION=$(shell git rev-parse HEAD)

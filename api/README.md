@@ -27,7 +27,9 @@ make setup
 
 To start Merlin locally you have to:
 
-- Replace `VAULT_TOKEN` value in .env.sample
+```bash
+make build
+```
 
 Then execute:
 

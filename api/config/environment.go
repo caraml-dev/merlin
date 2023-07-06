@@ -27,7 +27,7 @@ import (
 )
 
 type EnvironmentConfig struct {
-	Name                   string `yaml:"name"`
+	Name                   string `validate:"required" yaml:"name"`
 	Cluster                string `yaml:"cluster"`
 	IsDefault              bool   `yaml:"is_default"`
 	IsPredictionJobEnabled bool   `yaml:"is_prediction_job_enabled"`
@@ -47,7 +47,7 @@ type EnvironmentConfig struct {
 	DefaultPredictionJobConfig *PredictionJobResourceRequestConfig `yaml:"default_prediction_job_config"`
 	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
 	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
-	K8sConfig                  *mlpcluster.K8sConfig               `yaml:"k8s_config"`
+	K8sConfig                  *mlpcluster.K8sConfig               `validate:"required" yaml:"k8s_config"`
 }
 
 type TopologySpreadConstraints []corev1.TopologySpreadConstraint
@@ -89,20 +89,24 @@ type ResourceRequestConfig struct {
 	MemoryRequest string `yaml:"memory_request"`
 }
 
-func initEnvironmentConfigs(path string) []EnvironmentConfig {
+func InitEnvironmentConfigs(path string) []*EnvironmentConfig {
 	cfgFile, err := os.ReadFile(path)
 	if err != nil {
 		log.Panicf("unable to read deployment config file: %s", path)
 	}
-	var configs []EnvironmentConfig
-	err = yaml.Unmarshal(cfgFile, &configs)
-	if err != nil {
+	var configs []*EnvironmentConfig
+	if err = yaml.Unmarshal(cfgFile, &configs); err != nil {
 		log.Panicf("unable to unmarshall deployment config file:\n %s,\nDue to: %v", cfgFile, err)
+	}
+	for _, env := range configs {
+		if env.K8sConfig == nil {
+			log.Panicf("Error, k8sConfig for %s is nil", env.Name)
+		}
 	}
 	return configs
 }
 
-func ParseDeploymentConfig(cfg EnvironmentConfig, pyfuncGRPCOptions string) DeploymentConfig {
+func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) DeploymentConfig {
 	return DeploymentConfig{
 		DeploymentTimeout: cfg.DeploymentTimeout,
 		NamespaceTimeout:  cfg.NamespaceTimeout,

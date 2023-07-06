@@ -445,11 +445,10 @@ func TestStandardTransformer_Execute(t *testing.T) {
 			require.NoError(t, err)
 
 			compiler := pipeline.NewCompiler(symbol.NewRegistry(), feastClients, &feast.Options{
-				CacheEnabled:  true,
-				CacheSizeInMB: 100,
-				CacheTTL:      60 * time.Second,
-				BatchSize:     100,
-				FeastTimeout:  1 * time.Second,
+				CacheEnabled: true,
+				CacheTTL:     60 * time.Second,
+				BatchSize:    100,
+				FeastTimeout: 1 * time.Second,
 
 				DefaultFeastSource: spec.ServingSource_BIGTABLE,
 				StorageConfigs: feast.FeastStorageConfig{

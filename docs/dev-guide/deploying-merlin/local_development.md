@@ -209,7 +209,7 @@ MLP and Merlin use Google Sign-in to authenticate the user to access the API and
 
 ```bash
 export OAUTH_CLIENT_ID="<put your oauth client id here>"
-export MERLIN_CHART_VERSION=0.10.16
+export MERLIN_CHART_VERSION=0.11.1
 export MERLIN_VERSION=0.27.0
 
 output=$(yq e -o json '.k8s_config' k8s_config.yaml | jq -r -M -c .)

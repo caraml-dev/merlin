@@ -22,6 +22,7 @@ import (
 	"github.com/caraml-dev/merlin/cluster/resource"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kservev1beta1client "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
+	"k8s.io/client-go/rest"
 
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
@@ -58,6 +59,8 @@ type Config struct {
 	ClusterName string
 	// GCP project where the cluster resides
 	GcpProject string
+	// Use Kubernetes service account in cluster config
+	InClusterConfig bool
 
 	// Alternative to CACert, ClientCert info
 	mlpcluster.Credentials
@@ -79,7 +82,13 @@ type controller struct {
 }
 
 func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, standardTransformerConfig config.StandardTransformerConfig) (Controller, error) {
-	cfg, err := clusterConfig.ToRestConfig()
+	var cfg *rest.Config
+	var err error
+	if clusterConfig.InClusterConfig {
+		cfg, err = rest.InClusterConfig()
+	} else {
+		cfg, err = clusterConfig.Credentials.ToRestConfig()
+	}
 	if err != nil {
 		return nil, err
 	}

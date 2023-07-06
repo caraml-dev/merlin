@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
@@ -25,6 +26,9 @@ import (
 	"syscall"
 	"time"
 
+	mlflowDelete "github.com/caraml-dev/mlp/api/pkg/client/mlflow"
+
+	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
@@ -32,15 +36,11 @@ import (
 	"github.com/rs/cors"
 	"gorm.io/gorm"
 
-	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
-	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
-	"github.com/caraml-dev/mlp/api/pkg/instrumentation/sentry"
-
 	"github.com/caraml-dev/merlin/api"
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/log"
-	"github.com/caraml-dev/merlin/mlflow"
+	mlflow "github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/gitlab"
 	"github.com/caraml-dev/merlin/queue"
@@ -48,6 +48,8 @@ import (
 	"github.com/caraml-dev/merlin/service"
 	"github.com/caraml-dev/merlin/storage"
 	"github.com/caraml-dev/merlin/warden"
+	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
+	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
 )
 
 var (
@@ -55,12 +57,42 @@ var (
 	onlyOneSignalHandler = make(chan struct{})
 )
 
+type configFlags []string
+
+func (c *configFlags) String() string {
+	return strings.Join(*c, ",")
+}
+
+func (c *configFlags) Set(value string) error {
+	*c = append(*c, value)
+	return nil
+}
+
 func main() {
 	ctx := context.Background()
 
-	cfg, err := config.InitConfigEnv()
+	var configFlags configFlags
+	flag.Var(&configFlags, "config", "Path to a configuration file. This flag can be specified multiple "+
+		"times to load multiple configurations.")
+	flag.Parse()
+
+	if len(configFlags) < 1 {
+		log.Panicf("Must specify at least one config path using -config")
+	}
+
+	var emptyCfg config.Config
+	cfg, err := config.Load(&emptyCfg, configFlags...)
 	if err != nil {
 		log.Panicf("Failed initializing config: %v", err)
+	}
+
+	cfg.ClusterConfig.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
+	if cfg.ClusterConfig.InClusterConfig && len(cfg.ClusterConfig.EnvironmentConfigs) > 1 {
+		log.Panicf("There should only be one cluster if in cluster credentials are used")
+	}
+
+	if err := cfg.Validate(); err != nil {
+		log.Panicf("Failed validating config: %s", err)
 	}
 
 	// Initializing Sentry client
@@ -272,6 +304,15 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 
 	mlflowConfig := cfg.MlflowConfig
 	mlflowClient := mlflow.NewClient(mlflowConfig.TrackingURL)
+
+	mlflowDeleteService, err := mlflowDelete.NewMlflowService(http.DefaultClient, mlflowDelete.Config{
+		TrackingURL:         mlflowConfig.TrackingURL,
+		ArtifactServiceType: mlflowConfig.ArtifactServiceType,
+	})
+	if err != nil {
+		log.Panicf("failed initializing mlflow delete package: %v", err)
+	}
+
 	transformerService := service.NewTransformerService(cfg.StandardTransformerConfig)
 	apiContext := api.AppContext{
 		DB:       db,
@@ -288,6 +329,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		SecretService:             secretService,
 		ModelEndpointAlertService: modelEndpointAlertService,
 		TransformerService:        transformerService,
+		MlflowDeleteService:       mlflowDeleteService,
 
 		AuthorizationEnabled: cfg.AuthorizationConfig.AuthorizationEnabled,
 		AlertEnabled:         cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,

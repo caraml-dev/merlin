@@ -17,7 +17,6 @@ require (
 	github.com/cespare/xxhash v1.1.0
 	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
-	github.com/coocood/freecache v1.1.1
 	github.com/fatih/color v1.13.0
 	github.com/feast-dev/feast/sdk/go v0.9.4
 	github.com/fraugster/parquet-go v0.10.0
@@ -26,7 +25,7 @@ require (
 	github.com/go-gota/gota v0.0.0-00010101000000-000000000000
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
-	github.com/go-playground/validator v9.30.0+incompatible
+	github.com/go-playground/validator/v10 v10.11.1
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/gojekfarm/jsonpath v0.1.1
@@ -44,11 +43,14 @@ require (
 	github.com/kserve/kserve v0.8.0
 	github.com/linkedin/goavro/v2 v2.11.1
 	github.com/mitchellh/copystructure v1.2.0
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mmcloughlin/geohash v0.10.0
 	github.com/newrelic/newrelic-client-go/v2 v2.17.0
 	github.com/opentracing-contrib/go-grpc v0.0.0-20200813121455-4a6760c71486
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
+	github.com/ory/viper v1.7.5
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pilagod/gorm-cursor-paginator/v2 v2.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
@@ -111,6 +113,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.0.8 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.11.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgraph-io/ristretto v0.0.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/docker/cli v20.10.13+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
@@ -182,7 +185,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -191,7 +193,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
 	github.com/ory/keto-client-go v0.4.4-alpha.1 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/princjef/gomarkdoc v0.4.1 // indirect
@@ -239,7 +240,7 @@ require (
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
-	github.com/caraml-dev/universal-prediction-interface v0.3.4
+	github.com/caraml-dev/universal-prediction-interface v0.3.6
 	github.com/go-openapi/spec v0.19.9 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect

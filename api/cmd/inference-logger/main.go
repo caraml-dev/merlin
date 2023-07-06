@@ -124,7 +124,12 @@ func main() {
 		MaxBatchSize: QueueMaxBatchSize,
 	}
 
-	logSink := getLogSink(*logUrl, log)
+	logSink, err := getLogSink(*logUrl, log)
+	if err != nil {
+		log.Infof("Failed initializing logSink for %s: %v", *logUrl, err)
+		os.Exit(1)
+	}
+
 	dispatcher := createLoggerDispatcher(workerConfig, logSink, log)
 	dispatcher.Start()
 
@@ -277,7 +282,7 @@ func getTopicName(serviceName string) string {
 func getLogSink(
 	logUrl string,
 	log *zap.SugaredLogger,
-) merlinlogger.LogSink {
+) (merlinlogger.LogSink, error) {
 	var sinkKind merlinlogger.LoggerSinkKind
 	host := logUrl
 	for _, loggerSinkKind := range merlinlogger.LoggerSinkKinds {
@@ -309,7 +314,7 @@ func getLogSink(
 		nrLogClient := nrlog.New(cfg)
 		logClient = &nrLogClient
 
-		return merlinlogger.NewNewRelicSink(log, logClient, serviceName, projectName, modelName, modelVersion)
+		return merlinlogger.NewNewRelicSink(log, logClient, serviceName, projectName, modelName, modelVersion), nil
 	case merlinlogger.Kafka:
 		// Initialize the producer
 		var kafkaProducer merlinlogger.KafkaProducer
@@ -323,18 +328,19 @@ func getLogSink(
 		)
 		if err != nil {
 			log.Info(err)
-			return nil
+			return nil, fmt.Errorf("failed to create new kafka producer: %w", err)
 		}
+
 		// Test that we are able to query the broker on the topic. If the topic
 		// does not already exist on the broker, this should create it.
 		_, err = kafkaProducer.GetMetadata(&topicName, false, merlinlogger.ConnectTimeoutMS)
 		if err != nil {
 			log.Info(err)
-			return nil
+			return nil, fmt.Errorf("failed to get kafka producer's metadata: %w", err)
 		}
 
-		return merlinlogger.NewKafkaSink(log, kafkaProducer, serviceName, projectName, modelName, modelVersion, topicName)
+		return merlinlogger.NewKafkaSink(log, kafkaProducer, serviceName, projectName, modelName, modelVersion, topicName), nil
 	default:
-		return merlinlogger.NewConsoleSink(log)
+		return merlinlogger.NewConsoleSink(log), nil
 	}
 }

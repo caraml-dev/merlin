@@ -35,9 +35,11 @@ import {
   EuiToolTip,
   EuiSearchBar,
 } from "@elastic/eui";
-import { DateFromNow } from "@caraml-dev/ui-lib";
+import { DateFromNow, useToggle } from "@caraml-dev/ui-lib";
 import ModelEndpointActions from "./ModelEndpointActions";
 import PropTypes from "prop-types";
+import { DeleteModelModal, DeleteModelPyFuncV2Modal } from "../components/modals";
+
 
 const moment = require("moment");
 
@@ -54,6 +56,10 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     modelTypes: [],
     itemsToList: [],
   });
+  const [ isDeleteModelPyFuncV2ModalVisible, toggleDeleteModelPyFuncV2Modal ] = useToggle()
+  const [ isDeleteModelModalVisible, toggleDeleteModelModal ] = useToggle()
+  const [ modelForModal, setModelForModal ] = useState({});
+
 
   const isTerminatedEndpoint = (endpoint) => {
     return endpoint.status === "terminated";
@@ -237,6 +243,15 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     });
   };
 
+  const handleDeleteModel = (model) => {
+    setModelForModal(model)
+    if (model.type === "pyfunc_v2"){
+      toggleDeleteModelPyFuncV2Modal()
+    } else {
+      toggleDeleteModelModal()
+    }
+  }
+
   const columns = [
     {
       field: "name",
@@ -348,7 +363,7 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
       ),
     },
     {
-      field: "id",
+      field: "actions",
       name: (
         <EuiToolTip content="Model Actions">
           <span>
@@ -368,18 +383,27 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
         fullWidth: false,
       },
       render: (_, model) =>
-        model.type === "pyfunc_v2" && (
-          <EuiToolTip position="top" content={<p>Batch Prediction Job</p>}>
-            <Link
-              to={`${model.id}/versions/all/jobs`}
-              state={{ projectId: model.project_id }}
-            >
-              <EuiButtonEmpty iconType="storage" size="xs">
-                <EuiText size="xs">Batch Jobs</EuiText>
-              </EuiButtonEmpty>
-            </Link>
-          </EuiToolTip>
-        ),
+        <EuiFlexGroup alignItems="flexEnd" direction="column" gutterSize="s"> 
+          {model.type === "pyfunc_v2" && (
+            <EuiFlexItem grow={false}>
+              <EuiToolTip position="top" content={<p>Batch Prediction Job</p>}>
+                <Link
+                  to={`${model.id}/versions/all/jobs`}
+                  state={{ projectId: model.project_id }}
+                >
+                  <EuiButtonEmpty iconType="storage" size="xs">
+                    <EuiText size="xs">Batch Jobs</EuiText>
+                  </EuiButtonEmpty>
+                </Link>
+              </EuiToolTip>
+            </EuiFlexItem>
+          )}
+          <EuiFlexItem grow={false}>
+            <EuiButtonEmpty color={"danger"} iconType="trash" size="xs" onClick={() => handleDeleteModel(model)}>
+              <EuiText size="xs">Delete</EuiText>
+            </EuiButtonEmpty>
+          </EuiFlexItem>
+        </EuiFlexGroup>
     },
     {
       align: "right",
@@ -415,12 +439,15 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     },
   ];
 
-  const cellProps = (item) => {
-    return {
-      style:
-        item.endpoints && item.endpoints.length ? { cursor: "pointer" } : {},
-      onClick: () => toggleDetails(item),
-    };
+  const cellProps = (item, column) => {
+    if (column.field !== "actions") {
+      return {
+        style:
+          item.endpoints && item.endpoints.length ? { cursor: "pointer" } : {},
+        onClick: () => toggleDetails(item),
+      };
+    }
+    return undefined;
   };
 
   const onChange = ({ query, error }) => {
@@ -473,15 +500,31 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
       <p>{error.message}</p>
     </EuiCallOut>
   ) : (
-    <EuiInMemoryTable
-      items={items}
-      columns={columns}
-      itemId="id"
-      itemIdToExpandedRowMap={expandedRowState.itemIdToExpandedRowMap}
-      search={search}
-      sorting={{ sort: { field: "Name", direction: "asc" } }}
-      cellProps={cellProps}
-    />
+    <div>
+       {isDeleteModelPyFuncV2ModalVisible && (
+          <DeleteModelPyFuncV2Modal 
+            closeModal={() => toggleDeleteModelPyFuncV2Modal()}
+            model={modelForModal}
+            callback={fetchModels}
+          /> 
+       )}
+       {isDeleteModelModalVisible && (
+        <DeleteModelModal
+          closeModal={() => toggleDeleteModelModal()}
+          model={modelForModal}
+          callback={fetchModels}
+         />
+       )}
+      <EuiInMemoryTable
+        items={items}
+        columns={columns}
+        itemId="id"
+        itemIdToExpandedRowMap={expandedRowState.itemIdToExpandedRowMap}
+        search={search}
+        sorting={{ sort: { field: "Name", direction: "asc" } }}
+        cellProps={cellProps}
+      />
+    </div>
   );
 };
 

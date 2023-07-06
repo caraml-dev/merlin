@@ -41,7 +41,7 @@ const moment = require("moment");
 const defaultTextSize = "s";
 const defaultIconSize = "xs";
 
-const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
+const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) => {
   const healthColor = status => {
     switch (status) {
       case "running":
@@ -89,6 +89,14 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
     toggleStopPredictionJobModal
   ] = useState(false);
   const [currentJob, setCurrentJob] = useState(null);
+
+  const isActiveJob = function(status) {
+    return ["pending", "running"].includes(status)
+  }
+
+  const isTerminatedJob = function(status){
+    return ["terminating", "terminated"].includes(status)
+  }
 
   const columns = [
     {
@@ -167,7 +175,7 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
         header: true,
         fullWidth: false
       },
-      width: "5%",
+      width: "10%",
       render: (_, item) => (
         <EuiFlexGroup
           alignItems="flexStart"
@@ -206,20 +214,19 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
               </EuiButtonEmpty>
             </Link>
           </EuiFlexItem>
-          {(item.status === "pending" || item.status === "running") && (
-            <EuiFlexItem grow={false} key={`stop-job-${item.id}`}>
-              <EuiButtonEmpty
-                onClick={() => {
-                  setCurrentJob(item);
-                  toggleStopPredictionJobModal(true);
-                }}
-                color="danger"
-                iconType="minusInCircle"
-                size="xs">
-                <EuiText size="xs">Stop Job</EuiText>
-              </EuiButtonEmpty>
-            </EuiFlexItem>
-          )}
+          {!isTerminatedJob(item.status) && (<EuiFlexItem grow={false} key={`stop-job-${item.id}`}>
+            <EuiButtonEmpty
+              onClick={() => {
+                setCurrentJob(item);
+                toggleStopPredictionJobModal(true);
+              }}
+              color="danger"
+              iconType={isActiveJob(item.status) ? "minusInCircle" : "trash"}
+              size="xs">
+              <EuiText size="xs">{isActiveJob(item.status) ? "Stop Job" : "Terminate Job"}</EuiText>
+
+            </EuiButtonEmpty>
+          </EuiFlexItem>)}
         </EuiFlexGroup>
       )
     }
@@ -266,6 +273,7 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error }) => {
         <StopPredictionJobModal
           job={currentJob}
           closeModal={() => toggleStopPredictionJobModal(false)}
+          fetchJobs={fetchJobs}
         />
       )}
     </Fragment>
@@ -277,7 +285,8 @@ JobListTable.propTypes = {
   modelId: PropTypes.string,
   jobs: PropTypes.array,
   isLoaded: PropTypes.bool,
-  error: PropTypes.object
+  error: PropTypes.object,
+  fetchJobs: PropTypes.func
 };
 
 export default JobListTable;

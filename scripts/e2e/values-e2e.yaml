@@ -10,11 +10,16 @@ deployment:
       memory: 64Mi
     limits:
       memory: 256Mi
-environment: dev
-loggerDestinationURL: "http://message-dumper.mlp.svc.cluster.local"
-mlpApi:
-  apiHost: http://mlp.mlp:8080
-  encryptionKey: password
+config:
+  Environment: dev
+  LoggerDestinationURL: "http://message-dumper.mlp.svc.cluster.local"
+  MlpAPIConfig:
+    APIHost: http://mlp:8080
+    EncryptionKey: password
+  StandardTransformerConfig:
+    ImageName: ghcr.io/caraml-dev/merlin-transformer:0.27.0
+  AuthorizationConfig:
+    AuthorizationEnabled: false
 imageBuilder:
   serviceAccount:
     create: true
@@ -22,35 +27,40 @@ imageBuilder:
     annotations: {}
     labels: {}
   clusterName: "merlin-cluster"
-  baseImages:
-    3.7.*:
-      imageName: pyfunc-py37:v0.27.0
-      dockerfilePath: "docker/Dockerfile"
-      buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
-      mainAppPath: /merlin-spark-app/main.py
-  predictionJobBaseImages:
-    3.7.*:
-      imageName: pyspark-py37:v0.27.0
-      dockerfilePath: "docker/app.Dockerfile"
-      buildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
-      mainAppPath: /merlin-spark-app/main.py
-  predictionJobContextSubPath: "python/batch-predictor"
-  namespace: "mlp"
-  dockerRegistry: "dockerRegistry"
-  timeout: "10m"
-  retention: "48h"
-  kanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
-  resources:
-    requests:
-      cpu: "1"
-      memory: 512Mi
-    limits:
-      cpu: "1"
-      memory: 1Gi
-  maxRetry: 3
-  safeToEvict: false
-transformer:
-  image: ghcr.io/caraml-dev/merlin-transformer:0.27.0
+  k8s_config: {}
+  builderConfig:
+    BaseImages:
+      3.7.*:
+        ImageName: pyfunc-py37:v0.27.0
+        DockerfilePath: "docker/Dockerfile"
+        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
+        MainAppPath: /merlin-spark-app/main.py
+    PredictionJobBaseImages:
+      3.7.*:
+        ImageName: pyspark-py37:v0.27.0
+        DockerfilePath: "docker/app.Dockerfile"
+        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
+        MainAppPath: /merlin-spark-app/main.py
+    BuildNamespace: "mlp"
+    BuildContextURI: git://github.com/caraml-dev/merlin.git#refs/heads/main
+    PredictionJobContextSubPath: "python/batch-predictor"
+    PredictionJobBuildContextURI: git://github.com/caraml-dev/merlin.git#refs/heads/main
+    DockerRegistry: "dockerRegistry"
+    BuildTimeout: "10m"
+    KanikoImage: "gcr.io/kaniko-project/executor:v1.6.0"
+    Resources:
+      Requests:
+        CPU: "1"
+        Memory: 512Mi
+      Limits:
+        CPU: "1"
+        Memory: 1Gi
+    Tolerations: []
+    NodeSelectors: {}
+    MaximumRetry: 3
+    KanikoServiceAccount: "kaniko"
+    Retention: "48h"
+    SafeToEvict: false
 environmentConfigs:
   - name: dev
     is_default: true
@@ -80,8 +90,6 @@ environmentConfigs:
       max_replica: 1
       cpu_request: "25m"
       memory_request: "64Mi"
-authorization:
-  enabled: false
 ingress:
   enabled: true
   class: istio
@@ -99,6 +107,7 @@ merlin-postgresql:
     enabled: false
 mlflow:
   trackingURL: "http://merlin-mlflow"
+  artifactServiceType: "nop"
   resources:
     requests:
       cpu: 25m

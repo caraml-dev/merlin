@@ -557,10 +557,18 @@ func TestStop(t *testing.T) {
 			namespace: defaultNamespace,
 			sparkResourceListResult: sparkResourceListResult{
 				resource: &v1beta2.SparkApplicationList{},
+				error:    nil,
+			},
+		},
+		{
+			name:      "Error fetching Prediction job spark application",
+			namespace: defaultNamespace,
+			sparkResourceListResult: sparkResourceListResult{
+				resource: &v1beta2.SparkApplicationList{},
 				error:    errRaised,
 			},
 			wantError:    true,
-			wantErrorMsg: fmt.Sprintf("unable to retrieve spark application of prediction job id %s from spark client", models.ID(1).String()),
+			wantErrorMsg: "unable to retrieve spark application of prediction job id 1 from spark client",
 		},
 	}
 	for _, test := range tests {
@@ -587,7 +595,7 @@ func TestStop(t *testing.T) {
 			mockSparkClient.PrependReactor("list", "sparkapplications", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, test.sparkResourceListResult.resource, test.sparkResourceListResult.error
 			})
-			mockStorage.On("Save", predictionJob).Return(nil)
+			mockStorage.On("Delete", predictionJob).Return(nil)
 
 			err := ctl.Stop(context.Background(), predictionJob, namespace.Name)
 			if test.wantError {
@@ -596,7 +604,6 @@ func TestStop(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			assert.Equal(t, models.State("terminated"), predictionJob.Status)
 		})
 	}
 }

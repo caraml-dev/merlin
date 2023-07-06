@@ -2,44 +2,14 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	internalValidator "github.com/caraml-dev/merlin/pkg/validator"
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
-
-type Duration time.Duration
-
-func (d Duration) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Duration(d).String())
-}
-
-func (d *Duration) UnmarshalJSON(b []byte) error {
-	var v interface{}
-	if err := json.Unmarshal(b, &v); err != nil {
-		return err
-	}
-	switch value := v.(type) {
-	case float64:
-		timeDuration := time.Duration(value)
-		*d = Duration(timeDuration)
-		return nil
-	case string:
-		var err error
-		timeDuration, err := time.ParseDuration(value)
-		if err != nil {
-			return err
-		}
-		*d = Duration(timeDuration)
-		return nil
-	default:
-		return errors.New("invalid duration")
-	}
-}
 
 // FeastRedisConfig is redis storage configuration for standard transformer whether it is single or cluster
 type FeastRedisConfig struct {
@@ -56,22 +26,22 @@ type FeastRedisConfig struct {
 	// Max retries if redis command returning error
 	MaxRetries int32 `json:"max_retries"`
 	// Backoff duration before attempt retry
-	MinRetryBackoff *Duration `json:"min_retry_backoff"`
+	MinRetryBackoff *time.Duration `json:"min_retry_backoff" default:"0s"`
 	// Maximum duration before timeout to establishing new redis connection
-	DialTimeout *Duration `json:"dial_timeout"`
+	DialTimeout *time.Duration `json:"dial_timeout" default:"0"`
 	// Maximum duration before timeout to read from redis
-	ReadTimeout *Duration `json:"read_timeout"`
+	ReadTimeout *time.Duration `json:"read_timeout" default:"0"`
 	// Maximum duration before timeout to write to redis
-	WriteTimeout *Duration `json:"write_timeout"`
+	WriteTimeout *time.Duration `json:"write_timeout" default:"0"`
 	// Maximum age of a connection before mark it as stale and destroy the connection
-	MaxConnAge *Duration `json:"max_conn_age"`
+	MaxConnAge *time.Duration `json:"max_conn_age" default:"0"`
 	// Amount of time client waits for connection if all connections
 	// are busy before returning an error.
-	PoolTimeout *Duration `json:"pool_timeout"`
+	PoolTimeout *time.Duration `json:"pool_timeout" default:"0"`
 	// Amount of time after which client closes idle connections
-	IdleTimeout *Duration `json:"idle_timeout"`
+	IdleTimeout *time.Duration `json:"idle_timeout" default:"0"`
 	// Frequency of idle checks
-	IdleCheckFrequency *Duration `json:"idle_check_frequency"`
+	IdleCheckFrequency *time.Duration `json:"idle_check_frequency" default:"0s"`
 	// Minimum number of idle connections
 	MinIdleConn int32 `json:"min_idle_conn"`
 }
@@ -149,9 +119,9 @@ type FeastBigtableConfig struct {
 	// Number of grpc connnection created
 	PoolSize int32 `json:"pool_size" validate:"gt=0"`
 	// Interval to send keep-alive packet to established connection
-	KeepAliveInterval *Duration `json:"keep_alive_interval"`
+	KeepAliveInterval *time.Duration `json:"keep_alive_interval" default:"0s"`
 	// Duration before connection is marks as not healthy and close the connection afterward
-	KeepAliveTimeout *Duration `json:"keep_alive_timeout"`
+	KeepAliveTimeout *time.Duration `json:"keep_alive_timeout" default:"0s"`
 }
 
 func (bigtableCfg *FeastBigtableConfig) Decode(value string) error {
@@ -193,9 +163,9 @@ func (bigtableCfg *FeastBigtableConfig) ToFeastStorageWithCredential(credential 
 	}
 }
 
-func getDurationProtoFromTime(timeDuration *Duration) *durationpb.Duration {
+func getDurationProtoFromTime(timeDuration *time.Duration) *durationpb.Duration {
 	if timeDuration == nil {
 		return nil
 	}
-	return durationpb.New(time.Duration(*timeDuration))
+	return durationpb.New(*timeDuration)
 }

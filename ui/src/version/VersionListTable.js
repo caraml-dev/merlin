@@ -35,7 +35,7 @@ import {
   EuiBadgeGroup,
   EuiSearchBar,
 } from "@elastic/eui";
-import { DateFromNow } from "@caraml-dev/ui-lib";
+import { DateFromNow, useToggle } from "@caraml-dev/ui-lib";
 import PropTypes from "prop-types";
 
 import VersionEndpointActions from "./VersionEndpointActions";
@@ -43,7 +43,7 @@ import { Link, useNavigate } from "react-router-dom";
 import EllipsisText from "react-ellipsis-text";
 import useCollapse from "react-collapsed";
 import { versionEndpointUrl } from "../utils/versionEndpointUrl";
-
+import { DeleteModelVersionPyFuncV2Modal, DeleteModelVersionModal } from "../components/modals";
 const moment = require("moment");
 
 const defaultTextSize = "s";
@@ -117,6 +117,11 @@ const VersionListTable = ({
   ...props
 }) => {
   const navigate = useNavigate();
+  const [ isDeleteModelVersionPyFuncV2ModalVisible, toggleDeleteModelVersionPyFuncV2Modal ] = useToggle()
+  const [ isDeleteModelVersionModalVisible, toggleDeleteModelVersionModal ] = useToggle()
+  const [ modelForModal, setModelForModal ] = useState({});
+  const [ versionForModal, setVersionForModal ] = useState({});
+
   const healthColor = (status) => {
     switch (status) {
       case "serving":
@@ -322,6 +327,16 @@ const VersionListTable = ({
     });
   };
 
+  const handleDeleteModelVersion = (model, version) => {
+    setModelForModal(model)
+    setVersionForModal(version)
+    if (model.type === "pyfunc_v2"){
+      toggleDeleteModelVersionPyFuncV2Modal()
+    } else {
+      toggleDeleteModelVersionModal()
+    }
+  }
+
   const columns = [
     {
       field: "id",
@@ -466,7 +481,7 @@ const VersionListTable = ({
       render: (date) => <DateFromNow date={date} size={defaultTextSize} />,
     },
     {
-      field: "id",
+      field: "actions",
       name: (
         <EuiToolTip content="Model version actions">
           <span>
@@ -542,6 +557,13 @@ const VersionListTable = ({
                 </EuiButtonEmpty>
               </Link>
             </EuiFlexItem>
+
+            <EuiFlexItem grow={false}>
+                <EuiButtonEmpty color={"danger"} iconType="trash" size="xs" onClick={() => handleDeleteModelVersion(activeModel, version)}>
+                  <EuiText size="xs">Delete</EuiText>
+                </EuiButtonEmpty>
+            </EuiFlexItem>
+
           </EuiFlexGroup>
         ),
     },
@@ -579,11 +601,14 @@ const VersionListTable = ({
     },
   ];
 
-  const cellProps = (item) => {
-    return {
-      style: versionCanBeExpanded(item) ? { cursor: "pointer" } : {},
-      onClick: () => toggleDetails(item),
-    };
+  const cellProps = (item, column) => {
+    if (column.field !== "actions") {
+      return {
+        style: versionCanBeExpanded(item) ? { cursor: "pointer" } : {},
+        onClick: () => toggleDetails(item),
+      };
+    }
+    return undefined
   };
 
   // Query for the search bar
@@ -648,19 +673,37 @@ const VersionListTable = ({
       <p>{error.message}</p>
     </EuiCallOut>
   ) : activeModel ? (
-    <EuiInMemoryTable
-      items={versionData}
-      columns={columns}
-      loading={!isLoaded}
-      itemId="id"
-      itemIdToExpandedRowMap={expandedRowState.versionIdToExpandedRowMap}
-      isExpandable={true}
-      hasActions={true}
-      message={loadingView}
-      search={search}
-      sorting={{ sort: { field: "Version", direction: "desc" } }}
-      cellProps={cellProps}
-    />
+     <div>
+       {isDeleteModelVersionPyFuncV2ModalVisible && (
+          <DeleteModelVersionPyFuncV2Modal 
+            closeModal={() => toggleDeleteModelVersionPyFuncV2Modal()}
+            model={modelForModal}
+            version={versionForModal}
+            callback={fetchVersions}
+          /> 
+       )}
+       {isDeleteModelVersionModalVisible && (
+        <DeleteModelVersionModal
+          closeModal={() => toggleDeleteModelVersionModal()}
+          model={modelForModal}
+          version={versionForModal}
+          callback={fetchVersions}
+         />
+       )}
+       <EuiInMemoryTable
+         items={versionData}
+         columns={columns}
+         loading={!isLoaded}
+         itemId="id"
+         itemIdToExpandedRowMap={expandedRowState.versionIdToExpandedRowMap}
+         isExpandable={true}
+         hasActions={true}
+         message={loadingView}
+         search={search}
+         sorting={{ sort: { field: "Version", direction: "desc" } }}
+         cellProps={cellProps}
+       />
+     </div>
   ) : (
     <EuiTextAlign textAlign="center">
       <EuiLoadingChart size="xl" mono />
