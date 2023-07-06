@@ -64,6 +64,7 @@ type AppConfig struct {
 	// By default the value is 0, users should configure this value below the memory requested
 	InitHeapSizeInMB int `envconfig:"INIT_HEAP_SIZE_IN_MB" default:"0"`
 
+	// Tracing config
 	Tracing JaegerTracing
 }
 

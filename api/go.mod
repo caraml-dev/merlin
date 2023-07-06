@@ -236,7 +236,6 @@ require (
 )
 
 require (
-	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/caraml-dev/universal-prediction-interface v0.3.6
 	github.com/go-openapi/spec v0.19.9 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
