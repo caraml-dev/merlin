@@ -13,8 +13,7 @@ import (
 
 func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 	type cacheConfig struct {
-		ttl      time.Duration
-		sizeInMB int
+		ttl time.Duration
 	}
 	type args struct {
 		entities    []feast.Row
@@ -32,8 +31,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 		{
 			name: "single entity, no value in cache",
 			cacheConfig: cacheConfig{
-				ttl:      10 * time.Minute,
-				sizeInMB: 10,
+				ttl: 10 * time.Minute,
 			},
 			args: args{
 				entities: []feast.Row{
@@ -60,8 +58,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 		{
 			name: "two entities, no value in cache",
 			cacheConfig: cacheConfig{
-				ttl:      10 * time.Minute,
-				sizeInMB: 10,
+				ttl: 10 * time.Minute,
 			},
 			args: args{
 				entities: []feast.Row{
@@ -94,8 +91,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 		{
 			name: "two entities, only one has value in cache",
 			cacheConfig: cacheConfig{
-				ttl:      10 * time.Minute,
-				sizeInMB: 10,
+				ttl: 10 * time.Minute,
 			},
 			args: args{
 				entities: []feast.Row{
@@ -148,8 +144,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 		{
 			name: "two entities, both have value in cache",
 			cacheConfig: cacheConfig{
-				ttl:      10 * time.Minute,
-				sizeInMB: 10,
+				ttl: 10 * time.Minute,
 			},
 			args: args{
 				entities: []feast.Row{
@@ -212,8 +207,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 		{
 			name: "one entity, but cache contain different list of feature than requested",
 			cacheConfig: cacheConfig{
-				ttl:      10 * time.Minute,
-				sizeInMB: 10,
+				ttl: 10 * time.Minute,
 			},
 			args: args{
 				entities: []feast.Row{
@@ -258,7 +252,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fc := newFeatureCache(tt.cacheConfig.ttl, tt.cacheConfig.sizeInMB)
+			fc := newFeatureCache(tt.cacheConfig.ttl)
 			if tt.valueInCache != nil {
 				err := fc.insertFeatureTable(tt.valueInCache, tt.args.project)
 				if err != nil {
@@ -275,8 +269,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 
 func TestFeatureCache_InsertFeatureTable(t *testing.T) {
 	type cacheConfig struct {
-		ttl      time.Duration
-		sizeInMB int
+		ttl time.Duration
 	}
 	type args struct {
 		featureTable *internalFeatureTable
@@ -292,8 +285,7 @@ func TestFeatureCache_InsertFeatureTable(t *testing.T) {
 		{
 			name: "insert table containing one entity",
 			cacheConfig: cacheConfig{
-				ttl:      10 * time.Minute,
-				sizeInMB: 10,
+				ttl: 10 * time.Minute,
 			},
 			args: args{
 				featureTable: &internalFeatureTable{
@@ -318,7 +310,7 @@ func TestFeatureCache_InsertFeatureTable(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fc := newFeatureCache(tt.cacheConfig.ttl, tt.cacheConfig.sizeInMB)
+			fc := newFeatureCache(tt.cacheConfig.ttl)
 			err := fc.insertFeatureTable(tt.args.featureTable, tt.args.project)
 			if err != nil {
 				if !tt.wantErr {

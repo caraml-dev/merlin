@@ -3,31 +3,31 @@ package cache
 import (
 	"time"
 
-	"github.com/coocood/freecache"
+	cache "github.com/patrickmn/go-cache"
 )
 
 type Cache interface {
-	Insert(key []byte, value []byte, ttl time.Duration) error
-	Fetch(key []byte) ([]byte, error)
+	Insert(key string, value interface{}, ttl time.Duration)
+	Fetch(key string) (interface{}, bool)
 }
 
 type inMemoryCache struct {
-	cache *freecache.Cache
+	cache *cache.Cache
 }
 
 const (
-	MB = 1024 * 1024
+	cacheCleanUpSeconds = 300
 )
 
-func NewInMemoryCache(sizeInMB int) *inMemoryCache {
-	executor := freecache.NewCache(sizeInMB * MB)
+func NewInMemoryCache() *inMemoryCache {
+	executor := cache.New(0, cacheCleanUpSeconds*time.Second)
 	return &inMemoryCache{cache: executor}
 }
 
-func (c *inMemoryCache) Insert(key []byte, value []byte, ttl time.Duration) error {
-	return c.cache.Set(key, value, int(ttl/time.Second))
+func (c *inMemoryCache) Insert(key string, value interface{}, ttl time.Duration) {
+	c.cache.Set(key, value, ttl)
 }
 
-func (c *inMemoryCache) Fetch(key []byte) ([]byte, error) {
+func (c *inMemoryCache) Fetch(key string) (interface{}, bool) {
 	return c.cache.Get(key)
 }

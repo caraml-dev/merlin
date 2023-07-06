@@ -23,9 +23,9 @@ type featureCache struct {
 	ttl   time.Duration
 }
 
-func newFeatureCache(ttl time.Duration, sizeInMB int) *featureCache {
+func newFeatureCache(ttl time.Duration) *featureCache {
 	return &featureCache{
-		cache: cache.NewInMemoryCache(sizeInMB),
+		cache: cache.NewInMemoryCache(),
 		ttl:   ttl,
 	}
 }
@@ -74,15 +74,15 @@ func (fc *featureCache) fetchFeatureTable(entities []feast.Row, columnNames []st
 		}
 
 		feastCacheRetrievalCount.Inc()
-		val, err := fc.cache.Fetch(keyByte)
-		if err != nil {
+		val, ok := fc.cache.Fetch(string(keyByte))
+		if !ok {
 			entityNotInCache = append(entityNotInCache, entity)
 			continue
 		}
 
 		feastCacheHitCount.Inc()
-		var cacheValue CacheValue
-		if err := json.Unmarshal(val, &cacheValue); err != nil {
+		cacheValue, ok := val.(CacheValue)
+		if !ok {
 			entityNotInCache = append(entityNotInCache, entity)
 			continue
 		}
@@ -136,11 +136,8 @@ func (fc *featureCache) insertFeaturesOfEntity(entity feast.Row, columnNames []s
 		ValueRow:   value,
 		ValueTypes: valueTypes,
 	}
-	dataByte, err := json.Marshal(cacheValue)
-	if err != nil {
-		return err
-	}
-	return fc.cache.Insert(keyByte, dataByte, fc.ttl)
+	fc.cache.Insert(string(keyByte), cacheValue, fc.ttl)
+	return nil
 }
 
 func castValueRow(row types.ValueRow, columnTypes []feastTypes.ValueType_Enum) (types.ValueRow, error) {
