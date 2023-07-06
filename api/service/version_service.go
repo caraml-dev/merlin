@@ -63,12 +63,10 @@ func (service *versionsService) query() *gorm.DB {
 				Preload("Environment").
 				Preload("Transformer").
 				Joins("JOIN models on models.id = version_endpoints.version_model_id").
-				Joins("JOIN environments on environments.name = version_endpoints.environment_name").
-				Select("version_endpoints.*")
+				Joins("JOIN environments on environments.name = version_endpoints.environment_name")
 		}).
 		Preload("Model").
-		Joins("JOIN models on models.id = versions.model_id").
-		Select("versions.*")
+		Joins("JOIN models on models.id = versions.model_id")
 }
 
 func (service *versionsService) buildListVersionsQuery(modelID models.ID, query VersionQuery) *gorm.DB {
