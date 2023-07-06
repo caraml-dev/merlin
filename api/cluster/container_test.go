@@ -32,7 +32,6 @@ import (
 )
 
 func TestContainer_GetContainers(t *testing.T) {
-
 	type args struct {
 		namespace     string
 		labelSelector string
@@ -78,6 +77,7 @@ func TestContainer_GetContainers(t *testing.T) {
 	for _, tt := range tests {
 		kfClient := kserveclifake.NewSimpleClientset().ServingV1beta1().(*kservev1beta1fake.FakeServingV1beta1)
 		v1Client := fake.NewSimpleClientset().CoreV1()
+		policyV1Client := fake.NewSimpleClientset().PolicyV1()
 		fakePodCtl := v1Client.Pods(tt.args.namespace).(*fakecorev1.FakePods)
 		fakePodCtl.Fake.PrependReactor(listMethod, podResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 			return true, tt.mock, nil
@@ -86,7 +86,7 @@ func TestContainer_GetContainers(t *testing.T) {
 		clusterMetadata := Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
 
 		containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-		ctl, _ := newController(kfClient, v1Client, nil, config.DeploymentConfig{}, containerFetcher, nil)
+		ctl, _ := newController(kfClient, v1Client, nil, policyV1Client, config.DeploymentConfig{}, containerFetcher, nil)
 		containers, err := ctl.GetContainers(context.Background(), tt.args.namespace, tt.args.labelSelector)
 		if !tt.wantError {
 			assert.NoErrorf(t, err, "expected no error got %v", err)

@@ -19,11 +19,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/caraml-dev/merlin/cluster/resource"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kservev1beta1client "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
-	"k8s.io/client-go/rest"
-
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -31,8 +28,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	batchv1client "k8s.io/client-go/kubernetes/typed/batch/v1"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	policyv1client "k8s.io/client-go/kubernetes/typed/policy/v1"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/caraml-dev/merlin/cluster/resource"
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
@@ -75,6 +75,7 @@ type controller struct {
 	servingClient              kservev1beta1client.ServingV1beta1Interface
 	clusterClient              corev1client.CoreV1Interface
 	batchClient                batchv1client.BatchV1Interface
+	policyClient               policyv1client.PolicyV1Interface
 	namespaceCreator           NamespaceCreator
 	deploymentConfig           *config.DeploymentConfig
 	kfServingResourceTemplater *resource.InferenceServiceTemplater
@@ -107,18 +108,24 @@ func NewController(clusterConfig Config, deployConfig config.DeploymentConfig, s
 		return nil, err
 	}
 
+	policyV1Client, err := policyv1client.NewForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	containerFetcher := NewContainerFetcher(coreV1Client, Metadata{
 		ClusterName: clusterConfig.ClusterName,
 		GcpProject:  clusterConfig.GcpProject,
 	})
 
 	kfServingResourceTemplater := resource.NewInferenceServiceTemplater(standardTransformerConfig)
-	return newController(servingClient, coreV1Client, batchV1Client, deployConfig, containerFetcher, kfServingResourceTemplater)
+	return newController(servingClient, coreV1Client, batchV1Client, policyV1Client, deployConfig, containerFetcher, kfServingResourceTemplater)
 }
 
 func newController(kfservingClient kservev1beta1client.ServingV1beta1Interface,
 	coreV1Client corev1client.CoreV1Interface,
 	batchV1Client batchv1client.BatchV1Interface,
+	policyV1Client policyv1client.PolicyV1Interface,
 	deploymentConfig config.DeploymentConfig,
 	containerFetcher ContainerFetcher,
 	templater *resource.InferenceServiceTemplater,
@@ -127,6 +134,7 @@ func newController(kfservingClient kservev1beta1client.ServingV1beta1Interface,
 		servingClient:              kfservingClient,
 		clusterClient:              coreV1Client,
 		batchClient:                batchV1Client,
+		policyClient:               policyV1Client,
 		namespaceCreator:           NewNamespaceCreator(coreV1Client, deploymentConfig.NamespaceTimeout),
 		deploymentConfig:           &deploymentConfig,
 		ContainerFetcher:           containerFetcher,
@@ -191,6 +199,14 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		}
 	}
 
+	if k.deploymentConfig.PodDisruptionBudget.Enabled {
+		pdbs := k.createPodDisruptionBudgets(modelService, k.deploymentConfig.PodDisruptionBudget)
+		if err := k.deployPodDisruptionBudgets(ctx, pdbs); err != nil {
+			log.Errorf("unable to create pdb %v", err)
+			return nil, ErrUnableToCreatePDB
+		}
+	}
+
 	s, err = k.waitInferenceServiceReady(s)
 	if err != nil {
 		// remove created inferenceservice when got error
@@ -219,9 +235,19 @@ func (k *controller) Delete(ctx context.Context, modelService *models.Service) (
 		}
 		return modelService, nil
 	}
+
 	if err := k.deleteInferenceService(modelService.Name, modelService.Namespace); err != nil {
 		return nil, err
 	}
+
+	if k.deploymentConfig.PodDisruptionBudget.Enabled {
+		pdbs := k.createPodDisruptionBudgets(modelService, k.deploymentConfig.PodDisruptionBudget)
+		if err := k.deletePodDisruptionBudgets(ctx, pdbs); err != nil {
+			log.Errorf("unable to delete pdb %v", err)
+			return nil, ErrUnableToDeletePDB
+		}
+	}
+
 	return modelService, nil
 }
 

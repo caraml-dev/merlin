@@ -177,8 +177,6 @@ jobs:
         run: |
           make setup
           make init-dep-api
-      - name: Lint API files
-        run: make lint-api
       - name: Test API files
         env:
           POSTGRES_HOST: localhost

@@ -86,7 +86,13 @@ func main() {
 		log.Panicf("Failed initializing config: %v", err)
 	}
 
-	cfg.ClusterConfig.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
+	// cfg.ClusterConfig.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
+	environmentConfigs, err := config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
+	if err != nil {
+		log.Panicf("Failed initializing environment configs: %v", err)
+	}
+
+	cfg.ClusterConfig.EnvironmentConfigs = environmentConfigs
 	if cfg.ClusterConfig.InClusterConfig && len(cfg.ClusterConfig.EnvironmentConfigs) > 1 {
 		log.Panicf("There should only be one cluster if in cluster credentials are used")
 	}

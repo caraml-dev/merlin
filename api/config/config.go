@@ -424,11 +424,13 @@ func (cfg *Config) Validate() error {
 	if err != nil {
 		return err
 	}
+
 	// Validate pyfunc server keep alive config, it must be string in json format
 	var pyfuncGRPCOpts json.RawMessage
 	if err := json.Unmarshal([]byte(cfg.PyfuncGRPCOptions), &pyfuncGRPCOpts); err != nil {
 		return err
 	}
+
 	return nil
 }
 
