@@ -16,17 +16,16 @@ import os
 from test.utils import undeploy_all_version
 from time import sleep
 
+import merlin
 import pandas as pd
 import pytest
+from merlin import DeploymentMode
 from merlin.endpoint import Status
 from merlin.logger import Logger, LoggerConfig, LoggerMode
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import StandardTransformer, Transformer
 from recursive_diff import recursive_eq
-
-import merlin
-from merlin import DeploymentMode
 
 request_json = {"instances": [[2.8, 1.0, 6.8, 0.4], [3.1, 1.4, 4.5, 1.6]]}
 tensorflow_request_json = {
