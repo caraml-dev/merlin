@@ -2,9 +2,11 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -149,4 +151,25 @@ func TestPDBConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestImageBuilderConfig(t *testing.T) {
+	baseFilePath := "./testdata/config-1.yaml"
+	imageBuilderCfgFilePath := "./testdata/valid-imagebuilder-nodeselectors.yaml"
+
+	os.Clearenv()
+	setRequiredEnvironmentVariables()
+
+	filePaths := []string{baseFilePath}
+	filePaths = append(filePaths, imageBuilderCfgFilePath)
+
+	var emptyCfg Config
+	cfg, err := Load(&emptyCfg, filePaths...)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+
+	expected := map[string]string{
+		"cloud.google.com/gke-nodepool": "image-build-job-node-pool",
+	}
+	assert.Equal(t, expected, cfg.ImageBuilderConfig.NodeSelectors)
 }
