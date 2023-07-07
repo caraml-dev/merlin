@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/antonmedv/expr/vm"
-	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
 	"github.com/caraml-dev/merlin/pkg/transformer/jsonpath"
@@ -37,8 +36,8 @@ func NewEnvironment(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Env
 }
 
 func (e *Environment) Preprocess(ctx context.Context, rawRequest types.Payload, rawRequestHeaders map[string]string) (types.Payload, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "environment.Preprocess")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "environment.Preprocess")
+	defer span.End()
 
 	e.symbolRegistry.SetRawRequest(rawRequest)
 	e.symbolRegistry.SetRawRequestHeaders(rawRequestHeaders)
@@ -52,8 +51,8 @@ func (e *Environment) Preprocess(ctx context.Context, rawRequest types.Payload, 
 }
 
 func (e *Environment) Postprocess(ctx context.Context, modelResponse types.Payload, modelResponseHeaders map[string]string) (types.Payload, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "environment.Postprocess")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "environment.Postprocess")
+	defer span.End()
 
 	e.symbolRegistry.SetModelResponse(modelResponse)
 	e.symbolRegistry.SetModelResponseHeaders(modelResponseHeaders)

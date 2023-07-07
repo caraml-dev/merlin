@@ -8,7 +8,7 @@ import (
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/serving"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
@@ -64,10 +64,10 @@ func (fc *call) do(ctx context.Context, entityList []feast.Row, features []strin
 	tableName := GetTableName(fc.featureTableSpec)
 
 	feastSource := spec.ServingSource_name[int32(fc.servingSource)]
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.doBatchCall")
-	span.SetTag("feast.source", feastSource)
-	span.SetTag("table", tableName)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "feast.doBatchCall")
+	span.SetAttributes(attribute.String("feast.source", feastSource))
+	span.SetAttributes(attribute.String("table", tableName))
+	defer span.End()
 
 	feastRequest := feast.OnlineFeaturesRequest{
 		Project:  fc.featureTableSpec.Project,

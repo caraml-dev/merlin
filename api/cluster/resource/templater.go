@@ -474,10 +474,8 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 
 	jaegerCfg := t.standardTransformerConfig.Jaeger
 	jaegerEnvVars := []models.EnvVar{
-		{Name: transformerpkg.JaegerAgentHost, Value: jaegerCfg.AgentHost},
-		{Name: transformerpkg.JaegerAgentPort, Value: jaegerCfg.AgentPort},
+		{Name: transformerpkg.JaegerCollectorURL, Value: jaegerCfg.CollectorURL},
 		{Name: transformerpkg.JaegerSamplerParam, Value: jaegerCfg.SamplerParam},
-		{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType},
 		{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
 	}
 

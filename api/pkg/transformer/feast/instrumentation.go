@@ -3,6 +3,7 @@ package feast
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"go.opentelemetry.io/otel"
 
 	"github.com/caraml-dev/merlin/pkg/transformer"
 )
@@ -33,4 +34,6 @@ var (
 		Help:       "Summary of feature value",
 		AgeBuckets: 1,
 	}, []string{"feature"})
+
+	tracer = otel.Tracer("pkg/transformer/feast")
 )

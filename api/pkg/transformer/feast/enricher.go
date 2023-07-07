@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/buger/jsonparser"
-	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
 	"github.com/caraml-dev/merlin/pkg/transformer"
@@ -33,8 +32,8 @@ func (t *Enricher) Enrich(ctx context.Context, request types.Payload, _ map[stri
 	if !validRequestType {
 		return nil, fmt.Errorf("supplied request for Enrich is not byte")
 	}
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.Enrich")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "feast.Enrich")
+	defer span.End()
 
 	requestJson, err := request.AsInput()
 	if err != nil {
@@ -60,8 +59,8 @@ func (t *Enricher) Enrich(ctx context.Context, request types.Payload, _ map[stri
 }
 
 func enrichRequest(ctx context.Context, request []byte, feastFeatures []*types.FeatureTable) ([]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.enrichRequest") //nolint: all
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "feast.enrichRequest")
+	defer span.End()
 
 	feastFeatureMap := make(map[string]*types.FeatureTable)
 	for _, ft := range feastFeatures {

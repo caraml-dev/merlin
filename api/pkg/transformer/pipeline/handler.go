@@ -3,7 +3,6 @@ package pipeline
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
@@ -24,8 +23,8 @@ func NewHandler(compiledPipeline *CompiledPipeline, logger *zap.Logger) *Handler
 }
 
 func (h *Handler) Preprocess(ctx context.Context, rawRequest types.Payload, rawRequestHeaders map[string]string) (types.Payload, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "pipeline.Preprocess")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "pipeline.Preprocess")
+	defer span.End()
 
 	env := getEnvironment(ctx)
 	rawRequestObj, err := rawRequest.AsInput()
@@ -38,15 +37,12 @@ func (h *Handler) Preprocess(ctx context.Context, rawRequest types.Payload, rawR
 		return nil, err
 	}
 
-	jsonSpan, _ := opentracing.StartSpanFromContext(ctx, "pipeline.Preprocess.JsonMarshall")
-	jsonSpan.Finish()
-
 	return result.AsOutput()
 }
 
 func (h *Handler) Postprocess(ctx context.Context, modelResponse types.Payload, modelResponseHeaders map[string]string) (types.Payload, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "pipeline.Postprocess")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "pipeline.Postprocess")
+	defer span.End()
 
 	env := getEnvironment(ctx)
 	if !env.IsPostProcessOpExist() {
