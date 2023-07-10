@@ -11,7 +11,7 @@
   max_memory: "8Gi"
   pod_disruption_budget:
     enabled: true
-    max_unavailable_percentage: 20
+    min_available_percentage: 20
   queue_resource_percentage: "20"
   default_prediction_job_config:
     executor_replica: 3

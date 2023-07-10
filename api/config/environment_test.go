@@ -98,7 +98,7 @@ func TestUnmarshalTopologySpreadConstraints(t *testing.T) {
 }
 
 func TestPDBConfig(t *testing.T) {
-	defaultMaxUnavailablePercentage := 20
+	defaultMinAvailablePercentage := 20
 
 	testCases := []struct {
 		desc              string
@@ -110,8 +110,8 @@ func TestPDBConfig(t *testing.T) {
 			desc:          "Success: valid pdb config",
 			envConfigPath: "./testdata/valid-environment-1.yaml",
 			expectedPDBConfig: PodDisruptionBudgetConfig{
-				Enabled:                  true,
-				MaxUnavailablePercentage: &defaultMaxUnavailablePercentage,
+				Enabled:                true,
+				MinAvailablePercentage: &defaultMinAvailablePercentage,
 			},
 		},
 		{
