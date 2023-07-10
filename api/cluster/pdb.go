@@ -20,7 +20,6 @@ type PodDisruptionBudget struct {
 	Labels                   map[string]string
 	MaxUnavailablePercentage *int
 	MinAvailablePercentage   *int
-	Selector                 *metav1.LabelSelector
 }
 
 func NewPodDisruptionBudget(modelService *models.Service, componentType string, pdbConfig config.PodDisruptionBudgetConfig) *PodDisruptionBudget {
@@ -47,10 +46,10 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1cfg.PodDisruptionBudgetS
 	// Since we can specify only one of maxUnavailable and minAvailable, minAvailable takes precedence
 	// https://kubernetes.io/docs/tasks/run-application/configure-pdb/#specifying-a-poddisruptionbudget
 	if cfg.MinAvailablePercentage != nil {
-		minAvailable := intstr.FromInt(*cfg.MinAvailablePercentage)
+		minAvailable := intstr.FromString(fmt.Sprintf("%d%%", *cfg.MinAvailablePercentage))
 		pdbSpec.MinAvailable = &minAvailable
 	} else if cfg.MaxUnavailablePercentage != nil {
-		maxUnavailable := intstr.FromInt(*cfg.MaxUnavailablePercentage)
+		maxUnavailable := intstr.FromString(fmt.Sprintf("%d%%", *cfg.MaxUnavailablePercentage))
 		pdbSpec.MaxUnavailable = &maxUnavailable
 	}
 
@@ -90,7 +89,7 @@ func (c *controller) deployPodDisruptionBudget(ctx context.Context, pdb *PodDisr
 	pdbCfg.WithLabels(pdb.Labels)
 	pdbCfg.WithSpec(pdbSpec)
 
-	_, err = c.policyClient.PodDisruptionBudgets(pdb.Namespace).Apply(ctx, pdbCfg, metav1.ApplyOptions{})
+	_, err = c.policyClient.PodDisruptionBudgets(pdb.Namespace).Apply(ctx, pdbCfg, metav1.ApplyOptions{FieldManager: "application/apply-patch"})
 	if err != nil {
 		return err
 	}
