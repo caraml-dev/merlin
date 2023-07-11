@@ -43,7 +43,7 @@ const (
 var LoggerSinkKinds = []LoggerSinkKind{Kafka, NewRelic, Console}
 
 func ParseSinkKindAndUrl(logUrl string) (LoggerSinkKind, string) {
-	var sinkKind LoggerSinkKind
+	sinkKind := Console
 	url := logUrl
 
 	for _, loggerSinkKind := range LoggerSinkKinds {
