@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { DateFromNow, useToggle } from "@caraml-dev/ui-lib";
 import {
   EuiBadge,
   EuiButtonEmpty,
@@ -30,16 +29,20 @@ import {
   EuiLink,
   EuiLoadingChart,
   EuiProgress,
+  EuiSearchBar,
   EuiText,
   EuiTextAlign,
   EuiToolTip,
-  EuiSearchBar,
 } from "@elastic/eui";
-import { DateFromNow, useToggle } from "@caraml-dev/ui-lib";
-import ModelEndpointActions from "./ModelEndpointActions";
 import PropTypes from "prop-types";
-import { DeleteModelModal, DeleteModelPyFuncV2Modal } from "../components/modals";
-
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  DeleteModelModal,
+  DeleteModelPyFuncV2Modal,
+} from "../components/modals";
+import { featureToggleConfig } from "../config";
+import ModelEndpointActions from "./ModelEndpointActions";
 
 const moment = require("moment");
 
@@ -56,10 +59,10 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     modelTypes: [],
     itemsToList: [],
   });
-  const [ isDeleteModelPyFuncV2ModalVisible, toggleDeleteModelPyFuncV2Modal ] = useToggle()
-  const [ isDeleteModelModalVisible, toggleDeleteModelModal ] = useToggle()
-  const [ modelForModal, setModelForModal ] = useState({});
-
+  const [isDeleteModelPyFuncV2ModalVisible, toggleDeleteModelPyFuncV2Modal] =
+    useToggle();
+  const [isDeleteModelModalVisible, toggleDeleteModelModal] = useToggle();
+  const [modelForModal, setModelForModal] = useState({});
 
   const isTerminatedEndpoint = (endpoint) => {
     return endpoint.status === "terminated";
@@ -244,13 +247,13 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
   };
 
   const handleDeleteModel = (model) => {
-    setModelForModal(model)
-    if (model.type === "pyfunc_v2"){
-      toggleDeleteModelPyFuncV2Modal()
+    setModelForModal(model);
+    if (model.type === "pyfunc_v2") {
+      toggleDeleteModelPyFuncV2Modal();
     } else {
-      toggleDeleteModelModal()
+      toggleDeleteModelModal();
     }
-  }
+  };
 
   const columns = [
     {
@@ -382,8 +385,8 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
         header: true,
         fullWidth: false,
       },
-      render: (_, model) =>
-        <EuiFlexGroup alignItems="flexEnd" direction="column" gutterSize="s"> 
+      render: (_, model) => (
+        <EuiFlexGroup alignItems="flexEnd" direction="column" gutterSize="s">
           {model.type === "pyfunc_v2" && (
             <EuiFlexItem grow={false}>
               <EuiToolTip position="top" content={<p>Batch Prediction Job</p>}>
@@ -398,12 +401,20 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
               </EuiToolTip>
             </EuiFlexItem>
           )}
-          <EuiFlexItem grow={false}>
-            <EuiButtonEmpty color={"danger"} iconType="trash" size="xs" onClick={() => handleDeleteModel(model)}>
-              <EuiText size="xs">Delete</EuiText>
-            </EuiButtonEmpty>
-          </EuiFlexItem>
+          {featureToggleConfig.modelDeletionEnabled && (
+            <EuiFlexItem grow={false}>
+              <EuiButtonEmpty
+                color={"danger"}
+                iconType="trash"
+                size="xs"
+                onClick={() => handleDeleteModel(model)}
+              >
+                <EuiText size="xs">Delete</EuiText>
+              </EuiButtonEmpty>
+            </EuiFlexItem>
+          )}
         </EuiFlexGroup>
+      ),
     },
     {
       align: "right",
@@ -501,20 +512,20 @@ const ModelListTable = ({ items, isLoaded, error, fetchModels }) => {
     </EuiCallOut>
   ) : (
     <div>
-       {isDeleteModelPyFuncV2ModalVisible && (
-          <DeleteModelPyFuncV2Modal 
-            closeModal={() => toggleDeleteModelPyFuncV2Modal()}
-            model={modelForModal}
-            callback={fetchModels}
-          /> 
-       )}
-       {isDeleteModelModalVisible && (
+      {isDeleteModelPyFuncV2ModalVisible && (
+        <DeleteModelPyFuncV2Modal
+          closeModal={() => toggleDeleteModelPyFuncV2Modal()}
+          model={modelForModal}
+          callback={fetchModels}
+        />
+      )}
+      {isDeleteModelModalVisible && (
         <DeleteModelModal
           closeModal={() => toggleDeleteModelModal()}
           model={modelForModal}
           callback={fetchModels}
-         />
-       )}
+        />
+      )}
       <EuiInMemoryTable
         items={items}
         columns={columns}
