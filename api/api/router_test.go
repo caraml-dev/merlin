@@ -366,11 +366,15 @@ func TestRejectAuthorization(t *testing.T) {
 				Enforcer:              mockEnforcer,
 				DB:                    nil,
 				AuthorizationEnabled:  true,
-				MonitoringConfig: config.MonitoringConfig{
-					MonitoringEnabled: true,
-					MonitoringBaseURL: "http://grafana",
+				FeatureToggleConfig: config.FeatureToggleConfig{
+					AlertConfig: config.AlertConfig{
+						AlertEnabled: true,
+					},
+					MonitoringConfig: config.MonitoringConfig{
+						MonitoringEnabled: true,
+						MonitoringBaseURL: "http://grafana",
+					},
 				},
-				AlertEnabled: true,
 			})
 			assert.NoError(t, err)
 			if tt.model != nil {

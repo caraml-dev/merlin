@@ -196,11 +196,15 @@ func TestList(t *testing.T) {
 					ModelsService:        modelSvc,
 					VersionsService:      versionSvc,
 					PredictionJobService: predictionJobSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.List(&http.Request{}, tC.vars, nil)
@@ -451,11 +455,15 @@ func TestGet(t *testing.T) {
 					VersionsService:      versionSvc,
 					PredictionJobService: predictionJobSvc,
 					EnvironmentService:   envSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.Get(&http.Request{}, tC.vars, nil)
@@ -698,11 +706,15 @@ func TestStop(t *testing.T) {
 					VersionsService:      versionSvc,
 					PredictionJobService: predictionJobSvc,
 					EnvironmentService:   envSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.Stop(&http.Request{}, tC.vars, nil)
@@ -1036,11 +1048,15 @@ func TestListContainers_PredictionJob(t *testing.T) {
 					VersionsService:      versionSvc,
 					PredictionJobService: predictionJobSvc,
 					EnvironmentService:   envSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.ListContainers(&http.Request{}, tC.vars, nil)
@@ -1366,11 +1382,15 @@ func TestCreate(t *testing.T) {
 					VersionsService:      versionSvc,
 					PredictionJobService: predictionJobSvc,
 					EnvironmentService:   envSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.Create(&http.Request{}, tC.vars, tC.requestBody)
@@ -1501,11 +1521,15 @@ func TestListAllInProject(t *testing.T) {
 				AppContext: &AppContext{
 					ProjectsService:      projectSvc,
 					PredictionJobService: predictionJobSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.ListAllInProject(tC.request, tC.vars, nil)

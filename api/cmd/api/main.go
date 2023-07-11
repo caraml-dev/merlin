@@ -328,11 +328,8 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		TransformerService:        transformerService,
 		MlflowDeleteService:       mlflowDeleteService,
 
-		AuthorizationEnabled: cfg.AuthorizationConfig.AuthorizationEnabled,
-		AlertEnabled:         cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
-		FeatureToggleConfig:  cfg.FeatureToggleConfig,
-		MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
-
+		AuthorizationEnabled:      cfg.AuthorizationConfig.AuthorizationEnabled,
+		FeatureToggleConfig:       cfg.FeatureToggleConfig,
 		StandardTransformerConfig: cfg.StandardTransformerConfig,
 
 		FeastCoreClient: coreClient,

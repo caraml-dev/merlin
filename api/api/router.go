@@ -66,11 +66,8 @@ type AppContext struct {
 	TransformerService        service.TransformerService
 	MlflowDeleteService       mlflowDelete.Service
 
-	AuthorizationEnabled bool
-	AlertEnabled         bool
-	FeatureToggleConfig  config.FeatureToggleConfig
-	MonitoringConfig     config.MonitoringConfig
-
+	AuthorizationEnabled      bool
+	FeatureToggleConfig       config.FeatureToggleConfig
 	StandardTransformerConfig config.StandardTransformerConfig
 
 	FeastCoreClient core.CoreServiceClient
@@ -231,7 +228,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 		routes = append(routes, Route{http.MethodDelete, "/projects/{project_id:[0-9]+}/models/{model_id:[0-9]+}", nil, modelsController.DeleteModel, "DeleteModel"})
 	}
 
-	if appCtx.AlertEnabled {
+	if appCtx.FeatureToggleConfig.AlertConfig.AlertEnabled {
 		routes = append(routes, []Route{
 			// Model Endpoint Alerts API
 			{http.MethodGet, "/alerts/teams", nil, alertsController.ListTeams, "ListTeams"},
