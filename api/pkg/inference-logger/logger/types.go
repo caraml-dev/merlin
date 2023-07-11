@@ -1,6 +1,10 @@
 package logger
 
-import "github.com/golang/protobuf/ptypes/timestamp"
+import (
+	"strings"
+
+	"github.com/golang/protobuf/ptypes/timestamp"
+)
 
 type LogEntry struct {
 	RequestId      string
@@ -37,3 +41,17 @@ const (
 )
 
 var LoggerSinkKinds = []LoggerSinkKind{Kafka, NewRelic, Console}
+
+func ParseSinkKindAndUrl(logUrl string) (LoggerSinkKind, string) {
+	var sinkKind LoggerSinkKind
+	url := logUrl
+
+	for _, loggerSinkKind := range LoggerSinkKinds {
+		if strings.HasPrefix(logUrl, loggerSinkKind) {
+			sinkKind = loggerSinkKind
+			url = strings.TrimPrefix(logUrl, loggerSinkKind+":")
+		}
+	}
+
+	return sinkKind, url
+}
