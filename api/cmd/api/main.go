@@ -159,6 +159,8 @@ func main() {
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
+
+		ModelDeletionEnabled: cfg.FeatureToggleConfig.ModelDeletionConfig.Enabled,
 	}
 
 	uiHomePage := fmt.Sprintf("/%s", strings.TrimPrefix(cfg.ReactAppConfig.HomePage, "/"))
@@ -328,6 +330,7 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 
 		AuthorizationEnabled: cfg.AuthorizationConfig.AuthorizationEnabled,
 		AlertEnabled:         cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
+		FeatureToggleConfig:  cfg.FeatureToggleConfig,
 		MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
 
 		StandardTransformerConfig: cfg.StandardTransformerConfig,

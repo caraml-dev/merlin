@@ -68,6 +68,7 @@ type AppContext struct {
 
 	AuthorizationEnabled bool
 	AlertEnabled         bool
+	FeatureToggleConfig  config.FeatureToggleConfig
 	MonitoringConfig     config.MonitoringConfig
 
 	StandardTransformerConfig config.StandardTransformerConfig
@@ -186,7 +187,6 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 		{http.MethodGet, "/projects/{project_id:[0-9]+}/models/{model_id:[0-9]+}", nil, modelsController.GetModel, "GetModel"},
 		{http.MethodGet, "/projects/{project_id:[0-9]+}/models", nil, modelsController.ListModels, "ListModels"},
 		{http.MethodPost, "/projects/{project_id:[0-9]+}/models", models.Model{}, modelsController.CreateModel, "CreateModel"},
-		{http.MethodDelete, "/projects/{project_id:[0-9]+}/models/{model_id:[0-9]+}", nil, modelsController.DeleteModel, "DeleteModel"},
 
 		// Model Endpoints API
 		{http.MethodGet, "/projects/{project_id:[0-9]+}/model_endpoints", nil, modelEndpointsController.ListModelEndpointInProject, "ListModelEndpointInProject"},
@@ -224,6 +224,11 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 
 		// Standard Transformer Simulation API
 		{http.MethodPost, "/standard_transformer/simulate", models.TransformerSimulation{}, transformerController.SimulateTransformer, "SimulateTransformer"},
+	}
+
+	if appCtx.FeatureToggleConfig.ModelDeletionConfig.Enabled {
+		// Model deletion API
+		routes = append(routes, Route{http.MethodDelete, "/projects/{project_id:[0-9]+}/models/{model_id:[0-9]+}", nil, modelsController.DeleteModel, "DeleteModel"})
 	}
 
 	if appCtx.AlertEnabled {
