@@ -229,7 +229,7 @@ func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *ta
 
 			columnValue, err := subsetSeriesFromExpression(env, condition.Expression, rowIndex)
 			if err != nil {
-				return nil, fmt.Errorf("error evaluation column rule value for column %s: %v. Err: Ts", columnName, condition.Default.Expression)
+				return nil, fmt.Errorf("error evaluation column rule value for column %s: %v. Err: %v", columnName, condition.Expression, err)
 			}
 
 			colRuleValue := table.RowValues{
