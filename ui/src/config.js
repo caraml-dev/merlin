@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import React from "react";
 import objectAssignDeep from "object-assign-deep";
+import React from "react";
 
 const getEnv = (env) => {
   return window.env && env in window.env ? window.env[env] : process.env[env];
@@ -76,6 +76,12 @@ export const featureToggleConfig = {
   monitoringDashboardJobBaseURL: getEnv(
     "REACT_APP_MONITORING_DASHBOARD_JOB_BASE_URL"
   ),
+  modelDeletionEnabled: getEnv("REACT_APP_MODEL_DELETION_ENABLED")
+    ? !(
+        getEnv("REACT_APP_MODEL_DELETION_ENABLED").toString().toLowerCase() ===
+        "false"
+      )
+    : false,
 };
 
 export const costEstimationConfig = {

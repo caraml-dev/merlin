@@ -247,8 +247,9 @@ type InMemoryCacheConfig struct {
 }
 
 type FeatureToggleConfig struct {
-	MonitoringConfig MonitoringConfig
-	AlertConfig      AlertConfig
+	MonitoringConfig    MonitoringConfig
+	AlertConfig         AlertConfig
+	ModelDeletionConfig ModelDeletionConfig
 }
 
 type MonitoringConfig struct {
@@ -261,6 +262,10 @@ type AlertConfig struct {
 	AlertEnabled bool `default:"false"`
 	GitlabConfig GitlabConfig
 	WardenConfig WardenConfig
+}
+
+type ModelDeletionConfig struct {
+	Enabled bool `default:"false"`
 }
 
 type GitlabConfig struct {

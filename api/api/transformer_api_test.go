@@ -9,7 +9,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
@@ -312,11 +311,6 @@ func TestTransformerController_SimulateTransformer(t *testing.T) {
 			ctl := &TransformerController{
 				AppContext: &AppContext{
 					TransformerService: tt.transformerService(payload),
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
-					},
-					AlertEnabled: true,
 				},
 			}
 			got := ctl.SimulateTransformer(&http.Request{}, tt.vars, tt.requestBody)

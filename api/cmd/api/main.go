@@ -159,6 +159,8 @@ func main() {
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
+
+		ModelDeletionEnabled: cfg.FeatureToggleConfig.ModelDeletionConfig.Enabled,
 	}
 
 	uiHomePage := fmt.Sprintf("/%s", strings.TrimPrefix(cfg.ReactAppConfig.HomePage, "/"))
@@ -326,10 +328,8 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		TransformerService:        transformerService,
 		MlflowDeleteService:       mlflowDeleteService,
 
-		AuthorizationEnabled: cfg.AuthorizationConfig.AuthorizationEnabled,
-		AlertEnabled:         cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
-		MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
-
+		AuthorizationEnabled:      cfg.AuthorizationConfig.AuthorizationEnabled,
+		FeatureToggleConfig:       cfg.FeatureToggleConfig,
 		StandardTransformerConfig: cfg.StandardTransformerConfig,
 
 		FeastCoreClient: coreClient,
