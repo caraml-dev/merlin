@@ -14,15 +14,15 @@
 
 import json
 
+import mlflow
 import pytest
-from urllib3_mock import Responses
 
 import client as cl
 import merlin
-import mlflow
 from merlin.model import ModelVersion
 
-responses = Responses("requests.packages.urllib3")
+# get global mock responses that configured in conftest
+responses = pytest.responses
 
 default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
 env_1 = cl.Environment(
