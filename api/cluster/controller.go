@@ -185,7 +185,7 @@ func (k *controller) Deploy(ctx context.Context, modelService *models.Service) (
 			return nil, ErrUnableToCreateInferenceService
 		}
 	} else {
-		patchedSpec, err := k.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, k.deploymentConfig)
+		patchedSpec, err := k.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, k.deploymentConfig, resource.DeploymentScale{})
 		if err != nil {
 			log.Errorf("unable to update inference service %s %v", isvcName, err)
 			return nil, ErrUnableToUpdateInferenceService

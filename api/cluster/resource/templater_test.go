@@ -3728,11 +3728,12 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		modelSvc *models.Service
-		original *kservev1beta1.InferenceService
-		exp      *kservev1beta1.InferenceService
-		wantErr  bool
+		name            string
+		modelSvc        *models.Service
+		deploymentScale DeploymentScale
+		original        *kservev1beta1.InferenceService
+		exp             *kservev1beta1.InferenceService
+		wantErr         bool
 	}{
 		{
 			name: "tensorflow spec",
@@ -4352,7 +4353,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig)
+			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -4426,12 +4427,15 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 		},
 	}
 
+	testPredictorScale, testTransformerScale := 3, 5
+
 	tests := []struct {
-		name     string
-		modelSvc *models.Service
-		original *kservev1beta1.InferenceService
-		exp      *kservev1beta1.InferenceService
-		wantErr  bool
+		name            string
+		modelSvc        *models.Service
+		deploymentScale DeploymentScale
+		original        *kservev1beta1.InferenceService
+		exp             *kservev1beta1.InferenceService
+		wantErr         bool
 	}{
 		{
 			name: "predictor with unspecified deployment mode (serverless)",
@@ -4591,6 +4595,9 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				DeploymentMode: deployment.ServerlessDeploymentMode,
 				Protocol:       protocol.HttpJson,
 			},
+			deploymentScale: DeploymentScale{
+				Predictor: &testPredictorScale,
+			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -4634,6 +4641,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               "3",
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -5110,6 +5118,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				DeploymentMode: deployment.ServerlessDeploymentMode,
 				Protocol:       protocol.HttpJson,
 			},
+			deploymentScale: DeploymentScale{
+				Predictor:   &testPredictorScale,
+				Transformer: &testTransformerScale,
+			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -5153,6 +5165,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               "5",
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -5587,7 +5600,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig)
+			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

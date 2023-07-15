@@ -106,6 +106,11 @@ var (
 	}
 )
 
+type DeploymentScale struct {
+	Predictor   *int
+	Transformer *int
+}
+
 type InferenceServiceTemplater struct {
 	standardTransformerConfig config.StandardTransformerConfig
 }
@@ -117,7 +122,7 @@ func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTrans
 func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
 	applyDefaults(modelService, config)
 
-	annotations, err := createAnnotations(modelService, config)
+	annotations, err := createAnnotations(modelService, config, nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
 	}
@@ -164,15 +169,33 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	return inferenceService, nil
 }
 
-func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(
+	orig *kservev1beta1.InferenceService,
+	modelService *models.Service,
+	config *config.DeploymentConfig,
+	currentReplicas DeploymentScale,
+) (*kservev1beta1.InferenceService, error) {
+	// Identify the desired initial scale of the new deployment
+	var initialScale *int
+	if currentReplicas.Predictor != nil {
+		// The desired scale of the new deployment is a single value, applicable to both the predictor and the transformer.
+		// Set the desired scale of the new deployment by taking the max of the 2 values.
+		if currentReplicas.Transformer != nil && *currentReplicas.Transformer > *currentReplicas.Predictor {
+			initialScale = currentReplicas.Transformer
+		} else {
+			initialScale = currentReplicas.Predictor
+		}
+	}
+
 	applyDefaults(modelService, config)
 
 	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
-	annotations, err := createAnnotations(modelService, config)
+	annotations, err := createAnnotations(modelService, config, initialScale)
 	if err != nil {
 		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
 	}
 	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
+
 	orig.Spec.Predictor = createPredictorSpec(modelService, config)
 	orig.Spec.Predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
 		orig,
@@ -532,7 +555,7 @@ func createPredictorHost(modelService *models.Service) string {
 	return fmt.Sprintf("%s-predictor-default.%s:%d", modelService.Name, modelService.Namespace, defaultPredictorPort)
 }
 
-func createAnnotations(modelService *models.Service, config *config.DeploymentConfig) (map[string]string, error) {
+func createAnnotations(modelService *models.Service, config *config.DeploymentConfig, initialScale *int) (map[string]string, error) {
 	annotations := make(map[string]string)
 
 	if config.QueueResourcePercentage != "" {
@@ -576,6 +599,11 @@ func createAnnotations(modelService *models.Service, config *config.DeploymentCo
 			annotations[knautoscaling.MetricAnnotationKey] = autoscalingMetrics
 			annotations[knautoscaling.TargetAnnotationKey] = targetValue
 		}
+	}
+
+	// For serverless deployments, set initial scale, if supplied.
+	if initialScale != nil && modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
+		annotations[knautoscaling.InitialScaleAnnotationKey] = strconv.Itoa(*initialScale)
 	}
 
 	return annotations, nil
