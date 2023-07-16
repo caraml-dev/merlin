@@ -69,6 +69,8 @@ StandardTransformerConfig:
     FeastBigtableURL: https://caraml.dev/feast/bigtable
   Kafka:
     Brokers: localhost:9092
+  Jaeger:
+    CollectorURL: localhost:14268/api/traces
 
 MlflowConfig:
   TrackingURL: https://caraml.dev/mlflow
