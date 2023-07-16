@@ -747,7 +747,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 	}
 }
 
-func TestGetKnativeServiceDesiredReplicas(t *testing.T) {
+func TestGetCurrentDeploymentScale(t *testing.T) {
 	testRevisionName, testNamespace := "test-name-0", "test-namespace"
 	var testDesiredReplicas int32 = 5
 
