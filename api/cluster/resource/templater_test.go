@@ -3727,6 +3727,8 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 		},
 	}
 
+	testPredictorScale, testTransformerScale := 3, 5
+
 	tests := []struct {
 		name            string
 		modelSvc        *models.Service
@@ -3938,7 +3940,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "tensorflow + transformer spec top tensorflow spec only",
+			name: "tensorflow + transformer spec to tensorflow spec only",
 			modelSvc: &models.Service{
 				Name:        modelSvc.Name,
 				Namespace:   project.Name,
@@ -3950,6 +3952,10 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Enabled: false,
 				},
 				Protocol: protocol.HttpJson,
+			},
+			deploymentScale: DeploymentScale{
+				Predictor:   &testPredictorScale,
+				Transformer: &testTransformerScale,
 			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -4019,6 +4025,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               "3",
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,

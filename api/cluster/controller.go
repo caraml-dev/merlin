@@ -39,6 +39,7 @@ import (
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/deployment"
 	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 )
 
@@ -209,16 +210,19 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	} else {
 		// Get current scale of the existing deployment
 		deploymentScale := resource.DeploymentScale{}
-		if predictorScale, err := c.getCurrentDeploymentScale(
-			ctx, modelService.Namespace,
-			s.Status.Components[kservev1beta1.PredictorComponent].LatestCreatedRevision); err != nil {
-			deploymentScale.Predictor = &predictorScale
-		}
-		if _, ok := s.Status.Components[kservev1beta1.TransformerComponent]; ok {
-			if transformerScale, err := c.getCurrentDeploymentScale(
+		if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
+			modelService.DeploymentMode == deployment.EmptyDeploymentMode {
+			if predictorScale, err := c.getCurrentDeploymentScale(
 				ctx, modelService.Namespace,
-				s.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision); err != nil {
-				deploymentScale.Transformer = &transformerScale
+				s.Status.Components[kservev1beta1.PredictorComponent].LatestCreatedRevision); err != nil {
+				deploymentScale.Predictor = &predictorScale
+			}
+			if _, ok := s.Status.Components[kservev1beta1.TransformerComponent]; ok {
+				if transformerScale, err := c.getCurrentDeploymentScale(
+					ctx, modelService.Namespace,
+					s.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision); err != nil {
+					deploymentScale.Transformer = &transformerScale
+				}
 			}
 		}
 

@@ -180,7 +180,11 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(
 	if currentReplicas.Predictor != nil {
 		// The desired scale of the new deployment is a single value, applicable to both the predictor and the transformer.
 		// Set the desired scale of the new deployment by taking the max of the 2 values.
-		if currentReplicas.Transformer != nil && *currentReplicas.Transformer > *currentReplicas.Predictor {
+		// Consider the transformer's scale only if it is also enabled in the new spec.
+		if modelService.Transformer != nil &&
+			modelService.Transformer.Enabled &&
+			currentReplicas.Transformer != nil &&
+			*currentReplicas.Transformer > *currentReplicas.Predictor {
 			initialScale = currentReplicas.Transformer
 		} else {
 			initialScale = currentReplicas.Predictor
@@ -602,7 +606,7 @@ func createAnnotations(modelService *models.Service, config *config.DeploymentCo
 	}
 
 	// For serverless deployments, set initial scale, if supplied.
-	if initialScale != nil && modelService.DeploymentMode == deployment.ServerlessDeploymentMode {
+	if deployMode == string(kserveconstant.Serverless) && initialScale != nil {
 		annotations[knautoscaling.InitialScaleAnnotationKey] = strconv.Itoa(*initialScale)
 	}
 
