@@ -54,6 +54,8 @@ type Controller interface {
 	DeleteJob(ctx context.Context, namespace, jobName string, deleteOptions metav1.DeleteOptions) error
 	DeleteJobs(ctx context.Context, namespace string, deleteOptions metav1.DeleteOptions, listOptions metav1.ListOptions) error
 
+	GetCurrentDeploymentScale(ctx context.Context, namespace, knRevisionName string) (int, error)
+
 	ContainerFetcher
 }
 
@@ -212,13 +214,13 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		deploymentScale := resource.DeploymentScale{}
 		if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 			modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-			if predictorScale, err := c.getCurrentDeploymentScale(
+			if predictorScale, err := c.GetCurrentDeploymentScale(
 				ctx, modelService.Namespace,
 				s.Status.Components[kservev1beta1.PredictorComponent].LatestCreatedRevision); err != nil {
 				deploymentScale.Predictor = &predictorScale
 			}
 			if _, ok := s.Status.Components[kservev1beta1.TransformerComponent]; ok {
-				if transformerScale, err := c.getCurrentDeploymentScale(
+				if transformerScale, err := c.GetCurrentDeploymentScale(
 					ctx, modelService.Namespace,
 					s.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision); err != nil {
 					deploymentScale.Transformer = &transformerScale
@@ -333,7 +335,7 @@ func (c *controller) StreamPodLogs(ctx context.Context, namespace, podName strin
 	return c.clusterClient.Pods(namespace).GetLogs(podName, opts).Stream(ctx)
 }
 
-func (c *controller) getCurrentDeploymentScale(ctx context.Context, namespace, knRevisionName string) (int, error) {
+func (c *controller) GetCurrentDeploymentScale(ctx context.Context, namespace, knRevisionName string) (int, error) {
 	// Init knative revisions getter
 	revisions := c.knServingClient.Revisions(namespace)
 
