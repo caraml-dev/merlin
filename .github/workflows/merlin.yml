@@ -63,6 +63,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/batch-predictor
         run: |
+          pip install --upgrade pip
           pip install pipenv
           make setup
       - name: Run batch-predictor test
@@ -95,6 +96,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/pyfunc-server
         run: |
+          pip install --upgrade pip
           pip install pipenv
           make setup
       - name: Run pyfunc-server test
@@ -127,6 +129,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./python/sdk
         run: |
+          pip install --upgrade pip
           pip install pipenv
           make setup
       - name: Unit test Python SDK
