@@ -85,8 +85,15 @@ class PredictionJob:
         job_client.models_model_id_versions_version_id_jobs_job_id_stop_put(model_id=self._model_id,
                                                                             version_id=self._version_id,
                                                                             job_id=self._id)
-        j = self.refresh()
-        return j
+        try:
+            self.refresh()
+        except client.rest.ApiException as e:
+            if e.status == 404:
+                # This means the job does not exist anymore - it was terminated, as expected.
+                self._status = JobStatus.TERMINATED
+            else:
+                raise e
+        return self
 
     def refresh(self):
         """
@@ -95,15 +102,8 @@ class PredictionJob:
         :return:
         """
         job_client = client.PredictionJobsApi(self._api_client)
-        try:
-            job = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self._model_id,
-                                                                            version_id=self._version_id,
-                                                                            job_id=self._id)
-            self._status = JobStatus(job.status)
-        except client.rest.ApiException as e:
-            if e.status == 404:
-                # This means the job does not exist anymore - it was terminated.
-                self._status = JobStatus.TERMINATED
-            else:
-                raise e
+        self._status = JobStatus(
+            job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self._model_id,
+                                                                           version_id=self._version_id,
+                                                                           job_id=self._id).status)
         return self
