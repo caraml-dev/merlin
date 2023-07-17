@@ -758,7 +758,6 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 		Resource: revisionResource,
 	}
 
-	// Define tests
 	tests := map[string]struct {
 		components    map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec
 		rFunc         func(action k8stesting.Action) (bool, runtime.Object, error)
