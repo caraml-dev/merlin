@@ -748,8 +748,9 @@ func TestController_DeployInferenceService(t *testing.T) {
 }
 
 func TestGetCurrentDeploymentScale(t *testing.T) {
-	testRevisionName, testNamespace := "test-name-0", "test-namespace"
+	testNamespace := "test-namespace"
 	var testDesiredReplicas int32 = 5
+	var testDesiredReplicasInt int = 5
 
 	resourceItem := schema.GroupVersionResource{
 		Group:    knativeGroup,
@@ -759,50 +760,93 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 
 	// Define tests
 	tests := map[string]struct {
-		rFunc            func(action k8stesting.Action) (bool, runtime.Object, error)
-		expectedReplicas int
-		expectedErr      string
+		components    map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec
+		rFunc         func(action k8stesting.Action) (bool, runtime.Object, error)
+		expectedScale clusterresource.DeploymentScale
 	}{
 		"failure | revision not found": {
+			components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
+				kservev1beta1.PredictorComponent: {
+					LatestCreatedRevision: "test-predictor-0",
+				},
+			},
 			rFunc: func(action k8stesting.Action) (bool, runtime.Object, error) {
-				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, testRevisionName)
+				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, "test-predictor-0")
 				// Check that the method is called with the expected action
 				assert.Equal(t, expAction, action)
 				// Return nil object and error to indicate non existent object
-				return true, nil, kerrors.NewNotFound(schema.GroupResource{}, testRevisionName)
+				return true, nil, kerrors.NewNotFound(schema.GroupResource{}, "test-predictor-0")
 			},
-			expectedErr: `"test-name-0" not found`,
+			expectedScale: clusterresource.DeploymentScale{},
 		},
 		"failure | desired replicas not set": {
+			components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
+				kservev1beta1.PredictorComponent: {
+					LatestCreatedRevision: "test-predictor-0",
+				},
+			},
 			rFunc: func(action k8stesting.Action) (bool, runtime.Object, error) {
-				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, testRevisionName)
+				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, "test-predictor-0")
 				// Check that the method is called with the expected action
 				assert.Equal(t, expAction, action)
 				// Return test response
 				return true, &knservingv1.Revision{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: testRevisionName,
+						Name: "test-predictor-0",
 					},
 				}, nil
 			},
-			expectedErr: fmt.Sprintf("Desired Replicas for %s/%s is not set", testNamespace, testRevisionName),
+			expectedScale: clusterresource.DeploymentScale{},
 		},
-		"success": {
+		"success | predictor only": {
+			components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
+				kservev1beta1.PredictorComponent: {
+					LatestCreatedRevision: "test-predictor-0",
+				},
+			},
 			rFunc: func(action k8stesting.Action) (bool, runtime.Object, error) {
-				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, testRevisionName)
+				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, "test-predictor-0")
 				// Check that the method is called with the expected action
 				assert.Equal(t, expAction, action)
 				// Return test response
 				return true, &knservingv1.Revision{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: testRevisionName,
+						Name: "test-predictor-0",
 					},
 					Status: knservingv1.RevisionStatus{
 						DesiredReplicas: &testDesiredReplicas,
 					},
 				}, nil
 			},
-			expectedReplicas: 5,
+			expectedScale: clusterresource.DeploymentScale{Predictor: &testDesiredReplicasInt},
+		},
+		"success | predictor and transformer": {
+			components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
+				kservev1beta1.PredictorComponent: {
+					LatestCreatedRevision: "test-svc-0",
+				},
+				kservev1beta1.TransformerComponent: {
+					LatestCreatedRevision: "test-svc-0",
+				},
+			},
+			rFunc: func(action k8stesting.Action) (bool, runtime.Object, error) {
+				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, "test-svc-0")
+				// Check that the method is called with the expected action
+				assert.Equal(t, expAction, action)
+				// Return test response
+				return true, &knservingv1.Revision{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test-svc-0",
+					},
+					Status: knservingv1.RevisionStatus{
+						DesiredReplicas: &testDesiredReplicas,
+					},
+				}, nil
+			},
+			expectedScale: clusterresource.DeploymentScale{
+				Predictor:   &testDesiredReplicasInt,
+				Transformer: &testDesiredReplicasInt,
+			},
 		},
 	}
 
@@ -825,13 +869,8 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 			// Create test controller
 			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, templater)
 
-			desiredReplicas, err := ctl.GetCurrentDeploymentScale(context.TODO(), testNamespace, testRevisionName)
-			if tt.expectedErr == "" {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedReplicas, desiredReplicas)
-			} else {
-				assert.ErrorContains(t, err, tt.expectedErr)
-			}
+			desiredReplicas := ctl.GetCurrentDeploymentScale(context.TODO(), testNamespace, tt.components)
+			assert.Equal(t, tt.expectedScale, desiredReplicas)
 		})
 	}
 }

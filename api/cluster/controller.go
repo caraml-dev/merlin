@@ -16,7 +16,6 @@ package cluster
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"time"
 
@@ -54,7 +53,8 @@ type Controller interface {
 	DeleteJob(ctx context.Context, namespace, jobName string, deleteOptions metav1.DeleteOptions) error
 	DeleteJobs(ctx context.Context, namespace string, deleteOptions metav1.DeleteOptions, listOptions metav1.ListOptions) error
 
-	GetCurrentDeploymentScale(ctx context.Context, namespace, knRevisionName string) (int, error)
+	GetCurrentDeploymentScale(ctx context.Context, namespace string,
+		components map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec) resource.DeploymentScale
 
 	ContainerFetcher
 }
@@ -214,18 +214,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 		deploymentScale := resource.DeploymentScale{}
 		if modelService.DeploymentMode == deployment.ServerlessDeploymentMode ||
 			modelService.DeploymentMode == deployment.EmptyDeploymentMode {
-			if predictorScale, err := c.GetCurrentDeploymentScale(
-				ctx, modelService.Namespace,
-				s.Status.Components[kservev1beta1.PredictorComponent].LatestCreatedRevision); err != nil {
-				deploymentScale.Predictor = &predictorScale
-			}
-			if _, ok := s.Status.Components[kservev1beta1.TransformerComponent]; ok {
-				if transformerScale, err := c.GetCurrentDeploymentScale(
-					ctx, modelService.Namespace,
-					s.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision); err != nil {
-					deploymentScale.Transformer = &transformerScale
-				}
-			}
+			deploymentScale = c.GetCurrentDeploymentScale(ctx, modelService.Namespace, s.Status.Components)
 		}
 
 		patchedSpec, err := c.kfServingResourceTemplater.PatchInferenceServiceSpec(s, modelService, c.deploymentConfig, deploymentScale)
@@ -335,17 +324,33 @@ func (c *controller) StreamPodLogs(ctx context.Context, namespace, podName strin
 	return c.clusterClient.Pods(namespace).GetLogs(podName, opts).Stream(ctx)
 }
 
-func (c *controller) GetCurrentDeploymentScale(ctx context.Context, namespace, knRevisionName string) (int, error) {
+func (c *controller) GetCurrentDeploymentScale(
+	ctx context.Context,
+	namespace string,
+	components map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec,
+) resource.DeploymentScale {
+	deploymentScale := resource.DeploymentScale{}
+
 	// Init knative revisions getter
 	revisions := c.knServingClient.Revisions(namespace)
 
-	rev, err := revisions.Get(ctx, knRevisionName, metav1.GetOptions{})
-	if err != nil {
-		return 0, err
-	}
-	if rev.Status.DesiredReplicas != nil {
-		return int(*rev.Status.DesiredReplicas), nil
+	// Get predictor scale
+	if rev, err := revisions.Get(ctx, components[kservev1beta1.PredictorComponent].LatestCreatedRevision, metav1.GetOptions{}); err == nil {
+		if rev.Status.DesiredReplicas != nil {
+			predictorScale := int(*rev.Status.DesiredReplicas)
+			deploymentScale.Predictor = &predictorScale
+		}
 	}
 
-	return 0, fmt.Errorf("Desired Replicas for %s/%s is not set", namespace, knRevisionName)
+	// Get transformer scale, if enabled
+	if _, ok := components[kservev1beta1.TransformerComponent]; ok {
+		if rev, err := revisions.Get(ctx, components[kservev1beta1.TransformerComponent].LatestCreatedRevision, metav1.GetOptions{}); err == nil {
+			if rev.Status.DesiredReplicas != nil {
+				transformerScale := int(*rev.Status.DesiredReplicas)
+				deploymentScale.Transformer = &transformerScale
+			}
+		}
+	}
+
+	return deploymentScale
 }
