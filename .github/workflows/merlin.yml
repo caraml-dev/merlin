@@ -129,7 +129,6 @@ jobs:
         run: |
           pip install pipenv
           make setup
-          pipenv run pip freeze
       - name: Unit test Python SDK
         env:
           E2E_USE_GOOGLE_OAUTH: false
