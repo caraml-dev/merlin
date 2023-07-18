@@ -227,11 +227,15 @@ func TestListEndpoint(t *testing.T) {
 					ModelsService:    modelSvc,
 					VersionsService:  versionSvc,
 					EndpointsService: endpointSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.ListEndpoint(&http.Request{}, tC.vars, nil)
@@ -471,11 +475,15 @@ func TestGetEndpoint(t *testing.T) {
 					ModelsService:    modelSvc,
 					VersionsService:  versionSvc,
 					EndpointsService: endpointSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.GetEndpoint(&http.Request{}, tC.vars, nil)
@@ -668,11 +676,15 @@ func TestListContainers(t *testing.T) {
 					ModelsService:    modelSvc,
 					VersionsService:  versionSvc,
 					EndpointsService: endpointSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.ListContainers(&http.Request{}, tC.vars, nil)
@@ -3268,12 +3280,16 @@ func TestCreateEndpoint(t *testing.T) {
 
 			ctl := &EndpointsController{
 				AppContext: &AppContext{
-					ModelsService:             modelSvc,
-					VersionsService:           versionSvc,
-					EnvironmentService:        envSvc,
-					EndpointsService:          endpointSvc,
-					MonitoringConfig:          tC.monitoringConfig,
-					AlertEnabled:              true,
+					ModelsService:      modelSvc,
+					VersionsService:    versionSvc,
+					EnvironmentService: envSvc,
+					EndpointsService:   endpointSvc,
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: tC.monitoringConfig,
+					},
 					StandardTransformerConfig: tC.standardTransformerConfig,
 					FeastCoreClient:           feastCoreMock,
 				},
@@ -4928,11 +4944,15 @@ func TestUpdateEndpoint(t *testing.T) {
 					VersionsService:    versionSvc,
 					EnvironmentService: envSvc,
 					EndpointsService:   endpointSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.UpdateEndpoint(&http.Request{}, tC.vars, tC.requestBody)
@@ -5560,11 +5580,15 @@ func TestDeleteEndpoint(t *testing.T) {
 					VersionsService:    versionSvc,
 					EnvironmentService: envSvc,
 					EndpointsService:   endpointSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.DeleteEndpoint(&http.Request{}, tC.vars, nil)

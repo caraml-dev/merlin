@@ -1022,3 +1022,193 @@ func Test_controller_ListPods(t *testing.T) {
 	assert.Equal(t, "test-model-1-predictor-default-a", podList.Items[0].ObjectMeta.Name)
 	assert.Equal(t, "test-model-1-predictor-default-b", podList.Items[1].ObjectMeta.Name)
 }
+
+func TestController_Delete(t *testing.T) {
+	isvcName := models.CreateInferenceServiceName("my-model", "1")
+	projectName := "my-project"
+	pdb := &policyv1.PodDisruptionBudget{}
+
+	tests := []struct {
+		name         string
+		modelService *models.Service
+		getResult    *inferenceServiceReactor
+		deleteResult *inferenceServiceReactor
+		deployConfig config.DeploymentConfig
+		wantError    bool
+	}{
+		{
+			name: "success: delete predictor",
+			modelService: &models.Service{
+				Name:      isvcName,
+				Namespace: projectName,
+			},
+			getResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      isvcName,
+						Namespace: projectName,
+					},
+				},
+				nil,
+			},
+			deleteResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      isvcName,
+						Namespace: projectName,
+					},
+				},
+				nil,
+			},
+			deployConfig: config.DeploymentConfig{},
+			wantError:    false,
+		},
+		{
+			name: "success: delete predictor and transformer",
+			modelService: &models.Service{
+				Name:      isvcName,
+				Namespace: projectName,
+				Transformer: &models.Transformer{
+					Enabled: true,
+				},
+			},
+			getResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      isvcName,
+						Namespace: projectName,
+					},
+				},
+				nil,
+			},
+			deleteResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      isvcName,
+						Namespace: projectName,
+					},
+				},
+				nil,
+			},
+			deployConfig: config.DeploymentConfig{},
+			wantError:    false,
+		},
+		{
+			name: "success: delete predictor and its pdb",
+			modelService: &models.Service{
+				Name:      isvcName,
+				Namespace: projectName,
+			},
+			getResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      isvcName,
+						Namespace: projectName,
+					},
+				},
+				nil,
+			},
+			deleteResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      isvcName,
+						Namespace: projectName,
+					},
+				},
+				nil,
+			},
+			deployConfig: config.DeploymentConfig{
+				PodDisruptionBudget: config.PodDisruptionBudgetConfig{
+					Enabled: true,
+				},
+			},
+			wantError: false,
+		},
+		{
+			name: "success: delete predictor, transformer, and their pdb",
+			modelService: &models.Service{
+				Name:      isvcName,
+				Namespace: projectName,
+				Transformer: &models.Transformer{
+					Enabled: true,
+				},
+			},
+			getResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      isvcName,
+						Namespace: projectName,
+					},
+				},
+				nil,
+			},
+			deleteResult: &inferenceServiceReactor{
+				&kservev1beta1.InferenceService{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      isvcName,
+						Namespace: projectName,
+					},
+				},
+				nil,
+			},
+			deployConfig: config.DeploymentConfig{
+				PodDisruptionBudget: config.PodDisruptionBudgetConfig{
+					Enabled: true,
+				},
+			},
+			wantError: false,
+		},
+		{
+			name: "skip: predictor not found",
+			modelService: &models.Service{
+				Name:      isvcName,
+				Namespace: projectName,
+			},
+			getResult: &inferenceServiceReactor{
+				nil,
+				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
+			},
+			deleteResult: &inferenceServiceReactor{
+				nil,
+				nil,
+			},
+			deployConfig: config.DeploymentConfig{},
+			wantError:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
+			kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, tt.getResult.isvc, tt.getResult.err
+			})
+			kfClient.PrependReactor(deleteMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, tt.deleteResult.isvc, tt.deleteResult.err
+			})
+
+			v1Client := fake.NewSimpleClientset().CoreV1()
+
+			policyV1Client := fake.NewSimpleClientset().PolicyV1().(*fakepolicyv1.FakePolicyV1)
+			policyV1Client.Fake.PrependReactor(deleteMethod, pdbResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, pdb, nil
+			})
+
+			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
+
+			templater := clusterresource.NewInferenceServiceTemplater(config.StandardTransformerConfig{})
+
+			ctl, _ := newController(kfClient, v1Client, nil, policyV1Client, tt.deployConfig, containerFetcher, templater)
+			mSvc, err := ctl.Delete(context.Background(), tt.modelService)
+
+			if tt.wantError {
+				assert.Error(t, err)
+				assert.Nil(t, mSvc)
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.NotNil(t, mSvc)
+		})
+	}
+}

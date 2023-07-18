@@ -347,6 +347,35 @@ func TestTableTransformOp_Execute(t1 *testing.T) {
 			},
 		},
 		{
+			name: "failed: update columns; failed during expression eval",
+			tableTransformSpec: &spec.TableTransformation{
+				InputTable:  "existing_table",
+				OutputTable: "output_table",
+				Steps: []*spec.TransformationStep{
+					{
+						UpdateColumns: []*spec.UpdateColumn{
+							{
+								Column: "conditional_col",
+								Conditions: []*spec.ColumnCondition{
+									{
+										RowSelector: "existing_table.Col('int_col') % 2 == 0",
+										Expression:  "existing_table.Col('int_col')",
+									},
+									{
+										RowSelector: "existing_table.Col('int_col') % 2 == 1",
+										Expression:  "existing_table.Col('not_exist_col')",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			env:      env,
+			wantErr:  true,
+			expError: fmt.Errorf("error evaluation column rule value for column conditional_col: existing_table.Col('not_exist_col'). Err: compiled expression 'existing_table.Col('not_exist_col')' not found"),
+		},
+		{
 			name: "success: filter row",
 			tableTransformSpec: &spec.TableTransformation{
 				InputTable:  "existing_table",

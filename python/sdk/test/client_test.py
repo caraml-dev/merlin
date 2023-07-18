@@ -18,7 +18,6 @@ from sys import version_info
 from unittest import mock
 
 import pytest
-from urllib3_mock import Responses
 
 import client as cl
 from client import ApiClient, Configuration
@@ -28,7 +27,8 @@ from merlin.model import Model, ModelType, Project
 from merlin.util import guess_mlp_ui_url
 from merlin.version import VERSION
 
-responses = Responses("requests.packages.urllib3")
+# get global mock responses that configured in conftest
+responses = pytest.responses
 
 
 @pytest.fixture
