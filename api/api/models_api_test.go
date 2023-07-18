@@ -1289,30 +1289,38 @@ func TestDeleteModel(t *testing.T) {
 
 			ctl := &ModelsController{
 				AppContext: &AppContext{
-					VersionsService: versionSvc(),
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
-					},
-					AlertEnabled:          true,
+					VersionsService:       versionSvc(),
 					ModelsService:         modelsSvc(),
 					MlflowDeleteService:   mlflowDeleteSvc(),
 					PredictionJobService:  predictionJobSvc(),
 					EndpointsService:      endpointSvc(),
 					ProjectsService:       projectSvc(),
 					ModelEndpointsService: modelEndpointSvc(),
-				},
-				VersionsController: &VersionsController{
-					AppContext: &AppContext{
-						VersionsService: versionSvc(),
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
 						MonitoringConfig: config.MonitoringConfig{
 							MonitoringEnabled: true,
 							MonitoringBaseURL: "http://grafana",
 						},
-						AlertEnabled:         true,
+					},
+				},
+				VersionsController: &VersionsController{
+					AppContext: &AppContext{
+						VersionsService:      versionSvc(),
 						MlflowDeleteService:  mlflowDeleteSvc(),
 						PredictionJobService: predictionJobSvc(),
 						EndpointsService:     endpointSvc(),
+						FeatureToggleConfig: config.FeatureToggleConfig{
+							AlertConfig: config.AlertConfig{
+								AlertEnabled: true,
+							},
+							MonitoringConfig: config.MonitoringConfig{
+								MonitoringEnabled: true,
+								MonitoringBaseURL: "http://grafana",
+							},
+						},
 					},
 				},
 			}
@@ -1320,5 +1328,4 @@ func TestDeleteModel(t *testing.T) {
 			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
-
 }

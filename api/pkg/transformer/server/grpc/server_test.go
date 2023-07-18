@@ -26,6 +26,8 @@ import (
 	feastTypes "github.com/feast-dev/feast/sdk/go/protos/feast/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -591,12 +593,14 @@ func TestUPIServer_PredictValues_WithMockPreprocessAndPostprocessHandler(t *test
 				incomingReq = (*upiv1.PredictValuesRequest)(req)
 			}
 			clientMock.On("PredictValues", mock.Anything, incomingReq, mock.Anything).Return(tt.expectedModelOutput, tt.modelErr)
+			noOpTracer := trace.NewNoopTracerProvider()
 			us := &UPIServer{
 				modelClient: clientMock,
 				opts: &config.Options{
 					ModelGRPCHystrixCommandName: "grpcHandler",
 				},
 				logger: logger,
+				tracer: noOpTracer.Tracer(""),
 			}
 			if tt.expectedPreprocessOutput != nil || tt.preprocessErr != nil {
 				us.PreprocessHandler = func(ctx context.Context, request types.Payload, requestHeaders map[string]string) (types.Payload, error) {
@@ -3522,10 +3526,13 @@ func createTransformerServer(transformerConfigPath string, feastClients feast.Cl
 	}
 
 	handler := pipeline.NewHandler(compiledPipeline, logger)
+	noOpTracer := trace.NewNoopTracerProvider()
+	otel.SetTracerProvider(noOpTracer)
 	transformerServer := &UPIServer{
 		opts:        options,
 		modelClient: modelClient,
 		logger:      logger,
+		tracer:      noOpTracer.Tracer(""),
 	}
 
 	transformerServer.ContextModifier = handler.EmbedEnvironment

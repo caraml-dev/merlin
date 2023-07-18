@@ -37,6 +37,8 @@ import (
 )
 
 const (
+	viperKeyDelimiter = "::"
+
 	MaxDeployedVersion = 2
 )
 
@@ -245,8 +247,9 @@ type InMemoryCacheConfig struct {
 }
 
 type FeatureToggleConfig struct {
-	MonitoringConfig MonitoringConfig
-	AlertConfig      AlertConfig
+	MonitoringConfig    MonitoringConfig
+	AlertConfig         AlertConfig
+	ModelDeletionConfig ModelDeletionConfig
 }
 
 type MonitoringConfig struct {
@@ -259,6 +262,10 @@ type AlertConfig struct {
 	AlertEnabled bool `default:"false"`
 	GitlabConfig GitlabConfig
 	WardenConfig WardenConfig
+}
+
+type ModelDeletionConfig struct {
+	Enabled bool `default:"false"`
 }
 
 type GitlabConfig struct {
@@ -406,9 +413,7 @@ func (u *FeastServingURLs) URLs() []string {
 }
 
 type JaegerConfig struct {
-	AgentHost    string
-	AgentPort    string
-	SamplerType  string `validate:"required" default:"probabilistic"`
+	CollectorURL string `validate:"required"`
 	SamplerParam string `validate:"required" default:"0.01"`
 	Disabled     string `validate:"required" default:"true"`
 }
@@ -424,11 +429,13 @@ func (cfg *Config) Validate() error {
 	if err != nil {
 		return err
 	}
+
 	// Validate pyfunc server keep alive config, it must be string in json format
 	var pyfuncGRPCOpts json.RawMessage
 	if err := json.Unmarshal([]byte(cfg.PyfuncGRPCOptions), &pyfuncGRPCOpts); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -449,7 +456,7 @@ func (cfg *Config) Validate() error {
 //
 // Refer to example.yaml for an example of config file.
 func Load(spec interface{}, filepaths ...string) (*Config, error) {
-	v := viper.New()
+	v := viper.NewWithOptions(viper.KeyDelimiter(viperKeyDelimiter))
 
 	err := reflectViperConfig("", spec, v)
 	if err != nil {
@@ -468,7 +475,7 @@ func Load(spec interface{}, filepaths ...string) (*Config, error) {
 	// Load config values from environment variables.
 	// Nested keys in the config is represented by variable name separated by '_'.
 	// For example, DbConfig.Host can be set from environment variable DBCONFIG_HOST.
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.SetEnvKeyReplacer(strings.NewReplacer(viperKeyDelimiter, "_"))
 	v.AutomaticEnv()
 
 	// Unmarshal config values into the config object.
@@ -511,7 +518,7 @@ func reflectViperConfig(prefix string, spec interface{}, v *viper.Viper) error {
 		viperKey := ftype.Name
 		// Nested struct tags
 		if prefix != "" {
-			viperKey = fmt.Sprintf("%s.%s", prefix, ftype.Name)
+			viperKey = fmt.Sprintf("%s%s%s", prefix, viperKeyDelimiter, ftype.Name)
 		}
 		value := ftype.Tag.Get("default")
 		if value == "-" {

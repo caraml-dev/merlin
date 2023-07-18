@@ -13,6 +13,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
 	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
+	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -20,7 +21,6 @@ import (
 	"github.com/cespare/xxhash"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 )
 
@@ -120,8 +120,8 @@ type Options struct {
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, requestJson transTypes.JSONObject) ([]*transTypes.FeatureTable, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.RetrieveFromRequest")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "feast.RetrieveFromRequest")
+	defer span.End()
 
 	sr := symbol.NewRegistryWithCompiledJSONPath(fr.entityExtractor.compiledJsonPath)
 	sr.SetRawRequest(requestJson)
@@ -130,8 +130,8 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInRequest(ctx context.Context, 
 }
 
 func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Context, symbolRegistry symbol.Registry) ([]*transTypes.FeatureTable, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.RetrieveFromSymbolRegistry")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "feast.RetrieveFromSymbolRegistry")
+	defer span.End()
 
 	// parallelize feast call per feature table
 	resChan := make(chan callResult, len(fr.featureTableSpecs))
@@ -158,9 +158,9 @@ func (fr *FeastRetriever) RetrieveFeatureOfEntityInSymbolRegistry(ctx context.Co
 }
 
 func (fr *FeastRetriever) getFeaturePerTable(ctx context.Context, symbolRegistry symbol.Registry, featureTableSpec *spec.FeatureTable) (*internalFeatureTable, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "feast.getFeaturePerTable")
-	span.SetTag("table.name", GetTableName(featureTableSpec))
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "feast.getFeatureTable")
+	span.SetAttributes(attribute.String("table.Name", GetTableName(featureTableSpec)))
+	defer span.End()
 
 	entities, err := fr.buildEntityRows(symbolRegistry, featureTableSpec.Entities)
 	if err != nil {

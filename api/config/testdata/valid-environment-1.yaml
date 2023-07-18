@@ -1,0 +1,42 @@
+- name: "id-dev"
+  is_default: true
+  is_prediction_job_enabled: true
+  is_default_prediction_job: true
+  cluster: "dev"
+  region: "id"
+  gcp_project: ""
+  deployment_timeout: "10m"
+  namespace_timeout: "2m"
+  max_cpu: "8"
+  max_memory: "8Gi"
+  pod_disruption_budget:
+    enabled: true
+    min_available_percentage: 20
+  queue_resource_percentage: "20"
+  default_prediction_job_config:
+    executor_replica: 3
+    driver_cpu_request: "2"
+    driver_memory_request: "2Gi"
+    executor_cpu_request: "2"
+    executor_memory_request: "2Gi"
+  default_deployment_config:
+    min_replica: 0
+    max_replica: 1
+    cpu_request: "500m"
+    memory_request: "500Mi"
+  default_transformer_config:
+    min_replica: 0
+    max_replica: 1
+    cpu_request: "500m"
+    memory_request: "500Mi"
+  k8s_config:
+    name: id-dev
+    cluster:
+      server: id-dev.k8s-cluster
+      insecure-skip-tls-verify: true
+    user:
+      exec:
+        apiVersion: client.authentication.k8s.io/v1beta1
+        command: gke-gcloud-auth-plugin
+        interactiveMode: IfAvailable
+        provideClusterInfo: true

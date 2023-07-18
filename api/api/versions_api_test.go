@@ -124,11 +124,15 @@ func TestGetVersion(t *testing.T) {
 			ctl := &VersionsController{
 				AppContext: &AppContext{
 					VersionsService: versionSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.GetVersion(&http.Request{}, tC.vars, nil)
@@ -263,11 +267,15 @@ func TestListVersion(t *testing.T) {
 			ctl := &VersionsController{
 				AppContext: &AppContext{
 					VersionsService: versionSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.ListVersions(&http.Request{URL: &url.URL{RawQuery: tC.queryParameter}}, tC.vars, nil)
@@ -708,11 +716,15 @@ func TestPatchVersion(t *testing.T) {
 			ctl := &VersionsController{
 				AppContext: &AppContext{
 					VersionsService: versionSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled: true,
 				},
 			}
 			resp := ctl.PatchVersion(&http.Request{}, tC.vars, tC.requestBody)
@@ -1153,11 +1165,15 @@ func TestCreateVersion(t *testing.T) {
 			ctl := &VersionsController{
 				AppContext: &AppContext{
 					VersionsService: versionSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled:  true,
 					MlflowClient:  mlflowClient,
 					ModelsService: modelsSvc,
 				},
@@ -1747,11 +1763,15 @@ func TestDeleteVersion(t *testing.T) {
 			ctl := &VersionsController{
 				AppContext: &AppContext{
 					VersionsService: versionSvc,
-					MonitoringConfig: config.MonitoringConfig{
-						MonitoringEnabled: true,
-						MonitoringBaseURL: "http://grafana",
+					FeatureToggleConfig: config.FeatureToggleConfig{
+						AlertConfig: config.AlertConfig{
+							AlertEnabled: true,
+						},
+						MonitoringConfig: config.MonitoringConfig{
+							MonitoringEnabled: true,
+							MonitoringBaseURL: "http://grafana",
+						},
 					},
-					AlertEnabled:         true,
 					ModelsService:        modelsSvc,
 					MlflowDeleteService:  mlflowDeleteSvc(),
 					PredictionJobService: predictionJobSvc(),

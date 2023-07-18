@@ -39,7 +39,7 @@ func (c *VersionsController) GetVersion(r *http.Request, vars map[string]string,
 	modelID, _ := models.ParseID(vars["model_id"])
 	versionID, _ := models.ParseID(vars["version_id"])
 
-	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
+	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.FeatureToggleConfig.MonitoringConfig)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model version not found: %v", err))
@@ -56,7 +56,7 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 	modelID, _ := models.ParseID(vars["model_id"])
 	versionID, _ := models.ParseID(vars["version_id"])
 
-	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
+	v, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.FeatureToggleConfig.MonitoringConfig)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model version not found: %v", err))
@@ -73,7 +73,7 @@ func (c *VersionsController) PatchVersion(r *http.Request, vars map[string]strin
 		return BadRequest(fmt.Sprintf("Error validating version: %v", err))
 	}
 
-	patchedVersion, err := c.VersionsService.Save(ctx, v, c.MonitoringConfig)
+	patchedVersion, err := c.VersionsService.Save(ctx, v, c.FeatureToggleConfig.MonitoringConfig)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error patching model version: %v", err))
 	}
@@ -90,7 +90,7 @@ func (c *VersionsController) ListVersions(r *http.Request, vars map[string]strin
 	}
 
 	modelID, _ := models.ParseID(vars["model_id"])
-	versions, nextCursor, err := c.VersionsService.ListVersions(ctx, modelID, c.MonitoringConfig, query)
+	versions, nextCursor, err := c.VersionsService.ListVersions(ctx, modelID, c.FeatureToggleConfig.MonitoringConfig, query)
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error listing versions for model: %v", err))
 	}
@@ -139,7 +139,7 @@ func (c *VersionsController) CreateVersion(r *http.Request, vars map[string]stri
 		PythonVersion: versionPost.PythonVersion,
 	}
 
-	version, _ = c.VersionsService.Save(ctx, version, c.MonitoringConfig)
+	version, _ = c.VersionsService.Save(ctx, version, c.FeatureToggleConfig.MonitoringConfig)
 	return Created(version)
 }
 
@@ -227,7 +227,6 @@ func (c *VersionsController) getInactivePredictionJobsForDeletion(ctx context.Co
 }
 
 func (c *VersionsController) getInactiveEndpointsForDeletion(ctx context.Context, model *models.Model, version *models.Version) ([]*models.VersionEndpoint, *Response) {
-
 	endpoints, err := c.EndpointsService.ListEndpoints(ctx, model, version)
 	if err != nil {
 		return nil, InternalServerError("Failed listing model version endpoint")

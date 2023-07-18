@@ -86,7 +86,13 @@ func main() {
 		log.Panicf("Failed initializing config: %v", err)
 	}
 
-	cfg.ClusterConfig.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
+	// cfg.ClusterConfig.EnvironmentConfigs = config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
+	environmentConfigs, err := config.InitEnvironmentConfigs(cfg.ClusterConfig.EnvironmentConfigPath)
+	if err != nil {
+		log.Panicf("Failed initializing environment configs: %v", err)
+	}
+
+	cfg.ClusterConfig.EnvironmentConfigs = environmentConfigs
 	if cfg.ClusterConfig.InClusterConfig && len(cfg.ClusterConfig.EnvironmentConfigs) > 1 {
 		log.Panicf("There should only be one cluster if in cluster credentials are used")
 	}
@@ -164,6 +170,8 @@ func main() {
 
 		MonitoringEnabled:              cfg.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled,
 		MonitoringPredictionJobBaseURL: cfg.FeatureToggleConfig.MonitoringConfig.MonitoringJobBaseURL,
+
+		ModelDeletionEnabled: cfg.FeatureToggleConfig.ModelDeletionConfig.Enabled,
 	}
 
 	uiHomePage := fmt.Sprintf("/%s", strings.TrimPrefix(cfg.ReactAppConfig.HomePage, "/"))
@@ -331,10 +339,8 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 		TransformerService:        transformerService,
 		MlflowDeleteService:       mlflowDeleteService,
 
-		AuthorizationEnabled: cfg.AuthorizationConfig.AuthorizationEnabled,
-		AlertEnabled:         cfg.FeatureToggleConfig.AlertConfig.AlertEnabled,
-		MonitoringConfig:     cfg.FeatureToggleConfig.MonitoringConfig,
-
+		AuthorizationEnabled:      cfg.AuthorizationConfig.AuthorizationEnabled,
+		FeatureToggleConfig:       cfg.FeatureToggleConfig,
 		StandardTransformerConfig: cfg.StandardTransformerConfig,
 
 		FeastCoreClient: coreClient,

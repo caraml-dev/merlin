@@ -131,7 +131,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 	}
 
 	// get all model version for this model
-	versions, _, err := c.VersionsService.ListVersions(ctx, modelID, c.MonitoringConfig, service.VersionQuery{})
+	versions, _, err := c.VersionsService.ListVersions(ctx, modelID, c.FeatureToggleConfig.MonitoringConfig, service.VersionQuery{})
 	if err != nil {
 		return InternalServerError(fmt.Sprintf("Error getting list of versions: %v", err.Error()))
 	}

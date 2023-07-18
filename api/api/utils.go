@@ -33,7 +33,7 @@ func (c *AppContext) getModelAndVersion(ctx context.Context, modelID models.ID, 
 		return nil, nil, fmt.Errorf("error retrieving model with id: %d", modelID)
 	}
 
-	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
+	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.FeatureToggleConfig.MonitoringConfig)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil, fmt.Errorf("model version with given id: %d not found", versionID)

@@ -8,6 +8,8 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Op responsible to execute all the operation
@@ -19,6 +21,8 @@ type Op interface {
 	// Retrieve the tracing detail of certain operation
 	GetOperationTracingDetail() ([]types.TracingDetail, error)
 }
+
+var tracer trace.Tracer = otel.Tracer("pkg/transformer/pipeline")
 
 // OperationTracing track information about input, output, specs for certain Operation that implemented in standard transformer
 type OperationTracing struct {

@@ -279,18 +279,26 @@ func getTopicName(serviceName string) string {
 	return fmt.Sprintf("merlin-%s-inference-log", serviceName)
 }
 
+func getNewRelicAPIKey(newRelicUrl string) (string, error) {
+	apiKey := ""
+	url, err := url.Parse(newRelicUrl)
+	if err != nil {
+		return "", fmt.Errorf("invalid NewRelic URL (%s): %w", newRelicUrl, err)
+	}
+
+	apiKey = url.Query().Get("Api-Key")
+	if apiKey == "" {
+		return "", fmt.Errorf("Api-Key query param not found")
+	}
+
+	return apiKey, nil
+}
+
 func getLogSink(
 	logUrl string,
 	log *zap.SugaredLogger,
 ) (merlinlogger.LogSink, error) {
-	var sinkKind merlinlogger.LoggerSinkKind
-	host := logUrl
-	for _, loggerSinkKind := range merlinlogger.LoggerSinkKinds {
-		if strings.HasPrefix(logUrl, loggerSinkKind) {
-			sinkKind = loggerSinkKind
-			host = strings.TrimPrefix(logUrl, loggerSinkKind+":")
-		}
-	}
+	sinkKind, url := merlinlogger.ParseSinkKindAndUrl(logUrl)
 
 	// Map inputs to respective variables for logging
 	projectName := *namespace
@@ -300,8 +308,10 @@ func getLogSink(
 
 	switch sinkKind {
 	case merlinlogger.NewRelic:
-		apiKeySplits := strings.Split(logUrl, "?")
-		apiKey := apiKeySplits[len(apiKeySplits)-1]
+		apiKey, err := getNewRelicAPIKey(url)
+		if err != nil {
+			return nil, fmt.Errorf("invalid NewRelic Api-Key: %w", err)
+		}
 
 		// https://github.com/newrelic/newrelic-client-go/blob/main/pkg/logs/logs.go
 		// Initialize the client configuration
@@ -321,7 +331,7 @@ func getLogSink(
 		// Create Kafka Producer
 		kafkaProducer, err := kafka.NewProducer(
 			&kafka.ConfigMap{
-				"bootstrap.servers": host,
+				"bootstrap.servers": url,
 				"message.max.bytes": merlinlogger.MaxMessageBytes,
 				"compression.type":  merlinlogger.CompressionType,
 			},

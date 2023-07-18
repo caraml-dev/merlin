@@ -10,7 +10,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/types/scaler"
 	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
-	"github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type TableTransformOp struct {
@@ -29,15 +29,15 @@ func NewTableTransformOp(tableTransformSpec *spec.TableTransformation, tracingEn
 	return tableTrfOp
 }
 
-func (t TableTransformOp) Execute(context context.Context, env *Environment) error {
-	span, _ := opentracing.StartSpanFromContext(context, "pipeline.TableTransformOp")
-	defer span.Finish()
+func (t TableTransformOp) Execute(ctx context.Context, env *Environment) error {
+	_, span := tracer.Start(ctx, "pipeline.TableTransformerOp")
+	defer span.End()
 
 	inputTableName := t.tableTransformSpec.InputTable
 	outputTableName := t.tableTransformSpec.OutputTable
 
-	span.SetTag("table.input", inputTableName)
-	span.SetTag("table.output", outputTableName)
+	span.SetAttributes(attribute.String("table.input", inputTableName))
+	span.SetAttributes(attribute.String("table.output", outputTableName))
 
 	inputTable, err := getTable(env, inputTableName)
 	if err != nil {
@@ -229,7 +229,7 @@ func updateColumns(env *Environment, specs []*spec.UpdateColumn, resultTable *ta
 
 			columnValue, err := subsetSeriesFromExpression(env, condition.Expression, rowIndex)
 			if err != nil {
-				return nil, fmt.Errorf("error evaluation column rule value for column %s: %v. Err: Ts", columnName, condition.Default.Expression)
+				return nil, fmt.Errorf("error evaluation column rule value for column %s: %v. Err: %w", columnName, condition.Expression, err)
 			}
 
 			colRuleValue := table.RowValues{

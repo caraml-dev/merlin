@@ -753,7 +753,7 @@ func TestValidateTransformerConfig(t *testing.T) {
 					},
 				},
 			},
-			wantError: errors.New("udf compilation failed: unknown func unknown (1:1)\n | unknown()\n | ^"),
+			wantError: errors.New("udf compilation failed: unknown name unknown (1:1)\n | unknown()\n | ^"),
 		},
 		{
 			"success case with fully qualified feature name from non-default project name",

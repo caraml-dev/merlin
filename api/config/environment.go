@@ -15,15 +15,17 @@
 package config
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"time"
 
-	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
+	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	sigyaml "sigs.k8s.io/yaml"
+
+	mlpcluster "github.com/caraml-dev/mlp/api/pkg/cluster"
 )
 
 type EnvironmentConfig struct {
@@ -41,6 +43,7 @@ type EnvironmentConfig struct {
 	MaxCPU                    string                    `yaml:"max_cpu"`
 	MaxMemory                 string                    `yaml:"max_memory"`
 	TopologySpreadConstraints TopologySpreadConstraints `yaml:"topology_spread_constraints"`
+	PodDisruptionBudget       PodDisruptionBudgetConfig `yaml:"pod_disruption_budget"`
 
 	QueueResourcePercentage string `yaml:"queue_resource_percentage"`
 
@@ -48,6 +51,24 @@ type EnvironmentConfig struct {
 	DefaultDeploymentConfig    *ResourceRequestConfig              `yaml:"default_deployment_config"`
 	DefaultTransformerConfig   *ResourceRequestConfig              `yaml:"default_transformer_config"`
 	K8sConfig                  *mlpcluster.K8sConfig               `validate:"required" yaml:"k8s_config"`
+}
+
+func (e *EnvironmentConfig) Validate() error {
+	v := validator.New()
+
+	// Use struct level validation for PodDisruptionBudgetConfig
+	v.RegisterStructValidation(func(sl validator.StructLevel) {
+		field := sl.Current().Interface().(PodDisruptionBudgetConfig)
+		// If PDB is enabled, one of max unavailable or min available shall be set
+		if field.Enabled &&
+			(field.MaxUnavailablePercentage == nil && field.MinAvailablePercentage == nil) ||
+			(field.MaxUnavailablePercentage != nil && field.MinAvailablePercentage != nil) {
+			sl.ReportError(field.MaxUnavailablePercentage, "max_unavailable_percentage", "int", "choose_one[max_unavailable_percentage,min_available_percentage]", "")
+			sl.ReportError(field.MinAvailablePercentage, "min_available_percentage", "int", "choose_one[max_unavailable_percentage,min_available_percentage]", "")
+		}
+	}, PodDisruptionBudgetConfig{})
+
+	return v.Struct(e)
 }
 
 type TopologySpreadConstraints []corev1.TopologySpreadConstraint
@@ -89,21 +110,28 @@ type ResourceRequestConfig struct {
 	MemoryRequest string `yaml:"memory_request"`
 }
 
-func InitEnvironmentConfigs(path string) []*EnvironmentConfig {
+func InitEnvironmentConfigs(path string) ([]*EnvironmentConfig, error) {
 	cfgFile, err := os.ReadFile(path)
 	if err != nil {
-		log.Panicf("unable to read deployment config file: %s", path)
+		return nil, fmt.Errorf("unable to read deployment config file: %s", path)
 	}
+
 	var configs []*EnvironmentConfig
 	if err = yaml.Unmarshal(cfgFile, &configs); err != nil {
-		log.Panicf("unable to unmarshall deployment config file:\n %s,\nDue to: %v", cfgFile, err)
+		return nil, fmt.Errorf("unable to unmarshall deployment config file:\n %s,\ndue to: %w", cfgFile, err)
 	}
+
 	for _, env := range configs {
+		if err := env.Validate(); err != nil {
+			return nil, fmt.Errorf("invalid environment config: %w", err)
+		}
+
 		if env.K8sConfig == nil {
-			log.Panicf("Error, k8sConfig for %s is nil", env.Name)
+			return nil, fmt.Errorf("k8sConfig for %s is nil", env.Name)
 		}
 	}
-	return configs
+
+	return configs, nil
 }
 
 func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) DeploymentConfig {
@@ -127,5 +155,6 @@ func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) Dep
 		TopologySpreadConstraints: cfg.TopologySpreadConstraints,
 		QueueResourcePercentage:   cfg.QueueResourcePercentage,
 		PyfuncGRPCOptions:         pyfuncGRPCOptions,
+		PodDisruptionBudget:       cfg.PodDisruptionBudget,
 	}
 }

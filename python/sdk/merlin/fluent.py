@@ -13,20 +13,20 @@
 # limitations under the License.
 
 from contextlib import contextmanager
-from typing import Optional, List, Any, Dict
+from typing import Any, Dict, List, Optional
 
 from client import PredictionJob
 from merlin.autoscaling import AutoscalingPolicy
-from merlin.deployment_mode import DeploymentMode
 from merlin.batch.config import PredictionJobConfig
 from merlin.client import MerlinClient
+from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import ModelEndpoint, VersionEndpoint
 from merlin.environment import Environment
+from merlin.logger import Logger
 from merlin.model import Model, ModelType, ModelVersion, Project
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.logger import Logger
 
 _merlin_client: Optional[MerlinClient] = None
 _active_project: Optional[Project]

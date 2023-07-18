@@ -1,9 +1,12 @@
 package config
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -94,4 +97,79 @@ func TestUnmarshalTopologySpreadConstraints(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPDBConfig(t *testing.T) {
+	defaultMinAvailablePercentage := 20
+
+	testCases := []struct {
+		desc              string
+		envConfigPath     string
+		expectedPDBConfig PodDisruptionBudgetConfig
+		validateErr       error
+	}{
+		{
+			desc:          "Success: valid pdb config",
+			envConfigPath: "./testdata/valid-environment-1.yaml",
+			expectedPDBConfig: PodDisruptionBudgetConfig{
+				Enabled:                true,
+				MinAvailablePercentage: &defaultMinAvailablePercentage,
+			},
+		},
+		{
+			desc:          "Invalid: both pdb maxUnavailable and minUnavailable is set",
+			envConfigPath: "./testdata/invalid-pdb-environment-both-set.yaml",
+			validateErr:   fmt.Errorf("invalid environment config: Key: 'EnvironmentConfig.PodDisruptionBudget.max_unavailable_percentage' Error:Field validation for 'max_unavailable_percentage' failed on the 'choose_one[max_unavailable_percentage,min_available_percentage]' tag\nKey: 'EnvironmentConfig.PodDisruptionBudget.min_available_percentage' Error:Field validation for 'min_available_percentage' failed on the 'choose_one[max_unavailable_percentage,min_available_percentage]' tag"),
+		},
+		{
+			desc:          "Invalid: both pdb maxUnavailable and minUnavailable is set",
+			envConfigPath: "./testdata/invalid-pdb-environment-both-nil.yaml",
+			validateErr:   fmt.Errorf("invalid environment config: Key: 'EnvironmentConfig.PodDisruptionBudget.max_unavailable_percentage' Error:Field validation for 'max_unavailable_percentage' failed on the 'choose_one[max_unavailable_percentage,min_available_percentage]' tag\nKey: 'EnvironmentConfig.PodDisruptionBudget.min_available_percentage' Error:Field validation for 'min_available_percentage' failed on the 'choose_one[max_unavailable_percentage,min_available_percentage]' tag"),
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			envConfigs, err := InitEnvironmentConfigs(tC.envConfigPath)
+			if tC.validateErr == nil {
+				assert.Nil(t, err)
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, tC.validateErr.Error(), err.Error())
+				return
+			}
+
+			cfg := &Config{
+				ClusterConfig: ClusterConfig{
+					EnvironmentConfigs: envConfigs,
+				},
+			}
+
+			for _, envCfg := range cfg.ClusterConfig.EnvironmentConfigs {
+				deploymentCfg := ParseDeploymentConfig(envCfg, "")
+				assert.Equal(t, tC.expectedPDBConfig, deploymentCfg.PodDisruptionBudget)
+			}
+		})
+	}
+}
+
+func TestImageBuilderConfig(t *testing.T) {
+	baseFilePath := "./testdata/config-1.yaml"
+	imageBuilderCfgFilePath := "./testdata/valid-imagebuilder-nodeselectors.yaml"
+
+	os.Clearenv()
+	setRequiredEnvironmentVariables()
+
+	filePaths := []string{baseFilePath}
+	filePaths = append(filePaths, imageBuilderCfgFilePath)
+
+	var emptyCfg Config
+	cfg, err := Load(&emptyCfg, filePaths...)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+
+	expected := map[string]string{
+		"cloud.google.com/gke-nodepool": "image-build-job-node-pool",
+	}
+	assert.Equal(t, expected, cfg.ImageBuilderConfig.NodeSelectors)
 }

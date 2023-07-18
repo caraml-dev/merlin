@@ -50,7 +50,7 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 		return NotFound(fmt.Sprintf("Model with given `model_id: %d` not found", modelID))
 	}
 
-	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
+	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.FeatureToggleConfig.MonitoringConfig)
 	if err != nil {
 		return NotFound(fmt.Sprintf("Version with given `version_id: %d` not found: %v", versionID, err))
 	}
@@ -60,9 +60,9 @@ func (c *EndpointsController) ListEndpoint(r *http.Request, vars map[string]stri
 		return InternalServerError(err.Error())
 	}
 
-	if c.MonitoringConfig.MonitoringEnabled {
+	if c.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled {
 		for k := range endpoints {
-			endpoints[k].UpdateMonitoringURL(c.MonitoringConfig.MonitoringBaseURL, models.EndpointMonitoringURLParams{
+			endpoints[k].UpdateMonitoringURL(c.FeatureToggleConfig.MonitoringConfig.MonitoringBaseURL, models.EndpointMonitoringURLParams{
 				Cluster:      endpoints[k].Environment.Cluster,
 				Project:      model.Project.Name,
 				Model:        model.Name,
@@ -86,7 +86,7 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 		return NotFound(fmt.Sprintf("Model not found: %v", err))
 	}
 
-	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
+	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.FeatureToggleConfig.MonitoringConfig)
 	if err != nil {
 		return NotFound(fmt.Sprintf("Version not found: %v", err))
 	}
@@ -99,8 +99,8 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 		return InternalServerError(fmt.Sprintf("Error getting version endpoint: %v", err))
 	}
 
-	if c.MonitoringConfig.MonitoringEnabled {
-		endpoint.UpdateMonitoringURL(c.MonitoringConfig.MonitoringBaseURL, models.EndpointMonitoringURLParams{
+	if c.FeatureToggleConfig.MonitoringConfig.MonitoringEnabled {
+		endpoint.UpdateMonitoringURL(c.FeatureToggleConfig.MonitoringConfig.MonitoringBaseURL, models.EndpointMonitoringURLParams{
 			Cluster:      endpoint.Environment.Cluster,
 			Project:      model.Project.Name,
 			Model:        model.Name,
@@ -206,12 +206,10 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 	return Created(endpoint)
 }
 
-var (
-	supportedUPIModelTypes = map[string]bool{
-		models.ModelTypePyFunc: true,
-		models.ModelTypeCustom: true,
-	}
-)
+var supportedUPIModelTypes = map[string]bool{
+	models.ModelTypePyFunc: true,
+	models.ModelTypeCustom: true,
+}
 
 func isModelSupportUPI(model *models.Model) bool {
 	_, isSupported := supportedUPIModelTypes[model.Type]
@@ -377,7 +375,7 @@ func (c *EndpointsController) ListContainers(r *http.Request, vars map[string]st
 	if err != nil {
 		return NotFound(fmt.Sprintf("Model not found: %v", err))
 	}
-	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.MonitoringConfig)
+	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.FeatureToggleConfig.MonitoringConfig)
 	if err != nil {
 		return NotFound(fmt.Sprintf("Version not found: %v", err))
 	}

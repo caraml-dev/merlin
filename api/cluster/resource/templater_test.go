@@ -104,9 +104,7 @@ var (
 		ImageName:    "merlin-standard-transformer",
 		FeastCoreURL: "core.feast.dev:8081",
 		Jaeger: config.JaegerConfig{
-			AgentHost:    "localhost",
-			AgentPort:    "6831",
-			SamplerType:  "const",
+			CollectorURL: "http://jaeger-tracing-collector.infrastructure:14268/api/traces",
 			SamplerParam: "1",
 			Disabled:     "false",
 		},
@@ -1982,10 +1980,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
 										{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
 										{Name: transformerpkg.FeastGRPCConnCount, Value: "5"},
-										{Name: transformerpkg.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
-										{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+										{Name: transformerpkg.JaegerCollectorURL, Value: standardTransformerConfig.Jaeger.CollectorURL},
 										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
-										{Name: transformerpkg.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 										{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 									}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
@@ -2094,10 +2090,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.ConnectTimeoutMS)},
 										{Name: transformerpkg.KafkaSerialization, Value: string(standardTransformerConfig.Kafka.SerializationFmt)},
 										{Name: transformerpkg.ModelServerConnCount, Value: "3"},
-										{Name: transformerpkg.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
-										{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+										{Name: transformerpkg.JaegerCollectorURL, Value: standardTransformerConfig.Jaeger.CollectorURL},
 										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
-										{Name: transformerpkg.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 										{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
@@ -2215,10 +2209,8 @@ func TestCreateInferenceServiceSpecWithTransformer(t *testing.T) {
 										{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", standardTransformerConfig.Kafka.ConnectTimeoutMS)},
 										{Name: transformerpkg.KafkaSerialization, Value: string(standardTransformerConfig.Kafka.SerializationFmt)},
 										{Name: transformerpkg.ModelServerConnCount, Value: "3"},
-										{Name: transformerpkg.JaegerAgentHost, Value: standardTransformerConfig.Jaeger.AgentHost},
-										{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+										{Name: transformerpkg.JaegerCollectorURL, Value: standardTransformerConfig.Jaeger.CollectorURL},
 										{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
-										{Name: transformerpkg.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 										{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 										{Name: transformerpkg.StandardTransformerConfigEnvName, Value: `{"standard_transformer":null}`},
 									}, createDefaultTransformerEnvVars(modelSvcGRPC)).ToKubernetesEnvVars(),
@@ -3735,12 +3727,15 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 		},
 	}
 
+	testPredictorScale, testTransformerScale := 3, 5
+
 	tests := []struct {
-		name     string
-		modelSvc *models.Service
-		original *kservev1beta1.InferenceService
-		exp      *kservev1beta1.InferenceService
-		wantErr  bool
+		name            string
+		modelSvc        *models.Service
+		deploymentScale DeploymentScale
+		original        *kservev1beta1.InferenceService
+		exp             *kservev1beta1.InferenceService
+		wantErr         bool
 	}{
 		{
 			name: "tensorflow spec",
@@ -3945,7 +3940,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "tensorflow + transformer spec top tensorflow spec only",
+			name: "tensorflow + transformer spec to tensorflow spec only",
 			modelSvc: &models.Service{
 				Name:        modelSvc.Name,
 				Namespace:   project.Name,
@@ -3957,6 +3952,10 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Enabled: false,
 				},
 				Protocol: protocol.HttpJson,
+			},
+			deploymentScale: DeploymentScale{
+				Predictor:   &testPredictorScale,
+				Transformer: &testTransformerScale,
 			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
@@ -4026,6 +4025,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               "3",
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -4360,7 +4360,7 @@ func TestPatchInferenceServiceSpec(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig)
+			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -4434,12 +4434,15 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 		},
 	}
 
+	testPredictorScale, testTransformerScale := 3, 5
+
 	tests := []struct {
-		name     string
-		modelSvc *models.Service
-		original *kservev1beta1.InferenceService
-		exp      *kservev1beta1.InferenceService
-		wantErr  bool
+		name            string
+		modelSvc        *models.Service
+		deploymentScale DeploymentScale
+		original        *kservev1beta1.InferenceService
+		exp             *kservev1beta1.InferenceService
+		wantErr         bool
 	}{
 		{
 			name: "predictor with unspecified deployment mode (serverless)",
@@ -4599,6 +4602,9 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				DeploymentMode: deployment.ServerlessDeploymentMode,
 				Protocol:       protocol.HttpJson,
 			},
+			deploymentScale: DeploymentScale{
+				Predictor: &testPredictorScale,
+			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -4642,6 +4648,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               "3",
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -5118,6 +5125,10 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 				DeploymentMode: deployment.ServerlessDeploymentMode,
 				Protocol:       protocol.HttpJson,
 			},
+			deploymentScale: DeploymentScale{
+				Predictor:   &testPredictorScale,
+				Transformer: &testTransformerScale,
+			},
 			original: &kservev1beta1.InferenceService{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      modelSvc.Name,
@@ -5161,6 +5172,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 					Annotations: map[string]string{
 						knserving.QueueSidecarResourcePercentageAnnotationKey: queueResourcePercentage,
 						kserveconstant.DeploymentMode:                         string(kserveconstant.Serverless),
+						knautoscaling.InitialScaleAnnotationKey:               "5",
 					},
 					Labels: map[string]string{
 						"gojek.com/app":          modelSvc.Metadata.App,
@@ -5595,7 +5607,7 @@ func TestPatchInferenceServiceSpecWithTopologySpreadConstraints(t *testing.T) {
 			}
 
 			tpl := NewInferenceServiceTemplater(standardTransformerConfig)
-			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig)
+			infSvcSpec, err := tpl.PatchInferenceServiceSpec(tt.original, tt.modelSvc, deployConfig, tt.deploymentScale)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -5670,7 +5682,7 @@ func TestCreateTransformerSpec(t *testing.T) {
 						MemoryRequest: memoryRequest,
 					},
 					EnvVars: models.EnvVars{
-						{Name: transformerpkg.JaegerAgentHost, Value: "NEW_HOST"}, // test user overwrite
+						{Name: transformerpkg.JaegerCollectorURL, Value: "NEW_HOST"}, // test user overwrite
 					},
 				},
 				&config.DeploymentConfig{},
@@ -5693,10 +5705,8 @@ func TestCreateTransformerSpec(t *testing.T) {
 								{Name: transformerpkg.FeastServingKeepAliveTime, Value: "30s"},
 								{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: "1s"},
 								{Name: transformerpkg.FeastGRPCConnCount, Value: "5"},
-								{Name: transformerpkg.JaegerAgentHost, Value: "NEW_HOST"},
-								{Name: transformerpkg.JaegerAgentPort, Value: standardTransformerConfig.Jaeger.AgentPort},
+								{Name: transformerpkg.JaegerCollectorURL, Value: "NEW_HOST"},
 								{Name: transformerpkg.JaegerSamplerParam, Value: standardTransformerConfig.Jaeger.SamplerParam},
-								{Name: transformerpkg.JaegerSamplerType, Value: standardTransformerConfig.Jaeger.SamplerType},
 								{Name: transformerpkg.JaegerDisabled, Value: standardTransformerConfig.Jaeger.Disabled},
 							}, createDefaultTransformerEnvVars(modelSvc)).ToKubernetesEnvVars(),
 							Resources: corev1.ResourceRequirements{

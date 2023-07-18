@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
@@ -1474,6 +1475,7 @@ func Test_recoveryHandler(t *testing.T) {
 		PreprocessHandler: func(ctx context.Context, rawRequest types.Payload, rawRequestHeaders map[string]string) (types.Payload, error) {
 			panic("panic at preprocess")
 		},
+		tracer: trace.NewNoopTracerProvider().Tracer(""),
 	}
 	go s.Run()
 

@@ -28,6 +28,7 @@ const (
 	ImageBuilderComponentType     = "image_builder"
 	ModelComponentType            = "model"
 	TransformerComponentType      = "transformer"
+	PDBComponentType              = "pdb" // Pod disruption budget
 	BatchJobDriverComponentType   = "batch_job_driver"
 	BatchJobExecutorComponentType = "batch_job_executor"
 )
@@ -46,7 +47,8 @@ func NewContainer(name string,
 	podName string,
 	namespace string,
 	cluster string,
-	gcpProject string) *Container {
+	gcpProject string,
+) *Container {
 	return &Container{
 		Name:          name,
 		PodName:       podName,
