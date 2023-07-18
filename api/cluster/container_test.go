@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	ktesting "k8s.io/client-go/testing"
+	knservingfake "knative.dev/serving/pkg/client/clientset/versioned/fake"
 
 	"github.com/caraml-dev/merlin/config"
 )
@@ -75,6 +76,7 @@ func TestContainer_GetContainers(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		knClient := knservingfake.NewSimpleClientset().ServingV1()
 		kfClient := kserveclifake.NewSimpleClientset().ServingV1beta1().(*kservev1beta1fake.FakeServingV1beta1)
 		v1Client := fake.NewSimpleClientset().CoreV1()
 		policyV1Client := fake.NewSimpleClientset().PolicyV1()
@@ -86,7 +88,7 @@ func TestContainer_GetContainers(t *testing.T) {
 		clusterMetadata := Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
 
 		containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-		ctl, _ := newController(kfClient, v1Client, nil, policyV1Client, config.DeploymentConfig{}, containerFetcher, nil)
+		ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, config.DeploymentConfig{}, containerFetcher, nil)
 		containers, err := ctl.GetContainers(context.Background(), tt.args.namespace, tt.args.labelSelector)
 		if !tt.wantError {
 			assert.NoErrorf(t, err, "expected no error got %v", err)

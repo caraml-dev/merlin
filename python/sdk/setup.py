@@ -25,7 +25,7 @@ REQUIRES = [
     "boto3>=1.9.84",
     "caraml-upi-protos>=0.3.1",
     "certifi>=2017.4.17",
-    "Click>=7.0",
+    "Click>=7.0,<8.1.4",
     "cloudpickle==2.0.0",  # used by mlflow
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
