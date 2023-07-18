@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/gojek/custom-model/model"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
@@ -51,7 +52,7 @@ type Model interface {
 func main() {
 	cfg := Config{}
 	if err := envconfig.Process("", &cfg); err != nil {
-		panic(err)
+		log.Panicf(err.Error())
 	}
 
 	// initialize prometheus
@@ -60,7 +61,7 @@ func main() {
 	modelLocation := fmt.Sprintf("%s/%s", cfg.ArtifactLocation, cfg.ModelFile)
 	xgbModel, err := model.NewXGBoostModel(modelLocation)
 	if err != nil {
-		panic(err)
+		log.Panicf(err.Error())
 	}
 
 	srv := &server{

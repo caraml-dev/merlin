@@ -263,7 +263,7 @@ func (service *versionsService) ListVersions(ctx context.Context, modelID models
 }
 
 func (service *versionsService) Save(ctx context.Context, version *models.Version, monitoringConfig config.MonitoringConfig) (*models.Version, error) {
-	tx := service.db.Begin()
+	tx := service.db.WithContext(ctx).Begin()
 
 	var err error
 	err = service.db.Clauses(clause.OnConflict{

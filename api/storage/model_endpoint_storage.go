@@ -77,7 +77,7 @@ func (m *modelEndpointStorage) ListModelEndpointsInProject(ctx context.Context, 
 
 // Save save newModelEndpoint and its nested version endpoint objects
 func (m *modelEndpointStorage) Save(ctx context.Context, prevModelEndpoint, newModelEndpoint *models.ModelEndpoint) error {
-	tx := m.db.Begin()
+	tx := m.db.WithContext(ctx).Begin()
 	var err error
 	// At the end of the function, commit or rollback transaction, based on err
 	defer func() {

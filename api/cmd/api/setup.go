@@ -57,14 +57,14 @@ func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool
 	if enableAuth {
 		cred, err := feast.NewGoogleCredential(feastAuthAudience)
 		if err != nil {
-			panic(err)
+			log.Panicf(err.Error())
 		}
 		dialOpts = append(dialOpts, grpc.WithPerRPCCredentials(cred))
 	}
 
 	cc, err := grpc.Dial(feastCoreURL, dialOpts...)
 	if err != nil {
-		panic(err)
+		log.Panicf(err.Error())
 	}
 	return core.NewCoreServiceClient(cc)
 }

@@ -45,6 +45,7 @@ import (
 
 	clusterresource "github.com/caraml-dev/merlin/cluster/resource"
 	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 )
@@ -886,7 +887,7 @@ func createServiceReadyStatus(iSvcName, namespace, baseUrl string) kservev1beta1
 
 	url, err := apis.ParseURL(fmt.Sprintf("%s.%s.%s", iSvcName, namespace, baseUrl))
 	if err != nil {
-		panic(err)
+		log.Panicf(err.Error())
 	}
 	status.URL = url
 	status.Address = &duckv1.Addressable{

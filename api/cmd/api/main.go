@@ -117,16 +117,16 @@ func main() {
 	// Init db
 	db, err := database.InitDB(&cfg.DbConfig)
 	if err != nil {
-		panic(err)
+		log.Panicf(err.Error())
 	}
 	sqlDB, err := db.DB()
 	if err != nil {
-		panic(err)
+		log.Panicf(err.Error())
 	}
 	defer func() {
 		err := sqlDB.Close()
 		if err != nil {
-			log.Infof("Error closing connection: %w", err)
+			log.Errorf("Error closing connection: %w", err)
 		}
 	}()
 
