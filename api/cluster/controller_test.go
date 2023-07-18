@@ -35,10 +35,13 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	fakepolicyv1 "k8s.io/client-go/kubernetes/typed/policy/v1/fake"
+	k8stesting "k8s.io/client-go/testing"
 	ktesting "k8s.io/client-go/testing"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
+	knservingv1 "knative.dev/serving/pkg/apis/serving/v1"
+	knservingfake "knative.dev/serving/pkg/client/clientset/versioned/fake"
 
 	clusterresource "github.com/caraml-dev/merlin/cluster/resource"
 	"github.com/caraml-dev/merlin/config"
@@ -55,7 +58,10 @@ const (
 	deleteCollectionMethod = "delete-collection"
 
 	kfservingGroup           = "kubeflow.com/kfserving"
+	knativeGroup             = "serving.knative.dev"
+	knativeVersion           = "v1"
 	inferenceServiceResource = "inferenceservices"
+	revisionResource         = "revisions"
 
 	coreGroup         = ""
 	namespaceResource = "namespaces"
@@ -74,6 +80,11 @@ type namespaceReactor struct {
 type inferenceServiceReactor struct {
 	isvc *kservev1beta1.InferenceService
 	err  error
+}
+
+type knativeRevisionReactor struct {
+	rev *knservingv1.Revision
+	err error
 }
 
 var clusterMetadata = Metadata{GcpProject: "my-gcp", ClusterName: "my-cluster"}
@@ -244,6 +255,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			knClient := knservingfake.NewSimpleClientset().ServingV1()
 			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
 			kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
@@ -276,7 +288,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			ctl, _ := newController(kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, nil)
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, nil)
 			iSvc, err := ctl.Deploy(context.Background(), modelSvc)
 
 			if tt.wantError {
@@ -321,6 +333,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 	tests := []struct {
 		name          string
 		modelService  *models.Service
+		getRevResult  *knativeRevisionReactor
 		getResult     *inferenceServiceReactor
 		createResult  *inferenceServiceReactor
 		updateResult  *inferenceServiceReactor
@@ -331,6 +344,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"success: create inference service",
 			modelSvc,
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
@@ -353,6 +367,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"success: update inference service",
 			modelSvc,
+			&knativeRevisionReactor{err: kerrors.NewNotFound(schema.GroupResource{}, "test service")},
 			&inferenceServiceReactor{
 				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil,
@@ -385,6 +400,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 			},
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
@@ -416,6 +432,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 					Image:           "ghcr.io/caraml-dev/merlin-transformer-test",
 				},
 			},
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
@@ -438,6 +455,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: failed get",
 			modelSvc,
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				errors.New("error"),
@@ -460,6 +478,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: failed create",
 			modelSvc,
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName),
@@ -482,6 +501,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: failed update",
 			modelSvc,
+			&knativeRevisionReactor{err: kerrors.NewNotFound(schema.GroupResource{}, "test service")},
 			&inferenceServiceReactor{
 				&kservev1beta1.InferenceService{ObjectMeta: metav1.ObjectMeta{Name: isvcName, Namespace: project.Name}},
 				nil,
@@ -504,6 +524,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: failed check",
 			modelSvc,
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName),
@@ -523,6 +544,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: predictor error",
 			modelSvc,
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName),
@@ -545,6 +567,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: routes error",
 			modelSvc,
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: "kubeflow.com/kfserving", Resource: "inferenceservices"}, isvcName),
@@ -567,6 +590,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 		{
 			"error: timeout",
 			modelSvc,
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
@@ -599,6 +623,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 					MemoryRequest: resource.MustParse("1Gi"),
 				},
 			},
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
@@ -631,6 +656,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 					MemoryRequest: resource.MustParse("10Gi"),
 				},
 			},
+			&knativeRevisionReactor{},
 			&inferenceServiceReactor{
 				nil,
 				kerrors.NewNotFound(schema.GroupResource{Group: kfservingGroup, Resource: inferenceServiceResource}, isvcName),
@@ -654,6 +680,11 @@ func TestController_DeployInferenceService(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			knClient := knservingfake.NewSimpleClientset()
+			knClient.PrependReactor(getMethod, revisionResource, func(action k8stesting.Action) (bool, runtime.Object, error) {
+				return true, tt.getRevResult.rev, tt.getRevResult.err
+			})
+
 			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
 			kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
@@ -702,7 +733,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 				FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
 			})
 
-			ctl, _ := newController(kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, templater)
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, templater)
 			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
 
 			if tt.wantError {
@@ -712,6 +743,133 @@ func TestController_DeployInferenceService(t *testing.T) {
 			}
 			assert.NoError(t, err)
 			assert.NotNil(t, iSvc)
+		})
+	}
+}
+
+func TestGetCurrentDeploymentScale(t *testing.T) {
+	testNamespace := "test-namespace"
+	var testDesiredReplicas int32 = 5
+	var testDesiredReplicasInt int = 5
+
+	resourceItem := schema.GroupVersionResource{
+		Group:    knativeGroup,
+		Version:  knativeVersion,
+		Resource: revisionResource,
+	}
+
+	tests := map[string]struct {
+		components    map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec
+		rFunc         func(action k8stesting.Action) (bool, runtime.Object, error)
+		expectedScale clusterresource.DeploymentScale
+	}{
+		"failure | revision not found": {
+			components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
+				kservev1beta1.PredictorComponent: {
+					LatestCreatedRevision: "test-predictor-0",
+				},
+			},
+			rFunc: func(action k8stesting.Action) (bool, runtime.Object, error) {
+				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, "test-predictor-0")
+				// Check that the method is called with the expected action
+				assert.Equal(t, expAction, action)
+				// Return nil object and error to indicate non existent object
+				return true, nil, kerrors.NewNotFound(schema.GroupResource{}, "test-predictor-0")
+			},
+			expectedScale: clusterresource.DeploymentScale{},
+		},
+		"failure | desired replicas not set": {
+			components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
+				kservev1beta1.PredictorComponent: {
+					LatestCreatedRevision: "test-predictor-0",
+				},
+			},
+			rFunc: func(action k8stesting.Action) (bool, runtime.Object, error) {
+				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, "test-predictor-0")
+				// Check that the method is called with the expected action
+				assert.Equal(t, expAction, action)
+				// Return test response
+				return true, &knservingv1.Revision{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test-predictor-0",
+					},
+				}, nil
+			},
+			expectedScale: clusterresource.DeploymentScale{},
+		},
+		"success | predictor only": {
+			components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
+				kservev1beta1.PredictorComponent: {
+					LatestCreatedRevision: "test-predictor-0",
+				},
+			},
+			rFunc: func(action k8stesting.Action) (bool, runtime.Object, error) {
+				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, "test-predictor-0")
+				// Check that the method is called with the expected action
+				assert.Equal(t, expAction, action)
+				// Return test response
+				return true, &knservingv1.Revision{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test-predictor-0",
+					},
+					Status: knservingv1.RevisionStatus{
+						DesiredReplicas: &testDesiredReplicas,
+					},
+				}, nil
+			},
+			expectedScale: clusterresource.DeploymentScale{Predictor: &testDesiredReplicasInt},
+		},
+		"success | predictor and transformer": {
+			components: map[kservev1beta1.ComponentType]kservev1beta1.ComponentStatusSpec{
+				kservev1beta1.PredictorComponent: {
+					LatestCreatedRevision: "test-svc-0",
+				},
+				kservev1beta1.TransformerComponent: {
+					LatestCreatedRevision: "test-svc-0",
+				},
+			},
+			rFunc: func(action k8stesting.Action) (bool, runtime.Object, error) {
+				expAction := k8stesting.NewGetAction(resourceItem, testNamespace, "test-svc-0")
+				// Check that the method is called with the expected action
+				assert.Equal(t, expAction, action)
+				// Return test response
+				return true, &knservingv1.Revision{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test-svc-0",
+					},
+					Status: knservingv1.RevisionStatus{
+						DesiredReplicas: &testDesiredReplicas,
+					},
+				}, nil
+			},
+			expectedScale: clusterresource.DeploymentScale{
+				Predictor:   &testDesiredReplicasInt,
+				Transformer: &testDesiredReplicasInt,
+			},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			knClient := knservingfake.NewSimpleClientset()
+			knClient.PrependReactor(getMethod, revisionResource, tt.rFunc)
+
+			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
+			v1Client := fake.NewSimpleClientset().CoreV1()
+			policyV1Client := fake.NewSimpleClientset().PolicyV1().(*fakepolicyv1.FakePolicyV1)
+
+			deployConfig := config.DeploymentConfig{}
+			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
+			templater := clusterresource.NewInferenceServiceTemplater(config.StandardTransformerConfig{
+				ImageName:             "ghcr.io/caraml-dev/merlin-transformer-test",
+				FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
+			})
+
+			// Create test controller
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, templater)
+
+			desiredReplicas := ctl.GetCurrentDeploymentScale(context.TODO(), testNamespace, tt.components)
+			assert.Equal(t, tt.expectedScale, desiredReplicas)
 		})
 	}
 }
@@ -1012,6 +1170,7 @@ func TestController_Delete(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			knClient := knservingfake.NewSimpleClientset().ServingV1()
 			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
 			kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, tt.getResult.isvc, tt.getResult.err
@@ -1031,7 +1190,7 @@ func TestController_Delete(t *testing.T) {
 
 			templater := clusterresource.NewInferenceServiceTemplater(config.StandardTransformerConfig{})
 
-			ctl, _ := newController(kfClient, v1Client, nil, policyV1Client, tt.deployConfig, containerFetcher, templater)
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, tt.deployConfig, containerFetcher, templater)
 			mSvc, err := ctl.Delete(context.Background(), tt.modelService)
 
 			if tt.wantError {
