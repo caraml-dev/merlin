@@ -288,10 +288,7 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			ctl, _ := newController(
-				knClient, kfClient, v1Client, nil,
-				policyV1Client, deployConfig, containerFetcher, nil,
-			)
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, nil)
 			iSvc, err := ctl.Deploy(context.Background(), modelSvc)
 
 			if tt.wantError {
@@ -736,10 +733,7 @@ func TestController_DeployInferenceService(t *testing.T) {
 				FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
 			})
 
-			ctl, _ := newController(
-				knClient.ServingV1(), kfClient, v1Client, nil,
-				policyV1Client, deployConfig, containerFetcher, templater,
-			)
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, templater)
 			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
 
 			if tt.wantError {
@@ -872,10 +866,7 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 			})
 
 			// Create test controller
-			ctl, _ := newController(
-				knClient.ServingV1(), kfClient, v1Client, nil,
-				policyV1Client, deployConfig, containerFetcher, templater,
-			)
+			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, templater)
 
 			desiredReplicas := ctl.GetCurrentDeploymentScale(context.TODO(), testNamespace, tt.components)
 			assert.Equal(t, tt.expectedScale, desiredReplicas)
@@ -1179,6 +1170,7 @@ func TestController_Delete(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			knClient := knservingfake.NewSimpleClientset().ServingV1()
 			kfClient := fakekserve.NewSimpleClientset().ServingV1beta1().(*fakekservev1beta1.FakeServingV1beta1)
 			kfClient.PrependReactor(getMethod, inferenceServiceResource, func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, tt.getResult.isvc, tt.getResult.err
@@ -1198,7 +1190,7 @@ func TestController_Delete(t *testing.T) {
 
 			templater := clusterresource.NewInferenceServiceTemplater(config.StandardTransformerConfig{})
 
-			ctl, _ := newController(kfClient, v1Client, nil, policyV1Client, tt.deployConfig, containerFetcher, templater)
+			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, tt.deployConfig, containerFetcher, templater)
 			mSvc, err := ctl.Delete(context.Background(), tt.modelService)
 
 			if tt.wantError {
