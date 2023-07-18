@@ -288,7 +288,10 @@ func TestController_DeployInferenceService_NamespaceCreation(t *testing.T) {
 			}
 
 			containerFetcher := NewContainerFetcher(v1Client, clusterMetadata)
-			ctl, _ := newController(knClient, kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, nil)
+			ctl, _ := newController(
+				knClient, kfClient, v1Client, nil,
+				policyV1Client, deployConfig, containerFetcher, nil,
+			)
 			iSvc, err := ctl.Deploy(context.Background(), modelSvc)
 
 			if tt.wantError {
@@ -733,7 +736,10 @@ func TestController_DeployInferenceService(t *testing.T) {
 				FeastServingKeepAlive: &config.FeastServingKeepAliveConfig{},
 			})
 
-			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, templater)
+			ctl, _ := newController(
+				knClient.ServingV1(), kfClient, v1Client, nil,
+				policyV1Client, deployConfig, containerFetcher, templater,
+			)
 			iSvc, err := ctl.Deploy(context.Background(), tt.modelService)
 
 			if tt.wantError {
@@ -866,7 +872,10 @@ func TestGetCurrentDeploymentScale(t *testing.T) {
 			})
 
 			// Create test controller
-			ctl, _ := newController(knClient.ServingV1(), kfClient, v1Client, nil, policyV1Client, deployConfig, containerFetcher, templater)
+			ctl, _ := newController(
+				knClient.ServingV1(), kfClient, v1Client, nil,
+				policyV1Client, deployConfig, containerFetcher, templater,
+			)
 
 			desiredReplicas := ctl.GetCurrentDeploymentScale(context.TODO(), testNamespace, tt.components)
 			assert.Equal(t, tt.expectedScale, desiredReplicas)
