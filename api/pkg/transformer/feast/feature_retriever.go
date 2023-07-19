@@ -70,7 +70,7 @@ func NewFeastRetriever(
 	return &FeastRetriever{
 		feastClients:      feastClients,
 		entityExtractor:   entityExtractor,
-		featureCache:      newFeatureCache(options.CacheTTL),
+		featureCache:      newFeatureCache(options.CacheTTL, options.CacheSizeInMB),
 		featureTableSpecs: featureTableSpecs,
 		defaultValues:     defaultValues,
 		options:           options,
@@ -95,6 +95,8 @@ type Options struct {
 	CacheEnabled bool `envconfig:"FEAST_CACHE_ENABLED" default:"true"`
 	// Duration of cache will be lived and used as response
 	CacheTTL time.Duration `envconfig:"FEAST_CACHE_TTL" default:"60s"`
+	// Size of cache that can be store
+	CacheSizeInMB int `envconfig:"CACHE_SIZE_IN_MB" default:"100"`
 
 	// Timeout of feast request
 	FeastTimeout time.Duration `envconfig:"FEAST_TIMEOUT" default:"1s"`
