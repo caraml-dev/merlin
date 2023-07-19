@@ -17,6 +17,7 @@ require (
 	github.com/cespare/xxhash v1.1.0
 	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
+	github.com/coocood/freecache v1.2.3
 	github.com/fatih/color v1.13.0
 	github.com/feast-dev/feast/sdk/go v0.9.4
 	github.com/fraugster/parquet-go v0.10.0

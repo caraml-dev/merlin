@@ -58,7 +58,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -99,7 +100,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.UpiV1,
@@ -127,7 +129,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.UpiV1,
@@ -157,7 +160,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.UpiV1,
@@ -172,7 +176,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.UpiV1,
@@ -187,7 +192,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.UpiV1,
@@ -202,7 +208,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.UpiV1,
@@ -217,7 +224,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.UpiV1,
@@ -232,7 +240,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.UpiV1,
@@ -247,7 +256,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.UpiV1,
@@ -262,7 +272,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -283,7 +294,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -335,7 +347,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -374,7 +387,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -411,7 +425,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				protocol: prt.HttpJson,
 			},
@@ -445,7 +460,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -484,7 +500,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -517,7 +534,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -552,7 +570,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -567,7 +586,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -582,7 +602,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -597,7 +618,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -612,7 +634,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -627,7 +650,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,
@@ -642,7 +666,8 @@ func TestCompiler_Compile(t *testing.T) {
 				sr:           symbol.NewRegistry(),
 				feastClients: feast.Clients{},
 				feastOptions: &feast.Options{
-					CacheEnabled: true,
+					CacheEnabled:  true,
+					CacheSizeInMB: 100,
 				},
 				logger:   logger,
 				protocol: prt.HttpJson,

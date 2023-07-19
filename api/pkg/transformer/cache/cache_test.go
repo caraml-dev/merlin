@@ -1,9 +1,12 @@
 package cache
 
 import (
+	"encoding/json"
+	"reflect"
 	"testing"
 	"time"
 
+	"github.com/coocood/freecache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,33 +15,40 @@ func TestCache(t *testing.T) {
 	testCases := []struct {
 		desc string
 		data interface{}
-		key  string
+		key  []byte
 	}{
 		{
 			desc: "Success - 1",
 			data: map[string]string{"key": "value"},
-			key:  "key1",
+			key:  []byte("key1"),
 		},
 		{
 			desc: "Success - 2",
 			data: map[string]string{"key": "value"},
-			key:  "key2",
+			key:  []byte("key2"),
 		},
 		{
 			desc: "Success - 3",
 			data: []int{1, 2, 3},
-			key:  "key3",
+			key:  []byte("key3"),
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			cache := NewInMemoryCache()
-			cache.Insert(tC.key, tC.data, 2*time.Second)
+			dataByte, err := json.Marshal(tC.data)
+			require.NoError(t, err)
+			cache := NewInMemoryCache(1)
+			err = cache.Insert(tC.key, dataByte, 1)
+			assert.NoError(t, err)
 
-			cachedValue, ok := cache.Fetch(tC.key)
-			require.True(t, ok)
+			cachedValue, err := cache.Fetch(tC.key)
+			require.NoError(t, err)
 
-			assert.Equal(t, tC.data, cachedValue)
+			var val interface{}
+			err = json.Unmarshal(cachedValue, &val)
+			require.NoError(t, err)
+
+			reflect.DeepEqual(tC.data, val)
 		})
 	}
 }
@@ -47,38 +57,45 @@ func TestCache_Expiry(t *testing.T) {
 	testCases := []struct {
 		desc            string
 		data            interface{}
-		key             string
+		key             []byte
 		delayOfFetching int
-		foundInCache    bool
+		err             error
 	}{
 		{
 			desc:            "Success - Not expired",
 			data:            map[string]string{"key": "value"},
-			key:             "key1",
+			key:             []byte("key1"),
 			delayOfFetching: 0,
-			foundInCache:    true,
 		},
 		{
 			desc:            "Success - Expired",
 			data:            map[string]string{"key": "value"},
-			key:             "key1",
-			delayOfFetching: 3,
+			key:             []byte("key1"),
+			delayOfFetching: 2,
+			err:             freecache.ErrNotFound,
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			cache := NewInMemoryCache()
-			cache.Insert(tC.key, tC.data, 2*time.Second)
+			dataByte, err := json.Marshal(tC.data)
+			require.NoError(t, err)
+			cache := NewInMemoryCache(1)
+			err = cache.Insert(tC.key, dataByte, 1*time.Second)
+			assert.NoError(t, err)
 
 			if tC.delayOfFetching > 0 {
 				time.Sleep(time.Duration(tC.delayOfFetching) * time.Second)
 			}
 
-			cachedValue, ok := cache.Fetch(tC.key)
-			require.Equal(t, tC.foundInCache, ok)
+			cachedValue, err := cache.Fetch(tC.key)
+			assert.Equal(t, tC.err, err)
 
-			if ok {
-				assert.Equal(t, tC.data, cachedValue)
+			if err == nil {
+				var val interface{}
+				err = json.Unmarshal(cachedValue, &val)
+				require.NoError(t, err)
+
+				reflect.DeepEqual(tC.data, val)
 			}
 
 		})
