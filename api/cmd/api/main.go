@@ -32,13 +32,13 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/api"
 	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/log"
 	mlflow "github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
@@ -114,10 +114,21 @@ func main() {
 	}
 	defer newrelic.Shutdown(5 * time.Second)
 
-	db, dbDeferFunc := initDB(cfg.DbConfig)
-	defer dbDeferFunc()
-
-	runDBMigration(db, cfg.DbConfig.MigrationPath)
+	// Init db
+	db, err := database.InitDB(&cfg.DbConfig)
+	if err != nil {
+		log.Panicf(err.Error())
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Panicf(err.Error())
+	}
+	defer func() {
+		err := sqlDB.Close()
+		if err != nil {
+			log.Errorf("Error closing connection: %w", err)
+		}
+	}()
 
 	dispatcher := queue.NewDispatcher(queue.Config{
 		NumWorkers: cfg.NumOfQueueWorkers,

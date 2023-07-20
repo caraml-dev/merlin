@@ -15,7 +15,7 @@
 package service
 
 import (
-	paginator "github.com/pilagod/gorm-cursor-paginator"
+	"github.com/pilagod/gorm-cursor-paginator/v2/paginator"
 )
 
 type order string
@@ -34,7 +34,9 @@ func generatePagination(query PaginationQuery, cursorKeys []string, orderStrateg
 	paginateEngine := paginator.New()
 	paginateEngine.SetKeys(cursorKeys...)
 	paginateEngine.SetLimit(query.Limit)
-	paginateEngine.SetAfterCursor(query.Cursor)
+	if query.Cursor != "" {
+		paginateEngine.SetAfterCursor(query.Cursor)
+	}
 	if strategy, ok := orderMapping[orderStrategy]; ok {
 		paginateEngine.SetOrder(strategy)
 	}

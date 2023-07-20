@@ -33,7 +33,7 @@ type VersionEndpoint struct {
 	ID uuid.UUID `json:"id" gorm:"type:uuid;primary_key;"`
 	// VersionID model version id from which the version endpoint is created
 	// The field name has to be prefixed with the related struct name
-	// in order for gorm Preload to work with association_foreignkey
+	// in order for gorm Preload to work with references
 	VersionID ID `json:"version_id"`
 	// VersionModelID model id from which the version endpoint is created
 	VersionModelID ID `json:"model_id"`
@@ -50,7 +50,7 @@ type VersionEndpoint struct {
 	// MonitoringURL URL pointing to the version endpoint's dashboard
 	MonitoringURL string `json:"monitoring_url,omitempty" gorm:"-"`
 	// Environment environment where the version endpoint is deployed
-	Environment *Environment `json:"environment" gorm:"association_foreignkey:Name;"`
+	Environment *Environment `json:"environment" gorm:"references:Name;"`
 	// EnvironmentName environment name where the version endpoint is deployed
 	EnvironmentName string `json:"environment_name"`
 	// Message message containing the latest deployment result

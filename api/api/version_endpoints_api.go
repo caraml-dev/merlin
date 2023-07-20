@@ -23,8 +23,8 @@ import (
 	merror "github.com/caraml-dev/merlin/pkg/errors"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
 	"google.golang.org/protobuf/encoding/protojson"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/models"
@@ -93,7 +93,7 @@ func (c *EndpointsController) GetEndpoint(r *http.Request, vars map[string]strin
 
 	endpoint, err := c.EndpointsService.FindByID(ctx, endpointID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Version endpoint not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting version endpoint: %v", err))
@@ -121,7 +121,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
@@ -154,7 +154,7 @@ func (c *EndpointsController) CreateEndpoint(r *http.Request, vars map[string]st
 		if newEndpoint.EnvironmentName != "" {
 			env, err = c.AppContext.EnvironmentService.GetEnvironment(newEndpoint.EnvironmentName)
 			if err != nil {
-				if gorm.IsRecordNotFoundError(err) {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return NotFound(fmt.Sprintf("Environment not found: %v", err))
 				}
 				return InternalServerError(fmt.Sprintf("Error getting environment: %v", err))
@@ -227,7 +227,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
@@ -243,7 +243,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 
 	endpoint, err := c.EndpointsService.FindByID(ctx, endpointID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Endpoint not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting endpoint: %v", err))
@@ -261,7 +261,7 @@ func (c *EndpointsController) UpdateEndpoint(r *http.Request, vars map[string]st
 
 	env, err := c.AppContext.EnvironmentService.GetEnvironment(newEndpoint.EnvironmentName)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Environment not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting the specified environment: %v", err))
@@ -340,7 +340,7 @@ func (c *EndpointsController) DeleteEndpoint(r *http.Request, vars map[string]st
 
 		endpoint, err = c.EndpointsService.FindByID(ctx, endpointID)
 		if err != nil {
-			if gorm.IsRecordNotFoundError(err) {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
 				// Record does not existing, nothing to delete
 				return Ok(fmt.Sprintf("Endpoint not found: %v", err))
 			}

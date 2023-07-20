@@ -15,10 +15,11 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
@@ -38,7 +39,7 @@ func (c *PredictionJobController) Create(r *http.Request, vars map[string]string
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
@@ -71,7 +72,7 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 
 	model, _, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
@@ -100,7 +101,7 @@ func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
@@ -113,7 +114,7 @@ func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _
 
 	job, err := c.PredictionJobService.GetPredictionJob(ctx, env, model, version, id)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Prediction job not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting prediction job: %v", err))
@@ -132,7 +133,7 @@ func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, 
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
@@ -161,7 +162,7 @@ func (c *PredictionJobController) ListContainers(r *http.Request, vars map[strin
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
@@ -174,7 +175,7 @@ func (c *PredictionJobController) ListContainers(r *http.Request, vars map[strin
 
 	job, err := c.PredictionJobService.GetPredictionJob(ctx, env, model, version, id)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Prediction job not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting prediction job: %v", err))

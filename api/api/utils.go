@@ -16,9 +16,10 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/models"
 )
@@ -26,7 +27,7 @@ import (
 func (c *AppContext) getModelAndVersion(ctx context.Context, modelID models.ID, versionID models.ID) (*models.Model, *models.Version, error) {
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil, fmt.Errorf("model with given id: %d not found", modelID)
 		}
 		return nil, nil, fmt.Errorf("error retrieving model with id: %d", modelID)
@@ -34,7 +35,7 @@ func (c *AppContext) getModelAndVersion(ctx context.Context, modelID models.ID, 
 
 	version, err := c.VersionsService.FindByID(ctx, modelID, versionID, c.FeatureToggleConfig.MonitoringConfig)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil, fmt.Errorf("model version with given id: %d not found", versionID)
 		}
 		return nil, nil, fmt.Errorf("error retrieving model version with id: %d", versionID)

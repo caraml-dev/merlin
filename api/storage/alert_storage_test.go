@@ -20,18 +20,16 @@ package storage
 import (
 	"testing"
 
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 
-	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 )
 
 func populateAlertTable(db *gorm.DB) []*models.ModelEndpointAlert {
 	isDefaultTrue := true
-
-	db = db.LogMode(true)
 
 	env1 := models.Environment{
 		Name:      "env-1",

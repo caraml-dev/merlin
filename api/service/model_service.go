@@ -19,7 +19,7 @@ import (
 
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type ModelsService interface {
@@ -43,8 +43,7 @@ func (service *modelsService) query() *gorm.DB {
 	return service.db.
 		Preload("Endpoints", func(db *gorm.DB) *gorm.DB {
 			return db.Preload("Environment")
-		}).
-		Select("models.*")
+		})
 }
 
 func (service *modelsService) ListModels(ctx context.Context, projectID models.ID, name string) (models []*models.Model, err error) {

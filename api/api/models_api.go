@@ -15,11 +15,12 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/models"
@@ -94,7 +95,7 @@ func (c *ModelsController) GetModel(r *http.Request, vars map[string]string, bod
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model not found: %v", err))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model: %v", err))
@@ -123,7 +124,7 @@ func (c *ModelsController) DeleteModel(r *http.Request, vars map[string]string, 
 
 	model, err := c.ModelsService.FindByID(ctx, modelID)
 	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NotFound(fmt.Sprintf("Model is not found: %s", err.Error()))
 		}
 		return InternalServerError(fmt.Sprintf("Error getting model: %v", err.Error()))

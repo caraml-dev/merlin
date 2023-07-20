@@ -5,12 +5,14 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
+
+	"github.com/caraml-dev/merlin/log"
 )
 
 func main() {
 	cfg := server.Config{}
 	if err := envconfig.Process("", &cfg); err != nil {
-		panic(err)
+		log.Panicf(err.Error())
 	}
 	logger, _ := zap.NewProduction()
 	defer logger.Sync() // flushes buffer, if any

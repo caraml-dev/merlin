@@ -22,11 +22,10 @@ import (
 
 	"github.com/caraml-dev/merlin/pkg/protocol"
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 
-	"github.com/caraml-dev/merlin/it/database"
-	"github.com/caraml-dev/merlin/mlp"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/deployment"
 )
@@ -124,15 +123,10 @@ func TestVersionEndpointsStorage_Save(t *testing.T) {
 
 func populateVersionEndpointTable(db *gorm.DB) []*models.VersionEndpoint {
 	isDefaultTrue := true
-	p := mlp.Project{
-		Name:              "project",
-		MLFlowTrackingURL: "http://mlflow:5000",
-	}
-	db.Create(&p)
 
 	m := models.Model{
 		ID:           1,
-		ProjectID:    models.ID(p.ID),
+		ProjectID:    models.ID(1),
 		ExperimentID: 1,
 		Name:         "model",
 		Type:         models.ModelTypeSkLearn,

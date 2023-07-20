@@ -26,8 +26,8 @@ import (
 	mlflowDeleteServiceMocks "github.com/caraml-dev/mlp/api/pkg/client/mlflow/mocks"
 	"github.com/google/uuid"
 
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/mlp/api/client"
 

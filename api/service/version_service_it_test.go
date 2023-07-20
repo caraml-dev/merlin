@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build integration || integration_local
-// +build integration integration_local
+//go:build integration_local || integration
+// +build integration_local integration
 
 package service
 
@@ -25,12 +25,12 @@ import (
 
 	"github.com/caraml-dev/merlin/pkg/deployment"
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/it/database"
+	"github.com/caraml-dev/merlin/database"
 	"github.com/caraml-dev/merlin/mlp"
 	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
 	"github.com/caraml-dev/merlin/models"
