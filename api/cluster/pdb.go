@@ -60,16 +60,16 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1cfg.PodDisruptionBudgetS
 func createPodDisruptionBudgets(modelService *models.Service, pdbConfig config.PodDisruptionBudgetConfig) []*PodDisruptionBudget {
 	pdbs := []*PodDisruptionBudget{}
 
-	// Only create PDB if: ceil(minReplica * minAvailablePercent / 100) < minReplica
+	// Only create PDB if: ceil(minReplica * minAvailablePercent) < minReplica
 	// If not, the replicas may be unable to be removed.
 	// Note that we only care about minReplica here because, for active replicas > minReplica,
 	// the condition will be satisfied if it was satisfied for the minReplica case.
 
-	var minAvailablePercent int
+	var minAvailablePercent float64
 	if pdbConfig.MinAvailablePercentage != nil {
-		minAvailablePercent = *pdbConfig.MinAvailablePercentage
+		minAvailablePercent = float64(*pdbConfig.MinAvailablePercentage) / 100.0
 	} else if pdbConfig.MaxUnavailablePercentage != nil {
-		minAvailablePercent = 100 - *pdbConfig.MaxUnavailablePercentage
+		minAvailablePercent = float64(100-*pdbConfig.MaxUnavailablePercentage) / 100.0
 	} else {
 		// PDB config is not set properly, we can't apply it.
 		return pdbs
@@ -77,7 +77,7 @@ func createPodDisruptionBudgets(modelService *models.Service, pdbConfig config.P
 
 	if modelService.ResourceRequest != nil &&
 		math.Ceil(float64(modelService.ResourceRequest.MinReplica)*
-			float64(minAvailablePercent)/100.0) < float64(modelService.ResourceRequest.MinReplica) {
+			minAvailablePercent) < float64(modelService.ResourceRequest.MinReplica) {
 		predictorPdb := NewPodDisruptionBudget(modelService, models.ModelComponentType, pdbConfig)
 		pdbs = append(pdbs, predictorPdb)
 	}
@@ -86,7 +86,7 @@ func createPodDisruptionBudgets(modelService *models.Service, pdbConfig config.P
 		modelService.Transformer.Enabled &&
 		modelService.Transformer.ResourceRequest != nil &&
 		math.Ceil(float64(modelService.Transformer.ResourceRequest.MinReplica)*
-			float64(minAvailablePercent)/100.0) < float64(modelService.Transformer.ResourceRequest.MinReplica) {
+			minAvailablePercent) < float64(modelService.Transformer.ResourceRequest.MinReplica) {
 		transformerPdb := NewPodDisruptionBudget(modelService, models.TransformerComponentType, pdbConfig)
 		pdbs = append(pdbs, transformerPdb)
 	}
