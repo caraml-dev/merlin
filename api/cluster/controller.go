@@ -232,7 +232,7 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 	}
 
 	if c.deploymentConfig.PodDisruptionBudget.Enabled {
-		pdbs := c.createPodDisruptionBudgets(modelService, c.deploymentConfig.PodDisruptionBudget)
+		pdbs := createPodDisruptionBudgets(modelService, c.deploymentConfig.PodDisruptionBudget)
 		if err := c.deployPodDisruptionBudgets(ctx, pdbs); err != nil {
 			log.Errorf("unable to create pdb %v", err)
 			return nil, ErrUnableToCreatePDB
@@ -273,7 +273,7 @@ func (c *controller) Delete(ctx context.Context, modelService *models.Service) (
 	}
 
 	if c.deploymentConfig.PodDisruptionBudget.Enabled {
-		pdbs := c.createPodDisruptionBudgets(modelService, c.deploymentConfig.PodDisruptionBudget)
+		pdbs := createPodDisruptionBudgets(modelService, c.deploymentConfig.PodDisruptionBudget)
 		if err := c.deletePodDisruptionBudgets(ctx, pdbs); err != nil {
 			log.Errorf("unable to delete pdb %v", err)
 			return nil, ErrUnableToDeletePDB

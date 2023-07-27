@@ -4,10 +4,14 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	metav1cfg "k8s.io/client-go/applyconfigurations/meta/v1"
 	policyv1cfg "k8s.io/client-go/applyconfigurations/policy/v1"
+
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/models"
 )
 
 func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
@@ -95,6 +99,163 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("PodDisruptionBudget.BuildPDBSpec() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestCreatePodDisruptionBudgets(t *testing.T) {
+	twenty, eighty := 20, 80
+	defaultLabels := map[string]string{
+		"app":          "",
+		"component":    "",
+		"environment":  "",
+		"orchestrator": "merlin",
+		"stream":       "",
+		"team":         "",
+	}
+
+	tests := map[string]struct {
+		modelService *models.Service
+		pdbConfig    config.PodDisruptionBudgetConfig
+		expected     []*PodDisruptionBudget
+	}{
+		"bad pdb config": {
+			modelService: &models.Service{
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 5,
+				},
+			},
+			pdbConfig: config.PodDisruptionBudgetConfig{
+				Enabled: true,
+			},
+			expected: []*PodDisruptionBudget{},
+		},
+		"model min replica low | minAvailablePercentage": {
+			modelService: &models.Service{
+				Name:      "test",
+				Namespace: "test-ns",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 1,
+				},
+				Transformer: &models.Transformer{
+					Enabled: true,
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica: 3,
+					},
+				},
+			},
+			pdbConfig: config.PodDisruptionBudgetConfig{
+				Enabled:                true,
+				MinAvailablePercentage: &twenty,
+			},
+			expected: []*PodDisruptionBudget{
+				{
+					Name:                   "test-transformer-pdb",
+					Namespace:              "test-ns",
+					Labels:                 defaultLabels,
+					MinAvailablePercentage: &twenty,
+				},
+			},
+		},
+		"transformer min replica low | minAvailablePercentage": {
+			modelService: &models.Service{
+				Name:      "test",
+				Namespace: "test-ns",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 3,
+				},
+				Transformer: &models.Transformer{
+					Enabled: true,
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica: 1,
+					},
+				},
+			},
+			pdbConfig: config.PodDisruptionBudgetConfig{
+				Enabled:                true,
+				MinAvailablePercentage: &twenty,
+			},
+			expected: []*PodDisruptionBudget{
+				{
+					Name:                   "test-model-pdb",
+					Namespace:              "test-ns",
+					Labels:                 defaultLabels,
+					MinAvailablePercentage: &twenty,
+				},
+			},
+		},
+		"all pdbs | minAvailablePercentage": {
+			modelService: &models.Service{
+				Name:      "test",
+				Namespace: "test-ns",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 5,
+				},
+				Transformer: &models.Transformer{
+					Enabled: true,
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica: 3,
+					},
+				},
+			},
+			pdbConfig: config.PodDisruptionBudgetConfig{
+				Enabled:                true,
+				MinAvailablePercentage: &twenty,
+			},
+			expected: []*PodDisruptionBudget{
+				{
+					Name:                   "test-model-pdb",
+					Namespace:              "test-ns",
+					Labels:                 defaultLabels,
+					MinAvailablePercentage: &twenty,
+				},
+				{
+					Name:                   "test-transformer-pdb",
+					Namespace:              "test-ns",
+					Labels:                 defaultLabels,
+					MinAvailablePercentage: &twenty,
+				},
+			},
+		},
+		"all pdbs | maxUnavailablePercentage": {
+			modelService: &models.Service{
+				Name:      "test",
+				Namespace: "test-ns",
+				ResourceRequest: &models.ResourceRequest{
+					MinReplica: 5,
+				},
+				Transformer: &models.Transformer{
+					Enabled: true,
+					ResourceRequest: &models.ResourceRequest{
+						MinReplica: 3,
+					},
+				},
+			},
+			pdbConfig: config.PodDisruptionBudgetConfig{
+				Enabled:                  true,
+				MaxUnavailablePercentage: &eighty,
+			},
+			expected: []*PodDisruptionBudget{
+				{
+					Name:                     "test-model-pdb",
+					Namespace:                "test-ns",
+					Labels:                   defaultLabels,
+					MaxUnavailablePercentage: &eighty,
+				},
+				{
+					Name:                     "test-transformer-pdb",
+					Namespace:                "test-ns",
+					Labels:                   defaultLabels,
+					MaxUnavailablePercentage: &eighty,
+				},
+			},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			pdbs := createPodDisruptionBudgets(tt.modelService, tt.pdbConfig)
+			assert.Equal(t, tt.expected, pdbs)
 		})
 	}
 }

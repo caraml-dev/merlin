@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"math"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -56,13 +57,36 @@ func (cfg PodDisruptionBudget) BuildPDBSpec() (*policyv1cfg.PodDisruptionBudgetS
 	return pdbSpec, nil
 }
 
-func (c *controller) createPodDisruptionBudgets(modelService *models.Service, pdbConfig config.PodDisruptionBudgetConfig) []*PodDisruptionBudget {
+func createPodDisruptionBudgets(modelService *models.Service, pdbConfig config.PodDisruptionBudgetConfig) []*PodDisruptionBudget {
 	pdbs := []*PodDisruptionBudget{}
 
-	predictorPdb := NewPodDisruptionBudget(modelService, models.ModelComponentType, pdbConfig)
-	pdbs = append(pdbs, predictorPdb)
+	// Only create PDB if: ceil(minReplica * minAvailablePercent) < minReplica
+	// If not, the replicas may be unable to be removed.
+	// Note that we only care about minReplica here because, for active replicas > minReplica,
+	// the condition will be satisfied if it was satisfied for the minReplica case.
 
-	if modelService.Transformer != nil && modelService.Transformer.Enabled {
+	var minAvailablePercent float64
+	if pdbConfig.MinAvailablePercentage != nil {
+		minAvailablePercent = float64(*pdbConfig.MinAvailablePercentage) / 100.0
+	} else if pdbConfig.MaxUnavailablePercentage != nil {
+		minAvailablePercent = float64(100-*pdbConfig.MaxUnavailablePercentage) / 100.0
+	} else {
+		// PDB config is not set properly, we can't apply it.
+		return pdbs
+	}
+
+	if modelService.ResourceRequest != nil &&
+		math.Ceil(float64(modelService.ResourceRequest.MinReplica)*
+			minAvailablePercent) < float64(modelService.ResourceRequest.MinReplica) {
+		predictorPdb := NewPodDisruptionBudget(modelService, models.ModelComponentType, pdbConfig)
+		pdbs = append(pdbs, predictorPdb)
+	}
+
+	if modelService.Transformer != nil &&
+		modelService.Transformer.Enabled &&
+		modelService.Transformer.ResourceRequest != nil &&
+		math.Ceil(float64(modelService.Transformer.ResourceRequest.MinReplica)*
+			minAvailablePercent) < float64(modelService.Transformer.ResourceRequest.MinReplica) {
 		transformerPdb := NewPodDisruptionBudget(modelService, models.TransformerComponentType, pdbConfig)
 		pdbs = append(pdbs, transformerPdb)
 	}
