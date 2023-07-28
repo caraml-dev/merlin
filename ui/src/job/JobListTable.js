@@ -94,10 +94,6 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) 
     return ["pending", "running"].includes(status)
   }
 
-  const isTerminatedJob = function(status){
-    return ["terminating", "terminated"].includes(status)
-  }
-
   const columns = [
     {
       field: "name",
@@ -214,7 +210,7 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) 
               </EuiButtonEmpty>
             </Link>
           </EuiFlexItem>
-          {!isTerminatedJob(item.status) && (<EuiFlexItem grow={false} key={`stop-job-${item.id}`}>
+          <EuiFlexItem grow={false} key={`stop-job-${item.id}`}>
             <EuiButtonEmpty
               onClick={() => {
                 setCurrentJob(item);
@@ -222,11 +218,11 @@ const JobListTable = ({ projectId, modelId, jobs, isLoaded, error, fetchJobs }) 
               }}
               color="danger"
               iconType={isActiveJob(item.status) ? "minusInCircle" : "trash"}
-              size="xs">
-              <EuiText size="xs">{isActiveJob(item.status) ? "Stop Job" : "Terminate Job"}</EuiText>
-
+              size="xs"
+              isDisabled={item.status === "terminating"}>
+              <EuiText size="xs">{isActiveJob(item.status) ? "Terminate" : "Delete"}</EuiText>
             </EuiButtonEmpty>
-          </EuiFlexItem>)}
+          </EuiFlexItem>
         </EuiFlexGroup>
       )
     }
