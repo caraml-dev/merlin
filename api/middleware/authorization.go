@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"strings"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
 	"github.com/gorilla/mux"
 
@@ -41,36 +43,40 @@ type Authorizer struct {
 	modelService    service.ModelsService
 }
 
-var methodMapping = map[string]string{
-	http.MethodGet:     enforcer.ActionRead,
-	http.MethodHead:    enforcer.ActionRead,
-	http.MethodPost:    enforcer.ActionCreate,
-	http.MethodPut:     enforcer.ActionUpdate,
-	http.MethodPatch:   enforcer.ActionUpdate,
-	http.MethodDelete:  enforcer.ActionDelete,
-	http.MethodConnect: enforcer.ActionRead,
-	http.MethodOptions: enforcer.ActionRead,
-	http.MethodTrace:   enforcer.ActionRead,
+type Operation struct {
+	RequestPath   string
+	RequestMethod []string
+}
+
+var publicOperations = []Operation{
+	{"/projects", []string{http.MethodGet}},
+	{"/environments", []string{http.MethodGet}},
+	{"/standard-transformer/simulate", []string{http.MethodGet}},
+	{"/alerts/teams", []string{http.MethodGet}},
 }
 
 func (a *Authorizer) AuthorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resource, err := a.getResource(r)
+		if !a.RequireAuthorization(r.URL.Path, r.Method) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		permission, err := a.GetPermission(r)
 		if err != nil {
 			jsonError(w, fmt.Sprintf("Error while checking authorization: %s", err), http.StatusInternalServerError)
 			return
 		}
 
-		action := methodToAction(r.Method)
 		user := r.Header.Get("User-Email")
 
-		allowed, err := a.authEnforcer.Enforce(user, resource, action)
+		allowed, err := a.authEnforcer.IsUserGrantedPermission(r.Context(), user, permission)
 		if err != nil {
 			jsonError(w, fmt.Sprintf("Error while checking authorization: %s", err), http.StatusInternalServerError)
 			return
 		}
-		if !*allowed {
-			jsonError(w, fmt.Sprintf("%s is not authorized to execute %s on %s", user, action, resource), http.StatusUnauthorized)
+		if !allowed {
+			jsonError(w, fmt.Sprintf("%s does not have the permission:%s ", user, permission), http.StatusUnauthorized)
 			return
 		}
 
@@ -78,9 +84,22 @@ func (a *Authorizer) AuthorizationMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (a *Authorizer) getResource(r *http.Request) (string, error) {
+func (a *Authorizer) RequireAuthorization(requestPath string, requestMethod string) bool {
+	if requestMethod == http.MethodOptions {
+		return false
+	}
+
+	for _, operation := range publicOperations {
+		if operation.RequestPath == requestPath && slices.Contains(operation.RequestMethod, requestMethod) {
+			return false
+		}
+	}
+	return true
+}
+
+func (a *Authorizer) GetPermission(r *http.Request) (string, error) {
 	ctx := r.Context()
-	resource := strings.Replace(strings.TrimPrefix(r.URL.Path, "/"), "/", ":", -1)
+	resource := strings.Replace(strings.TrimPrefix(r.URL.Path, "/"), "/", ".", -1)
 
 	// Current paths registered in Merlin are of the following formats:
 	// - /alerts/teams
@@ -106,7 +125,7 @@ func (a *Authorizer) getResource(r *http.Request) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("projects:%d", model.Project.ID), nil
+		return fmt.Sprintf("mlp.projects.%d.%s", model.Project.ID, strings.ToLower(r.Method)), nil
 	}
 
 	// workaround since logs API is not under projects/**
@@ -122,19 +141,15 @@ func (a *Authorizer) getResource(r *http.Request) (string, error) {
 			return "", err
 		}
 
-		return fmt.Sprintf("projects:%d", model.Project.ID), nil
+		return fmt.Sprintf("mlp.projects.%d.%s", model.Project.ID, strings.ToLower(r.Method)), nil
 	}
 
 	// Trim the resource info, greater than 2 segments
-	parts := strings.Split(resource, ":")
+	parts := strings.Split(resource, ".")
 	if len(parts) > 1 {
 		parts = parts[:2]
 	}
-	return strings.Join(parts, ":"), nil
-}
-
-func methodToAction(method string) string {
-	return methodMapping[method]
+	return fmt.Sprintf("mlp.%s.%s", strings.Join(parts, "."), strings.ToLower(r.Method)), nil
 }
 
 func jsonError(w http.ResponseWriter, msg string, status int) {

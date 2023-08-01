@@ -235,9 +235,10 @@ func (spec *Tolerations) Decode(value string) error {
 }
 
 type AuthorizationConfig struct {
-	AuthorizationEnabled   bool                 `default:"true"`
-	AuthorizationServerURL string               `default:"http://localhost:4466"`
-	Caching                *InMemoryCacheConfig `validate:"required_if=AuthorizationEnabled True"`
+	AuthorizationEnabled bool                 `default:"true"`
+	KetoRemoteRead       string               `default:"http://localhost:4466"`
+	KetoRemoteWrite      string               `default:"http://localhost:4467"`
+	Caching              *InMemoryCacheConfig `validate:"required_if=AuthorizationEnabled True"`
 }
 
 type InMemoryCacheConfig struct {

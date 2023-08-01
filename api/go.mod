@@ -11,7 +11,7 @@ require (
 	github.com/bboughton/gcp-helpers v0.1.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/caraml-dev/merlin-pyspark-app v0.0.3
-	github.com/caraml-dev/mlp v1.8.1-0.20230613010931-dd63f4364a18
+	github.com/caraml-dev/mlp v1.10.0
 	github.com/caraml-dev/protopath v0.1.0
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/cespare/xxhash v1.1.0
@@ -73,6 +73,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.16.0
 	go.uber.org/automaxprocs v1.4.0
 	go.uber.org/zap v1.21.0
+	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	golang.org/x/oauth2 v0.6.0
 	golang.org/x/text v0.9.0
 	google.golang.org/api v0.114.0
@@ -107,7 +108,6 @@ require (
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220804214150-8b0cc382067f // indirect
 	github.com/apache/thrift v0.15.0 // indirect
-	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/aws/aws-sdk-go v1.35.24 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -138,16 +138,9 @@ require (
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-openapi/analysis v0.19.5 // indirect
-	github.com/go-openapi/errors v0.19.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
-	github.com/go-openapi/loads v0.19.4 // indirect
-	github.com/go-openapi/runtime v0.19.15 // indirect
-	github.com/go-openapi/strfmt v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
-	github.com/go-openapi/validate v0.19.8 // indirect
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -165,7 +158,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.13.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
@@ -198,7 +191,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
-	github.com/ory/keto-client-go v0.4.4-alpha.1 // indirect
+	github.com/ory/keto-client-go v0.11.0-alpha.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/princjef/gomarkdoc v0.4.1 // indirect
@@ -213,7 +206,7 @@ require (
 	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	github.com/spf13/cobra v1.5.0 // indirect
+	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.8.1 // indirect
@@ -223,7 +216,6 @@ require (
 	github.com/valyala/fastjson v1.6.3 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
-	go.mongodb.org/mongo-driver v1.1.2 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
@@ -247,7 +239,6 @@ require (
 
 require (
 	github.com/caraml-dev/universal-prediction-interface v0.3.6
-	github.com/go-openapi/spec v0.19.9 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect

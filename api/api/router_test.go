@@ -22,7 +22,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
 	enforcerMock "github.com/caraml-dev/mlp/api/pkg/authz/enforcer/mocks"
 	"github.com/gorilla/mux"
 	mux2 "github.com/gorilla/mux"
@@ -38,59 +37,38 @@ import (
 )
 
 var (
-	user   = "user@email.com"
-	reject = false
+	user = "user@email.com"
 
 	basePath = "/v1"
 )
 
 func TestRejectAuthorization(t *testing.T) {
 	tests := []struct {
-		name     string
-		method   string
-		path     string
-		resource string
-		action   string
-		model    *models.Model
+		name       string
+		method     string
+		path       string
+		permission string
+		model      *models.Model
 	}{
-		{
-			"reject: list environments",
-			http.MethodGet,
-			"/v1/environments",
-			"environments",
-			enforcer.ActionRead,
-			nil,
-		},
-		{
-			"reject: list projects",
-			http.MethodGet,
-			"/v1/projects",
-			"projects",
-			enforcer.ActionRead,
-			nil,
-		},
 		{
 			"reject: list models",
 			http.MethodGet,
 			"/v1/projects/1/models",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			nil,
 		},
 		{
 			"reject: create models",
 			http.MethodPost,
 			"/v1/projects/1/models",
-			"projects:1",
-			enforcer.ActionCreate,
+			"mlp.projects.1.post",
 			nil,
 		},
 		{
 			"reject: list model versions",
 			http.MethodGet,
 			"/v1/models/2/versions",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -105,8 +83,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: create model versions",
 			http.MethodPost,
 			"/v1/models/2/versions",
-			"projects:1",
-			enforcer.ActionCreate,
+			"mlp.projects.1.post",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -121,8 +98,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: get model versions",
 			http.MethodGet,
 			"/v1/models/2/versions/3",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -137,8 +113,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: patch model versions",
 			http.MethodPatch,
 			"/v1/models/2/versions/3",
-			"projects:1",
-			enforcer.ActionUpdate,
+			"mlp.projects.1.patch",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -153,16 +128,14 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: list model endpoints in project",
 			http.MethodGet,
 			"/v1/projects/1/model_endpoints",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			nil,
 		},
 		{
 			"reject: list model endpoints",
 			http.MethodGet,
 			"/v1/models/2/endpoints",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -177,8 +150,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: create model endpoints",
 			http.MethodPost,
 			"/v1/models/2/endpoints",
-			"projects:1",
-			enforcer.ActionCreate,
+			"mlp.projects.1.post",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -193,8 +165,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: get model endpoints",
 			http.MethodGet,
 			"/v1/models/2/endpoints/4",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -209,8 +180,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: update model endpoints",
 			http.MethodPut,
 			"/v1/models/2/endpoints/4",
-			"projects:1",
-			enforcer.ActionUpdate,
+			"mlp.projects.1.put",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -225,8 +195,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: list version endpoints",
 			http.MethodGet,
 			"/v1/models/2/versions/3/endpoint",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -241,8 +210,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: create version endpoints",
 			http.MethodPost,
 			"/v1/models/2/versions/3/endpoint",
-			"projects:1",
-			enforcer.ActionCreate,
+			"mlp.projects.1.post",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -257,8 +225,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: delete version endpoints (old)",
 			http.MethodDelete,
 			"/v1/models/2/versions/3/endpoint",
-			"projects:1",
-			enforcer.ActionDelete,
+			"mlp.projects.1.delete",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -273,8 +240,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: get version endpoints",
 			http.MethodGet,
 			"/v1/models/2/versions/3/endpoint/8e9624e0-efd3-44c9-941d-e645d5f680e8",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -289,8 +255,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: update version endpoints",
 			http.MethodPut,
 			"/v1/models/2/versions/3/endpoint/8e9624e0-efd3-44c9-941d-e645d5f680e8",
-			"projects:1",
-			enforcer.ActionUpdate,
+			"mlp.projects.1.put",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -305,8 +270,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: get version endpoints",
 			http.MethodDelete,
 			"/v1/models/2/versions/3/endpoint/8e9624e0-efd3-44c9-941d-e645d5f680e8",
-			"projects:1",
-			enforcer.ActionDelete,
+			"mlp.projects.1.delete",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -321,8 +285,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: list containers",
 			http.MethodGet,
 			"/v1/models/2/versions/3/endpoint/8e9624e0-efd3-44c9-941d-e645d5f680e8/containers",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -337,8 +300,7 @@ func TestRejectAuthorization(t *testing.T) {
 			"reject: read log",
 			http.MethodGet,
 			"/v1/logs?name=pyfunc-image-builder&pod_name=maf-dnf-3&namespace=my-project&cluster=products&gcp_project=&version_endpoint_id=0e1b0dc6-94ee-4417-ad0c-8078f694ac3c&follow=true&timestamps=true&model_id=2",
-			"projects:1",
-			enforcer.ActionRead,
+			"mlp.projects.1.get",
 			&models.Model{
 				ID:        2,
 				ProjectID: 1,
@@ -381,7 +343,7 @@ func TestRejectAuthorization(t *testing.T) {
 				mockModelService.On("FindByID", mock.Anything, tt.model.ID).Return(tt.model, nil)
 			}
 
-			mockEnforcer.On("Enforce", user, tt.resource, tt.action).Return(&reject, nil)
+			mockEnforcer.On("IsUserGrantedPermission", mock.Anything, user, tt.permission).Return(false, nil)
 
 			req, err := http.NewRequest(tt.method, tt.path, nil)
 			if err != nil {
@@ -400,6 +362,7 @@ func TestRejectAuthorization(t *testing.T) {
 			)
 			route.ServeHTTP(rr, req)
 
+			mockEnforcer.AssertExpectations(t)
 			assert.Equal(t, http.StatusUnauthorized, rr.Code)
 		})
 	}
