@@ -69,10 +69,11 @@ func (ts *transformerService) createTransformerExecutor(ctx context.Context, sim
 		executor.WithTraceEnabled(true),
 		executor.WithModelPredictor(executor.NewMockModelPredictor(mockModelResponseBody, mockModelRequestHeaders, simulationPayload.Protocol)),
 		executor.WithFeastOptions(feast.Options{
-			StorageConfigs:     ts.cfg.ToFeastStorageConfigsForSimulation(),
-			DefaultFeastSource: ts.cfg.DefaultFeastSource,
-			BatchSize:          defaultFeastBatchSize,
-			FeastGRPCConnCount: ts.cfg.FeastGPRCConnCount,
+			StorageConfigs:                   ts.cfg.ToFeastStorageConfigsForSimulation(),
+			DefaultFeastSource:               ts.cfg.DefaultFeastSource,
+			BatchSize:                        defaultFeastBatchSize,
+			FeastGRPCConnCount:               ts.cfg.FeastGPRCConnCount,
+			FeastClientMaxConcurrentRequests: ts.cfg.SimulatorFeastClientMaxConcurrentRequests,
 		}),
 		executor.WithProtocol(simulationPayload.Protocol),
 	)
