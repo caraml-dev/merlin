@@ -61,6 +61,7 @@ func TestAuthorizer_GetPermission(t *testing.T) {
 	}{
 		{"project sub-resource permission", "/projects/1003/model_endpoints", "GET", "", map[string]string{}, "", "mlp.projects.1003.get"},
 		{"model permission", "/models/9001/endpoints", "POST", "", map[string]string{"model_id": "9001"}, "", "mlp.projects.1003.post"},
+		{"model versioned endpoint permission", "/models/9001/versions/3/endpoint/8e9624e0-efd3-44c9-941d-e645d5f680e8/containers", "GET", "", map[string]string{"model_id": "9001"}, "", "mlp.projects.1003.get"},
 		{"log permission", "/logs?model_id=9001", "GET", "", map[string]string{}, "", "mlp.projects.1003.get"},
 	}
 	for _, tt := range tests {
