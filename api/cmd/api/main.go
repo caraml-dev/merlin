@@ -274,7 +274,8 @@ func buildDependencies(ctx context.Context, cfg *config.Config, db *gorm.DB, dis
 	predictionJobService := initPredictionJobService(cfg, batchControllers, predJobBuilder, db, dispatcher)
 	logService := initLogService(cfg)
 	// use "mlp" as product name for enforcer so that same policy can be reused by other components
-	enforcerCfg := enforcer.NewEnforcerBuilder().URL(cfg.AuthorizationConfig.AuthorizationServerURL).Product("mlp")
+	enforcerCfg := enforcer.NewEnforcerBuilder().KetoEndpoints(cfg.AuthorizationConfig.KetoRemoteRead,
+		cfg.AuthorizationConfig.KetoRemoteWrite)
 	if cfg.AuthorizationConfig.Caching.Enabled {
 		enforcerCfg = enforcerCfg.WithCaching(
 			cfg.AuthorizationConfig.Caching.KeyExpirySeconds,
