@@ -40,3 +40,10 @@
         command: gke-gcloud-auth-plugin
         interactiveMode: IfAvailable
         provideClusterInfo: true
+  gpus:
+    - values: ["none", "1"]
+      display_name: "NVIDIA T4"
+      resource_type: "nvidia.com/gpu"
+      node_selector:
+        "cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
+      monthly_cost_per_gpu: 189.07

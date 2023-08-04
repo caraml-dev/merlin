@@ -113,11 +113,19 @@ type ResourceRequestConfig struct {
 }
 
 type GpuConfig struct {
-	Values            []string          `yaml:"values"`
-	DisplayName       string            `yaml:"display_name"`
-	ResourceType      string            `yaml:"resource_type"`
-	NodeSelector      map[string]string `yaml:"node_selector"`
-	MonthlyCostPerGpu float64           `yaml:"monthly_cost_per_gpu"`
+	// Values limits how many GPUs can be requested by users.
+	// Example: "none", "1", "2", "4"
+	Values []string `yaml:"values"`
+	// Specifies how the accelerator type will be written in the UI.
+	// Example: "NVIDIA T4"
+	DisplayName string `yaml:"display_name"`
+	// Specifies how the accelerator type will be translated to
+	// K8s resource type. Example: nvidia.com/gpu
+	ResourceType string `yaml:"resource_type"`
+	// To deploy the models on a specific GPU node.
+	NodeSelector map[string]string `yaml:"node_selector"`
+	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
+	MonthlyCostPerGpu float64 `yaml:"monthly_cost_per_gpu"`
 }
 
 func InitEnvironmentConfigs(path string) ([]*EnvironmentConfig, error) {
@@ -153,14 +161,12 @@ func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) Dep
 			MaxReplica:    cfg.DefaultDeploymentConfig.MaxReplica,
 			CPURequest:    resource.MustParse(cfg.DefaultDeploymentConfig.CPURequest),
 			MemoryRequest: resource.MustParse(cfg.DefaultDeploymentConfig.MemoryRequest),
-			GPURequest:    resource.MustParse(cfg.DefaultDeploymentConfig.Gpus),
 		},
 		DefaultTransformerResourceRequests: &ResourceRequests{
 			MinReplica:    cfg.DefaultTransformerConfig.MinReplica,
 			MaxReplica:    cfg.DefaultTransformerConfig.MaxReplica,
 			CPURequest:    resource.MustParse(cfg.DefaultTransformerConfig.CPURequest),
 			MemoryRequest: resource.MustParse(cfg.DefaultTransformerConfig.MemoryRequest),
-			GPURequest:    resource.MustParse(cfg.DefaultDeploymentConfig.Gpus),
 		},
 		MaxCPU:                    resource.MustParse(cfg.MaxCPU),
 		MaxMemory:                 resource.MustParse(cfg.MaxMemory),
@@ -168,5 +174,6 @@ func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) Dep
 		QueueResourcePercentage:   cfg.QueueResourcePercentage,
 		PyfuncGRPCOptions:         pyfuncGRPCOptions,
 		PodDisruptionBudget:       cfg.PodDisruptionBudget,
+		Gpus:                      cfg.Gpus,
 	}
 }
