@@ -43,6 +43,8 @@ type DeploymentConfig struct {
 	PyfuncGRPCOptions string
 	// PDB config to be applied on models and transformers
 	PodDisruptionBudget PodDisruptionBudgetConfig
+	// GPU Config
+	Gpus string
 }
 
 type ResourceRequests struct {
