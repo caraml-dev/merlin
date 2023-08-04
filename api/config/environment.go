@@ -40,6 +40,8 @@ type EnvironmentConfig struct {
 	DeploymentTimeout time.Duration `yaml:"deployment_timeout"`
 	NamespaceTimeout  time.Duration `yaml:"namespace_timeout"`
 
+	Gpus string `yaml:"gpus"`
+
 	MaxCPU                    string                    `yaml:"max_cpu"`
 	MaxMemory                 string                    `yaml:"max_memory"`
 	TopologySpreadConstraints TopologySpreadConstraints `yaml:"topology_spread_constraints"`
@@ -110,6 +112,14 @@ type ResourceRequestConfig struct {
 	MemoryRequest string `yaml:"memory_request"`
 }
 
+type GpuConfig struct {
+	Values            []string          `yaml:"values"`
+	DisplayName       string            `yaml:"display_name"`
+	ResourceType      string            `yaml:"resource_type"`
+	NodeSelector      map[string]string `yaml:"node_selector"`
+	MonthlyCostPerGpu float64           `yaml:"monthly_cost_per_gpu"`
+}
+
 func InitEnvironmentConfigs(path string) ([]*EnvironmentConfig, error) {
 	cfgFile, err := os.ReadFile(path)
 	if err != nil {
@@ -143,6 +153,7 @@ func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) Dep
 			MaxReplica:    cfg.DefaultDeploymentConfig.MaxReplica,
 			CPURequest:    resource.MustParse(cfg.DefaultDeploymentConfig.CPURequest),
 			MemoryRequest: resource.MustParse(cfg.DefaultDeploymentConfig.MemoryRequest),
+			GPURequest:    resource.MustParse(cfg.DefaultDeploymentConfig.Gpus),
 		},
 		DefaultTransformerResourceRequests: &ResourceRequests{
 			MinReplica:    cfg.DefaultTransformerConfig.MinReplica,
