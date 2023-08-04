@@ -31,7 +31,7 @@ const Jobs = () => {
   const { projectId, modelId } = useParams();
   const createJobURL = `/merlin/projects/${projectId}/models/${modelId}/create-job`;
 
-  const [{ data, isLoaded, error }] = useMerlinApi(
+  const [{ data, isLoaded, error }, fetchJobs] = useMerlinApi(
     `/projects/${projectId}/jobs?model_id=${modelId}`,
     { mock: mocks.jobList },
     []
@@ -81,6 +81,7 @@ const Jobs = () => {
             jobs={data}
             isLoaded={isLoaded}
             error={error}
+            fetchJobs={fetchJobs}
           />
         </EuiPanel>
       </EuiPageTemplate.Section>

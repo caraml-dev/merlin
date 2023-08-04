@@ -15,7 +15,7 @@
 package service
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/models"
 )

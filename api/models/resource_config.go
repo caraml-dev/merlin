@@ -16,7 +16,7 @@ package models
 
 import (
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type ResourceConfig struct {
@@ -27,11 +27,11 @@ type ResourceConfig struct {
 	CreatedUpdated
 }
 
-func (v *ResourceConfig) BeforeCreate(scope *gorm.Scope) {
+func (v *ResourceConfig) BeforeCreate(db *gorm.DB) error {
 	if v.Version == 0 {
 		var maxVersion int
 
-		scope.DB().
+		db.
 			Table("resource_configs").
 			Select("COALESCE(MAX(version), 0)").
 			Where("endpoint_id = ?", v.EndpointID).
@@ -40,4 +40,5 @@ func (v *ResourceConfig) BeforeCreate(scope *gorm.Scope) {
 
 		v.Version = ID(maxVersion + 1)
 	}
+	return nil
 }

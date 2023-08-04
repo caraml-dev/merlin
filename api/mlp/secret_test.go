@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSecret(t *testing.T) {
@@ -30,35 +31,38 @@ func TestSecret(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 
 		fmt.Println(r.Method, r.URL.Path)
-
 		switch r.URL.Path {
-		case "/projects/1/secrets":
-			if r.Method == "POST" {
+		case "/v1/projects/1/secrets":
+			switch r.Method {
+			case http.MethodPost:
 				_, err := w.Write([]byte(`{
 					"id": 1,
 					"name": "secret-1",
-					"data": "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA=="
+					"data": "data-1"
 				}`))
-				assert.NoError(t, err)
-			} else if r.Method == "GET" {
+				require.NoError(t, err)
+			case http.MethodGet:
 				_, err := w.Write([]byte(`[{
 					"id": 1,
 					"name": "secret-1",
-					"data": "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA=="
+					"data": "data-1"
 				}]`))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
-		case "/projects/1/secrets/1":
-			if r.Method == "PATCH" {
+		case "/v1/projects/1/secrets/1":
+			switch r.Method {
+			case http.MethodGet:
+				fallthrough
+			case http.MethodPatch:
 				_, err := w.Write([]byte(`{
 					"id": 1,
 					"name": "secret-1",
-					"data": "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA=="
+					"data": "data-1"
 				}`))
-				assert.NoError(t, err)
-			} else if r.Method == "DELETE" {
+				require.NoError(t, err)
+			case http.MethodDelete:
 				_, err := w.Write([]byte(`ok`))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		}
 	}))
@@ -66,35 +70,27 @@ func TestSecret(t *testing.T) {
 
 	ctx := context.Background()
 
-	c := NewAPIClient(&http.Client{}, ts.URL, "password")
+	c := NewAPIClient(&http.Client{}, ts.URL)
 
 	secret, err := c.CreateSecret(ctx, int32(1), Secret{Name: "secret-1", Data: "data-1"})
 	assert.Nil(t, err)
-	assert.Equal(t, "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA==", secret.Data)
+	assert.Equal(t, "data-1", secret.Data)
 
 	secret, err = c.UpdateSecret(ctx, int32(1), Secret{ID: int32(1), Name: "secret-1", Data: "data-1"})
 	assert.Nil(t, err)
-	assert.Equal(t, "P6+g6X2o1JctwZKd1uA0KhWm3fDl2niV7do5/YC+4pdQjA==", secret.Data)
+	assert.Equal(t, "data-1", secret.Data)
 
 	secrets, err := c.ListSecrets(ctx, int32(1))
 	assert.Nil(t, err)
 	assert.Len(t, secrets, 1)
 
-	secret, err = c.GetSecretByIDandProjectID(ctx, int32(1), int32(1))
+	secret, err = c.GetSecretByID(ctx, int32(1), int32(1))
 	assert.Nil(t, err)
 	assert.Equal(t, int32(1), secret.ID)
 
-	secret, err = c.GetSecretByNameAndProjectID(ctx, "secret-1", int32(1))
+	secret, err = c.GetSecretByName(ctx, "secret-1", int32(1))
 	assert.Nil(t, err)
-	assert.Equal(t, "secret-1", secret.Name)
-
-	plainSecret, err := c.GetPlainSecretByIDandProjectID(ctx, int32(1), int32(1))
-	assert.Nil(t, err)
-	assert.Equal(t, "data-1", plainSecret.Data)
-
-	plainSecret, err = c.GetPlainSecretByNameAndProjectID(ctx, "secret-1", int32(1))
-	assert.Nil(t, err)
-	assert.Equal(t, "data-1", plainSecret.Data)
+	assert.Equal(t, "data-1", secret.Data)
 
 	err = c.DeleteSecret(ctx, int32(1), int32(1))
 	assert.Nil(t, err)

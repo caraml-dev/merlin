@@ -31,7 +31,7 @@ type ModelEndpoint struct {
 	Status          EndpointStatus     `json:"status"`
 	URL             string             `json:"url" gorm:"url"`
 	Rule            *ModelEndpointRule `json:"rule" gorm:"rule"`
-	Environment     *Environment       `json:"environment" gorm:"association_foreignkey:Name"`
+	Environment     *Environment       `json:"environment" gorm:"references:Name"`
 	EnvironmentName string             `json:"environment_name"`
 	Protocol        protocol.Protocol  `json:"protocol" gorm:"protocol"`
 	CreatedUpdated

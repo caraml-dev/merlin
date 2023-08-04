@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -11,13 +10,12 @@ import (
 	"github.com/caraml-dev/mlp/api/pkg/auth"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"gorm.io/gorm"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/caraml-dev/merlin/api"
 	"github.com/caraml-dev/merlin/batch"
@@ -42,48 +40,6 @@ type deps struct {
 	imageBuilderJanitor *imagebuilder.Janitor
 }
 
-func initDB(cfg config.DatabaseConfig) (*gorm.DB, func()) {
-	databaseURL := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
-		cfg.Host,
-		cfg.Port,
-		cfg.User,
-		cfg.Database,
-		cfg.Password)
-
-	db, err := gorm.Open("postgres", databaseURL)
-	if err != nil {
-		panic(err)
-	}
-	db.LogMode(false)
-
-	sqlDB := db.DB()
-	if sqlDB == nil {
-		panic("fail to get the underlying database connection")
-	}
-
-	sqlDB.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
-	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
-	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
-	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
-
-	return db, func() { db.Close() } //nolint:errcheck
-}
-
-func runDBMigration(db *gorm.DB, migrationPath string) {
-	driver, err := postgres.WithInstance(db.DB(), &postgres.Config{})
-	if err != nil {
-		panic(err)
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(migrationPath, "postgres", driver)
-	if err != nil {
-		panic(err)
-	}
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		panic(err)
-	}
-}
-
 func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClient {
 	mlpHTTPClient := http.DefaultClient
 	googleClient, err := auth.InitGoogleClient(context.Background())
@@ -93,7 +49,7 @@ func initMLPAPIClient(ctx context.Context, cfg config.MlpAPIConfig) mlp.APIClien
 		log.Infof("Google default credential not found. Fallback to default HTTP client.")
 	}
 
-	return mlp.NewAPIClient(mlpHTTPClient, cfg.APIHost, cfg.EncryptionKey)
+	return mlp.NewAPIClient(mlpHTTPClient, cfg.APIHost)
 }
 
 func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool) core.CoreServiceClient {
@@ -101,23 +57,33 @@ func initFeastCoreClient(feastCoreURL, feastAuthAudience string, enableAuth bool
 	if enableAuth {
 		cred, err := feast.NewGoogleCredential(feastAuthAudience)
 		if err != nil {
-			panic(err)
+			log.Panicf(err.Error())
 		}
 		dialOpts = append(dialOpts, grpc.WithPerRPCCredentials(cred))
 	}
 
 	cc, err := grpc.Dial(feastCoreURL, dialOpts...)
 	if err != nil {
-		panic(err)
+		log.Panicf(err.Error())
 	}
 	return core.NewCoreServiceClient(cc)
 }
 
 func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageBuilder, predJobBuilder imagebuilder.ImageBuilder, imageBuilderJanitor *imagebuilder.Janitor) {
-	imgBuilderK8sConfig := cfg.ImageBuilderConfig.K8sConfig
-	creds := mlpcluster.NewK8sClusterCreds(&imgBuilderK8sConfig)
+	clusterCfg := cluster.Config{
+		ClusterName: cfg.ImageBuilderConfig.ClusterName,
+		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
+	}
 
-	restConfig, err := creds.ToRestConfig()
+	var restConfig *rest.Config
+	var err error
+	if cfg.ClusterConfig.InClusterConfig {
+		clusterCfg.InClusterConfig = true
+		restConfig, err = rest.InClusterConfig()
+	} else {
+		clusterCfg.Credentials = mlpcluster.NewK8sClusterCreds(cfg.ImageBuilderConfig.K8sConfig)
+		restConfig, err = clusterCfg.Credentials.ToRestConfig()
+	}
 	if err != nil {
 		log.Panicf("%s, unable to get image builder k8s config", err.Error())
 	}
@@ -174,11 +140,8 @@ func initImageBuilder(cfg *config.Config) (webserviceBuilder imagebuilder.ImageB
 	}
 	predJobBuilder = imagebuilder.NewPredictionJobImageBuilder(kubeClient, predJobConfig)
 
-	ctl, err := cluster.NewController(cluster.Config{
-		Credentials: creds,
-		ClusterName: cfg.ImageBuilderConfig.ClusterName,
-		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
-	},
+	ctl, err := cluster.NewController(
+		clusterCfg,
 		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
 		config.StandardTransformerConfig{})
 	imageBuilderJanitor = imagebuilder.NewJanitor(ctl, imagebuilder.JanitorConfig{
@@ -210,7 +173,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 		log.Panicf("unable to initialize environment service: %v", err)
 	}
 
-	for _, envCfg := range cfg.EnvironmentConfigs {
+	for _, envCfg := range cfg.ClusterConfig.EnvironmentConfigs {
 		var isDefault *bool = nil
 		if envCfg.IsDefault {
 			isDefault = &envCfg.IsDefault
@@ -225,7 +188,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 
 		env, err := envSvc.GetEnvironment(envCfg.Name)
 		if err != nil {
-			if !gorm.IsRecordNotFoundError(err) {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				log.Panicf("unable to get environment %s: %v", envCfg.Name, err)
 			}
 
@@ -352,7 +315,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 
 func initModelEndpointService(cfg *config.Config, db *gorm.DB) service.ModelEndpointsService {
 	istioClients := make(map[string]istio.Client)
-	for _, env := range cfg.EnvironmentConfigs {
+	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
 		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 
 		istioClient, err := istio.NewClient(istio.Config{
@@ -382,16 +345,26 @@ func initBatchDeployment(cfg *config.Config, db *gorm.DB, controllers map[string
 func initBatchControllers(cfg *config.Config, db *gorm.DB, mlpAPIClient mlp.APIClient) map[string]batch.Controller {
 	controllers := make(map[string]batch.Controller)
 	predictionJobStorage := storage.NewPredictionJobStorage(db)
-	for _, env := range cfg.EnvironmentConfigs {
+	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
 		if !env.IsPredictionJobEnabled {
 			continue
 		}
 
 		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
 		clusterName := env.Cluster
-		restConfig, err := creds.ToRestConfig()
-		if err != nil {
-			log.Panicf("unable to get cluster config of cluster: %s %v", clusterName, err)
+
+		var restConfig *rest.Config
+		var err error
+		if cfg.ClusterConfig.InClusterConfig {
+			restConfig, err = rest.InClusterConfig()
+			if err != nil {
+				log.Panicf("unable to get in cluster configs: %v", err)
+			}
+		} else {
+			restConfig, err = creds.ToRestConfig()
+			if err != nil {
+				log.Panicf("unable to get cluster config of cluster: %s %v", clusterName, err)
+			}
 		}
 
 		sparkClient := versioned.NewForConfigOrDie(restConfig)
@@ -432,16 +405,20 @@ func initModelServiceDeployment(cfg *config.Config, builder imagebuilder.ImageBu
 
 func initClusterControllers(cfg *config.Config) map[string]cluster.Controller {
 	controllers := make(map[string]cluster.Controller)
-	for _, env := range cfg.EnvironmentConfigs {
-		clusterName := env.Cluster
-		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
-
-		ctl, err := cluster.NewController(cluster.Config{
-			Credentials: creds,
-
-			ClusterName: clusterName,
+	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
+		clusterCfg := cluster.Config{
+			ClusterName: env.Cluster,
 			GcpProject:  env.GcpProject,
-		},
+		}
+
+		if cfg.ClusterConfig.InClusterConfig {
+			clusterCfg.InClusterConfig = true
+		} else {
+			clusterCfg.Credentials = mlpcluster.NewK8sClusterCreds(env.K8sConfig)
+		}
+
+		ctl, err := cluster.NewController(
+			clusterCfg,
 			config.ParseDeploymentConfig(env, cfg.PyfuncGRPCOptions),
 			cfg.StandardTransformerConfig)
 		if err != nil {
@@ -468,13 +445,19 @@ func initVersionEndpointService(cfg *config.Config, builder imagebuilder.ImageBu
 }
 
 func initLogService(cfg *config.Config) service.LogService {
-	creds := mlpcluster.NewK8sClusterCreds(&cfg.ImageBuilderConfig.K8sConfig)
-	ctl, err := cluster.NewController(cluster.Config{
-		Credentials: creds,
-
+	clusterCfg := cluster.Config{
 		ClusterName: cfg.ImageBuilderConfig.ClusterName,
 		GcpProject:  cfg.ImageBuilderConfig.GcpProject,
-	},
+	}
+
+	if cfg.ClusterConfig.InClusterConfig {
+		clusterCfg.InClusterConfig = true
+	} else {
+		clusterCfg.Credentials = mlpcluster.NewK8sClusterCreds(cfg.ImageBuilderConfig.K8sConfig)
+	}
+
+	ctl, err := cluster.NewController(
+		clusterCfg,
 		config.DeploymentConfig{}, // We don't need deployment config here because we're going to retrieve the log not deploy model.
 		cfg.StandardTransformerConfig)
 	if err != nil {
@@ -484,22 +467,27 @@ func initLogService(cfg *config.Config) service.LogService {
 	clusterControllers := make(map[string]cluster.Controller)
 	clusterControllers[cfg.ImageBuilderConfig.ClusterName] = ctl
 
-	for _, env := range cfg.EnvironmentConfigs {
-		clusterName := env.Cluster
-		creds := mlpcluster.NewK8sClusterCreds(env.K8sConfig)
-
-		ctl, err := cluster.NewController(cluster.Config{
-			Credentials: creds,
-			ClusterName: clusterName,
+	for _, env := range cfg.ClusterConfig.EnvironmentConfigs {
+		clusterCfg := cluster.Config{
+			ClusterName: env.Cluster,
 			GcpProject:  env.GcpProject,
-		},
+		}
+
+		if cfg.ClusterConfig.InClusterConfig {
+			clusterCfg.InClusterConfig = true
+		} else {
+			clusterCfg.Credentials = mlpcluster.NewK8sClusterCreds(env.K8sConfig)
+		}
+
+		ctl, err := cluster.NewController(
+			clusterCfg,
 			config.ParseDeploymentConfig(env, cfg.PyfuncGRPCOptions),
 			cfg.StandardTransformerConfig)
 		if err != nil {
 			log.Panicf("unable to initialize cluster controller %v", err)
 		}
 
-		clusterControllers[clusterName] = ctl
+		clusterControllers[env.Cluster] = ctl
 	}
 
 	return service.NewLogService(clusterControllers)

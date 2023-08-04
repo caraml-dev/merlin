@@ -159,6 +159,32 @@ paths:
               $ref: "#/definitions/Model"
         404:
           description: "Project/Model with given id not found"
+    delete:
+      tags: ["models"]
+      summary: "Delete model"
+      parameters:
+        - in: "path"
+          name: "project_id"
+          description: "project id of the project to be deleted"
+          type: "integer"
+          required: true
+        - in: "path"
+          name: "model_id"
+          description: "model id of the model to be deleted"
+          type: "integer"
+          required: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "integer"
+        404:
+          description: "Project/Model with given id not found"
+        400:
+          description: "There are other entity still using this model (model version endpoint / model endpoint / prediction jobs)"
+        500:
+          description: "Deletion failed"
+
   "/projects/{project_id}/models":
     get:
       tags: ["models"]
@@ -342,6 +368,29 @@ paths:
           description: "Invalid request format"
         404:
           description: "Version with given `version_id` not found"
+    delete:
+      tags: ["version"]
+      summary: "Delete version by ID from model"
+      parameters:
+        - in: "path"
+          name: "model_id"
+          type: "integer"
+          required: true
+        - in: "path"
+          name: "version_id"
+          type: "integer"
+          required: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "integer"
+        404:
+          description: "Model with given `model_id` not found"
+        400:
+          description: "There are other entity still using this model (model version endpoint / prediction jobs)"
+        500:
+          description: "Deletion failed"
   "/models/{model_id}/versions/{version_id}/endpoint":
     get:
       tags: ["endpoint"]

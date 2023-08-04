@@ -21,7 +21,6 @@ import (
 
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service/mocks"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestListEnvironments(t *testing.T) {
@@ -79,7 +78,7 @@ func TestListEnvironments(t *testing.T) {
 			expected: &Response{
 				code: http.StatusInternalServerError,
 				data: Error{
-					Message: "Database is down",
+					Message: "Error listing environments: Database is down",
 				},
 			},
 		},
@@ -93,7 +92,7 @@ func TestListEnvironments(t *testing.T) {
 				},
 			}
 			resp := ctl.ListEnvironments(&http.Request{}, tC.vars, nil)
-			assert.Equal(t, tC.expected, resp)
+			assertEqualResponses(t, tC.expected, resp)
 		})
 	}
 }

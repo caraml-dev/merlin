@@ -14,18 +14,17 @@
 
 import os
 import warnings
+from test.utils import undeploy_all_version
 from time import sleep
 
 import joblib
+import merlin
 import numpy as np
 import pytest
 import xgboost as xgb
+from merlin.model import ModelType, PyFuncModel
 from sklearn import svm
 from sklearn.datasets import load_iris
-
-import merlin
-from merlin.model import PyFuncModel, ModelType
-from test.utils import undeploy_all_version
 
 warnings.filterwarnings('ignore')
 

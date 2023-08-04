@@ -2,12 +2,11 @@ package storage
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type ModelEndpointStorage interface {
@@ -19,6 +18,8 @@ type ModelEndpointStorage interface {
 	ListModelEndpointsInProject(ctx context.Context, projectID models.ID, region string) ([]*models.ModelEndpoint, error)
 	// Save save newModelEndpoint and its nested version endpoint objects
 	Save(ctx context.Context, prevModelEndpoint, newModelEndpoint *models.ModelEndpoint) error
+	// Delete delete a model endpoint from the database
+	Delete(endpoint *models.ModelEndpoint) error
 }
 
 type modelEndpointStorage struct {
@@ -76,10 +77,16 @@ func (m *modelEndpointStorage) ListModelEndpointsInProject(ctx context.Context, 
 
 // Save save newModelEndpoint and its nested version endpoint objects
 func (m *modelEndpointStorage) Save(ctx context.Context, prevModelEndpoint, newModelEndpoint *models.ModelEndpoint) error {
-	tx := m.db.BeginTx(ctx, &sql.TxOptions{})
-	defer tx.RollbackUnlessCommitted()
-
+	tx := m.db.WithContext(ctx).Begin()
 	var err error
+	// At the end of the function, commit or rollback transaction, based on err
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
 
 	err = tx.Save(newModelEndpoint).Error
 	if err != nil {
@@ -104,7 +111,8 @@ func (m *modelEndpointStorage) Save(ctx context.Context, prevModelEndpoint, newM
 
 	// Update version and version endpoints from new model endpoint
 	for _, ruleDestination := range newModelEndpoint.Rule.Destination {
-		versionEndpoint, err := m.versionEndpointStorage.Get(ruleDestination.VersionEndpointID)
+		var versionEndpoint *models.VersionEndpoint
+		versionEndpoint, err = m.versionEndpointStorage.Get(ruleDestination.VersionEndpointID)
 		if err != nil {
 			return err
 		}
@@ -120,12 +128,11 @@ func (m *modelEndpointStorage) Save(ctx context.Context, prevModelEndpoint, newM
 		}
 	}
 
-	err = tx.Commit().Error
-	if err != nil {
-		return err
-	}
-
 	return nil
+}
+
+func (m *modelEndpointStorage) Delete(endpoint *models.ModelEndpoint) error {
+	return m.db.Delete(endpoint).Error
 }
 
 func (m *modelEndpointStorage) query() *gorm.DB {

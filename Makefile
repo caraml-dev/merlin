@@ -1,6 +1,3 @@
-include .env.sample
-export
-
 BIN_NAME=merlin
 TRANSFORMER_BIN_NAME=merlin-transformer
 INFERENCE_LOGGER_BIN_NAME=merlin-logger
@@ -129,7 +126,7 @@ build-inference-logger:
 .PHONY: run
 run:
 	@echo "> Running application ..."
-	@./bin/${BIN_NAME}
+	@./bin/${BIN_NAME} -config ./config.yaml
 
 .PHONY: run-ui
 run-ui:
@@ -171,6 +168,11 @@ local-db:
 stop-docker:
 	@echo "> Stopping Docker compose ..."
 	@docker-compose down
+
+.PHONY: fmt
+fmt:
+	@echo "Formatting code..."
+	gofmt -s -w api
 
 .PHONY: swagger-ui
 swagger-ui:

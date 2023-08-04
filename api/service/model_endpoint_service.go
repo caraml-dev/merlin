@@ -58,8 +58,10 @@ type ModelEndpointsService interface {
 	DeployEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
 	// UpdateEndpoint update existing model endpoint owned by model
 	UpdateEndpoint(ctx context.Context, model *models.Model, oldEndpoint *models.ModelEndpoint, newEndpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
-	// UndeployEndpoint delete model endpoint
+	// UndeployEndpoint delete model endpoint (marking model endpoint as terminated)
 	UndeployEndpoint(ctx context.Context, model *models.Model, endpoint *models.ModelEndpoint) (*models.ModelEndpoint, error)
+	// DeleteModelEndpoint delete model endpoint from the database
+	DeleteModelEndpoint(endpoint *models.ModelEndpoint) error
 }
 
 // NewModelEndpointsService returns an initialized ModelEndpointsService.
@@ -207,6 +209,10 @@ func (s *modelEndpointsService) UndeployEndpoint(ctx context.Context, model *mod
 	}
 
 	return endpoint, nil
+}
+
+func (s *modelEndpointsService) DeleteModelEndpoint(endpoint *models.ModelEndpoint) error {
+	return s.modelEndpointStorage.Delete(endpoint)
 }
 
 func (s *modelEndpointsService) createVirtualService(model *models.Model, endpoint *models.ModelEndpoint) (*v1beta1.VirtualService, error) {

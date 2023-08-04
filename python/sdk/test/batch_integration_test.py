@@ -12,23 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+import os
+from time import sleep
+from typing import Union
 
-from merlin.batch.job import JobStatus
-
+import joblib
 import merlin
+import numpy as np
+import pandas as pd
+import pytest
 from merlin.batch.config import PredictionJobConfig
+from merlin.batch.job import JobStatus
 from merlin.batch.sink import BigQuerySink, SaveMode
 from merlin.batch.source import BigQuerySource
-from merlin.model import PyFuncV2Model, ModelType
-from sklearn.datasets import load_iris
+from merlin.model import ModelType, PyFuncV2Model
 from sklearn import svm
-from time import sleep
-import joblib
-import os
-import pandas as pd
-import numpy as np
-from typing import Union
+from sklearn.datasets import load_iris
 
 MODEL_PATH_ARTIFACT_KEY = "model_path"
 MODEL_DIR = "test/batch/model"

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/merlin/pkg/cronjob"
 	"github.com/caraml-dev/merlin/storage"

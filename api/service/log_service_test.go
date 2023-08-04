@@ -150,14 +150,15 @@ func Test_logService_StreamLogs(t *testing.T) {
 		"test-cluster": mockController,
 	}
 
-	mockController.On("ListPods", context.Background(), "test-namespace", "serving.knative.dev/service=test-model-1-predictor-default").
+	mockController.On("ListPods", context.Background(), "test-namespace", "component=predictor,serving.kserve.io/inferenceservice=test-model-1").
 		Return(&v1.PodList{
 			Items: []v1.Pod{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "test-model-1-predictor-default-a",
 						Labels: map[string]string{
-							"serving.knative.dev/service": "test-model-1-predictor-default",
+							"component":                          "predictor",
+							"serving.kserve.io/inferenceservice": "test-model-1",
 						},
 					},
 					Spec: v1.PodSpec{
@@ -175,7 +176,8 @@ func Test_logService_StreamLogs(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "test-model-1-predictor-default-b",
 						Labels: map[string]string{
-							"serving.knative.dev/service": "test-model-1-predictor-default",
+							"component":                          "predictor",
+							"serving.kserve.io/inferenceservice": "test-model-1",
 						},
 					},
 					Spec: v1.PodSpec{

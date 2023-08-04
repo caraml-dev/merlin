@@ -29,10 +29,10 @@ type EndpointApiService service
 
 /*
 EndpointApiService Get all container belong to a version endpoint
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param versionId
+  - @param endpointId
 
 @return Container
 */
@@ -132,12 +132,10 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdCon
 
 /*
 EndpointApiService Undeploy the specified model version deployment
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
-
-
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param versionId
+  - @param endpointId
 */
 func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdDelete(ctx context.Context, modelId int32, versionId int32, endpointId string) (*http.Response, error) {
 	var (
@@ -217,10 +215,10 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdDel
 
 /*
 EndpointApiService Get version endpoint resource
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
- * @param endpointId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param versionId
+  - @param endpointId
 
 @return VersionEndpoint
 */
@@ -439,9 +437,9 @@ func (a *EndpointApiService) ModelsModelIdVersionsVersionIdEndpointEndpointIdPut
 
 /*
 EndpointApiService List all endpoint of a model version
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param versionId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param versionId
 
 @return []VersionEndpoint
 */

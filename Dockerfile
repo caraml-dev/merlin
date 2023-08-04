@@ -59,4 +59,4 @@ ENV ZONEINFO=/zoneinfo.zip
 # UI must be built outside docker
 COPY ./ui/build ./ui/build
 
-CMD ["merlin_api"]
+ENTRYPOINT ["sh", "-c", "merlin_api \"$@\"", "--"]

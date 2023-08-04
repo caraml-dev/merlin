@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import random
 import socket
-import requests
+import time
 from multiprocessing import Process
 
-import pytest
-import random
-import os
-
-import requests
-import time
 import merlin
+import pytest
+import requests
 from merlin.model import ModelType
 
 request_json = {

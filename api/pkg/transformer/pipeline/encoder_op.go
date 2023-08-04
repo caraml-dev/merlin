@@ -7,7 +7,6 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	enc "github.com/caraml-dev/merlin/pkg/transformer/types/encoder"
-	"github.com/opentracing/opentracing-go"
 )
 
 type EncoderOp struct {
@@ -28,8 +27,8 @@ func NewEncoderOp(encoders []*spec.Encoder, tracingEnabled bool) *EncoderOp {
 }
 
 func (e *EncoderOp) Execute(ctx context.Context, env *Environment) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "pipeline.EncoderOp")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "pipeline.EncoderOp")
+	defer span.End()
 
 	var encoderImpl Encoder
 	for _, encoderSpec := range e.encoderSpecs {

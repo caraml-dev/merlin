@@ -1,0 +1,8 @@
+StandardTransformerConfig:
+  FeastRedisConfig:
+    RedisAddresses:
+      - 10.1.1.10
+      - 10.1.1.11
+    PoolSize: 4
+    MaxRetries: 1
+    DialTimeout: 10s

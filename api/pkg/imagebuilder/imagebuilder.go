@@ -66,9 +66,14 @@ type imageBuilder struct {
 }
 
 const (
-	containerName      = "pyfunc-image-builder"
-	kanikoSecretName   = "kaniko-secret"
-	tickDurationSecond = 5
+	containerName    = "pyfunc-image-builder"
+	kanikoSecretName = "kaniko-secret"
+	// jobCompletionTickDurationSecond is the interval at which the API server checks if a job has completed
+	jobCompletionTickDurationSecond = 5
+	// jobDeletionTimeoutSeconds is the maximum time to wait for a job to be deleted from a cluster
+	jobDeletionTimeoutSeconds = 30
+	// jobDeletionTickDurationMilliseconds is the interval at which the API server checks if a job has been deleted
+	jobDeletionTickDurationMilliseconds = 100
 
 	gacEnvKey  = "GOOGLE_APPLICATION_CREDENTIALS"
 	saFilePath = "/secret/kaniko-secret.json"
@@ -142,6 +147,12 @@ func (c *imageBuilder) BuildImage(ctx context.Context, project mlp.Project, mode
 		if job.Status.Failed != 0 {
 			// job already created before so we have to delete it first if it failed
 			err = jobClient.Delete(ctx, job.Name, metav1.DeleteOptions{})
+			if err != nil {
+				log.Errorf("error deleting job: %v", err)
+				return "", ErrDeleteFailedJob
+			}
+
+			err = c.waitJobDeleted(ctx, job)
 			if err != nil {
 				log.Errorf("error deleting job: %v", err)
 				return "", ErrDeleteFailedJob
@@ -285,7 +296,7 @@ func (c *imageBuilder) imageRefExists(imageName, imageTag string) (bool, error) 
 
 func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) error {
 	timeout := time.After(c.config.BuildTimeoutDuration)
-	ticker := time.NewTicker(time.Second * tickDurationSecond)
+	ticker := time.NewTicker(time.Second * jobCompletionTickDurationSecond)
 	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
 	podClient := c.kubeClient.CoreV1().Pods(c.config.BuildNamespace)
 
@@ -322,6 +333,28 @@ func (c *imageBuilder) waitJobCompleted(ctx context.Context, job *batchv1.Job) e
 				return ErrUnableToBuildImage{
 					Message: errMessage,
 				}
+			}
+		}
+	}
+}
+
+func (c *imageBuilder) waitJobDeleted(ctx context.Context, job *batchv1.Job) error {
+	timeout := time.After(time.Second * jobDeletionTimeoutSeconds)
+	ticker := time.NewTicker(time.Millisecond * jobDeletionTickDurationMilliseconds)
+	jobClient := c.kubeClient.BatchV1().Jobs(c.config.BuildNamespace)
+
+	for {
+		select {
+		case <-timeout:
+			return ErrDeleteFailedJob
+		case <-ticker.C:
+			_, err := jobClient.Get(ctx, job.Name, metav1.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					return nil
+				}
+				log.Errorf("unable to get job status for job %s: %v", job.Name, err)
+				return ErrDeleteFailedJob
 			}
 		}
 	}

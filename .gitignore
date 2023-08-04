@@ -185,3 +185,5 @@ Temporary Items
 
 # Binary
 bin/
+
+.vscode/

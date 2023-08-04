@@ -35,11 +35,13 @@ type LogController struct {
 func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	var errorMsg string
 	var query service.LogQuery
 	err := decoder.Decode(&query, r.URL.Query())
 	if err != nil {
-		log.Errorf("Error while parsing query string %v", err)
-		BadRequest(fmt.Sprintf("Unable to parse query string: %s", err)).WriteTo(w)
+		errorMsg = fmt.Sprintf("Error while parsing query string: %v", err)
+		log.Errorf(errorMsg)
+		BadRequest(errorMsg).WriteTo(w)
 		return
 	}
 
@@ -76,7 +78,9 @@ func (l *LogController) ReadLog(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err := l.LogService.StreamLogs(ctx, logLineCh, stopCh, &query); err != nil {
-		InternalServerError(err.Error()).WriteTo(w)
+		errorMsg = fmt.Sprintf("Error while streaming logs: %v", err)
+		log.Errorf(errorMsg)
+		InternalServerError(errorMsg).WriteTo(w)
 		return
 	}
 }

@@ -29,7 +29,7 @@ type AlertApiService service
 
 /*
 AlertApiService Lists teams for alert notification channel.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 
 @return []string
 */
@@ -126,8 +126,8 @@ func (a *AlertApiService) AlertsTeamsGet(ctx context.Context) ([]string, *http.R
 
 /*
 AlertApiService Lists alerts for given model.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
 
 @return []ModelEndpointAlert
 */
@@ -225,9 +225,9 @@ func (a *AlertApiService) ModelsModelIdAlertsGet(ctx context.Context, modelId in
 
 /*
 AlertApiService Gets alert for given model endpoint.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param modelId
- * @param modelEndpointId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param modelId
+  - @param modelEndpointId
 
 @return ModelEndpointAlert
 */

@@ -13,16 +13,14 @@
 # limitations under the License.
 
 import os
-
-from click.testing import CliRunner
-import pytest
-
 import traceback
+from test.utils import undeploy_all_version
 
 import merlin
+import pytest
+from click.testing import CliRunner
 from merlin.merlin import cli
 from merlin.model import ModelType
-from test.utils import undeploy_all_version
 
 
 @pytest.fixture()

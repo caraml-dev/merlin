@@ -22,7 +22,9 @@ import (
 
 	"github.com/caraml-dev/merlin/log"
 
-	"github.com/jinzhu/gorm"
+	"github.com/pilagod/gorm-cursor-paginator/v2/paginator"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
@@ -33,6 +35,7 @@ type VersionsService interface {
 	ListVersions(ctx context.Context, modelID models.ID, monitoringConfig config.MonitoringConfig, query VersionQuery) ([]*models.Version, string, error)
 	Save(ctx context.Context, version *models.Version, monitoringConfig config.MonitoringConfig) (*models.Version, error)
 	FindByID(ctx context.Context, modelID, versionID models.ID, monitoringConfig config.MonitoringConfig) (*models.Version, error)
+	Delete(version *models.Version) error
 }
 
 func NewVersionsService(db *gorm.DB, mlpAPIClient mlp.APIClient) VersionsService {
@@ -61,12 +64,10 @@ func (service *versionsService) query() *gorm.DB {
 				Preload("Environment").
 				Preload("Transformer").
 				Joins("JOIN models on models.id = version_endpoints.version_model_id").
-				Joins("JOIN environments on environments.name = version_endpoints.environment_name").
-				Select("version_endpoints.*")
+				Joins("JOIN environments on environments.name = version_endpoints.environment_name")
 		}).
 		Preload("Model").
-		Joins("JOIN models on models.id = versions.model_id").
-		Select("versions.*")
+		Joins("JOIN models on models.id = versions.model_id")
 }
 
 func (service *versionsService) buildListVersionsQuery(modelID models.ID, query VersionQuery) *gorm.DB {
@@ -211,10 +212,20 @@ func (service *versionsService) ListVersions(ctx context.Context, modelID models
 
 	paginationEnabled := query.Limit > 0
 	if paginationEnabled {
+		var cursor paginator.Cursor
+		var result *gorm.DB
 		paginateEngine := generatePagination(query.PaginationQuery, []string{"ID"}, descOrder)
-		err = paginateEngine.Paginate(dbQuery, &versions).Error
-		if paginateEngine.GetNextCursor().After != nil {
-			nextCursor = *paginateEngine.GetNextCursor().After
+		result, cursor, err = paginateEngine.Paginate(dbQuery, &versions)
+		if cursor.After != nil {
+			nextCursor = *cursor.After
+		}
+		// this is paginator error, e.g., invalid cursor
+		if err != nil {
+			return
+		}
+		// this is gorm error
+		if result.Error != nil {
+			return nil, "", result.Error
 		}
 	} else {
 		err = dbQuery.Find(&versions).Error
@@ -252,17 +263,15 @@ func (service *versionsService) ListVersions(ctx context.Context, modelID models
 }
 
 func (service *versionsService) Save(ctx context.Context, version *models.Version, monitoringConfig config.MonitoringConfig) (*models.Version, error) {
-	tx := service.db.Begin()
-	defer tx.RollbackUnlessCommitted()
+	tx := service.db.WithContext(ctx).Begin()
 
 	var err error
-	if tx.NewRecord(version) {
-		err = tx.Create(version).Error
-	} else {
-		err = tx.Save(version).Error
-	}
+	err = service.db.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(version).Error
 
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	} else if err = tx.Commit().Error; err != nil {
 		return nil, err
@@ -300,4 +309,8 @@ func (service *versionsService) FindByID(ctx context.Context, modelID, versionID
 	}
 
 	return &version, nil
+}
+
+func (service *versionsService) Delete(version *models.Version) error {
+	return service.db.Delete(version).Error
 }

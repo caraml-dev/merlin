@@ -120,7 +120,7 @@ func Test_secretService_GetByIDandProjectID(t *testing.T) {
 				projectID: int32(1),
 			},
 			mockFunc: func(m *mlpMock.APIClient) {
-				m.On("GetSecretByIDandProjectID", mock.Anything, int32(1), int32(1)).
+				m.On("GetSecretByID", mock.Anything, int32(1), int32(1)).
 					Return(secret1, nil)
 			},
 			want:    secret1,
@@ -134,7 +134,7 @@ func Test_secretService_GetByIDandProjectID(t *testing.T) {
 				projectID: int32(1),
 			},
 			mockFunc: func(m *mlpMock.APIClient) {
-				m.On("GetSecretByIDandProjectID", mock.Anything, int32(1), int32(1)).
+				m.On("GetSecretByID", mock.Anything, int32(1), int32(1)).
 					Return(mlp.Secret{}, nil)
 			},
 			want:    mlp.Secret{},
@@ -148,7 +148,7 @@ func Test_secretService_GetByIDandProjectID(t *testing.T) {
 				projectID: int32(1),
 			},
 			mockFunc: func(m *mlpMock.APIClient) {
-				m.On("GetSecretByIDandProjectID", mock.Anything, int32(1), int32(1)).
+				m.On("GetSecretByID", mock.Anything, int32(1), int32(1)).
 					Return(mlp.Secret{}, fmt.Errorf("internal server error"))
 			},
 			want:    mlp.Secret{},

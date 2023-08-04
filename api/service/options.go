@@ -14,7 +14,7 @@
 
 package service
 
-import "github.com/jinzhu/gorm"
+import "gorm.io/gorm"
 
 type ListOptions interface {
 	apply(q *gorm.DB) *gorm.DB

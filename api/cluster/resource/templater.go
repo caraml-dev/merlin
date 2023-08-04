@@ -106,6 +106,11 @@ var (
 	}
 )
 
+type DeploymentScale struct {
+	Predictor   *int
+	Transformer *int
+}
+
 type InferenceServiceTemplater struct {
 	standardTransformerConfig config.StandardTransformerConfig
 }
@@ -117,7 +122,7 @@ func NewInferenceServiceTemplater(standardTransformerConfig config.StandardTrans
 func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
 	applyDefaults(modelService, config)
 
-	annotations, err := createAnnotations(modelService, config)
+	annotations, err := createAnnotations(modelService, config, nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create inference service spec: %w", err)
 	}
@@ -164,15 +169,37 @@ func (t *InferenceServiceTemplater) CreateInferenceServiceSpec(modelService *mod
 	return inferenceService, nil
 }
 
-func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta1.InferenceService, modelService *models.Service, config *config.DeploymentConfig) (*kservev1beta1.InferenceService, error) {
+func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(
+	orig *kservev1beta1.InferenceService,
+	modelService *models.Service,
+	config *config.DeploymentConfig,
+	currentReplicas DeploymentScale,
+) (*kservev1beta1.InferenceService, error) {
+	// Identify the desired initial scale of the new deployment
+	var initialScale *int
+	if currentReplicas.Predictor != nil {
+		// The desired scale of the new deployment is a single value, applicable to both the predictor and the transformer.
+		// Set the desired scale of the new deployment by taking the max of the 2 values.
+		// Consider the transformer's scale only if it is also enabled in the new spec.
+		if modelService.Transformer != nil &&
+			modelService.Transformer.Enabled &&
+			currentReplicas.Transformer != nil &&
+			*currentReplicas.Transformer > *currentReplicas.Predictor {
+			initialScale = currentReplicas.Transformer
+		} else {
+			initialScale = currentReplicas.Predictor
+		}
+	}
+
 	applyDefaults(modelService, config)
 
 	orig.ObjectMeta.Labels = modelService.Metadata.ToLabel()
-	annotations, err := createAnnotations(modelService, config)
+	annotations, err := createAnnotations(modelService, config, initialScale)
 	if err != nil {
 		return nil, fmt.Errorf("unable to patch inference service spec: %w", err)
 	}
 	orig.ObjectMeta.Annotations = utils.MergeMaps(utils.ExcludeKeys(orig.ObjectMeta.Annotations, configAnnotationKeys), annotations)
+
 	orig.Spec.Predictor = createPredictorSpec(modelService, config)
 	orig.Spec.Predictor.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
 		orig,
@@ -187,12 +214,21 @@ func (t *InferenceServiceTemplater) PatchInferenceServiceSpec(orig *kservev1beta
 	orig.Spec.Transformer = nil
 	if modelService.Transformer != nil && modelService.Transformer.Enabled {
 		orig.Spec.Transformer = t.createTransformerSpec(modelService, modelService.Transformer)
-		orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
-			orig,
-			modelService,
-			config,
-			kservev1beta1.TransformerComponent,
-		)
+		if _, ok := orig.Status.Components[kservev1beta1.TransformerComponent]; !ok ||
+			orig.Status.Components[kservev1beta1.TransformerComponent].LatestCreatedRevision == "" {
+			orig.Spec.Transformer.TopologySpreadConstraints, err = createNewInferenceServiceTopologySpreadConstraints(
+				modelService,
+				config,
+				kservev1beta1.TransformerComponent,
+			)
+		} else {
+			orig.Spec.Transformer.TopologySpreadConstraints, err = updateExistingInferenceServiceTopologySpreadConstraints(
+				orig,
+				modelService,
+				config,
+				kservev1beta1.TransformerComponent,
+			)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("unable to create transformer topology spread constraints: %w", err)
 		}
@@ -436,7 +472,6 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	if feastStorageConfigJsonByte, err := json.Marshal(feastStorageConfig); err == nil {
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastStorageConfigs, Value: string(feastStorageConfigJsonByte)})
 	}
-
 	// Add keepalive configuration for predictor
 	// only pyfunc config that enforced by merlin
 	keepAliveModelCfg := t.standardTransformerConfig.ModelClientKeepAlive
@@ -450,23 +485,24 @@ func (t *InferenceServiceTemplater) enrichStandardTransformerEnvVars(modelServic
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveEnabled, Value: strconv.FormatBool(keepaliveCfg.Enabled)})
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTime, Value: keepaliveCfg.Time.String()})
 	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastServingKeepAliveTimeout, Value: keepaliveCfg.Timeout.String()})
+	addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.FeastGRPCConnCount, Value: fmt.Sprintf("%d", t.standardTransformerConfig.FeastGPRCConnCount)})
 
-	// add kafka configuration
 	if modelService.Protocol == protocol.UpiV1 {
+		// add kafka configuration
 		kafkaCfg := t.standardTransformerConfig.Kafka
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaTopic, Value: modelService.GetPredictionLogTopic()})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaBrokers, Value: kafkaCfg.Brokers})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaMaxMessageSizeBytes, Value: fmt.Sprintf("%v", kafkaCfg.MaxMessageSizeBytes)})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaConnectTimeoutMS, Value: fmt.Sprintf("%v", kafkaCfg.ConnectTimeoutMS)})
 		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.KafkaSerialization, Value: string(kafkaCfg.SerializationFmt)})
+
+		addEnvVar = append(addEnvVar, models.EnvVar{Name: transformerpkg.ModelServerConnCount, Value: fmt.Sprintf("%d", t.standardTransformerConfig.ModelServerConnCount)})
 	}
 
 	jaegerCfg := t.standardTransformerConfig.Jaeger
 	jaegerEnvVars := []models.EnvVar{
-		{Name: transformerpkg.JaegerAgentHost, Value: jaegerCfg.AgentHost},
-		{Name: transformerpkg.JaegerAgentPort, Value: jaegerCfg.AgentPort},
+		{Name: transformerpkg.JaegerCollectorURL, Value: jaegerCfg.CollectorURL},
 		{Name: transformerpkg.JaegerSamplerParam, Value: jaegerCfg.SamplerParam},
-		{Name: transformerpkg.JaegerSamplerType, Value: jaegerCfg.SamplerType},
 		{Name: transformerpkg.JaegerDisabled, Value: jaegerCfg.Disabled},
 	}
 
@@ -523,7 +559,7 @@ func createPredictorHost(modelService *models.Service) string {
 	return fmt.Sprintf("%s-predictor-default.%s:%d", modelService.Name, modelService.Namespace, defaultPredictorPort)
 }
 
-func createAnnotations(modelService *models.Service, config *config.DeploymentConfig) (map[string]string, error) {
+func createAnnotations(modelService *models.Service, config *config.DeploymentConfig, initialScale *int) (map[string]string, error) {
 	annotations := make(map[string]string)
 
 	if config.QueueResourcePercentage != "" {
@@ -567,6 +603,11 @@ func createAnnotations(modelService *models.Service, config *config.DeploymentCo
 			annotations[knautoscaling.MetricAnnotationKey] = autoscalingMetrics
 			annotations[knautoscaling.TargetAnnotationKey] = targetValue
 		}
+	}
+
+	// For serverless deployments, set initial scale, if supplied.
+	if deployMode == string(kserveconstant.Serverless) && initialScale != nil {
+		annotations[knautoscaling.InitialScaleAnnotationKey] = strconv.Itoa(*initialScale)
 	}
 
 	return annotations, nil

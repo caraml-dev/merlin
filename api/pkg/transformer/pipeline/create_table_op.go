@@ -8,7 +8,6 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
-	"github.com/opentracing/opentracing-go"
 )
 
 type CreateTableOp struct {
@@ -28,8 +27,8 @@ func NewCreateTableOp(tableSpecs []*spec.Table, tracingEnabled bool) *CreateTabl
 }
 
 func (c CreateTableOp) Execute(ctx context.Context, env *Environment) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "pipeline.CreateTableOp")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "pipeline.CreateTableOp")
+	defer span.End()
 
 	for _, tableSpec := range c.tableSpecs {
 		var t *table.Table

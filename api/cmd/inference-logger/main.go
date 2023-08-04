@@ -124,7 +124,12 @@ func main() {
 		MaxBatchSize: QueueMaxBatchSize,
 	}
 
-	logSink := getLogSink(*logUrl, log)
+	logSink, err := getLogSink(*logUrl, log)
+	if err != nil {
+		log.Infof("Failed initializing logSink for %s: %v", *logUrl, err)
+		os.Exit(1)
+	}
+
 	dispatcher := createLoggerDispatcher(workerConfig, logSink, log)
 	dispatcher.Start()
 
@@ -274,18 +279,26 @@ func getTopicName(serviceName string) string {
 	return fmt.Sprintf("merlin-%s-inference-log", serviceName)
 }
 
+func getNewRelicAPIKey(newRelicUrl string) (string, error) {
+	apiKey := ""
+	url, err := url.Parse(newRelicUrl)
+	if err != nil {
+		return "", fmt.Errorf("invalid NewRelic URL (%s): %w", newRelicUrl, err)
+	}
+
+	apiKey = url.Query().Get("Api-Key")
+	if apiKey == "" {
+		return "", fmt.Errorf("Api-Key query param not found")
+	}
+
+	return apiKey, nil
+}
+
 func getLogSink(
 	logUrl string,
 	log *zap.SugaredLogger,
-) merlinlogger.LogSink {
-	var sinkKind merlinlogger.LoggerSinkKind
-	host := logUrl
-	for _, loggerSinkKind := range merlinlogger.LoggerSinkKinds {
-		if strings.HasPrefix(logUrl, loggerSinkKind) {
-			sinkKind = loggerSinkKind
-			host = strings.TrimPrefix(logUrl, loggerSinkKind+":")
-		}
-	}
+) (merlinlogger.LogSink, error) {
+	sinkKind, url := merlinlogger.ParseSinkKindAndUrl(logUrl)
 
 	// Map inputs to respective variables for logging
 	projectName := *namespace
@@ -295,8 +308,10 @@ func getLogSink(
 
 	switch sinkKind {
 	case merlinlogger.NewRelic:
-		apiKeySplits := strings.Split(logUrl, "?")
-		apiKey := apiKeySplits[len(apiKeySplits)-1]
+		apiKey, err := getNewRelicAPIKey(url)
+		if err != nil {
+			return nil, fmt.Errorf("invalid NewRelic Api-Key: %w", err)
+		}
 
 		// https://github.com/newrelic/newrelic-client-go/blob/main/pkg/logs/logs.go
 		// Initialize the client configuration
@@ -309,32 +324,33 @@ func getLogSink(
 		nrLogClient := nrlog.New(cfg)
 		logClient = &nrLogClient
 
-		return merlinlogger.NewNewRelicSink(log, logClient, serviceName, projectName, modelName, modelVersion)
+		return merlinlogger.NewNewRelicSink(log, logClient, serviceName, projectName, modelName, modelVersion), nil
 	case merlinlogger.Kafka:
 		// Initialize the producer
 		var kafkaProducer merlinlogger.KafkaProducer
 		// Create Kafka Producer
 		kafkaProducer, err := kafka.NewProducer(
 			&kafka.ConfigMap{
-				"bootstrap.servers": host,
+				"bootstrap.servers": url,
 				"message.max.bytes": merlinlogger.MaxMessageBytes,
 				"compression.type":  merlinlogger.CompressionType,
 			},
 		)
 		if err != nil {
 			log.Info(err)
-			return nil
+			return nil, fmt.Errorf("failed to create new kafka producer: %w", err)
 		}
+
 		// Test that we are able to query the broker on the topic. If the topic
 		// does not already exist on the broker, this should create it.
 		_, err = kafkaProducer.GetMetadata(&topicName, false, merlinlogger.ConnectTimeoutMS)
 		if err != nil {
 			log.Info(err)
-			return nil
+			return nil, fmt.Errorf("failed to get kafka producer's metadata: %w", err)
 		}
 
-		return merlinlogger.NewKafkaSink(log, kafkaProducer, serviceName, projectName, modelName, modelVersion, topicName)
+		return merlinlogger.NewKafkaSink(log, kafkaProducer, serviceName, projectName, modelName, modelVersion, topicName), nil
 	default:
-		return merlinlogger.NewConsoleSink(log)
+		return merlinlogger.NewConsoleSink(log), nil
 	}
 }

@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
-
 	mErrors "github.com/caraml-dev/merlin/pkg/errors"
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/symbol"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type TableJoinOp struct {
@@ -31,13 +30,13 @@ func NewTableJoinOp(tableJoinSpec *spec.TableJoin, tracingEnabled bool) Op {
 }
 
 func (t TableJoinOp) Execute(ctx context.Context, environment *Environment) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "pipeline.TableJoin")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "pipeline.TableJoin")
+	defer span.End()
 
-	span.SetTag("table.left", t.tableJoinSpec.LeftTable)
-	span.SetTag("table.right", t.tableJoinSpec.RightTable)
-	span.SetTag("table.output", t.tableJoinSpec.OutputTable)
-	span.SetTag("table.how", t.tableJoinSpec.How)
+	span.SetAttributes(attribute.String("table.left", t.tableJoinSpec.LeftTable))
+	span.SetAttributes(attribute.String("table.right", t.tableJoinSpec.RightTable))
+	span.SetAttributes(attribute.String("table.output", t.tableJoinSpec.OutputTable))
+	span.SetAttributes(attribute.String("table.how", t.tableJoinSpec.How.String()))
 
 	leftTable, err := getTable(environment, t.tableJoinSpec.LeftTable)
 	if err != nil {

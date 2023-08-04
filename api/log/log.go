@@ -27,8 +27,8 @@ func NewLogger() *zap.SugaredLogger {
 }
 
 // GetLogger() get a Logger from SugaredLogger
-func GetLogger() *zap.Logger {
-	return globalLogger.Desugar()
+func GetLogger() *zap.SugaredLogger {
+	return globalLogger
 }
 
 // Infof uses fmt.Sprintf to log a templated message.

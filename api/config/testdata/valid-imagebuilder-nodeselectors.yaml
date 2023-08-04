@@ -1,0 +1,3 @@
+ImageBuilderConfig:
+  NodeSelectors:
+    cloud.google.com/gke-nodepool: image-build-job-node-pool

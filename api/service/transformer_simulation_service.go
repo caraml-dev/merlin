@@ -60,7 +60,6 @@ func (ts *transformerService) createTransformerExecutor(ctx context.Context, sim
 		}
 	}
 
-	// logger := log.GetLogger()
 	logger, _ := zap.NewDevelopment()
 
 	transformerExecutor, err := executor.NewStandardTransformerWithConfig(
@@ -70,9 +69,11 @@ func (ts *transformerService) createTransformerExecutor(ctx context.Context, sim
 		executor.WithTraceEnabled(true),
 		executor.WithModelPredictor(executor.NewMockModelPredictor(mockModelResponseBody, mockModelRequestHeaders, simulationPayload.Protocol)),
 		executor.WithFeastOptions(feast.Options{
-			StorageConfigs:     ts.cfg.ToFeastStorageConfigsForSimulation(),
-			DefaultFeastSource: ts.cfg.DefaultFeastSource,
-			BatchSize:          defaultFeastBatchSize,
+			StorageConfigs:                   ts.cfg.ToFeastStorageConfigsForSimulation(),
+			DefaultFeastSource:               ts.cfg.DefaultFeastSource,
+			BatchSize:                        defaultFeastBatchSize,
+			FeastGRPCConnCount:               ts.cfg.FeastGPRCConnCount,
+			FeastClientMaxConcurrentRequests: ts.cfg.SimulatorFeastClientMaxConcurrentRequests,
 		}),
 		executor.WithProtocol(simulationPayload.Protocol),
 	)

@@ -15,8 +15,9 @@
 package storage
 
 import (
+	"gorm.io/gorm"
+
 	"github.com/caraml-dev/merlin/models"
-	"github.com/jinzhu/gorm"
 )
 
 type DeploymentStorage interface {
@@ -26,6 +27,7 @@ type DeploymentStorage interface {
 	Save(deployment *models.Deployment) (*models.Deployment, error)
 	// GetFirstSuccessModelVersionPerModel Return mapping of model id and the first model version with a successful model version
 	GetFirstSuccessModelVersionPerModel() (map[models.ID]models.ID, error)
+	Delete(modelID models.ID, versionID models.ID) error
 }
 
 type deploymentStorage struct {
@@ -53,7 +55,6 @@ func (d *deploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID
 		Where("status = 'running' or status = 'serving'").
 		Group("version_model_id").
 		Rows()
-
 	if err != nil {
 		return nil, err
 	}
@@ -69,4 +70,8 @@ func (d *deploymentStorage) GetFirstSuccessModelVersionPerModel() (map[models.ID
 		resultMap[modelID] = versionID
 	}
 	return resultMap, nil
+}
+
+func (d *deploymentStorage) Delete(modelID models.ID, versionID models.ID) error {
+	return d.db.Where("version_id = ? AND version_model_id = ?", versionID, modelID).Delete(models.Deployment{}).Error
 }

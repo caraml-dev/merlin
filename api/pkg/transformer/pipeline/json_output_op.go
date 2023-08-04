@@ -8,7 +8,6 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 	"github.com/caraml-dev/merlin/pkg/transformer/types/series"
 	"github.com/caraml-dev/merlin/pkg/transformer/types/table"
-	"github.com/opentracing/opentracing-go"
 )
 
 type JsonOutputOp struct {
@@ -25,8 +24,8 @@ func NewJsonOutputOp(outputSpec *spec.JsonOutput, tracingEnabled bool) Op {
 }
 
 func (j JsonOutputOp) Execute(ctx context.Context, env *Environment) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "pipeline.JsonOutputOp")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "pipeline.JsonOutputOp")
+	defer span.End()
 
 	template := j.outputSpec.JsonTemplate
 	outputJson := make(types.JSONObject)

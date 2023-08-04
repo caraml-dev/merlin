@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
 )
@@ -33,8 +32,7 @@ func (c *SecretsController) CreateSecret(r *http.Request, vars map[string]string
 	projectID, _ := models.ParseID(vars["project_id"])
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
-		log.Warnf("Project with id: %d not found", projectID)
-		return NotFound(fmt.Sprintf("Project with given `project_id: %d` not found", projectID))
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
 	secret, ok := body.(*mlp.Secret)
@@ -44,8 +42,7 @@ func (c *SecretsController) CreateSecret(r *http.Request, vars map[string]string
 
 	newSecret, err := c.SecretService.Create(ctx, int32(projectID), *secret)
 	if err != nil {
-		log.Errorf("Failed create new secret with %v", err)
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error creating secret: %v", err))
 	}
 
 	return Created(newSecret)
@@ -62,8 +59,7 @@ func (c *SecretsController) UpdateSecret(r *http.Request, vars map[string]string
 
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
-		log.Warnf("Project with id: %d not found", projectID)
-		return NotFound(fmt.Sprintf("Project with given `project_id: %d` not found", projectID))
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
 	secret, ok := body.(*mlp.Secret)
@@ -73,7 +69,7 @@ func (c *SecretsController) UpdateSecret(r *http.Request, vars map[string]string
 
 	updatedSecret, err := c.SecretService.Update(ctx, int32(projectID), *secret)
 	if err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error updating secret: %v", err))
 	}
 	return Ok(updatedSecret)
 }
@@ -89,12 +85,11 @@ func (c *SecretsController) DeleteSecret(r *http.Request, vars map[string]string
 
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
-		log.Warnf("Project with id: %d not found", projectID)
-		return NotFound(fmt.Sprintf("Project with given `project_id: %d` not found", projectID))
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
 	if err := c.SecretService.Delete(ctx, int32(secretID), int32(projectID)); err != nil {
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error deleting secret: %v", err))
 	}
 
 	return NoContent()
@@ -106,14 +101,12 @@ func (c *SecretsController) ListSecret(r *http.Request, vars map[string]string, 
 	projectID, _ := models.ParseID(vars["project_id"])
 	_, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
-		log.Warnf("Project with id: %d not found", projectID)
-		return NotFound(fmt.Sprintf("Project with given `project_id: %d` not found", projectID))
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
 	secrets, err := c.SecretService.List(ctx, int32(projectID))
 	if err != nil {
-		log.Errorf("Failed retrieving secret from project id %s: %v", projectID, err)
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error listing secrets: %v", err))
 	}
 
 	return Ok(secrets)

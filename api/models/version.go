@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Version struct {
@@ -29,7 +29,7 @@ type Version struct {
 	RunID           string             `json:"mlflow_run_id" gorm:"column:mlflow_run_id"`
 	MlflowURL       string             `json:"mlflow_url" gorm:"-"`
 	ArtifactURI     string             `json:"artifact_uri" gorm:"artifact_uri"`
-	Endpoints       []*VersionEndpoint `json:"endpoints" gorm:"foreignkey:VersionID,VersionModelID;association_foreignkey:ID,ModelID;"`
+	Endpoints       []*VersionEndpoint `json:"endpoints" gorm:"foreignkey:VersionID,VersionModelID;references:ID,ModelID;"`
 	Properties      KV                 `json:"properties" gorm:"properties"`
 	Labels          KV                 `json:"labels" gorm:"labels"`
 	PythonVersion   string             `json:"python_version" gorm:"python_version"`
@@ -101,11 +101,11 @@ func (v *Version) Patch(patch *VersionPatch) error {
 	return nil
 }
 
-func (v *Version) BeforeCreate(scope *gorm.Scope) {
+func (v *Version) BeforeCreate(db *gorm.DB) error {
 	if v.ID == 0 {
 		var maxModelVersionID int
 
-		scope.DB().
+		db.
 			Table("versions").
 			Select("COALESCE(MAX(id), 0)").
 			Where("model_id = ?", v.ModelID).
@@ -114,6 +114,7 @@ func (v *Version) BeforeCreate(scope *gorm.Scope) {
 
 		v.ID = ID(maxModelVersionID + 1)
 	}
+	return nil
 }
 
 // GetEndpointByEnvironmentName return endpoint of this model version which is deployed in environment name

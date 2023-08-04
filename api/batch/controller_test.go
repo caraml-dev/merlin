@@ -336,9 +336,9 @@ func TestSubmit(t *testing.T) {
 			mockManifestManager.On("CreateSecret", context.Background(), jobName, test.namespace, secret.Data).Return(test.secretCreationResult.secretName, test.secretCreationResult.error)
 			mockManifestManager.On("CreateJobSpec", context.Background(), jobName, test.namespace, predictionJob.Config.JobConfig).Return(test.jobConfigCreationResult.configName, test.jobConfigCreationResult.error)
 			if test.existingServiceAccount.ID != int32(0) {
-				mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(test.existingServiceAccount, nil)
+				mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(test.existingServiceAccount, nil)
 			} else {
-				mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(mlp.Secret{}, errors.New("not found"))
+				mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(mlp.Secret{}, errors.New("not found"))
 			}
 			mockStorage.On("Save", predictionJob).Return(test.saveResult.error)
 
@@ -375,7 +375,7 @@ func TestCleanupAfterSubmitFailed(t *testing.T) {
 	mockStorage.On("Save", predictionJob).Return(nil)
 
 	mockMlpAPIClient := &mlpMock.APIClient{}
-	mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
+	mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
 	mockSparkClient := &sparkOpFake.Clientset{}
 	mockSparkClient.PrependReactor("create", "sparkapplications", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
@@ -402,7 +402,7 @@ func TestOnUpdate(t *testing.T) {
 	mockStorage.On("Get", predictionJob.ID).Return(predictionJob, nil)
 
 	mockMlpAPIClient := &mlpMock.APIClient{}
-	mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
+	mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
 	mockSparkClient := &sparkOpFake.Clientset{}
 	mockKubeClient := &fake2.Clientset{}
@@ -477,7 +477,7 @@ func TestUpdateStatus(t *testing.T) {
 			mockStorage.On("Get", predictionJob.ID).Return(predictionJob, nil)
 
 			mockMlpAPIClient := &mlpMock.APIClient{}
-			mockMlpAPIClient.On("GetPlainSecretByNameAndProjectID", context.Background(), secret.Name, int32(1)).Return(secret, nil)
+			mockMlpAPIClient.On("GetSecretByName", context.Background(), secret.Name, int32(1)).Return(secret, nil)
 
 			mockSparkClient := &sparkOpFake.Clientset{}
 			mockKubeClient := &fake2.Clientset{}
@@ -557,10 +557,18 @@ func TestStop(t *testing.T) {
 			namespace: defaultNamespace,
 			sparkResourceListResult: sparkResourceListResult{
 				resource: &v1beta2.SparkApplicationList{},
+				error:    nil,
+			},
+		},
+		{
+			name:      "Error fetching Prediction job spark application",
+			namespace: defaultNamespace,
+			sparkResourceListResult: sparkResourceListResult{
+				resource: &v1beta2.SparkApplicationList{},
 				error:    errRaised,
 			},
 			wantError:    true,
-			wantErrorMsg: fmt.Sprintf("unable to retrieve spark application of prediction job id %s from spark client", models.ID(1).String()),
+			wantErrorMsg: "unable to retrieve spark application of prediction job id 1 from spark client",
 		},
 	}
 	for _, test := range tests {
@@ -587,7 +595,7 @@ func TestStop(t *testing.T) {
 			mockSparkClient.PrependReactor("list", "sparkapplications", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, test.sparkResourceListResult.resource, test.sparkResourceListResult.error
 			})
-			mockStorage.On("Save", predictionJob).Return(nil)
+			mockStorage.On("Delete", predictionJob).Return(nil)
 
 			err := ctl.Stop(context.Background(), predictionJob, namespace.Name)
 			if test.wantError {
@@ -596,7 +604,6 @@ func TestStop(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			assert.Equal(t, models.State("terminated"), predictionJob.Status)
 		})
 	}
 }

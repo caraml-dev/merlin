@@ -13,7 +13,7 @@ export MINIO_VERSION=7.0.2
 
 export OAUTH_CLIENT_ID=""
 export MLP_CHART_VERSION=0.4.18
-export MERLIN_CHART_VERSION=0.10.16
+export MERLIN_CHART_VERSION=0.11.1
 export MERLIN_VERSION=0.27.0
 
 ## Install Istio
@@ -170,7 +170,7 @@ helm upgrade --install merlin caraml/merlin --namespace=mlp --values=./values-e2
   --version ${MERLIN_CHART_VERSION} \
   --set deployment.image.tag=${VERSION} \
   --set ui.oauthClientID=${OAUTH_CLIENT_ID} \
-  --set mlpApi.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
+  --set mlpApi.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io \
   --set ingress.enabled=true \
   --set ingress.class=istio \
   --set ingress.host=merlin.mlp.${INGRESS_HOST}.nip.io \

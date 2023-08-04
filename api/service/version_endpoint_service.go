@@ -51,6 +51,8 @@ type EndpointsService interface {
 	CountEndpoints(ctx context.Context, environment *models.Environment, model *models.Model) (int, error)
 	// ListContainers list all container associated with an endpoint
 	ListContainers(ctx context.Context, model *models.Model, version *models.Version, endpointUuid uuid.UUID) ([]*models.Container, error)
+	// DeleteEndpoint hard delete endpoint data, including the relation from deployment
+	DeleteEndpoint(version *models.Version, endpoint *models.VersionEndpoint) error
 }
 
 type EndpointServiceParams struct {
@@ -247,8 +249,9 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 	}
 
 	modelService := &models.Service{
-		Name:      models.CreateInferenceServiceName(model.Name, version.ID.String()),
-		Namespace: model.Project.Name,
+		Name:        models.CreateInferenceServiceName(model.Name, version.ID.String()),
+		Namespace:   model.Project.Name,
+		Transformer: endpoint.Transformer,
 	}
 
 	_, err := ctl.Delete(ctx, modelService)
@@ -303,6 +306,19 @@ func (k *endpointService) ListContainers(ctx context.Context, model *models.Mode
 	}
 
 	return containers, nil
+}
+
+func (k *endpointService) DeleteEndpoint(version *models.Version, endpoint *models.VersionEndpoint) error {
+	err := k.deploymentStorage.Delete(version.ModelID, version.ID)
+	if err != nil {
+		return err
+	}
+
+	err = k.storage.Delete(endpoint)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (k *endpointService) reconfigureStandardTransformer(standardTransformer *models.Transformer, predictionLogger *models.PredictionLoggerConfig) (*models.Transformer, error) {

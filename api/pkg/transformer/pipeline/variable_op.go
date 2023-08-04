@@ -6,7 +6,6 @@ import (
 
 	"github.com/caraml-dev/merlin/pkg/transformer/spec"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
-	"github.com/opentracing/opentracing-go"
 )
 
 type VariableDeclarationOp struct {
@@ -25,9 +24,9 @@ func NewVariableDeclarationOp(variables []*spec.Variable, tracingEnabled bool) O
 	return varOp
 }
 
-func (v *VariableDeclarationOp) Execute(context context.Context, env *Environment) error {
-	span, _ := opentracing.StartSpanFromContext(context, "pipeline.VariableOp")
-	defer span.Finish()
+func (v *VariableDeclarationOp) Execute(ctx context.Context, env *Environment) error {
+	_, span := tracer.Start(ctx, "pipeline.VariableOp")
+	defer span.End()
 
 	for _, varDef := range v.variableSpec {
 		name := varDef.Name

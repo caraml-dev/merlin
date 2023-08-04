@@ -9,7 +9,6 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -17,10 +16,10 @@ import (
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/gorilla/mux"
 	"github.com/heptiolabs/healthcheck"
-	"github.com/opentracing-contrib/go-stdlib/nethttp"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	mErrors "github.com/caraml-dev/merlin/pkg/errors"
@@ -29,6 +28,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/transformer/server/config"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/instrumentation"
 	"github.com/caraml-dev/merlin/pkg/transformer/server/response"
+	"github.com/caraml-dev/merlin/pkg/transformer/server/rest/middleware"
 	"github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
@@ -48,6 +48,7 @@ type HTTPServer struct {
 	router     *mux.Router
 	logger     *zap.Logger
 	modelURL   string
+	tracer     trace.Tracer
 
 	// ContextModifier function to modify or store value in a context
 	ContextModifier func(ctx context.Context) context.Context
@@ -86,6 +87,7 @@ func NewWithHandler(o *config.Options, handler *pipeline.Handler, logger *zap.Lo
 		modelURL:   predictURL,
 		router:     mux.NewRouter(),
 		logger:     logger,
+		tracer:     otel.Tracer("pkg/transformer/server/rest"),
 	}
 	if handler != nil {
 		srv.PreprocessHandler = handler.Preprocess
@@ -116,8 +118,8 @@ func (s *HTTPServer) PredictHandler(w http.ResponseWriter, r *http.Request) {
 		ctx = s.ContextModifier(ctx)
 	}
 
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PredictHandler")
-	defer span.Finish()
+	ctx, span := s.tracer.Start(ctx, "PredictHandler")
+	defer span.End()
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -183,8 +185,8 @@ func responseCodeFromError(err error) int {
 }
 
 func (s *HTTPServer) preprocess(ctx context.Context, request []byte, requestHeader http.Header) ([]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, string(types.Preprocess))
-	defer span.Finish()
+	ctx, span := s.tracer.Start(ctx, string(types.Preprocess))
+	defer span.End()
 
 	if s.PreprocessHandler == nil {
 		return request, nil
@@ -207,8 +209,8 @@ func (s *HTTPServer) preprocess(ctx context.Context, request []byte, requestHead
 }
 
 func (s *HTTPServer) postprocess(ctx context.Context, response []byte, responseHeader http.Header) ([]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, string(types.Preprocess))
-	defer span.Finish()
+	ctx, span := s.tracer.Start(ctx, string(types.Preprocess))
+	defer span.End()
 
 	if s.PostprocessHandler == nil {
 		return response, nil
@@ -231,12 +233,12 @@ func (s *HTTPServer) postprocess(ctx context.Context, response []byte, responseH
 }
 
 func (s *HTTPServer) predict(ctx context.Context, r *http.Request, payload []byte) (*http.Response, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "predict") // nolint: all
-	defer span.Finish()
+	ctx, span := s.tracer.Start(ctx, "predict")
+	defer span.End()
 
 	predictStartTime := time.Now()
 
-	req, err := http.NewRequest("POST", s.modelURL, bytes.NewBuffer(payload))
+	req, err := http.NewRequestWithContext(ctx, "POST", s.modelURL, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, err
 	}
@@ -273,14 +275,10 @@ func (s *HTTPServer) Run() {
 }
 
 func run(name string, handler http.Handler, opt *config.Options, logger *zap.Logger) {
-	operationName := nethttp.OperationNameFunc(func(r *http.Request) string {
-		return fmt.Sprintf("%s %s", r.Method, r.URL.Path)
-	})
-
 	addr := fmt.Sprintf(":%s", opt.HTTPPort)
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      nethttp.Middleware(opentracing.GlobalTracer(), handler, operationName),
+		Handler:      handler,
 		WriteTimeout: opt.ServerTimeout,
 		ReadTimeout:  opt.ServerTimeout,
 		IdleTimeout:  2 * opt.ServerTimeout,
@@ -312,7 +310,7 @@ func run(name string, handler http.Handler, opt *config.Options, logger *zap.Log
 }
 
 func attachInstrumentationRoutes(router *mux.Router) {
-	router.Use(recoveryHandler)
+	router.Use(middleware.RecoveryHandler)
 
 	health := healthcheck.NewHandler()
 	router.HandleFunc("/", health.LiveEndpoint)
@@ -320,19 +318,6 @@ func attachInstrumentationRoutes(router *mux.Router) {
 	router.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
 	router.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
 	router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
-}
-
-func recoveryHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				debug.PrintStack()
-				response.NewError(http.StatusInternalServerError, fmt.Errorf("panic: %v", err)).Write(w)
-			}
-		}()
-
-		next.ServeHTTP(w, r)
-	})
 }
 
 // setupSignalHandler registered for SIGTERM and SIGINT. A stop channel is returned

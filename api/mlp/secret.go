@@ -21,7 +21,6 @@ import (
 	"github.com/antihax/optional"
 
 	"github.com/caraml-dev/mlp/api/client"
-	"github.com/caraml-dev/mlp/api/util"
 )
 
 // SecretAPI is interface to mlp-api's Secret API.
@@ -31,35 +30,18 @@ type SecretAPI interface {
 	UpdateSecret(ctx context.Context, projectID int32, secret Secret) (Secret, error)
 	DeleteSecret(ctx context.Context, secretID, projectID int32) error
 
-	GetSecretByIDandProjectID(ctx context.Context, secretID, projectID int32) (Secret, error)
-	GetSecretByNameAndProjectID(ctx context.Context, secretName string, projectID int32) (Secret, error)
-	GetPlainSecretByIDandProjectID(ctx context.Context, secretID, projectID int32) (Secret, error)
-	GetPlainSecretByNameAndProjectID(ctx context.Context, secretName string, projectID int32) (Secret, error)
+	GetSecretByID(ctx context.Context, secretID, projectID int32) (Secret, error)
+	GetSecretByName(ctx context.Context, secretName string, projectID int32) (Secret, error)
 }
 
 // Secret is mlp-api's Secret.
 type Secret client.Secret
 
-// Decrypt returns a copy of secret with decrypted data.
-func (s Secret) Decrypt(passphrase string) (Secret, error) {
-	encryptedData := s.Data
-	decryptedData, err := util.Decrypt(encryptedData, passphrase)
-	if err != nil {
-		return Secret{}, err
-	}
-
-	return Secret{
-		ID:   s.ID,
-		Name: s.Name,
-		Data: decryptedData,
-	}, nil
-}
-
 // Secrets is a list of mlp-api's Secret.
 type Secrets []client.Secret
 
 func (c *apiClient) ListSecrets(ctx context.Context, projectID int32) (Secrets, error) {
-	secrets, _, err := c.client.SecretApi.ProjectsProjectIdSecretsGet(ctx, projectID) // nolint: bodyclose
+	secrets, _, err := c.client.SecretApi.V1ProjectsProjectIdSecretsGet(ctx, projectID) // nolint: bodyclose
 	if err != nil {
 		return nil, fmt.Errorf("mlp-api_ListSecrets: %w", err)
 	}
@@ -67,7 +49,7 @@ func (c *apiClient) ListSecrets(ctx context.Context, projectID int32) (Secrets, 
 }
 
 func (c *apiClient) CreateSecret(ctx context.Context, projectID int32, secret Secret) (Secret, error) {
-	newSecret, _, err := c.client.SecretApi.ProjectsProjectIdSecretsPost(ctx, projectID, client.Secret(secret)) // nolint: bodyclose
+	newSecret, _, err := c.client.SecretApi.V1ProjectsProjectIdSecretsPost(ctx, projectID, client.Secret(secret)) // nolint: bodyclose
 	if err != nil {
 		return Secret{}, fmt.Errorf("mlp-api_CreateSecret: %w", err)
 	}
@@ -75,11 +57,11 @@ func (c *apiClient) CreateSecret(ctx context.Context, projectID int32, secret Se
 }
 
 func (c *apiClient) UpdateSecret(ctx context.Context, projectID int32, secret Secret) (Secret, error) {
-	opt := &client.SecretApiProjectsProjectIdSecretsSecretIdPatchOpts{
+	opt := &client.SecretApiV1ProjectsProjectIdSecretsSecretIdPatchOpts{
 		Body: optional.NewInterface(client.Secret(secret)),
 	}
 
-	newSecret, _, err := c.client.SecretApi.ProjectsProjectIdSecretsSecretIdPatch(ctx, projectID, secret.ID, opt) // nolint: bodyclose
+	newSecret, _, err := c.client.SecretApi.V1ProjectsProjectIdSecretsSecretIdPatch(ctx, projectID, secret.ID, opt) // nolint: bodyclose
 	if err != nil {
 		return Secret{}, fmt.Errorf("mlp-api_UpdateSecret: %w", err)
 	}
@@ -88,32 +70,26 @@ func (c *apiClient) UpdateSecret(ctx context.Context, projectID int32, secret Se
 }
 
 func (c *apiClient) DeleteSecret(ctx context.Context, secretID, projectID int32) error {
-	_, err := c.client.SecretApi.ProjectsProjectIdSecretsSecretIdDelete(ctx, projectID, secretID) // nolint: bodyclose
+	_, err := c.client.SecretApi.V1ProjectsProjectIdSecretsSecretIdDelete(ctx, projectID, secretID) // nolint: bodyclose
 	if err != nil {
 		return fmt.Errorf("mlp-api_DeleteSecret: %w", err)
 	}
 	return nil
 }
 
-func (c *apiClient) GetSecretByIDandProjectID(ctx context.Context, secretID, projectID int32) (Secret, error) {
-	secrets, _, err := c.client.SecretApi.ProjectsProjectIdSecretsGet(ctx, projectID) // nolint: bodyclose
+func (c *apiClient) GetSecretByID(ctx context.Context, secretID, projectID int32) (Secret, error) {
+	secret, _, err := c.client.SecretApi.V1ProjectsProjectIdSecretsSecretIdGet(ctx, projectID, secretID) // nolint: bodyclose
 	if err != nil {
-		return Secret{}, fmt.Errorf("mlp-api_GetSecretByIDandProjectID: %w", err)
+		return Secret{}, fmt.Errorf("mlp-api_GetSecretByID: %w", err)
 	}
 
-	for _, secret := range secrets {
-		if secret.ID == secretID {
-			return Secret(secret), nil
-		}
-	}
-
-	return Secret{}, fmt.Errorf("mlp-api_GetSecretByIDandProjectID: Secret %d in Project %d not found", secretID, projectID)
+	return Secret(secret), nil
 }
 
-func (c *apiClient) GetSecretByNameAndProjectID(ctx context.Context, secretName string, projectID int32) (Secret, error) {
-	secrets, _, err := c.client.SecretApi.ProjectsProjectIdSecretsGet(ctx, projectID) // nolint: bodyclose
+func (c *apiClient) GetSecretByName(ctx context.Context, secretName string, projectID int32) (Secret, error) {
+	secrets, _, err := c.client.SecretApi.V1ProjectsProjectIdSecretsGet(ctx, projectID) // nolint: bodyclose
 	if err != nil {
-		return Secret{}, fmt.Errorf("mlp-api_GetSecretByNameAndProjectID: %w", err)
+		return Secret{}, fmt.Errorf("mlp-api_GetSecretByName: %w", err)
 	}
 
 	for _, secret := range secrets {
@@ -122,33 +98,5 @@ func (c *apiClient) GetSecretByNameAndProjectID(ctx context.Context, secretName 
 		}
 	}
 
-	return Secret{}, fmt.Errorf("mlp-api_GetSecretByNameAndProjectID: Secret %s in Project %d not found", secretName, projectID)
-}
-
-func (c *apiClient) GetPlainSecretByIDandProjectID(ctx context.Context, secretID, projectID int32) (Secret, error) {
-	secret, err := c.GetSecretByIDandProjectID(ctx, secretID, projectID)
-	if err != nil {
-		return Secret{}, fmt.Errorf("mlp-api_GetPlainSecretByIDandProjectID: %w", err)
-	}
-
-	sec, err := secret.Decrypt(c.passphrase)
-	if err != nil {
-		return Secret{}, fmt.Errorf("mlp-api_GetPlainSecretByIDandProjectID: error when decrypt secret data with id %d: %w", secretID, err)
-	}
-
-	return Secret(sec), nil
-}
-
-func (c *apiClient) GetPlainSecretByNameAndProjectID(ctx context.Context, secretName string, projectID int32) (Secret, error) {
-	secret, err := c.GetSecretByNameAndProjectID(ctx, secretName, projectID)
-	if err != nil {
-		return Secret{}, fmt.Errorf("mlp-api_GetPlainSecretByNameAndProjectID: %w", err)
-	}
-
-	sec, err := secret.Decrypt(c.passphrase)
-	if err != nil {
-		return Secret{}, fmt.Errorf("mlp-api_GetPlainSecretByNameAndProjectID: error when decrypt secret data with name %s: %w", secretName, err)
-	}
-
-	return Secret(sec), nil
+	return Secret{}, fmt.Errorf("mlp-GetSecretByName: Secret %s in Project %d not found", secretName, projectID)
 }

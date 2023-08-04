@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/caraml-dev/merlin/log"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 var (

@@ -29,11 +29,11 @@ type PredictionJob struct {
 	// Keep metadata internal until it's needed to be exposed
 	Metadata Metadata `json:"-"`
 	// The field name has to be prefixed with the related struct name
-	// in order for gorm Preload to work with association_foreignkey
+	// in order for gorm Preload to work with references
 	VersionID       ID           `json:"version_id"`
 	VersionModelID  ID           `json:"model_id"`
 	ProjectID       ID           `json:"project_id"`
-	Environment     *Environment `json:"environment" gorm:"association_foreignkey:Name;association_autoupdate:false;association_autocreate:false;"`
+	Environment     *Environment `json:"environment" gorm:"references:Name;"`
 	EnvironmentName string       `json:"environment_name"`
 	Config          *Config      `json:"config,omitempty"`
 	Status          State        `json:"status"`

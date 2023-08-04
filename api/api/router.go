@@ -24,12 +24,14 @@ import (
 	"strings"
 	"time"
 
+	mlflowDelete "github.com/caraml-dev/mlp/api/pkg/client/mlflow"
+
 	"github.com/feast-dev/feast/sdk/go/protos/feast/core"
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"gorm.io/gorm"
 
 	"github.com/caraml-dev/mlp/api/pkg/authz/enforcer"
 	"github.com/caraml-dev/mlp/api/pkg/instrumentation/newrelic"
@@ -37,6 +39,7 @@ import (
 
 	"github.com/caraml-dev/merlin/config"
 
+	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/middleware"
 	"github.com/caraml-dev/merlin/mlflow"
 	"github.com/caraml-dev/merlin/mlp"
@@ -61,11 +64,10 @@ type AppContext struct {
 	SecretService             service.SecretService
 	ModelEndpointAlertService service.ModelEndpointAlertService
 	TransformerService        service.TransformerService
+	MlflowDeleteService       mlflowDelete.Service
 
-	AuthorizationEnabled bool
-	AlertEnabled         bool
-	MonitoringConfig     config.MonitoringConfig
-
+	AuthorizationEnabled      bool
+	FeatureToggleConfig       config.FeatureToggleConfig
 	StandardTransformerConfig config.StandardTransformerConfig
 
 	FeastCoreClient core.CoreServiceClient
@@ -121,6 +123,17 @@ func (route Route) HandlerFunc(validate *validator.Validate) http.HandlerFunc {
 			return route.handler(r, vars, body)
 		}()
 
+		// Log unsuccessful responses
+		if response != nil && !response.IsSuccess() {
+			log.GetLogger().Errorw("Request failed",
+				"route", route.name,
+				"path", r.URL.Path,
+				"status", response.code,
+				"response", response.data,
+				"stacktrace", response.stacktrace, // Override default stacktrace produced by logger
+			)
+		}
+
 		response.WriteTo(w)
 	}
 }
@@ -143,9 +156,9 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 	}
 	environmentController := EnvironmentController{&appCtx}
 	projectsController := ProjectsController{&appCtx}
-	modelsController := ModelsController{&appCtx}
 	modelEndpointsController := ModelEndpointsController{&appCtx}
 	versionsController := VersionsController{&appCtx}
+	modelsController := ModelsController{&appCtx, &versionsController}
 	endpointsController := EndpointsController{&appCtx}
 	predictionJobController := PredictionJobController{&appCtx}
 	logController := LogController{&appCtx}
@@ -185,6 +198,7 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 		{http.MethodPost, "/models/{model_id:[0-9]+}/versions", models.VersionPost{}, versionsController.CreateVersion, "CreateVersion"},
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", nil, versionsController.GetVersion, "GetVersion"},
 		{http.MethodPatch, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", models.VersionPatch{}, versionsController.PatchVersion, "PatchVersion"},
+		{http.MethodDelete, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}", nil, versionsController.DeleteVersion, "DeleteVersion"},
 
 		// Version Endpoint API
 		{http.MethodGet, "/models/{model_id:[0-9]+}/versions/{version_id:[0-9]+}/endpoint", nil, endpointsController.ListEndpoint, "ListEndpoint"},
@@ -209,7 +223,12 @@ func NewRouter(appCtx AppContext) (*mux.Router, error) {
 		{http.MethodPost, "/standard_transformer/simulate", models.TransformerSimulation{}, transformerController.SimulateTransformer, "SimulateTransformer"},
 	}
 
-	if appCtx.AlertEnabled {
+	if appCtx.FeatureToggleConfig.ModelDeletionConfig.Enabled {
+		// Model deletion API
+		routes = append(routes, Route{http.MethodDelete, "/projects/{project_id:[0-9]+}/models/{model_id:[0-9]+}", nil, modelsController.DeleteModel, "DeleteModel"})
+	}
+
+	if appCtx.FeatureToggleConfig.AlertConfig.AlertEnabled {
 		routes = append(routes, []Route{
 			// Model Endpoint Alerts API
 			{http.MethodGet, "/alerts/teams", nil, alertsController.ListTeams, "ListTeams"},

@@ -18,7 +18,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/caraml-dev/merlin/mlp"
@@ -105,7 +104,7 @@ func TestProjectsController_ListProjects(t *testing.T) {
 			}
 
 			got := c.ListProjects(tt.args.r, tt.args.vars, tt.args.in2)
-			assert.Equal(t, tt.want, got)
+			assertEqualResponses(t, tt.want, got)
 		})
 	}
 }
@@ -173,7 +172,7 @@ func TestProjectsController_GetProject(t *testing.T) {
 			}
 
 			got := c.GetProject(tt.args.r, tt.args.vars, tt.args.body)
-			assert.Equal(t, tt.want, got)
+			assertEqualResponses(t, tt.want, got)
 		})
 	}
 }

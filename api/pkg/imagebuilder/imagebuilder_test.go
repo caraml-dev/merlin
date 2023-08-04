@@ -1294,25 +1294,37 @@ func TestBuildImage(t *testing.T) {
 			kubeClient := fake.NewSimpleClientset()
 			client := kubeClient.BatchV1().Jobs(tt.config.BuildNamespace).(*fakebatchv1.FakeJobs)
 			client.Fake.PrependReactor("get", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
-				client.Fake.PrependReactor("get", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
-					if tt.existingJob != nil {
-						successfulJob := tt.existingJob.DeepCopy()
-						successfulJob.Status.Succeeded = 1
-						return true, successfulJob, nil
-					} else if tt.wantCreateJob != nil {
-						successfulJob := tt.wantCreateJob.DeepCopy()
-						successfulJob.Status.Succeeded = 1
-						return true, successfulJob, nil
-					} else {
-						assert.Fail(t, "either existingJob or wantCreateJob must be not nil")
-						panic("should not reach this code")
-					}
-				})
-
 				if tt.existingJob != nil {
+					if tt.wantCreateJob != nil {
+						client.Fake.PrependReactor("get", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+							client.Fake.PrependReactor("get", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+								successfulJob := tt.wantCreateJob.DeepCopy()
+								successfulJob.Status.Succeeded = 1
+								return true, successfulJob, nil
+							})
+							return true, nil, kerrors.NewNotFound(schema.ParseGroupResource("v1"), action.(ktesting.GetAction).GetName())
+						})
+					} else {
+						client.Fake.PrependReactor("get", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+							successfulJob := tt.existingJob.DeepCopy()
+							successfulJob.Status.Succeeded = 1
+							return true, successfulJob, nil
+						})
+					}
 					return true, tt.existingJob, nil
+				} else {
+					client.Fake.PrependReactor("get", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+						if tt.wantCreateJob != nil {
+							successfulJob := tt.wantCreateJob.DeepCopy()
+							successfulJob.Status.Succeeded = 1
+							return true, successfulJob, nil
+						} else {
+							assert.Fail(t, "either existingJob or wantCreateJob must be not nil")
+							panic("should not reach this code")
+						}
+					})
+					return true, nil, kerrors.NewNotFound(schema.ParseGroupResource("v1"), action.(ktesting.GetAction).GetName())
 				}
-				return true, nil, kerrors.NewNotFound(schema.ParseGroupResource("v1"), action.(ktesting.GetAction).GetName())
 			})
 
 			client.Fake.PrependReactor("create", "jobs", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {

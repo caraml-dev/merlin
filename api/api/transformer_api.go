@@ -1,9 +1,9 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/pkg/protocol"
 )
@@ -19,7 +19,6 @@ func (c *TransformerController) SimulateTransformer(r *http.Request, vars map[st
 
 	simulationPayload, ok := body.(*models.TransformerSimulation)
 	if !ok {
-		log.Errorf("Unable to parse request body %v", body)
 		return BadRequest("Unable to parse request body")
 	}
 
@@ -28,8 +27,7 @@ func (c *TransformerController) SimulateTransformer(r *http.Request, vars map[st
 	}
 	transformerResult, err := c.TransformerService.SimulateTransformer(ctx, simulationPayload)
 	if err != nil {
-		log.Errorf("Failed performing transfomer simulation %v", err)
-		return InternalServerError(err.Error())
+		return InternalServerError(fmt.Sprintf("Error during simulation: %v", err))
 	}
 
 	return Ok(transformerResult)

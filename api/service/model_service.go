@@ -19,7 +19,7 @@ import (
 
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type ModelsService interface {
@@ -27,6 +27,7 @@ type ModelsService interface {
 	Save(ctx context.Context, model *models.Model) (*models.Model, error)
 	Update(ctx context.Context, model *models.Model) (*models.Model, error)
 	FindByID(ctx context.Context, modelID models.ID) (*models.Model, error)
+	Delete(model *models.Model) error
 }
 
 func NewModelsService(db *gorm.DB, mlpAPIClient mlp.APIClient) ModelsService {
@@ -42,8 +43,7 @@ func (service *modelsService) query() *gorm.DB {
 	return service.db.
 		Preload("Endpoints", func(db *gorm.DB) *gorm.DB {
 			return db.Preload("Environment")
-		}).
-		Select("models.*")
+		})
 }
 
 func (service *modelsService) ListModels(ctx context.Context, projectID models.ID, name string) (models []*models.Model, err error) {
@@ -102,4 +102,8 @@ func (service *modelsService) FindByID(ctx context.Context, modelID models.ID) (
 	model.MlflowURL = project.MlflowExperimentURL(model.ExperimentID.String())
 
 	return &model, nil
+}
+
+func (service *modelsService) Delete(model *models.Model) error {
+	return service.db.Delete(model).Error
 }

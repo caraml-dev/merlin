@@ -15,12 +15,12 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
-	"github.com/caraml-dev/merlin/log"
 	"github.com/caraml-dev/merlin/models"
 	"github.com/caraml-dev/merlin/service"
 )
@@ -39,10 +39,10 @@ func (c *PredictionJobController) Create(r *http.Request, vars map[string]string
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return InternalServerError(err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
-		return NotFound(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
 	data, ok := body.(*models.PredictionJob)
@@ -52,13 +52,12 @@ func (c *PredictionJobController) Create(r *http.Request, vars map[string]string
 
 	env, err := c.AppContext.EnvironmentService.GetDefaultPredictionJobEnvironment()
 	if err != nil {
-		return InternalServerError("Unable to find default environment, specify environment target for deployment")
+		return InternalServerError(fmt.Sprintf("Unable to find default environment, specify environment target for deployment: %v", err))
 	}
 
 	predictionJob, err := c.PredictionJobService.CreatePredictionJob(ctx, env, model, version, data)
 	if err != nil {
-		log.Errorf("failed creating prediction job %v", err)
-		return BadRequest(fmt.Sprintf("Failed creating prediction job %s", err))
+		return BadRequest(fmt.Sprintf("Error creating prediction job: %v", err))
 	}
 
 	return Ok(predictionJob)
@@ -71,12 +70,12 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 	modelID, _ := models.ParseID(vars["model_id"])
 	versionID, _ := models.ParseID(vars["version_id"])
 
-	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
+	model, _, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return InternalServerError(err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
-		return NotFound(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
 	query := &service.ListPredictionJobQuery{
@@ -86,8 +85,7 @@ func (c *PredictionJobController) List(r *http.Request, vars map[string]string, 
 
 	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, model.Project, query)
 	if err != nil {
-		log.Errorf("failed to list all prediction job for model %s version %s: %v", model.Name, version.ID, err)
-		return InternalServerError("Failed listing prediction job")
+		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
 
 	return Ok(jobs)
@@ -103,21 +101,23 @@ func (c *PredictionJobController) Get(r *http.Request, vars map[string]string, _
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return InternalServerError(err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
-		return NotFound(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
 	env, err := c.AppContext.EnvironmentService.GetDefaultPredictionJobEnvironment()
 	if err != nil {
-		return InternalServerError("Unable to find default environment, specify environment target for deployment")
+		return InternalServerError(fmt.Sprintf("Unable to find default environment, specify environment target for deployment: %v", err))
 	}
 
 	job, err := c.PredictionJobService.GetPredictionJob(ctx, env, model, version, id)
 	if err != nil {
-		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.ID, err)
-		return InternalServerError("Failed reading prediction job")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return NotFound(fmt.Sprintf("Prediction job not found: %v", err))
+		}
+		return InternalServerError(fmt.Sprintf("Error getting prediction job: %v", err))
 	}
 
 	return Ok(job)
@@ -133,21 +133,20 @@ func (c *PredictionJobController) Stop(r *http.Request, vars map[string]string, 
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return InternalServerError(err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
-		return NotFound(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
 	env, err := c.AppContext.EnvironmentService.GetDefaultPredictionJobEnvironment()
 	if err != nil {
-		return InternalServerError("Unable to find default environment, specify environment target for deployment")
+		return InternalServerError(fmt.Sprintf("Unable to find default environment, specify environment target for deployment: %v", err))
 	}
 
 	_, err = c.PredictionJobService.StopPredictionJob(ctx, env, model, version, id)
 	if err != nil {
-		log.Errorf("failed to stop prediction job %v", err)
-		return BadRequest(fmt.Sprintf("Failed stopping prediction job %s", err))
+		return BadRequest(fmt.Sprintf("Error stopping prediction job: %v", err))
 	}
 
 	return NoContent()
@@ -163,27 +162,28 @@ func (c *PredictionJobController) ListContainers(r *http.Request, vars map[strin
 
 	model, version, err := c.getModelAndVersion(ctx, modelID, versionID)
 	if err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return InternalServerError(err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return NotFound(fmt.Sprintf("Model / version not found: %v", err))
 		}
-		return NotFound(err.Error())
+		return InternalServerError(fmt.Sprintf("Error getting model / version: %v", err))
 	}
 
 	env, err := c.AppContext.EnvironmentService.GetDefaultPredictionJobEnvironment()
 	if err != nil {
-		return InternalServerError("Unable to find default environment, specify environment target for deployment")
+		return InternalServerError(fmt.Sprintf("Unable to find default environment, specify environment target for deployment: %v", err))
 	}
 
 	job, err := c.PredictionJobService.GetPredictionJob(ctx, env, model, version, id)
 	if err != nil {
-		log.Errorf("failed to get prediction job %s for model %s version %s: %v", id, model.Name, version.ID, err)
-		return InternalServerError("Failed reading prediction job")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return NotFound(fmt.Sprintf("Prediction job not found: %v", err))
+		}
+		return InternalServerError(fmt.Sprintf("Error getting prediction job: %v", err))
 	}
 
 	containers, err := c.PredictionJobService.ListContainers(ctx, env, model, version, job)
 	if err != nil {
-		log.Errorf("Error finding containers for model %v, version %v, reason: %v", model, version, err)
-		return InternalServerError(fmt.Sprintf("Error while getting container for endpoint with model %v and version %v", model.ID, version.ID))
+		return InternalServerError(fmt.Sprintf("Error while getting containers for endpoint: %v", err))
 	}
 	return Ok(containers)
 }
@@ -195,7 +195,6 @@ func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[str
 	var query service.ListPredictionJobQuery
 	err := decoder.Decode(&query, r.URL.Query())
 	if err != nil {
-		log.Errorf("unable to decode query: %s", r.URL.Query(), err)
 		return BadRequest(fmt.Sprintf("Bad query %s", r.URL.Query()))
 	}
 
@@ -203,13 +202,12 @@ func (c *PredictionJobController) ListAllInProject(r *http.Request, vars map[str
 
 	project, err := c.ProjectsService.GetByID(ctx, int32(projectID))
 	if err != nil {
-		return NotFound(err.Error())
+		return NotFound(fmt.Sprintf("Project not found: %v", err))
 	}
 
 	jobs, err := c.PredictionJobService.ListPredictionJobs(ctx, project, &query)
 	if err != nil {
-		log.Errorf("failed to list all prediction job for model ")
-		return InternalServerError("Failed listing prediction job")
+		return InternalServerError(fmt.Sprintf("Error listing prediction jobs: %v", err))
 	}
 
 	return Ok(jobs)

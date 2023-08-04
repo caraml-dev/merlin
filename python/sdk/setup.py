@@ -25,7 +25,7 @@ REQUIRES = [
     "boto3>=1.9.84",
     "caraml-upi-protos>=0.3.1",
     "certifi>=2017.4.17",
-    "Click>=7.0",
+    "Click>=7.0,<8.1.4",
     "cloudpickle==2.0.0",  # used by mlflow
     "cookiecutter>=1.7.2",
     "docker>=4.2.1",
@@ -38,7 +38,7 @@ REQUIRES = [
     "six>=1.10",
     "urllib3>=1.23",
     "numpy<=1.23.5", # Temporary pin numpy due to https://numpy.org/doc/stable/release/1.20.0-notes.html#numpy-1-20-0-release-notes
-    "caraml-auth-google==0.0.0.post4",
+    "caraml-auth-google==0.0.0.post6",
 ]
 
 TEST_REQUIRES = [

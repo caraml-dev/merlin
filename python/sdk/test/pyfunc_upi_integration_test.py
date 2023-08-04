@@ -1,25 +1,22 @@
 import os
 import uuid
+from test.utils import undeploy_all_version
 from time import sleep
+from typing import List
 
 import grpc
+import merlin
 import pandas as pd
 import pytest
 import xgboost as xgb
 from caraml.upi.utils import df_to_table, table_to_df
-from caraml.upi.v1 import upi_pb2, upi_pb2_grpc
-from caraml.upi.v1 import type_pb2, variable_pb2
-from sklearn.datasets import load_iris
-from typing import List
-
-
-import merlin
+from caraml.upi.v1 import type_pb2, upi_pb2, upi_pb2_grpc, variable_pb2
 from merlin.deployment_mode import DeploymentMode
 from merlin.endpoint import Status
 from merlin.model import ModelType, PyFuncModel
 from merlin.protocol import Protocol
 from merlin.transformer import StandardTransformer
-from test.utils import undeploy_all_version
+from sklearn.datasets import load_iris
 
 
 class IrisClassifier(PyFuncModel):

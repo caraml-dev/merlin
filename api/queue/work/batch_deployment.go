@@ -3,6 +3,7 @@ package work
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/caraml-dev/merlin/batch"
@@ -12,7 +13,7 @@ import (
 	"github.com/caraml-dev/merlin/pkg/imagebuilder"
 	"github.com/caraml-dev/merlin/queue"
 	"github.com/caraml-dev/merlin/storage"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	clock2 "k8s.io/apimachinery/pkg/util/clock"
 )
 
@@ -42,7 +43,7 @@ func (depl *BatchDeployment) Deploy(job *queue.Job) error {
 
 	predictionJobArg := jobArgs.Job
 	predictionJob, err := depl.Store.Get(predictionJobArg.ID)
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if err != nil {

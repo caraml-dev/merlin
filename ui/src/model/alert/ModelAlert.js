@@ -14,23 +14,25 @@
  * limitations under the License.
  */
 
-import React, { Fragment, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
 import {
   EuiButton,
   EuiButtonEmpty,
   EuiFlexGroup,
   EuiFlexItem,
   EuiForm,
-  EuiTitle
+  EuiTitle,
 } from "@elastic/eui";
-import { replaceBreadcrumbs } from "@caraml-dev/ui-lib";
+import PropTypes from "prop-types";
+import React, { Fragment, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
 import mocks from "../../mocks";
 import { ModelAlertForm } from "./components/ModelAlertForm";
-import PropTypes from "prop-types";
 
-export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
+export const ModelAlert = ({ breadcrumbs, model }) => {
+  const { endpointId } = useParams();
+
   const navigate = useNavigate();
   const redirectUrl = `/merlin/projects/${model.project_id}`;
 
@@ -40,7 +42,7 @@ export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
 
   const [request, setRequest] = useState({
     model_id: model.id,
-    alert_conditions: []
+    alert_conditions: [],
   });
 
   const [endpoint, setEndpoint] = useState();
@@ -48,14 +50,14 @@ export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
   useEffect(() => {
     if (model && endpointId) {
       const endpoint = model.endpoints.find(
-        e => e.id.toString() === endpointId
+        (e) => e.id.toString() === endpointId
       );
       setEndpoint(endpoint);
 
-      setRequest(r => ({
+      setRequest((r) => ({
         ...r,
         model_endpoint_id: parseInt(endpointId),
-        environment_name: endpoint.environment_name
+        environment_name: endpoint.environment_name,
       }));
     }
   }, [model, endpointId, setEndpoint, setRequest]);
@@ -66,7 +68,7 @@ export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
     `/models/${model.id}/endpoints/${endpointId}/alert`,
     {
       mock: mocks.modelEndpointAlert,
-      muteError: true
+      muteError: true,
     }
   );
 
@@ -134,7 +136,8 @@ export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
                   <EuiFlexItem grow={false}>
                     <EuiButtonEmpty
                       size="s"
-                      onClick={() => navigate(redirectUrl)}>
+                      onClick={() => navigate(redirectUrl)}
+                    >
                       Cancel
                     </EuiButtonEmpty>
                   </EuiFlexItem>
@@ -145,7 +148,8 @@ export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
                       color="primary"
                       fill
                       disabled={request.alert_conditions.length === 0}
-                      onClick={saveAlert}>
+                      onClick={saveAlert}
+                    >
                       Save
                     </EuiButton>
                   </EuiFlexItem>
@@ -162,5 +166,5 @@ export const ModelAlert = ({ breadcrumbs, model, endpointId }) => {
 ModelAlert.propTypes = {
   breadcrumbs: PropTypes.array,
   model: PropTypes.object,
-  endpointId: PropTypes.string
+  endpointId: PropTypes.string,
 };

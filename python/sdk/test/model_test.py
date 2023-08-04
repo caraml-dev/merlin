@@ -697,6 +697,16 @@ class TestModelVersion:
         assert j.error == job_1.error
         assert j.name == job_1.name
 
+    @responses.activate
+    def test_model_version_deletion(self, version):
+        responses.add("DELETE", '/v1/models/1/versions/1',
+                body=json.dumps(1),
+                status=200,
+                content_type='application/json')
+        response = version.delete_model_version()
+
+        assert response == 1
+
 
 class TestModel:
     v1 = cl.Version(id=1, model_id=1)
@@ -954,6 +964,16 @@ class TestModel:
         assert endpoint.id == str(mdl_endpoint_upi.id)
         assert endpoint.environment_name == env_1.name == mdl_endpoint_upi.environment_name
         assert endpoint.protocol == Protocol.UPI_V1
+
+    @responses.activate
+    def test_model_deletion(self, model):
+        responses.add("DELETE", '/v1/projects/1/models/1',
+                body=json.dumps(1),
+                status=200,
+                content_type='application/json')
+        response = model.delete_model()
+
+        assert response == 1
 
 def test_process_conda_env():
     # test dict version

@@ -26,4 +26,6 @@ var (
 	ErrUnableToCreateInferenceService    = errors.New("error creating inference service")
 	ErrUnableToUpdateInferenceService    = errors.New("error updating inference service")
 	ErrTimeoutCreateInferenceService     = errors.New("timeout creating inference service")
+	ErrUnableToCreatePDB                 = errors.New("error creating pod disruption budget")
+	ErrUnableToDeletePDB                 = errors.New("error deleting pod disruption budget")
 )

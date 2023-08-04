@@ -16,10 +16,12 @@ package service
 
 import (
 	"context"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/caraml-dev/mlp/api/client"
 
@@ -27,39 +29,88 @@ import (
 	mlpMock "github.com/caraml-dev/merlin/mlp/mocks"
 )
 
-func Test_projectService(t *testing.T) {
-	ctx := context.Background()
-
-	mockMlpAPIClient := &mlpMock.APIClient{}
-	ps := NewProjectsService(mockMlpAPIClient)
-	assert.NotNil(t, ps)
-
+func TestListProjects(t *testing.T) {
 	project1 := mlp.Project{
 		ID:   1,
 		Name: "project-1",
 	}
+	project2 := mlp.Project{
+		ID:   2,
+		Name: "project-2",
+	}
 	projects := mlp.Projects{
 		client.Project(project1),
+		client.Project(project2),
 	}
 
+	// Create new service
+	ps, err := NewProjectsService(createMockMLPClient(projects))
+	require.NoError(t, err)
+	assert.NotNil(t, ps)
+
+	tests := map[string]struct {
+		projectName string
+		expected    mlp.Projects
+	}{
+		"list all projects": {"", mlp.Projects(projects)},
+		"filter by name":    {"project-1", mlp.Projects{client.Project(project1)}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := ps.List(context.Background(), tt.projectName)
+			assert.Nil(t, err)
+			sort.SliceStable(got, func(i, j int) bool {
+				// Sort result by ID
+				return got[i].ID < got[j].ID
+			})
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func TestGetProjectByID(t *testing.T) {
+	project1 := mlp.Project{
+		ID:   1,
+		Name: "project-1",
+	}
+	project2 := mlp.Project{
+		ID:   2,
+		Name: "project-2",
+	}
+	projects := mlp.Projects{
+		client.Project(project1),
+		client.Project(project2),
+	}
+
+	// Create new service
+	ps, err := NewProjectsService(createMockMLPClient(projects))
+	require.NoError(t, err)
+	assert.NotNil(t, ps)
+
+	tests := map[string]struct {
+		projectID   int32
+		expected    mlp.Project
+		expectedErr string
+	}{
+		"project exists":         {1, project1, ""},
+		"project does not exist": {100, mlp.Project{}, "Project info for id 100 not found in the cache"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := ps.GetByID(context.Background(), tt.projectID)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tt.expected, got)
+			}
+		})
+	}
+}
+
+func createMockMLPClient(projects mlp.Projects) mlp.APIClient {
+	mockMlpAPIClient := &mlpMock.APIClient{}
 	mockMlpAPIClient.On("ListProjects", mock.Anything, "").
 		Return(projects, nil)
-
-	got1, err := ps.List(ctx, "")
-	assert.Nil(t, err)
-	assert.Equal(t, projects, got1)
-
-	mockMlpAPIClient.On("GetProjectByID", mock.Anything, int32(1)).
-		Return(project1, nil)
-
-	got2, err := ps.GetByID(ctx, int32(1))
-	assert.Nil(t, err)
-	assert.Equal(t, project1, got2)
-
-	mockMlpAPIClient.On("GetProjectByName", mock.Anything, "project-1").
-		Return(project1, nil)
-
-	got3, err := ps.GetByName(ctx, "project-1")
-	assert.Nil(t, err)
-	assert.Equal(t, project1, got3)
+	return mockMlpAPIClient
 }
