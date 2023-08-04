@@ -40,7 +40,7 @@ type EnvironmentConfig struct {
 	DeploymentTimeout time.Duration `yaml:"deployment_timeout"`
 	NamespaceTimeout  time.Duration `yaml:"namespace_timeout"`
 
-	Gpus string `yaml:"gpus"`
+	Gpus []GpuConfig `yaml:"gpus"`
 
 	MaxCPU                    string                    `yaml:"max_cpu"`
 	MaxMemory                 string                    `yaml:"max_memory"`
@@ -160,6 +160,7 @@ func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) Dep
 			MaxReplica:    cfg.DefaultTransformerConfig.MaxReplica,
 			CPURequest:    resource.MustParse(cfg.DefaultTransformerConfig.CPURequest),
 			MemoryRequest: resource.MustParse(cfg.DefaultTransformerConfig.MemoryRequest),
+			GPURequest:    resource.MustParse(cfg.DefaultDeploymentConfig.Gpus),
 		},
 		MaxCPU:                    resource.MustParse(cfg.MaxCPU),
 		MaxMemory:                 resource.MustParse(cfg.MaxMemory),
