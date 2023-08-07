@@ -22,7 +22,6 @@ import (
 	migrate "github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-
 	pg "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -43,8 +42,7 @@ func InitDB(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 	db, err := gorm.Open(
 		pg.Open(connectionString(cfg)),
 		&gorm.Config{
-			FullSaveAssociations: true,
-			Logger:               logger.Default.LogMode(logger.Silent),
+			Logger: logger.Default.LogMode(logger.Silent),
 		},
 	)
 	if err != nil {

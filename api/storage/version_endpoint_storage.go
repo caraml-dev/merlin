@@ -54,7 +54,7 @@ func (v *versionEndpointStorage) Get(uuid uuid.UUID) (*models.VersionEndpoint, e
 
 func (v *versionEndpointStorage) Save(endpoint *models.VersionEndpoint) error {
 	sanitizeEndpoint(endpoint)
-	return v.db.Save(&endpoint).Error
+	return v.db.Session(&gorm.Session{FullSaveAssociations: true}).Save(&endpoint).Error
 }
 
 func sanitizeEndpoint(endpoint *models.VersionEndpoint) {
