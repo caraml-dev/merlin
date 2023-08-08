@@ -3,10 +3,9 @@ package feast
 import (
 	"errors"
 
+	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
 	feast "github.com/feast-dev/feast/sdk/go"
 	"github.com/feast-dev/feast/sdk/go/protos/feast/types"
-
-	transTypes "github.com/caraml-dev/merlin/pkg/transformer/types"
 )
 
 // internalFeatureTable helper type for internal table processing
@@ -14,15 +13,25 @@ type internalFeatureTable struct {
 	entities    []feast.Row
 	columnNames []string
 	columnTypes []types.ValueType_Enum
+	indexRows   []int
 	valueRows   transTypes.ValueRows
 }
 
+type orderedFeastRow struct {
+	Index int
+	Row   feast.Row
+}
+
 func (it *internalFeatureTable) toFeatureTable(tableName string) *transTypes.FeatureTable {
+	sortedValueRows := make(transTypes.ValueRows, len(it.valueRows))
+	for i, index := range it.indexRows {
+		sortedValueRows[index] = it.valueRows[i]
+	}
 	return &transTypes.FeatureTable{
 		Name:        tableName,
 		Columns:     it.columnNames,
 		ColumnTypes: it.columnTypes,
-		Data:        it.valueRows,
+		Data:        sortedValueRows,
 	}
 }
 
@@ -43,6 +52,7 @@ func (it *internalFeatureTable) mergeFeatureTable(right *internalFeatureTable) e
 	it.columnTypes = mergeColumnTypes(it.columnTypes, right.columnTypes)
 	it.entities = append(it.entities, right.entities...)
 	it.valueRows = append(it.valueRows, right.valueRows...)
+	it.indexRows = append(it.indexRows, right.indexRows...)
 
 	return nil
 }
