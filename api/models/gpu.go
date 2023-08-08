@@ -24,25 +24,27 @@ type Gpu struct {
 	MonthlyCostPerGpu float64 `json:"monthly_cost_per_gpu"`
 }
 
-func (gpu Gpu) Value() (driver.Value, error) {
-	return json.Marshal(gpu)
+type Gpus []Gpu
+
+func (gpus Gpus) Value() (driver.Value, error) {
+	return json.Marshal(gpus)
 }
 
-func (gpu *Gpu) Scan(value interface{}) error {
+func (gpus *Gpus) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
 		return errors.New("type assertion to []byte failed")
 	}
 
-	return json.Unmarshal(b, &gpu)
+	return json.Unmarshal(b, &gpus)
 }
 
-// Function to parse []config.GpuConfig into []*models.Gpu
-func ParseGpusConfig(configGpus []config.GpuConfig) []*Gpu {
-	gpus := []*Gpu{}
+// Function to parse []config.GpuConfig into models.Gpu
+func ParseGpusConfig(configGpus []config.GpuConfig) Gpus {
+	gpus := []Gpu{}
 
 	for _, configGpu := range configGpus {
-		gpu := &Gpu{
+		gpu := Gpu{
 			Values:            configGpu.Values,
 			DisplayName:       configGpu.DisplayName,
 			ResourceType:      configGpu.ResourceType,
