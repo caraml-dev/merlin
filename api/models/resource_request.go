@@ -31,7 +31,7 @@ type ResourceRequest struct {
 	CPURequest resource.Quantity `json:"cpu_request"`
 	// Memory request of inference service
 	MemoryRequest resource.Quantity `json:"memory_request"`
-	// GPU Type
+	// GPU Type [NVIDIA T4, V100]
 	GpuResourceType string `json:"gpu_resource_type"`
 	// GPU Quantity requests
 	GpuRequest resource.Quantity `json:"gpu_request"`
