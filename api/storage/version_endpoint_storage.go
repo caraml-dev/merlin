@@ -54,7 +54,16 @@ func (v *versionEndpointStorage) Get(uuid uuid.UUID) (*models.VersionEndpoint, e
 
 func (v *versionEndpointStorage) Save(endpoint *models.VersionEndpoint) error {
 	sanitizeEndpoint(endpoint)
-	return v.db.Save(&endpoint).Error
+
+	if err := v.db.Save(&endpoint).Error; err != nil {
+		return err
+	}
+
+	if endpoint.Transformer != nil {
+		return v.db.Save(endpoint.Transformer).Error
+	}
+
+	return nil
 }
 
 func sanitizeEndpoint(endpoint *models.VersionEndpoint) {
