@@ -351,18 +351,17 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		predictorSpec = createCustomPredictorSpec(modelService, resources)
 	}
 
-	NodeSelector := map[string]string
-
 	if !modelService.ResourceRequest.GpuRequest.IsZero() {
 		// Declare and initialize resourceType and resourceQuantity variables
-		resourceType := modelService.ResourceRequest.GpuResourceType
+		resourceType := corev1.ResourceName(modelService.ResourceRequest.GpuResourceType)
 		resourceQuantity := modelService.ResourceRequest.GpuRequest
 
 		// Set the resourceType as the key in the maps, with resourceQuantity as the value
-		resources.Request[resourceType] = resourceQuantity
+		resources.Requests[resourceType] = resourceQuantity
 		resources.Limits[resourceType] = resourceQuantity
 
-		nodeSelector = modelService.ResourceRequest.GpuNodeSelector
+		predictorSpec.NodeSelector = modelService.ResourceRequest.GpuNodeSelector
+
 	}
 
 	var loggerSpec *kservev1beta1.LoggerSpec
@@ -374,7 +373,6 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	predictorSpec.MinReplicas = &(modelService.ResourceRequest.MinReplica)
 	predictorSpec.MaxReplicas = modelService.ResourceRequest.MaxReplica
 	predictorSpec.Logger = loggerSpec
-	predictorSpec = modelService.ResourceRequest.GpuNodeSelector
 
 	return predictorSpec
 }
