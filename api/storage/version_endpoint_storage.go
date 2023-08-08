@@ -59,7 +59,11 @@ func (v *versionEndpointStorage) Save(endpoint *models.VersionEndpoint) error {
 		return err
 	}
 
-	return v.db.Save(endpoint.Transformer).Error
+	if endpoint.Transformer != nil {
+		return v.db.Save(endpoint.Transformer).Error
+	}
+
+	return nil
 }
 
 func sanitizeEndpoint(endpoint *models.VersionEndpoint) {
