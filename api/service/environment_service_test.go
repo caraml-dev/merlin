@@ -63,6 +63,17 @@ func TestSave(t *testing.T) {
 					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
 				},
+				Gpus: []*models.Gpu{
+					{
+						Values:       []string{"none", "1"},
+						DisplayName:  "NVIDIA T4",
+						ResourceType: "nvidia.com/gpu",
+						NodeSelector: map[string]string{
+							"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
+						},
+						MonthlyCostPerGpu: 189.07,
+					},
+				},
 			},
 		},
 		{
