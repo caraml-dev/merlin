@@ -21,23 +21,22 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/caraml-dev/merlin/pkg/protocol"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/models"
-	"github.com/caraml-dev/merlin/pkg/autoscaling"
-	"github.com/caraml-dev/merlin/pkg/deployment"
-	prt "github.com/caraml-dev/merlin/pkg/protocol"
-	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/mitchellh/copystructure"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	knautoscaling "knative.dev/serving/pkg/apis/autoscaling"
 	knserving "knative.dev/serving/pkg/apis/serving"
 
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/protocol"
+	prt "github.com/caraml-dev/merlin/pkg/protocol"
+	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	"github.com/caraml-dev/merlin/utils"
 )
 
@@ -256,6 +255,19 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		},
 	}
 
+	nodeSelector := map[string]string{}
+	if !modelService.ResourceRequest.GpuRequest.IsZero() {
+		// Declare and initialize resourceType and resourceQuantity variables
+		resourceType := corev1.ResourceName(modelService.ResourceRequest.GpuResourceType)
+		resourceQuantity := modelService.ResourceRequest.GpuRequest
+
+		// Set the resourceType as the key in the maps, with resourceQuantity as the value
+		resources.Requests[resourceType] = resourceQuantity
+		resources.Limits[resourceType] = resourceQuantity
+
+		nodeSelector = modelService.ResourceRequest.GpuNodeSelector
+	}
+
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	var livenessProbeConfig *corev1.Probe = nil
 	envVarsMap := envVars.ToMap()
@@ -351,17 +363,8 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		predictorSpec = createCustomPredictorSpec(modelService, resources)
 	}
 
-	if !modelService.ResourceRequest.GpuRequest.IsZero() {
-		// Declare and initialize resourceType and resourceQuantity variables
-		resourceType := corev1.ResourceName(modelService.ResourceRequest.GpuResourceType)
-		resourceQuantity := modelService.ResourceRequest.GpuRequest
-
-		// Set the resourceType as the key in the maps, with resourceQuantity as the value
-		resources.Requests[resourceType] = resourceQuantity
-		resources.Limits[resourceType] = resourceQuantity
-
-		predictorSpec.NodeSelector = modelService.ResourceRequest.GpuNodeSelector
-
+	if len(nodeSelector) > 0 {
+		predictorSpec.NodeSelector = nodeSelector
 	}
 
 	var loggerSpec *kservev1beta1.LoggerSpec
