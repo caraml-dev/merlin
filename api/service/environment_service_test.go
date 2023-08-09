@@ -30,7 +30,6 @@ import (
 )
 
 func TestSave(t *testing.T) {
-
 	testCases := []struct {
 		desc                string
 		existingEnvironment *models.Environment
@@ -62,6 +61,17 @@ func TestSave(t *testing.T) {
 					ExecutorReplica:       0,
 					ExecutorCPURequest:    "1",
 					ExecutorMemoryRequest: "1Gi",
+				},
+				Gpus: models.Gpus{
+					{
+						Values:       []string{"none", "1"},
+						DisplayName:  "NVIDIA T4",
+						ResourceType: "nvidia.com/gpu",
+						NodeSelector: map[string]string{
+							"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
+						},
+						MonthlyCostPerGpu: 189.07,
+					},
 				},
 			},
 		},
@@ -166,7 +176,6 @@ func TestSave(t *testing.T) {
 }
 
 func TestGetEnvironment(t *testing.T) {
-
 	testCases := []struct {
 		desc                string
 		name                string
@@ -708,7 +717,6 @@ func TestListEnvironment(t *testing.T) {
 				assert.Equal(t, tC.expectedEnvironments[i].IsDefaultPredictionJob, env.IsDefaultPredictionJob)
 				assert.Equal(t, tC.expectedEnvironments[i].DefaultPredictionJobResourceRequest, env.DefaultPredictionJobResourceRequest)
 			}
-
 		})
 	}
 }

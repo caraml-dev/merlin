@@ -40,6 +40,8 @@ type EnvironmentConfig struct {
 	DeploymentTimeout time.Duration `yaml:"deployment_timeout"`
 	NamespaceTimeout  time.Duration `yaml:"namespace_timeout"`
 
+	Gpus []GpuConfig `yaml:"gpus"`
+
 	MaxCPU                    string                    `yaml:"max_cpu"`
 	MaxMemory                 string                    `yaml:"max_memory"`
 	TopologySpreadConstraints TopologySpreadConstraints `yaml:"topology_spread_constraints"`
@@ -110,6 +112,22 @@ type ResourceRequestConfig struct {
 	MemoryRequest string `yaml:"memory_request"`
 }
 
+type GpuConfig struct {
+	// Values limits how many GPUs can be requested by users.
+	// Example: "none", "1", "2", "4"
+	Values []string `yaml:"values"`
+	// Specifies how the accelerator type will be written in the UI.
+	// Example: "NVIDIA T4"
+	DisplayName string `yaml:"display_name"`
+	// Specifies how the accelerator type will be translated to
+	// K8s resource type. Example: nvidia.com/gpu
+	ResourceType string `yaml:"resource_type"`
+	// To deploy the models on a specific GPU node.
+	NodeSelector map[string]string `yaml:"node_selector"`
+	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
+	MonthlyCostPerGpu float64 `yaml:"monthly_cost_per_gpu"`
+}
+
 func InitEnvironmentConfigs(path string) ([]*EnvironmentConfig, error) {
 	cfgFile, err := os.ReadFile(path)
 	if err != nil {
@@ -156,5 +174,6 @@ func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) Dep
 		QueueResourcePercentage:   cfg.QueueResourcePercentage,
 		PyfuncGRPCOptions:         pyfuncGRPCOptions,
 		PodDisruptionBudget:       cfg.PodDisruptionBudget,
+		Gpus:                      cfg.Gpus,
 	}
 }

@@ -173,3 +173,52 @@ func TestImageBuilderConfig(t *testing.T) {
 	}
 	assert.Equal(t, expected, cfg.ImageBuilderConfig.NodeSelectors)
 }
+
+func TestGpusConfig(t *testing.T) {
+	testCases := []struct {
+		desc               string
+		envConfigPath      string
+		expectedGpusConfig []GpuConfig
+		validateErr        error
+	}{
+		{
+			desc:          "Success: valid pdb config",
+			envConfigPath: "./testdata/valid-environment-1.yaml",
+			expectedGpusConfig: []GpuConfig{
+				{
+					Values:       []string{"none", "1"},
+					DisplayName:  "NVIDIA T4",
+					ResourceType: "nvidia.com/gpu",
+					NodeSelector: map[string]string{
+						"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
+					},
+					MonthlyCostPerGpu: 189.07,
+				},
+			},
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			envConfigs, err := InitEnvironmentConfigs(tC.envConfigPath)
+			if tC.validateErr == nil {
+				assert.Nil(t, err)
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, tC.validateErr.Error(), err.Error())
+				return
+			}
+
+			cfg := &Config{
+				ClusterConfig: ClusterConfig{
+					EnvironmentConfigs: envConfigs,
+				},
+			}
+
+			for _, envCfg := range cfg.ClusterConfig.EnvironmentConfigs {
+				deploymentCfg := ParseDeploymentConfig(envCfg, "")
+				assert.Equal(t, tC.expectedGpusConfig, deploymentCfg.Gpus)
+			}
+		})
+	}
+}
