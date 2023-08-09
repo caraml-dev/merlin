@@ -197,6 +197,7 @@ func TestGetEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GpuRequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -222,6 +223,7 @@ func TestGetEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GpuRequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -318,6 +320,7 @@ func TestGetDefaultEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GpuRequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -343,6 +346,7 @@ func TestGetDefaultEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GpuRequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -439,6 +443,7 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GpuRequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -464,6 +469,7 @@ func TestGetDefaultPredictionJobEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GpuRequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -561,6 +567,7 @@ func TestListEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GpuRequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -587,6 +594,7 @@ func TestListEnvironment(t *testing.T) {
 						MaxReplica:    4,
 						CPURequest:    resource.MustParse("1"),
 						MemoryRequest: resource.MustParse("1Gi"),
+						GpuRequest:    resource.MustParse("0"),
 					},
 					CreatedUpdated: models.CreatedUpdated{
 						CreatedAt: now,
@@ -619,6 +627,7 @@ func TestListEnvironment(t *testing.T) {
 					MaxReplica:    4,
 					CPURequest:    resource.MustParse("1"),
 					MemoryRequest: resource.MustParse("1Gi"),
+					GpuRequest:    resource.MustParse("0"),
 				},
 				CreatedUpdated: models.CreatedUpdated{
 					CreatedAt: now,
@@ -645,6 +654,7 @@ func TestListEnvironment(t *testing.T) {
 						MaxReplica:    4,
 						CPURequest:    resource.MustParse("1"),
 						MemoryRequest: resource.MustParse("1Gi"),
+						GpuRequest:    resource.MustParse("0"),
 					},
 					CreatedUpdated: models.CreatedUpdated{
 						CreatedAt: now,
