@@ -360,7 +360,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			},
 		}
 	case models.ModelTypeCustom:
-		predictorSpec = createCustomPredictorSpec(modelService, resources)
+		predictorSpec = createCustomPredictorSpec(modelService, resources, nodeSelector)
 	}
 
 	if len(nodeSelector) > 0 {
@@ -802,7 +802,7 @@ func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars 
 	return defaultEnvVars
 }
 
-func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
+func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements, nodeSelector map[string]string) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
 	// Add default env var (Overwrite by user not allowed)
@@ -827,7 +827,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
-	return kservev1beta1.PredictorSpec{
+	spec := kservev1beta1.PredictorSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
 				{
@@ -842,6 +842,11 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 			},
 		},
 	}
+	if len(nodeSelector) > 0 {
+		spec.NodeSelector = nodeSelector
+	}
+
+	return spec
 }
 
 // createPyFuncDefaultEnvVars return default env vars for Pyfunc model.
