@@ -193,6 +193,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 			}
 
 			// Create new environment
+
 			log.Infof("adding environment %s: cluster: %s, is_default: %v", envCfg.Name, envCfg.Cluster, envCfg.IsDefault)
 			env = &models.Environment{
 				Name:       envCfg.Name,
@@ -201,6 +202,8 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 				Region:     envCfg.Region,
 				GcpProject: envCfg.GcpProject,
 				MaxCPU:     envCfg.MaxCPU,
+				MaxMemory:  envCfg.MaxMemory,
+				Gpus:       models.ParseGpusConfig(envCfg.Gpus),
 				DefaultResourceRequest: &models.ResourceRequest{
 					MinReplica:    deploymentCfg.DefaultModelResourceRequests.MinReplica,
 					MaxReplica:    deploymentCfg.DefaultModelResourceRequests.MaxReplica,
@@ -237,6 +240,7 @@ func initEnvironmentService(cfg *config.Config, db *gorm.DB) service.Environment
 			env.GcpProject = envCfg.GcpProject
 			env.MaxCPU = envCfg.MaxCPU
 			env.MaxMemory = envCfg.MaxMemory
+			env.Gpus = models.ParseGpusConfig(envCfg.Gpus)
 			env.DefaultResourceRequest = &models.ResourceRequest{
 				MinReplica:    deploymentCfg.DefaultModelResourceRequests.MinReplica,
 				MaxReplica:    deploymentCfg.DefaultModelResourceRequests.MaxReplica,
