@@ -27,7 +27,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 		args           args
 		valueInCache   *internalFeatureTable
 		want           *internalFeatureTable
-		missedEntities []feast.Row
+		missedEntities []orderedFeastRow
 	}{
 		{
 			name: "single entity, no value in cache",
@@ -51,9 +51,10 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INVALID, feastTypes.ValueType_INVALID},
 				valueRows:   nil,
 			},
-			missedEntities: []feast.Row{
+			missedEntities: []orderedFeastRow{
 				{
-					"driver_id": feast.StrVal("1001"),
+					Index: 0,
+					Row:   feast.Row{"driver_id": feast.StrVal("1001")},
 				},
 			},
 		},
@@ -82,12 +83,14 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INVALID, feastTypes.ValueType_INVALID},
 				valueRows:   nil,
 			},
-			missedEntities: []feast.Row{
+			missedEntities: []orderedFeastRow{
 				{
-					"driver_id": feast.StrVal("1001"),
+					Index: 0,
+					Row:   feast.Row{"driver_id": feast.StrVal("1001")},
 				},
 				{
-					"driver_id": feast.StrVal("1002"),
+					Index: 1,
+					Row:   feast.Row{"driver_id": feast.StrVal("1002")},
 				},
 			},
 		},
@@ -117,6 +120,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 				},
 				columnNames: []string{"feature1", "feature2"},
 				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				indexRows:   []int{0},
 				valueRows: types.ValueRows{
 					types.ValueRow{
 						"val1",
@@ -132,6 +136,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 				},
 				columnNames: []string{"feature1", "feature2"},
 				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				indexRows:   []int{0},
 				valueRows: types.ValueRows{
 					types.ValueRow{
 						"val1",
@@ -139,9 +144,10 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 					},
 				},
 			},
-			missedEntities: []feast.Row{
+			missedEntities: []orderedFeastRow{
 				{
-					"driver_id": feast.StrVal("1002"),
+					Index: 1,
+					Row:   feast.Row{"driver_id": feast.StrVal("1002")},
 				},
 			},
 		},
@@ -196,6 +202,7 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 				},
 				columnNames: []string{"feature1", "feature2"},
 				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+				indexRows:   []int{0, 1},
 				valueRows: types.ValueRows{
 					types.ValueRow{
 						"val11",
@@ -249,9 +256,10 @@ func TestFeatureCache_FetchFeatureTable(t *testing.T) {
 				columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_INVALID, feastTypes.ValueType_INVALID},
 				valueRows:   nil,
 			},
-			missedEntities: []feast.Row{
+			missedEntities: []orderedFeastRow{
 				{
-					"driver_id": feast.StrVal("1001"),
+					Index: 0,
+					Row:   feast.Row{"driver_id": feast.StrVal("1001")},
 				},
 			},
 		},
@@ -304,6 +312,7 @@ func TestFeatureCache_InsertFeatureTable(t *testing.T) {
 					},
 					columnNames: []string{"feature3", "feature4"},
 					columnTypes: []feastTypes.ValueType_Enum{feastTypes.ValueType_STRING, feastTypes.ValueType_STRING},
+					indexRows:   []int{0},
 					valueRows: types.ValueRows{
 						types.ValueRow{
 							"val11",
