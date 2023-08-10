@@ -22,6 +22,7 @@ type Environment struct {
 	DefaultResourceRequest              *ResourceRequest              `json:"default_resource_request,omitempty"`
 	DefaultTransformerResourceRequest   *ResourceRequest              `json:"default_transformer_resource_request,omitempty"`
 	DefaultPredictionJobResourceRequest *PredictionJobResourceRequest `json:"default_prediction_job_resource_request,omitempty"`
+	Gpus                                []Gpu                         `json:"gpus,omitempty"`
 	CreatedAt                           time.Time                     `json:"created_at,omitempty"`
 	UpdatedAt                           time.Time                     `json:"updated_at,omitempty"`
 }

@@ -37,6 +37,7 @@ class Environment(object):
         'default_resource_request': 'ResourceRequest',
         'default_transformer_resource_request': 'ResourceRequest',
         'default_prediction_job_resource_request': 'PredictionJobResourceRequest',
+        'gpus': 'list[Gpu]',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -51,11 +52,12 @@ class Environment(object):
         'default_resource_request': 'default_resource_request',
         'default_transformer_resource_request': 'default_transformer_resource_request',
         'default_prediction_job_resource_request': 'default_prediction_job_resource_request',
+        'gpus': 'gpus',
         'created_at': 'created_at',
         'updated_at': 'updated_at'
     }
 
-    def __init__(self, id=None, name=None, cluster=None, is_default=None, region=None, gcp_project=None, default_resource_request=None, default_transformer_resource_request=None, default_prediction_job_resource_request=None, created_at=None, updated_at=None):  # noqa: E501
+    def __init__(self, id=None, name=None, cluster=None, is_default=None, region=None, gcp_project=None, default_resource_request=None, default_transformer_resource_request=None, default_prediction_job_resource_request=None, gpus=None, created_at=None, updated_at=None):  # noqa: E501
         """Environment - a model defined in Swagger"""  # noqa: E501
         self._id = None
         self._name = None
@@ -66,6 +68,7 @@ class Environment(object):
         self._default_resource_request = None
         self._default_transformer_resource_request = None
         self._default_prediction_job_resource_request = None
+        self._gpus = None
         self._created_at = None
         self._updated_at = None
         self.discriminator = None
@@ -86,6 +89,8 @@ class Environment(object):
             self.default_transformer_resource_request = default_transformer_resource_request
         if default_prediction_job_resource_request is not None:
             self.default_prediction_job_resource_request = default_prediction_job_resource_request
+        if gpus is not None:
+            self.gpus = gpus
         if created_at is not None:
             self.created_at = created_at
         if updated_at is not None:
@@ -281,6 +286,27 @@ class Environment(object):
         """
 
         self._default_prediction_job_resource_request = default_prediction_job_resource_request
+
+    @property
+    def gpus(self):
+        """Gets the gpus of this Environment.  # noqa: E501
+
+
+        :return: The gpus of this Environment.  # noqa: E501
+        :rtype: list[Gpu]
+        """
+        return self._gpus
+
+    @gpus.setter
+    def gpus(self, gpus):
+        """Sets the gpus of this Environment.
+
+
+        :param gpus: The gpus of this Environment.  # noqa: E501
+        :type: list[Gpu]
+        """
+
+        self._gpus = gpus
 
     @property
     def created_at(self):

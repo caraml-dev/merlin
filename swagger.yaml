@@ -1053,6 +1053,10 @@ definitions:
         $ref: "#/definitions/ResourceRequest"
       default_prediction_job_resource_request:
         $ref: "#/definitions/PredictionJobResourceRequest"
+      gpus:
+        type: "array"
+        items:
+          $ref: "#/definitions/Gpu"
       created_at:
         type: "string"
         format: "date-time"
@@ -1533,6 +1537,23 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/EnvVar"
+
+  Gpu:
+    type: "object"
+    properties:
+      values:
+        type: "integer"
+        format: "int32"
+      display_name:
+        type: "string"
+      resource_type:
+        type: "string"
+      node_selector:
+        type: "object"
+        additionalProperties:
+          type: "string"
+      monthly_cost_per_gpu:
+        type: "number"
 
   PredictionJobResourceRequest:
     type: "object"
