@@ -1439,7 +1439,7 @@ definitions:
       gpu_resource_type:
         type: "string"
       gpu_request:
-        type: "integer"
+        type: "string"
       gpu_node_selector:
         type: "object"
         additionalProperties:
@@ -1542,8 +1542,9 @@ definitions:
     type: "object"
     properties:
       values:
-        type: "integer"
-        format: "int32"
+        type: "array"
+        items:
+          type: string
       display_name:
         type: "string"
       resource_type:
