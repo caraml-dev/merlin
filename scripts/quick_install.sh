@@ -15,146 +15,146 @@ export MLP_CHART_VERSION=0.6.1
 export MERLIN_CHART_VERSION=0.11.7
 export MERLIN_VERSION=0.31.1
 
-# # Install Istio
-# curl --location https://istio.io/downloadIstio | sh -
+# Install Istio
+curl --location https://istio.io/downloadIstio | sh -
 
-# cat << EOF > ./istio-config.yaml
-# apiVersion: install.istio.io/v1alpha1
-# kind: IstioOperator
-# spec:
-#   profile: default
-#   meshConfig:
-#     accessLogFile: /dev/stdout
-#     enableTracing: true
-#   components:
-#     egressGateways:
-#     - name: istio-egressgateway
-#       enabled: true
-#   values:
-#     global:
-#       proxy:
-#         autoInject: disabled
-#     gateways:
-#       istio-ingressgateway:
-#         runAsRoot: true
-#   components:
-#     ingressGateways:
-#       - name: istio-ingressgateway
-#         enabled: true
-#         k8s:
-#           resources:
-#             requests:
-#               cpu: 20m
-#               memory: 64Mi
-#             limits:
-#               memory: 128Mi
-#       - name: cluster-local-gateway
-#         enabled: true
-#         label:
-#           istio: cluster-local-gateway
-#           app: cluster-local-gateway
-#         k8s:
-#           resources:
-#             requests:
-#               cpu: 20m
-#               memory: 64Mi
-#             limits:
-#               memory: 128Mi
-#           service:
-#             type: ClusterIP
-#             ports:
-#               - port: 15020
-#                 name: status-port
-#               - port: 80
-#                 name: http2
-#               - port: 443
-#                 name: https
-# EOF
-# istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f istio-config.yaml
+cat << EOF > ./istio-config.yaml
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  profile: default
+  meshConfig:
+    accessLogFile: /dev/stdout
+    enableTracing: true
+  components:
+    egressGateways:
+    - name: istio-egressgateway
+      enabled: true
+  values:
+    global:
+      proxy:
+        autoInject: disabled
+    gateways:
+      istio-ingressgateway:
+        runAsRoot: true
+  components:
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: true
+        k8s:
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      - name: cluster-local-gateway
+        enabled: true
+        label:
+          istio: cluster-local-gateway
+          app: cluster-local-gateway
+        k8s:
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+          service:
+            type: ClusterIP
+            ports:
+              - port: 15020
+                name: status-port
+              - port: 80
+                name: http2
+              - port: 443
+                name: https
+EOF
+istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f istio-config.yaml
 
-# ## Install Knative
-# kubectl apply --filename=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-crds.yaml
-# kubectl apply --filename=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-core.yaml
+## Install Knative
+kubectl apply --filename=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-crds.yaml
+kubectl apply --filename=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-core.yaml
 
-# export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-# cat <<EOF > ./patch-config-domain.json
-# {
-#   "data": {
-#     "${INGRESS_HOST}.nip.io": ""
-#   }
-# }
-# EOF
-# kubectl patch configmap/config-domain --namespace=knative-serving --type=merge --patch="$(cat patch-config-domain.json)"
+export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+cat <<EOF > ./patch-config-domain.json
+{
+  "data": {
+    "${INGRESS_HOST}.nip.io": ""
+  }
+}
+EOF
+kubectl patch configmap/config-domain --namespace=knative-serving --type=merge --patch="$(cat patch-config-domain.json)"
 
-# # Install Knative Net Istio
-# kubectl apply --filename=https://github.com/knative-sandbox/net-istio/releases/download/knative-${KNATIVE_NET_ISTIO_VERSION}/release.yaml
+# Install Knative Net Istio
+kubectl apply --filename=https://github.com/knative-sandbox/net-istio/releases/download/knative-${KNATIVE_NET_ISTIO_VERSION}/release.yaml
 
-# # Install Cert Manager
-# kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
-# kubectl wait deployment.apps/cert-manager-webhook --namespace=cert-manager --for=condition=available --timeout=600s
-# sleep 15
+# Install Cert Manager
+kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
+kubectl wait deployment.apps/cert-manager-webhook --namespace=cert-manager --for=condition=available --timeout=600s
+sleep 15
 
-# # Install KFServing
-# kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve.yaml
-# kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve-runtimes.yaml
+# Install KFServing
+kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve.yaml
+kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve-runtimes.yaml
 
-# cat <<EOF > ./patch-config-inferenceservice.json
-# {
-#   "data": {
-#     "storageInitializer": "{\n    \"image\" : \"ghcr.io/ariefrahmansyah/kfserving-storage-init:latest\",\n    \"memoryRequest\": \"100Mi\",\n    \"memoryLimit\": \"1Gi\",\n    \"cpuRequest\": \"25m\",\n    \"cpuLimit\": \"1\"\n}",
-#     "logger": "{\n    \"image\" : \"kserve/agent:v0.11.0\",\n    \"memoryRequest\": \"100Mi\",\n    \"memoryLimit\": \"1Gi\",\n    \"cpuRequest\": \"25m\",\n    \"cpuLimit\": \"1\",\n    \"defaultUrl\": \"http:\/\/default-broker\"\n}"
-#   }
-# }
-# EOF
-# kubectl patch configmap/inferenceservice-config --namespace=kserve --type=merge --patch="$(cat patch-config-inferenceservice.json)"
+cat <<EOF > ./patch-config-inferenceservice.json
+{
+  "data": {
+    "storageInitializer": "{\n    \"image\" : \"ghcr.io/ariefrahmansyah/kfserving-storage-init:latest\",\n    \"memoryRequest\": \"100Mi\",\n    \"memoryLimit\": \"1Gi\",\n    \"cpuRequest\": \"25m\",\n    \"cpuLimit\": \"1\"\n}",
+    "logger": "{\n    \"image\" : \"kserve/agent:v0.11.0\",\n    \"memoryRequest\": \"100Mi\",\n    \"memoryLimit\": \"1Gi\",\n    \"cpuRequest\": \"25m\",\n    \"cpuLimit\": \"1\",\n    \"defaultUrl\": \"http:\/\/default-broker\"\n}"
+  }
+}
+EOF
+kubectl patch configmap/inferenceservice-config --namespace=kserve --type=merge --patch="$(cat patch-config-inferenceservice.json)"
 
-# # Install Minio
-# cat <<EOF > minio-operator-values.yaml
-# operator:
-#   replicaCount: 1
-#   resources:
-#     requests:
-#       cpu: 20m
-#       memory: 64Mi
-# console:
-#   replicaCount: 1
-#   resources:
-#     requests:
-#       cpu: 20m
-#       memory: 64Mi
-# EOF
+# Install Minio
+cat <<EOF > minio-operator-values.yaml
+operator:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+console:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+EOF
 
-# cat <<EOF > minio-tenant-values.yaml
-# secrets:
-#   accessKey: YOURACCESSKEY
-#   secretKey: YOURSECRETKEY
-# tenant:
-#   buckets:
-#     - name: mlflow
-#   pools:
-#     - servers: 1
-#       name: pool-0
-#       volumesPerServer: 1
-#       size: 10Gi
-#       storageClassName: standard
-#       resources:
-#         requests:
-#           cpu: 20m
-#           memory: 64Mi
-# ingress:
-#   api:
-#     enabled: true
-#     ingressClassName: istio
-#     host: minio.minio.${INGRESS_HOST}.nip.io
-#   console:
-#     enabled: true
-#     ingressClassName: istio
-#     host: console.minio.minio.${INGRESS_HOST}.nip.io
-# EOF
+cat <<EOF > minio-tenant-values.yaml
+secrets:
+  accessKey: YOURACCESSKEY
+  secretKey: YOURSECRETKEY
+tenant:
+  buckets:
+    - name: mlflow
+  pools:
+    - servers: 1
+      name: pool-0
+      volumesPerServer: 1
+      size: 10Gi
+      storageClassName: standard
+      resources:
+        requests:
+          cpu: 20m
+          memory: 64Mi
+ingress:
+  api:
+    enabled: true
+    ingressClassName: istio
+    host: minio.minio.${INGRESS_HOST}.nip.io
+  console:
+    enabled: true
+    ingressClassName: istio
+    host: console.minio.minio.${INGRESS_HOST}.nip.io
+EOF
 
-# helm repo add minio https://operator.min.io/
-# helm install --namespace minio-operator --create-namespace minio-operator minio/operator --values=minio-operator-values.yaml --wait --timeout=600s --version ${MINIO_VERSION}
-# helm install --namespace minio-tenant --create-namespace minio-tenant minio/tenant --values=minio-tenant-values.yaml --wait --timeout=600s --version ${MINIO_VERSION}
+helm repo add minio https://operator.min.io/
+helm install --namespace minio-operator --create-namespace minio-operator minio/operator --values=minio-operator-values.yaml --wait --timeout=600s --version ${MINIO_VERSION}
+helm install --namespace minio-tenant --create-namespace minio-tenant minio/tenant --values=minio-tenant-values.yaml --wait --timeout=600s --version ${MINIO_VERSION}
 
 # Install MLP and Merlin
 

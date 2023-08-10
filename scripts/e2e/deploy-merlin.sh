@@ -22,7 +22,7 @@ install_merlin() {
 
   helm repo add caraml https://caraml-dev.github.io/helm-charts
 
-  helm upgrade --install --debug merlin caraml/merlin --namespace=mlp --create-namespace \
+  helm upgrade --install --debug merlin caraml/merlin --namespace=caraml --create-namespace \
     --version ${MERLIN_CHART_VERSION} \
     --values values-e2e.yaml \
     --set deployment.image.registry=${DOCKER_REGISTRY} \
@@ -50,10 +50,16 @@ install_merlin() {
     --set mlp.deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
     --set mlp.deployment.mlflowTrackingUrl=http://merlin-mlflow.mlp.${INGRESS_HOST} \
     --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST} \
+    --set mlp.postgresql.resources.requests.cpu=25m \
+    --set mlp.postgresql.resources.requests.memory=64Mi \
+    --set merlin-postgresql.resources.requests.cpu=25m \
+    --set merlin-postgresql.resources.requests.memory=64Mi \
+    --set mlflow-postgresql.resources.requests.cpu=25m \
+    --set mlflow-postgresql.resources.requests.memory=64Mi \
     --wait --timeout=${TIMEOUT}
 
-  kubectl rollout status deployment/mlp -n mlp -w --timeout=${TIMEOUT}
-  kubectl rollout status deployment/merlin -n mlp -w --timeout=${TIMEOUT}
+  kubectl rollout status deployment/mlp -n caraml -w --timeout=${TIMEOUT}
+  kubectl rollout status deployment/merlin -n caraml -w --timeout=${TIMEOUT}
 }
 
 install_merlin

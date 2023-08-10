@@ -47,6 +47,7 @@ store_cluster_secret() {
 }
 EOF
 }
+
 install_istio() {
     echo "::group::Istio Deployment"
     helm upgrade --install istio-base istio/base --version=${ISTIO_VERSION} -n istio-system --create-namespace
