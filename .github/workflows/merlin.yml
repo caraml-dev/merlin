@@ -463,6 +463,8 @@ jobs:
           echo "::group::Get Minio pods"
           kubectl get pods -n minio-operator -o wide
           kubectl get pods -n minio-tenant -o wide
+          kubectl get pods -n minio-tenant -o yaml
+          kubectl get pvc -n minio-tenant -o yaml
           echo "::endgroup::"
 
           echo "::group::Get deployments in caraml namespace"
