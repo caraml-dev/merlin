@@ -6,8 +6,8 @@ set -o pipefail
 set -o nounset
 
 # Software requirements:
-# - yq 4.24.2
-# - helm 3
+# - yq
+# - helm
 # - k3d
 # - kubectl
 
@@ -28,9 +28,8 @@ TIMEOUT=180s
 
 
 add_helm_repo() {
-    helm repo add hashicorp https://helm.releases.hashicorp.com
     helm repo add istio https://istio-release.storage.googleapis.com/charts
-    helm repo add minio https://charts.min.io/
+    helm repo add minio https://operator.min.io/
     helm repo update
 }
 
@@ -103,13 +102,13 @@ install_cert_manager() {
 
 install_minio() {
     echo "::group::Minio Deployment"
-    helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
-        --namespace=minio --create-namespace --timeout=${TIMEOUT} \
-        --set accessKey=YOURACCESSKEY --set secretKey=YOURSECRETKEY \
-        --set "ingress.hosts[0]=minio.minio.${INGRESS_HOST}" \
-        --set "consoleIngress.hosts[0]=console.minio.${INGRESS_HOST}"
+    helm install --namespace minio-operator --create-namespace minio-operator minio/operator --values=config/minio/minio-operator-values.yaml --wait --timeout=600s --version ${MINIO_VERSION}
+    helm install --namespace minio-tenant --create-namespace minio-tenant minio/tenant --wait --timeout=600s --version ${MINIO_VERSION} \
+        --values=config/minio/minio-tenant-values.yaml \
+        --set "ingress.api.host=minio.minio.${INGRESS_HOST}" \
+        --set "ingress.console.host=minio.minio.${INGRESS_HOST}"
 
-    kubectl rollout status statefulset/minio -n minio -w --timeout=${TIMEOUT}
+    kubectl rollout status statefulset/myminio-pool-0 -n minio-tenant -w --timeout=${TIMEOUT}
 }
 
 install_kserve() {
