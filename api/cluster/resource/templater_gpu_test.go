@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/caraml-dev/merlin/pkg/autoscaling"
-	"github.com/caraml-dev/merlin/pkg/deployment"
-	"github.com/caraml-dev/merlin/pkg/protocol"
-
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +16,9 @@ import (
 	"github.com/caraml-dev/merlin/config"
 	"github.com/caraml-dev/merlin/mlp"
 	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/protocol"
 )
 
 var (
