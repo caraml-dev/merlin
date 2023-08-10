@@ -9,7 +9,7 @@ tenant:
       name: pool-0
       volumesPerServer: 1
       size: 10Gi
-      storageClassName: standard
+      storageClassName: local-path
       resources:
         requests:
           cpu: 20m
