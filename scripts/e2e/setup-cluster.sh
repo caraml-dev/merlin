@@ -87,8 +87,6 @@ install_knative() {
 
     kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}
-
-    sleep 30
 }
 
 install_cert_manager() {
@@ -107,8 +105,6 @@ install_minio() {
         --values=config/minio/minio-tenant-values.yaml \
         --set "ingress.api.host=minio.minio.${INGRESS_HOST}" \
         --set "ingress.console.host=minio.minio.${INGRESS_HOST}"
-
-    kubectl rollout status statefulset/myminio-pool-0 -n minio-tenant -w --timeout=${TIMEOUT}
 }
 
 install_kserve() {

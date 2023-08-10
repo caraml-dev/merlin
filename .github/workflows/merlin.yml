@@ -430,11 +430,15 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
-          echo "::group::Get cert manager logs"
+          echo "::group::Get all events"
+          kubectl get events -A
+          echo "::endgroup::"
+
+          echo "::group::Get cert-manager logs"
           kubectl logs deploy/cert-manager -n cert-manager
           echo "::endgroup::"
 
-          echo "::group::Get kserve pods"
+          echo "::group::Get KServe pods"
           kubectl get pods -n kserve -o wide
           kubectl get pods -n kserve -o yaml
           echo "::endgroup::"
@@ -447,56 +451,57 @@ jobs:
           kubectl get events -n kserve
           echo "::endgroup::"
 
-          echo "::group::Knative log"
-          kubectl logs deploy/controller -n knative-serving
-          echo "::endgroup::"
-
           echo "::group::Get Knative pods"
           kubectl get pods -n knative-serving -o wide
           kubectl get pods -n knative-serving -o yaml
           echo "::endgroup::"
 
-          echo "::group::Get Event"
-          kubectl get events -A
+          echo "::group::Knative log"
+          kubectl logs deploy/controller -n knative-serving
           echo "::endgroup::"
 
-          echo "::group::Get deployment mlp namespace"
-          kubectl get deployment -n mlp
+          echo "::group::Get Minio pods"
+          kubectl get pods -n minio-operator -o wide
+          kubectl get pods -n minio-tenant -o wide
           echo "::endgroup::"
 
-          echo "::group::Describe pods mlp namespace"
-          kubectl describe pods -n mlp
+          echo "::group::Get deployments in caraml namespace"
+          kubectl get deployment -n caraml
           echo "::endgroup::"
 
-          echo "::group::Describe deployment merlin-e2e namespace"
-          kubectl describe deployment -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Get deployment merlin-e2e namespace"
-          kubectl get deployment -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Get Pod  merlin-e2e namespace"
-          kubectl get pod -n merlin-e2e -o yaml
-          echo "::endgroup::"
-
-          echo "::group::Describe Pod merlin-e2e namespace"
-          kubectl describe pod -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Get events merlin-e2e namespace"
-          kubectl get events -n merlin-e2e
+          echo "::group::Describe pods in caraml namespace"
+          kubectl describe pods -n caraml
           echo "::endgroup::"
 
           echo "::group::Merlin log"
-          kubectl logs deploy/merlin -n mlp -c merlin
+          kubectl logs deploy/merlin -n caraml -c merlin
           echo "::endgroup::"
 
-          echo "::group::Get Inference Service merlin-e2e namespace"
+          echo "::group::Get deployment in merlin-e2e namespace"
+          kubectl get deployment -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Describe deployment in merlin-e2e namespace"
+          kubectl describe deployment -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Get pods in merlin-e2e namespace"
+          kubectl get pod -n merlin-e2e -o yaml
+          echo "::endgroup::"
+
+          echo "::group::Describe pods in merlin-e2e namespace"
+          kubectl describe pod -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Get events in merlin-e2e namespace"
+          kubectl get events -n merlin-e2e
+          echo "::endgroup::"
+
+          echo "::group::Get Inference Service in merlin-e2e namespace"
           kubectl get isvc -n merlin-e2e -o yaml
           echo "::endgroup::"
 
-          echo "::group::Model log"
+          echo "::group::Models log"
           kubectl logs -l component=predictor -c kserve-container -n merlin-e2e
           echo "::endgroup::"
 
@@ -504,7 +509,7 @@ jobs:
           kubectl logs -l component=predictor -c queue-proxy -n merlin-e2e
           echo "::endgroup::"
 
-          echo "::group::Transformer log"
+          echo "::group::Transformers log"
           kubectl logs -l component=transformer -c kserve-container -n merlin-e2e
           echo "::endgroup::"
 
