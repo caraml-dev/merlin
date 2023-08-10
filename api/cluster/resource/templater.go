@@ -256,16 +256,16 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	}
 
 	nodeSelector := map[string]string{}
-	if !modelService.ResourceRequest.GpuRequest.IsZero() {
+	if !modelService.ResourceRequest.GPURequest.IsZero() {
 		// Declare and initialize resourceType and resourceQuantity variables
-		resourceType := corev1.ResourceName(modelService.ResourceRequest.GpuResourceType)
-		resourceQuantity := modelService.ResourceRequest.GpuRequest
+		resourceType := corev1.ResourceName(modelService.ResourceRequest.GPUResourceType)
+		resourceQuantity := modelService.ResourceRequest.GPURequest
 
 		// Set the resourceType as the key in the maps, with resourceQuantity as the value
 		resources.Requests[resourceType] = resourceQuantity
 		resources.Limits[resourceType] = resourceQuantity
 
-		nodeSelector = modelService.ResourceRequest.GpuNodeSelector
+		nodeSelector = modelService.ResourceRequest.GPUNodeSelector
 	}
 
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled

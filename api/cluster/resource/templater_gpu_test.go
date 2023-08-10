@@ -71,9 +71,9 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 			MaxReplica:      2,
 			CPURequest:      resource.MustParse("500m"),
 			MemoryRequest:   resource.MustParse("500Mi"),
-			GpuRequest:      resource.MustParse("1"),
-			GpuResourceType: "nvidia.com/gpu",
-			GpuNodeSelector: map[string]string{"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"},
+			GPURequest:      resource.MustParse("1"),
+			GPUResourceType: "nvidia.com/gpu",
+			GPUNodeSelector: map[string]string{"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"},
 		},
 	}
 
@@ -142,7 +142,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -214,7 +214,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -272,7 +272,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -330,7 +330,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -385,7 +385,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -442,7 +442,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -499,7 +499,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -556,7 +556,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -612,7 +612,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									Resources: expDefaultModelResourceRequestsWithGpu,
 								},
 							},
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
@@ -672,7 +672,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									Resources: expDefaultModelResourceRequestsWithGpu,
 								},
 							},
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
@@ -738,7 +738,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									Resources: expDefaultModelResourceRequestsWithGpu,
 								},
 							},
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
@@ -805,7 +805,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									},
 								},
 							},
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &modelSvc.ResourceRequest.MinReplica,
@@ -874,7 +874,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -961,7 +961,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -1026,7 +1026,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -1091,7 +1091,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: modelSvc.ResourceRequest.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -1156,7 +1156,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -1221,7 +1221,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -1279,7 +1279,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -1336,7 +1336,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									LivenessProbe: probeConfigUPI,
 								},
 							},
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
@@ -1398,7 +1398,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 							MaxReplicas: defaultModelResourceRequests.MaxReplica,
 						},
 						PodSpec: kservev1beta1.PodSpec{
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 					},
 				},
@@ -1460,7 +1460,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									Ports:     grpcContainerPorts,
 								},
 							},
-							NodeSelector: modelSvc.ResourceRequest.GpuNodeSelector,
+							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
