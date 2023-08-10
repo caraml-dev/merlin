@@ -28,7 +28,7 @@ class GPU(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'values': 'int',
+        'values': 'list[str]',
         'display_name': 'str',
         'resource_type': 'str',
         'node_selector': 'dict(str, str)',
@@ -68,7 +68,7 @@ class GPU(object):
 
 
         :return: The values of this GPU.  # noqa: E501
-        :rtype: int
+        :rtype: list[str]
         """
         return self._values
 
@@ -78,7 +78,7 @@ class GPU(object):
 
 
         :param values: The values of this GPU.  # noqa: E501
-        :type: int
+        :type: list[str]
         """
 
         self._values = values

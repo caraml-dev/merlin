@@ -14,6 +14,6 @@ type ResourceRequest struct {
 	CpuRequest      string            `json:"cpu_request,omitempty"`
 	MemoryRequest   string            `json:"memory_request,omitempty"`
 	GpuResourceType string            `json:"gpu_resource_type,omitempty"`
-	GpuRequest      int32             `json:"gpu_request,omitempty"`
+	GpuRequest      string            `json:"gpu_request,omitempty"`
 	GpuNodeSelector map[string]string `json:"gpu_node_selector,omitempty"`
 }

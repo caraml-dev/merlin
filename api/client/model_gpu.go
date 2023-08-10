@@ -9,7 +9,7 @@
 package client
 
 type Gpu struct {
-	Values            int32             `json:"values,omitempty"`
+	Values            []string          `json:"values,omitempty"`
 	DisplayName       string            `json:"display_name,omitempty"`
 	ResourceType      string            `json:"resource_type,omitempty"`
 	NodeSelector      map[string]string `json:"node_selector,omitempty"`

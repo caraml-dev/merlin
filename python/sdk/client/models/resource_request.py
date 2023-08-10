@@ -33,7 +33,7 @@ class ResourceRequest(object):
         'cpu_request': 'str',
         'memory_request': 'str',
         'gpu_resource_type': 'str',
-        'gpu_request': 'int',
+        'gpu_request': 'str',
         'gpu_node_selector': 'dict(str, str)'
     }
 
@@ -183,7 +183,7 @@ class ResourceRequest(object):
 
 
         :return: The gpu_request of this ResourceRequest.  # noqa: E501
-        :rtype: int
+        :rtype: str
         """
         return self._gpu_request
 
@@ -193,7 +193,7 @@ class ResourceRequest(object):
 
 
         :param gpu_request: The gpu_request of this ResourceRequest.  # noqa: E501
-        :type: int
+        :type: str
         """
 
         self._gpu_request = gpu_request
