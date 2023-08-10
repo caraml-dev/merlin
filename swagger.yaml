@@ -1056,7 +1056,7 @@ definitions:
       gpus:
         type: "array"
         items:
-          $ref: "#/definitions/Gpu"
+          $ref: "#/definitions/GPU"
       created_at:
         type: "string"
         format: "date-time"
@@ -1538,7 +1538,7 @@ definitions:
         items:
           $ref: "#/definitions/EnvVar"
 
-  Gpu:
+  GPU:
     type: "object"
     properties:
       values:

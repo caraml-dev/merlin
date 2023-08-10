@@ -42,7 +42,7 @@ from client.models.env_var import EnvVar
 from client.models.environment import Environment
 from client.models.file_format import FileFormat
 from client.models.free_form_object import FreeFormObject
-from client.models.gpu import Gpu
+from client.models.gpu import GPU
 from client.models.label import Label
 from client.models.logger import Logger
 from client.models.logger_config import LoggerConfig

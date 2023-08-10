@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	expDefaultModelResourceRequestsWithGpu = corev1.ResourceRequirements{
+	expDefaultModelResourceRequestsWithGPU = corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceCPU:    defaultModelResourceRequests.CPURequest,
 			corev1.ResourceMemory: defaultModelResourceRequests.MemoryRequest,
@@ -36,7 +36,7 @@ var (
 	}
 )
 
-func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
+func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
 	assert.NoError(t, err)
 
@@ -131,7 +131,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -196,7 +196,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env: []corev1.EnvVar{
 										{
@@ -261,7 +261,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -319,7 +319,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -374,7 +374,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -431,7 +431,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -488,7 +488,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -545,7 +545,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -609,7 +609,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									Image: "gojek/project-model:1",
 									Env: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envOldDisableLivenessProbe, Value: "true"}},
 										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson)).ToKubernetesEnvVars(),
-									Resources: expDefaultModelResourceRequestsWithGpu,
+									Resources: expDefaultModelResourceRequestsWithGPU,
 								},
 							},
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
@@ -669,7 +669,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									Image: "gojek/project-model:1",
 									Env: models.MergeEnvVars(models.EnvVars{models.EnvVar{Name: envDisableLivenessProbe, Value: "true"}},
 										createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.HttpJson)).ToKubernetesEnvVars(),
-									Resources: expDefaultModelResourceRequestsWithGpu,
+									Resources: expDefaultModelResourceRequestsWithGPU,
 								},
 							},
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
@@ -735,7 +735,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									Name:      kserveconstant.InferenceServiceContainerName,
 									Image:     "gcr.io/custom-model:v0.1",
 									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources: expDefaultModelResourceRequestsWithGpu,
+									Resources: expDefaultModelResourceRequestsWithGPU,
 								},
 							},
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
@@ -795,7 +795,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									Name:      kserveconstant.InferenceServiceContainerName,
 									Image:     "gcr.io/custom-model:v0.1",
 									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources: expDefaultModelResourceRequestsWithGpu,
+									Resources: expDefaultModelResourceRequestsWithGPU,
 									Command: []string{
 										"./run.sh",
 									},
@@ -863,7 +863,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -950,7 +950,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -1015,7 +1015,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -1080,7 +1080,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -1145,7 +1145,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -1210,7 +1210,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									LivenessProbe: probeConfig,
 									Env:           []corev1.EnvVar{},
 								},
@@ -1267,7 +1267,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									Ports:         grpcContainerPorts,
 									Env:           []corev1.EnvVar{},
 									LivenessProbe: probeConfigUPI,
@@ -1329,7 +1329,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								{
 									Name:      kserveconstant.InferenceServiceContainerName,
 									Image:     "gojek/project-model:1",
-									Resources: expDefaultModelResourceRequestsWithGpu,
+									Resources: expDefaultModelResourceRequestsWithGPU,
 									Ports:     grpcContainerPorts,
 									Env: models.MergeEnvVars(createPyFuncDefaultEnvVarsWithProtocol(modelSvc, protocol.UpiV1),
 										models.EnvVars{models.EnvVar{Name: envGRPCOptions, Value: "{}"}}).ToKubernetesEnvVars(),
@@ -1386,7 +1386,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 								StorageURI: &storageUri,
 								Container: corev1.Container{
 									Name:          kserveconstant.InferenceServiceContainerName,
-									Resources:     expDefaultModelResourceRequestsWithGpu,
+									Resources:     expDefaultModelResourceRequestsWithGPU,
 									Ports:         grpcContainerPorts,
 									Env:           []corev1.EnvVar{},
 									LivenessProbe: probeConfigUPI,
@@ -1456,7 +1456,7 @@ func TestCreateInferenceServiceSpecWithGpu(t *testing.T) {
 									Name:      kserveconstant.InferenceServiceContainerName,
 									Image:     "gcr.io/custom-model:v0.1",
 									Env:       createDefaultPredictorEnvVars(modelSvc).ToKubernetesEnvVars(),
-									Resources: expDefaultModelResourceRequestsWithGpu,
+									Resources: expDefaultModelResourceRequestsWithGPU,
 									Ports:     grpcContainerPorts,
 								},
 							},

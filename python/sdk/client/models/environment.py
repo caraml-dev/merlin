@@ -37,7 +37,7 @@ class Environment(object):
         'default_resource_request': 'ResourceRequest',
         'default_transformer_resource_request': 'ResourceRequest',
         'default_prediction_job_resource_request': 'PredictionJobResourceRequest',
-        'gpus': 'list[Gpu]',
+        'gpus': 'list[GPU]',
         'created_at': 'datetime',
         'updated_at': 'datetime'
     }
@@ -293,7 +293,7 @@ class Environment(object):
 
 
         :return: The gpus of this Environment.  # noqa: E501
-        :rtype: list[Gpu]
+        :rtype: list[GPU]
         """
         return self._gpus
 
@@ -303,7 +303,7 @@ class Environment(object):
 
 
         :param gpus: The gpus of this Environment.  # noqa: E501
-        :type: list[Gpu]
+        :type: list[GPU]
         """
 
         self._gpus = gpus
