@@ -369,6 +369,7 @@ jobs:
       INGRESS_HOST: "127.0.0.1.nip.io"
       MERLIN_CHART_VERSION: 0.11.4
       E2E_PYTHON_VERSION: "3.10.6"
+      K3S_VERSION: v1.26.7-k3s1
     steps:
       - uses: actions/checkout@v2
         with:
@@ -395,7 +396,7 @@ jobs:
       - name: Create Test Cluster
         run: |
           k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
-          k3d cluster create $K3D_CLUSTER --image rancher/k3s:v1.25.9-k3s1 --k3s-arg '--disable=traefik,metrics-server@server:*' --port 80:80@loadbalancer
+          k3d cluster create $K3D_CLUSTER --image rancher/k3s:${K3S_VERSION} --k3s-arg '--disable=traefik,metrics-server@server:*' --port 80:80@loadbalancer
       - name: Setup cluster
         working-directory: merlin/scripts/e2e
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
