@@ -107,7 +107,6 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 	models.InitKubernetesLabeller("gojek.com/", "dev")
 
 	twenty, eighty := 20, 80
-	_ = eighty
 
 	defaultMetadata := models.Metadata{
 		App:       "mymodel",
