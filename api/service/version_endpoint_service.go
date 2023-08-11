@@ -249,9 +249,10 @@ func (k *endpointService) UndeployEndpoint(ctx context.Context, environment *mod
 	}
 
 	modelService := &models.Service{
-		Name:        models.CreateInferenceServiceName(model.Name, version.ID.String()),
-		Namespace:   model.Project.Name,
-		Transformer: endpoint.Transformer,
+		Name:            models.CreateInferenceServiceName(model.Name, version.ID.String()),
+		Namespace:       model.Project.Name,
+		ResourceRequest: endpoint.ResourceRequest,
+		Transformer:     endpoint.Transformer,
 	}
 
 	_, err := ctl.Delete(ctx, modelService)
