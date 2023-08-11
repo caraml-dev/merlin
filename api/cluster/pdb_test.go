@@ -104,7 +104,8 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 }
 
 func TestCreatePodDisruptionBudgets(t *testing.T) {
-	models.InitKubernetesLabeller("gojek.com/", "dev")
+	err := models.InitKubernetesLabeller("gojek.com/", "dev")
+	assert.Nil(t, err)
 
 	twenty, eighty := 20, 80
 
