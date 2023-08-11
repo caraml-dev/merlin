@@ -60,7 +60,7 @@ func newCall(
 }
 
 // do create request to feast and return the result as table
-func (fc *call) do(ctx context.Context, entityList []feast.Row, features []string) callResult {
+func (fc *call) do(ctx context.Context, orderedEntityList []orderedFeastRow, features []string) callResult {
 	tableName := GetTableName(fc.featureTableSpec)
 
 	feastSource := spec.ServingSource_name[int32(fc.servingSource)]
@@ -69,6 +69,12 @@ func (fc *call) do(ctx context.Context, entityList []feast.Row, features []strin
 	span.SetAttributes(attribute.String("table", tableName))
 	defer span.End()
 
+	indexes := make([]int, len(orderedEntityList))
+	entityList := make([]feast.Row, len(orderedEntityList))
+	for i, row := range orderedEntityList {
+		entityList[i] = row.Row
+		indexes[i] = row.Index
+	}
 	feastRequest := feast.OnlineFeaturesRequest{
 		Project:  fc.featureTableSpec.Project,
 		Entities: entityList,
@@ -85,7 +91,7 @@ func (fc *call) do(ctx context.Context, entityList []feast.Row, features []strin
 		return callResult{featureTable: nil, err: err}
 	}
 	feastLatency.WithLabelValues("success", feastSource).Observe(float64(durationMs))
-	featureTable, err := fc.processResponse(feastResponse)
+	featureTable, err := fc.processResponse(feastResponse, indexes)
 	if err != nil {
 		return callResult{featureTable: nil, err: err}
 	}
@@ -103,11 +109,12 @@ func getFeatureTypeMapping(featureTableSpec *spec.FeatureTable) map[string]types
 }
 
 // processResponse process response from feast serving and create an internal feature table representation of it
-func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*internalFeatureTable, error) {
+func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse, entityIndexes []int) (*internalFeatureTable, error) {
 	responseStatus := feastResponse.Statuses()
 	responseRows := feastResponse.Rows()
 	entities := make([]feast.Row, len(responseRows))
 	valueRows := make([]transTypes.ValueRow, len(responseRows))
+	indexRows := make([]int, len(responseRows))
 	columnTypes := make([]types.ValueType_Enum, len(fc.columns))
 
 	for rowIdx, feastRow := range responseRows {
@@ -160,6 +167,7 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 
 		entities[rowIdx] = entity
 		valueRows[rowIdx] = valueRow
+		indexRows[rowIdx] = entityIndexes[rowIdx]
 	}
 
 	return &internalFeatureTable{
@@ -167,6 +175,7 @@ func (fc *call) processResponse(feastResponse *feast.OnlineFeaturesResponse) (*i
 		columnNames: fc.columns,
 		columnTypes: columnTypes,
 		valueRows:   valueRows,
+		indexRows:   indexRows,
 	}, nil
 }
 
