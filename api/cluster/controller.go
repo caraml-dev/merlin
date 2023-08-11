@@ -241,11 +241,6 @@ func (c *controller) Deploy(ctx context.Context, modelService *models.Service) (
 
 	s, err = c.waitInferenceServiceReady(s)
 	if err != nil {
-		// remove created inferenceservice when got error
-		if err := c.deleteInferenceService(isvcName, modelService.Namespace); err != nil {
-			log.Warnf("unable to delete inference service %s with error %v", isvcName, err)
-		}
-
 		return nil, err
 	}
 
