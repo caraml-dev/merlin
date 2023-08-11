@@ -27,6 +27,7 @@ const (
 
 	ImageBuilderComponentType     = "image_builder"
 	ModelComponentType            = "model"
+	PredictorComponentType        = "predictor"
 	TransformerComponentType      = "transformer"
 	PDBComponentType              = "pdb" // Pod disruption budget
 	BatchJobDriverComponentType   = "batch_job_driver"

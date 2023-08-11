@@ -104,14 +104,16 @@ func TestPodDisruptionBudget_BuildPDBSpec(t *testing.T) {
 }
 
 func TestCreatePodDisruptionBudgets(t *testing.T) {
+	models.InitKubernetesLabeller("gojek.com/", "dev")
+
 	twenty, eighty := 20, 80
-	defaultLabels := map[string]string{
-		"app":          "",
-		"component":    "",
-		"environment":  "",
-		"orchestrator": "merlin",
-		"stream":       "",
-		"team":         "",
+	_ = eighty
+
+	defaultMetadata := models.Metadata{
+		App:       "mymodel",
+		Component: models.ComponentModelVersion,
+		Stream:    "mystream",
+		Team:      "myteam",
 	}
 
 	tests := map[string]struct {
@@ -132,10 +134,10 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 		},
 		"model min replica low | minAvailablePercentage": {
 			modelService: &models.Service{
-				Name:         "test-1",
-				ModelName:    "test",
+				Name:         "mymodel-1",
+				ModelName:    "mymodel",
 				ModelVersion: "1",
-				Namespace:    "test-ns",
+				Namespace:    "mynamespace",
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica: 1,
 				},
@@ -145,6 +147,7 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 						MinReplica: 3,
 					},
 				},
+				Metadata: defaultMetadata,
 			},
 			pdbConfig: config.PodDisruptionBudgetConfig{
 				Enabled:                true,
@@ -152,19 +155,28 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 			},
 			expected: []*PodDisruptionBudget{
 				{
-					Name:                   "test-transformer-pdb",
-					Namespace:              "test-ns",
-					Labels:                 defaultLabels,
+					Name:      "mymodel-1-transformer-pdb",
+					Namespace: "mynamespace",
+					Labels: map[string]string{
+						"gojek.com/app":                      "mymodel",
+						"gojek.com/component":                "model-version",
+						"gojek.com/environment":              "dev",
+						"gojek.com/orchestrator":             "merlin",
+						"gojek.com/stream":                   "mystream",
+						"gojek.com/team":                     "myteam",
+						"component":                          "transformer",
+						"serving.kserve.io/inferenceservice": "mymodel-1",
+					},
 					MinAvailablePercentage: &twenty,
 				},
 			},
 		},
 		"transformer min replica low | minAvailablePercentage": {
 			modelService: &models.Service{
-				Name:         "test-1",
-				ModelName:    "test",
+				Name:         "mymodel-1",
+				ModelName:    "mymodel",
 				ModelVersion: "1",
-				Namespace:    "test-ns",
+				Namespace:    "mynamespace",
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica: 3,
 				},
@@ -174,6 +186,7 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 						MinReplica: 1,
 					},
 				},
+				Metadata: defaultMetadata,
 			},
 			pdbConfig: config.PodDisruptionBudgetConfig{
 				Enabled:                true,
@@ -181,19 +194,28 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 			},
 			expected: []*PodDisruptionBudget{
 				{
-					Name:                   "test-model-pdb",
-					Namespace:              "test-ns",
-					Labels:                 defaultLabels,
+					Name:      "mymodel-1-predictor-pdb",
+					Namespace: "mynamespace",
+					Labels: map[string]string{
+						"gojek.com/app":                      "mymodel",
+						"gojek.com/component":                "model-version",
+						"gojek.com/environment":              "dev",
+						"gojek.com/orchestrator":             "merlin",
+						"gojek.com/stream":                   "mystream",
+						"gojek.com/team":                     "myteam",
+						"component":                          "predictor",
+						"serving.kserve.io/inferenceservice": "mymodel-1",
+					},
 					MinAvailablePercentage: &twenty,
 				},
 			},
 		},
 		"all pdbs | minAvailablePercentage": {
 			modelService: &models.Service{
-				Name:         "test-1",
-				ModelName:    "test",
+				Name:         "mymodel-1",
+				ModelName:    "mymodel",
 				ModelVersion: "1",
-				Namespace:    "test-ns",
+				Namespace:    "mynamespace",
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica: 5,
 				},
@@ -203,6 +225,7 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 						MinReplica: 3,
 					},
 				},
+				Metadata: defaultMetadata,
 			},
 			pdbConfig: config.PodDisruptionBudgetConfig{
 				Enabled:                true,
@@ -210,25 +233,43 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 			},
 			expected: []*PodDisruptionBudget{
 				{
-					Name:                   "test-model-pdb",
-					Namespace:              "test-ns",
-					Labels:                 defaultLabels,
+					Name:      "mymodel-1-predictor-pdb",
+					Namespace: "mynamespace",
+					Labels: map[string]string{
+						"gojek.com/app":                      "mymodel",
+						"gojek.com/component":                "model-version",
+						"gojek.com/environment":              "dev",
+						"gojek.com/orchestrator":             "merlin",
+						"gojek.com/stream":                   "mystream",
+						"gojek.com/team":                     "myteam",
+						"component":                          "predictor",
+						"serving.kserve.io/inferenceservice": "mymodel-1",
+					},
 					MinAvailablePercentage: &twenty,
 				},
 				{
-					Name:                   "test-transformer-pdb",
-					Namespace:              "test-ns",
-					Labels:                 defaultLabels,
+					Name:      "mymodel-1-transformer-pdb",
+					Namespace: "mynamespace",
+					Labels: map[string]string{
+						"gojek.com/app":                      "mymodel",
+						"gojek.com/component":                "model-version",
+						"gojek.com/environment":              "dev",
+						"gojek.com/orchestrator":             "merlin",
+						"gojek.com/stream":                   "mystream",
+						"gojek.com/team":                     "myteam",
+						"component":                          "transformer",
+						"serving.kserve.io/inferenceservice": "mymodel-1",
+					},
 					MinAvailablePercentage: &twenty,
 				},
 			},
 		},
 		"all pdbs | maxUnavailablePercentage": {
 			modelService: &models.Service{
-				Name:         "test-1",
-				ModelName:    "test",
+				Name:         "mymodel-1",
+				ModelName:    "mymodel",
 				ModelVersion: "1",
-				Namespace:    "test-ns",
+				Namespace:    "mynamespace",
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica: 5,
 				},
@@ -238,6 +279,7 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 						MinReplica: 3,
 					},
 				},
+				Metadata: defaultMetadata,
 			},
 			pdbConfig: config.PodDisruptionBudgetConfig{
 				Enabled:                  true,
@@ -245,15 +287,33 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 			},
 			expected: []*PodDisruptionBudget{
 				{
-					Name:                     "test-model-pdb",
-					Namespace:                "test-ns",
-					Labels:                   defaultLabels,
+					Name:      "mymodel-1-predictor-pdb",
+					Namespace: "mynamespace",
+					Labels: map[string]string{
+						"gojek.com/app":                      "mymodel",
+						"gojek.com/component":                "model-version",
+						"gojek.com/environment":              "dev",
+						"gojek.com/orchestrator":             "merlin",
+						"gojek.com/stream":                   "mystream",
+						"gojek.com/team":                     "myteam",
+						"component":                          "predictor",
+						"serving.kserve.io/inferenceservice": "mymodel-1",
+					},
 					MaxUnavailablePercentage: &eighty,
 				},
 				{
-					Name:                     "test-transformer-pdb",
-					Namespace:                "test-ns",
-					Labels:                   defaultLabels,
+					Name:      "mymodel-1-transformer-pdb",
+					Namespace: "mynamespace",
+					Labels: map[string]string{
+						"gojek.com/app":                      "mymodel",
+						"gojek.com/component":                "model-version",
+						"gojek.com/environment":              "dev",
+						"gojek.com/orchestrator":             "merlin",
+						"gojek.com/stream":                   "mystream",
+						"gojek.com/team":                     "myteam",
+						"component":                          "transformer",
+						"serving.kserve.io/inferenceservice": "mymodel-1",
+					},
 					MaxUnavailablePercentage: &eighty,
 				},
 			},
