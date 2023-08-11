@@ -25,7 +25,7 @@ type PodDisruptionBudget struct {
 
 func NewPodDisruptionBudget(modelService *models.Service, componentType string, pdbConfig config.PodDisruptionBudgetConfig) *PodDisruptionBudget {
 	return &PodDisruptionBudget{
-		Name:                     fmt.Sprintf("%s-%s-%s", modelService.Name, componentType, models.PDBComponentType),
+		Name:                     fmt.Sprintf("%s-%s-%s", modelService.ModelName, componentType, models.PDBComponentType),
 		Namespace:                modelService.Namespace,
 		Labels:                   modelService.Metadata.ToLabel(),
 		MaxUnavailablePercentage: pdbConfig.MaxUnavailablePercentage,

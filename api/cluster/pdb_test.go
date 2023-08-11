@@ -132,8 +132,10 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 		},
 		"model min replica low | minAvailablePercentage": {
 			modelService: &models.Service{
-				Name:      "test",
-				Namespace: "test-ns",
+				Name:         "test-1",
+				ModelName:    "test",
+				ModelVersion: "1",
+				Namespace:    "test-ns",
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica: 1,
 				},
@@ -159,8 +161,10 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 		},
 		"transformer min replica low | minAvailablePercentage": {
 			modelService: &models.Service{
-				Name:      "test",
-				Namespace: "test-ns",
+				Name:         "test-1",
+				ModelName:    "test",
+				ModelVersion: "1",
+				Namespace:    "test-ns",
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica: 3,
 				},
@@ -186,8 +190,10 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 		},
 		"all pdbs | minAvailablePercentage": {
 			modelService: &models.Service{
-				Name:      "test",
-				Namespace: "test-ns",
+				Name:         "test-1",
+				ModelName:    "test",
+				ModelVersion: "1",
+				Namespace:    "test-ns",
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica: 5,
 				},
@@ -219,8 +225,10 @@ func TestCreatePodDisruptionBudgets(t *testing.T) {
 		},
 		"all pdbs | maxUnavailablePercentage": {
 			modelService: &models.Service{
-				Name:      "test",
-				Namespace: "test-ns",
+				Name:         "test-1",
+				ModelName:    "test",
+				ModelVersion: "1",
+				Namespace:    "test-ns",
 				ResourceRequest: &models.ResourceRequest{
 					MinReplica: 5,
 				},
