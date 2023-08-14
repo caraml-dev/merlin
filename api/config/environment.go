@@ -40,7 +40,7 @@ type EnvironmentConfig struct {
 	DeploymentTimeout time.Duration `yaml:"deployment_timeout"`
 	NamespaceTimeout  time.Duration `yaml:"namespace_timeout"`
 
-	Gpus []GpuConfig `yaml:"gpus"`
+	GPUs []GPUConfig `yaml:"gpus"`
 
 	MaxCPU                    string                    `yaml:"max_cpu"`
 	MaxMemory                 string                    `yaml:"max_memory"`
@@ -112,7 +112,7 @@ type ResourceRequestConfig struct {
 	MemoryRequest string `yaml:"memory_request"`
 }
 
-type GpuConfig struct {
+type GPUConfig struct {
 	// Values limits how many GPUs can be requested by users.
 	// Example: "none", "1", "2", "4"
 	Values []string `yaml:"values"`
@@ -125,7 +125,7 @@ type GpuConfig struct {
 	// To deploy the models on a specific GPU node.
 	NodeSelector map[string]string `yaml:"node_selector"`
 	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
-	MonthlyCostPerGpu float64 `yaml:"monthly_cost_per_gpu"`
+	MonthlyCostPerGPU float64 `yaml:"monthly_cost_per_gpu"`
 }
 
 func InitEnvironmentConfigs(path string) ([]*EnvironmentConfig, error) {
@@ -174,6 +174,6 @@ func ParseDeploymentConfig(cfg *EnvironmentConfig, pyfuncGRPCOptions string) Dep
 		QueueResourcePercentage:   cfg.QueueResourcePercentage,
 		PyfuncGRPCOptions:         pyfuncGRPCOptions,
 		PodDisruptionBudget:       cfg.PodDisruptionBudget,
-		Gpus:                      cfg.Gpus,
+		GPUs:                      cfg.GPUs,
 	}
 }

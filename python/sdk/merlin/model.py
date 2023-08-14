@@ -1376,7 +1376,7 @@ class ModelVersion:
         raise ValueError(f"unknown model type: {model_type}")
 
     def _run_standard_model_local_server(self, artifact_path, env_vars, port, build_image):
-        container: Optional[Container] = None
+        container: Optional[Container] = None  # type: ignore
         try:
             container_name = self._container_name()
             image_name = self.MODEL_TYPE_TO_IMAGE_MAP[self.model.type]
@@ -1448,7 +1448,7 @@ class ModelVersion:
                                )
         self._wait_build_complete(logs)
 
-        container: Optional[Container] = None
+        container: Optional[Container] = None  # type: ignore
         try:
             container_name = self._container_name()
             print(f"Starting model server {container_name} at port: {port}")

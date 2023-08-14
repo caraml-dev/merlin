@@ -1053,6 +1053,10 @@ definitions:
         $ref: "#/definitions/ResourceRequest"
       default_prediction_job_resource_request:
         $ref: "#/definitions/PredictionJobResourceRequest"
+      gpus:
+        type: "array"
+        items:
+          $ref: "#/definitions/GPU"
       created_at:
         type: "string"
         format: "date-time"
@@ -1345,7 +1349,7 @@ definitions:
         type: "boolean"
       mode:
         $ref: "#/definitions/LoggerMode"
-  
+
   PredictionLoggerConfig:
     type: "object"
     properties:
@@ -1394,7 +1398,7 @@ definitions:
     enum:
       - serverless
       - raw_deployment
-    default: serverless  
+    default: serverless
 
   Container:
     type: "object"
@@ -1432,23 +1436,30 @@ definitions:
         type: "string"
       memory_request:
         type: "string"
-
+      gpu_resource_type:
+        type: "string"
+      gpu_request:
+        type: "string"
+      gpu_node_selector:
+        type: "object"
+        additionalProperties:
+          type: "string"
 
   AutoscalingPolicy:
     type: "object"
     properties:
       metrics_type:
-        $ref:  "#/definitions/MetricsType"
+        $ref: "#/definitions/MetricsType"
       target_value:
         type: "number"
 
   MetricsType:
     type: "string"
     enum:
-    - "concurrency"
-    - "cpu_utilization"
-    - "memory_utilization"
-    - "rps"
+      - "concurrency"
+      - "cpu_utilization"
+      - "memory_utilization"
+      - "rps"
 
   EnvVar:
     type: "object"
@@ -1526,6 +1537,24 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/EnvVar"
+
+  GPU:
+    type: "object"
+    properties:
+      values:
+        type: "array"
+        items:
+          type: string
+      display_name:
+        type: "string"
+      resource_type:
+        type: "string"
+      node_selector:
+        type: "object"
+        additionalProperties:
+          type: "string"
+      monthly_cost_per_gpu:
+        type: "number"
 
   PredictionJobResourceRequest:
     type: "object"
@@ -1667,7 +1696,7 @@ definitions:
       - IGNORE
       - ERROR
     default: ERRORIFEXISTS
-  
+
   StandardTransformerSimulationRequest:
     type: object
     properties:
@@ -1675,13 +1704,12 @@ definitions:
         $ref: "#/definitions/FreeFormObject"
       headers:
         $ref: "#/definitions/FreeFormObject"
-      config: 
+      config:
         $ref: "#/definitions/FreeFormObject"
       model_prediction_config:
         $ref: "#/definitions/ModelPredictionConfig"
       protocol:
         $ref: "#/definitions/Protocol"
-
 
   StandardTransformerSimulationResponse:
     type: object
@@ -1712,7 +1740,6 @@ definitions:
           $ref: "#/definitions/FreeFormObject"
         outputs:
           $ref: "#/definitions/FreeFormObject"
-
 
   ModelPredictionConfig:
     type: object
