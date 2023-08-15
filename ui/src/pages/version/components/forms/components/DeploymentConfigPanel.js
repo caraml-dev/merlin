@@ -60,6 +60,8 @@ export const DeploymentConfigPanel = ({
     const versionEndpoint = getEndpointByEnvironment(version, environment.name);
     const isDisabled = isEnvironmentOptionDisabled(versionEndpoint);
 
+    console.log(environment)
+
     return {
       value: environment.name,
       disabled: isDisabled,

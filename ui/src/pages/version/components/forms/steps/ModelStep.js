@@ -34,6 +34,7 @@ export const ModelStep = ({ version, isEnvironmentDisabled = false }) => {
 
       <EuiFlexItem grow={false}>
         <ResourcesPanel
+          environment={data.environment_name}
           resourcesConfig={data.resource_request}
           onChangeHandler={onChange("resource_request")}
           maxAllowedReplica={appConfig.scaling.maxAllowedReplica}

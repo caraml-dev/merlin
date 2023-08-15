@@ -6,6 +6,36 @@
     "is_default": true,
     "created_at": "2019-12-12T12:12:12Z",
     "updated_at": "2019-12-12T12:12:12Z",
+    "gpus": [
+      {
+        "values": [
+          "none",
+          "1",
+          "2",
+          "4"
+        ],
+        "display_name": "NVIDIA T4",
+        "resource_type": "nvidia.com/gpu",
+        "node_selector": {
+          "cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
+        },
+        "monthly_cost_per_gpu": 189.07
+      },
+      {
+        "values": [
+          "none",
+          "1",
+          "2",
+          "4"
+        ],
+        "display_name": "NVIDIA P4",
+        "resource_type": "nvidia.com/gpu",
+        "node_selector": {
+          "cloud.google.com/gke-accelerator": "nvidia-tesla-p4"
+        },
+        "monthly_cost_per_gpu": 332.15
+      }
+    ],
     "default_resource_request": {
       "cpu_request": "500m",
       "cpu_limit": "1000m",
@@ -22,6 +52,7 @@
     "is_default": false,
     "created_at": "2019-12-12T12:12:12Z",
     "updated_at": "2019-12-12T12:12:12Z",
+    "gpus": [],
     "default_resource_request": {
       "cpu_request": "400m",
       "cpu_limit": "1000m",

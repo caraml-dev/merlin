@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useContext, useEffect } from "react";
 import {
   EuiDualRange,
   EuiFieldText,
@@ -8,25 +8,34 @@ import {
   EuiFormRow,
   EuiSpacer,
   EuiCallOut,
+  EuiSuperSelect,
 } from "@elastic/eui";
 import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import { Panel } from "./Panel";
 import { calculateCost } from "../../../../../utils/costEstimation";
+import EnvironmentsContext from "../../../../../providers/environments/context";
 
 const maxTicks = 20;
 
 export const ResourcesPanel = ({
+  environment,
   resourcesConfig,
   onChangeHandler,
   errors = {},
   maxAllowedReplica,
 }) => {
-  const { onChange } = useOnChangeHandler(onChangeHandler);
+  const environments = useContext(EnvironmentsContext);
+  const gpus = environments.find((env) => env.name === environment)?.gpus || [];
 
+  const { onChange } = useOnChangeHandler(onChangeHandler);
   const replicasError = useMemo(
     () => [...(errors.min_replica || []), ...(errors.max_replica || [])],
     [errors.min_replica, errors.max_replica]
   );
+
+  const onGPUTypeChange = (value) => {
+    onChange("gpu_resource_type")(value);
+  };
 
   return (
     <Panel title="Resources">
@@ -78,6 +87,66 @@ export const ResourcesPanel = ({
         </EuiFlexGroup>
 
         <EuiSpacer size="l" />
+
+        {gpus.length > 0 && (
+          <>
+            <EuiFlexGroup direction="row">
+              <EuiFlexItem>
+                <EuiFormRow
+                  label={
+                    <FormLabelWithToolTip
+                      label="GPU Type"
+                      content="Specify the type of GPU that will be used for the model"
+                    />
+                  }
+                  isInvalid={!!errors.cpu_request}
+                  error={errors.cpu_request}
+                  fullWidth
+                >
+                  <EuiSuperSelect
+                    onChange={onGPUTypeChange}
+                    options={[
+                      {
+                        value: "None",
+                        inputDisplay: "None",
+                      },
+                      ...gpus.map((gpu) => ({
+                        value: gpu.display_name,
+                        inputDisplay: gpu.display_name,
+                      })),
+                    ]}
+                    valueOfSelected={
+                      resourcesConfig.gpu_resource_type || "None"
+                    }
+                  />
+                </EuiFormRow>
+              </EuiFlexItem>
+
+              <EuiFlexItem>
+                <EuiFormRow
+                  label={
+                    <FormLabelWithToolTip
+                      label="GPU Values"
+                      content="Specify the total amount of RAM available for the component"
+                    />
+                  }
+                  isInvalid={!!errors.memory_request}
+                  error={errors.memory_request}
+                  fullWidth
+                >
+                  <EuiFieldText
+                    placeholder="500Mi"
+                    value={resourcesConfig.memory_request}
+                    onChange={(e) => onChange("memory_request")(e.target.value)}
+                    isInvalid={!!errors.memory_request}
+                    name="memory"
+                  />
+                </EuiFormRow>
+              </EuiFlexItem>
+            </EuiFlexGroup>
+            <EuiSpacer size="l" />{" "}
+          </>
+        )}
 
         <EuiFormRow
           label={
