@@ -105,7 +105,7 @@ install_minio() {
     helm install --namespace minio-tenant --create-namespace minio-tenant minio/tenant --wait --timeout=600s --version ${MINIO_VERSION} \
         --values=config/minio/minio-tenant-values.yaml \
         --set "ingress.api.host=minio.minio.${INGRESS_HOST}" \
-        --set "ingress.console.host=minio.minio.${INGRESS_HOST}"
+        --set "ingress.console.host=console.minio.minio.${INGRESS_HOST}"
 }
 
 install_kserve() {

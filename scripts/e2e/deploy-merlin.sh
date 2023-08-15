@@ -26,6 +26,7 @@ install_merlin() {
     --version ${MERLIN_CHART_VERSION} \
     --values values-e2e.yaml \
     --set deployment.image.registry=${DOCKER_REGISTRY} \
+    --set deployment.image.repository=merlin \
     --set deployment.image.tag=${VERSION} \
     --set transformer.image=${DOCKER_REGISTRY}/merlin-transformer:${VERSION} \
     --set imageBuilder.dockerRegistry=${DOCKER_REGISTRY} \
@@ -45,17 +46,11 @@ install_merlin() {
     --set imageBuilder.predictionJobBaseImages."3\.10\.*".buildContextURI=git://github.com/caraml-dev/merlin.git#${GIT_REF} \
     --set imageBuilder.predictionJobBaseImages."3\.10\.*".dockerfilePath=docker/app.Dockerfile \
     --set imageBuilder.predictionJobBaseImages."3\.10\.*".mainAppPath=/home/spark/merlin-spark-app/main.py \
-    --set ingress.host=merlin.mlp.${INGRESS_HOST} \
-    --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST} \
-    --set mlp.deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}/v1 \
-    --set mlp.deployment.mlflowTrackingUrl=http://merlin-mlflow.mlp.${INGRESS_HOST} \
-    --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST} \
-    --set mlp.postgresql.resources.requests.cpu=25m \
-    --set mlp.postgresql.resources.requests.memory=64Mi \
-    --set merlin-postgresql.resources.requests.cpu=25m \
-    --set merlin-postgresql.resources.requests.memory=64Mi \
-    --set mlflow-postgresql.resources.requests.cpu=25m \
-    --set mlflow-postgresql.resources.requests.memory=64Mi \
+    --set ingress.host=merlin.caraml.${INGRESS_HOST} \
+    --set mlflow.ingress.host=merlin-mlflow.caraml.${INGRESS_HOST} \
+    --set mlp.deployment.apiHost=http://mlp.caraml.${INGRESS_HOST}/v1 \
+    --set mlp.deployment.mlflowTrackingUrl=http://merlin-mlflow.caraml.${INGRESS_HOST} \
+    --set mlp.ingress.host=mlp.caraml.${INGRESS_HOST} \
     --wait --timeout=${TIMEOUT}
 
   kubectl rollout status deployment/mlp -n caraml -w --timeout=${TIMEOUT}

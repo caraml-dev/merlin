@@ -1,6 +1,4 @@
 deployment:
-  image:
-    repository: merlin
   replicaCount: 1
   podLabels:
     environment: e2e
@@ -8,8 +6,7 @@ deployment:
     requests:
       cpu: 25m
       memory: 64Mi
-    limits:
-      memory: 256Mi
+    limits: ~
 config:
   Environment: dev
   LoggerDestinationURL: "http://message-dumper.mlp.svc.cluster.local"
@@ -17,7 +14,7 @@ config:
     APIHost: http://mlp:8080
     EncryptionKey: password
   StandardTransformerConfig:
-    ImageName: ghcr.io/caraml-dev/merlin-transformer:0.27.0
+    ImageName: ghcr.io/caraml-dev/merlin-transformer:0.31.3
   AuthorizationConfig:
     AuthorizationEnabled: false
 imageBuilder:
@@ -27,19 +24,19 @@ imageBuilder:
     annotations: {}
     labels: {}
   clusterName: "merlin-cluster"
-  k8s_config: {}
+  k8sConfig: {}
   builderConfig:
     BaseImages:
       3.7.*:
-        ImageName: pyfunc-py37:v0.27.0
+        ImageName: pyfunc-py37:v0.31.3
         DockerfilePath: "docker/Dockerfile"
-        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
+        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.31.3"
         MainAppPath: /merlin-spark-app/main.py
     PredictionJobBaseImages:
       3.7.*:
-        ImageName: pyspark-py37:v0.27.0
+        ImageName: pyspark-py37:v0.31.3
         DockerfilePath: "docker/app.Dockerfile"
-        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.27.0"
+        BuildContextURI: "git://github.com/gojek/merlin.git#refs/tags/v0.31.3"
         MainAppPath: /merlin-spark-app/main.py
     BuildNamespace: "mlp"
     BuildContextURI: git://github.com/caraml-dev/merlin.git#refs/heads/main
@@ -103,6 +100,7 @@ merlin-postgresql:
     requests:
       cpu: 25m
       memory: 64Mi
+    limits: ~
   persistence:
     enabled: false
 mlflow:
@@ -121,7 +119,7 @@ mlflow:
     AWS_ACCESS_KEY_ID: YOURACCESSKEY
     AWS_SECRET_ACCESS_KEY: YOURSECRETKEY
     AWS_DEFAULT_REGION: ap-southeast-2
-    MLFLOW_S3_ENDPOINT_URL: http://minio.minio.svc.cluster.local:9000
+    MLFLOW_S3_ENDPOINT_URL: http://myminio-hl.minio-tenant.svc.cluster.local:9000
 mlflow-postgresql:
   enabled: true
   postgresqlUsername: mlflow
@@ -132,6 +130,7 @@ mlflow-postgresql:
     requests:
       cpu: 25m
       memory: 64Mi
+    limits: ~
   persistence:
     enabled: false
 swagger:
@@ -146,3 +145,9 @@ mlp:
   ingress:
     enabled: true
     class: istio
+  postgresql:
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits: ~
