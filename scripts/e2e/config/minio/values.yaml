@@ -1,4 +1,4 @@
-replicas: 2
+replicas: 4
 
 resources:
   requests:
@@ -21,12 +21,7 @@ ingress:
     - minio.minio.127.0.0.1.nip.io
 
 consoleIngress:
-  enabled: true
-  annotations:
-    kubernetes.io/ingress.class: istio
-  path: /
-  hosts:
-    - console.minio.127.0.0.1.nip.io
+  enabled: false
 
 buckets:
   - name: mlflow
