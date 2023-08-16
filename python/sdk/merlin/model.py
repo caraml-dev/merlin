@@ -1068,12 +1068,14 @@ class ModelVersion:
 
             for env in env_list:
                 for gpu in env.gpus:
-                    if gpu.resource_type == resource_request.gpu_resource_type:
-                        resource_request.gpu_node_selector = gpu.gpu_node_selector
-
-            target_resource_request.gpu_request = resource_request.gpu_request
-            target_resource_request.gpu_resource_type = resource_request.gpu_resource_type
-            target_resource_request.gpu_node_selector = resource_request.gpu_node_selector
+                    if resource_request.gpu_name == gpu.display_name:
+                        if resource_request.gpu_request not in gpu.values:
+                            raise ValueError(f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}")
+                        
+                        target_resource_request.gpu_request = resource_request.gpu_request
+                        target_resource_request.gpu_resource_type = gpu.resource_type
+                        target_resource_request.gpu_node_selector = gpu.node_selector
+                        break
 
         target_env_vars = []
         if env_vars is not None:

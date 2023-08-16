@@ -12,21 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Dict
+from typing import Optional
 
 class ResourceRequest:
     """
     The resource requirement and replicas requests for model version endpoint.
     """
 
-    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str, gpu_request: str=None, gpu_resource_type: str=None, gpu_node_selector: Dict=None):
+    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str, gpu_request: str=None, gpu_name: str=None):
         self._min_replica = min_replica
         self._max_replica = max_replica
         self._cpu_request = cpu_request
         self._memory_request = memory_request
         self._gpu_request = gpu_request
-        self._gpu_resource_type = gpu_resource_type
-        self._gpu_node_selector = gpu_node_selector
+        self._gpu_name = gpu_name
         self.validate()
 
     @property
@@ -70,21 +69,12 @@ class ResourceRequest:
         self._gpu_request = gpu_request
     
     @property
-    def gpu_resource_type(self) -> Optional[str]:
-        return self._gpu_resource_type
+    def gpu_name(self) -> Optional[str]:
+        return self._gpu_name
     
-    @gpu_resource_type.setter
-    def gpu_resource_type(self, gpu_resource_type):
-        self._gpu_resource_type = gpu_resource_type
-
-    @property
-    def gpu_node_selector(self) -> Optional[Dict]:
-        return self._gpu_node_selector
-
-    @gpu_node_selector.setter
-    def gpu_node_selector(self, gpu_node_selector):
-        self._gpu_node_selector = gpu_node_selector
-
+    @gpu_name.setter
+    def gpu_name(self, gpu_name):
+        self._gpu_name = gpu_name
 
     def validate(self):
         if self._min_replica > self._max_replica:
