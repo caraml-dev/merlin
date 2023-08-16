@@ -22,14 +22,14 @@ ISTIO_VERSION=1.18.2
 KNATIVE_VERSION=1.10.2
 KNATIVE_NET_ISTIO_VERSION=1.10.1
 CERT_MANAGER_VERSION=1.12.2
-MINIO_VERSION=5.0.7
+MINIO_VERSION=3.6.3
 KSERVE_VERSION=0.9.0
 TIMEOUT=180s
 
 
 add_helm_repo() {
     helm repo add istio https://istio-release.storage.googleapis.com/charts
-    helm repo add minio https://operator.min.io/
+    helm repo add minio https://charts.min.io/
     helm repo update
 }
 
@@ -101,11 +101,12 @@ install_cert_manager() {
 
 install_minio() {
     echo "::group::Minio Deployment"
-    helm install --namespace minio-operator --create-namespace minio-operator minio/operator --values=config/minio/minio-operator-values.yaml --wait --timeout=600s --version ${MINIO_VERSION}
-    helm install --namespace minio-tenant --create-namespace minio-tenant minio/tenant --wait --timeout=600s --version ${MINIO_VERSION} \
-        --values=config/minio/minio-tenant-values.yaml \
-        --set "ingress.api.host=minio.minio.${INGRESS_HOST}" \
-        --set "ingress.console.host=console.minio.minio.${INGRESS_HOST}"
+    helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
+        --namespace=minio --create-namespace --timeout=${TIMEOUT} \
+        --set "ingress.hosts[0]=minio.minio.${INGRESS_HOST}" \
+        --set "consoleIngress.hosts[0]=console.minio.${INGRESS_HOST}"
+
+    kubectl rollout status statefulset/minio -n minio -w --timeout=${TIMEOUT}
 }
 
 install_kserve() {

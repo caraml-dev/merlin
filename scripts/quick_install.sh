@@ -7,8 +7,8 @@ export ISTIO_VERSION=1.18.2
 export KNATIVE_VERSION=v1.10.2
 export KNATIVE_NET_ISTIO_VERSION=v1.10.1
 export CERT_MANAGER_VERSION=v1.12.2
+export MINIO_VERSION=3.6.3
 export KSERVE_VERSION=v0.11.0
-export MINIO_VERSION=5.0.7
 
 export OAUTH_CLIENT_ID=""
 export MLP_CHART_VERSION=0.6.1
@@ -94,6 +94,33 @@ kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/downl
 kubectl wait deployment.apps/cert-manager-webhook --namespace=cert-manager --for=condition=available --timeout=600s
 sleep 15
 
+# Install Minio
+cat <<EOF > minio-values.yaml
+replicas: 1
+persistence:
+  enabled: false
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+livenessProbe:
+  initialDelaySeconds: 30
+defaultBucket:
+  enabled: true
+  name: mlflow
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: istio
+  path: /*
+  hosts:
+    - 'minio.minio.${INGRESS_HOST}.nip.io'
+EOF
+
+kubectl create namespace minio
+helm repo add minio https://helm.min.io/
+helm install minio minio/minio --version=${MINIO_VERSION} --namespace=minio --values=minio-values.yaml --wait --timeout=600s
+
 # Install KFServing
 kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve.yaml
 kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve-runtimes.yaml
@@ -107,54 +134,6 @@ cat <<EOF > ./patch-config-inferenceservice.json
 }
 EOF
 kubectl patch configmap/inferenceservice-config --namespace=kserve --type=merge --patch="$(cat patch-config-inferenceservice.json)"
-
-# Install Minio
-cat <<EOF > minio-operator-values.yaml
-operator:
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: 20m
-      memory: 64Mi
-console:
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: 20m
-      memory: 64Mi
-EOF
-
-cat <<EOF > minio-tenant-values.yaml
-secrets:
-  accessKey: YOURACCESSKEY
-  secretKey: YOURSECRETKEY
-tenant:
-  buckets:
-    - name: mlflow
-  pools:
-    - servers: 1
-      name: pool-0
-      volumesPerServer: 1
-      size: 10Gi
-      storageClassName: standard
-      resources:
-        requests:
-          cpu: 20m
-          memory: 64Mi
-ingress:
-  api:
-    enabled: true
-    ingressClassName: istio
-    host: minio.minio.${INGRESS_HOST}.nip.io
-  console:
-    enabled: true
-    ingressClassName: istio
-    host: console.minio.minio.${INGRESS_HOST}.nip.io
-EOF
-
-helm repo add minio https://operator.min.io/
-helm install --namespace minio-operator --create-namespace minio-operator minio/operator --values=minio-operator-values.yaml --wait --timeout=600s --version ${MINIO_VERSION}
-helm install --namespace minio-tenant --create-namespace minio-tenant minio/tenant --values=minio-tenant-values.yaml --wait --timeout=600s --version ${MINIO_VERSION}
 
 # Install MLP and Merlin
 
@@ -197,12 +176,6 @@ helm upgrade --install --create-namespace merlin caraml/merlin --namespace=caram
   --set mlp.deployment.mlflowTrackingUrl=http://merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
   --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
   --set mlp.ingress.path="/*" \
-  --set mlp.postgresql.resources.requests.cpu=25m \
-  --set mlp.postgresql.resources.requests.memory=64Mi \
-  --set merlin-postgresql.resources.requests.cpu=25m \
-  --set merlin-postgresql.resources.requests.memory=64Mi \
-  --set mlflow-postgresql.resources.requests.cpu=25m \
-  --set mlflow-postgresql.resources.requests.memory=64Mi \
   --set minio.enabled=false \
   --set kserve.enabled=false \
   --timeout=5m \
