@@ -17,7 +17,7 @@ class ResourceRequest:
     The resource requirement and replicas requests for model version endpoint.
     """
 
-    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str, gpu_request: str, gpu_resource_type: str):
+    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str, gpu_request: str=None, gpu_resource_type: str=None):
         self._min_replica = min_replica
         self._max_replica = max_replica
         self._cpu_request = cpu_request
