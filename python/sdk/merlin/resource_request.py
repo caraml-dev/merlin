@@ -17,11 +17,13 @@ class ResourceRequest:
     The resource requirement and replicas requests for model version endpoint.
     """
 
-    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str):
+    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str, gpu_request: str, gpu_resource_type: str):
         self._min_replica = min_replica
         self._max_replica = max_replica
         self._cpu_request = cpu_request
         self._memory_request = memory_request
+        self._gpu_request = gpu_request
+        self._gpu_resource_type = gpu_resource_type
         self.validate()
 
     @property
@@ -55,6 +57,22 @@ class ResourceRequest:
     @memory_request.setter
     def memory_request(self, memory_request):
         self._memory_request = memory_request
+
+    @property
+    def gpu_request(self) -> str:
+        return self._gpu_request
+    
+    @gpu_request.setter
+    def gpu_request(self, gpu_request):
+        self._gpu_request = gpu_request
+    
+    @property
+    def gpu_resource_type(self) -> str:
+        return self._gpu_resource_type
+    
+    @gpu_resource_type.setter
+    def gpu_resource_type(self, gpu_resource_type):
+        self._gpu_resource_type = gpu_resource_type
 
     def validate(self):
         if self._min_replica > self._max_replica:

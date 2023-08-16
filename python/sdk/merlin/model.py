@@ -1061,6 +1061,19 @@ class ModelVersion:
         target_resource_request = client.ResourceRequest(
             resource_request.min_replica, resource_request.max_replica,
             resource_request.cpu_request, resource_request.memory_request)
+        
+        if resource_request.gpu_request is not None and resource_request.gpu_resource_type is not None:
+            env_api = EnvironmentApi(self._api_client)
+            env_list = env_api.environments_get()
+
+            for env in env_list:
+                for gpu in env.gpus:
+                    if gpu.resource_type == resource_request.gpu_resource_type:
+                        resource_request.gpu_node_selector = gpu.gpu_node_selector
+
+            target_resource_request.gpu_request = resource_request.gpu_request
+            target_resource_request.gpu_resource_type = resource_request.gpu_resource_type
+            target_resource_request.gpu_node_selector = resource_request.gpu_node_selector
 
         target_env_vars = []
         if env_vars is not None:
