@@ -9,7 +9,7 @@ import { DeploymentSummary } from "./components/DeploymentSummary";
 import { CustomTransformerStep } from "./steps/CustomTransformerStep";
 import { FeastTransformerStep } from "./steps/FeastTransformerStep";
 import { ModelStep } from "./steps/ModelStep";
-import { PredictionLoggerStep } from "./steps/PredictionLoggerStep"
+import { PredictionLoggerStep } from "./steps/PredictionLoggerStep";
 import { StandardTransformerStep } from "./steps/StandardTransformerStep";
 import { TransformerStep } from "./steps/TransformerStep";
 import {
@@ -87,8 +87,8 @@ export const DeployModelVersionForm = ({
   const predictionLoggerStep = {
     title: "Logging",
     children: <PredictionLoggerStep />,
-    validationSchema: versionEndpointSchema
-  }
+    validationSchema: versionEndpointSchema,
+  };
 
   const customTransformerStep = {
     title: "Custom Transformer",
@@ -110,7 +110,11 @@ export const DeployModelVersionForm = ({
         switch (versionEndpoint.transformer.type_on_ui) {
           case "standard":
             if (versionEndpoint.protocol === PROTOCOL.UPI_V1) {
-              setSteps([...mainSteps, standardTransformerStep, predictionLoggerStep])
+              setSteps([
+                ...mainSteps,
+                standardTransformerStep,
+                predictionLoggerStep,
+              ]);
             } else {
               setSteps([...mainSteps, standardTransformerStep]);
             }
