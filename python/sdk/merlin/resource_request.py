@@ -12,16 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
 class ResourceRequest:
     """
     The resource requirement and replicas requests for model version endpoint.
     """
 
-    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str):
+    def __init__(self, min_replica: int, max_replica: int, cpu_request: str, memory_request: str, gpu_request: str=None, gpu_name: str=None):
         self._min_replica = min_replica
         self._max_replica = max_replica
         self._cpu_request = cpu_request
         self._memory_request = memory_request
+        self._gpu_request = gpu_request
+        self._gpu_name = gpu_name
         self.validate()
 
     @property
@@ -55,6 +59,22 @@ class ResourceRequest:
     @memory_request.setter
     def memory_request(self, memory_request):
         self._memory_request = memory_request
+
+    @property
+    def gpu_request(self) -> Optional[str]:
+        return self._gpu_request
+    
+    @gpu_request.setter
+    def gpu_request(self, gpu_request):
+        self._gpu_request = gpu_request
+    
+    @property
+    def gpu_name(self) -> Optional[str]:
+        return self._gpu_name
+    
+    @gpu_name.setter
+    def gpu_name(self, gpu_name):
+        self._gpu_name = gpu_name
 
     def validate(self):
         if self._min_replica > self._max_replica:
