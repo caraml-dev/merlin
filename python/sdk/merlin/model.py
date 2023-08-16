@@ -1062,7 +1062,7 @@ class ModelVersion:
             resource_request.min_replica, resource_request.max_replica,
             resource_request.cpu_request, resource_request.memory_request)
         
-        if resource_request.gpu_request is not None and resource_request.gpu_resource_type is not None:
+        if resource_request.gpu_request is not None and resource_request.gpu_name is not None:
             env_api = EnvironmentApi(self._api_client)
             env_list = env_api.environments_get()
 
