@@ -30,7 +30,7 @@ func TestAuthorizer_RequireAuthorization(t *testing.T) {
 	}{
 		{"All authenticated users can list projects", "/projects", "GET", false},
 		{"All authenticated users can list environments", "/environments", "GET", false},
-		{"All authenticated users can make changes to simulator", "/standard-transformer/simulate", "POST", false},
+		{"All authenticated users can make changes to simulator", "/standard_transformer/simulate", "POST", false},
 		{"Only authorized users can create model", "/models/100", "POST", true},
 		{"Options http request does not require authorization", "/projects", "OPTIONS", false},
 		{"Only authorized users can access project sub resources", "/projects/100/model_endpoints", "GET", true},
