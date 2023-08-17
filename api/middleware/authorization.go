@@ -51,7 +51,7 @@ type Operation struct {
 var publicOperations = []Operation{
 	{"/projects", []string{http.MethodGet}},
 	{"/environments", []string{http.MethodGet}},
-	{"/standard-transformer/simulate", []string{http.MethodGet}},
+	{"/standard-transformer/simulate", []string{http.MethodPost}},
 	{"/alerts/teams", []string{http.MethodGet}},
 }
 
