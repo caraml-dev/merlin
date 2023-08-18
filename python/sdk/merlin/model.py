@@ -1061,6 +1061,21 @@ class ModelVersion:
         target_resource_request = client.ResourceRequest(
             resource_request.min_replica, resource_request.max_replica,
             resource_request.cpu_request, resource_request.memory_request)
+        
+        if resource_request.gpu_request is not None and resource_request.gpu_name is not None:
+            env_api = EnvironmentApi(self._api_client)
+            env_list = env_api.environments_get()
+
+            for env in env_list:
+                for gpu in env.gpus:
+                    if resource_request.gpu_name == gpu.display_name:
+                        if resource_request.gpu_request not in gpu.values:
+                            raise ValueError(f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}")
+                        
+                        target_resource_request.gpu_request = resource_request.gpu_request
+                        target_resource_request.gpu_resource_type = gpu.resource_type
+                        target_resource_request.gpu_node_selector = gpu.node_selector
+                        break
 
         target_env_vars = []
         if env_vars is not None:
