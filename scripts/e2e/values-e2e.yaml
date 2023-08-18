@@ -64,9 +64,9 @@ environmentConfigs:
     cluster: merlin-cluster
     region: id
     gcp_project: gcp-project
-    deployment_timeout: 10m
+    deployment_timeout: 5m
     namespace_timeout: 2m
-    max_cpu: 200m
+    max_cpu: 100m
     max_memory: 512Mi
     queue_resource_percentage: 10
     is_prediction_job_enabled: true
@@ -80,13 +80,13 @@ environmentConfigs:
     default_deployment_config:
       min_replica: 1
       max_replica: 1
-      cpu_request: "100m"
+      cpu_request: "50m"
       memory_request: "256Mi"
     default_transformer_config:
       min_replica: 1
       max_replica: 1
-      cpu_request: "25m"
-      memory_request: "64Mi"
+      cpu_request: "10m"
+      memory_request: "32Mi"
     gpus: []
 ingress:
   enabled: true
