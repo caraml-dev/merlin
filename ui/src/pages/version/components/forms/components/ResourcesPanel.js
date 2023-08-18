@@ -87,7 +87,7 @@ export const ResourcesPanel = ({
 
   useEffect(() => {
     resetGPU();
-  }, [environment]);
+  }, [environment, resetGPU]);
 
   return (
     <Panel title="Resources">
