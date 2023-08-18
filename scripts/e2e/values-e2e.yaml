@@ -66,9 +66,9 @@ environmentConfigs:
     gcp_project: gcp-project
     deployment_timeout: 15m
     namespace_timeout: 2m
-    max_cpu: 250m
+    max_cpu: 128m
     max_memory: 256Mi
-    queue_resource_percentage: 20
+    queue_resource_percentage: 10
     is_prediction_job_enabled: true
     is_default_prediction_job: true
     default_prediction_job_config:
@@ -80,13 +80,14 @@ environmentConfigs:
     default_deployment_config:
       min_replica: 0
       max_replica: 1
-      cpu_request: "32m"
+      cpu_request: "64m"
       memory_request: "128Mi"
     default_transformer_config:
       min_replica: 0
       max_replica: 1
       cpu_request: "32m"
       memory_request: "64Mi"
+    gpus: []
 ingress:
   enabled: true
   class: istio
@@ -110,6 +111,7 @@ mlflow:
     requests:
       cpu: 25m
       memory: 64Mi
+    limits: ~
   artifactRoot: s3://mlflow
   ingress:
     enabled: true
