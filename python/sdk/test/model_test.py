@@ -29,6 +29,7 @@ from merlin.endpoint import VersionEndpoint
 from merlin.model import ModelType
 from merlin.protocol import Protocol
 from urllib3_mock import Responses
+from client.models import GPU
 
 import merlin
 from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
@@ -36,8 +37,12 @@ from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
 responses = Responses('requests.packages.urllib3')
 
 default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
+gpu = GPU(resource_type="nvidia.com/gpu", node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"})
+
 env_1 = cl.Environment(1, "dev", "cluster-1", True, default_resource_request=default_resource_request)
 env_2 = cl.Environment(2, "dev-2", "cluster-2", False, default_resource_request=default_resource_request)
+env_3 = cl.Environment(3, "dev-3", "cluster-3", False, default_resource_request=default_resource_request, gpus=[gpu])
+
 ep1 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
                          env_1.name, env_1, "grafana.com")
 ep2 = cl.VersionEndpoint("4567", 1, "running", "localhost/1", "svc-2",
@@ -48,6 +53,9 @@ ep4 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
                          env_1.name, env_1, "grafana.com",
                          autoscaling_policy=client.AutoscalingPolicy(metrics_type=cl.MetricsType.CPU_UTILIZATION,
                                                                      target_value=10))
+ep5 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
+                         env_3.name, env_3, "grafana.com")
+
 upi_ep = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
                          env_1.name, env_1, "grafana.com", protocol=cl.Protocol.UPI_V1)
 
@@ -350,6 +358,31 @@ class TestModelVersion:
         assert endpoint.environment_name == ep1.environment_name
         assert endpoint.environment.cluster == env_1.cluster
         assert endpoint.environment.name == env_1.name
+    
+    @responses.activate
+    def test_deploy_with_gpu(self, version):
+        responses.add("GET", '/v1/environments',
+                      body=json.dumps(
+                          [env_3.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+        responses.add("POST", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps(ep5.to_dict()),
+                      status=200,
+                      content_type='application/json')
+        responses.add("GET", '/v1/models/1/versions/1/endpoint',
+                      body=json.dumps([ep5.to_dict()]),
+                      status=200,
+                      content_type='application/json')
+
+        endpoint = version.deploy(environment_name=env_3.name)
+
+        assert endpoint.id == ep5.id
+        assert endpoint.status.value == ep5.status
+        assert endpoint.environment_name == ep5.environment_name
+        assert endpoint.environment.cluster == env_3.cluster
+        assert endpoint.environment.name == env_3.name
+        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
 
     @responses.activate
     def test_undeploy(self, version):
