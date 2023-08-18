@@ -1121,7 +1121,11 @@ class ModelVersion:
                                           )
         current_endpoint = self.endpoint
         if current_endpoint is not None:
-            endpoint.status = Status.RUNNING.value
+            # This allows a serving deployment to be update while it is serving
+            if current_endpoint.status == Status.SERVING:
+                endpoint.status = Status.SERVING.value
+            else:
+                endpoint.status = Status.RUNNING.value
             endpoint = endpoint_api \
                 .models_model_id_versions_version_id_endpoint_endpoint_id_put(int(model.id),
                                                                    int(self.id),
@@ -1146,7 +1150,7 @@ class ModelVersion:
             sleep(5)
         bar.stop()
 
-        if endpoint.status != "running":
+        if endpoint.status != "running" and endpoint.status != "serving":
             raise ModelEndpointDeploymentError(model.name, self.id, endpoint.message)
 
         log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
