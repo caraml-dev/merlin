@@ -1,4 +1,10 @@
-import React, { useMemo, useContext, useState, useEffect } from "react";
+import React, {
+  useMemo,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   EuiDualRange,
   EuiFieldText,
@@ -78,12 +84,12 @@ export const ResourcesPanel = ({
     onChange("gpu_request")(value);
   };
 
-  const resetGPU = () => {
+  const resetGPU = useCallback(() => {
     onChange("gpu_display_name")(undefined);
     onChange("gpu_resource_type")(undefined);
     onChange("gpu_node_selector")(undefined);
     onChange("gpu_request")(undefined);
-  };
+  }, [onChange]);
 
   useEffect(() => {
     resetGPU();
