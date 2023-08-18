@@ -155,7 +155,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 			Items: []v1.Pod{
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "test-model-1-predictor-default-a",
+						Name: "test-model-1-predictor-a",
 						Labels: map[string]string{
 							"component":                          "predictor",
 							"serving.kserve.io/inferenceservice": "test-model-1",
@@ -174,7 +174,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 				},
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "test-model-1-predictor-default-b",
+						Name: "test-model-1-predictor-b",
 						Labels: map[string]string{
 							"component":                          "predictor",
 							"serving.kserve.io/inferenceservice": "test-model-1",
@@ -194,7 +194,7 @@ func Test_logService_StreamLogs(t *testing.T) {
 			},
 		}, nil)
 
-	pods := []string{"test-model-1-predictor-default-a", "test-model-1-predictor-default-b"}
+	pods := []string{"test-model-1-predictor-a", "test-model-1-predictor-b"}
 	containers := []string{"storage-initializer", "kfserving-container", "inferenceservice-logger"}
 
 	for _, pod := range pods {

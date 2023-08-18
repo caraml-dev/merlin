@@ -51,14 +51,14 @@ func TestNewContainer(t *testing.T) {
 			"model",
 			args{
 				name:       "kfserving-container",
-				podName:    "test-1-predictor-default-12345-deployment",
+				podName:    "test-1-predictor-12345-deployment",
 				namespace:  "sample",
 				cluster:    "test",
 				gcpProject: "test-project",
 			},
 			&Container{
 				Name:          "kfserving-container",
-				PodName:       "test-1-predictor-default-12345-deployment",
+				PodName:       "test-1-predictor-12345-deployment",
 				ComponentType: "model",
 				Namespace:     "sample",
 				Cluster:       "test",
@@ -69,14 +69,14 @@ func TestNewContainer(t *testing.T) {
 			"transformer",
 			args{
 				name:       "transformer",
-				podName:    "test-1-transformer-default-12345-deployment",
+				podName:    "test-1-transformer-12345-deployment",
 				namespace:  "sample",
 				cluster:    "test",
 				gcpProject: "test-project",
 			},
 			&Container{
 				Name:          "transformer",
-				PodName:       "test-1-transformer-default-12345-deployment",
+				PodName:       "test-1-transformer-12345-deployment",
 				ComponentType: "transformer",
 				Namespace:     "sample",
 				Cluster:       "test",
