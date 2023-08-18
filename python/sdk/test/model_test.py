@@ -29,7 +29,6 @@ from merlin.endpoint import VersionEndpoint
 from merlin.model import ModelType
 from merlin.protocol import Protocol
 from urllib3_mock import Responses
-from client.models import GPU
 
 import merlin
 from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
@@ -37,11 +36,13 @@ from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
 responses = Responses('requests.packages.urllib3')
 
 default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
-gpu = GPU(resource_type="nvidia.com/gpu", node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"})
+gpu_config = {"gpu_resource_type": "nvidia.com/gpu", "gpu_request": '1', "gpu_node_selector": {"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"}}
+default_resource_request_with_gpu = cl.ResourceRequest(1, 1, "100m", "128Mi", **gpu_config)
+gpu = cl.GPU(values=["1", "4", "8"], display_name="nvidia-tesla-p4",resource_type="nvidia.com/gpu", node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"})
 
 env_1 = cl.Environment(1, "dev", "cluster-1", True, default_resource_request=default_resource_request)
 env_2 = cl.Environment(2, "dev-2", "cluster-2", False, default_resource_request=default_resource_request)
-env_3 = cl.Environment(3, "dev-3", "cluster-3", False, default_resource_request=default_resource_request, gpus=[gpu])
+env_3 = cl.Environment(3, "dev-3", "cluster-3", False, default_resource_request=default_resource_request_with_gpu, gpus=[gpu])
 
 ep1 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
                          env_1.name, env_1, "grafana.com")
@@ -53,7 +54,7 @@ ep4 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
                          env_1.name, env_1, "grafana.com",
                          autoscaling_policy=client.AutoscalingPolicy(metrics_type=cl.MetricsType.CPU_UTILIZATION,
                                                                      target_value=10))
-ep5 = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
+ep5 = cl.VersionEndpoint("789", 1, "running", "localhost/1", "svc-1",
                          env_3.name, env_3, "grafana.com")
 
 upi_ep = cl.VersionEndpoint("1234", 1, "running", "localhost/1", "svc-1",
@@ -383,6 +384,9 @@ class TestModelVersion:
         assert endpoint.environment.cluster == env_3.cluster
         assert endpoint.environment.name == env_3.name
         assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+        assert endpoint.resource_request.gpu_request == env_3.default_resource_request.gpu_request
+        assert endpoint.resource_request.gpu_resource_type == env_3.default_resource_request.gpu_resource_type
+        assert endpoint.resource_request.gpu_node_selector == env_3.default_resource_request.gpu_node_selector
 
     @responses.activate
     def test_undeploy(self, version):

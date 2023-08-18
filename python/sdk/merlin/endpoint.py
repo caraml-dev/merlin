@@ -24,6 +24,7 @@ from merlin.environment import Environment
 from merlin.logger import Logger
 from merlin.protocol import Protocol
 from merlin.util import autostr, get_url
+from merlin.resource_request import ResourceRequest
 
 
 class Status(Enum):
@@ -51,6 +52,7 @@ class VersionEndpoint:
         self._environment = Environment(endpoint.environment)
         self._env_vars = endpoint.env_vars
         self._logger = Logger.from_logger_response(endpoint.logger)
+        self._resource_request = endpoint.environment.default_resource_request
         self._deployment_mode = DeploymentMode.SERVERLESS if not endpoint.deployment_mode \
             else DeploymentMode(endpoint.deployment_mode)
 
@@ -113,6 +115,10 @@ class VersionEndpoint:
     @property
     def protocol(self) -> Protocol:
         return self._protocol
+    
+    @property
+    def resource_request(self) -> ResourceRequest:
+        return self._resource_request
 
     def _repr_html_(self):
         return f"""<a href="{self._url}">{self._url}</a>"""
