@@ -1,14 +1,10 @@
 import React from "react";
 import { useMerlinApi } from "../../hooks/useMerlinApi";
-// import evn from mock
-import mocks from "../../mocks";
 
 const EnvironmentsContext = React.createContext([]);
 
 export const EnvironmentsContextProvider = ({ children }) => {
-  // const [{ data: environments }] = useMerlinApi("/environments", {}, []);
-
-  const environments = mocks.environmentList;
+  const [{ data: environments }] = useMerlinApi("/environments", {}, []);
 
   console.log("___environments", environments);
 
