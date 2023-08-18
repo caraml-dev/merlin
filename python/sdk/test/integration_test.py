@@ -99,7 +99,10 @@ def test_sklearn(
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
 
-    endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
+    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+    endpoint = merlin.deploy(
+        v, deployment_mode=deployment_mode, resource_request=resource_request
+    )
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
@@ -131,7 +134,10 @@ def test_xgboost(
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
 
-    endpoint = merlin.deploy(v, deployment_mode=deployment_mode)
+    resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+    endpoint = merlin.deploy(
+        v, deployment_mode=deployment_mode, resource_request=resource_request
+    )
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
     assert resp.status_code == 200
@@ -235,7 +241,8 @@ def test_pytorch(integration_test_url, project_name, use_google_oauth, requests)
 
     with merlin.new_model_version() as v:
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v)
+        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+        endpoint = merlin.deploy(v, resource_request=resource_request)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -347,7 +354,10 @@ def test_multi_env(integration_test_url, project_name, use_google_oauth, request
     with merlin.new_model_version() as v:
         # Upload the serialized model to MLP
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v, environment_name=default_env.name)
+        resource_request = ResourceRequest(1, 1, "100m", "200Mi")
+        endpoint = merlin.deploy(
+            v, environment_name=default_env.name, resource_request=resource_request
+        )
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 

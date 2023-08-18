@@ -78,12 +78,12 @@ environmentConfigs:
       executor_cpu_request: 25m
       executor_memory_request: 128Mi
     default_deployment_config:
-      min_replica: 1
+      min_replica: 0
       max_replica: 1
       cpu_request: "50m"
-      memory_request: "256Mi"
+      memory_request: "128Mi"
     default_transformer_config:
-      min_replica: 1
+      min_replica: 0
       max_replica: 1
       cpu_request: "10m"
       memory_request: "32Mi"
