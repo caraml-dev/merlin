@@ -64,7 +64,7 @@ environmentConfigs:
     cluster: merlin-cluster
     region: id
     gcp_project: gcp-project
-    deployment_timeout: 5m
+    deployment_timeout: 10m
     namespace_timeout: 2m
     max_cpu: 200m
     max_memory: 512Mi
