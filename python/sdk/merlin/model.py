@@ -1045,7 +1045,7 @@ class ModelVersion:
         if resource_request is None:
             env_api = EnvironmentApi(self._api_client)
             env_list = env_api.environments_get()
-            
+
             for env in env_list:
                 if env.name == target_env_name:
                     resource_request = ResourceRequest(
@@ -1054,7 +1054,7 @@ class ModelVersion:
                         env.default_resource_request.cpu_request,
                         env.default_resource_request.memory_request,
                         )
-                    
+
             # This case is when the default resource request is not specified in the environment config
             if resource_request is None:
                 raise ValueError("resource request must be specified")
@@ -1119,12 +1119,19 @@ class ModelVersion:
                                                                                       autoscaling_policy.target_value),
                                           protocol=protocol.value
                                           )
-
-        endpoint = endpoint_api \
-            .models_model_id_versions_version_id_endpoint_post(int(model.id),
-                                                               int(self.id),
-                                                               body=endpoint.to_dict())
-
+        current_endpoint = self.endpoint
+        if current_endpoint is not None:
+            endpoint.status = Status.RUNNING.value
+            endpoint = endpoint_api \
+                .models_model_id_versions_version_id_endpoint_endpoint_id_put(int(model.id),
+                                                                   int(self.id),
+                                                                   current_endpoint.id,
+                                                                   body=endpoint.to_dict())
+        else:
+            endpoint = endpoint_api \
+                .models_model_id_versions_version_id_endpoint_post(int(model.id),
+                                                                   int(self.id),
+                                                                   body=endpoint.to_dict())
         bar = pyprind.ProgBar(100, track_time=True,
                               title=f"Deploying model {model.name} version "
                                     f"{self.id}")
@@ -1147,7 +1154,7 @@ class ModelVersion:
               f"\nView model version logs: {log_url}")
 
         self._version_endpoints = self.list_endpoint()
-        
+
         return VersionEndpoint(endpoint, log_url)
 
     def create_transformer_spec(self, transformer: Transformer, target_env_name: str) -> client.Transformer:
