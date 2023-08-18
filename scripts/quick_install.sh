@@ -96,40 +96,52 @@ sleep 15
 
 # Install Minio
 cat <<EOF > minio-values.yaml
-replicas: 1
-persistence:
-  enabled: false
+replicas: 4
+
 resources:
   requests:
     cpu: 25m
     memory: 64Mi
-livenessProbe:
-  initialDelaySeconds: 30
-defaultBucket:
-  enabled: true
-  name: mlflow
+  limits: ~
+
+accessKey: YOURACCESSKEY
+secretKey: YOURSECRETKEY
+
+rootUser: YOURACCESSKEY
+rootPassword: YOURSECRETKEY
+
 ingress:
   enabled: true
   annotations:
     kubernetes.io/ingress.class: istio
-  path: /*
+  path: /
   hosts:
-    - 'minio.minio.${INGRESS_HOST}.nip.io'
+    - minio.minio.${INGRESS_HOST}.nip.io
+
+consoleIngress:
+  enabled: false
+
+buckets:
+  - name: mlflow
+    policy: none
+    purge: false
+    versioning: false
 EOF
 
 kubectl create namespace minio
-helm repo add minio https://helm.min.io/
+helm repo add minio https://charts.min.io/
 helm install minio minio/minio --version=${MINIO_VERSION} --namespace=minio --values=minio-values.yaml --wait --timeout=600s
 
-# Install KFServing
+Install Kserve
 kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve.yaml
 kubectl apply --filename=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve-runtimes.yaml
 
 cat <<EOF > ./patch-config-inferenceservice.json
 {
   "data": {
-    "storageInitializer": "{\n    \"image\" : \"ghcr.io/ariefrahmansyah/kfserving-storage-init:latest\",\n    \"memoryRequest\": \"100Mi\",\n    \"memoryLimit\": \"1Gi\",\n    \"cpuRequest\": \"25m\",\n    \"cpuLimit\": \"1\"\n}",
-    "logger": "{\n    \"image\" : \"kserve/agent:v0.11.0\",\n    \"memoryRequest\": \"100Mi\",\n    \"memoryLimit\": \"1Gi\",\n    \"cpuRequest\": \"25m\",\n    \"cpuLimit\": \"1\",\n    \"defaultUrl\": \"http:\/\/default-broker\"\n}"
+    "ingress": "{\n    \"ingressGateway\" : \"knative-serving/knative-ingress-gateway\",\n    \"ingressService\" : \"istio-ingressgateway.istio-system.svc.cluster.local\",\n    \"localGateway\" : \"knative-serving/knative-local-gateway\",\n    \"localGatewayService\" : \"knative-local-gateway.istio-system.svc.cluster.local\",\n    \"ingressDomain\"  : \"${INGRESS_HOST}.nip.io\",\n    \"ingressClassName\" : \"istio\",\n    \"domainTemplate\": \"{{ .Name }}.{{ .Namespace }}.{{ .IngressDomain }}\",\n    \"urlScheme\": \"http\",\n    \"disableIstioVirtualHost\": false\n}"
+    "logger": "{\n    \"image\" : \"kserve/agent:${KSERVE_VERSION}\",\n    \"memoryRequest\": \"100Mi\",\n    \"memoryLimit\": \"1Gi\",\n    \"cpuRequest\": \"25m\",\n    \"cpuLimit\": \"1\",\n    \"defaultUrl\": \"http:\/\/default-broker\"\n}",
+    "storageInitializer": "{\n    \"image\" : \"ghcr.io/ariefrahmansyah/kfserving-storage-init:latest\",\n    \"memoryRequest\": \"100Mi\",\n    \"memoryLimit\": \"1Gi\",\n    \"cpuRequest\": \"25m\",\n    \"cpuLimit\": \"1\"\n}"
   }
 }
 EOF
@@ -137,7 +149,7 @@ kubectl patch configmap/inferenceservice-config --namespace=kserve --type=merge 
 
 # Install MLP and Merlin
 
-# create new helm value file containing cluster credentials
+create new helm value file containing cluster credentials
 cat <<EOF | yq e -P - > k8s_config.yaml
 {
   "k8s_config": {
@@ -163,19 +175,16 @@ helm upgrade --install --create-namespace merlin caraml/merlin --namespace=caram
   --version ${MERLIN_CHART_VERSION} \
   --set deployment.image.tag=${MERLIN_VERSION} \
   --set ui.oauthClientID=${OAUTH_CLIENT_ID} \
-  --set config.MlpAPIConfig.APIHost=http://mlp.mlp.${INGRESS_HOST}.nip.io \
+  --set config.MlpAPIConfig.APIHost=http://mlp.caraml.${INGRESS_HOST}.nip.io \
   --set ingress.enabled=true \
   --set ingress.class=istio \
-  --set ingress.host=merlin.mlp.${INGRESS_HOST}.nip.io \
-  --set ingress.path="/*" \
+  --set ingress.host=merlin.caraml.${INGRESS_HOST}.nip.io \
   --set mlflow.ingress.enabled=true \
   --set mlflow.ingress.class=istio \
-  --set mlflow.ingress.host=merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
-  --set mlflow.ingress.path="/*" \
-  --set mlp.deployment.apiHost=http://mlp.mlp.${INGRESS_HOST}.nip.io/v1 \
-  --set mlp.deployment.mlflowTrackingUrl=http://merlin-mlflow.mlp.${INGRESS_HOST}.nip.io \
-  --set mlp.ingress.host=mlp.mlp.${INGRESS_HOST}.nip.io \
-  --set mlp.ingress.path="/*" \
+  --set mlflow.ingress.host=merlin-mlflow.caraml.${INGRESS_HOST}.nip.io \
+  --set mlp.deployment.apiHost=http://mlp.caraml.${INGRESS_HOST}.nip.io/v1 \
+  --set mlp.deployment.mlflowTrackingUrl=http://merlin-mlflow.caraml.${INGRESS_HOST}.nip.io \
+  --set mlp.ingress.host=mlp.caraml.${INGRESS_HOST}.nip.io \
   --set minio.enabled=false \
   --set kserve.enabled=false \
   --timeout=5m \
