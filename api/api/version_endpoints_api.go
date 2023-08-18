@@ -392,9 +392,13 @@ func validateUpdateRequest(prev *models.VersionEndpoint, new *models.VersionEndp
 		return fmt.Errorf("Updating environment is not allowed, previous: %s, new: %s", prev.EnvironmentName, new.EnvironmentName)
 	}
 
+	if prev.Status == models.EndpointPending {
+		return fmt.Errorf("Updating endpoint status to %s is not allowed when the endpoint is currently in the pending state", new.Status)
+	}
+
 	if new.Status != prev.Status {
 		if prev.Status == models.EndpointServing {
-			return fmt.Errorf("Updating endpoint status to %s is not allowed when the endpoint is in serving state", new.Status)
+			return fmt.Errorf("Updating endpoint status to %s is not allowed when the endpoint is currently in the serving state", new.Status)
 		}
 
 		if new.Status != models.EndpointRunning && new.Status != models.EndpointTerminated {
