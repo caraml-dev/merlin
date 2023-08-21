@@ -52,7 +52,7 @@ class VersionEndpoint:
         self._environment = Environment(endpoint.environment)
         self._env_vars = endpoint.env_vars
         self._logger = Logger.from_logger_response(endpoint.logger)
-        self._resource_request = endpoint.environment.default_resource_request
+        self._resource_request = endpoint.resource_request
         self._deployment_mode = DeploymentMode.SERVERLESS if not endpoint.deployment_mode \
             else DeploymentMode(endpoint.deployment_mode)
 

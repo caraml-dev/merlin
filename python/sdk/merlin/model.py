@@ -1053,8 +1053,6 @@ class ModelVersion:
                         env.default_resource_request.max_replica,
                         env.default_resource_request.cpu_request,
                         env.default_resource_request.memory_request,
-                        env.default_resource_request.gpu_request if env.default_resource_request.gpu_request else None,
-                        env.default_resource_request.gpu_node_selector.get("cloud.google.com/gke-accelerator", None) if env.default_resource_request.gpu_resource_type else None
                         )
                     
             # This case is when the default resource request is not specified in the environment config
