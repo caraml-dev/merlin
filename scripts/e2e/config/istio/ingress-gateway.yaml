@@ -5,4 +5,6 @@ resources:
   requests:
     cpu: 25m
     memory: 64Mi
-  limits: ~
+  limits:
+    cpu: 25m
+    memory: 64Mi

@@ -12,7 +12,9 @@ spec:
             requests:
               cpu: 20m
               memory: 64Mi
-            limits: ~
+            limits:
+              cpu: 20m
+              memory: 64Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -28,7 +30,9 @@ spec:
             requests:
               cpu: 20m
               memory: 64Mi
-            limits: ~
+            limits:
+              cpu: 20m
+              memory: 64Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -44,7 +48,9 @@ spec:
             requests:
               cpu: 50m
               memory: 64Mi
-            limits: ~
+            limits:
+              cpu: 20m
+              memory: 64Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -58,6 +64,9 @@ spec:
         - name: webhook
           resources:
             requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
               cpu: 50m
               memory: 64Mi
 ---
@@ -75,7 +84,9 @@ spec:
             requests:
               cpu: 20m
               memory: 64Mi
-            limits: ~
+            limits:
+              cpu: 20m
+              memory: 64Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -91,7 +102,9 @@ spec:
             requests:
               cpu: 20m
               memory: 64Mi
-            limits: ~
+            limits:
+              cpu: 20m
+              memory: 64Mi
 
 ---
 apiVersion: v1

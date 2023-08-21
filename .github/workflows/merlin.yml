@@ -429,6 +429,10 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
+          echo "::group::Get nodes"
+          kubectl get nodes
+          echo "::endgroup::"
+
           echo "::group::Get all events"
           kubectl get events -A
           echo "::endgroup::"

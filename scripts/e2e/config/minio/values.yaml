@@ -2,9 +2,11 @@ replicas: 4
 
 resources:
   requests:
-    cpu: 25m
+    cpu: 10m
     memory: 64Mi
-  limits: ~
+  limits:
+    cpu: 10m
+    memory: 64Mi
 
 accessKey: YOURACCESSKEY
 secretKey: YOURSECRETKEY
