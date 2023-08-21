@@ -268,7 +268,7 @@ def test_set_traffic(integration_test_url, project_name, use_google_oauth, reque
         # Upload the serialized model to MLP
         resource_request = ResourceRequest(1, 1, "100m", "200Mi")
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v)
+        endpoint = merlin.deploy(v, resource_request=resource_request)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
@@ -310,7 +310,7 @@ def test_serve_traffic(integration_test_url, project_name, use_google_oauth, req
         # Upload the serialized model to MLP
         resource_request = ResourceRequest(1, 1, "100m", "200Mi")
         merlin.log_model(model_dir=model_dir)
-        endpoint = merlin.deploy(v)
+        endpoint = merlin.deploy(v, resource_request=resource_request)
 
     resp = requests.post(f"{endpoint.url}", json=request_json)
 
