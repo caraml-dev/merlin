@@ -429,10 +429,6 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
-          echo "::group::Get node resources usage"
-          kubectl top nodes
-          echo "::endgroup::"
-
           echo "::group::Get all events"
           kubectl get events -A
           echo "::endgroup::"
