@@ -172,6 +172,7 @@ export const ResourcesPanel = ({
                       })),
                     ]}
                     valueOfSelected={resourcesConfig.gpu_display_name || "None"}
+                    hasDividers
                   />
                 </EuiFormRow>
               </EuiFlexItem>
@@ -192,6 +193,7 @@ export const ResourcesPanel = ({
                     onChange={onGPUValueChange}
                     options={gpuValueOptions}
                     valueOfSelected={resourcesConfig.gpu_request || "None"}
+                    hasDividers
                   />
                 </EuiFormRow>
               </EuiFlexItem>
