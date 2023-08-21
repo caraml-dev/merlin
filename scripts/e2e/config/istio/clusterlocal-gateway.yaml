@@ -12,7 +12,7 @@ resources:
     cpu: 25m
     memory: 64Mi
   limits:
-    cpu: 25m
+    cpu: ~
     memory: 64Mi
 
 service:
