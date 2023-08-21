@@ -66,7 +66,7 @@ environmentConfigs:
     gcp_project: gcp-project
     deployment_timeout: 5m
     namespace_timeout: 2m
-    max_cpu: 100m
+    max_cpu: 200m
     max_memory: 512Mi
     queue_resource_percentage: 10
     is_prediction_job_enabled: true

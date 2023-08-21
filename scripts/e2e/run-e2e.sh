@@ -33,4 +33,4 @@ kubectl create namespace ${E2E_PROJECT_NAME} --dry-run=client -o yaml | kubectl 
 cd ../../python/sdk
 pip install pipenv==2022.8.19
 pipenv install --dev --skip-lock --python ${PYTHON_VERSION}
-pipenv run pytest -n=8 -W=ignore --cov=merlin -m "not (feast or batch or pyfunc or local_server_test or cli or customtransformer)"
+pipenv run pytest -n=4 -W=ignore --cov=merlin -m "not (feast or batch or pyfunc or local_server_test or cli or customtransformer)"
