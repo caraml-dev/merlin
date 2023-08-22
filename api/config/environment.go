@@ -126,8 +126,12 @@ type GPUConfig struct {
 	NodeSelector map[string]string `yaml:"node_selector"`
 	// To deploy the models on a specific GPU node via taints and tolerations.
 	Tolerations []corev1.Toleration `yaml:"tolerations"`
+	// MinMonthlyCostPerGPU is the minimum monthly cost per GPU, for example, if you enable time-sharing GPUs with 8 max shared clients,
+	// the minimum monthly cost per GPU is max_monthly_cost_per_gpu divided by 8.
+	// MaxMonthlyCostPerGPU is the maximum monthly cost if you use the whole GPU.
 	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
-	MonthlyCostPerGPU float64 `yaml:"monthly_cost_per_gpu"`
+	MinMonthlyCostPerGPU float64 `yaml:"min_monthly_cost_per_gpu"`
+	MaxMonthlyCostPerGPU float64 `yaml:"max_monthly_cost_per_gpu"`
 }
 
 func InitEnvironmentConfigs(path string) ([]*EnvironmentConfig, error) {

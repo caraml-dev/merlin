@@ -70,7 +70,8 @@ func TestSave(t *testing.T) {
 						NodeSelector: map[string]string{
 							"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
 						},
-						MonthlyCostPerGPU: 189.07,
+						MinMonthlyCostPerGPU: 189.07,
+						MaxMonthlyCostPerGPU: 189.07,
 					},
 				},
 			},

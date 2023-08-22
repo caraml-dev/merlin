@@ -1560,7 +1560,9 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/GPUToleration"
-      monthly_cost_per_gpu:
+      min_monthly_cost_per_gpu:
+        type: "number"
+      max_monthly_cost_per_gpu:
         type: "number"
 
   GPUToleration:

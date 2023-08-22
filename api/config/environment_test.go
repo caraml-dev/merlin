@@ -192,7 +192,20 @@ func TestGPUsConfig(t *testing.T) {
 					NodeSelector: map[string]string{
 						"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
 					},
-					MonthlyCostPerGPU: 189.07,
+					MinMonthlyCostPerGPU: 189.07,
+					MaxMonthlyCostPerGPU: 189.07,
+				},
+				{
+					Values:       []string{"None", "1"},
+					DisplayName:  "NVIDIA T4 with Time Sharing",
+					ResourceType: "nvidia.com/gpu",
+					NodeSelector: map[string]string{
+						"cloud.google.com/gke-accelerator":                "nvidia-tesla-t4",
+						"cloud.google.com/gke-max-shared-clients-per-gpu": "8",
+						"cloud.google.com/gke-gpu-sharing-strategy":       "time-sharing",
+					},
+					MinMonthlyCostPerGPU: 23.63,
+					MaxMonthlyCostPerGPU: 189.07,
 				},
 				{
 					Values:       []string{"None", "1", "2"},
@@ -215,7 +228,8 @@ func TestGPUsConfig(t *testing.T) {
 							Effect:   corev1.TaintEffectNoSchedule,
 						},
 					},
-					MonthlyCostPerGPU: 332.15,
+					MinMonthlyCostPerGPU: 332.15,
+					MaxMonthlyCostPerGPU: 332.15,
 				},
 			},
 		},
