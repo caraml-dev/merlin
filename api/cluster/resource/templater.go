@@ -256,6 +256,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	}
 
 	nodeSelector := map[string]string{}
+	tolerations := []corev1.Toleration{}
 	if !modelService.ResourceRequest.GPURequest.IsZero() {
 		// Declare and initialize resourceType and resourceQuantity variables
 		resourceType := corev1.ResourceName(modelService.ResourceRequest.GPUResourceType)
@@ -266,6 +267,7 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		resources.Limits[resourceType] = resourceQuantity
 
 		nodeSelector = modelService.ResourceRequest.GPUNodeSelector
+		tolerations = modelService.ResourceRequest.GPUTolerations
 	}
 
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
@@ -360,11 +362,15 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			},
 		}
 	case models.ModelTypeCustom:
-		predictorSpec = createCustomPredictorSpec(modelService, resources, nodeSelector)
+		predictorSpec = createCustomPredictorSpec(modelService, resources, nodeSelector, tolerations)
 	}
 
 	if len(nodeSelector) > 0 {
 		predictorSpec.NodeSelector = nodeSelector
+	}
+
+	if len(tolerations) > 0 {
+		predictorSpec.Tolerations = tolerations
 	}
 
 	var loggerSpec *kservev1beta1.LoggerSpec
@@ -802,7 +808,7 @@ func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars 
 	return defaultEnvVars
 }
 
-func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements, nodeSelector map[string]string) kservev1beta1.PredictorSpec {
+func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements, nodeSelector map[string]string, tolerations []corev1.Toleration) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
 	// Add default env var (Overwrite by user not allowed)
@@ -844,6 +850,10 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 	}
 	if len(nodeSelector) > 0 {
 		spec.NodeSelector = nodeSelector
+	}
+
+	if len(tolerations) > 0 {
+		spec.Tolerations = tolerations
 	}
 
 	return spec

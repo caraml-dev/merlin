@@ -23,7 +23,7 @@ type GPU struct {
 	// To deploy the models on a specific GPU node.
 	NodeSelector map[string]string `json:"node_selector"`
 	// To deploy the models on a specific GPU node via taints and tolerations.
-	Tolerations []corev1.Toleration `yaml:"tolerations"`
+	Tolerations []corev1.Toleration `json:"tolerations"`
 	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
 	MonthlyCostPerGPU float64 `json:"monthly_cost_per_gpu"`
 }

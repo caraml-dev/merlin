@@ -33,6 +33,8 @@ type ResourceRequest struct {
 	// Memory request of inference service
 	MemoryRequest resource.Quantity `json:"memory_request"`
 
+	// GPU name
+	GPUName string `json:"gpu_name"`
 	// GPU resource type (nvidia.com/gpu or amd.com/gpu)
 	GPUResourceType string `json:"gpu_resource_type"`
 	// GPU Quantity requests

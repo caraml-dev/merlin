@@ -25,6 +25,7 @@ const maxTicks = 20;
 
 export const ResourcesPanel = ({
   environment: initEnvironment,
+  isGPUEnabled,
   resourcesConfig,
   onChangeHandler,
   errors = {},
@@ -49,12 +50,12 @@ export const ResourcesPanel = ({
   useEffect(() => {
     if (
       resourcesConfig &&
-      resourcesConfig.gpu_display_name &&
-      resourcesConfig.gpu_display_name !== "" &&
-      resourcesConfig.gpu_display_name !== "None" &&
+      resourcesConfig.gpu_name &&
+      resourcesConfig.gpu_name !== "" &&
+      resourcesConfig.gpu_name !== "None" &&
       Object.keys(gpus).length > 0
     ) {
-      const gpu = gpus[resourcesConfig.gpu_display_name];
+      const gpu = gpus[resourcesConfig.gpu_name];
       const gpuValues = gpu.values.map((value) => ({
         value: value,
         inputDisplay: value,
@@ -63,7 +64,7 @@ export const ResourcesPanel = ({
     } else {
       setGpuValueOptions([{ value: "None", inputDisplay: "None" }]);
     }
-  }, [resourcesConfig, resourcesConfig.gpu_display_name, gpus]);
+  }, [resourcesConfig, resourcesConfig.gpu_name, gpus]);
 
   const { onChange } = useOnChangeHandler(onChangeHandler);
 
@@ -72,15 +73,15 @@ export const ResourcesPanel = ({
     [errors.min_replica, errors.max_replica]
   );
 
-  const onGPUTypeChange = (gpu_display_name) => {
-    if (gpu_display_name === "None") {
+  const onGPUTypeChange = (gpu_name) => {
+    if (gpu_name === "None") {
       resetGPU();
       return;
     }
-    onChange("gpu_display_name")(gpu_display_name);
-    onChange("gpu_resource_type")(gpus[gpu_display_name].resource_type);
-    onChange("gpu_node_selector")(gpus[gpu_display_name].node_selector);
-    onChange("gpu_tolerations")(gpus[gpu_display_name].tolerations);
+    onChange("gpu_name")(gpu_name);
+    onChange("gpu_resource_type")(gpus[gpu_name].resource_type);
+    onChange("gpu_node_selector")(gpus[gpu_name].node_selector);
+    onChange("gpu_tolerations")(gpus[gpu_name].tolerations);
     onChange("gpu_request")(undefined);
   };
 
@@ -89,7 +90,7 @@ export const ResourcesPanel = ({
   };
 
   const resetGPU = useCallback(() => {
-    onChange("gpu_display_name")(undefined);
+    onChange("gpu_name")(undefined);
     onChange("gpu_resource_type")(undefined);
     onChange("gpu_node_selector")(undefined);
     onChange("gpu_tolerations")(undefined);
@@ -153,7 +154,7 @@ export const ResourcesPanel = ({
 
         <EuiSpacer size="l" />
 
-        {Object.keys(gpus).length > 0 && (
+        {isGPUEnabled && Object.keys(gpus).length > 0 && (
           <>
             <EuiFlexGroup direction="row">
               <EuiFlexItem>
@@ -178,7 +179,7 @@ export const ResourcesPanel = ({
                         inputDisplay: display_name,
                       })),
                     ]}
-                    valueOfSelected={resourcesConfig.gpu_display_name || "None"}
+                    valueOfSelected={resourcesConfig.gpu_name || "None"}
                     hasDividers
                   />
                 </EuiFormRow>
@@ -199,7 +200,12 @@ export const ResourcesPanel = ({
                   <EuiSuperSelect
                     onChange={onGPUValueChange}
                     options={gpuValueOptions}
-                    valueOfSelected={resourcesConfig.gpu_request || "None"}
+                    valueOfSelected={
+                      resourcesConfig.gpu_request &&
+                      resourcesConfig.gpu_request !== "0"
+                        ? resourcesConfig.gpu_request
+                        : "None"
+                    }
                     hasDividers
                   />
                 </EuiFormRow>
