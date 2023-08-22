@@ -14,7 +14,7 @@ spec:
               memory: 64Mi
             limits:
               cpu: ~
-              memory: 64Mi
+              memory: 256Mi
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -22,6 +22,22 @@ metadata:
   name: inferenceservice-config
   namespace: kserve
 data:
+  agent: |-
+    {
+        "image" : "kserve/agent:v0.11.0",
+        "memoryRequest": "50Mi",
+        "memoryLimit": "1Gi",
+        "cpuRequest": "10m",
+        "cpuLimit": "1"
+    }
+  batcher: |-
+    {
+        "image" : "kserve/agent:v0.11.0",
+        "memoryRequest": "50Mi",
+        "memoryLimit": "1Gi",
+        "cpuRequest": "10m",
+        "cpuLimit": "1"
+    }
   ingress: |-
     {
         "ingressGateway" : "knative-serving/knative-ingress-gateway",
@@ -33,6 +49,15 @@ data:
         "domainTemplate": "{{ .Name }}.{{ .Namespace }}.{{ .IngressDomain }}",
         "urlScheme": "http",
         "disableIstioVirtualHost": false
+    }
+  logger: |-
+    {
+        "image" : "kserve/agent:v0.11.0",
+        "memoryRequest": "50Mi",
+        "memoryLimit": "1Gi",
+        "cpuRequest": "10m",
+        "cpuLimit": "1",
+        "defaultUrl": "http://default-broker"
     }
   storageInitializer: |-
     {
