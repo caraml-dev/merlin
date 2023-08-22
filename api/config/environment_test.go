@@ -186,8 +186,8 @@ func TestGPUsConfig(t *testing.T) {
 			envConfigPath: "./testdata/valid-environment-1.yaml",
 			expectedGPUsConfig: []GPUConfig{
 				{
+					Name:         "NVIDIA T4",
 					Values:       []string{"None", "1"},
-					DisplayName:  "NVIDIA T4",
 					ResourceType: "nvidia.com/gpu",
 					NodeSelector: map[string]string{
 						"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
@@ -196,8 +196,8 @@ func TestGPUsConfig(t *testing.T) {
 					MaxMonthlyCostPerGPU: 189.07,
 				},
 				{
+					Name:         "NVIDIA T4 with Time Sharing",
 					Values:       []string{"None", "1"},
-					DisplayName:  "NVIDIA T4 with Time Sharing",
 					ResourceType: "nvidia.com/gpu",
 					NodeSelector: map[string]string{
 						"cloud.google.com/gke-accelerator":                "nvidia-tesla-t4",
@@ -208,8 +208,8 @@ func TestGPUsConfig(t *testing.T) {
 					MaxMonthlyCostPerGPU: 189.07,
 				},
 				{
+					Name:         "NVIDIA P4",
 					Values:       []string{"None", "1", "2"},
-					DisplayName:  "NVIDIA P4",
 					ResourceType: "nvidia.com/gpu",
 					NodeSelector: map[string]string{
 						"cloud.google.com/gke-accelerator": "nvidia-tesla-p4",

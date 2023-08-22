@@ -64,8 +64,8 @@ func TestSave(t *testing.T) {
 				},
 				GPUs: models.GPUs{
 					{
+						Name:         "NVIDIA T4",
 						Values:       []string{"none", "1"},
-						DisplayName:  "NVIDIA T4",
 						ResourceType: "nvidia.com/gpu",
 						NodeSelector: map[string]string{
 							"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",

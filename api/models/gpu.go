@@ -11,12 +11,13 @@ import (
 )
 
 type GPU struct {
+	// Name is used as the key to identify the GPU configuration.
+	// It also specifies how the accelerator type will be written in the UI.
+	// Example: "NVIDIA T4"
+	Name string `json:"name"`
 	// Values limits how many GPUs can be requested by users.
 	// Example: "none", "1", "2", "4"
 	Values []string `json:"values"`
-	// Specifies how the accelerator type will be written in the UI.
-	// Example: "NVIDIA T4"
-	DisplayName string `json:"display_name"`
 	// Specifies how the accelerator type will be translated to
 	// K8s resource type. Example: nvidia.com/gpu
 	ResourceType string `json:"resource_type"`
@@ -53,8 +54,8 @@ func ParseGPUsConfig(configGPUs []config.GPUConfig) GPUs {
 
 	for _, configGPU := range configGPUs {
 		gpu := GPU{
+			Name:                 configGPU.Name,
 			Values:               configGPU.Values,
-			DisplayName:          configGPU.DisplayName,
 			ResourceType:         configGPU.ResourceType,
 			NodeSelector:         configGPU.NodeSelector,
 			Tolerations:          configGPU.Tolerations,

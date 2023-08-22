@@ -23,8 +23,8 @@ func TestParseGPUsConfig(t *testing.T) {
 			args: args{
 				configGPUs: []config.GPUConfig{
 					{
+						Name:         "NVIDIA P4",
 						Values:       []string{"None", "1", "2"},
-						DisplayName:  "NVIDIA P4",
 						ResourceType: "nvidia.com/gpu",
 						NodeSelector: map[string]string{
 							"cloud.google.com/gke-accelerator": "nvidia-tesla-p4",
@@ -50,8 +50,8 @@ func TestParseGPUsConfig(t *testing.T) {
 			},
 			want: GPUs{
 				{
+					Name:         "NVIDIA P4",
 					Values:       []string{"None", "1", "2"},
-					DisplayName:  "NVIDIA P4",
 					ResourceType: "nvidia.com/gpu",
 					NodeSelector: map[string]string{
 						"cloud.google.com/gke-accelerator": "nvidia-tesla-p4",

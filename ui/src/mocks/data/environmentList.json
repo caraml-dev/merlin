@@ -8,8 +8,8 @@
     "updated_at": "2019-12-12T12:12:12Z",
     "gpus": [
       {
+        "name": "NVIDIA T4",
         "values": ["None", "1", "2", "4"],
-        "display_name": "NVIDIA T4",
         "resource_type": "nvidia.com/gpu",
         "node_selector": {
           "cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
@@ -18,8 +18,8 @@
         "max_monthly_cost_per_gpu": 189.07
       },
       {
+        "name": "NVIDIA T4 with Time Sharing",
         "values": ["None", "1", "2", "4"],
-        "display_name": "NVIDIA T4 with Time Sharing",
         "resource_type": "nvidia.com/gpu",
         "node_selector": {
           "cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
@@ -30,8 +30,8 @@
         "max_monthly_cost_per_gpu": 189.07
       },
       {
+        "name": "NVIDIA P4",
         "values": ["None", "2", "4"],
-        "display_name": "NVIDIA P4",
         "resource_type": "nvidia.com/gpu",
         "node_selector": {
           "cloud.google.com/gke-accelerator": "nvidia-tesla-p4"

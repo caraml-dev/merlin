@@ -113,12 +113,13 @@ type ResourceRequestConfig struct {
 }
 
 type GPUConfig struct {
+	// Name is used as the key to identify the GPU configuration.
+	// It also specifies how the accelerator type will be written in the UI.
+	// Example: "NVIDIA T4"
+	Name string `yaml:"name"`
 	// Values limits how many GPUs can be requested by users.
 	// Example: "none", "1", "2", "4"
 	Values []string `yaml:"values"`
-	// Specifies how the accelerator type will be written in the UI.
-	// Example: "NVIDIA T4"
-	DisplayName string `yaml:"display_name"`
 	// Specifies how the accelerator type will be translated to
 	// K8s resource type. Example: nvidia.com/gpu
 	ResourceType string `yaml:"resource_type"`

@@ -36,7 +36,7 @@ export const ResourcesPanel = ({
     environments.forEach((env) => {
       if (env.name === environment) {
         env.gpus.forEach((gpu) => {
-          dict[gpu.display_name] = gpu;
+          dict[gpu.name] = gpu;
         });
       }
     });
@@ -47,12 +47,12 @@ export const ResourcesPanel = ({
   useEffect(() => {
     if (
       resourcesConfig &&
-      resourcesConfig.gpu_display_name &&
-      resourcesConfig.gpu_display_name !== "" &&
-      resourcesConfig.gpu_display_name !== "None" &&
+      resourcesConfig.gpu_name &&
+      resourcesConfig.gpu_name !== "" &&
+      resourcesConfig.gpu_name !== "None" &&
       Object.keys(gpus).length > 0
     ) {
-      const gpu = gpus[resourcesConfig.gpu_display_name];
+      const gpu = gpus[resourcesConfig.gpu_name];
       const gpuValues = gpu.values.map((value) => ({
         value: value,
         inputDisplay: value,
@@ -61,7 +61,7 @@ export const ResourcesPanel = ({
     } else {
       setGpuValueOptions([{ value: "None", inputDisplay: "None" }]);
     }
-  }, [resourcesConfig, resourcesConfig.gpu_display_name, gpus]);
+  }, [resourcesConfig, resourcesConfig.gpu_name, gpus]);
 
   const { onChange } = useOnChangeHandler(onChangeHandler);
   const replicasError = useMemo(
@@ -69,20 +69,20 @@ export const ResourcesPanel = ({
     [errors.min_replica, errors.max_replica]
   );
 
-  const onGPUTypeChange = (gpu_display_name) => {
-    if (gpu_display_name === "None") {
+  const onGPUTypeChange = (gpu_name) => {
+    if (gpu_name === "None") {
       resetGPU();
       return;
     }
-    onChange("gpu_display_name")(gpu_display_name);
-    onChange("gpu_resource_type")(gpus[gpu_display_name].resource_type);
-    onChange("gpu_node_selector")(gpus[gpu_display_name].node_selector);
+    onChange("gpu_name")(gpu_name);
+    onChange("gpu_resource_type")(gpus[gpu_name].resource_type);
+    onChange("gpu_node_selector")(gpus[gpu_name].node_selector);
     onChange("gpu_request")(undefined);
     onChange("min_monthly_cost_per_gpu")(
-      gpus[gpu_display_name].min_monthly_cost_per_gpu
+      gpus[gpu_name].min_monthly_cost_per_gpu
     );
     onChange("max_monthly_cost_per_gpu")(
-      gpus[gpu_display_name].max_monthly_cost_per_gpu
+      gpus[gpu_name].max_monthly_cost_per_gpu
     );
   };
 
@@ -91,7 +91,7 @@ export const ResourcesPanel = ({
   };
 
   const resetGPU = useCallback(() => {
-    onChange("gpu_display_name")(undefined);
+    onChange("gpu_name")(undefined);
     onChange("gpu_resource_type")(undefined);
     onChange("gpu_node_selector")(undefined);
     onChange("gpu_request")(undefined);
@@ -174,12 +174,12 @@ export const ResourcesPanel = ({
                         value: "None",
                         inputDisplay: "None",
                       },
-                      ...Object.keys(gpus).map((display_name) => ({
-                        value: display_name,
-                        inputDisplay: display_name,
+                      ...Object.keys(gpus).map((name) => ({
+                        value: name,
+                        inputDisplay: name,
                       })),
                     ]}
-                    valueOfSelected={resourcesConfig.gpu_display_name || "None"}
+                    valueOfSelected={resourcesConfig.gpu_name || "None"}
                     hasDividers
                   />
                 </EuiFormRow>

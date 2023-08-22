@@ -1544,12 +1544,12 @@ definitions:
   GPU:
     type: "object"
     properties:
+      name:
+        type: "string"
       values:
         type: "array"
         items:
           type: string
-      display_name:
-        type: "string"
       resource_type:
         type: "string"
       node_selector:
