@@ -21,20 +21,18 @@ import (
 	"github.com/caraml-dev/merlin/pkg/protocol"
 )
 
-var (
-	expDefaultModelResourceRequestsWithGPU = corev1.ResourceRequirements{
-		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    defaultModelResourceRequests.CPURequest,
-			corev1.ResourceMemory: defaultModelResourceRequests.MemoryRequest,
-			"nvidia.com/gpu":      resource.MustParse("1"),
-		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    getLimit(defaultModelResourceRequests.CPURequest),
-			corev1.ResourceMemory: getLimit(defaultModelResourceRequests.MemoryRequest),
-			"nvidia.com/gpu":      resource.MustParse("1"),
-		},
-	}
-)
+var expDefaultModelResourceRequestsWithGPU = corev1.ResourceRequirements{
+	Requests: corev1.ResourceList{
+		corev1.ResourceCPU:    defaultModelResourceRequests.CPURequest,
+		corev1.ResourceMemory: defaultModelResourceRequests.MemoryRequest,
+		"nvidia.com/gpu":      resource.MustParse("1"),
+	},
+	Limits: corev1.ResourceList{
+		corev1.ResourceCPU:    getLimit(defaultModelResourceRequests.CPURequest),
+		corev1.ResourceMemory: getLimit(defaultModelResourceRequests.MemoryRequest),
+		"nvidia.com/gpu":      resource.MustParse("1"),
+	},
+}
 
 func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 	err := models.InitKubernetesLabeller("gojek.com/", testEnvironmentName)
@@ -46,6 +44,21 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 
 	project := mlp.Project{
 		Name: "project",
+	}
+
+	defaultTolerations := []corev1.Toleration{
+		{
+			Key:      "caraml/nvidia-tesla-p4",
+			Operator: corev1.TolerationOpEqual,
+			Value:    "enabled",
+			Effect:   corev1.TaintEffectNoSchedule,
+		},
+		{
+			Key:      "nvidia.com/gpu",
+			Operator: corev1.TolerationOpEqual,
+			Value:    "present",
+			Effect:   corev1.TaintEffectNoSchedule,
+		},
 	}
 
 	modelSvc := &models.Service{
@@ -71,9 +84,11 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 			MaxReplica:      2,
 			CPURequest:      resource.MustParse("500m"),
 			MemoryRequest:   resource.MustParse("500Mi"),
+			GPUName:         "NVIDIA P4",
 			GPURequest:      resource.MustParse("1"),
 			GPUResourceType: "nvidia.com/gpu",
 			GPUNodeSelector: map[string]string{"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"},
+			GPUTolerations:  defaultTolerations,
 		},
 	}
 
@@ -143,6 +158,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -215,6 +231,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -273,6 +290,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -331,6 +349,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -386,6 +405,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -443,6 +463,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -500,6 +521,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -557,6 +579,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -613,6 +636,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 								},
 							},
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
@@ -673,6 +697,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 								},
 							},
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
@@ -739,6 +764,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 								},
 							},
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
@@ -806,6 +832,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 								},
 							},
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &modelSvc.ResourceRequest.MinReplica,
@@ -875,6 +902,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -962,6 +990,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -1027,6 +1056,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -1092,6 +1122,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -1157,6 +1188,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -1222,6 +1254,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -1280,6 +1313,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -1337,6 +1371,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 								},
 							},
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
@@ -1399,6 +1434,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 						},
 						PodSpec: kservev1beta1.PodSpec{
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 					},
 				},
@@ -1461,6 +1497,7 @@ func TestCreateInferenceServiceSpecWithGPU(t *testing.T) {
 								},
 							},
 							NodeSelector: modelSvc.ResourceRequest.GPUNodeSelector,
+							Tolerations:  defaultTolerations,
 						},
 						ComponentExtensionSpec: kservev1beta1.ComponentExtensionSpec{
 							MinReplicas: &defaultModelResourceRequests.MinReplica,
