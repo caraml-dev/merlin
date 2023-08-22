@@ -22,9 +22,9 @@ type GPU struct {
 	// K8s resource type. Example: nvidia.com/gpu
 	ResourceType string `json:"resource_type"`
 	// To deploy the models on a specific GPU node.
-	NodeSelector map[string]string `json:"node_selector"`
+	NodeSelector map[string]string `json:"node_selector,omitempty"`
 	// To deploy the models on a specific GPU node via taints and tolerations.
-	Tolerations []corev1.Toleration `json:"tolerations"`
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 	// MinMonthlyCostPerGPU is the minimum monthly cost per GPU, for example, if you enable time-sharing GPUs with 8 max shared clients,
 	// the minimum monthly cost per GPU is max_monthly_cost_per_gpu divided by 8.
 	// MaxMonthlyCostPerGPU is the maximum monthly cost if you use the whole GPU.

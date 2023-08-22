@@ -34,15 +34,15 @@ type ResourceRequest struct {
 	MemoryRequest resource.Quantity `json:"memory_request"`
 
 	// GPU name
-	GPUName string `json:"gpu_name"`
+	GPUName string `json:"gpu_name,omitempty"`
 	// GPU resource type (nvidia.com/gpu or amd.com/gpu)
-	GPUResourceType string `json:"gpu_resource_type"`
+	GPUResourceType string `json:"gpu_resource_type,omitempty"`
 	// GPU Quantity requests
-	GPURequest resource.Quantity `json:"gpu_request"`
+	GPURequest resource.Quantity `json:"gpu_request,omitempty"`
 	// GPU Node selector
-	GPUNodeSelector map[string]string `json:"gpu_node_selector"`
+	GPUNodeSelector map[string]string `json:"gpu_node_selector,omitempty"`
 	// GPU Tolerations
-	GPUTolerations []corev1.Toleration `json:"gpu_tolerations"`
+	GPUTolerations []corev1.Toleration `json:"gpu_tolerations,omitempty"`
 }
 
 func (r ResourceRequest) Value() (driver.Value, error) {
