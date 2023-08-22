@@ -66,9 +66,9 @@ environmentConfigs:
     gcp_project: gcp-project
     deployment_timeout: 5m
     namespace_timeout: 2m
-    max_cpu: 200m
+    max_cpu: 250m
     max_memory: 512Mi
-    queue_resource_percentage: 10
+    queue_resource_percentage: 20
     is_prediction_job_enabled: true
     is_default_prediction_job: true
     default_prediction_job_config:
@@ -85,8 +85,8 @@ environmentConfigs:
     default_transformer_config:
       min_replica: 0
       max_replica: 1
-      cpu_request: "10m"
-      memory_request: "32Mi"
+      cpu_request: "25m"
+      memory_request: "64Mi"
     gpus: []
 ingress:
   enabled: true

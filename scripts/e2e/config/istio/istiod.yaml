@@ -14,5 +14,5 @@ pilot:
       cpu: 10m
       memory: 64Mi
     limits:
-      cpu: 10m
+      cpu: ~
       memory: 64Mi
