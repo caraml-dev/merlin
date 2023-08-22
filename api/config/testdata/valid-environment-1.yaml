@@ -41,9 +41,24 @@
         interactiveMode: IfAvailable
         provideClusterInfo: true
   gpus:
-    - values: ["none", "1"]
+    - values: ["None", "1"]
       display_name: "NVIDIA T4"
       resource_type: "nvidia.com/gpu"
       node_selector:
         "cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
       monthly_cost_per_gpu: 189.07
+    - values: ["None", "1", "2"]
+      display_name: "NVIDIA P4"
+      resource_type: "nvidia.com/gpu"
+      node_selector:
+        "cloud.google.com/gke-accelerator": "nvidia-tesla-p4"
+      tolerations:
+        - key: "caraml/nvidia-tesla-p4"
+          operator: "Equal"
+          value: "enabled"
+          effect: "NoSchedule"
+        - key: "nvidia.com/gpu"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"
+      monthly_cost_per_gpu: 332.15

@@ -186,13 +186,36 @@ func TestGPUsConfig(t *testing.T) {
 			envConfigPath: "./testdata/valid-environment-1.yaml",
 			expectedGPUsConfig: []GPUConfig{
 				{
-					Values:       []string{"none", "1"},
+					Values:       []string{"None", "1"},
 					DisplayName:  "NVIDIA T4",
 					ResourceType: "nvidia.com/gpu",
 					NodeSelector: map[string]string{
 						"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
 					},
 					MonthlyCostPerGPU: 189.07,
+				},
+				{
+					Values:       []string{"None", "1", "2"},
+					DisplayName:  "NVIDIA P4",
+					ResourceType: "nvidia.com/gpu",
+					NodeSelector: map[string]string{
+						"cloud.google.com/gke-accelerator": "nvidia-tesla-p4",
+					},
+					Tolerations: []corev1.Toleration{
+						{
+							Key:      "caraml/nvidia-tesla-p4",
+							Operator: corev1.TolerationOpEqual,
+							Value:    "enabled",
+							Effect:   corev1.TaintEffectNoSchedule,
+						},
+						{
+							Key:      "nvidia.com/gpu",
+							Operator: corev1.TolerationOpEqual,
+							Value:    "present",
+							Effect:   corev1.TaintEffectNoSchedule,
+						},
+					},
+					MonthlyCostPerGPU: 332.15,
 				},
 			},
 		},

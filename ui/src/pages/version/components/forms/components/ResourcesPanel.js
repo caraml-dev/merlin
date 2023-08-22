@@ -1,11 +1,6 @@
-import React, {
-  useMemo,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import {
+  EuiCallOut,
   EuiDualRange,
   EuiFieldText,
   EuiFlexGroup,
@@ -13,24 +8,31 @@ import {
   EuiForm,
   EuiFormRow,
   EuiSpacer,
-  EuiCallOut,
   EuiSuperSelect,
 } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
-import { Panel } from "./Panel";
-import { calculateCost } from "../../../../../utils/costEstimation";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import EnvironmentsContext from "../../../../../providers/environments/context";
+import { calculateCost } from "../../../../../utils/costEstimation";
+import { Panel } from "./Panel";
 
 const maxTicks = 20;
 
 export const ResourcesPanel = ({
-  environment,
+  environment: initEnvironment,
   resourcesConfig,
   onChangeHandler,
   errors = {},
   maxAllowedReplica,
 }) => {
+  const environment = initEnvironment;
   const environments = useContext(EnvironmentsContext);
+
   const gpus = useMemo(() => {
     const dict = {};
     environments.forEach((env) => {
@@ -64,6 +66,7 @@ export const ResourcesPanel = ({
   }, [resourcesConfig, resourcesConfig.gpu_display_name, gpus]);
 
   const { onChange } = useOnChangeHandler(onChangeHandler);
+
   const replicasError = useMemo(
     () => [...(errors.min_replica || []), ...(errors.max_replica || [])],
     [errors.min_replica, errors.max_replica]
@@ -77,6 +80,7 @@ export const ResourcesPanel = ({
     onChange("gpu_display_name")(gpu_display_name);
     onChange("gpu_resource_type")(gpus[gpu_display_name].resource_type);
     onChange("gpu_node_selector")(gpus[gpu_display_name].node_selector);
+    onChange("gpu_tolerations")(gpus[gpu_display_name].tolerations);
     onChange("gpu_request")(undefined);
   };
 
@@ -88,12 +92,15 @@ export const ResourcesPanel = ({
     onChange("gpu_display_name")(undefined);
     onChange("gpu_resource_type")(undefined);
     onChange("gpu_node_selector")(undefined);
+    onChange("gpu_tolerations")(undefined);
     onChange("gpu_request")(undefined);
   }, [onChange]);
 
   useEffect(() => {
-    resetGPU();
-  }, [environment, resetGPU, onChange]);
+    if (environment !== initEnvironment) {
+      resetGPU();
+    }
+  }, [environment, initEnvironment, resetGPU, onChange]);
 
   return (
     <Panel title="Resources">

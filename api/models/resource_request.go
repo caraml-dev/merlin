@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -31,12 +32,15 @@ type ResourceRequest struct {
 	CPURequest resource.Quantity `json:"cpu_request"`
 	// Memory request of inference service
 	MemoryRequest resource.Quantity `json:"memory_request"`
+
 	// GPU resource type (nvidia.com/gpu or amd.com/gpu)
 	GPUResourceType string `json:"gpu_resource_type"`
 	// GPU Quantity requests
 	GPURequest resource.Quantity `json:"gpu_request"`
 	// GPU Node selector
 	GPUNodeSelector map[string]string `json:"gpu_node_selector"`
+	// GPU Tolerations
+	GPUTolerations []corev1.Toleration `json:"gpu_tolerations"`
 }
 
 func (r ResourceRequest) Value() (driver.Value, error) {

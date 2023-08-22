@@ -8,12 +8,7 @@
     "updated_at": "2019-12-12T12:12:12Z",
     "gpus": [
       {
-        "values": [
-          "None",
-          "1",
-          "2",
-          "4"
-        ],
+        "values": ["None", "1", "2", "4"],
         "display_name": "NVIDIA T4",
         "resource_type": "nvidia.com/gpu",
         "node_selector": {
@@ -22,16 +17,26 @@
         "monthly_cost_per_gpu": 189.07
       },
       {
-        "values": [
-          "None",
-          "2",
-          "4"
-        ],
+        "values": ["None", "2", "4"],
         "display_name": "NVIDIA P4",
         "resource_type": "nvidia.com/gpu",
         "node_selector": {
           "cloud.google.com/gke-accelerator": "nvidia-tesla-p4"
         },
+        "tolerations": [
+          {
+            "key": "caraml/nvidia-tesla-p4",
+            "operator": "Equal",
+            "value": "enabled",
+            "effect": "NoSchedule"
+          },
+          {
+            "key": "nvidia.com/gpu",
+            "operator": "Equal",
+            "value": "present",
+            "effect": "NoSchedule"
+          }
+        ],
         "monthly_cost_per_gpu": 332.15
       }
     ],

@@ -124,6 +124,8 @@ type GPUConfig struct {
 	ResourceType string `yaml:"resource_type"`
 	// To deploy the models on a specific GPU node.
 	NodeSelector map[string]string `yaml:"node_selector"`
+	// To deploy the models on a specific GPU node via taints and tolerations.
+	Tolerations []corev1.Toleration `yaml:"tolerations"`
 	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
 	MonthlyCostPerGPU float64 `yaml:"monthly_cost_per_gpu"`
 }

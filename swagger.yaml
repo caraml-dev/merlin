@@ -1444,6 +1444,9 @@ definitions:
         type: "object"
         additionalProperties:
           type: "string"
+      gpu_tolerations:
+        type: "array"
+        $ref: "#/definitions/GPUToleration"
 
   AutoscalingPolicy:
     type: "object"
@@ -1553,8 +1556,27 @@ definitions:
         type: "object"
         additionalProperties:
           type: "string"
+      tolerations:
+        type: "array"
+        items:
+          $ref: "#/definitions/GPUToleration"
       monthly_cost_per_gpu:
         type: "number"
+
+  GPUToleration:
+    type: "object"
+    properties:
+      key:
+        type: "string"
+      operator:
+        type: "string"
+      value:
+        type: "string"
+      effect:
+        type: "string"
+      toleration_seconds:
+        type: "integer"
+        format: "int64"
 
   PredictionJobResourceRequest:
     type: "object"

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/caraml-dev/merlin/config"
 )
 
@@ -20,6 +22,8 @@ type GPU struct {
 	ResourceType string `json:"resource_type"`
 	// To deploy the models on a specific GPU node.
 	NodeSelector map[string]string `json:"node_selector"`
+	// To deploy the models on a specific GPU node via taints and tolerations.
+	Tolerations []corev1.Toleration `yaml:"tolerations"`
 	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
 	MonthlyCostPerGPU float64 `json:"monthly_cost_per_gpu"`
 }
@@ -49,6 +53,7 @@ func ParseGPUsConfig(configGPUs []config.GPUConfig) GPUs {
 			DisplayName:       configGPU.DisplayName,
 			ResourceType:      configGPU.ResourceType,
 			NodeSelector:      configGPU.NodeSelector,
+			Tolerations:       configGPU.Tolerations,
 			MonthlyCostPerGPU: configGPU.MonthlyCostPerGPU,
 		}
 		gpus = append(gpus, gpu)
