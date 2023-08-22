@@ -24,13 +24,18 @@ import { Panel } from "./Panel";
 const maxTicks = 20;
 
 export const ResourcesPanel = ({
-  environment,
+  environment: initEnvironment,
+  isGPUEnabled,
   resourcesConfig,
   onChangeHandler,
   errors = {},
   maxAllowedReplica,
 }) => {
+  const environment = initEnvironment;
   const environments = useContext(EnvironmentsContext);
+
+  const { onChange } = useOnChangeHandler(onChangeHandler);
+
   const gpus = useMemo(() => {
     const dict = {};
     environments.forEach((env) => {
@@ -63,7 +68,6 @@ export const ResourcesPanel = ({
     }
   }, [resourcesConfig, resourcesConfig.gpu_name, gpus]);
 
-  const { onChange } = useOnChangeHandler(onChangeHandler);
   const replicasError = useMemo(
     () => [...(errors.min_replica || []), ...(errors.max_replica || [])],
     [errors.min_replica, errors.max_replica]
@@ -78,7 +82,7 @@ export const ResourcesPanel = ({
     onChange("gpu_request")(undefined);
     onChange("gpu_resource_type")(gpus[gpu_name].resource_type);
     onChange("gpu_node_selector")(gpus[gpu_name].node_selector);
-    onChange("gpu_tolerations")(undefined);
+    onChange("gpu_tolerations")(gpus[gpu_name].tolerations);
     onChange("min_monthly_cost_per_gpu")(
       gpus[gpu_name].min_monthly_cost_per_gpu
     );
@@ -102,8 +106,10 @@ export const ResourcesPanel = ({
   }, [onChange]);
 
   useEffect(() => {
-    resetGPU();
-  }, [environment, resetGPU, onChange]);
+    if (environment !== initEnvironment) {
+      resetGPU();
+    }
+  }, [environment, initEnvironment, resetGPU, onChange]);
 
   return (
     <Panel title="Resources">
@@ -156,15 +162,15 @@ export const ResourcesPanel = ({
 
         <EuiSpacer size="l" />
 
-        {Object.keys(gpus).length > 0 && (
+        {isGPUEnabled && Object.keys(gpus).length > 0 && (
           <>
             <EuiFlexGroup direction="row">
               <EuiFlexItem>
                 <EuiFormRow
                   label={
                     <FormLabelWithToolTip
-                      label="GPU Type"
-                      content="Specify the type of GPU that will be used for the component"
+                      label="GPU Name"
+                      content="Specify the GPU that will be used for the component"
                     />
                   }
                   fullWidth
@@ -202,7 +208,12 @@ export const ResourcesPanel = ({
                   <EuiSuperSelect
                     onChange={onGPUValueChange}
                     options={gpuValueOptions}
-                    valueOfSelected={resourcesConfig.gpu_request || "None"}
+                    valueOfSelected={
+                      resourcesConfig.gpu_request &&
+                      resourcesConfig.gpu_request !== "0"
+                        ? resourcesConfig.gpu_request
+                        : "None"
+                    }
                     hasDividers
                   />
                 </EuiFormRow>
