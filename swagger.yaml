@@ -1446,7 +1446,8 @@ definitions:
           type: "string"
       gpu_tolerations:
         type: "array"
-        $ref: "#/definitions/GPUToleration"
+        items:
+          $ref: "#/definitions/GPUToleration"
 
   AutoscalingPolicy:
     type: "object"

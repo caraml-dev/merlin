@@ -9,9 +9,11 @@
 package client
 
 type Gpu struct {
-	Values            []string          `json:"values,omitempty"`
-	DisplayName       string            `json:"display_name,omitempty"`
-	ResourceType      string            `json:"resource_type,omitempty"`
-	NodeSelector      map[string]string `json:"node_selector,omitempty"`
-	MonthlyCostPerGpu float64           `json:"monthly_cost_per_gpu,omitempty"`
+	Name                 string            `json:"name,omitempty"`
+	Values               []string          `json:"values,omitempty"`
+	ResourceType         string            `json:"resource_type,omitempty"`
+	NodeSelector         map[string]string `json:"node_selector,omitempty"`
+	Tolerations          []GpuToleration   `json:"tolerations,omitempty"`
+	MinMonthlyCostPerGpu float64           `json:"min_monthly_cost_per_gpu,omitempty"`
+	MaxMonthlyCostPerGpu float64           `json:"max_monthly_cost_per_gpu,omitempty"`
 }

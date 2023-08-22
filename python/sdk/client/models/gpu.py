@@ -28,39 +28,70 @@ class GPU(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'name': 'str',
         'values': 'list[str]',
-        'display_name': 'str',
         'resource_type': 'str',
         'node_selector': 'dict(str, str)',
-        'monthly_cost_per_gpu': 'float'
+        'tolerations': 'list[GPUToleration]',
+        'min_monthly_cost_per_gpu': 'float',
+        'max_monthly_cost_per_gpu': 'float'
     }
 
     attribute_map = {
+        'name': 'name',
         'values': 'values',
-        'display_name': 'display_name',
         'resource_type': 'resource_type',
         'node_selector': 'node_selector',
-        'monthly_cost_per_gpu': 'monthly_cost_per_gpu'
+        'tolerations': 'tolerations',
+        'min_monthly_cost_per_gpu': 'min_monthly_cost_per_gpu',
+        'max_monthly_cost_per_gpu': 'max_monthly_cost_per_gpu'
     }
 
-    def __init__(self, values=None, display_name=None, resource_type=None, node_selector=None, monthly_cost_per_gpu=None):  # noqa: E501
+    def __init__(self, name=None, values=None, resource_type=None, node_selector=None, tolerations=None, min_monthly_cost_per_gpu=None, max_monthly_cost_per_gpu=None):  # noqa: E501
         """GPU - a model defined in Swagger"""  # noqa: E501
+        self._name = None
         self._values = None
-        self._display_name = None
         self._resource_type = None
         self._node_selector = None
-        self._monthly_cost_per_gpu = None
+        self._tolerations = None
+        self._min_monthly_cost_per_gpu = None
+        self._max_monthly_cost_per_gpu = None
         self.discriminator = None
+        if name is not None:
+            self.name = name
         if values is not None:
             self.values = values
-        if display_name is not None:
-            self.display_name = display_name
         if resource_type is not None:
             self.resource_type = resource_type
         if node_selector is not None:
             self.node_selector = node_selector
-        if monthly_cost_per_gpu is not None:
-            self.monthly_cost_per_gpu = monthly_cost_per_gpu
+        if tolerations is not None:
+            self.tolerations = tolerations
+        if min_monthly_cost_per_gpu is not None:
+            self.min_monthly_cost_per_gpu = min_monthly_cost_per_gpu
+        if max_monthly_cost_per_gpu is not None:
+            self.max_monthly_cost_per_gpu = max_monthly_cost_per_gpu
+
+    @property
+    def name(self):
+        """Gets the name of this GPU.  # noqa: E501
+
+
+        :return: The name of this GPU.  # noqa: E501
+        :rtype: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        """Sets the name of this GPU.
+
+
+        :param name: The name of this GPU.  # noqa: E501
+        :type: str
+        """
+
+        self._name = name
 
     @property
     def values(self):
@@ -82,27 +113,6 @@ class GPU(object):
         """
 
         self._values = values
-
-    @property
-    def display_name(self):
-        """Gets the display_name of this GPU.  # noqa: E501
-
-
-        :return: The display_name of this GPU.  # noqa: E501
-        :rtype: str
-        """
-        return self._display_name
-
-    @display_name.setter
-    def display_name(self, display_name):
-        """Sets the display_name of this GPU.
-
-
-        :param display_name: The display_name of this GPU.  # noqa: E501
-        :type: str
-        """
-
-        self._display_name = display_name
 
     @property
     def resource_type(self):
@@ -147,25 +157,67 @@ class GPU(object):
         self._node_selector = node_selector
 
     @property
-    def monthly_cost_per_gpu(self):
-        """Gets the monthly_cost_per_gpu of this GPU.  # noqa: E501
+    def tolerations(self):
+        """Gets the tolerations of this GPU.  # noqa: E501
 
 
-        :return: The monthly_cost_per_gpu of this GPU.  # noqa: E501
+        :return: The tolerations of this GPU.  # noqa: E501
+        :rtype: list[GPUToleration]
+        """
+        return self._tolerations
+
+    @tolerations.setter
+    def tolerations(self, tolerations):
+        """Sets the tolerations of this GPU.
+
+
+        :param tolerations: The tolerations of this GPU.  # noqa: E501
+        :type: list[GPUToleration]
+        """
+
+        self._tolerations = tolerations
+
+    @property
+    def min_monthly_cost_per_gpu(self):
+        """Gets the min_monthly_cost_per_gpu of this GPU.  # noqa: E501
+
+
+        :return: The min_monthly_cost_per_gpu of this GPU.  # noqa: E501
         :rtype: float
         """
-        return self._monthly_cost_per_gpu
+        return self._min_monthly_cost_per_gpu
 
-    @monthly_cost_per_gpu.setter
-    def monthly_cost_per_gpu(self, monthly_cost_per_gpu):
-        """Sets the monthly_cost_per_gpu of this GPU.
+    @min_monthly_cost_per_gpu.setter
+    def min_monthly_cost_per_gpu(self, min_monthly_cost_per_gpu):
+        """Sets the min_monthly_cost_per_gpu of this GPU.
 
 
-        :param monthly_cost_per_gpu: The monthly_cost_per_gpu of this GPU.  # noqa: E501
+        :param min_monthly_cost_per_gpu: The min_monthly_cost_per_gpu of this GPU.  # noqa: E501
         :type: float
         """
 
-        self._monthly_cost_per_gpu = monthly_cost_per_gpu
+        self._min_monthly_cost_per_gpu = min_monthly_cost_per_gpu
+
+    @property
+    def max_monthly_cost_per_gpu(self):
+        """Gets the max_monthly_cost_per_gpu of this GPU.  # noqa: E501
+
+
+        :return: The max_monthly_cost_per_gpu of this GPU.  # noqa: E501
+        :rtype: float
+        """
+        return self._max_monthly_cost_per_gpu
+
+    @max_monthly_cost_per_gpu.setter
+    def max_monthly_cost_per_gpu(self, max_monthly_cost_per_gpu):
+        """Sets the max_monthly_cost_per_gpu of this GPU.
+
+
+        :param max_monthly_cost_per_gpu: The max_monthly_cost_per_gpu of this GPU.  # noqa: E501
+        :type: float
+        """
+
+        self._max_monthly_cost_per_gpu = max_monthly_cost_per_gpu
 
     def to_dict(self):
         """Returns the model properties as a dict"""

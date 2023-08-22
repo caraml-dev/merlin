@@ -34,7 +34,8 @@ class ResourceRequest(object):
         'memory_request': 'str',
         'gpu_resource_type': 'str',
         'gpu_request': 'str',
-        'gpu_node_selector': 'dict(str, str)'
+        'gpu_node_selector': 'dict(str, str)',
+        'gpu_tolerations': 'list[GPUToleration]'
     }
 
     attribute_map = {
@@ -44,10 +45,11 @@ class ResourceRequest(object):
         'memory_request': 'memory_request',
         'gpu_resource_type': 'gpu_resource_type',
         'gpu_request': 'gpu_request',
-        'gpu_node_selector': 'gpu_node_selector'
+        'gpu_node_selector': 'gpu_node_selector',
+        'gpu_tolerations': 'gpu_tolerations'
     }
 
-    def __init__(self, min_replica=None, max_replica=None, cpu_request=None, memory_request=None, gpu_resource_type=None, gpu_request=None, gpu_node_selector=None):  # noqa: E501
+    def __init__(self, min_replica=None, max_replica=None, cpu_request=None, memory_request=None, gpu_resource_type=None, gpu_request=None, gpu_node_selector=None, gpu_tolerations=None):  # noqa: E501
         """ResourceRequest - a model defined in Swagger"""  # noqa: E501
         self._min_replica = None
         self._max_replica = None
@@ -56,6 +58,7 @@ class ResourceRequest(object):
         self._gpu_resource_type = None
         self._gpu_request = None
         self._gpu_node_selector = None
+        self._gpu_tolerations = None
         self.discriminator = None
         if min_replica is not None:
             self.min_replica = min_replica
@@ -71,6 +74,8 @@ class ResourceRequest(object):
             self.gpu_request = gpu_request
         if gpu_node_selector is not None:
             self.gpu_node_selector = gpu_node_selector
+        if gpu_tolerations is not None:
+            self.gpu_tolerations = gpu_tolerations
 
     @property
     def min_replica(self):
@@ -218,6 +223,27 @@ class ResourceRequest(object):
         """
 
         self._gpu_node_selector = gpu_node_selector
+
+    @property
+    def gpu_tolerations(self):
+        """Gets the gpu_tolerations of this ResourceRequest.  # noqa: E501
+
+
+        :return: The gpu_tolerations of this ResourceRequest.  # noqa: E501
+        :rtype: list[GPUToleration]
+        """
+        return self._gpu_tolerations
+
+    @gpu_tolerations.setter
+    def gpu_tolerations(self, gpu_tolerations):
+        """Sets the gpu_tolerations of this ResourceRequest.
+
+
+        :param gpu_tolerations: The gpu_tolerations of this ResourceRequest.  # noqa: E501
+        :type: list[GPUToleration]
+        """
+
+        self._gpu_tolerations = gpu_tolerations
 
     def to_dict(self):
         """Returns the model properties as a dict"""

@@ -18,11 +18,11 @@ from unittest.mock import patch
 
 import client
 import client as cl
+import merlin
 import pytest
-from merlin.autoscaling import (
-    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
-)
+from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
+from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY)
 from merlin.batch.config import PredictionJobConfig, ResultType
 from merlin.batch.job import JobStatus
 from merlin.batch.sink import BigQuerySink, SaveMode
@@ -32,17 +32,18 @@ from merlin.model import ModelType
 from merlin.protocol import Protocol
 from urllib3_mock import Responses
 
-import merlin
-from merlin import AutoscalingPolicy, DeploymentMode, MetricsType
-
 responses = Responses("requests.packages.urllib3")
 
 default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
 gpu = cl.GPU(
+    name="nvidia-tesla-p4",
     values=["1", "4", "8"],
-    display_name="nvidia-tesla-p4",
     resource_type="nvidia.com/gpu",
     node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"},
+    tolerations=[
+        cl.GPUToleration(key="caraml/nvidia-tesla-p4", operator="Equal", value="enabled", effect="NoSchedule"),
+        cl.GPUToleration(key="nvidia.com/gpu", operator="Equal", value="present", effect="NoSchedule"),
+    ],
 )
 
 env_1 = cl.Environment(
@@ -571,6 +572,10 @@ class TestModelVersion:
         assert (
             endpoint.resource_request.gpu_node_selector
             == resource_request_with_gpu.gpu_node_selector
+        )
+        assert (
+            endpoint.resource_request.gpu_tolerations
+            == resource_request_with_gpu.gpu_tolerations
         )
 
     @responses.activate
