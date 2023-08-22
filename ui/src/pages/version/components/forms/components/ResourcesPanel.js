@@ -75,9 +75,10 @@ export const ResourcesPanel = ({
       return;
     }
     onChange("gpu_name")(gpu_name);
+    onChange("gpu_request")(undefined);
     onChange("gpu_resource_type")(gpus[gpu_name].resource_type);
     onChange("gpu_node_selector")(gpus[gpu_name].node_selector);
-    onChange("gpu_request")(undefined);
+    onChange("gpu_tolerations")(undefined);
     onChange("min_monthly_cost_per_gpu")(
       gpus[gpu_name].min_monthly_cost_per_gpu
     );
@@ -92,9 +93,10 @@ export const ResourcesPanel = ({
 
   const resetGPU = useCallback(() => {
     onChange("gpu_name")(undefined);
+    onChange("gpu_request")(undefined);
     onChange("gpu_resource_type")(undefined);
     onChange("gpu_node_selector")(undefined);
-    onChange("gpu_request")(undefined);
+    onChange("gpu_tolerations")(undefined);
     onChange("min_monthly_cost_per_gpu")(undefined);
     onChange("max_monthly_cost_per_gpu")(undefined);
   }, [onChange]);
