@@ -435,7 +435,7 @@ jobs:
       - name: Check disk size
         run: df -h
       - name: Prune docker image to make some space
-        run: docker image prune -f
+        run: docker image prune --all --force
       - name: Run E2E Test
         timeout-minutes: 30
         id: run-e2e-test
