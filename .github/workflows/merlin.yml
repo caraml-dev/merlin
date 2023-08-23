@@ -392,14 +392,16 @@ jobs:
         run: df -h
       - name: Download k3d
         run: |
-          curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.4.1 bash
+          curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.6.0 bash
       - name: Create Test Cluster
         run: |
           k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
           k3d cluster create $K3D_CLUSTER --image rancher/k3s:${K3S_VERSION} --port 80:80@loadbalancer \
             --k3s-arg '--disable=traefik,metrics-server@server:*' \
-            --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%' \
-            --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%'
+            --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@server:0' \
+            --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@server:0'
+            --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@agent:*' \
+            --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*' \
       - name: Check disk size
         run: df -h
       - name: Setup cluster
