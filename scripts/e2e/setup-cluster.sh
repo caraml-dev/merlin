@@ -28,9 +28,13 @@ TIMEOUT=180s
 
 
 add_helm_repo() {
+    echo "::group::Add Helm repo"
+
     helm repo add istio https://istio-release.storage.googleapis.com/charts
     helm repo add minio https://charts.min.io/
     helm repo update
+
+    echo "::endgroup::"
 }
 
 store_cluster_secret() {
@@ -46,10 +50,13 @@ store_cluster_secret() {
     }
 }
 EOF
+
+    echo "::endgroup::"
 }
 
 install_istio() {
     echo "::group::Istio Deployment"
+
     helm upgrade --install istio-base istio/base --version=${ISTIO_VERSION} -n istio-system --create-namespace
     helm upgrade --install istiod istio/istiod --version=${ISTIO_VERSION} -n istio-system --create-namespace \
         -f config/istio/istiod.yaml --timeout=${TIMEOUT}
@@ -67,10 +74,13 @@ install_istio() {
     kubectl apply -f config/istio/ingress-class.yaml
 
     sleep 30
+
+    echo "::endgroup::"
 }
 
 install_knative() {
     echo "::group::Knative Deployment"
+
     # Install CRD
     kubectl apply -f https://github.com/knative/serving/releases/download/knative-v${KNATIVE_VERSION}/serving-crds.yaml
 
@@ -90,39 +100,53 @@ install_knative() {
 
     kubectl rollout status deployment/net-istio-controller -n knative-serving -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/net-istio-webhook -n knative-serving -w --timeout=${TIMEOUT}
+
+    echo "::endgroup::"
 }
 
 install_cert_manager() {
     echo "::group::Cert Manager Deployment"
+
     kubectl apply --filename=https://github.com/jetstack/cert-manager/releases/download/v${CERT_MANAGER_VERSION}/cert-manager.yaml
 
     kubectl rollout status deployment/cert-manager-webhook -n cert-manager -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/cert-manager-cainjector -n cert-manager -w --timeout=${TIMEOUT}
     kubectl rollout status deployment/cert-manager -n cert-manager -w --timeout=${TIMEOUT}
+
+    echo "::endgroup::"
 }
 
 install_minio() {
     echo "::group::Minio Deployment"
+
     helm upgrade --install minio minio/minio --version=${MINIO_VERSION} -f config/minio/values.yaml \
         --namespace=minio --create-namespace --timeout=${TIMEOUT} \
         --set "ingress.hosts[0]=minio.minio.${INGRESS_HOST}" \
         --set "consoleIngress.hosts[0]=console.minio.${INGRESS_HOST}"
 
     kubectl rollout status statefulset/minio -n minio -w --timeout=${TIMEOUT}
+
+    echo "::endgroup::"
 }
 
 install_kserve() {
     echo "::group::KServe Deployment"
+
     wget https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve.yaml -O config/kserve/kserve.yaml
     kubectl apply -k config/kserve
     kubectl rollout status deployment/kserve-controller-manager -n kserve -w --timeout=${TIMEOUT}
     kubectl apply -f https://raw.githubusercontent.com/kserve/kserve/master/install/v${KSERVE_VERSION}/kserve-runtimes.yaml
+
+    echo "::endgroup::"
 }
 
 patch_coredns() {
     echo "::group::Patching CoreDNS"
+
     kubectl patch cm coredns -n kube-system --patch-file config/coredns/patch.yaml
     kubectl get cm coredns -n kube-system -o yaml
+
+    echo "::endgroup::"
 }
 
 add_helm_repo
@@ -133,5 +157,3 @@ install_cert_manager
 install_kserve
 store_cluster_secret
 patch_coredns
-
-df -h

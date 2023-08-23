@@ -388,6 +388,8 @@ jobs:
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-python-${{ matrix.python-version }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+      - name: Check disk size
+        run: df -h
       - name: Download k3d
         run: |
           curl --silent --fail https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.4.1 bash
@@ -395,9 +397,13 @@ jobs:
         run: |
           k3d registry create $LOCAL_REGISTRY --port $LOCAL_REGISTRY_PORT
           k3d cluster create $K3D_CLUSTER --image rancher/k3s:${K3S_VERSION} --k3s-arg '--disable=traefik,metrics-server@server:*' --port 80:80@loadbalancer
+      - name: Check disk size
+        run: df -h
       - name: Setup cluster
         working-directory: merlin/scripts/e2e
         run: ./setup-cluster.sh merlin-cluster ${{ env.INGRESS_HOST }}
+      - name: Check disk size
+        run: df -h
       - name: Download API Docker Artifact
         uses: actions/download-artifact@v2
         with:
@@ -406,6 +412,8 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: merlin-transformer.${{ needs.create-version.outputs.version }}.tar
+      - name: Check disk size
+        run: df -h
       - name: Publish images to k3d registry
         run: |
           # Merlin API
@@ -417,20 +425,26 @@ jobs:
           docker image load --input  merlin-transformer.${{ needs.create-version.outputs.version }}.tar
           docker tag merlin-transformer:${{ needs.create-version.outputs.version }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }}
           k3d image import ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }}/merlin-transformer:${{ needs.create-version.outputs.version }} -c merlin-cluster
+      - name: Check disk size
+        run: df -h
       - name: Deploy merlin and mlp
         working-directory: merlin/scripts/e2e
         run: ./deploy-merlin.sh ${{ env.INGRESS_HOST }} ${{ env.LOCAL_REGISTRY }}:${{ env.LOCAL_REGISTRY_PORT }} ${{ needs.create-version.outputs.version }} ${{ github.ref }} ${{ env.MERLIN_CHART_VERSION }}
+      - name: Check disk size
+        run: df -h
       - name: Run E2E Test
         timeout-minutes: 30
         id: run-e2e-test
         working-directory: merlin/scripts/e2e
         run: ./run-e2e.sh ${{ env.INGRESS_HOST }} ${{ env.E2E_PYTHON_VERSION }}
+      - name: Check disk size
+        if: always()
+        continue-on-error: true
+        run: df -h
       - name: "Debug"
         if: always()
         continue-on-error: true
         run: |
-          df -h
-
           echo "::group::Get nodes"
           kubectl get nodes
           echo "::endgroup::"
