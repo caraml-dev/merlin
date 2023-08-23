@@ -339,24 +339,35 @@ class TestModelVersion:
 
     @responses.activate
     def test_deploy(self, version):
-        responses.add("GET", '/v1/environments',
-                      body=json.dumps(
-                          [env_1.to_dict(), env_2.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("POST", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps(ep1.to_dict()),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep1.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([ep1.to_dict()]),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep1.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
 
         endpoint = version.deploy(environment_name=env_1.name)
 
@@ -371,24 +382,35 @@ class TestModelVersion:
 
     @responses.activate
     def test_deploy_upiv1(self, version):
-        responses.add("GET", '/v1/environments',
-                      body=json.dumps(
-                          [env_1.to_dict(), env_2.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("POST", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps(upi_ep.to_dict()),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(upi_ep.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([upi_ep.to_dict()]),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([upi_ep.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
 
         endpoint = version.deploy(environment_name=env_1.name)
 
@@ -403,24 +425,35 @@ class TestModelVersion:
 
     @responses.activate
     def test_deploy_using_raw_deployment_mode(self, version):
-        responses.add("GET", '/v1/environments',
-                      body=json.dumps(
-                          [env_1.to_dict(), env_2.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("POST", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps(ep3.to_dict()),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep3.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([ep3.to_dict()]),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep3.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
 
         endpoint = version.deploy(
             environment_name=env_1.name, deployment_mode=DeploymentMode.RAW_DEPLOYMENT
@@ -436,24 +469,34 @@ class TestModelVersion:
 
     @responses.activate
     def test_deploy_with_autoscaling_policy(self, version):
-        responses.add("GET", '/v1/environments',
-                      body=json.dumps(
-                          [env_1.to_dict(), env_2.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("POST", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps(ep4.to_dict()),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep4.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([ep4.to_dict()]),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET", "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep4.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
 
         endpoint = version.deploy(
             environment_name=env_1.name,
@@ -486,24 +529,35 @@ class TestModelVersion:
 
         # default environment exists
         responses.reset()
-        responses.add("GET", '/v1/environments',
-                      body=json.dumps(
-                          [env_1.to_dict(), env_2.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("POST", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps(ep1.to_dict()),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep1.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([ep1.to_dict()]),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep1.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
 
         endpoint = version.deploy()
 
@@ -520,46 +574,68 @@ class TestModelVersion:
         # 1. Deploy a model version
         # 2. Update the model version
         # 3. Redeploy the updated model version
-        responses.add("GET", '/v1/environments',
-                      body=json.dumps(
-                          [env_1.to_dict(), env_2.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("POST", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps(ep3.to_dict()),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep3.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([ep3.to_dict()]),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep3.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
         # Initial deployment
         version.deploy(environment_name=env_1.name, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
 
         responses.reset()
-        responses.add("GET", '/v1/environments',
-                      body=json.dumps(
-                          [env_1.to_dict(), env_2.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("POST", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps(ep4.to_dict()),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep3.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([ep3.to_dict()]),
-                      status=200,
-                      content_type='application/json')
-        responses.add("GET", '/v1/models/1/versions/1/endpoint',
-                      body=json.dumps([ep4.to_dict()]),
-                      status=200,
-                      content_type='application/json')
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep3.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep3.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
 
         # Redeployment (add autoscaling policy and change deployment mode)
         endpoint = version.deploy(environment_name=env_1.name,
