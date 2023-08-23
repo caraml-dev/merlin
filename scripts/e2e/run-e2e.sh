@@ -33,4 +33,8 @@ kubectl create namespace ${E2E_PROJECT_NAME} --dry-run=client -o yaml | kubectl 
 cd ../../python/sdk
 pip install pipenv==2023.7.23
 pipenv install --dev --skip-lock --python ${PYTHON_VERSION}
+
+df -h
+docker system df
+
 pipenv run pytest -n=8 -W=ignore --cov=merlin -m "not (feast or batch or pyfunc or local_server_test or cli or customtransformer)"

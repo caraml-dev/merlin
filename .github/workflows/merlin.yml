@@ -445,7 +445,10 @@ jobs:
       - name: Check disk size
         if: always()
         continue-on-error: true
-        run: df -h
+        run: |
+          df -h
+          docker image ls
+          docker system df
       - name: "Debug"
         if: always()
         continue-on-error: true
@@ -458,10 +461,6 @@ jobs:
           kubectl get events -A
           echo "::endgroup::"
 
-          echo "::group::Get cert-manager logs"
-          kubectl logs deploy/cert-manager -n cert-manager
-          echo "::endgroup::"
-
           echo "::group::Get KServe pods"
           kubectl get pods -n kserve -o wide
           kubectl get pods -n kserve -o yaml
@@ -471,10 +470,6 @@ jobs:
           kubectl logs deployment/kserve-controller-manager -n kserve -c manager
           echo "::endgroup::"
 
-          echo "::group::KServe events"
-          kubectl get events -n kserve
-          echo "::endgroup::"
-
           echo "::group::Get Knative pods"
           kubectl get pods -n knative-serving -o wide
           kubectl get pods -n knative-serving -o yaml
@@ -482,11 +477,6 @@ jobs:
 
           echo "::group::Knative log"
           kubectl logs deploy/controller -n knative-serving
-          echo "::endgroup::"
-
-          echo "::group::Get Minio pods"
-          kubectl get pods -n minio -o wide
-          kubectl get pods -n minio -o yaml
           echo "::endgroup::"
 
           echo "::group::Get deployments in caraml namespace"
@@ -499,6 +489,14 @@ jobs:
 
           echo "::group::Merlin log"
           kubectl logs deploy/merlin -n caraml -c merlin
+          echo "::endgroup::"
+
+          echo "::group::Get Inference Service in merlin-e2e namespace"
+          kubectl get isvc -n merlin-e2e -o wide
+          echo "::endgroup::"
+
+          echo "::group::Describe Inference Service in merlin-e2e namespace"
+          kubectl describe isvc -n merlin-e2e
           echo "::endgroup::"
 
           echo "::group::Get deployment in merlin-e2e namespace"
@@ -519,10 +517,6 @@ jobs:
 
           echo "::group::Get events in merlin-e2e namespace"
           kubectl get events -n merlin-e2e
-          echo "::endgroup::"
-
-          echo "::group::Get Inference Service in merlin-e2e namespace"
-          kubectl get isvc -n merlin-e2e -o yaml
           echo "::endgroup::"
 
           echo "::group::Models log"
