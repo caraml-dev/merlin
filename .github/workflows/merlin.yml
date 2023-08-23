@@ -429,6 +429,8 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
+          df -h
+
           echo "::group::Get nodes"
           kubectl get nodes
           echo "::endgroup::"

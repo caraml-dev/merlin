@@ -133,3 +133,5 @@ install_cert_manager
 install_kserve
 store_cluster_secret
 patch_coredns
+
+df -h
