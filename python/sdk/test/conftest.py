@@ -145,6 +145,13 @@ def requests():
 
     return req
 
+@pytest.fixture
+def gpu_config():
+    gpu_request = os.environ.get("E2E_GPU_REQUEST", default="1")
+    gpu_name = os.environ.get("E2E_GPU_NAME", default="nvidia-tesla-p4")
+
+    return {"gpu_request": gpu_request, "gpu_name": gpu_name}
+
 
 @pytest.fixture
 def mock_oauth():

@@ -412,6 +412,40 @@ def test_resource_request(
 
     merlin.undeploy(v)
 
+@pytest.mark.gpu
+@pytest.mark.integration
+@pytest.mark.parametrize("deployment_mode", [DeploymentMode.RAW_DEPLOYMENT, DeploymentMode.SERVERLESS])
+def test_resource_request_with_gpu(integration_test_url, project_name, deployment_mode, use_google_oauth, requests, gpu_config):
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model(f"resource-request-with-gpu-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST)
+
+    model_dir = "test/xgboost-model"
+
+    envs = merlin.list_environment()
+    assert len(envs) >= 1
+
+    default_env = merlin.get_default_environment()
+    assert default_env is not None
+
+    undeploy_all_version()
+    with merlin.new_model_version() as v:
+        # Upload the serialized model to MLP
+        merlin.log_model(model_dir=model_dir)
+
+        resource_request = ResourceRequest(1, 1, "100m", "200Mi", **gpu_config)
+        endpoint = merlin.deploy(
+            v, environment_name=default_env.name, resource_request=resource_request, deployment_mode=deployment_mode
+        )
+
+    resp = requests.post(f"{endpoint.url}", json=request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(request_json["instances"])
+
+    merlin.undeploy(v)
+
 
 # https://github.com/kserve/kserve/issues/2142
 # Logging is not supported yet in raw_deployment

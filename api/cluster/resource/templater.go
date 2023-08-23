@@ -21,23 +21,22 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/caraml-dev/merlin/pkg/protocol"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/caraml-dev/merlin/config"
-	"github.com/caraml-dev/merlin/models"
-	"github.com/caraml-dev/merlin/pkg/autoscaling"
-	"github.com/caraml-dev/merlin/pkg/deployment"
-	prt "github.com/caraml-dev/merlin/pkg/protocol"
-	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	kservev1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	kserveconstant "github.com/kserve/kserve/pkg/constants"
 	"github.com/mitchellh/copystructure"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	knautoscaling "knative.dev/serving/pkg/apis/autoscaling"
 	knserving "knative.dev/serving/pkg/apis/serving"
 
+	"github.com/caraml-dev/merlin/config"
+	"github.com/caraml-dev/merlin/models"
+	"github.com/caraml-dev/merlin/pkg/autoscaling"
+	"github.com/caraml-dev/merlin/pkg/deployment"
+	"github.com/caraml-dev/merlin/pkg/protocol"
+	prt "github.com/caraml-dev/merlin/pkg/protocol"
+	transformerpkg "github.com/caraml-dev/merlin/pkg/transformer"
 	"github.com/caraml-dev/merlin/utils"
 )
 
@@ -256,6 +255,19 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 		},
 	}
 
+	nodeSelector := map[string]string{}
+	if !modelService.ResourceRequest.GPURequest.IsZero() {
+		// Declare and initialize resourceType and resourceQuantity variables
+		resourceType := corev1.ResourceName(modelService.ResourceRequest.GPUResourceType)
+		resourceQuantity := modelService.ResourceRequest.GPURequest
+
+		// Set the resourceType as the key in the maps, with resourceQuantity as the value
+		resources.Requests[resourceType] = resourceQuantity
+		resources.Limits[resourceType] = resourceQuantity
+
+		nodeSelector = modelService.ResourceRequest.GPUNodeSelector
+	}
+
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
 	var livenessProbeConfig *corev1.Probe = nil
 	envVarsMap := envVars.ToMap()
@@ -348,7 +360,11 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			},
 		}
 	case models.ModelTypeCustom:
-		predictorSpec = createCustomPredictorSpec(modelService, resources)
+		predictorSpec = createCustomPredictorSpec(modelService, resources, nodeSelector)
+	}
+
+	if len(nodeSelector) > 0 {
+		predictorSpec.NodeSelector = nodeSelector
 	}
 
 	var loggerSpec *kservev1beta1.LoggerSpec
@@ -786,7 +802,7 @@ func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars 
 	return defaultEnvVars
 }
 
-func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements) kservev1beta1.PredictorSpec {
+func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements, nodeSelector map[string]string) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
 	// Add default env var (Overwrite by user not allowed)
@@ -811,7 +827,7 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 	}
 
 	containerPorts := createContainerPorts(modelService.Protocol)
-	return kservev1beta1.PredictorSpec{
+	spec := kservev1beta1.PredictorSpec{
 		PodSpec: kservev1beta1.PodSpec{
 			Containers: []corev1.Container{
 				{
@@ -826,6 +842,11 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 			},
 		},
 	}
+	if len(nodeSelector) > 0 {
+		spec.NodeSelector = nodeSelector
+	}
+
+	return spec
 }
 
 // createPyFuncDefaultEnvVars return default env vars for Pyfunc model.

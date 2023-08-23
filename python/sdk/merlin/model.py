@@ -1045,13 +1045,16 @@ class ModelVersion:
         if resource_request is None:
             env_api = EnvironmentApi(self._api_client)
             env_list = env_api.environments_get()
+            
             for env in env_list:
                 if env.name == target_env_name:
                     resource_request = ResourceRequest(
                         env.default_resource_request.min_replica,
                         env.default_resource_request.max_replica,
                         env.default_resource_request.cpu_request,
-                        env.default_resource_request.memory_request)
+                        env.default_resource_request.memory_request,
+                        )
+                    
             # This case is when the default resource request is not specified in the environment config
             if resource_request is None:
                 raise ValueError("resource request must be specified")
@@ -1061,6 +1064,21 @@ class ModelVersion:
         target_resource_request = client.ResourceRequest(
             resource_request.min_replica, resource_request.max_replica,
             resource_request.cpu_request, resource_request.memory_request)
+        
+        if resource_request.gpu_request is not None and resource_request.gpu_name is not None:
+            env_api = EnvironmentApi(self._api_client)
+            env_list = env_api.environments_get()
+
+            for env in env_list:
+                for gpu in env.gpus:
+                    if resource_request.gpu_name == gpu.display_name:
+                        if resource_request.gpu_request not in gpu.values:
+                            raise ValueError(f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}")
+                        
+                        target_resource_request.gpu_request = resource_request.gpu_request
+                        target_resource_request.gpu_resource_type = gpu.resource_type
+                        target_resource_request.gpu_node_selector = gpu.node_selector
+                        break
 
         target_env_vars = []
         if env_vars is not None:
@@ -1090,6 +1108,7 @@ class ModelVersion:
 
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
+
         endpoint = client.VersionEndpoint(environment_name=target_env_name,
                                           resource_request=target_resource_request,
                                           env_vars=target_env_vars,
@@ -1100,10 +1119,12 @@ class ModelVersion:
                                                                                       autoscaling_policy.target_value),
                                           protocol=protocol.value
                                           )
+
         endpoint = endpoint_api \
             .models_model_id_versions_version_id_endpoint_post(int(model.id),
                                                                int(self.id),
                                                                body=endpoint.to_dict())
+
         bar = pyprind.ProgBar(100, track_time=True,
                               title=f"Deploying model {model.name} version "
                                     f"{self.id}")
@@ -1126,7 +1147,7 @@ class ModelVersion:
               f"\nView model version logs: {log_url}")
 
         self._version_endpoints = self.list_endpoint()
-
+        
         return VersionEndpoint(endpoint, log_url)
 
     def create_transformer_spec(self, transformer: Transformer, target_env_name: str) -> client.Transformer:
@@ -1376,7 +1397,7 @@ class ModelVersion:
         raise ValueError(f"unknown model type: {model_type}")
 
     def _run_standard_model_local_server(self, artifact_path, env_vars, port, build_image):
-        container: Optional[Container] = None
+        container: Optional[Container] = None  # type: ignore
         try:
             container_name = self._container_name()
             image_name = self.MODEL_TYPE_TO_IMAGE_MAP[self.model.type]
@@ -1448,7 +1469,7 @@ class ModelVersion:
                                )
         self._wait_build_complete(logs)
 
-        container: Optional[Container] = None
+        container: Optional[Container] = None  # type: ignore
         try:
             container_name = self._container_name()
             print(f"Starting model server {container_name} at port: {port}")

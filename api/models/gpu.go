@@ -8,7 +8,7 @@ import (
 	"github.com/caraml-dev/merlin/config"
 )
 
-type Gpu struct {
+type GPU struct {
 	// Values limits how many GPUs can be requested by users.
 	// Example: "none", "1", "2", "4"
 	Values []string `json:"values"`
@@ -21,16 +21,16 @@ type Gpu struct {
 	// To deploy the models on a specific GPU node.
 	NodeSelector map[string]string `json:"node_selector"`
 	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
-	MonthlyCostPerGpu float64 `json:"monthly_cost_per_gpu"`
+	MonthlyCostPerGPU float64 `json:"monthly_cost_per_gpu"`
 }
 
-type Gpus []Gpu
+type GPUs []GPU
 
-func (gpus Gpus) Value() (driver.Value, error) {
+func (gpus GPUs) Value() (driver.Value, error) {
 	return json.Marshal(gpus)
 }
 
-func (gpus *Gpus) Scan(value interface{}) error {
+func (gpus *GPUs) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
 		return errors.New("type assertion to []byte failed")
@@ -39,17 +39,17 @@ func (gpus *Gpus) Scan(value interface{}) error {
 	return json.Unmarshal(b, &gpus)
 }
 
-// Function to parse []config.GpuConfig into models.Gpu
-func ParseGpusConfig(configGpus []config.GpuConfig) Gpus {
-	gpus := []Gpu{}
+// Function to parse []config.GPUConfig into models.GPU
+func ParseGPUsConfig(configGPUs []config.GPUConfig) GPUs {
+	gpus := []GPU{}
 
-	for _, configGpu := range configGpus {
-		gpu := Gpu{
-			Values:            configGpu.Values,
-			DisplayName:       configGpu.DisplayName,
-			ResourceType:      configGpu.ResourceType,
-			NodeSelector:      configGpu.NodeSelector,
-			MonthlyCostPerGpu: configGpu.MonthlyCostPerGpu,
+	for _, configGPU := range configGPUs {
+		gpu := GPU{
+			Values:            configGPU.Values,
+			DisplayName:       configGPU.DisplayName,
+			ResourceType:      configGPU.ResourceType,
+			NodeSelector:      configGPU.NodeSelector,
+			MonthlyCostPerGPU: configGPU.MonthlyCostPerGPU,
 		}
 		gpus = append(gpus, gpu)
 	}

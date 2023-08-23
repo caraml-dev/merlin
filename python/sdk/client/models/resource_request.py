@@ -31,22 +31,31 @@ class ResourceRequest(object):
         'min_replica': 'int',
         'max_replica': 'int',
         'cpu_request': 'str',
-        'memory_request': 'str'
+        'memory_request': 'str',
+        'gpu_resource_type': 'str',
+        'gpu_request': 'str',
+        'gpu_node_selector': 'dict(str, str)'
     }
 
     attribute_map = {
         'min_replica': 'min_replica',
         'max_replica': 'max_replica',
         'cpu_request': 'cpu_request',
-        'memory_request': 'memory_request'
+        'memory_request': 'memory_request',
+        'gpu_resource_type': 'gpu_resource_type',
+        'gpu_request': 'gpu_request',
+        'gpu_node_selector': 'gpu_node_selector'
     }
 
-    def __init__(self, min_replica=None, max_replica=None, cpu_request=None, memory_request=None):  # noqa: E501
+    def __init__(self, min_replica=None, max_replica=None, cpu_request=None, memory_request=None, gpu_resource_type=None, gpu_request=None, gpu_node_selector=None):  # noqa: E501
         """ResourceRequest - a model defined in Swagger"""  # noqa: E501
         self._min_replica = None
         self._max_replica = None
         self._cpu_request = None
         self._memory_request = None
+        self._gpu_resource_type = None
+        self._gpu_request = None
+        self._gpu_node_selector = None
         self.discriminator = None
         if min_replica is not None:
             self.min_replica = min_replica
@@ -56,6 +65,12 @@ class ResourceRequest(object):
             self.cpu_request = cpu_request
         if memory_request is not None:
             self.memory_request = memory_request
+        if gpu_resource_type is not None:
+            self.gpu_resource_type = gpu_resource_type
+        if gpu_request is not None:
+            self.gpu_request = gpu_request
+        if gpu_node_selector is not None:
+            self.gpu_node_selector = gpu_node_selector
 
     @property
     def min_replica(self):
@@ -140,6 +155,69 @@ class ResourceRequest(object):
         """
 
         self._memory_request = memory_request
+
+    @property
+    def gpu_resource_type(self):
+        """Gets the gpu_resource_type of this ResourceRequest.  # noqa: E501
+
+
+        :return: The gpu_resource_type of this ResourceRequest.  # noqa: E501
+        :rtype: str
+        """
+        return self._gpu_resource_type
+
+    @gpu_resource_type.setter
+    def gpu_resource_type(self, gpu_resource_type):
+        """Sets the gpu_resource_type of this ResourceRequest.
+
+
+        :param gpu_resource_type: The gpu_resource_type of this ResourceRequest.  # noqa: E501
+        :type: str
+        """
+
+        self._gpu_resource_type = gpu_resource_type
+
+    @property
+    def gpu_request(self):
+        """Gets the gpu_request of this ResourceRequest.  # noqa: E501
+
+
+        :return: The gpu_request of this ResourceRequest.  # noqa: E501
+        :rtype: str
+        """
+        return self._gpu_request
+
+    @gpu_request.setter
+    def gpu_request(self, gpu_request):
+        """Sets the gpu_request of this ResourceRequest.
+
+
+        :param gpu_request: The gpu_request of this ResourceRequest.  # noqa: E501
+        :type: str
+        """
+
+        self._gpu_request = gpu_request
+
+    @property
+    def gpu_node_selector(self):
+        """Gets the gpu_node_selector of this ResourceRequest.  # noqa: E501
+
+
+        :return: The gpu_node_selector of this ResourceRequest.  # noqa: E501
+        :rtype: dict(str, str)
+        """
+        return self._gpu_node_selector
+
+    @gpu_node_selector.setter
+    def gpu_node_selector(self, gpu_node_selector):
+        """Sets the gpu_node_selector of this ResourceRequest.
+
+
+        :param gpu_node_selector: The gpu_node_selector of this ResourceRequest.  # noqa: E501
+        :type: dict(str, str)
+        """
+
+        self._gpu_node_selector = gpu_node_selector
 
     def to_dict(self):
         """Returns the model properties as a dict"""

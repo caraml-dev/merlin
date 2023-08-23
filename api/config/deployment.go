@@ -44,7 +44,7 @@ type DeploymentConfig struct {
 	// PDB config to be applied on models and transformers
 	PodDisruptionBudget PodDisruptionBudgetConfig
 	// GPU Config
-	Gpus []GpuConfig
+	GPUs []GPUConfig
 }
 
 type ResourceRequests struct {

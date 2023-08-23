@@ -37,4 +37,4 @@ pipenv install --dev --skip-lock --python ${PYTHON_VERSION}
 df -h
 docker system df
 
-pipenv run pytest -n=8 -W=ignore --cov=merlin -m "not (feast or batch or pyfunc or local_server_test or cli or customtransformer)"
+pipenv run pytest -n=8 -W=ignore --cov=merlin -m "not (gpu or feast or batch or pyfunc or local_server_test or cli or customtransformer)"

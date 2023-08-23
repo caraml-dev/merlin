@@ -223,6 +223,7 @@ func TestCall_do(t *testing.T) {
 						types.ValueType_INT64,
 						types.ValueType_INT64,
 					},
+					indexRows: []int{0, 1},
 					valueRows: transTypes.ValueRows{
 						transTypes.ValueRow{
 							"1001", "1002", int64(1111), int64(2222), int64(3333), int64(4444),
@@ -354,6 +355,7 @@ func TestCall_do(t *testing.T) {
 						types.ValueType_INT64,
 						types.ValueType_INT64,
 					},
+					indexRows: []int{0, 1},
 					valueRows: transTypes.ValueRows{
 						transTypes.ValueRow{
 							"1001", "1002", nil, nil, nil, nil,
@@ -485,6 +487,7 @@ func TestCall_do(t *testing.T) {
 						types.ValueType_INT64,
 						types.ValueType_INT64,
 					},
+					indexRows: []int{0, 1},
 					valueRows: transTypes.ValueRows{
 						transTypes.ValueRow{
 							"1001", "1002", int64(1), int64(2), int64(3), int64(4),
@@ -517,7 +520,11 @@ func TestCall_do(t *testing.T) {
 					return req.Project == tt.mockFeastCall.request.Project
 				})).Return(tt.mockFeastCall.response, nil)
 
-			got := fc.do(tt.args.ctx, tt.args.entityList, tt.args.features)
+			orderedEntityList := make([]orderedFeastRow, len(tt.args.entityList))
+			for i, entity := range tt.args.entityList {
+				orderedEntityList[i] = orderedFeastRow{Index: i, Row: entity}
+			}
+			got := fc.do(tt.args.ctx, orderedEntityList, tt.args.features)
 			assert.Equal(t, tt.want, got)
 		})
 	}
