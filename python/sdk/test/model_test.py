@@ -346,18 +346,18 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
         responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep1.to_dict()),
             status=200,
             content_type="application/json",
         )
@@ -389,18 +389,18 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(upi_ep.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
         responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(upi_ep.to_dict()),
             status=200,
             content_type="application/json",
         )
@@ -432,18 +432,18 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep3.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
         responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep3.to_dict()),
             status=200,
             content_type="application/json",
         )
@@ -476,17 +476,17 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep4.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
         responses.add(
             "GET", "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep4.to_dict()),
             status=200,
             content_type="application/json",
         )
@@ -536,18 +536,18 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep1.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
         # This is the additional check which deploy makes to determine if there are any existing endpoints associated
         responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
             body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "POST",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps(ep1.to_dict()),
             status=200,
             content_type="application/json",
         )
@@ -569,55 +569,10 @@ class TestModelVersion:
 
     @responses.activate
     def test_redeploy_model(self, version):
-        # This unit test could've been be simplified to only invoke one call to 'deploy' but instead explicitly shows
-        # the workflow where this functionality is expected to be used i.e.
-        # 1. Deploy a model version
-        # 2. Update the model version
-        # 3. Redeploy the updated model version
         responses.add(
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep3.to_dict()),
-            status=200,
-            content_type="application/json",
-        )
-        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "GET",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep3.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        # Initial deployment
-        version.deploy(environment_name=env_1.name, deployment_mode=DeploymentMode.RAW_DEPLOYMENT)
-
-        responses.reset()
-        responses.add(
-            "GET",
-            "/v1/environments",
-            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
-            status=200,
-            content_type="application/json",
-        )
-        responses.add(
-            "POST",
-            "/v1/models/1/versions/1/endpoint",
-            body=json.dumps(ep3.to_dict()),
             status=200,
             content_type="application/json",
         )
@@ -630,9 +585,16 @@ class TestModelVersion:
             content_type="application/json",
         )
         responses.add(
+            "PUT",
+            "/v1/models/1/versions/1/endpoint/1234",
+            body=json.dumps(ep4.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
             "GET",
             "/v1/models/1/versions/1/endpoint",
-            body=json.dumps([ep3.to_dict()]),
+            body=json.dumps([ep4.to_dict()]),
             status=200,
             content_type="application/json",
         )
