@@ -186,13 +186,50 @@ func TestGPUsConfig(t *testing.T) {
 			envConfigPath: "./testdata/valid-environment-1.yaml",
 			expectedGPUsConfig: []GPUConfig{
 				{
-					Values:       []string{"none", "1"},
-					DisplayName:  "NVIDIA T4",
+					Name:         "NVIDIA T4",
+					Values:       []string{"None", "1"},
 					ResourceType: "nvidia.com/gpu",
 					NodeSelector: map[string]string{
 						"cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
 					},
-					MonthlyCostPerGPU: 189.07,
+					MinMonthlyCostPerGPU: 189.07,
+					MaxMonthlyCostPerGPU: 189.07,
+				},
+				{
+					Name:         "NVIDIA T4 with Time Sharing",
+					Values:       []string{"None", "1"},
+					ResourceType: "nvidia.com/gpu",
+					NodeSelector: map[string]string{
+						"cloud.google.com/gke-accelerator":                "nvidia-tesla-t4",
+						"cloud.google.com/gke-max-shared-clients-per-gpu": "8",
+						"cloud.google.com/gke-gpu-sharing-strategy":       "time-sharing",
+					},
+					MinMonthlyCostPerGPU: 23.63,
+					MaxMonthlyCostPerGPU: 189.07,
+				},
+				{
+					Name:         "NVIDIA P4",
+					Values:       []string{"None", "1", "2"},
+					ResourceType: "nvidia.com/gpu",
+					NodeSelector: map[string]string{
+						"cloud.google.com/gke-accelerator": "nvidia-tesla-p4",
+					},
+					Tolerations: []corev1.Toleration{
+						{
+							Key:      "caraml/nvidia-tesla-p4",
+							Operator: corev1.TolerationOpEqual,
+							Value:    "enabled",
+							Effect:   corev1.TaintEffectNoSchedule,
+						},
+						{
+							Key:      "nvidia.com/gpu",
+							Operator: corev1.TolerationOpEqual,
+							Value:    "present",
+							Effect:   corev1.TaintEffectNoSchedule,
+						},
+					},
+					MinMonthlyCostPerGPU: 332.15,
+					MaxMonthlyCostPerGPU: 332.15,
 				},
 			},
 		},

@@ -1,11 +1,6 @@
-import React, {
-  useMemo,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
 import {
+  EuiCallOut,
   EuiDualRange,
   EuiFieldText,
   EuiFlexGroup,
@@ -13,30 +8,40 @@ import {
   EuiForm,
   EuiFormRow,
   EuiSpacer,
-  EuiCallOut,
   EuiSuperSelect,
 } from "@elastic/eui";
-import { FormLabelWithToolTip, useOnChangeHandler } from "@caraml-dev/ui-lib";
-import { Panel } from "./Panel";
-import { calculateCost } from "../../../../../utils/costEstimation";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import EnvironmentsContext from "../../../../../providers/environments/context";
+import { calculateCost } from "../../../../../utils/costEstimation";
+import { Panel } from "./Panel";
 
 const maxTicks = 20;
 
 export const ResourcesPanel = ({
-  environment,
+  environment: initEnvironment,
+  isGPUEnabled,
   resourcesConfig,
   onChangeHandler,
   errors = {},
   maxAllowedReplica,
 }) => {
+  const environment = initEnvironment;
   const environments = useContext(EnvironmentsContext);
+
+  const { onChange } = useOnChangeHandler(onChangeHandler);
+
   const gpus = useMemo(() => {
     const dict = {};
     environments.forEach((env) => {
       if (env.name === environment) {
         env.gpus.forEach((gpu) => {
-          dict[gpu.display_name] = gpu;
+          dict[gpu.name] = gpu;
         });
       }
     });
@@ -47,37 +52,42 @@ export const ResourcesPanel = ({
   useEffect(() => {
     if (
       resourcesConfig &&
-      resourcesConfig.gpu_display_name &&
-      resourcesConfig.gpu_display_name !== "" &&
-      resourcesConfig.gpu_display_name !== "None" &&
+      resourcesConfig.gpu_name &&
+      resourcesConfig.gpu_name !== "" &&
+      resourcesConfig.gpu_name !== "None" &&
       Object.keys(gpus).length > 0
     ) {
-      const gpu = gpus[resourcesConfig.gpu_display_name];
-      const gpuValues = gpu.values.map((value) => ({
-        value: value,
-        inputDisplay: value,
-      }));
-      setGpuValueOptions(gpuValues);
+      const gpu = gpus[resourcesConfig.gpu_name];
+      if (!!gpu) {
+        const gpuValues = gpu.values.map((value) => ({
+          value: value,
+          inputDisplay: value,
+        }));
+        setGpuValueOptions(gpuValues);
+      }
     } else {
       setGpuValueOptions([{ value: "None", inputDisplay: "None" }]);
     }
-  }, [resourcesConfig, resourcesConfig.gpu_display_name, gpus]);
+  }, [resourcesConfig, resourcesConfig.gpu_name, gpus]);
 
-  const { onChange } = useOnChangeHandler(onChangeHandler);
   const replicasError = useMemo(
     () => [...(errors.min_replica || []), ...(errors.max_replica || [])],
     [errors.min_replica, errors.max_replica]
   );
 
-  const onGPUTypeChange = (gpu_display_name) => {
-    if (gpu_display_name === "None") {
+  const onGPUTypeChange = (gpu_name) => {
+    if (gpu_name === "None") {
       resetGPU();
       return;
     }
-    onChange("gpu_display_name")(gpu_display_name);
-    onChange("gpu_resource_type")(gpus[gpu_display_name].resource_type);
-    onChange("gpu_node_selector")(gpus[gpu_display_name].node_selector);
+    onChange("gpu_name")(gpu_name);
     onChange("gpu_request")(undefined);
+    onChange("min_monthly_cost_per_gpu")(
+      gpus[gpu_name].min_monthly_cost_per_gpu
+    );
+    onChange("max_monthly_cost_per_gpu")(
+      gpus[gpu_name].max_monthly_cost_per_gpu
+    );
   };
 
   const onGPUValueChange = (value) => {
@@ -85,15 +95,17 @@ export const ResourcesPanel = ({
   };
 
   const resetGPU = useCallback(() => {
-    onChange("gpu_display_name")(undefined);
-    onChange("gpu_resource_type")(undefined);
-    onChange("gpu_node_selector")(undefined);
+    onChange("gpu_name")(undefined);
     onChange("gpu_request")(undefined);
+    onChange("min_monthly_cost_per_gpu")(undefined);
+    onChange("max_monthly_cost_per_gpu")(undefined);
   }, [onChange]);
 
   useEffect(() => {
-    resetGPU();
-  }, [environment, resetGPU, onChange]);
+    if (environment !== initEnvironment) {
+      resetGPU();
+    }
+  }, [environment, initEnvironment, resetGPU, onChange]);
 
   return (
     <Panel title="Resources">
@@ -146,15 +158,15 @@ export const ResourcesPanel = ({
 
         <EuiSpacer size="l" />
 
-        {Object.keys(gpus).length > 0 && (
+        {isGPUEnabled && Object.keys(gpus).length > 0 && (
           <>
             <EuiFlexGroup direction="row">
               <EuiFlexItem>
                 <EuiFormRow
                   label={
                     <FormLabelWithToolTip
-                      label="GPU Type"
-                      content="Specify the type of GPU that will be used for the component"
+                      label="GPU Name"
+                      content="Specify the GPU that will be used for the component"
                     />
                   }
                   fullWidth
@@ -166,12 +178,12 @@ export const ResourcesPanel = ({
                         value: "None",
                         inputDisplay: "None",
                       },
-                      ...Object.keys(gpus).map((display_name) => ({
-                        value: display_name,
-                        inputDisplay: display_name,
+                      ...Object.keys(gpus).map((name) => ({
+                        value: name,
+                        inputDisplay: name,
                       })),
                     ]}
-                    valueOfSelected={resourcesConfig.gpu_display_name || "None"}
+                    valueOfSelected={resourcesConfig.gpu_name || "None"}
                     hasDividers
                   />
                 </EuiFormRow>
@@ -192,7 +204,12 @@ export const ResourcesPanel = ({
                   <EuiSuperSelect
                     onChange={onGPUValueChange}
                     options={gpuValueOptions}
-                    valueOfSelected={resourcesConfig.gpu_request || "None"}
+                    valueOfSelected={
+                      resourcesConfig.gpu_request &&
+                      resourcesConfig.gpu_request !== "0"
+                        ? resourcesConfig.gpu_request
+                        : "None"
+                    }
                     hasDividers
                   />
                 </EuiFormRow>
@@ -241,13 +258,17 @@ export const ResourcesPanel = ({
           {calculateCost(
             resourcesConfig.min_replica,
             resourcesConfig.cpu_request,
-            resourcesConfig.memory_request
+            resourcesConfig.memory_request,
+            resourcesConfig.gpu_request,
+            resourcesConfig.min_monthly_cost_per_gpu
           ).toFixed(2)}
           -
           {calculateCost(
             resourcesConfig.max_replica,
             resourcesConfig.cpu_request,
-            resourcesConfig.memory_request
+            resourcesConfig.memory_request,
+            resourcesConfig.gpu_request,
+            resourcesConfig.max_monthly_cost_per_gpu
           ).toFixed(2)}{" "}
           / Month
         </p>

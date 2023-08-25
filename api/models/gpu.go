@@ -5,23 +5,32 @@ import (
 	"encoding/json"
 	"errors"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/caraml-dev/merlin/config"
 )
 
 type GPU struct {
+	// Name is used as the key to identify the GPU configuration.
+	// It also specifies how the accelerator type will be written in the UI.
+	// Example: "NVIDIA T4"
+	Name string `json:"name"`
 	// Values limits how many GPUs can be requested by users.
 	// Example: "none", "1", "2", "4"
 	Values []string `json:"values"`
-	// Specifies how the accelerator type will be written in the UI.
-	// Example: "NVIDIA T4"
-	DisplayName string `json:"display_name"`
 	// Specifies how the accelerator type will be translated to
 	// K8s resource type. Example: nvidia.com/gpu
 	ResourceType string `json:"resource_type"`
 	// To deploy the models on a specific GPU node.
-	NodeSelector map[string]string `json:"node_selector"`
+	NodeSelector map[string]string `json:"node_selector,omitempty"`
+	// To deploy the models on a specific GPU node via taints and tolerations.
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+	// MinMonthlyCostPerGPU is the minimum monthly cost per GPU, for example, if you enable time-sharing GPUs with 8 max shared clients,
+	// the minimum monthly cost per GPU is max_monthly_cost_per_gpu divided by 8.
+	// MaxMonthlyCostPerGPU is the maximum monthly cost if you use the whole GPU.
 	// https://cloud.google.com/compute/gpus-pricing#other-gpu-models
-	MonthlyCostPerGPU float64 `json:"monthly_cost_per_gpu"`
+	MinMonthlyCostPerGPU float64 `json:"min_monthly_cost_per_gpu"`
+	MaxMonthlyCostPerGPU float64 `json:"max_monthly_cost_per_gpu"`
 }
 
 type GPUs []GPU
@@ -45,11 +54,13 @@ func ParseGPUsConfig(configGPUs []config.GPUConfig) GPUs {
 
 	for _, configGPU := range configGPUs {
 		gpu := GPU{
-			Values:            configGPU.Values,
-			DisplayName:       configGPU.DisplayName,
-			ResourceType:      configGPU.ResourceType,
-			NodeSelector:      configGPU.NodeSelector,
-			MonthlyCostPerGPU: configGPU.MonthlyCostPerGPU,
+			Name:                 configGPU.Name,
+			Values:               configGPU.Values,
+			ResourceType:         configGPU.ResourceType,
+			NodeSelector:         configGPU.NodeSelector,
+			Tolerations:          configGPU.Tolerations,
+			MinMonthlyCostPerGPU: configGPU.MinMonthlyCostPerGPU,
+			MaxMonthlyCostPerGPU: configGPU.MaxMonthlyCostPerGPU,
 		}
 		gpus = append(gpus, gpu)
 	}

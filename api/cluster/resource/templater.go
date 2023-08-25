@@ -256,16 +256,23 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 	}
 
 	nodeSelector := map[string]string{}
-	if !modelService.ResourceRequest.GPURequest.IsZero() {
-		// Declare and initialize resourceType and resourceQuantity variables
-		resourceType := corev1.ResourceName(modelService.ResourceRequest.GPUResourceType)
-		resourceQuantity := modelService.ResourceRequest.GPURequest
+	tolerations := []corev1.Toleration{}
+	if modelService.ResourceRequest.GPUName != "" && !modelService.ResourceRequest.GPURequest.IsZero() {
+		// Look up to the GPU resource type and quantity from DeploymentConfig
+		for _, gpuConfig := range config.GPUs {
+			if gpuConfig.Name == modelService.ResourceRequest.GPUName {
+				// Declare and initialize resourceType and resourceQuantity variables
+				resourceType := corev1.ResourceName(gpuConfig.ResourceType)
+				resourceQuantity := modelService.ResourceRequest.GPURequest
 
-		// Set the resourceType as the key in the maps, with resourceQuantity as the value
-		resources.Requests[resourceType] = resourceQuantity
-		resources.Limits[resourceType] = resourceQuantity
+				// Set the resourceType as the key in the maps, with resourceQuantity as the value
+				resources.Requests[resourceType] = resourceQuantity
+				resources.Limits[resourceType] = resourceQuantity
 
-		nodeSelector = modelService.ResourceRequest.GPUNodeSelector
+				nodeSelector = gpuConfig.NodeSelector
+				tolerations = gpuConfig.Tolerations
+			}
+		}
 	}
 
 	// liveness probe config. if env var to disable != true or not set, it will default to enabled
@@ -360,11 +367,15 @@ func createPredictorSpec(modelService *models.Service, config *config.Deployment
 			},
 		}
 	case models.ModelTypeCustom:
-		predictorSpec = createCustomPredictorSpec(modelService, resources, nodeSelector)
+		predictorSpec = createCustomPredictorSpec(modelService, resources, nodeSelector, tolerations)
 	}
 
 	if len(nodeSelector) > 0 {
 		predictorSpec.NodeSelector = nodeSelector
+	}
+
+	if len(tolerations) > 0 {
+		predictorSpec.Tolerations = tolerations
 	}
 
 	var loggerSpec *kservev1beta1.LoggerSpec
@@ -802,7 +813,7 @@ func createDefaultPredictorEnvVars(modelService *models.Service) models.EnvVars 
 	return defaultEnvVars
 }
 
-func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements, nodeSelector map[string]string) kservev1beta1.PredictorSpec {
+func createCustomPredictorSpec(modelService *models.Service, resources corev1.ResourceRequirements, nodeSelector map[string]string, tolerations []corev1.Toleration) kservev1beta1.PredictorSpec {
 	envVars := modelService.EnvVars
 
 	// Add default env var (Overwrite by user not allowed)
@@ -844,6 +855,10 @@ func createCustomPredictorSpec(modelService *models.Service, resources corev1.Re
 	}
 	if len(nodeSelector) > 0 {
 		spec.NodeSelector = nodeSelector
+	}
+
+	if len(tolerations) > 0 {
+		spec.Tolerations = tolerations
 	}
 
 	return spec

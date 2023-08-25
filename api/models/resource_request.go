@@ -31,12 +31,11 @@ type ResourceRequest struct {
 	CPURequest resource.Quantity `json:"cpu_request"`
 	// Memory request of inference service
 	MemoryRequest resource.Quantity `json:"memory_request"`
-	// GPU resource type (nvidia.com/gpu or amd.com/gpu)
-	GPUResourceType string `json:"gpu_resource_type"`
+
+	// GPU name
+	GPUName string `json:"gpu_name,omitempty"`
 	// GPU Quantity requests
-	GPURequest resource.Quantity `json:"gpu_request"`
-	// GPU Node selector
-	GPUNodeSelector map[string]string `json:"gpu_node_selector"`
+	GPURequest resource.Quantity `json:"gpu_request,omitempty"`
 }
 
 func (r ResourceRequest) Value() (driver.Value, error) {
