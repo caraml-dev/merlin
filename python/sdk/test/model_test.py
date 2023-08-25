@@ -35,7 +35,7 @@ from urllib3_mock import Responses
 responses = Responses("requests.packages.urllib3")
 
 default_resource_request = cl.ResourceRequest(1, 1, "100m", "128Mi")
-gpu = cl.GPU(
+gpu = cl.GPUConfig(
     name="nvidia-tesla-p4",
     values=["1", "4", "8"],
     resource_type="nvidia.com/gpu",
@@ -97,9 +97,8 @@ resource_request_with_gpu = cl.ResourceRequest(
     max_replica=1,
     cpu_request="100m",
     memory_request="128Mi",
+    gpu_name="nvidia-tesla-p4",
     gpu_request="1",
-    gpu_resource_type="nvidia.com/gpu",
-    gpu_node_selector={"cloud.google.com/gke-accelerator": "nvidia-tesla-p4"},
 )
 ep5 = cl.VersionEndpoint(
     "789",
@@ -562,20 +561,12 @@ class TestModelVersion:
         assert endpoint.environment.name == env_3.name
         assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
         assert (
+            endpoint.resource_request.gpu_name
+            == resource_request_with_gpu.gpu_name
+        )
+        assert (
             endpoint.resource_request.gpu_request
             == resource_request_with_gpu.gpu_request
-        )
-        assert (
-            endpoint.resource_request.gpu_resource_type
-            == resource_request_with_gpu.gpu_resource_type
-        )
-        assert (
-            endpoint.resource_request.gpu_node_selector
-            == resource_request_with_gpu.gpu_node_selector
-        )
-        assert (
-            endpoint.resource_request.gpu_tolerations
-            == resource_request_with_gpu.gpu_tolerations
         )
 
     @responses.activate
