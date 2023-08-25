@@ -8,7 +8,7 @@
  */
 package client
 
-type Gpu struct {
+type GpuConfig struct {
 	Name                 string            `json:"name,omitempty"`
 	Values               []string          `json:"values,omitempty"`
 	ResourceType         string            `json:"resource_type,omitempty"`

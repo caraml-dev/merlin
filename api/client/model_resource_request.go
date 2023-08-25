@@ -9,12 +9,10 @@
 package client
 
 type ResourceRequest struct {
-	MinReplica      int32             `json:"min_replica,omitempty"`
-	MaxReplica      int32             `json:"max_replica,omitempty"`
-	CpuRequest      string            `json:"cpu_request,omitempty"`
-	MemoryRequest   string            `json:"memory_request,omitempty"`
-	GpuResourceType string            `json:"gpu_resource_type,omitempty"`
-	GpuRequest      string            `json:"gpu_request,omitempty"`
-	GpuNodeSelector map[string]string `json:"gpu_node_selector,omitempty"`
-	GpuTolerations  []GpuToleration   `json:"gpu_tolerations,omitempty"`
+	MinReplica    int32  `json:"min_replica,omitempty"`
+	MaxReplica    int32  `json:"max_replica,omitempty"`
+	CpuRequest    string `json:"cpu_request,omitempty"`
+	MemoryRequest string `json:"memory_request,omitempty"`
+	GpuName       string `json:"gpu_name,omitempty"`
+	GpuRequest    string `json:"gpu_request,omitempty"`
 }

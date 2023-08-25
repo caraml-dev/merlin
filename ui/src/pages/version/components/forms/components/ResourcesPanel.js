@@ -58,11 +58,13 @@ export const ResourcesPanel = ({
       Object.keys(gpus).length > 0
     ) {
       const gpu = gpus[resourcesConfig.gpu_name];
-      const gpuValues = gpu.values.map((value) => ({
-        value: value,
-        inputDisplay: value,
-      }));
-      setGpuValueOptions(gpuValues);
+      if (!!gpu) {
+        const gpuValues = gpu.values.map((value) => ({
+          value: value,
+          inputDisplay: value,
+        }));
+        setGpuValueOptions(gpuValues);
+      }
     } else {
       setGpuValueOptions([{ value: "None", inputDisplay: "None" }]);
     }
@@ -80,9 +82,6 @@ export const ResourcesPanel = ({
     }
     onChange("gpu_name")(gpu_name);
     onChange("gpu_request")(undefined);
-    onChange("gpu_resource_type")(gpus[gpu_name].resource_type);
-    onChange("gpu_node_selector")(gpus[gpu_name].node_selector);
-    onChange("gpu_tolerations")(gpus[gpu_name].tolerations);
     onChange("min_monthly_cost_per_gpu")(
       gpus[gpu_name].min_monthly_cost_per_gpu
     );
@@ -98,9 +97,6 @@ export const ResourcesPanel = ({
   const resetGPU = useCallback(() => {
     onChange("gpu_name")(undefined);
     onChange("gpu_request")(undefined);
-    onChange("gpu_resource_type")(undefined);
-    onChange("gpu_node_selector")(undefined);
-    onChange("gpu_tolerations")(undefined);
     onChange("min_monthly_cost_per_gpu")(undefined);
     onChange("max_monthly_cost_per_gpu")(undefined);
   }, [onChange]);

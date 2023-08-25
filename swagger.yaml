@@ -1056,7 +1056,7 @@ definitions:
       gpus:
         type: "array"
         items:
-          $ref: "#/definitions/GPU"
+          $ref: "#/definitions/GPUConfig"
       created_at:
         type: "string"
         format: "date-time"
@@ -1436,18 +1436,10 @@ definitions:
         type: "string"
       memory_request:
         type: "string"
-      gpu_resource_type:
+      gpu_name:
         type: "string"
       gpu_request:
         type: "string"
-      gpu_node_selector:
-        type: "object"
-        additionalProperties:
-          type: "string"
-      gpu_tolerations:
-        type: "array"
-        items:
-          $ref: "#/definitions/GPUToleration"
 
   AutoscalingPolicy:
     type: "object"
@@ -1542,7 +1534,7 @@ definitions:
         items:
           $ref: "#/definitions/EnvVar"
 
-  GPU:
+  GPUConfig:
     type: "object"
     properties:
       name:

@@ -1075,10 +1075,8 @@ class ModelVersion:
                         if resource_request.gpu_request not in gpu.values:
                             raise ValueError(f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}")
 
+                        target_resource_request.gpu_name = resource_request.gpu_name
                         target_resource_request.gpu_request = resource_request.gpu_request
-                        target_resource_request.gpu_resource_type = gpu.resource_type
-                        target_resource_request.gpu_node_selector = gpu.node_selector
-                        target_resource_request.gpu_tolerations = gpu.tolerations
                         break
 
         target_env_vars = []

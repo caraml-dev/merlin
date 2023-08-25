@@ -118,7 +118,7 @@ type GPUConfig struct {
 	// Example: "NVIDIA T4"
 	Name string `yaml:"name"`
 	// Values limits how many GPUs can be requested by users.
-	// Example: "none", "1", "2", "4"
+	// Example: "None", "1", "2", "4"
 	Values []string `yaml:"values"`
 	// Specifies how the accelerator type will be translated to
 	// K8s resource type. Example: nvidia.com/gpu

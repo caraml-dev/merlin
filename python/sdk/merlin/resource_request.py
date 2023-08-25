@@ -14,6 +14,7 @@
 
 from typing import Optional
 
+
 class ResourceRequest:
     """
     The resource requirement and replicas requests for model version endpoint.
@@ -63,15 +64,15 @@ class ResourceRequest:
     @property
     def gpu_request(self) -> Optional[str]:
         return self._gpu_request
-    
+
     @gpu_request.setter
     def gpu_request(self, gpu_request):
         self._gpu_request = gpu_request
-    
+
     @property
     def gpu_name(self) -> Optional[str]:
         return self._gpu_name
-    
+
     @gpu_name.setter
     def gpu_name(self, gpu_name):
         self._gpu_name = gpu_name

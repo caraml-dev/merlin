@@ -7,7 +7,7 @@ import { parseCpu, parseMemoryInGi } from "./kubernetesResourceParser";
  * @param {string} cpu cpu resource
  * @param {string} memory memory resource
  * @param {string} gpu gpu resource
- * @param {float} monthlyCostPerGPU monthlyl cost per gpu
+ * @param {float} monthlyCostPerGPU monthly cost per gpu
  * @returns estimated cost
  */
 export const calculateCost = (

@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -35,14 +34,8 @@ type ResourceRequest struct {
 
 	// GPU name
 	GPUName string `json:"gpu_name,omitempty"`
-	// GPU resource type (nvidia.com/gpu or amd.com/gpu)
-	GPUResourceType string `json:"gpu_resource_type,omitempty"`
 	// GPU Quantity requests
 	GPURequest resource.Quantity `json:"gpu_request,omitempty"`
-	// GPU Node selector
-	GPUNodeSelector map[string]string `json:"gpu_node_selector,omitempty"`
-	// GPU Tolerations
-	GPUTolerations []corev1.Toleration `json:"gpu_tolerations,omitempty"`
 }
 
 func (r ResourceRequest) Value() (driver.Value, error) {
