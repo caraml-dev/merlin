@@ -379,7 +379,7 @@ def test_resource_request(integration_test_url, project_name, deployment_mode, u
 def test_resource_request_with_gpu(integration_test_url, project_name, deployment_mode, use_google_oauth, requests, gpu_config):
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
     merlin.set_project(project_name)
-    merlin.set_model(f"resource-request-with-gpu-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST)
+    merlin.set_model(f"gpu-{deployment_mode_suffix(deployment_mode)}", ModelType.XGBOOST)
 
     model_dir = "test/xgboost-model"
 
