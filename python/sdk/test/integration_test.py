@@ -989,6 +989,8 @@ def test_redeploy_model(integration_test_url, project_name, use_google_oauth, re
     assert resp.json() is not None
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
+    # Check that the endpoint remains the same
+    assert endpoint.url == new_endpoint.url
     # Check the autoscaling policy of v2
     assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
     assert new_endpoint.autoscaling_policy.target_value == 10
