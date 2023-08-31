@@ -18,26 +18,31 @@ from merlin.resource_request import ResourceRequest
 from merlin.util import autostr
 from enum import Enum
 
-from client import EnvironmentApi
 import client
 import yaml
 import json
+import fluent
+
 
 class TransformerType(Enum):
-    CUSTOM_TRANSFORMER = 'custom'
-    STANDARD_TRANSFORMER = 'standard'
-
+    CUSTOM_TRANSFORMER = "custom"
+    STANDARD_TRANSFORMER = "standard"
 
 
 @autostr
 class Transformer:
     StandardTransformerConfigKey = "STANDARD_TRANSFORMER_CONFIG"
 
-    def __init__(self, image: str, enabled: bool = True,
-                 command: str = None, args: str = None,
-                 resource_request: ResourceRequest = None,
-                 env_vars: Dict[str, str] = None,
-                 transformer_type: TransformerType = TransformerType.CUSTOM_TRANSFORMER):
+    def __init__(
+        self,
+        image: str,
+        enabled: bool = True,
+        command: str = None,
+        args: str = None,
+        resource_request: ResourceRequest = None,
+        env_vars: Dict[str, str] = None,
+        transformer_type: TransformerType = TransformerType.CUSTOM_TRANSFORMER,
+    ):
         self._image = image
         self._enabled = enabled
         self._command = command
@@ -76,15 +81,23 @@ class Transformer:
 
 
 class StandardTransformer(Transformer):
-    def __init__(self, config_file: str, enabled: bool = True,
-                 resource_request: ResourceRequest = None,
-                 env_vars: Dict[str, str] = None):
-
+    def __init__(
+        self,
+        config_file: str,
+        enabled: bool = True,
+        resource_request: ResourceRequest = None,
+        env_vars: Dict[str, str] = None,
+    ):
         transformer_config = self._load_transformer_config(config_file)
         merged_env_vars = env_vars or {}
         merged_env_vars = {**merged_env_vars, **transformer_config}
-        super().__init__(image="", enabled=enabled, resource_request=resource_request,
-                         env_vars=merged_env_vars, transformer_type=TransformerType.STANDARD_TRANSFORMER)
+        super().__init__(
+            image="",
+            enabled=enabled,
+            resource_request=resource_request,
+            env_vars=merged_env_vars,
+            transformer_type=TransformerType.STANDARD_TRANSFORMER,
+        )
 
     def _load_transformer_config(self, config_file: str):
         with open(config_file, "r") as stream:
@@ -93,3 +106,6 @@ class StandardTransformer(Transformer):
         config_json_string = json.dumps(transformer_config)
         return {self.StandardTransformerConfigKey: config_json_string}
 
+    def simulate(self, request: Dict):
+        fluent._check_active_client()
+        return fluent._merlin_client.standard_transformer_simulate(request=request)
