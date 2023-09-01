@@ -28,29 +28,40 @@ import client
 import docker
 import pyprind
 import yaml
-from client import (EndpointApi, EnvironmentApi, ModelEndpointsApi, ModelsApi,
-                    SecretApi, VersionApi)
+from client import (
+    EndpointApi,
+    EnvironmentApi,
+    ModelEndpointsApi,
+    ModelsApi,
+    SecretApi,
+    VersionApi,
+)
 from docker import APIClient
 from docker.errors import BuildError
 from docker.models.containers import Container
 from merlin import pyfunc
-from merlin.autoscaling import (RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
-                                SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
-                                AutoscalingPolicy)
+from merlin.autoscaling import (
+    RAW_DEPLOYMENT_DEFAULT_AUTOSCALING_POLICY,
+    SERVERLESS_DEFAULT_AUTOSCALING_POLICY,
+    AutoscalingPolicy,
+)
 from merlin.batch.config import PredictionJobConfig
 from merlin.batch.job import PredictionJob
 from merlin.batch.sink import BigQuerySink
 from merlin.batch.source import BigQuerySource
 from merlin.deployment_mode import DeploymentMode
-from merlin.docker.docker import (copy_pyfunc_dockerfile,
-                                  copy_standard_dockerfile)
+from merlin.docker.docker import copy_pyfunc_dockerfile, copy_standard_dockerfile
 from merlin.endpoint import ModelEndpoint, Status, VersionEndpoint
 from merlin.logger import Logger
 from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.transformer import Transformer
-from merlin.util import (autostr, download_files_from_gcs, guess_mlp_ui_url,
-                         valid_name_check)
+from merlin.util import (
+    autostr,
+    download_files_from_gcs,
+    guess_mlp_ui_url,
+    valid_name_check,
+)
 from merlin.validation import validate_model_dir
 from merlin.version import VERSION
 from mlflow.entities import Run, RunData
@@ -79,7 +90,6 @@ PREDICTION_JOB = "PredictionJob"
 
 
 class ModelEndpointDeploymentError(Exception):
-
     def __init__(self, model_name: str, version: int, details: str):
         self._model_name = model_name
         self._version = version
@@ -100,8 +110,9 @@ class ModelEndpointDeploymentError(Exception):
 
 @autostr
 class Project:
-    def __init__(self, project: client.Project, mlp_url: str,
-                 api_client: client.ApiClient):
+    def __init__(
+        self, project: client.Project, mlp_url: str, api_client: client.ApiClient
+    ):
         self._id = project.id
         self._name = project.name
         self._mlflow_tracking_url = project.mlflow_tracking_url
@@ -144,23 +155,22 @@ class Project:
     def url(self) -> str:
         return self._url
 
-    def list_model(self) -> List['Model']:
+    def list_model(self) -> List["Model"]:
         """
         List all model available within the project
         :return: list of Model
         """
         model_api = ModelsApi(self._api_client)
-        m_list = model_api.projects_project_id_models_get(
-            project_id=int(self.id))
+        m_list = model_api.projects_project_id_models_get(project_id=int(self.id))
 
         result = []
         for model in m_list:
-            result.append(
-                Model(model, self, self._api_client))
+            result.append(Model(model, self, self._api_client))
         return result
 
-    def get_or_create_model(self, model_name: str,
-                            model_type: 'ModelType' = None) -> 'Model':
+    def get_or_create_model(
+        self, model_name: str, model_type: "ModelType" = None
+    ) -> "Model":
         """
         Get or create a model with given name
 
@@ -170,25 +180,29 @@ class Project:
         """
         if not valid_name_check(model_name):
             raise ValueError(
-                '''Your project/model name contains invalid characters.\
+                """Your project/model name contains invalid characters.\
                     \nUse only the following characters\
                     \n- Characters: a-z (Lowercase ONLY)\
                     \n- Numbers: 0-9\
                     \n- Symbols: -
-                '''
+                """
             )
 
         model_api = ModelsApi(self._api_client)
         m_list = model_api.projects_project_id_models_get(
-            project_id=int(self.id), name=model_name)
+            project_id=int(self.id), name=model_name
+        )
 
         if len(m_list) == 0:
             if model_type is None:
-                raise ValueError(f"model {model_name} is not found, specify "
-                                 f"{model_type} to create it")
+                raise ValueError(
+                    f"model {model_name} is not found, specify "
+                    f"{model_type} to create it"
+                )
             model = model_api.projects_project_id_models_post(
-                project_id=int(self.id), body={"name": model_name,
-                                               "type": model_type.value})
+                project_id=int(self.id),
+                body={"name": model_name, "type": model_type.value},
+            )
         else:
             model = m_list[0]
 
@@ -203,11 +217,9 @@ class Project:
         :return:
         """
         secret_api = SecretApi(self._api_client)
-        secret_api.projects_project_id_secrets_post(project_id=int(self.id),
-                                                    body={
-                                                        "name": name,
-                                                        "data": data
-        })
+        secret_api.projects_project_id_secrets_post(
+            project_id=int(self.id), body={"name": name, "data": data}
+        )
 
     def list_secret(self) -> List[str]:
         """
@@ -216,8 +228,7 @@ class Project:
         :return:
         """
         secret_api = SecretApi(self._api_client)
-        secrets = secret_api.projects_project_id_secrets_get(
-            project_id=int(self.id))
+        secrets = secret_api.projects_project_id_secrets_get(project_id=int(self.id))
         secret_names = []
         for s in secrets:
             secret_names.append(s.name)
@@ -234,13 +245,11 @@ class Project:
         secret_api = SecretApi(self._api_client)
         match = self._find_secret(name)
 
-        secret_api.projects_project_id_secrets_secret_id_patch(project_id=int(self.id),
-                                                               secret_id=int(
-                                                                   match.id),
-                                                               body={
-                                                                   "name": name,
-                                                                   "data": data
-        })
+        secret_api.projects_project_id_secrets_secret_id_patch(
+            project_id=int(self.id),
+            secret_id=int(match.id),
+            body={"name": name, "data": data},
+        )
 
     def delete_secret(self, name: str):
         """
@@ -252,20 +261,19 @@ class Project:
         secret_api = SecretApi(self._api_client)
         match = self._find_secret(name)
 
-        secret_api.projects_project_id_secrets_secret_id_delete(project_id=int(self.id),
-                                                                secret_id=int(match.id))
+        secret_api.projects_project_id_secrets_secret_id_delete(
+            project_id=int(self.id), secret_id=int(match.id)
+        )
 
     def _find_secret(self, name: str):
         secret_api = SecretApi(self._api_client)
-        secrets = secret_api.projects_project_id_secrets_get(
-            project_id=int(self.id))
+        secrets = secret_api.projects_project_id_secrets_get(project_id=int(self.id))
         match = None
         for s in secrets:
             if s.name == name:
                 match = s
         if match is None:
-            raise ValueError(
-                f"unable to find secret {name} in project {self.name}")
+            raise ValueError(f"unable to find secret {name} in project {self.name}")
         return match
 
 
@@ -273,6 +281,7 @@ class ModelType(Enum):
     """
     Model type supported by merlin
     """
+
     XGBOOST = "xgboost"
     TENSORFLOW = "tensorflow"
     SKLEARN = "sklearn"
@@ -289,8 +298,9 @@ class Model:
     Model representation
     """
 
-    def __init__(self, model: client.Model, project: Project,
-                 api_client: client.ApiClient):
+    def __init__(
+        self, model: client.Model, project: Project, api_client: client.ApiClient
+    ):
         self._id = model.id
         self._name = model.name
         self._mlflow_experiment_id = model.mlflow_experiment_id
@@ -341,8 +351,9 @@ class Model:
         :return: Endpoint if exist, otherwise None
         """
         mdl_endpoints_api = ModelEndpointsApi(self._api_client)
-        mdl_endpoints_list = \
-            mdl_endpoints_api.models_model_id_endpoints_get(model_id=self.id)
+        mdl_endpoints_list = mdl_endpoints_api.models_model_id_endpoints_get(
+            model_id=self.id
+        )
         for endpoint in mdl_endpoints_list:
             if endpoint.environment.is_default:
                 return ModelEndpoint(endpoint)
@@ -356,14 +367,15 @@ class Model:
         :return: List[ModelEndpoint]
         """
         mdl_endpoints_api = ModelEndpointsApi(self._api_client)
-        mdl_endpoints_list = \
-            mdl_endpoints_api.models_model_id_endpoints_get(model_id=self.id)
+        mdl_endpoints_list = mdl_endpoints_api.models_model_id_endpoints_get(
+            model_id=self.id
+        )
         mdl_endpoints = []
         for mdl_ep in mdl_endpoints_list:
             mdl_endpoints.append(ModelEndpoint(mdl_ep))
         return mdl_endpoints
 
-    def get_version(self, id: int) -> Optional['ModelVersion']:
+    def get_version(self, id: int) -> Optional["ModelVersion"]:
         """
         Get version with specific ID
 
@@ -377,18 +389,20 @@ class Model:
                 return ModelVersion(v, self, self._api_client)
         return None
 
-    def list_version(self, labels: Dict[str, List[str]] = None) -> List['ModelVersion']:
+    def list_version(self, labels: Dict[str, List[str]] = None) -> List["ModelVersion"]:
         """
         List all version of the model
 
         :return: list of ModelVersion
         """
-        result: List['ModelVersion'] = []
+        result: List["ModelVersion"] = []
         search_dsl = self._build_search_labels_dsl(labels)
         versions, cursor = self._list_version_pagination(search=search_dsl)
         result = result + versions
         while cursor != "":
-            versions, cursor = self._list_version_pagination(cursor=cursor, search=search_dsl)
+            versions, cursor = self._list_version_pagination(
+                cursor=cursor, search=search_dsl
+            )
             result = result + versions
         return result
 
@@ -403,7 +417,9 @@ class Model:
 
         return f"labels:{','.join(all_search_kv_pair)}"
 
-    def _list_version_pagination(self, limit=DEFAULT_MODEL_VERSION_LIMIT, cursor="", search="") -> Tuple[List['ModelVersion'], str]:
+    def _list_version_pagination(
+        self, limit=DEFAULT_MODEL_VERSION_LIMIT, cursor="", search=""
+    ) -> Tuple[List["ModelVersion"], str]:
         """
         List version of the model with pagination
         :param limit: integer, max number of rows will be returned
@@ -414,15 +430,20 @@ class Model:
         :return: next cursor to fetch next page of version
         """
         version_api = VersionApi(self._api_client)
-        (versions, _, headers) = version_api.models_model_id_versions_get_with_http_info(
-            int(self.id), limit=limit, cursor=cursor, search=search)
+        (
+            versions,
+            _,
+            headers,
+        ) = version_api.models_model_id_versions_get_with_http_info(
+            int(self.id), limit=limit, cursor=cursor, search=search
+        )
         next_cursor = headers.get("Next-Cursor") or ""
         result = []
         for v in versions:
             result.append(ModelVersion(v, self, self._api_client))
         return result, next_cursor
 
-    def new_model_version(self, labels: Dict[str, str] = None) -> 'ModelVersion':
+    def new_model_version(self, labels: Dict[str, str] = None) -> "ModelVersion":
         """
         Create a new version of this model
 
@@ -430,12 +451,15 @@ class Model:
         :return:  new ModelVersion
         """
         version_api = VersionApi(self._api_client)
-        python_version = f'{version_info.major}.{version_info.minor}.*'  # capture user's python version
-        v = version_api.models_model_id_versions_post(int(self.id), body={"labels": labels, "python_version": python_version})
+        python_version = f"{version_info.major}.{version_info.minor}.*"  # capture user's python version
+        v = version_api.models_model_id_versions_post(
+            int(self.id), body={"labels": labels, "python_version": python_version}
+        )
         return ModelVersion(v, self, self._api_client)
 
-    def serve_traffic(self, traffic_rule: Dict['VersionEndpoint', int],
-                      environment_name: str = None) -> ModelEndpoint:
+    def serve_traffic(
+        self, traffic_rule: Dict["VersionEndpoint", int], environment_name: str = None
+    ) -> ModelEndpoint:
         """
         Set traffic rule for this model.
 
@@ -445,7 +469,8 @@ class Model:
         """
         if not isinstance(traffic_rule, dict):
             raise ValueError(
-                f"Traffic_rule should be dictionary, got: {type(traffic_rule)}")
+                f"Traffic_rule should be dictionary, got: {type(traffic_rule)}"
+            )
 
         if len(traffic_rule) > 1:
             raise ValueError("Traffic splitting is not yet supported")
@@ -459,14 +484,17 @@ class Model:
                     target_env = env.name
 
             if target_env is None:
-                raise ValueError("Unable to find default environment, "
-                                 "pass environment_name to the method")
+                raise ValueError(
+                    "Unable to find default environment, "
+                    "pass environment_name to the method"
+                )
 
         total_traffic = 0
         for version_endpoint, traffic_split in traffic_rule.items():
             if version_endpoint.environment_name != target_env:
-                raise ValueError("Version Endpoint must have same "
-                                 "environment as target")
+                raise ValueError(
+                    "Version Endpoint must have same " "environment as target"
+                )
 
             if traffic_split <= 0:
                 raise ValueError("Traffic percentage should be non negative")
@@ -479,8 +507,7 @@ class Model:
 
         # get existing model endpoint
         mdl_epi_api = ModelEndpointsApi(self._api_client)
-        endpoints = mdl_epi_api.models_model_id_endpoints_get(
-            model_id=self.id)
+        endpoints = mdl_epi_api.models_model_id_endpoints_get(model_id=self.id)
         prev_endpoint = None
         for endpoint in endpoints:
             if endpoint.environment_name == target_env:
@@ -489,25 +516,27 @@ class Model:
         if prev_endpoint is None:
             # create
             dst = client.ModelEndpointRuleDestination(
-                version_endpoint_id=version_endpoint.id, weight=100)
+                version_endpoint_id=version_endpoint.id, weight=100
+            )
             rule = client.ModelEndpointRule(destinations=[dst])
-            ep = client.ModelEndpoint(model_id=self.id,
-                                      environment_name=target_env,
-                                      rule=rule)
-            ep = mdl_epi_api.models_model_id_endpoints_post(model_id=self.id,
-                                                            body=ep.to_dict())
+            ep = client.ModelEndpoint(
+                model_id=self.id, environment_name=target_env, rule=rule
+            )
+            ep = mdl_epi_api.models_model_id_endpoints_post(
+                model_id=self.id, body=ep.to_dict()
+            )
         else:
             # update: GET and PUT
             ep = mdl_epi_api.models_model_id_endpoints_model_endpoint_id_get(
-                model_id=self.id,
-                model_endpoint_id=prev_endpoint.id)
-            ep.rule.destinations[
-                0].version_endpoint_id = version_endpoint.id
+                model_id=self.id, model_endpoint_id=prev_endpoint.id
+            )
+            ep.rule.destinations[0].version_endpoint_id = version_endpoint.id
             ep.rule.destinations[0].weight = 100
             ep = mdl_epi_api.models_model_id_endpoints_model_endpoint_id_put(
                 model_id=int(self.id),
                 model_endpoint_id=prev_endpoint.id,
-                body=ep.to_dict())
+                body=ep.to_dict(),
+            )
 
         return ModelEndpoint(ep)
 
@@ -526,8 +555,10 @@ class Model:
                     target_env = env.name
 
             if target_env is None:
-                raise ValueError("Unable to find default environment, "
-                                 "pass environment_name to the method")
+                raise ValueError(
+                    "Unable to find default environment, "
+                    "pass environment_name to the method"
+                )
 
         mdl_epi_api = ModelEndpointsApi(self._api_client)
         endpoints = mdl_epi_api.models_model_id_endpoints_get(model_id=self.id)
@@ -538,16 +569,20 @@ class Model:
                 target_endpoint = endpoint
 
         if target_endpoint is None:
-            raise ValueError(f"there is no model endpoint for model "
-                             f"{self.name} in {target_env} environment")
+            raise ValueError(
+                f"there is no model endpoint for model "
+                f"{self.name} in {target_env} environment"
+            )
 
-        print(f"Stopping serving traffic for model {self.name} "
-              f"in {target_env} environment")
-        mdl_epi_api \
-            .models_model_id_endpoints_model_endpoint_id_delete(self.id, target_endpoint.id)
+        print(
+            f"Stopping serving traffic for model {self.name} "
+            f"in {target_env} environment"
+        )
+        mdl_epi_api.models_model_id_endpoints_model_endpoint_id_delete(
+            self.id, target_endpoint.id
+        )
 
-    def set_traffic(self, traffic_rule: Dict['ModelVersion', int]) \
-            -> ModelEndpoint:
+    def set_traffic(self, traffic_rule: Dict["ModelVersion", int]) -> ModelEndpoint:
         """
         Set traffic rule for this model.
 
@@ -556,11 +591,13 @@ class Model:
         :param traffic_rule: dict of model version and the percentage of traffic.
         :return: ModelEndpoint
         """
-        print("This method is going to be deprecated, please use "
-              "serve_traffic instead")
+        print(
+            "This method is going to be deprecated, please use " "serve_traffic instead"
+        )
         if not isinstance(traffic_rule, dict):
             raise ValueError(
-                f"Traffic_rule should be dictionary, got: {type(traffic_rule)}")
+                f"Traffic_rule should be dictionary, got: {type(traffic_rule)}"
+            )
 
         if len(traffic_rule) > 1:
             raise ValueError("Traffic splitting is not yet supported")
@@ -571,51 +608,56 @@ class Model:
                 raise ValueError("Traffic percentage should be non negative")
 
             total_traffic += traffic_split
-            if mdl_version.endpoint is None or mdl_version.endpoint.status \
-                    != Status.RUNNING:
+            if (
+                mdl_version.endpoint is None
+                or mdl_version.endpoint.status != Status.RUNNING
+            ):
                 raise ValueError(
-                    f"Model version with id {mdl_version.id} is not running")
+                    f"Model version with id {mdl_version.id} is not running"
+                )
 
         if total_traffic != 100:
-            raise ValueError(
-                f"Total traffic should be 100, got {total_traffic}")
+            raise ValueError(f"Total traffic should be 100, got {total_traffic}")
 
         mdl_version = traffic_rule.popitem()[0]
         model_endpoint_api = ModelEndpointsApi(self._api_client)
         if mdl_version.endpoint is None:
-            raise ValueError(f"there is no version endpoint for model version "
-                             f"{mdl_version.id} in default environment")
+            raise ValueError(
+                f"there is no version endpoint for model version "
+                f"{mdl_version.id} in default environment"
+            )
         def_version_endpoint = mdl_version.endpoint
 
         if self.endpoint is None:
             # create model endpoint
-            ep = model_endpoint_api.models_model_id_endpoints_post(body={
-                "model_id": self.id,
-                "rule": {
-                    "destinations": [
-                        {
-                            "version_endpoint_id": def_version_endpoint.id,
-                            "weight": 100
-                        }
-                    ]
-                }
-            }, model_id=int(self.id))
+            ep = model_endpoint_api.models_model_id_endpoints_post(
+                body={
+                    "model_id": self.id,
+                    "rule": {
+                        "destinations": [
+                            {
+                                "version_endpoint_id": def_version_endpoint.id,
+                                "weight": 100,
+                            }
+                        ]
+                    },
+                },
+                model_id=int(self.id),
+            )
             return ModelEndpoint(ep)
         else:
             def_model_endpoint = self.endpoint
             # GET and PUT
-            ep = model_endpoint_api \
-                .models_model_id_endpoints_model_endpoint_id_get(
-                    model_id=int(self.id),
-                    model_endpoint_id=def_model_endpoint.id)
-            ep.rule.destinations[0] \
-                .version_endpoint_id = def_version_endpoint.id
+            ep = model_endpoint_api.models_model_id_endpoints_model_endpoint_id_get(
+                model_id=int(self.id), model_endpoint_id=def_model_endpoint.id
+            )
+            ep.rule.destinations[0].version_endpoint_id = def_version_endpoint.id
             ep.rule.destinations[0].weight = 100
-            ep = model_endpoint_api \
-                .models_model_id_endpoints_model_endpoint_id_put(
-                    model_id=int(self.id),
-                    model_endpoint_id=def_model_endpoint.id,
-                    body=ep.to_dict())
+            ep = model_endpoint_api.models_model_id_endpoints_model_endpoint_id_put(
+                model_id=int(self.id),
+                model_endpoint_id=def_model_endpoint.id,
+                body=ep.to_dict(),
+            )
 
         return ModelEndpoint(ep)
 
@@ -627,8 +669,9 @@ class Model:
         :return: id of deleted model
         """
         model_api = ModelsApi(self._api_client)
-        return model_api.projects_project_id_models_model_id_delete(int(self.project.id), int(self.id))
-
+        return model_api.projects_project_id_models_model_id_delete(
+            int(self.project.id), int(self.id)
+        )
 
 
 @autostr
@@ -636,6 +679,7 @@ class ModelVersion:
     """
     Representation of version in a model
     """
+
     MODEL_TYPE_TO_IMAGE_MAP = {
         ModelType.SKLEARN: "gcr.io/kfserving/sklearnserver:0.2.2",
         ModelType.TENSORFLOW: "tensorflow/serving:1.14.0",
@@ -643,8 +687,9 @@ class ModelVersion:
         ModelType.PYTORCH: "gcr.io/kfserving/pytorchserver:0.2.2",
     }
 
-    def __init__(self, version: client.Version, model: Model,
-                 api_client: client.ApiClient):
+    def __init__(
+        self, version: client.Version, model: Model, api_client: client.ApiClient
+    ):
         self._api_client = api_client
         self._id = version.id
         self._mlflow_run_id = version.mlflow_run_id
@@ -854,12 +899,12 @@ class ModelVersion:
         """
         run = self.get_run()
         if run is None:
-            raise Exception('There is no mlflow run for this model version')
+            raise Exception("There is no mlflow run for this model version")
 
         run_info = run.info
         artifact_uri = run_info.artifact_uri
         if artifact_uri is None or artifact_uri == "":
-            raise Exception('There is no artifact uri for this model version')
+            raise Exception("There is no artifact uri for this model version")
 
         download_files_from_gcs(artifact_uri, destination_path)
 
@@ -883,11 +928,13 @@ class ModelVersion:
         """
         mlflow.log_artifact(local_path, artifact_path)
 
-    def log_pyfunc_model(self,
-                        model_instance: PythonModel,
-                        conda_env: Union[str, Dict[str, Any]],
-                        code_dir: Optional[List[str]] = None,
-                        artifacts: Dict[str, str] =None):
+    def log_pyfunc_model(
+        self,
+        model_instance: PythonModel,
+        conda_env: Union[str, Dict[str, Any]],
+        code_dir: Optional[List[str]] = None,
+        artifacts: Dict[str, str] = None,
+    ):
         """
         Upload PyFunc based model into artifact storage.
         User has to specify model_instance and
@@ -900,18 +947,22 @@ class ModelVersion:
         :param code_dir: additional code directory that will be loaded with ModelType.PYFUNC model
         :param artifacts: dictionary of artifact that will be stored together with the model. This will be passed to PythonModel.initialize. Example: {"config" : "config/staging.yaml"}
         """
-        if self._model.type != ModelType.PYFUNC and self._model.type != ModelType.PYFUNC_V2:
-            raise ValueError(
-                "log_pyfunc_model is only for PyFunc and PyFuncV2 model")
+        if (
+            self._model.type != ModelType.PYFUNC
+            and self._model.type != ModelType.PYFUNC_V2
+        ):
+            raise ValueError("log_pyfunc_model is only for PyFunc and PyFuncV2 model")
 
         # add/replace python version in conda to match that used to create model version
         conda_env = _process_conda_env(conda_env, self._python_version)
 
-        mlflow.pyfunc.log_model(DEFAULT_MODEL_PATH,
-                                python_model=model_instance,
-                                code_path=code_dir,
-                                conda_env=conda_env,
-                                artifacts=artifacts)
+        mlflow.pyfunc.log_model(
+            DEFAULT_MODEL_PATH,
+            python_model=model_instance,
+            code_path=code_dir,
+            conda_env=conda_env,
+            artifacts=artifacts,
+        )
 
     def log_pytorch_model(self, model_dir, model_class_name=None):
         """
@@ -923,8 +974,10 @@ class ModelVersion:
         if self._model.type != ModelType.PYTORCH:
             raise ValueError("log_pytorch_model is only for PyTorch model")
 
-        warnings.warn("'log_pytorch_model' is deprecated, use 'log_model' instead",
-                      DeprecationWarning)
+        warnings.warn(
+            "'log_pytorch_model' is deprecated, use 'log_model' instead",
+            DeprecationWarning,
+        )
         self.log_model(model_dir)
 
     def log_model(self, model_dir=None):
@@ -935,17 +988,18 @@ class ModelVersion:
 
         :param model_dir: directory which contain serialized model
         """
-        if self._model.type == ModelType.PYFUNC or self._model.type == ModelType.PYFUNC_V2:
+        if (
+            self._model.type == ModelType.PYFUNC
+            or self._model.type == ModelType.PYFUNC_V2
+        ):
             raise ValueError("use log_pyfunc_model to log pyfunc model")
 
         validate_model_dir(self._model.type, model_dir)
         mlflow.log_artifacts(model_dir, DEFAULT_MODEL_PATH)
 
-    def log_custom_model(self,
-                         image: str,
-                         model_dir: str = None,
-                         command: str = "",
-                         args: str = ""):
+    def log_custom_model(
+        self, image: str, model_dir: str = None, command: str = "", args: str = ""
+    ):
         """
         Upload model to artifact storage.
         This method is used to upload model for custom model type.
@@ -963,14 +1017,14 @@ class ModelVersion:
 
         if model_dir is None:
             """
-                Create temp directory, which later on will be uploaded
-                The reason is iff no data that will be uploaded to mlflow artifact (gcs), given artifact URI will not exist
-                Hence will raise error when creating inferenceservice
+            Create temp directory, which later on will be uploaded
+            The reason is iff no data that will be uploaded to mlflow artifact (gcs), given artifact URI will not exist
+            Hence will raise error when creating inferenceservice
             """
             is_using_temp_dir = True
             model_dir = tempfile.mkdtemp(suffix="merlin-custom-model")
 
-        with open(os.path.join(model_dir, model_properties_file), 'w') as writer:
+        with open(os.path.join(model_dir, model_properties_file), "w") as writer:
             writer.write(f"image = {image}\n")
             writer.write(f"command = {command}\n")
             writer.write(f"args = {args}\n")
@@ -986,9 +1040,14 @@ class ModelVersion:
             shutil.rmtree(model_dir)
 
         version_api = VersionApi(self._api_client)
-        custom_predictor_body = client.CustomPredictor(image=image, command=command, args=args)
+        custom_predictor_body = client.CustomPredictor(
+            image=image, command=command, args=args
+        )
         version_api.models_model_id_versions_version_id_patch(
-            int(self.model.id), int(self.id), body={"custom_predictor": custom_predictor_body})
+            int(self.model.id),
+            int(self.id),
+            body={"custom_predictor": custom_predictor_body},
+        )
 
     def list_endpoint(self) -> List[VersionEndpoint]:
         """
@@ -997,24 +1056,26 @@ class ModelVersion:
         :return: List of VersionEndpoint
         """
         endpoint_api = EndpointApi(self._api_client)
-        ep_list = endpoint_api. \
-            models_model_id_versions_version_id_endpoint_get(
-                model_id=self.model.id, version_id=self.id)
+        ep_list = endpoint_api.models_model_id_versions_version_id_endpoint_get(
+            model_id=self.model.id, version_id=self.id
+        )
 
         endpoints = []
         for ep in ep_list:
             endpoints.append(VersionEndpoint(ep))
         return endpoints
 
-    def deploy(self, environment_name: str = None,
-               resource_request: ResourceRequest = None,
-               env_vars: Dict[str, str] = None,
-               transformer: Transformer = None,
-               logger: Logger = None,
-               deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
-               autoscaling_policy: AutoscalingPolicy = None,
-               protocol: Protocol = Protocol.HTTP_JSON
-               ) -> VersionEndpoint:
+    def deploy(
+        self,
+        environment_name: str = None,
+        resource_request: ResourceRequest = None,
+        env_vars: Dict[str, str] = None,
+        transformer: Transformer = None,
+        logger: Logger = None,
+        deployment_mode: DeploymentMode = DeploymentMode.SERVERLESS,
+        autoscaling_policy: AutoscalingPolicy = None,
+        protocol: Protocol = Protocol.HTTP_JSON,
+    ) -> VersionEndpoint:
         """
         Deploy current model to MLP One of log_model, log_pytorch_model,
         and log_pyfunc_model has to be called beforehand
@@ -1039,8 +1100,10 @@ class ModelVersion:
                     target_env_name = env.name
 
             if target_env_name is None:
-                raise ValueError("Unable to find default environment, "
-                                 "pass environment_name to the method")
+                raise ValueError(
+                    "Unable to find default environment, "
+                    "pass environment_name to the method"
+                )
 
         if resource_request is None:
             env_api = EnvironmentApi(self._api_client)
@@ -1053,7 +1116,7 @@ class ModelVersion:
                         env.default_resource_request.max_replica,
                         env.default_resource_request.cpu_request,
                         env.default_resource_request.memory_request,
-                        )
+                    )
 
             # This case is when the default resource request is not specified in the environment config
             if resource_request is None:
@@ -1062,10 +1125,16 @@ class ModelVersion:
         resource_request.validate()
 
         target_resource_request = client.ResourceRequest(
-            resource_request.min_replica, resource_request.max_replica,
-            resource_request.cpu_request, resource_request.memory_request)
+            resource_request.min_replica,
+            resource_request.max_replica,
+            resource_request.cpu_request,
+            resource_request.memory_request,
+        )
 
-        if resource_request.gpu_request is not None and resource_request.gpu_name is not None:
+        if (
+            resource_request.gpu_request is not None
+            and resource_request.gpu_name is not None
+        ):
             env_api = EnvironmentApi(self._api_client)
             env_list = env_api.environments_get()
 
@@ -1073,27 +1142,32 @@ class ModelVersion:
                 for gpu in env.gpus:
                     if resource_request.gpu_name == gpu.name:
                         if resource_request.gpu_request not in gpu.values:
-                            raise ValueError(f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}")
+                            raise ValueError(
+                                f"Invalid GPU request count. Supported GPUs count for  {resource_request.gpu_name} is {gpu.values}"
+                            )
 
                         target_resource_request.gpu_name = resource_request.gpu_name
-                        target_resource_request.gpu_request = resource_request.gpu_request
+                        target_resource_request.gpu_request = (
+                            resource_request.gpu_request
+                        )
                         break
 
         target_env_vars = []
         if env_vars is not None:
             if not isinstance(env_vars, dict):
                 raise ValueError(
-                    f"env_vars should be dictionary, got: {type(env_vars)}")
+                    f"env_vars should be dictionary, got: {type(env_vars)}"
+                )
 
             if len(env_vars) > 0:
                 for name, value in env_vars.items():
-                    target_env_vars.append(
-                        client.EnvVar(str(name), str(value)))
+                    target_env_vars.append(client.EnvVar(str(name), str(value)))
 
         target_transformer = None
         if transformer is not None:
             target_transformer = self.create_transformer_spec(
-                transformer, target_env_name)
+                transformer, target_env_name
+            )
 
         target_logger = None
         if logger is not None:
@@ -1108,32 +1182,33 @@ class ModelVersion:
         model = self._model
         endpoint_api = EndpointApi(self._api_client)
 
-        endpoint = client.VersionEndpoint(environment_name=target_env_name,
-                                          resource_request=target_resource_request,
-                                          env_vars=target_env_vars,
-                                          transformer=target_transformer,
-                                          logger=target_logger,
-                                          deployment_mode=deployment_mode.value,
-                                          autoscaling_policy=client.AutoscalingPolicy(autoscaling_policy.metrics_type.value,
-                                                                                      autoscaling_policy.target_value),
-                                          protocol=protocol.value
-                                          )
+        endpoint = client.VersionEndpoint(
+            environment_name=target_env_name,
+            resource_request=target_resource_request,
+            env_vars=target_env_vars,
+            transformer=target_transformer,
+            logger=target_logger,
+            deployment_mode=deployment_mode.value,
+            autoscaling_policy=client.AutoscalingPolicy(
+                autoscaling_policy.metrics_type.value, autoscaling_policy.target_value
+            ),
+            protocol=protocol.value,
+        )
 
-        endpoint = endpoint_api \
-            .models_model_id_versions_version_id_endpoint_post(int(model.id),
-                                                               int(self.id),
-                                                               body=endpoint.to_dict())
+        endpoint = endpoint_api.models_model_id_versions_version_id_endpoint_post(
+            int(model.id), int(self.id), body=endpoint.to_dict()
+        )
 
-        bar = pyprind.ProgBar(100, track_time=True,
-                              title=f"Deploying model {model.name} version "
-                                    f"{self.id}")
+        bar = pyprind.ProgBar(
+            100,
+            track_time=True,
+            title=f"Deploying model {model.name} version " f"{self.id}",
+        )
 
         while endpoint.status == "pending":
-            endpoint = endpoint_api \
-                .models_model_id_versions_version_id_endpoint_endpoint_id_get(
-                    model_id=int(model.id),
-                    version_id=int(self.id),
-                    endpoint_id=endpoint.id)
+            endpoint = endpoint_api.models_model_id_versions_version_id_endpoint_endpoint_id_get(
+                model_id=int(model.id), version_id=int(self.id), endpoint_id=endpoint.id
+            )
             bar.update()
             sleep(5)
         bar.stop()
@@ -1142,14 +1217,18 @@ class ModelVersion:
             raise ModelEndpointDeploymentError(model.name, self.id, endpoint.message)
 
         log_url = f"{self.url}/{self.id}/endpoints/{endpoint.id}/logs"
-        print(f"Model {model.name} version {self.id} is deployed."
-              f"\nView model version logs: {log_url}")
+        print(
+            f"Model {model.name} version {self.id} is deployed."
+            f"\nView model version logs: {log_url}"
+        )
 
         self._version_endpoints = self.list_endpoint()
 
         return VersionEndpoint(endpoint, log_url)
 
-    def create_transformer_spec(self, transformer: Transformer, target_env_name: str) -> client.Transformer:
+    def create_transformer_spec(
+        self, transformer: Transformer, target_env_name: str
+    ) -> client.Transformer:
         resource_request = transformer.resource_request
         if resource_request is None:
             env_api = EnvironmentApi(self._api_client)
@@ -1160,7 +1239,8 @@ class ModelVersion:
                         env.default_resource_request.min_replica,
                         env.default_resource_request.max_replica,
                         env.default_resource_request.cpu_request,
-                        env.default_resource_request.memory_request)
+                        env.default_resource_request.memory_request,
+                    )
             # This case is when the default resource request is not specified in the environment config
             if resource_request is None:
                 raise ValueError("resource request must be specified")
@@ -1168,24 +1248,32 @@ class ModelVersion:
         resource_request.validate()
 
         target_resource_request = client.ResourceRequest(
-            resource_request.min_replica, resource_request.max_replica,
-            resource_request.cpu_request, resource_request.memory_request)
+            resource_request.min_replica,
+            resource_request.max_replica,
+            resource_request.cpu_request,
+            resource_request.memory_request,
+        )
 
         target_env_vars = []
         if transformer.env_vars is not None:
             if not isinstance(transformer.env_vars, dict):
                 raise ValueError(
-                    f"transformer.env_vars should be dictionary, got: {type(transformer.env_vars)}")
+                    f"transformer.env_vars should be dictionary, got: {type(transformer.env_vars)}"
+                )
 
             if len(transformer.env_vars) > 0:
                 for name, value in transformer.env_vars.items():
-                    target_env_vars.append(
-                        client.EnvVar(str(name), str(value)))
+                    target_env_vars.append(client.EnvVar(str(name), str(value)))
 
         return client.Transformer(
-            transformer.enabled, transformer.transformer_type.value,
-            transformer.image, transformer.command, transformer.args,
-            target_resource_request, target_env_vars)
+            transformer.enabled,
+            transformer.transformer_type.value,
+            transformer.image,
+            transformer.command,
+            transformer.args,
+            target_resource_request,
+            target_env_vars,
+        )
 
     def undeploy(self, environment_name: str = None):
         """
@@ -1202,13 +1290,15 @@ class ModelVersion:
                     target_env = env.name
 
             if target_env is None:
-                raise ValueError("Unable to find default environment, "
-                                 "pass environment_name to the method")
+                raise ValueError(
+                    "Unable to find default environment, "
+                    "pass environment_name to the method"
+                )
 
         endpoint_api = EndpointApi(self._api_client)
-        endpoints = \
-            endpoint_api.models_model_id_versions_version_id_endpoint_get(
-                model_id=self.model.id, version_id=self.id)
+        endpoints = endpoint_api.models_model_id_versions_version_id_endpoint_get(
+            model_id=self.model.id, version_id=self.id
+        )
         target_endpoint = None
         for endpoint in endpoints:
             if endpoint.environment_name == target_env:
@@ -1218,14 +1308,18 @@ class ModelVersion:
             print(f"No endpoint found for environment: {target_endpoint}")
             return
 
-        print(f"Deleting deployment of model {self._model.name} "
-              f"version {self.id} from enviroment {target_env}")
+        print(
+            f"Deleting deployment of model {self._model.name} "
+            f"version {self.id} from enviroment {target_env}"
+        )
         endpoint_api = EndpointApi(self._api_client)
-        endpoint_api \
-            .models_model_id_versions_version_id_endpoint_endpoint_id_delete(self.model.id, self.id,
-                                                                             target_endpoint.id)
+        endpoint_api.models_model_id_versions_version_id_endpoint_endpoint_id_delete(
+            self.model.id, self.id, target_endpoint.id
+        )
 
-    def create_prediction_job(self, job_config: PredictionJobConfig, sync: bool = True) -> PredictionJob:
+    def create_prediction_job(
+        self, job_config: PredictionJobConfig, sync: bool = True
+    ) -> PredictionJob:
         """
         Create and run prediction job with given config using this model version
 
@@ -1235,31 +1329,35 @@ class ModelVersion:
         """
         if self.model.type != ModelType.PYFUNC_V2:
             raise ValueError(
-                f"model type is not supported for prediction job: {self.model.type}")
+                f"model type is not supported for prediction job: {self.model.type}"
+            )
 
-        job_cfg = client.PredictionJobConfig(version=V1, kind=PREDICTION_JOB, model={
-            "type": self.model.type.value.upper(),
-            "uri": os.path.join(self.artifact_uri, DEFAULT_MODEL_PATH),
-            "result": {
-                "type": job_config.result_type.value,
-                "item_type": job_config.item_type.value
-            }
-        })
+        job_cfg = client.PredictionJobConfig(
+            version=V1,
+            kind=PREDICTION_JOB,
+            model={
+                "type": self.model.type.value.upper(),
+                "uri": os.path.join(self.artifact_uri, DEFAULT_MODEL_PATH),
+                "result": {
+                    "type": job_config.result_type.value,
+                    "item_type": job_config.item_type.value,
+                },
+            },
+        )
 
         if isinstance(job_config.source, BigQuerySource):
             job_cfg.bigquery_source = job_config.source.to_dict()
         else:
-            raise ValueError(
-                f"source type is not supported {type(job_config.source)}")
+            raise ValueError(f"source type is not supported {type(job_config.source)}")
 
         if isinstance(job_config.sink, BigQuerySink):
             job_cfg.bigquery_sink = job_config.sink.to_dict()
         else:
-            raise ValueError(
-                f"sink type is not supported {type(job_config.sink)}")
+            raise ValueError(f"sink type is not supported {type(job_config.sink)}")
 
-        cfg = client.Config(job_config=job_cfg,
-                            service_account_name=job_config.service_account_name)
+        cfg = client.Config(
+            job_config=job_cfg, service_account_name=job_config.service_account_name
+        )
 
         if job_config.resource_request is not None:
             cfg.resource_request = job_config.resource_request.to_dict()
@@ -1268,46 +1366,49 @@ class ModelVersion:
         if job_config.env_vars is not None:
             if not isinstance(job_config.env_vars, dict):
                 raise ValueError(
-                    f"env_vars should be dictionary, got: {type(job_config.env_vars)}")
+                    f"env_vars should be dictionary, got: {type(job_config.env_vars)}"
+                )
 
             if len(job_config.env_vars) > 0:
                 for name, value in job_config.env_vars.items():
                     target_env_vars.append(client.EnvVar(name, value))
                 cfg.env_vars = target_env_vars
 
-        req = client.PredictionJob(version_id=self.id,
-                                   model_id=self.model.id,
-                                   config=cfg)
+        req = client.PredictionJob(
+            version_id=self.id, model_id=self.model.id, config=cfg
+        )
         job_client = client.PredictionJobsApi(self._api_client)
         j = job_client.models_model_id_versions_version_id_jobs_post(
-            model_id=self.model.id,
-            version_id=self.id,
-            body=req)
+            model_id=self.model.id, version_id=self.id, body=req
+        )
 
-        bar = pyprind.ProgBar(100, track_time=True,
-                              title=f"Running prediction job {j.id} from model {self.model.name} version {self.id} "
-                                    f"under project {self.model.project.name}")
+        bar = pyprind.ProgBar(
+            100,
+            track_time=True,
+            title=f"Running prediction job {j.id} from model {self.model.name} version {self.id} "
+            f"under project {self.model.project.name}",
+        )
         retry = DEFAULT_API_CALL_RETRY
-        while j.status == "pending" or \
-                j.status == "running" or \
-                j.status == "terminating":
+        while (
+            j.status == "pending" or j.status == "running" or j.status == "terminating"
+        ):
             if not sync:
-                j = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self.model.id,
-                                                                                   version_id=self.id,
-                                                                                   job_id=j.id)
+                j = job_client.models_model_id_versions_version_id_jobs_job_id_get(
+                    model_id=self.model.id, version_id=self.id, job_id=j.id
+                )
                 return PredictionJob(j, self._api_client)
             else:
                 try:
-                    j = job_client.models_model_id_versions_version_id_jobs_job_id_get(model_id=self.model.id,
-                                                                                       version_id=self.id,
-                                                                                       job_id=j.id)
+                    j = job_client.models_model_id_versions_version_id_jobs_job_id_get(
+                        model_id=self.model.id, version_id=self.id, job_id=j.id
+                    )
                     retry = DEFAULT_API_CALL_RETRY
                 except Exception:
-                        retry -= 1
-                        if retry == 0:
-                            j.status = "failed"
-                            break
-                        sleep(DEFAULT_PREDICTION_JOB_RETRY_DELAY)
+                    retry -= 1
+                    if retry == 0:
+                        j.status = "failed"
+                        break
+                    sleep(DEFAULT_PREDICTION_JOB_RETRY_DELAY)
             bar.update()
             sleep(DEFAULT_PREDICTION_JOB_DELAY)
         bar.stop()
@@ -1325,19 +1426,22 @@ class ModelVersion:
         """
         job_client = client.PredictionJobsApi(self._api_client)
         res = job_client.models_model_id_versions_version_id_jobs_get(
-            model_id=self.model.id,
-            version_id=self.id)
+            model_id=self.model.id, version_id=self.id
+        )
         jobs = []
         for j in res:
             jobs.append(PredictionJob(j, self._api_client))
         return jobs
 
-    def start_server(self, env_vars: Dict[str, str] = None,
-                     port: int = 8080,
-                     pyfunc_base_image: str = None,
-                     kill_existing_server: bool = False,
-                     tmp_dir: Optional[str] = os.environ.get("MERLIN_TMP_DIR"),
-                     build_image: bool = False):
+    def start_server(
+        self,
+        env_vars: Dict[str, str] = None,
+        port: int = 8080,
+        pyfunc_base_image: str = None,
+        kill_existing_server: bool = False,
+        tmp_dir: Optional[str] = os.environ.get("MERLIN_TMP_DIR"),
+        build_image: bool = False,
+    ):
         """
         Start a local server running the model version
 
@@ -1355,14 +1459,16 @@ class ModelVersion:
         pathlib.Path(artifact_path).mkdir(parents=True, exist_ok=True)
         if len(os.listdir(artifact_path)) < 1:
             print(
-                f"Downloading model artifact for model {self.model.name} version {self.id}")
+                f"Downloading model artifact for model {self.model.name} version {self.id}"
+            )
             self.download_artifact(artifact_path)
 
         # stop all previous containers to avoid port conflict
         client = docker.from_env()
         if kill_existing_server:
             started_containers = client.containers.list(
-                filters={"name": self._container_name()})
+                filters={"name": self._container_name()}
+            )
             for started_container in started_containers:
                 print(f"Stopping model server {started_container.name}")
                 started_container.remove(force=True)
@@ -1370,24 +1476,33 @@ class ModelVersion:
         model_type = self.model.type
         if model_type == ModelType.PYFUNC:
             self._run_pyfunc_local_server(
-                artifact_path, env_vars, port, pyfunc_base_image)
+                artifact_path, env_vars, port, pyfunc_base_image
+            )
             return
 
-        if model_type == ModelType.TENSORFLOW \
-                or model_type == ModelType.XGBOOST \
-                or model_type == ModelType.SKLEARN \
-                or model_type == ModelType.PYTORCH:
+        if (
+            model_type == ModelType.TENSORFLOW
+            or model_type == ModelType.XGBOOST
+            or model_type == ModelType.SKLEARN
+            or model_type == ModelType.PYTORCH
+        ):
             self._run_standard_model_local_server(
-                artifact_path, env_vars, port, build_image)
+                artifact_path, env_vars, port, build_image
+            )
             return
 
         raise ValueError(
-            f"running local model server is not supported for model type: {model_type}")
+            f"running local model server is not supported for model type: {model_type}"
+        )
 
     def _create_launch_command(self):
         model_type = self.model.type
         print(f"model type: {model_type}")
-        if model_type == ModelType.SKLEARN or model_type == ModelType.XGBOOST or model_type == ModelType.PYTORCH:
+        if (
+            model_type == ModelType.SKLEARN
+            or model_type == ModelType.XGBOOST
+            or model_type == ModelType.PYTORCH
+        ):
             return f"--port=9000 --rest_api_port=8080 --model_name={self.model.name}-{self.id} --model_dir=/mnt/models"
 
         if model_type == ModelType.TENSORFLOW:
@@ -1395,7 +1510,9 @@ class ModelVersion:
 
         raise ValueError(f"unknown model type: {model_type}")
 
-    def _run_standard_model_local_server(self, artifact_path, env_vars, port, build_image):
+    def _run_standard_model_local_server(
+        self, artifact_path, env_vars, port, build_image
+    ):
         container: Optional[Container] = None  # type: ignore
         try:
             container_name = self._container_name()
@@ -1407,16 +1524,13 @@ class ModelVersion:
                 image_tag = f"{self.model.project.name}-{self.model.name}:{self.id}"
                 dockerfile_path = copy_standard_dockerfile(artifact_path)
                 print(f"Building {self.model.type} image: {image_tag}")
-                logs = apiClient.build(path=artifact_path,
-                                       tag=image_tag,
-                                       buildargs={
-                                           "BASE_IMAGE": image_name,
-                                           "MODEL_PATH": artifact_path
-                                       },
-                                       dockerfile=os.path.basename(
-                                           dockerfile_path),
-                                       decode=True
-                                       )
+                logs = apiClient.build(
+                    path=artifact_path,
+                    tag=image_tag,
+                    buildargs={"BASE_IMAGE": image_name, "MODEL_PATH": artifact_path},
+                    dockerfile=os.path.basename(dockerfile_path),
+                    decode=True,
+                )
                 self._wait_build_complete(logs)
                 image_name = image_tag
 
@@ -1427,16 +1541,17 @@ class ModelVersion:
                 volumes = None
 
             client = docker.from_env()
-            container = client.containers.run(image_name,
-                                              name=container_name,
-                                              labels={"managed-by": "merlin"},
-                                              command=cmd,
-                                              ports={"8080/tcp": port},
-                                              volumes=volumes,
-                                              environment=env_vars,
-                                              detach=True,
-                                              remove=True
-                                              )
+            container = client.containers.run(
+                image_name,
+                name=container_name,
+                labels={"managed-by": "merlin"},
+                command=cmd,
+                ports={"8080/tcp": port},
+                volumes=volumes,
+                environment=env_vars,
+                detach=True,
+                remove=True,
+            )
 
             # continously print docker log until the process is interrupted
             for log in container.logs(stream=True):
@@ -1445,7 +1560,9 @@ class ModelVersion:
             if container is not None:
                 container.remove(force=True)
 
-    def _run_pyfunc_local_server(self, artifact_path, env_vars, port, pyfunc_base_image):
+    def _run_pyfunc_local_server(
+        self, artifact_path, env_vars, port, pyfunc_base_image
+    ):
         if pyfunc_base_image is None:
             if "dev" in VERSION:
                 pyfunc_base_image = "ghcr.io/caraml-dev/merlin-pyfunc-base:dev"
@@ -1457,15 +1574,13 @@ class ModelVersion:
         client = docker.from_env()
         apiClient = APIClient()
         print(f"Building pyfunc image: {image_tag}")
-        logs = apiClient.build(path=artifact_path,
-                               tag=image_tag,
-                               buildargs={
-                                   "BASE_IMAGE": pyfunc_base_image,
-                                   "MODEL_PATH": artifact_path
-                               },
-                               dockerfile=os.path.basename(dockerfile_path),
-                               decode=True
-                               )
+        logs = apiClient.build(
+            path=artifact_path,
+            tag=image_tag,
+            buildargs={"BASE_IMAGE": pyfunc_base_image, "MODEL_PATH": artifact_path},
+            dockerfile=os.path.basename(dockerfile_path),
+            decode=True,
+        )
         self._wait_build_complete(logs)
 
         container: Optional[Container] = None  # type: ignore
@@ -1479,14 +1594,15 @@ class ModelVersion:
             env_vars["MODEL_NAME"] = f"{self.model.name}-{self.id}"
             env_vars["WORKERS"] = 1
             env_vars["PORT"] = 8080
-            container = client.containers.run(image=image_tag,
-                                              name=container_name,
-                                              labels={"managed-by": "merlin"},
-                                              ports={"8080/tcp": port},
-                                              environment=env_vars,
-                                              detach=True,
-                                              remove=True
-                                              )
+            container = client.containers.run(
+                image=image_tag,
+                name=container_name,
+                labels={"managed-by": "merlin"},
+                ports={"8080/tcp": port},
+                environment=env_vars,
+                detach=True,
+                remove=True,
+            )
 
             # continously print docker log until the process is interrupted
             for log in container.logs(stream=True):
@@ -1500,19 +1616,18 @@ class ModelVersion:
 
     def _wait_build_complete(self, logs):
         for chunk in logs:
-            if 'error' in chunk:
-                raise BuildError(chunk['error'], logs)
-            if 'stream' in chunk:
+            if "error" in chunk:
+                raise BuildError(chunk["error"], logs)
+            if "stream" in chunk:
                 match = re.search(
-                    r'(^Successfully built |sha256:)([0-9a-f]+)$',
-                    chunk['stream']
+                    r"(^Successfully built |sha256:)([0-9a-f]+)$", chunk["stream"]
                 )
                 if match:
                     image_id = match.group(2)
             last_event = chunk
         if image_id:
             return
-        raise BuildError('Unknown', logs)
+        raise BuildError("Unknown", logs)
 
     def delete_model_version(self) -> int:
         """
@@ -1522,17 +1637,22 @@ class ModelVersion:
         :return: id of deleted model
         """
         versionApi = VersionApi(self._api_client)
-        return versionApi.models_model_id_versions_version_id_delete(int(self.model.id), int(self.id))
+        return versionApi.models_model_id_versions_version_id_delete(
+            int(self.model.id), int(self.id)
+        )
 
 
-def _process_conda_env(conda_env: Union[str, Dict[str, Any]], python_version: str) -> Dict[str, Any]:
+def _process_conda_env(
+    conda_env: Union[str, Dict[str, Any]], python_version: str
+) -> Dict[str, Any]:
     """
-        This function will replace/add python version dependency to the conda environment file.
+    This function will replace/add python version dependency to the conda environment file.
 
-        :param conda_env: Either a dictionary representation of a conda environment or the path to a conda environment yaml file.
-        :param python_version: The python version to replace the conda environment with
-        :return: dict representation of the conda environment with python_version set as per given input
+    :param conda_env: Either a dictionary representation of a conda environment or the path to a conda environment yaml file.
+    :param python_version: The python version to replace the conda environment with
+    :return: dict representation of the conda environment with python_version set as per given input
     """
+
     def match_dependency(spec, name):
         # Using direct match or regex match to match the dependency name,
         # where the regex accounts for the official conda dependency formats:
@@ -1553,11 +1673,14 @@ def _process_conda_env(conda_env: Union[str, Dict[str, Any]], python_version: st
     elif isinstance(conda_env, dict):
         new_conda_env = conda_env
 
-    if 'dependencies' not in new_conda_env:
-        new_conda_env['dependencies'] = []
+    if "dependencies" not in new_conda_env:
+        new_conda_env["dependencies"] = []
 
     # Replace python dependency to match minor version
-    new_conda_env['dependencies'] = ([f'python={python_version}'] +
-        [spec for spec in new_conda_env['dependencies'] if not match_dependency(spec, 'python')])
+    new_conda_env["dependencies"] = [f"python={python_version}"] + [
+        spec
+        for spec in new_conda_env["dependencies"]
+        if not match_dependency(spec, "python")
+    ]
 
     return new_conda_env

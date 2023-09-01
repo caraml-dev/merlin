@@ -1066,13 +1066,39 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
     """
     Validate that set traffic is working when switching from different deployment mode
     """
+    print("test_standard_transformer_simulate url :", integration_test_url)
+    print("test_standard_transformer_simulate use_google_oauth :", use_google_oauth)
+    use_google_oauth = True
+
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
 
     transformer_config_path = os.path.join(
-        "test/transformer", "standard_transformer_with_feast.yaml"
+        "test/transformer", "standard_transformer_no_feast.yaml"
     )
     transformer = StandardTransformer(config_file=transformer_config_path, enabled=True)
 
-    request = {"foo": "bar"}
-    resp = transformer.simulate(request)
+    payload = {
+        "drivers": [
+            # 1 Feb 2022, 00:00:00
+            {
+                "id": 1,
+                "name": "driver-1",
+                "vehicle": "motorcycle",
+                "previous_vehicle": "suv",
+                "rating": 4,
+                "ep_time": 1643673600,
+            },
+            # 30 Jan 2022, 00:00:00
+            {
+                "id": 2,
+                "name": "driver-2",
+                "vehicle": "sedan",
+                "previous_vehicle": "mpv",
+                "rating": 3,
+                "ep_time": 1643500800,
+            },
+        ],
+        "customer": {"id": 1111},
+    }
+    resp = transformer.simulate(payload=payload)
     print(resp)

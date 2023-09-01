@@ -14,14 +14,16 @@
 
 from typing import Dict, Optional
 
+from merlin.protocol import Protocol
 from merlin.resource_request import ResourceRequest
 from merlin.util import autostr
+from merlin import fluent
+
 from enum import Enum
 
 import client
 import yaml
 import json
-import fluent
 
 
 class TransformerType(Enum):
@@ -88,9 +90,10 @@ class StandardTransformer(Transformer):
         resource_request: ResourceRequest = None,
         env_vars: Dict[str, str] = None,
     ):
-        transformer_config = self._load_transformer_config(config_file)
+        self.transformer_config = self._load_transformer_config(config_file)
+        transformer_env_var = self._transformer_config_env_var()
         merged_env_vars = env_vars or {}
-        merged_env_vars = {**merged_env_vars, **transformer_config}
+        merged_env_vars = {**merged_env_vars, **transformer_env_var}
         super().__init__(
             image="",
             enabled=enabled,
@@ -101,11 +104,24 @@ class StandardTransformer(Transformer):
 
     def _load_transformer_config(self, config_file: str):
         with open(config_file, "r") as stream:
-            transformer_config = yaml.safe_load(stream)
+            self.transformer_config = yaml.safe_load(stream)
 
-        config_json_string = json.dumps(transformer_config)
+    def _transformer_config_env_var(self):
+        config_json_string = json.dumps(self.transformer_config)
         return {self.StandardTransformerConfigKey: config_json_string}
 
-    def simulate(self, request: Dict):
+    def simulate(
+        self,
+        payload: Dict,
+        headers: Dict = None,
+        model_prediction_config: Dict = None,
+        protocol: Protocol = None,
+    ):
         fluent._check_active_client()
-        return fluent._merlin_client.standard_transformer_simulate(request=request)
+        return fluent._merlin_client.standard_transformer_simulate(
+            payload=payload,
+            headers=headers,
+            config=self.transformer_config,
+            model_prediction_config=model_prediction_config,
+            protocol=protocol,
+        )

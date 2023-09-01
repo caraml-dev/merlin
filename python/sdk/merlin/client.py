@@ -27,7 +27,10 @@ from client import (
     ProjectApi,
     StandardTransformerApi,
     VersionApi,
+    StandardTransformerSimulationRequest,
+    FreeFormObject,
 )
+
 from google.auth.transport.requests import Request
 from google.auth.transport.urllib3 import AuthorizedHttp
 from merlin.autoscaling import AutoscalingPolicy
@@ -271,7 +274,22 @@ class MerlinClient:
     def undeploy(self, model_version: ModelVersion, environment_name: str = None):
         model_version.undeploy(environment_name)
 
-    def standard_transformer_simulate(self, request: Dict):
+    def standard_transformer_simulate(
+        self,
+        payload: dict,
+        headers: dict,
+        config: dict,
+        model_prediction_config: dict,
+        protocol: Protocol,
+    ):
+        request = StandardTransformerSimulationRequest(
+            payload=payload,
+            headers=headers,
+            config=config,
+            model_prediction_config=model_prediction_config,
+            protocol="HTTP_JSON",
+        )
+
         return self._standard_transformer_api.standard_transformer_simulate_post(
-            body=request
+            body=request.to_dict()
         )
