@@ -1066,10 +1066,6 @@ def test_standard_transformer_simulate(integration_test_url, use_google_oauth):
     """
     Validate that set traffic is working when switching from different deployment mode
     """
-    print("test_standard_transformer_simulate url :", integration_test_url)
-    print("test_standard_transformer_simulate use_google_oauth :", use_google_oauth)
-    use_google_oauth = True
-
     merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
 
     transformer_config_path = os.path.join(
