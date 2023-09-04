@@ -19,8 +19,7 @@ from time import sleep
 import merlin
 import pandas as pd
 import pytest
-from merlin import DeploymentMode
-from merlin.endpoint import Status
+from merlin import DeploymentMode, MetricsType
 from merlin.logger import Logger, LoggerConfig, LoggerMode
 from merlin.model import ModelType
 from merlin.resource_request import ResourceRequest
@@ -944,6 +943,58 @@ def test_deployment_mode_for_serving_model(integration_test_url, project_name, u
     assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
 
     merlin.stop_serving_traffic(model_endpoint.environment_name)
+    undeploy_all_version()
+
+
+@pytest.mark.integration
+def test_redeploy_model(integration_test_url, project_name, use_google_oauth, requests):
+    """
+    Validate that calling the 'merlin.deploy' twice in a row redeploys a Merlin model
+    """
+
+    merlin.set_url(integration_test_url, use_google_oauth=use_google_oauth)
+    merlin.set_project(project_name)
+    merlin.set_model("model-sdk-redeploy", ModelType.TENSORFLOW)
+    model_dir = "test/tensorflow-model"
+
+    undeploy_all_version()
+
+    # Upload new model version: v1
+    with merlin.new_model_version() as v1:
+        merlin.log_model(model_dir=model_dir)
+
+    # Deploy using serverless with RPS autoscaling policy
+    endpoint = merlin.deploy(v1, autoscaling_policy=merlin.AutoscalingPolicy(
+        metrics_type=merlin.MetricsType.RPS,
+        target_value=20))
+
+    resp = requests.post(f"{endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Check the autoscaling policy of v1
+    assert endpoint.autoscaling_policy.metrics_type == MetricsType.RPS
+    assert endpoint.autoscaling_policy.target_value == 20
+
+    # Deploy v2 using raw_deployment with CPU autoscaling policy
+    new_endpoint = merlin.deploy(v1, autoscaling_policy=merlin.AutoscalingPolicy(
+         metrics_type=merlin.MetricsType.CPU_UTILIZATION,
+         target_value=10))
+
+    resp = requests.post(f"{new_endpoint.url}", json=tensorflow_request_json)
+
+    assert resp.status_code == 200
+    assert resp.json() is not None
+    assert len(resp.json()["predictions"]) == len(tensorflow_request_json["instances"])
+
+    # Check that the endpoint remains the same
+    assert endpoint.url == new_endpoint.url
+    # Check the autoscaling policy of v2
+    assert new_endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+    assert new_endpoint.autoscaling_policy.target_value == 10
+
     undeploy_all_version()
 
 

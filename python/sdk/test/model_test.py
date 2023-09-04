@@ -346,6 +346,14 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
@@ -378,6 +386,14 @@ class TestModelVersion:
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
@@ -416,6 +432,14 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
@@ -449,6 +473,13 @@ class TestModelVersion:
             "GET",
             "/v1/environments",
             body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET", "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
             status=200,
             content_type="application/json",
         )
@@ -505,6 +536,14 @@ class TestModelVersion:
             status=200,
             content_type="application/json",
         )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([]),
+            status=200,
+            content_type="application/json",
+        )
         responses.add(
             "POST",
             "/v1/models/1/versions/1/endpoint",
@@ -527,6 +566,52 @@ class TestModelVersion:
         assert endpoint.environment_name == ep1.environment_name
         assert endpoint.environment.cluster == env_1.cluster
         assert endpoint.environment.name == env_1.name
+
+    @responses.activate
+    def test_redeploy_model(self, version):
+        responses.add(
+            "GET",
+            "/v1/environments",
+            body=json.dumps([env_1.to_dict(), env_2.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        # This is the additional check which deploy makes to determine if there are any existing endpoints associated
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep3.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "PUT",
+            "/v1/models/1/versions/1/endpoint/1234",
+            body=json.dumps(ep4.to_dict()),
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            "GET",
+            "/v1/models/1/versions/1/endpoint",
+            body=json.dumps([ep4.to_dict()]),
+            status=200,
+            content_type="application/json",
+        )
+
+        # Redeployment (add autoscaling policy and change deployment mode)
+        endpoint = version.deploy(environment_name=env_1.name,
+                                  autoscaling_policy=AutoscalingPolicy(metrics_type=MetricsType.CPU_UTILIZATION,
+                                                                       target_value=10))
+
+        assert endpoint.id == ep4.id
+        assert endpoint.status.value == ep4.status
+        assert endpoint.environment_name == ep4.environment_name
+        assert endpoint.environment.cluster == env_1.cluster
+        assert endpoint.environment.name == env_1.name
+        assert endpoint.deployment_mode == DeploymentMode.SERVERLESS
+        assert endpoint.autoscaling_policy.metrics_type == MetricsType.CPU_UTILIZATION
+        assert endpoint.autoscaling_policy.target_value == 10
 
     @responses.activate
     def test_deploy_with_gpu(self, version):
